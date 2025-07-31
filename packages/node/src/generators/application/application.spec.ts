@@ -52,7 +52,7 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "dist/my-node-app/workspace_modules",
+                "{workspaceRoot}/dist/my-node-app/workspace_modules",
               ],
             },
             "prune": {
@@ -72,8 +72,8 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "dist/my-node-app/package.json",
-                "dist/my-node-app/package-lock.json",
+                "{workspaceRoot}/dist/my-node-app/package.json",
+                "{workspaceRoot}/dist/my-node-app/package-lock.json",
               ],
             },
             "serve": {
@@ -299,7 +299,7 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "dist/my-dir/my-node-app/workspace_modules",
+                "{workspaceRoot}/dist/my-dir/my-node-app/workspace_modules",
               ],
             },
             "prune": {
@@ -319,8 +319,8 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "dist/my-dir/my-node-app/package.json",
-                "dist/my-dir/my-node-app/package-lock.json",
+                "{workspaceRoot}/dist/my-dir/my-node-app/package.json",
+                "{workspaceRoot}/dist/my-dir/my-node-app/package-lock.json",
               ],
             },
             "serve": {
@@ -697,7 +697,7 @@ describe('app', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/workspace_modules",
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
               },
               "prune": {
@@ -717,8 +717,8 @@ describe('app', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/package.json",
-                  "myapp/dist/package-lock.json",
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
                 ],
               },
               "serve": {
@@ -1002,7 +1002,7 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/workspace_modules",
+                "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
             },
             "prune": {
@@ -1022,8 +1022,8 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/package.json",
-                "myapp/dist/package-lock.json",
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
               ],
             },
             "serve": {
