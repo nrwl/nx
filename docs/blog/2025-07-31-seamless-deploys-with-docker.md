@@ -19,7 +19,7 @@ This article is part of the Java Week series:
 
 {% /callout %}
 
-We've explored how you can add a Java app to an existing Nx workspace, but just getting the code in the same place doesn't really help _ship_ our code. With JavaScript apps, you simple need to have a static hosting provider or have a platform that can run node. But Java? Where do you even begin? Let's look at how we can get our Java backend deployed and automate it using Nx. We'll also get a sneak peek at a new plugin we've been working on.
+We've explored how you can add a Java app to an existing Nx workspace, but just getting the code in the same place doesn't really help _ship_ our code. With JavaScript apps, you simply need to have a static hosting provider or have a platform that can run node. But Java? Where do you even begin? Let's look at how we can get our Java backend deployed and automate it using Nx. We'll also get a sneak peek at a new plugin we've been working on.
 
 ## The Challenge: From Monorepo to Production
 
@@ -111,7 +111,7 @@ Now creating and running a docker image is fine, but we want to coordinate this 
 
 This is fairly standard release config, but the `docker` entry is new. The `skipVersionActions` tells Nx to not attempt to version any of the packages we’re releasing. Typically, this means bumping the version to the next major/minor/patch depending on your commits. Since this is just a demo, we don't really need worry about versioning any packages, just versioning the Docker image.
 
-Then, we need to include some release configuration for to tell `nx release` about where we want our `java-backend` released to. Let's open the `project.json` and add a new release setup:
+Then, we need to include some release configuration to tell `nx release` about where we want our `java-backend` released to. Let's open the `project.json` and add a new release setup:
 
 ```json
 {
