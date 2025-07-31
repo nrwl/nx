@@ -48,13 +48,16 @@ export function shouldConfigureTsSolutionSetup(
       nxJson.useInferencePlugins !== false;
   }
 
-  // if the user didn't explicitly disabled adding plugins and there are no
-  // root tsconfig files, we should configure the TS solution setup
-  return (
-    addPlugins &&
-    !tree.exists('tsconfig.base.json') &&
-    !tree.exists('tsconfig.json')
-  );
+  if (!addPlugins) {
+    return false;
+  }
+
+  if (!isUsingPackageManagerWorkspaces(tree)) {
+    return false;
+  }
+
+  // if there are no root tsconfig files, we should configure the TS solution setup
+  return !tree.exists('tsconfig.base.json') && !tree.exists('tsconfig.json');
 }
 
 export function isUsingTsSolutionSetup(tree?: Tree): boolean {
