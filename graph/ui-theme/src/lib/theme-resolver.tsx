@@ -85,12 +85,3 @@ export function themeResolver(theme: Theme) {
 
   localStorage.setItem(localStorageThemeKey, theme);
 }
-
-// The function exists because some places do not support selectDynamically
-// It also prevents the dynamic change of theme for certain elements like tippy
-export function selectValueByThemeStatic<T>(
-  darkModeSetting: T,
-  lightModeSetting: T
-): T {
-  return currentTheme === 'dark' ? darkModeSetting : lightModeSetting;
-}

@@ -11,21 +11,18 @@ import {
   SunIcon,
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
-import { Fragment, useEffect, useState } from 'react';
-import { localStorageThemeKey, Theme, themeResolver } from './theme-resolver';
+import { Fragment, useEffect } from 'react';
+import { Theme } from './theme-resolver';
+import { useTheme } from './theme-context';
 
 export function ThemePanel({
   onThemeChange,
 }: {
   onThemeChange?: (theme: Theme) => void;
 }): JSX.Element {
-  const [theme, setTheme] = useState(
-    (localStorage.getItem(localStorageThemeKey) as Theme) || 'system'
-  );
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    themeResolver(theme);
-
     if (onThemeChange) {
       onThemeChange(theme);
     }
