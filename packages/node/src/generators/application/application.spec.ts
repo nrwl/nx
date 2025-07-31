@@ -51,9 +51,11 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "dist/my-node-app/workspace_modules",
+              ],
             },
             "prune": {
-              "cache": true,
               "dependsOn": [
                 "prune-lockfile",
                 "copy-workspace-modules",
@@ -69,6 +71,10 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "dist/my-node-app/package.json",
+                "dist/my-node-app/package-lock.json",
+              ],
             },
             "serve": {
               "configurations": {
@@ -292,9 +298,11 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "dist/my-dir/my-node-app/workspace_modules",
+              ],
             },
             "prune": {
-              "cache": true,
               "dependsOn": [
                 "prune-lockfile",
                 "copy-workspace-modules",
@@ -310,6 +318,10 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "dist/my-dir/my-node-app/package.json",
+                "dist/my-dir/my-node-app/package-lock.json",
+              ],
             },
             "serve": {
               "configurations": {
@@ -684,9 +696,11 @@ describe('app', () => {
                 "options": {
                   "buildTarget": "build",
                 },
+                "outputs": [
+                  "myapp/dist/workspace_modules",
+                ],
               },
               "prune": {
-                "cache": true,
                 "dependsOn": [
                   "prune-lockfile",
                   "copy-workspace-modules",
@@ -702,6 +716,10 @@ describe('app', () => {
                 "options": {
                   "buildTarget": "build",
                 },
+                "outputs": [
+                  "myapp/dist/package.json",
+                  "myapp/dist/package-lock.json",
+                ],
               },
               "serve": {
                 "configurations": {
@@ -983,9 +1001,11 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "myapp/dist/workspace_modules",
+              ],
             },
             "prune": {
-              "cache": true,
               "dependsOn": [
                 "prune-lockfile",
                 "copy-workspace-modules",
@@ -1001,6 +1021,10 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "myapp/dist/package.json",
+                "myapp/dist/package-lock.json",
+              ],
             },
             "serve": {
               "configurations": {

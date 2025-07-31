@@ -41,7 +41,7 @@ export function addProject(tree: Tree, options: NormalizedSchema) {
   }
   project.targets = {
     ...project.targets,
-    ...getPruneTargets('build'),
+    ...getPruneTargets('build', options.outputPath),
   };
   project.targets.serve = getServeConfig(options);
 
