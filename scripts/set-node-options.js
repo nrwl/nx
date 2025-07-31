@@ -23,7 +23,6 @@ if (args.length === 0) {
 
 const child = spawn(args[0], args.slice(1), {
   stdio: 'inherit',
-  shell: true,
   env: process.env,
 });
 
