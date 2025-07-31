@@ -493,7 +493,11 @@ export async function createNxReleaseConfig(
     releaseTagPattern:
       // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
       groupProjectsRelationship === 'independent'
-        ? defaultIndependentReleaseTagPattern
+        ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+          // Otherwise, use the default value to guarantee unique tags
+          WORKSPACE_DEFAULTS.releaseTagPattern?.includes('{projectName}')
+          ? WORKSPACE_DEFAULTS.releaseTagPattern
+          : defaultIndependentReleaseTagPattern
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
@@ -785,12 +789,15 @@ export async function createNxReleaseConfig(
               releaseGroup.changelog || {}
             )
           : false,
-
       releaseTagPattern:
         releaseGroup.releaseTagPattern ||
         // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
         (projectsRelationship === 'independent'
-          ? defaultIndependentReleaseTagPattern
+          ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+            // Otherwise, use the default value to guarantee unique tags
+            userConfig.releaseTagPattern?.includes('{projectName}')
+            ? userConfig.releaseTagPattern
+            : defaultIndependentReleaseTagPattern
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
       releaseTagPatternCheckAllBranchesWhen:
         releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
@@ -1055,6 +1062,7 @@ export async function handleNxReleaseConfigError(
   error: CreateNxReleaseConfigError,
   useLegacyVersioning: boolean
 ): Promise<never> {
+  const linkMessage = `\nRead more about Nx Release at https://nx.dev/features/manage-releases.`;
   switch (error.code) {
     case 'PROJECTS_AND_GROUPS_DEFINED':
       {
@@ -1064,7 +1072,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `"projects" is not valid when explicitly defining release groups, and everything should be expressed within "groups" in that case. If you are using "groups" then you should remove the "projects" property`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1076,7 +1084,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Release group "${error.data.releaseGroupName}" matches no projects. Please ensure all release groups match at least one project:`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1088,7 +1096,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Project "${error.data.project}" matches multiple release groups. Please ensure all projects are part of only one release group:`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1102,7 +1110,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Release group "${error.data.releaseGroupName}" has an invalid releaseTagPattern. Please ensure the pattern contains exactly one instance of the "{version}" placeholder`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1116,7 +1124,7 @@ export async function handleNxReleaseConfigError(
           : 'configuration options';
         output.error({
           title: `You have configured both the shorthand "version.conventionalCommits" and one or more of the related ${text} that it sets for you. Please use one or the other:`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1128,7 +1136,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `You have duplicate conflicting git configurations. If you are using the top level 'nx release' command, then remove the 'release.version.git' and 'release.changelog.git' properties in favor of 'release.git'. If you are using the subcommands or the programmatic API, then remove the 'release.git' property in favor of 'release.version.git' and 'release.changelog.git':`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1136,7 +1144,7 @@ export async function handleNxReleaseConfigError(
       const nxJsonMessage = await resolveNxJsonConfigErrorMessage(['release']);
       output.error({
         title: `There was an error when resolving the configured changelog renderer at path: ${error.data.workspaceRelativePath}`,
-        bodyLines: [nxJsonMessage],
+        bodyLines: [nxJsonMessage, linkMessage],
       });
       break;
     }
@@ -1153,7 +1161,7 @@ export async function handleNxReleaseConfigError(
           )
             .map((p) => `"${p}"`)
             .join(', ')}`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1164,7 +1172,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Your "changelog.createRelease" config specifies an invalid hostname "${error.data.hostname}". Please ensure you provide a valid hostname value, such as "example.com"`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1175,7 +1183,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Your "changelog.createRelease" config specifies an invalid apiBaseUrl "${error.data.apiBaseUrl}". Please ensure you provide a valid URL value, such as "https://example.com"`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -1186,7 +1194,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `The createRelease option for changelogs cannot be enabled when git push is explicitly disabled because the commit needs to be pushed to the remote in order to tie the release to it`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;

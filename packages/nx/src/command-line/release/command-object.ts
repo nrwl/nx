@@ -261,6 +261,11 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             describe:
               'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
           })
+          .options('dockerVersionScheme', {
+            type: 'string',
+            describe:
+              'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
+          })
       )
     ),
   handler: async (args) => {

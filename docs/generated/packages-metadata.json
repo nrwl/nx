@@ -441,6 +441,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/angular/migrations/21.4.0-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-ngrx-package-updates",
+        "version": "21.4.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.4.0-ngrx-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
         "hidden": false,
         "name": "21.3.5-jest-package-updates",
@@ -2312,6 +2322,16 @@
     ],
     "migrations": [
       {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.4 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-4.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-4",
+        "version": "21.3.11-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-4",
+        "type": "migration"
+      },
+      {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-2.json",
         "hidden": false,
@@ -3636,6 +3656,17 @@
         "path": "nx/documents/add",
         "tags": ["add"],
         "originalFilePath": "generated/cli/add"
+      },
+      {
+        "id": "mcp",
+        "name": "mcp",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/mcp",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/mcp",
+        "tags": ["mcp"],
+        "originalFilePath": "generated/cli/mcp"
       },
       {
         "id": "login",

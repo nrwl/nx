@@ -7,6 +7,17 @@ description: Nx’s Gradle plugin evolved from a prototype into a robust solutio
 cover_image: /blog/images/2025-07-28/header.avif
 ---
 
+{% callout type="deepdive" title="Java Week Series" expanded=true %}
+
+This article is part of the Java Week series:
+
+- **The Journey of Nx Gradle**
+- [Polyglot Projects Made Easy](/blog/spring-boot-with-nx)
+- [Getting Mobile Into Your Monorepo](/blog/android-and-nx)
+- [Seamless Deploys With Docker](/blog/seamless-deploys-with-docker)
+
+{% /callout %}
+
 When Nx first dipped its toes into the world of Java, no one could have predicted the ride ahead. From an accidental prototype to enterprise-level adoption, the path of Java support at Nx, particularly through the `@nx/gradle` plugin, has been one of exploration, iteration, and growing maturity.
 
 ## Humble Beginnings: An Accidental Start

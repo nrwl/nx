@@ -135,7 +135,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 Now connect your repository to Nx Cloud with the following command:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
@@ -237,7 +237,7 @@ Nx Console no longer supports the Angular CLI. Angular CLI users will receive a 
 If you're not ready to make the change yet, you can come back to this later:
 
 - If you're using Nx Console: open the Vs Code command palette and start typing "Convert Angular CLI to Nx Workspace".
-- Regardless of using Nx Console (or your IDE): run `npx nx init` from the root of your project.
+- Regardless of using Nx Console (or your IDE): run `npx nx@latest init` from the root of your project.
 
 Once the script has run, commit the changes. Reverting this commit will effectively undo the changes made.
 

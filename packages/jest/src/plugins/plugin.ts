@@ -30,6 +30,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { normalize } from 'node:path';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { major } from 'semver';
 
 const pmc = getPackageManagerCommand();
 
@@ -279,13 +280,32 @@ async function buildJestTargets(
     module: 'commonjs',
     customConditions: null,
   });
+
+  // Jest 30 + Node.js 24 can't parse TS configs with imports.
+  // This flag does not exist in Node 20/22.
+  // https://github.com/jestjs/jest/issues/15682
+  const nodeVersion = major(process.version);
+
+  const env: Record<string, string> = {
+    TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions,
+  };
+
+  if (nodeVersion >= 24) {
+    const currentOptions = process.env.NODE_OPTIONS || '';
+    if (!currentOptions.includes('--no-experimental-strip-types')) {
+      env.NODE_OPTIONS = (
+        currentOptions + ' --no-experimental-strip-types'
+      ).trim();
+    }
+  }
+
   const target: TargetConfiguration = (targets[options.targetName] = {
     command: 'jest',
     options: {
       cwd: projectRoot,
       // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
       // We want to support of ESM via 'module':'nodenext', we need to override the resolution until Jest supports it.
-      env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
+      env,
     },
     metadata: {
       technologies: ['jest'],
@@ -384,7 +404,7 @@ async function buildJestTargets(
           outputs,
           options: {
             cwd: projectRoot,
-            env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
+            env,
           },
           metadata: {
             technologies: ['jest'],
@@ -539,7 +559,7 @@ async function buildJestTargets(
             outputs,
             options: {
               cwd: projectRoot,
-              env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
+              env,
             },
             metadata: {
               technologies: ['jest'],

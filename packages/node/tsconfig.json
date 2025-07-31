@@ -7,6 +7,9 @@
   "files": [],
   "references": [
     {
+      "path": "../docker"
+    },
+    {
       "path": "../eslint"
     },
     {
@@ -16,10 +19,10 @@
       "path": "../jest"
     },
     {
-      "path": "../nx"
+      "path": "../devkit"
     },
     {
-      "path": "../devkit"
+      "path": "../nx"
     },
     {
       "path": "./tsconfig.lib.json"

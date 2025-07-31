@@ -19,7 +19,7 @@ Your CI pipeline with Nx can:
 [Create an account on Nx Cloud](https://cloud.nx.app) and connect your repository.
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 ## Learn about Nx on CI

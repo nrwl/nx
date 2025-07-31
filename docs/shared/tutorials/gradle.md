@@ -13,9 +13,15 @@ What you'll learn:
 - How Nx's caching speeds up your Gradle builds locally and in CI
 - How to visualize and understand project dependencies in your Gradle workspace
 - How to run Gradle tasks more efficiently with Nx's task runner
-- How to set up Nx Cloud for distributed caching and faster CI
+- How to set up Nx Cloud for faster and self-healing CI
 
-## Prerequisites
+## Ready to start?
+
+{% callout type="note" title="Prerequisites" %}
+This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
+{% /callout %}
+
+### Step 1: Setup local env
 
 Make sure that you have [Gradle](https://gradle.org/) installed on your system.
 Consult [Gradle's installation guide](https://docs.gradle.org/current/userguide/installation.html) for instruction that
@@ -27,10 +33,10 @@ To verify that Gradle was installed correctly, run this command:
 gradle --version
 ```
 
-To streamline this tutorial, we'll install Nx globally on your system. You can use Homebrew (Mac and Linux) or a manually installed Node version (any OS).
+To streamline this tutorial, we'll install Nx globally on your system. You can use your preferred installation method below based on your OS:
 
 {% tabs %}
-{% tab label="Homebrew" %}
+{% tab label="Homebrew (macOS, Linux)" %}
 
 Make sure [Homebrew is installed](https://brew.sh/), then install Nx globally with these commands:
 
@@ -39,7 +45,24 @@ brew install nx
 ```
 
 {% /tab %}
-{% tab label="Node" %}
+{% tab label="Chocolatey (Windows)" %}
+
+```shell
+choco install nx
+```
+
+{% /tab %}
+{% tab label="apt (Ubuntu)" %}
+
+```shell
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
+```
+
+{% /tab %}
+
+{% tab label="Node (any OS)" %}
 
 Install node from the [NodeJS website](https://nodejs.org/en/download), then install Nx globally with this command:
 
@@ -50,7 +73,7 @@ npm install --global nx
 {% /tab %}
 {% /tabs %}
 
-## Getting Started
+### Step 2: Fork sample repository
 
 This tutorial picks up where [Spring framework](https://spring.io/)'s guide for [Multi-Module Projects](https://spring.io/guides/gs/multi-module) leaves off.
 
@@ -67,7 +90,7 @@ The Multi-Module Spring Tutorial left us with 2 projects:
 
 You can see the above 2 projects by running `./gradlew projects`
 
-```text {% command="./gradlew projects" %}
+```text {% command="./gradlew projects" path="~/gradle-tutorial" %}
 > Task :projects
 
 ------------------------------------------------------------
@@ -88,15 +111,34 @@ both locally and on CI. We will explore the features of Nx in this tutorial by a
 To add Nx, run
 
 ```shell {% path="~/gradle-tutorial" %}
-npx nx@latest init
+nx init
 ```
 
 This command will download the latest version of Nx and help set up your repository to take advantage of it. Nx will
 also detect Gradle is used in the repo so it will propose adding the `@nx/gradle` plugin to integrate Gradle with Nx.
-Select the plugin and continue with the setup.
 
-Similar to Gradle, Nx can be run with the `nx` or `nx.bat` executables. We will learn about some of the Nx commands in
-the following sections.
+1. You'll also be prompted to add Nx Cloud, select "yes"
+2. Select the plugin and continue with the setup.
+
+Finally, commit and push all the changes to GitHub and proceed with finishing your Nx Cloud setup.
+
+### Finish Nx Cloud setup
+
+> Nx Cloud provides self-healing CI, remote caching and many other features. [Learn more about Nx Cloud features](/ci/features).
+
+Click the link printing in your terminal, or you can connect your existing workspace to Nx Cloud:
+
+{% call-to-action title="Finish Nx Cloud Setup ☁️" url="https://cloud.nx.app/setup/connect-workspace/github/select" description="Nx Cloud needs to be setup to complete the tutorial" /%}
+
+### Verify your setup
+
+Please verify closely that you have the following setup:
+
+1. A new Nx workspace on your local machine
+2. A corresponding GitHub repository for the workspace
+3. You completed the full Nx Cloud onboarding, and you now have a Nx Cloud dashboard that is connected to your example repository on GitHub.
+
+You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
 ## Explore Your Workspace
 
@@ -109,22 +151,9 @@ The `@nx/gradle` plugin reflects the graph of projects in Gradle into the Nx Pro
 are created, deleted, and change their dependencies, Nx will automatically recalculate the graph. Exploring this graph
 visually is vital to understanding how your code is structured and how Nx and Gradle behaves.
 
-{% tabs %}
-{% tab label="Mac/Linux" %}
-
-```shell
-./nx graph
+```shell {% path="~/gradle-tutorial" %}
+nx graph
 ```
-
-{% /tab %}
-{% tab label="Windows" %}
-
-```shell
-./nx.bat graph
-```
-
-{% /tab %}
-{% /tabs %}
 
 {% graph title="Gradle Projects" height="200px" jsonFile="shared/tutorials/gradle-project-graph.json" %}
 {% /graph %}
@@ -139,7 +168,7 @@ Before we start running tasks, let's explore the tasks available for the `applic
 that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can view the available tasks either through [Nx Console](/getting-started/editor-setup) or from the terminal:
 
 ```shell {% path="~/gradle-tutorial" %}
-./nx show project application --web
+nx show project application
 ```
 
 {% project-details title="Project Details View" jsonFile="shared/tutorials/gradle-pdv.json" expandedTargets=["build"] height="520px" %}
@@ -147,17 +176,17 @@ that we've installed reflects Gradle's tasks to Nx, which allows it to run any o
 
 The Nx command to run the `build` task for the `application` project is:
 
-```shell
-./nx run application:build
+```shell {% path="~/gradle-tutorial" %}
+nx run application:build
 ```
 
 When Nx runs a Gradle task, it hands off the execution of that task to Gradle, so all task dependencies and
 configuration settings in the Gradle configuration are still respected.
 
-By running the task via Nx, however, the task computation was cached for reuse. Now, running `./nx run application:build`
+By running the task via Nx, however, the task computation was cached for reuse. Now, running `nx run application:build`
 again, will complete almost instantly as the result from the previous execution will be used.
 
-```{% command="./nx run application:build" %}
+```text {% command="nx run application:build" path="~/gradle-tutorial"%}
 
    ✔  1/1 dependent project tasks succeeded [1 read from cache]
 
@@ -204,7 +233,7 @@ Nx read the output from the cache instead of running the command for 4 out of 4 
 
 Now that we've run one task, let's run all the `build` tasks in the repository with the Nx `run-many` command. This is similar to Gradle's `./gradlew build` command.
 
-```{% command="./nx run-many -t build" %}
+```text {% command="nx run-many -t build" path="~/gradle-tutorial"%}
 
    ✔  nx run library:classes  [existing outputs match the cache, left as is]
    ✔  nx run library:build  [existing outputs match the cache, left as is]
@@ -224,72 +253,27 @@ Again, because Nx cached the tasks when the application was built, most of the t
 ones which needed to be done is the root project's build. Running the command one more time, will be near instant as
 then all the tasks will be restored from the cache.
 
-## Fast CI ⚡ {% highlightColor="green" %}
+### Remote Cache for Faster Development
 
-{% callout type="check" title="Repository with Nx" %}
-Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can check out the [reference code](https://github.com/nrwl/nx-recipes/tree/main/gradle) as a starting point.
-{% /callout %}
+With Nx Cloud connected, your task results are now cached remotely. This means that if another developer runs the same tasks, or if you run them in CI, the results will be retrieved from the remote cache instead of being re-executed.
 
-This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
+Try running the build again after making a small change to see how Nx intelligently determines which tasks need to be re-run:
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
-
-### Connect to Nx Cloud {% highlightColor="green" %}
-
-Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
-
-{% call-to-action title="Get Started with Nx Cloud Free 🎯" url="https://cloud.nx.app/create-nx-workspace?preset=gradle" description="Cut CI times by 70% - Enterprise-grade caching & distribution at no cost" /%}
-
-Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
-
-1. Commit your existing changes with `git add . && git commit -am "updates"`
-2. [Create a new GitHub repository](https://github.com/new)
-3. Follow GitHub's instructions to push your existing code to the repository
-
-Now connect your repository to Nx Cloud with the following command:
-
-```shell
-./nx connect
+```shell {% path="~/gradle-tutorial" %}
+nx run-many -t build
 ```
 
-A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
+You'll notice that only the affected projects need to rebuild, while others are restored from cache.
 
-![](/shared/tutorials/nx-cloud-github-connect.avif)
+## Self-Healing CI with Nx Cloud
 
-Once the PR is created, merge it into your main branch.
+In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI.
 
-![](/shared/tutorials/github-cloud-pr-merged.avif)
+You can copy the example GitHub Action workflow file and place it in the `.github/workflows/ci.yml` directory of your repository. This workflow will run the `lint`, `test`, and `build` tasks for all projects in your repository whenever a pull request is opened or updated.
 
-And make sure you pull the latest changes locally:
+The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```shell
-git pull
-```
-
-You should now have an `nxCloudId` property specified in the `nx.json` file.
-
-### Create a CI Workflow {% highlightColor="green" %}
-
-Let's create a branch to add a CI workflow.
-
-```shell
-git checkout -b add-workflow
-```
-
-And use the following command to generate a CI workflow file.
-
-```shell
-./nx generate ci-workflow --ci=github
-```
-
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line.
-
-The key lines in the CI pipeline are:
-
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["22-26", "38-39"] %}
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[33,34] %}
 name: CI
 
 on:
@@ -308,57 +292,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           filter: tree:0
-
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
-
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           architecture: x64
-
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-
-      # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: './nx run-many -t test build'
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: ./nx fix-ci
+        uses: gradle/actions/setup-gradle@v4
+      - run: npx nx run-many -t lint test build
+      - run: npx nx-cloud fix-ci
         if: always()
 ```
 
-### Open a Pull Request {% highlightColor="green" %}
+You will also need to install the [Nx Console](/getting-started/editor-setup) editor extension for VS Code, Cursor, or IntelliJ. For the complete AI setup guide, see our [AI integration documentation](/getting-started/ai-integration).
+
+{% install-nx-console /%}
+
+### Open a Pull Request
+
+Start by making a new branch to work on.
+
+```shell {% path="~/gradle-tutorial" %}
+git checkout -b self-healing-ci
+```
+
+Now for demo purposes, we'll make a mistake in our `DemoApplication` class that will cause the build to fail.
+
+```diff {% fileName="application/src/main/java/com/example/multimodule/application/DemoApplication.java" %}
+    @GetMapping("/")
+    public String home() {
++       return myService.messages();
+-       return myService.message();
+    }
+```
 
 Commit the changes and open a new PR on GitHub.
 
-```shell
+```shell {% path="~/gradle-tutorial" %}
 git add .
-git commit -m 'add CI workflow file'
-git push origin add-workflow
+git commit -m 'demo self-healing ci'
+git push origin self-healing-ci
 ```
 
-When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
+Once pushed, CI will kick off, and we'll run into an error for the `application:build` task.
+When the build task fails, you'll see Nx Cloud begin to analyze the failure and suggest a fix. When a fix is proposed, Nx Console will show a notification for you to review the potential fix. From here you can reject or apply the fix. Applying the fix will commit back to your PR and re-trigger CI to run.
 
-![Nx Cloud report](/shared/tutorials/gradle-github-pr-cloud-report.avif)
+You can also see the fix link on the GitHub PR comment that Nx Cloud leaves.
 
-The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
+![Nx Cloud PR comment with AI fix suggestion](/shared/tutorials/nx-cloud-gh-comment-self-healing-coment.avif)
 
-![Gradle run details](/shared/tutorials/gradle-run-details.webp)
+From here you can manually apply or reject the fix:
 
-For more information about how Nx can improve your CI pipeline, check out one of these guides:
+![Nx Cloud apply AI fix suggestion](/shared/tutorials/nx-cloud-apply-fix-self-healing-ci.avif)
 
-- [GitHub Actions with Nx](/ci/recipes/set-up/monorepo-ci-github-actions)
-- [Circle CI with Nx](/ci/recipes/set-up/monorepo-ci-circle-ci)
-- [Azure Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-azure)
-- [Bitbucket Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
-- [GitLab with Nx](/ci/recipes/set-up/monorepo-ci-gitlab)
+For more information about how Nx can improve your CI pipeline, check out our [CI guides](/ci/recipes/set-up)
 
 ## Summary
 
@@ -368,7 +361,7 @@ organization:
 - Nx reflects the Gradle graph into the Nx graph
 - Nx's dependency graph visualisation helps you understand your codebase
 - Nx caches task results and reuses them when the same task is rerun later
-- Nx Cloud provides remote caching and distributed task execution to speed up CI
+- Nx Cloud provides self-healing CI and remote caching to speed up CI
 - Nx [intelligently determines which tasks are `affected`](/ci/features/affected) by code changes to reduce waste in CI
 
 ## Next Steps
@@ -378,6 +371,6 @@ Connect with the rest of the Nx community with these resources:
 - ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about
   Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+- [Follow Nx on Twitter](https://twitter.con/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

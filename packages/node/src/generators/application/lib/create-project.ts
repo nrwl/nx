@@ -14,6 +14,7 @@ import {
   getNestWebpackBuildConfig,
   getServeConfig,
   getWebpackBuildConfig,
+  getPruneTargets,
 } from './create-targets';
 
 export function addProject(tree: Tree, options: NormalizedSchema) {
@@ -38,6 +39,10 @@ export function addProject(tree: Tree, options: NormalizedSchema) {
       project.targets.build = getNestWebpackBuildConfig();
     }
   }
+  project.targets = {
+    ...project.targets,
+    ...getPruneTargets('build', options.outputPath),
+  };
   project.targets.serve = getServeConfig(options);
 
   const packageJson: PackageJson = {

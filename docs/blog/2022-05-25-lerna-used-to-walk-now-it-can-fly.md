@@ -53,7 +53,7 @@ Finally, add the following to your `lerna.json`.
 
 That's mostly it. You can continue using the usual Lerna commands, but at this point Lerna would delegate its operations to Nx underneath.
 
-To get more out of it, you might want to create a small `nx.json` file (or run `npx nx init` to generate one) for going into some more details on configuring the cacheable operations:
+To get more out of it, you might want to create a small `nx.json` file (or run `npx nx@latest init` to generate one) for going into some more details on configuring the cacheable operations:
 
 ```json5 {% fileName="nx.json" %}
 {
@@ -88,7 +88,7 @@ By having Nx integrated, you not just get faster builds but also some other Nx's
 **Distributed caching** — Right now when you enable `useNx` in your existing Lerna repo, you will get local caching, meaning the cache sits in a local folder on your machine. You get much more value out of it when you start distributing and sharing it with your teammates but especially in CI. This can be done by adding Nx Cloud, which comes with a no-credit card, 500 hours free / month offer which is more than what most workspaces need. Adding that is easy and can be done by adding `@nrwl/nx-cloud` to your root-level `package.json` and then by running:
 
 ```shell
-npx nx connect-to-nx-cloud
+npx nx@latest connect-to-nx-cloud
 ```
 
 **Distributed task execution** — Distribution of the cache is one thing, but the real speed improvements come from also [distributing the task execution](/ci/features/distribute-task-execution) to speed up your CI. Having the Nx project graph and as well as the cache and historical data about previous runs, Nx Cloud DTE is able to maximize the CI agent utilization by evenly distributing tasks based on their (historical) duration as well as based on their topological order. In addition, the DTE process makes sure to properly move cached assets between the agents. Setting up DTE is straightforward, read more on our [Nx Cloud docs](/ci/features/distribute-task-execution). Hint: we also have a CI generator in Nx (you need the `@nrwl/workspace` package) that allows you to generate your CI setup using a single command: `npx nx generate @nrwl/workspace:ci-workflow --ci=github`

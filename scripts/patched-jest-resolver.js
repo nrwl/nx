@@ -61,6 +61,7 @@ module.exports = function (modulePath, options) {
     '@nx/workspace',
     '@nx/module-federation',
     '@nx/rspack',
+    '@nx/docker',
     '@nx/eslint-plugin',
     '@nx/angular',
     '@nx/create-nx-plugin',
@@ -194,6 +195,13 @@ module.exports = function (modulePath, options) {
         options.rootDir,
         `${packagesPath}eslint/src/`,
         relativePath + '.ts'
+      );
+    }
+
+    if (modulePath.startsWith('@nx/docker/generators')) {
+      return path.resolve(
+        options.rootDir,
+        `${packagesPath}docker/generators.ts`
       );
     }
 
