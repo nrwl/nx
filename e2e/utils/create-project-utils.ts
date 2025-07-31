@@ -40,6 +40,7 @@ let projName: string;
 const nxPackages = [
   `@nx/angular`,
   `@nx/cypress`,
+  `@nx/docker`,
   `@nx/eslint-plugin`,
   `@nx/express`,
   `@nx/esbuild`,

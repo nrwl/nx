@@ -1154,6 +1154,12 @@ importers:
         specifier: workspace:*
         version: link:../utils
 
+  e2e/docker:
+    dependencies:
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+
   e2e/esbuild:
     dependencies:
       '@nx/e2e-utils':

@@ -40,6 +40,10 @@
       ],
       "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
     },
+    "start-docker-registry": {
+      "continuous": true,
+      "command": "docker run --rm -p 5000:5000 --name local-docker-registry registry:2"
+    },
     "documentation": {
       "executor": "nx:run-commands",
       "options": {

@@ -387,6 +387,9 @@
     },
     {
       "path": "./astro-docs"
+    },
+    {
+      "path": "./e2e/docker"
     }
   ],
   "extends": "./tsconfig.base.json"
