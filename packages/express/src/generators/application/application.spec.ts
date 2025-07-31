@@ -229,7 +229,7 @@ describe('app', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/workspace_modules",
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
               },
               "lint": {
@@ -252,8 +252,8 @@ describe('app', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/package.json",
-                  "myapp/dist/package-lock.json",
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
                 ],
               },
               "serve": {
@@ -439,7 +439,7 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/workspace_modules",
+                "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
             },
             "lint": {
@@ -462,8 +462,8 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/package.json",
-                "myapp/dist/package-lock.json",
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
               ],
             },
             "serve": {

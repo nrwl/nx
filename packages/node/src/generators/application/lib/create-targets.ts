@@ -145,8 +145,8 @@ export function getPruneTargets(
       cache: true,
       executor: '@nx/js:prune-lockfile',
       outputs: [
-        joinPathFragments(outputPath, 'package.json'),
-        joinPathFragments(outputPath, lockFileName),
+        `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
+        `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
       ],
       options: {
         buildTarget,
@@ -155,7 +155,9 @@ export function getPruneTargets(
     'copy-workspace-modules': {
       dependsOn: ['build'],
       cache: true,
-      outputs: [joinPathFragments(outputPath, 'workspace_modules')],
+      outputs: [
+        `{workspaceRoot}/${joinPathFragments(outputPath, 'workspace_modules')}`,
+      ],
       executor: '@nx/js:copy-workspace-modules',
       options: {
         buildTarget,
