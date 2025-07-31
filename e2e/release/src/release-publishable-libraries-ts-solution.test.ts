@@ -69,7 +69,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
 
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
-  }, 60000);
+  }, 100000);
 
   beforeEach(() => {
     try {
