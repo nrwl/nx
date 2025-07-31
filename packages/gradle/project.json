@@ -69,5 +69,6 @@
       }
     }
   },
-  "tags": []
+  "tags": [],
+  "implicitDependencies": ["gradle-project-graph"]
 }
