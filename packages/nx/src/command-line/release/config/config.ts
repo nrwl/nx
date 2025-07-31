@@ -401,7 +401,11 @@ export async function createNxReleaseConfig(
     releaseTagPattern:
       // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
       groupProjectsRelationship === 'independent'
-        ? defaultIndependentReleaseTagPattern
+        ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+          // Otherwise, use the default value to guarantee unique tags
+          WORKSPACE_DEFAULTS.releaseTagPattern?.includes('{projectName}')
+          ? WORKSPACE_DEFAULTS.releaseTagPattern
+          : defaultIndependentReleaseTagPattern
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
@@ -659,12 +663,15 @@ export async function createNxReleaseConfig(
               releaseGroup.changelog || {}
             )
           : false,
-
       releaseTagPattern:
         releaseGroup.releaseTagPattern ||
         // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
         (projectsRelationship === 'independent'
-          ? defaultIndependentReleaseTagPattern
+          ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+            // Otherwise, use the default value to guarantee unique tags
+            userConfig.releaseTagPattern?.includes('{projectName}')
+            ? userConfig.releaseTagPattern
+            : defaultIndependentReleaseTagPattern
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
       releaseTagPatternCheckAllBranchesWhen:
         releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
