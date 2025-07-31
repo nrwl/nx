@@ -81,8 +81,12 @@ function readVersionFromFile(projectRoot: string) {
 async function checkDockerImageExistsLocally(imageRef: string) {
   try {
     return await new Promise((res) => {
+      // If the ref starts with 'docker.io/', then we need to strip it since it is the default value and Docker CLI will not find it.
+      const normalizedImageRef = imageRef.startsWith('docker.io/')
+        ? imageRef.split('docker.io/')[1]
+        : imageRef;
       const childProcess = exec(
-        `docker images --filter "reference=${imageRef}" --quiet`,
+        `docker images --filter "reference=${normalizedImageRef}" --quiet`,
         { encoding: 'utf8' }
       );
       let result = '';
