@@ -278,7 +278,9 @@ export function createGitTagValues(
           tags.push(
             interpolate(releaseGroup.releaseTagPattern, {
               version: preferDockerVersion
-                ? projectVersionData.dockerVersion
+                ? // When running `nx release changelog` dockerVersion isn't set
+                  projectVersionData.dockerVersion ??
+                  projectVersionData.newVersion
                 : projectVersionData.newVersion,
               projectName: project,
             })
@@ -298,7 +300,8 @@ export function createGitTagValues(
       tags.push(
         interpolate(releaseGroup.releaseTagPattern, {
           version: preferDockerVersion
-            ? projectVersionData.dockerVersion
+            ? // When running `nx release changelog` dockerVersion isn't set
+              projectVersionData.dockerVersion ?? projectVersionData.newVersion
             : projectVersionData.newVersion,
           releaseGroupName: releaseGroup.name,
         })
