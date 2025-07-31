@@ -1,15 +1,15 @@
 ---
-title: Get Started with Nx Release
-description: Learn how to use Nx Release to version packages, generate changelogs, and publish packages in your JavaScript monorepo with a step-by-step guide.
+title: Release TypeScript/JavaScript Packages to NPM
+description: Learn how to use Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM in your monorepo.
 ---
 
-# Get Started with Nx Release
+# Release TypeScript/JavaScript Packages to NPM
 
-This recipe guides you through versioning packages, generating changelogs, and publishing packages in a JavaScript monorepo with Nx Release.
+This guide walks you through setting up Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM from your monorepo.
 
 {% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
 
-## Initialize Nx Release in Your Workspace
+## Setting Up Your NPM Release Workflow
 
 ### Install Nx
 
@@ -160,7 +160,7 @@ If the preview looks good, run the command again without the `--dry-run` option 
 nx release --first-release
 ```
 
-The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the packages to the remote registry. If you say no, the publishing step will be skipped. If you say yes, the command will publish the packages to the npm registry.
+The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the packages to NPM. If you say no, the publishing step will be skipped. If you say yes, the command will publish the packages to the NPM registry.
 
 ```text {% command="nx release --first-release" %}
 ...
