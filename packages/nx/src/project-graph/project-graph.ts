@@ -50,7 +50,43 @@ import { DelayedSpinner } from '../utils/delayed-spinner';
 export function readCachedProjectGraph(
   minimumComputedAt?: number
 ): ProjectGraph {
-  const projectGraphCache = readProjectGraphCache(minimumComputedAt);
+  let projectGraphCache = readProjectGraphCache(minimumComputedAt);
+
+  if (!projectGraphCache && !IS_WASM) {
+    // Check if another process is currently building the graph
+    const lockPath = join(workspaceDataDirectory, 'project-graph.lock');
+    const lock = new FileLock(lockPath);
+
+    // If the lock is held by another process, wait for it
+    if (lock.locked) {
+      logger.verbose(
+        `[readCachedProjectGraph] Waiting for another process to build the project graph...`
+      );
+
+      const startTime = Date.now();
+
+      try {
+        // This will block until the exclusive lock is released
+        lock.waitSync();
+
+        // Now try to read the cache again after waiting
+        projectGraphCache = readProjectGraphCache(minimumComputedAt);
+
+        const elapsedMs = Date.now() - startTime;
+        logger.verbose(
+          `[readCachedProjectGraph] Waited ${Math.round(
+            elapsedMs / 1000
+          )}s for project graph`
+        );
+      } catch (e: any) {
+        // If wait failed, fall through to error handling
+        logger.verbose(
+          `[readCachedProjectGraph] Failed to wait for lock: ${e.message}`
+        );
+      }
+    }
+  }
+
   if (!projectGraphCache) {
     const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
       ? stripIndents`
@@ -184,7 +220,10 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   }
 }
 
-export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
+export function handleProjectGraphError(
+  opts: { exitOnError: boolean },
+  e: any
+) {
   if (opts.exitOnError) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     if (e instanceof ProjectGraphError) {

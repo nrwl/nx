@@ -40,6 +40,11 @@ export declare class FileLock {
   check(): boolean
   wait(): Promise<void>
   lock(): void
+  /**
+   * Synchronously wait for the lock to be released
+   * This blocks the thread until the lock is available
+   */
+  waitSync(): void
 }
 
 export declare class HashPlanInspector {
