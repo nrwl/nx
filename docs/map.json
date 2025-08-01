@@ -2624,6 +2624,11 @@
               "file": "nx-cloud/concepts/cache-security"
             },
             {
+              "name": "Heartbeat",
+              "id": "heartbeat",
+              "file": "nx-cloud/concepts/heartbeat"
+            },
+            {
               "name": "Nx Cloud AI",
               "id": "nx-cloud-ai",
               "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
