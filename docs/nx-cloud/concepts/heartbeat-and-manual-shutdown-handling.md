@@ -80,9 +80,9 @@ The only fix in this scenario is to handle completion yourself and run `npx nx-c
 While both the heartbeat and `--stop-agents-after` tell Nx Cloud when it can shut down agents, they have different roles:
 
 1.  `--stop-agents-after` is useful purely to avoid wasting unnecessary compute.
-    -   So, while you might still have agents actively running tasks, Nx Cloud can tell that you won't be sending it any more tasks in the future because of how you configured `--stop-agents-after`.
-    -   So, it can turn off any agents that are no longer running tasks.
-    -   You can read about configuring it [here](/ci/reference/nx-cloud-cli#stopagentsafter).
+    - So, while you might still have agents actively running tasks, Nx Cloud can tell that you won't be sending it any more tasks in the future because of how you configured `--stop-agents-after`.
+    - So, it can turn off any agents that are no longer running tasks.
+    - You can read about configuring it [here](/ci/reference/nx-cloud-cli#stopagentsafter).
 2.  The heartbeat, on the other hand, marks the completion of the main job.
-    -   It makes sure Nx Cloud instantly knows when the main job exited so it can update the status of its CI run.
-    -   In case of errors, it makes sure that it can instantly abandon any in-progress tasks.
+    - It makes sure Nx Cloud instantly knows when the main job exited so it can update the status of its CI run.
+    - In case of errors, it makes sure that it can instantly abandon any in-progress tasks.
