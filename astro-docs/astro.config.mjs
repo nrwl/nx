@@ -78,6 +78,7 @@ export default defineConfig({
             { label: 'Nx CLI', link: 'api/nx-cli' },
             { label: 'Nx Cloud CLI', slug: 'api/nx-cloud-cli' },
             { label: 'create-nx-workspace', link: 'api/create-nx-workspace' },
+            { label: 'Plugin Registry', link: 'plugin-registry' },
             {
               label: 'devkit',
               collapsed: true,

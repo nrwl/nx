@@ -10,6 +10,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
+/astro-docs @nrwl/nx-docs-reviewers
 /docs/nx-cloud @StalkAltan @rarmatei @nixallover @nrwl/nx-docs-reviewers
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @xiongemi @Coly010 @jaysoo
 /images @nrwl/nx-docs-reviewers
