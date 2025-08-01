@@ -835,6 +835,7 @@
     - [Reduce Wasted Time in CI](/ci/concepts/reduce-waste)
     - [Parallelization and Distribution](/ci/concepts/parallelization-distribution)
     - [Cache Security](/ci/concepts/cache-security)
+    - [Heartbeat](/ci/concepts/heartbeat)
     - [Nx Cloud AI](/ci/concepts/nx-cloud-ai)
   - [Guides](/ci/recipes)
     - [Set Up CI](/ci/recipes/set-up)

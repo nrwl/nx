@@ -27,6 +27,10 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/concepts/cache-security',
   },
   {
+    title: 'Heartbeat and main job completion handling',
+    path: '/ci/concepts/heartbeat',
+  },
+  {
     title: 'Enable End to End Encryption',
     path: '/ci/recipes/security/encryption',
   },

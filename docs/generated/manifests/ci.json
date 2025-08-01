@@ -339,6 +339,17 @@
         "tags": []
       },
       {
+        "id": "heartbeat",
+        "name": "Heartbeat",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/heartbeat",
+        "tags": []
+      },
+      {
         "id": "nx-cloud-ai",
         "name": "Nx Cloud AI",
         "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
@@ -396,6 +407,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/concepts/cache-security",
+    "tags": []
+  },
+  "/ci/concepts/heartbeat": {
+    "id": "heartbeat",
+    "name": "Heartbeat",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/heartbeat",
     "tags": []
   },
   "/ci/concepts/nx-cloud-ai": {
