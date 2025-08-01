@@ -1,6 +1,7 @@
 import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -36,7 +37,7 @@ export async function withModuleFederationForSSR(
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)(
         {
-          name: options.name.replace(/-/g, '_'),
+          name: normalizeProjectName(options.name),
           filename: 'remoteEntry.js',
           exposes: options.exposes,
           remotes: mappedRemotes,
