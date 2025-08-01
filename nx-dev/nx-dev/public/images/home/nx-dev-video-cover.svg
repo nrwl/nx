@@ -146,24 +146,24 @@
     </style>
     <radialGradient id="radial-gradient" cx="937.42" cy="25.23" fx="937.42" fy="25.23" r="1262.46" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#c2f3ff"/>
-      <stop offset=".15" stop-color="#97d1fb"/>
-      <stop offset=".42" stop-color="#529bf6"/>
-      <stop offset=".54" stop-color="#3886f5"/>
-      <stop offset=".59" stop-color="#417ff5"/>
-      <stop offset=".67" stop-color="#5b6ef6"/>
-      <stop offset=".77" stop-color="#8551f8"/>
-      <stop offset=".88" stop-color="#be2bfb"/>
-      <stop offset="1" stop-color="#f0f"/>
+      <stop offset=".14" stop-color="#9ed5ff"/>
+      <stop offset=".42" stop-color="#599cff"/>
+      <stop offset=".55" stop-color="#3f86ff"/>
+      <stop offset=".6" stop-color="#3f7ef5"/>
+      <stop offset=".68" stop-color="#406adb"/>
+      <stop offset=".8" stop-color="#4349b1"/>
+      <stop offset=".93" stop-color="#461b78"/>
+      <stop offset="1" stop-color="#480055"/>
     </radialGradient>
     <linearGradient id="linear-gradient" x1="592.64" y1="-3550.01" x2="592.64" y2="-3336.55" gradientTransform="translate(165.2 3781.92)" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#000" stop-opacity="0"/>
       <stop offset="1" stop-color="#000"/>
     </linearGradient>
     <linearGradient id="linear-gradient-2" x1="9.87" y1="-3640.93" x2="9.87" y2="-3251.84" xlink:href="#linear-gradient"/>
-    <filter id="outer-glow-1" x="126.08" y="113.6" width="594" height="375" filterUnits="userSpaceOnUse">
+    <filter id="outer-glow-1" x="102.08" y="89.6" width="642" height="423" filterUnits="userSpaceOnUse">
       <feOffset dx="0" dy="0"/>
-      <feGaussianBlur result="blur" stdDeviation="12"/>
-      <feFlood flood-color="aqua" flood-opacity=".5"/>
+      <feGaussianBlur result="blur" stdDeviation="20"/>
+      <feFlood flood-color="aqua" flood-opacity="1"/>
       <feComposite in2="blur" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
@@ -171,9 +171,9 @@
       <stop offset="0" stop-color="#fff"/>
       <stop offset="1" stop-color="#fff" stop-opacity="0"/>
     </linearGradient>
-    <filter id="outer-glow-2" x="578.08" y="76.6" width="362" height="261" filterUnits="userSpaceOnUse">
+    <filter id="outer-glow-2" x="569.08" y="67.6" width="380" height="279" filterUnits="userSpaceOnUse">
       <feOffset dx="0" dy="0"/>
-      <feGaussianBlur result="blur-2" stdDeviation="12"/>
+      <feGaussianBlur result="blur-2" stdDeviation="15"/>
       <feFlood flood-color="#000" flood-opacity=".35"/>
       <feComposite in2="blur-2" operator="in"/>
       <feComposite in="SourceGraphic"/>
@@ -188,10 +188,10 @@
       <stop offset=".74" stop-color="#333" stop-opacity=".87"/>
       <stop offset="1" stop-color="#333"/>
     </linearGradient>
-    <filter id="outer-glow-3" x="-29.92" y="340.6" width="461" height="297" filterUnits="userSpaceOnUse">
+    <filter id="outer-glow-3" x="-53.92" y="316.6" width="509" height="345" filterUnits="userSpaceOnUse">
       <feOffset dx="0" dy="0"/>
-      <feGaussianBlur result="blur-3" stdDeviation="12"/>
-      <feFlood flood-color="aqua" flood-opacity=".5"/>
+      <feGaussianBlur result="blur-3" stdDeviation="20"/>
+      <feFlood flood-color="#f3f" flood-opacity="1"/>
       <feComposite in2="blur-3" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
@@ -205,10 +205,10 @@
     <linearGradient id="linear-gradient-10" x1="350.73" y1="745.61" x2="234.31" y2="745.61" xlink:href="#linear-gradient-6"/>
     <linearGradient id="linear-gradient-11" x1="350.73" y1="775.23" x2="234.31" y2="775.23" xlink:href="#linear-gradient-6"/>
     <linearGradient id="linear-gradient-12" y1="805.11" y2="805.11" xlink:href="#linear-gradient-6"/>
-    <filter id="outer-glow-4" x="9.08" y="-68.4" width="504" height="323" filterUnits="userSpaceOnUse">
+    <filter id="outer-glow-4" x="-14.92" y="-92.4" width="552" height="371" filterUnits="userSpaceOnUse">
       <feOffset dx="0" dy="0"/>
-      <feGaussianBlur result="blur-4" stdDeviation="12"/>
-      <feFlood flood-color="aqua" flood-opacity=".5"/>
+      <feGaussianBlur result="blur-4" stdDeviation="20"/>
+      <feFlood flood-color="aqua" flood-opacity="1"/>
       <feComposite in2="blur-4" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
@@ -729,6 +729,7 @@
           <path class="cls-33" d="M860.41,239.76h0c.55-.32.99-1.08.99-1.71v-11.95c0-.63-.44-.88-.99-.57h0c-.55.32-.99,1.08-.99,1.71v11.95c0,.63.44.88.99.57Z"/>
         </g>
         <line class="cls-21" x1="956.11" y1="80.2" x2="834.67" y2="150.31"/>
+        <line class="cls-20" x1="743.73" y1="272.59" x2="743.73" y2="295.72"/>
       </g>
       <g>
         <g class="cls-4">
@@ -802,7 +803,6 @@
         <line class="cls-11" x1="482.45" y1="348.24" x2="482.45" y2="496.6"/>
         <circle cx="482.45" cy="500.65" r="4.25"/>
       </g>
-      <line class="cls-20" x1="743.73" y1="272.59" x2="743.73" y2="295.72"/>
     </g>
   </g>
 </svg>

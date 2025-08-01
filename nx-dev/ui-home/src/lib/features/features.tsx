@@ -18,6 +18,13 @@ export function Features(): ReactElement {
         <SectionHeading as="h2" variant="title" id="" className="scroll-mt-24">
           Build Products, Not Build Systems
         </SectionHeading>
+        <SectionHeading as="p" variant="subtitle" className="mt-6">
+          Nx is an open-source build platform designed to manage codebases of
+          any scale. From small single projects to large enterprise{' '}
+          <TextLink href="">monorepos</TextLink>, Nx provides the platform to
+          efficiently get from starting a feature in your editor to a green,
+          review-ready PR.
+        </SectionHeading>
       </article>
       <div className="mt-12 lg:mt-20">
         <FeaturesWhileCoding />

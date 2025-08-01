@@ -1,17 +1,16 @@
-import { AnimateValue } from '@nx/nx-dev-ui-animations';
-
 const statistics = [
   {
     id: 1,
     name: 'use Nx every day',
-    value: 2,
+    value: 2.5,
     suffix: ' million',
     associative: 'developers',
   },
+  // Over
   {
     id: 2,
     name: 'companies use Nx to ship their products',
-    value: 50,
+    value: 70,
     suffix: '%',
     associative: 'of Fortune 500',
   },
@@ -39,7 +38,8 @@ export function Statistics(): JSX.Element {
               </dt>
               <dd className="order-first text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">
                 <span className="text-blue-500 dark:text-sky-500">
-                  <AnimateValue once num={stat.value} suffix={stat.suffix} />
+                  {stat.value}
+                  {stat.suffix}
                 </span>{' '}
                 {stat.associative}
               </dd>

@@ -46,12 +46,13 @@ export function FeaturesWhileCoding(): ReactElement {
                 technologies so you don't have to.
               </SectionHeading>
               <SectionHeading as="p" variant="subtitle" className="mt-6">
-                Your AI coding assistant gets{' '}
+                Your{' '}
                 <TextLink href="/features/enhance-AI">
-                  complete workspace context through Nx
-                </TextLink>
-                , understanding project relationships and dependencies to
-                provide more accurate, codebase-specific guidance.
+                  AI coding assistant
+                </TextLink>{' '}
+                gets complete workspace context through Nx, understanding
+                project relationships and dependencies to provide more accurate,
+                codebase-specific guidance.
               </SectionHeading>
             </div>
 

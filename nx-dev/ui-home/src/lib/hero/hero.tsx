@@ -33,8 +33,8 @@ export function Hero(): ReactElement {
             className="mx-auto mt-6 max-w-3xl"
           >
             The only build platform that provides a powerful local development
-            experience and an ultra-fast self-healing CI, so you can ship
-            fast—without distraction.
+            experience and an ultra-fast self-healing CI, built for humans and
+            AI.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
