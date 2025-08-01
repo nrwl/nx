@@ -60,7 +60,7 @@
       }
 
       .cls-17 {
-        filter: url(#outer-glow-10);
+        filter: url(#outer-glow-11);
       }
 
       .cls-18 {
@@ -163,7 +163,7 @@
       <stop offset=".96" stop-color="#3fffec" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="linear-gradient-14" x1="314.18" y1="129.72" x2="423.37" y2="129.72" xlink:href="#linear-gradient-5"/>
-    <filter id="outer-glow-10" x="409.93" y="127.53" width="58" height="57" filterUnits="userSpaceOnUse">
+    <filter id="outer-glow-11" x="409.93" y="127.53" width="58" height="57" filterUnits="userSpaceOnUse">
       <feOffset dx="0" dy="0"/>
       <feGaussianBlur result="blur" stdDeviation="4"/>
       <feFlood flood-color="#fff" flood-opacity="1"/>

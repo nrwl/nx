@@ -3,7 +3,7 @@
   <defs>
     <style>
       .cls-1 {
-        filter: url(#drop-shadow-1);
+        filter: url(#drop-shadow-3);
       }
 
       .cls-1, .cls-2, .cls-3, .cls-4, .cls-5, .cls-6 {
@@ -11,15 +11,15 @@
       }
 
       .cls-2 {
-        filter: url(#drop-shadow-3);
+        filter: url(#drop-shadow-8);
       }
 
       .cls-3 {
-        filter: url(#drop-shadow-2);
+        filter: url(#drop-shadow-6);
       }
 
       .cls-4 {
-        filter: url(#drop-shadow-6);
+        filter: url(#drop-shadow-7);
       }
 
       .cls-5 {
@@ -55,42 +55,42 @@
       <stop offset="0" stop-color="#fff" stop-opacity="0"/>
       <stop offset="1" stop-color="#fff"/>
     </linearGradient>
-    <filter id="drop-shadow-1" x="116.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-3" x="116.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-2" x="78.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-4" x="78.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-2" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-2" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-3" x="39.39" y="102.45" width="58" height="58" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-5" x="39.39" y="102.45" width="58" height="58" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-3" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-3" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-4" x="1.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-6" x="1.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-4" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-4" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-5" x="154.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-7" x="154.39" y="102.45" width="57" height="58" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-5" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-5" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-6" x="26.39" y="50.45" width="154" height="70" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-8" x="26.39" y="50.45" width="154" height="70" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-6" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
@@ -105,26 +105,26 @@
       <line class="cls-8" x1="136.05" y1="122.38" x2="146.14" y2="132.47"/>
       <line class="cls-8" x1="146.14" y1="122.38" x2="136.05" y2="132.47"/>
     </g>
-    <circle class="cls-3" cx="102.68" cy="127.42" r="10.27"/>
+    <circle class="cls-6" cx="102.68" cy="127.42" r="10.27"/>
     <g>
       <line class="cls-8" x1="97.64" y1="122.38" x2="107.73" y2="132.47"/>
       <line class="cls-8" x1="107.73" y1="122.38" x2="97.64" y2="132.47"/>
     </g>
-    <circle class="cls-2" cx="64.27" cy="127.42" r="10.27"/>
+    <circle class="cls-5" cx="64.27" cy="127.42" r="10.27"/>
     <g>
       <line class="cls-8" x1="59.22" y1="122.38" x2="69.32" y2="132.47"/>
       <line class="cls-8" x1="69.32" y1="122.38" x2="59.22" y2="132.47"/>
     </g>
-    <circle class="cls-6" cx="25.86" cy="127.42" r="10.27"/>
+    <circle class="cls-3" cx="25.86" cy="127.42" r="10.27"/>
     <g>
       <line class="cls-8" x1="20.81" y1="122.38" x2="30.91" y2="132.47"/>
       <line class="cls-8" x1="30.91" y1="122.38" x2="20.81" y2="132.47"/>
     </g>
-    <circle class="cls-5" cx="178.69" cy="127.42" r="10.27"/>
+    <circle class="cls-4" cx="178.69" cy="127.42" r="10.27"/>
     <polyline class="cls-8" points="173.65 124.54 178.69 131.03 190.59 116.97"/>
   </g>
   <g>
-    <rect class="cls-4" x="40.79" y="64.62" width="116.76" height="33.52" rx="16.76" ry="16.76"/>
+    <rect class="cls-2" x="40.79" y="64.62" width="116.76" height="33.52" rx="16.76" ry="16.76"/>
     <text class="cls-9" transform="translate(50.27 88.84)"><tspan x="0" y="0">PR #2531</tspan></text>
   </g>
 </svg>

@@ -35,7 +35,7 @@ export function NxHeroVideo(): ReactElement {
             ) : (
               <>
                 <Image
-                  src="/images/home/nx-dev-video-cover.svg"
+                  src="/images/home/nx-dev-video-cover.avif"
                   alt="Editor with Nx features"
                   width={2550}
                   height={1622}

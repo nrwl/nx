@@ -11,11 +11,11 @@
       }
 
       .cls-3 {
-        filter: url(#outer-glow-7);
+        filter: url(#outer-glow-8);
       }
 
       .cls-4 {
-        filter: url(#outer-glow-8);
+        filter: url(#outer-glow-9);
       }
 
       .cls-5 {
@@ -192,7 +192,7 @@
     </linearGradient>
     <linearGradient id="linear-gradient-15" x1="181.47" y1="197.3" x2="181.47" y2="299.32" xlink:href="#linear-gradient-13"/>
     <linearGradient id="linear-gradient-16" x1="211.11" y1="180.93" x2="211.11" y2="284.37" xlink:href="#linear-gradient-14"/>
-    <filter id="outer-glow-7" x="274.93" y="194.84" width="127" height="139" filterUnits="userSpaceOnUse">
+    <filter id="outer-glow-8" x="274.93" y="194.84" width="127" height="139" filterUnits="userSpaceOnUse">
       <feOffset dx="0" dy="0"/>
       <feGaussianBlur result="blur" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity="1"/>
@@ -207,7 +207,7 @@
         <image width="31" height="34" transform="translate(299.93 261.84)" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAiCAYAAACnSgJKAAAACXBIWXMAAAsSAAALEgHS3X78AAAElUlEQVRYhcWXTU8TXRiGr5nSoV8whdIy/UKlxdrCghqgYAwrgxsSWdJNF67E+BdM3sRf4EJiYsICXGDSxJAAKzZGUSARhOKiMSYkCgtMJXwUm1JmXJCOby3F90XEOzmLZ+ae5zrnyXPOzAiAxl+S+LfAAFWVbty8eROfz8f29jbJZPJ84dFolO7ubiRJIhaL8erVKyYmJs4HHgwG6erqwmazoSgK2Wz2fOB37tyhq6sLt9sNwIULF1AU5UzBUKHhIpEIPp9Pj2tqanA4HOcD93q91NbW6rHRaKS1tZW7d++WeTs7O+nt7T0VvKzsQ0NDXLlyBYPBUHK9vr6eS5culSW4fPkyoVCInp4e1tbWePbs2enhkUgEj8cDQD6fZ3V1Fb/fjyiK1NTUlCUwm81cvHgRr9dLJpNBURQePnx4OriiKDrk5cuX3Lhxg+fPn9Pe3o7FYilLsLm5iaqqOJ1OgsEgwWCQSCTC0tISjx8/PhFuAP4pBkNDQ/T39+NyuQBIpVKMj49z69YtWlpaMBqNaJrG0tKSniCdTuN0OnE6ndTV1ekTaG1tpbOzk6amJhYWFn698nA4rG8vQK+ALMvY7XYODw8Jh8NlSZ48eUI+n2drawtZlmlsbMThcOD3++no6CAUCjE/P8/Y2FjZs1pxJJNJ7eDgQCtqf39fW1xc1HK5nB6PjIxo/37m5zE1NaX9rI8fP2rJZFKLx+MlXn3lt2/fJhAIUFX1oxhms5loNKrH1dXV2O32Y0tY1O7uLpqmIQiCfq2+vh632603clH6Pvf7/VitVlRVZWdnh7m5OT5//lxqFkUikQj37t2rCC8UCmja0Vs6m83y4sUL3r17x/r6Ovv7+yVefZn5fJ5MJgPA3NwciUSC+/fvMzAwQCAQQJZlABobG2lubq4IV1VVh79+/Zq+vj4GBwexWq2sra0dD//w4QMrKyvIsszy8jIADx48IJPJEIvF6OvrQ1EUTCaTPpHjpGkaqqoiCAJbW1sAjI+PH+vV4clkklwuh8PhYGNjQzcMDw8zPDzM06dP6e/vp6qqCqvVeiJc0zQODw85ODio6CuBA0xOTlY0vnnzhnA4TCAQwOfzkUgkGB0dLfMVG604gf8MP0mPHj0iGo0iyzKSJNHU1HSsTxCEkk4/EzjAp0+fWF9fp1AoVARIkoTBYEBV1bOFv3//HpfLhclkYnt7G4Br165hsViYmZkBoK6uDlEUy/b6b8OLTdnQ0MDe3h4A7e3ttLW1EY/H8Xg8xGIx4Kj8onjyx/H/gsOPprx69Sq9vb34fD7a2toIBAK4XC79hBRFseS0PBN4UYuLi8DRydjS0oLX6y37ALHZbCfmKHmlnkapVAqz2Uwul8Nms2GxWJAk6Si5wYDJZGJ2dvbPwAGWl5eZnp7GaDTy9etXJEnSt6TH4yEUCtHQ0EAqlTp7eFHz8/NMTEzoFaiursZms2G327FYLAiCQDqd/jPwomZnZxFFkZ2dHQqFgj6+fPmi9wr8RsP9SiMjIwDE43Gam5sxm81ks9kSj8A5/SJfv36db9++8fbt2/OHH6e/+n/+HfnxqfPTm6krAAAAAElFTkSuQmCC"/>
       </g>
     </mask>
-    <filter id="outer-glow-8" x="109.93" y="283.84" width="150" height="109" filterUnits="userSpaceOnUse">
+    <filter id="outer-glow-9" x="109.93" y="283.84" width="150" height="109" filterUnits="userSpaceOnUse">
       <feOffset dx="0" dy="0"/>
       <feGaussianBlur result="blur-2" stdDeviation="2"/>
       <feFlood flood-color="#000" flood-opacity=".4"/>

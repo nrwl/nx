@@ -11,16 +11,12 @@
 
       .cls-2 {
         stroke: #333;
+        stroke-width: 3px;
       }
 
       .cls-2, .cls-3 {
         fill: none;
         stroke-miterlimit: 10;
-        stroke-width: 2px;
-      }
-
-      .cls-4 {
-        filter: url(#drop-shadow-1);
       }
 
       .cls-4, .cls-5, .cls-6, .cls-7, .cls-8, .cls-9 {
@@ -32,11 +28,11 @@
       }
 
       .cls-6 {
-        filter: url(#drop-shadow-2);
+        filter: url(#drop-shadow-6);
       }
 
       .cls-7 {
-        filter: url(#drop-shadow-6);
+        filter: url(#drop-shadow-7);
       }
 
       .cls-8 {
@@ -47,84 +43,85 @@
         filter: url(#drop-shadow-4);
       }
 
+      .cls-10 {
+        opacity: .45;
+      }
+
       .cls-3 {
         stroke: url(#linear-gradient);
+        stroke-width: 2px;
       }
     </style>
     <linearGradient id="linear-gradient" x1="-3.34" y1="126.16" x2="180.49" y2="126.16" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#000" stop-opacity="0"/>
       <stop offset="1" stop-color="#000"/>
     </linearGradient>
-    <filter id="drop-shadow-1" x="115.84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-3" x="115.84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-2" x="77.84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-4" x="77.84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-2" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-2" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-3" x="39.84" y="102.85" width="57" height="57" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-5" x="39.84" y="102.85" width="57" height="57" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-3" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-3" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-4" x=".84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-6" x=".84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-4" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-4" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-5" x="153.84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-7" x="153.84" y="102.85" width="58" height="57" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur-5" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur-5" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="drop-shadow-6" x="26.39" y="50.43" width="154" height="70" filterUnits="userSpaceOnUse">
-      <feOffset dx="4" dy="4"/>
-      <feGaussianBlur result="blur-6" stdDeviation="6"/>
-      <feFlood flood-color="#000" flood-opacity=".45"/>
-      <feComposite in2="blur-6" operator="in"/>
-      <feComposite in="SourceGraphic"/>
-    </filter>
   </defs>
   <g>
     <line class="cls-3" x1="-3.34" y1="126.16" x2="180.49" y2="126.16"/>
-    <circle class="cls-4" cx="141.09" cy="127.42" r="10.27"/>
+    <circle class="cls-5" cx="141.09" cy="127.42" r="10.27"/>
     <g>
       <line class="cls-2" x1="136.05" y1="122.38" x2="146.14" y2="132.47"/>
       <line class="cls-2" x1="146.14" y1="122.38" x2="136.05" y2="132.47"/>
     </g>
-    <circle class="cls-6" cx="102.68" cy="127.42" r="10.27"/>
+    <circle class="cls-9" cx="102.68" cy="127.42" r="10.27"/>
     <g>
       <line class="cls-2" x1="97.64" y1="122.38" x2="107.73" y2="132.47"/>
       <line class="cls-2" x1="107.73" y1="122.38" x2="97.64" y2="132.47"/>
     </g>
-    <circle class="cls-5" cx="64.27" cy="127.42" r="10.27"/>
+    <circle class="cls-8" cx="64.27" cy="127.42" r="10.27"/>
     <g>
       <line class="cls-2" x1="59.22" y1="122.38" x2="69.32" y2="132.47"/>
       <line class="cls-2" x1="69.32" y1="122.38" x2="59.22" y2="132.47"/>
     </g>
-    <circle class="cls-9" cx="25.86" cy="127.42" r="10.27"/>
+    <circle class="cls-6" cx="25.86" cy="127.42" r="10.27"/>
     <g>
       <line class="cls-2" x1="20.81" y1="122.38" x2="30.91" y2="132.47"/>
       <line class="cls-2" x1="30.91" y1="122.38" x2="20.81" y2="132.47"/>
     </g>
-    <circle class="cls-8" cx="178.69" cy="127.42" r="10.27"/>
+    <circle class="cls-7" cx="178.69" cy="127.42" r="10.27"/>
     <polyline class="cls-2" points="173.65 124.54 178.69 131.03 190.59 116.97"/>
   </g>
   <g>
-    <rect class="cls-7" x="40.79" y="64.62" width="116.76" height="33.52" rx="16.76" ry="16.76"/>
+    <g>
+      <image class="cls-10" width="154" height="70" transform="translate(26.39 50.43)" xlink:href="data:image/png;base64,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"/>
+      <rect class="cls-4" x="40.79" y="64.62" width="116.76" height="33.52" rx="16.76" ry="16.76"/>
+    </g>
     <text class="cls-1" transform="translate(50.27 88.84)"><tspan x="0" y="0">PR #2531</tspan></text>
   </g>
 </svg>
