@@ -1736,4 +1736,154 @@ describe('ReleaseGroupProcessor', () => {
       `);
     });
   });
+
+  describe('group filtering with cross-group dependencies', () => {
+    it('should not fail when dependents are in filtered-out groups', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          customer ({ "projectsRelationship": "independent" }):
+            - customer-portal@1.0.0 [js]
+          admin ({ "projectsRelationship": "independent" }):
+            - admin-portal@1.0.0 [js]
+              -> depends on customer-portal
+        `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion,
+        {
+          groups: ['customer'], // Only process customer group
+        }
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          userGivenSpecifier: '1.1.0',
+          filters: {
+            groups: ['customer'],
+          },
+        }
+      );
+
+      await processor.init();
+
+      // Mock conventional commits to simulate versioning
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        () => 'none'
+      );
+
+      // This should not throw an error even though admin-portal depends on customer-portal
+      // but admin-portal is filtered out by the group filter
+      await expect(processor.processGroups()).resolves.not.toThrow();
+
+      // Only customer-portal should be processed and versioned
+      const versionData = processor.getVersionData();
+      expect(versionData).toHaveProperty('customer-portal');
+      expect(versionData).not.toHaveProperty('admin-portal');
+      // Since we're using userGivenSpecifier, it should override conventional commits
+      expect(versionData['customer-portal'].newVersion).toBe('1.1.0');
+
+      // Verify the actual file was updated
+      expect(readJson(tree, 'customer-portal/package.json')).toMatchObject({
+        name: 'customer-portal',
+        version: '1.1.0',
+      });
+
+      // Verify admin-portal was not touched
+      expect(readJson(tree, 'admin-portal/package.json')).toMatchObject({
+        name: 'admin-portal',
+        version: '1.0.0', // Should remain unchanged
+      });
+    });
+
+    it('should handle multiple cross-group dependencies correctly', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          core ({ "projectsRelationship": "independent" }):
+            - shared-lib@1.0.0 [js]
+          feature ({ "projectsRelationship": "independent" }):
+            - feature-a@1.0.0 [js]
+              -> depends on shared-lib
+            - feature-b@1.0.0 [js]
+              -> depends on shared-lib
+          app ({ "projectsRelationship": "independent" }):
+            - main-app@1.0.0 [js]
+              -> depends on feature-a
+              -> depends on feature-b
+        `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion,
+        {
+          groups: ['core'], // Only process core group
+        }
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          userGivenSpecifier: '2.0.0',
+          filters: {
+            groups: ['core'],
+          },
+        }
+      );
+
+      await processor.init();
+
+      // Mock conventional commits to simulate versioning
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        () => 'none'
+      );
+
+      // This should not throw an error even though multiple projects depend on shared-lib
+      // but they are in filtered-out groups
+      await expect(processor.processGroups()).resolves.not.toThrow();
+
+      // Only shared-lib should be processed
+      const versionData = processor.getVersionData();
+      expect(versionData).toHaveProperty('shared-lib');
+      expect(versionData).not.toHaveProperty('feature-a');
+      expect(versionData).not.toHaveProperty('feature-b');
+      expect(versionData).not.toHaveProperty('main-app');
+      // Since we're using userGivenSpecifier, it should override conventional commits
+      expect(versionData['shared-lib'].newVersion).toBe('2.0.0');
+    });
+  });
 });
