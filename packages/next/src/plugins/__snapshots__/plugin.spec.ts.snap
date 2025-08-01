@@ -37,9 +37,6 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
                 "{workspaceRoot}/my-app/.next/!(cache)/**/*",
                 "{workspaceRoot}/my-app/.next/!(cache)",
               ],
-              "syncGenerators": [
-                "@nx/js:typescript-sync",
-              ],
             },
             "my-serve": {
               "command": "next dev",
@@ -47,9 +44,6 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
-              "syncGenerators": [
-                "@nx/js:typescript-sync",
-              ],
             },
             "my-serve-static": {
               "command": "next start",
@@ -118,9 +112,6 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
                 "{projectRoot}/.next/!(cache)/**/*",
                 "{projectRoot}/.next/!(cache)",
               ],
-              "syncGenerators": [
-                "@nx/js:typescript-sync",
-              ],
             },
             "build-deps": {
               "dependsOn": [
@@ -133,9 +124,6 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
-              "syncGenerators": [
-                "@nx/js:typescript-sync",
-              ],
             },
             "serve-static": {
               "command": "next start",
