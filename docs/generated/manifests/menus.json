@@ -6942,6 +6942,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Heartbeat",
+            "path": "/ci/concepts/heartbeat",
+            "id": "heartbeat",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx Cloud AI",
             "path": "/ci/concepts/nx-cloud-ai",
             "id": "nx-cloud-ai",
