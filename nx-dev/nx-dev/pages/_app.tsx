@@ -76,6 +76,14 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      <Script 
+        id="Cookiebot" 
+        src="https://consent.cookiebot.com/uc.js" 
+        data-cbid="51526f26-f410-4417-b833-0479ccf7530d" 
+        data-blockingmode="auto" 
+        type="text/javascript" 
+        strategy="beforeInteractive"
+      />
       <Link
         id="skip-to-content-link"
         href="#main"

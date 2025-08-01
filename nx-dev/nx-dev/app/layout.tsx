@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import Script from 'next/script';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
 // import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
@@ -61,6 +62,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
+      <Script
+        id="Cookiebot"
+        src="https://consent.cookiebot.com/uc.js"
+        data-cbid="51526f26-f410-4417-b833-0479ccf7530d"
+        data-blockingmode="auto"
+        type="text/javascript"
+      />
       <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
       <head>
         <meta
