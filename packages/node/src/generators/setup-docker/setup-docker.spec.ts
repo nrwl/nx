@@ -2,6 +2,7 @@ import { readNxJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { setupDockerGenerator } from './setup-docker';
+import * as process from 'node:process';
 
 describe('setupDockerGenerator', () => {
   let tree: Tree;
@@ -28,7 +29,7 @@ describe('setupDockerGenerator', () => {
 
       const dockerFile = tree.read(`${projectName}/Dockerfile`, 'utf8');
       expect(tree.exists(`${projectName}/Dockerfile`)).toBeTruthy();
-      expect(dockerFile).toContain(`COPY dist/${projectName} ${projectName}/`);
+      expect(dockerFile).toContain(`COPY ../dist/${projectName} .`);
       expect(project.targets).toEqual(
         expect.objectContaining({
           'docker:build': {
@@ -60,7 +61,7 @@ describe('setupDockerGenerator', () => {
       const dockerFile = tree.read(`Dockerfile`, 'utf8');
 
       expect(tree.exists(`Dockerfile`)).toBeTruthy();
-      expect(dockerFile).toContain(`COPY dist/${projectName} ${projectName}/`);
+      expect(dockerFile).toContain(`COPY dist/${projectName} .`);
       expect(project.targets).toEqual(
         expect.objectContaining({
           'docker:build': {
@@ -92,10 +93,7 @@ describe('setupDockerGenerator', () => {
       const dockerFile = tree.read(`${projectName}/Dockerfile`, 'utf8');
 
       expect(tree.exists(`${projectName}/Dockerfile`)).toBeTruthy();
-      expect(dockerFile).toContain(`COPY dist/${projectName} ${projectName}/`);
-      expect(dockerFile).toContain(
-        `COPY ${projectName}/package.json ${projectName}/`
-      );
+      expect(dockerFile).toContain(`COPY ../dist/${projectName} .`);
       expect(dockerFile).toContain(
         'Build the docker image with `npx nx docker:build'
       );
@@ -128,8 +126,7 @@ describe('setupDockerGenerator', () => {
       const dockerFile = tree.read(`${projectName}/Dockerfile`, 'utf8');
 
       expect(tree.exists(`${projectName}/Dockerfile`)).toBeTruthy();
-      expect(dockerFile).toContain(`COPY dist ${projectName}/`);
-      expect(dockerFile).toContain(`COPY package.json ${projectName}/`);
+      expect(dockerFile).toContain(`COPY dist .`);
       expect(dockerFile).toContain(
         'Build the docker image with `npx nx docker:build'
       );
@@ -164,8 +161,7 @@ describe('setupDockerGenerator', () => {
 
       const dockerFile = tree.read(`apps/${projectName}/Dockerfile`, 'utf8');
 
-      expect(dockerFile).toContain(`COPY dist nested-api/`);
-      expect(dockerFile).toContain(`COPY package.json nested-api/`);
+      expect(dockerFile).toContain(`COPY dist .`);
       expect(dockerFile).not.toContain(`apps/${projectName}`);
     });
 
@@ -183,12 +179,7 @@ describe('setupDockerGenerator', () => {
 
       const dockerFile = tree.read(`apps/${projectName}/Dockerfile`, 'utf8');
 
-      expect(dockerFile).toContain(
-        `COPY dist/apps/${projectName} nested-api-legacy/`
-      );
-      expect(dockerFile).toContain(
-        `COPY apps/${projectName}/package.json nested-api-legacy/`
-      );
+      expect(dockerFile).toContain(`COPY ../../dist/apps/${projectName} .`);
     });
   });
 
@@ -232,20 +223,17 @@ describe('setupDockerGenerator', () => {
         ENV HOST=0.0.0.0
         ENV PORT=3000
 
+
         WORKDIR /app
 
-        RUN addgroup --system myorg-my-app && \\
-                  adduser --system -G myorg-my-app myorg-my-app
-
-        COPY dist/myorg/my-app myorg-my-app/
-        COPY ./package.json myorg-my-app/
-        RUN chown -R myorg-my-app:myorg-my-app .
+        COPY dist/myorg/my-app .
 
         # You can remove this install step if you build with \`--bundle\` option.
         # The bundled output will include external dependencies.
-        RUN npm --prefix myorg-my-app --omit=dev -f install
 
-        CMD [ "node", "myorg-my-app" ]
+        RUN npm --omit=dev -f install
+
+        CMD [ "node", "main.js" ]
         "
       `);
     });
@@ -289,20 +277,17 @@ describe('setupDockerGenerator', () => {
         ENV HOST=0.0.0.0
         ENV PORT=3000
 
+
         WORKDIR /app
 
-        RUN addgroup --system my-special-app && \\
-                  adduser --system -G my-special-app my-special-app
-
-        COPY dist/basic-app my-special-app/
-        COPY ./package.json my-special-app/
-        RUN chown -R my-special-app:my-special-app .
+        COPY dist/basic-app .
 
         # You can remove this install step if you build with \`--bundle\` option.
         # The bundled output will include external dependencies.
-        RUN npm --prefix my-special-app --omit=dev -f install
 
-        CMD [ "node", "my-special-app" ]
+        RUN npm --omit=dev -f install
+
+        CMD [ "node", "main.js" ]
         "
       `);
     });
@@ -342,20 +327,17 @@ describe('setupDockerGenerator', () => {
         ENV HOST=0.0.0.0
         ENV PORT=3000
 
+
         WORKDIR /app
 
-        RUN addgroup --system my_app-123-test && \\
-                  adduser --system -G my_app-123-test my_app-123-test
-
-        COPY dist/My_App@123/Test my_app-123-test/
-        COPY ./package.json my_app-123-test/
-        RUN chown -R my_app-123-test:my_app-123-test .
+        COPY dist/My_App@123/Test .
 
         # You can remove this install step if you build with \`--bundle\` option.
         # The bundled output will include external dependencies.
-        RUN npm --prefix my_app-123-test --omit=dev -f install
 
-        CMD [ "node", "my_app-123-test" ]
+        RUN npm --omit=dev -f install
+
+        CMD [ "node", "main.js" ]
         "
       `);
     });
@@ -383,18 +365,9 @@ describe('setupDockerGenerator', () => {
       expect(dockerfileContent).toMatch(/^WORKDIR\s+\S+/m);
       expect(dockerfileContent).toMatch(/^CMD\s+\[/m);
 
-      // Verify user/group names are valid (no special chars that would break Linux)
-      const userGroupMatches = dockerfileContent.match(
-        /addgroup --system (\S+)/
-      );
-      const userGroupName = userGroupMatches?.[1];
-      expect(userGroupName).toMatch(/^[a-z0-9._-]+$/);
-      expect(userGroupName).not.toContain('@');
-      expect(userGroupName).not.toContain('/');
-
       const project = readProjectConfiguration(tree, projectName);
       expect(project.targets['docker:build'].command).toContain(
-        `-t ${userGroupName}`
+        `-t scope-my-app`
       );
     });
   });

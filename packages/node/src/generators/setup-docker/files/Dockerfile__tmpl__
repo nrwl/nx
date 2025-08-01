@@ -10,18 +10,19 @@ FROM docker.io/node:lts-alpine
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
+<% if(packageManager === "pnpm" || packageManager === 'yarn') { %>
+RUN corepack enable
+<% } %>
 
 WORKDIR /app
 
-RUN addgroup --system <%= sanitizedProjectName %> && \
-          adduser --system -G <%= sanitizedProjectName %> <%= sanitizedProjectName %>
-
-COPY <%= buildLocation %> <%= sanitizedProjectName %>/
-<% if (skipDockerPlugin) { %>COPY <%= projectPath %>/package.json <%= sanitizedProjectName %>/<% } else { %>COPY package.json <%= sanitizedProjectName %>/<% } %>
-RUN chown -R <%= sanitizedProjectName %>:<%= sanitizedProjectName %> .
+COPY <%= buildLocation %> .
 
 # You can remove this install step if you build with `--bundle` option.
 # The bundled output will include external dependencies.
-RUN npm --prefix <%= sanitizedProjectName %> --omit=dev -f install
-
-CMD [ "node", "<%= sanitizedProjectName %>" ]
+<% if(packageManager === 'npm') { %>
+RUN npm --omit=dev -f install
+<% } else { %>
+RUN <%= packageManager %> install
+<% } %>
+CMD [ "node", "main.js" ]
