@@ -28,26 +28,29 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
         <div className="flex flex-col items-start gap-8 md:flex-row">
           <div className="w-full md:w-1/2">
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              Nx defines clear{' '}
-              <TextLink href="/features/enforce-module-boundaries">
-                project boundaries
+              Nx defines clear project boundaries and leverages monorepo
+              concepts—shared tooling, atomic changes, and coordinated
+              releases—so code stays easy to maintain.{' '}
+              <TextLink href="/nx-enterprise/powerpack/owners">
+                Ownership
               </TextLink>{' '}
-              and leverages monorepo concepts—shared tooling, atomic changes,
-              and coordinated releases—so code stays easy to maintain.
+              is defined at the project level, while{' '}
+              <TextLink href="/nx-enterprise/powerpack/conformance">
+                conformance rules
+              </TextLink>{' '}
+              enforce organizational standards automatically across your{' '}
+              <strong>entire codebase</strong>.
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              Nx plugins and{' '}
+              <TextLink href="/plugin-registry">Nx plugins</TextLink> and{' '}
               <TextLink href="/features/generate-code">
                 code generation
               </TextLink>{' '}
-              standardize best practices and eliminate duplication, while{' '}
-              <TextLink href="/features/automate-updating-dependencies">
-                automated updates
-              </TextLink>{' '}
-              keep everything current without the overhead of managing separate
-              repositories.
+              standardize best practices and eliminate duplication, while
+              automated updates keep everything current without the overhead of
+              managing separate repositories.
             </SectionHeading>
-            <div className="mt-10 flex gap-x-6">
+            {/* <div className="mt-10 flex gap-x-6">
               <ButtonLink
                 href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
                 title="Get started"
@@ -56,7 +59,7 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               >
                 Try Nx for yourself
               </ButtonLink>
-            </div>
+            </div> */}
           </div>
           <div className="w-full md:w-1/2">
             <Image

@@ -22,7 +22,7 @@ export function Problem(): ReactElement {
             as="h2"
             variant="title"
             id=""
-            className="max-w-[32rem] scroll-mt-24 text-center sm:leading-tight"
+            className="max-w-[32rem] scroll-mt-24 text-center font-normal sm:leading-tight"
           >
             Most engineering work isn't that. It's:
           </SectionHeading>
