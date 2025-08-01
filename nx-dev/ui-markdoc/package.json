@@ -8,6 +8,8 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/graph-internal-ui-project-details": "workspace:*",
+    "@nx/graph-ui-common": "workspace:*",
+    "@nx/graph-ui-icons": "workspace:*",
     "@nx/nx-dev-ui-fence": "workspace:*",
     "@nx/nx-dev-ui-primitives": "workspace:*",
     "@nx/nx-dev-ui-theme": "workspace:*",

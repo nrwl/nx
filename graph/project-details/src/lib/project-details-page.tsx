@@ -12,12 +12,12 @@ import {
 } from 'react-router-dom';
 import { ProjectDetailsWrapper } from './project-details-wrapper';
 import {
-  ExpandedTargetsProvider,
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
+import { ExpandedTargetsProvider } from '@nx/graph-internal-ui-project-details';
 import { ProjectDetailsHeader } from './project-details-header';
 
 export function ProjectDetailsPage() {
