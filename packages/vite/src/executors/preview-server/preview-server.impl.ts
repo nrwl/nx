@@ -53,7 +53,13 @@ export async function* vitePreviewServerExecutor(
   );
 
   const { buildOptions, otherOptions: otherOptionsFromBuild } =
-    await getBuildExtraArgs(buildTargetOptions);
+    await getBuildExtraArgs({
+      ...buildTargetOptions,
+      ...{
+        // Enable watch mode by default for the build target.
+        watch: options.watch ?? {},
+      },
+    });
 
   const { previewOptions, otherOptions } = await getExtraArgs(
     options,
