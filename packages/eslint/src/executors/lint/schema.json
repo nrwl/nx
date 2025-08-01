@@ -142,6 +142,19 @@
       "type": "boolean",
       "description": "When set to false, equivalent of the `--no-error-on-unmatched-pattern` flag on the ESLint CLI.",
       "default": true
+    },
+    "suppressAll": {
+      "type": "boolean",
+      "description": "Suppress all existing violations. This is equivalent to the `--suppress-all` flag on the ESLint CLI. Requires ESLint v9.24.0 or higher.",
+      "default": false
+    },
+    "suppressRule": {
+      "type": "array",
+      "description": "Suppress violations for specific rules. This is equivalent to the `--suppress-rule` flag on the ESLint CLI. Requires ESLint v9.24.0 or higher.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
     }
   },
   "examplesFile": "../../../docs/eslint-examples.md"
