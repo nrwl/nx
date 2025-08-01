@@ -24,6 +24,7 @@ export interface Schema extends JsonObject {
   errorOnUnmatchedPattern?: boolean;
   suppressAll?: boolean;
   suppressRule?: string[];
+  suppressionsLocation?: string;
 }
 
 type Formatter =

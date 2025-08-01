@@ -129,6 +129,20 @@ ESLint v9.24.0 introduced bulk suppression features that allow you to suppress e
 }
 ```
 
+**Specify custom suppressions file location:**
+
+```json
+"lint": {
+  "executor": "@nx/eslint:lint",
+  "outputs": ["{options.outputFile}"],
+  "options": {
+    "lintFilePatterns": ["apps/frontend/**/*.ts"],
+    "suppressAll": true,
+    "suppressionsLocation": "./custom-suppressions.json"
+  }
+}
+```
+
 **Note:** Bulk suppression options require ESLint v9.24.0 or higher. When using these options with older ESLint versions, the executor will throw an error.
 
 ---

@@ -985,7 +985,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
       // Mock the resolveAndInstantiateESLint to throw the error
       mockResolveAndInstantiateESLint.mockRejectedValueOnce(
         new Error(
-          'Bulk suppression options (suppressAll, suppressRule) require ESLint v9.24.0 or higher. Current version: 9.23.0'
+          'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation) require ESLint v9.24.0 or higher. Current version: 9.23.0'
         )
       );
 
@@ -997,7 +997,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
           mockContext
         )
       ).rejects.toThrow(
-        'Bulk suppression options (suppressAll, suppressRule) require ESLint v9.24.0 or higher. Current version: 9.23.0'
+        'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation) require ESLint v9.24.0 or higher. Current version: 9.23.0'
       );
     });
 
