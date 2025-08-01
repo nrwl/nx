@@ -1544,9 +1544,13 @@ Valid values are: ${validReleaseVersionPrefixes
     // Only update dependencies for dependents if the group's updateDependents is 'auto'
     if (updateDependents === 'auto') {
       const dependents = this.getNonImplicitDependentsForProject(projectName);
-      await this.updateDependenciesForDependents(dependents);
+      // Filter dependents to only include those that are in allProjectsToProcess
+      const filteredDependents = dependents.filter((dep) =>
+        this.allProjectsToProcess.has(dep)
+      );
+      await this.updateDependenciesForDependents(filteredDependents);
 
-      for (const dependent of dependents) {
+      for (const dependent of filteredDependents) {
         if (
           this.allProjectsToProcess.has(dependent) &&
           !this.bumpedProjects.has(dependent)
