@@ -47,6 +47,12 @@
       "path": "../ui-fence/tsconfig.lib.json"
     },
     {
+      "path": "../../graph/ui-icons/tsconfig.lib.json"
+    },
+    {
+      "path": "../../graph/ui-common/tsconfig.lib.json"
+    },
+    {
       "path": "../../graph/ui-project-details/tsconfig.lib.json"
     },
     {

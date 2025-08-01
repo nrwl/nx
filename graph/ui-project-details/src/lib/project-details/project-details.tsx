@@ -5,8 +5,8 @@ import type { ProjectGraphProjectNode, TargetConfiguration } from '@nx/devkit';
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
+import { Tooltip } from '@nx/graph-ui-common';
 import { TagList } from '../tag-list/tag-list';
 import { OwnersList } from '../owners-list/owners-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';

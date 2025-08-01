@@ -1,6 +1,6 @@
 import type { Meta } from '@storybook/react-webpack5';
 import { ProjectDetails } from './project-details';
-import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
+import { ExpandedTargetsProvider } from '../expanded-targets-provider';
 
 const meta: Meta<typeof ProjectDetails> = {
   component: ProjectDetails,

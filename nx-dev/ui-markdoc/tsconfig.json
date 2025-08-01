@@ -40,6 +40,12 @@
       "path": "../ui-fence"
     },
     {
+      "path": "../../graph/ui-icons"
+    },
+    {
+      "path": "../../graph/ui-common"
+    },
+    {
       "path": "../../graph/ui-project-details"
     },
     {

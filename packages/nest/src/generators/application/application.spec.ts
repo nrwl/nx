@@ -259,6 +259,7 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
+          "dependencies": {},
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -438,6 +439,7 @@ describe('application generator', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
     });

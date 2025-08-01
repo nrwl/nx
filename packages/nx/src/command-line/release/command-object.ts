@@ -38,10 +38,15 @@ interface GitOptions {
   gitRemote?: string;
 }
 
+export type DockerVersionSchemeArgs = {
+  dockerVersionScheme?: string;
+};
+
 export type VersionOptions = NxReleaseArgs &
   GitOptions &
   VersionPlanArgs &
-  FirstReleaseArgs & {
+  FirstReleaseArgs &
+  DockerVersionSchemeArgs & {
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
@@ -52,7 +57,6 @@ export type VersionOptions = NxReleaseArgs &
      */
     generatorOptionsOverrides?: Record<string, unknown>;
     versionActionsOptionsOverrides?: Record<string, unknown>;
-    dockerVersionScheme?: string;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -91,7 +95,8 @@ export type PlanCheckOptions = BaseNxReleaseArgs & {
 };
 
 export type ReleaseOptions = NxReleaseArgs &
-  FirstReleaseArgs & {
+  FirstReleaseArgs &
+  DockerVersionSchemeArgs & {
     specifier?: string;
     yes?: boolean;
     preid?: VersionOptions['preid'];
@@ -189,42 +194,41 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
   describe:
     'Create a version and release for the workspace, generate a changelog, and optionally publish the packages.',
   builder: (yargs) =>
-    withFirstReleaseOptions(yargs)
-      .positional('specifier', {
-        type: 'string',
-        describe:
-          'Exact version or semver keyword to apply to the selected release group.',
-      })
-      .option('preid', {
-        type: 'string',
-        describe:
-          'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
-        default: '',
-      })
-      .options('dockerVersionScheme', {
-        type: 'string',
-        describe:
-          'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
-      })
-      .option('yes', {
-        type: 'boolean',
-        alias: 'y',
-        description:
-          'Automatically answer yes to the confirmation prompt for publishing.',
-      })
-      .option('skip-publish', {
-        type: 'boolean',
-        description:
-          'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
-      })
-      .check((argv) => {
-        if (argv.yes !== undefined && argv.skipPublish !== undefined) {
-          throw new Error(
-            'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
-          );
-        }
-        return true;
-      }),
+    withFirstReleaseOptions(
+      withDockerVersionSchemeOptions(
+        yargs
+          .positional('specifier', {
+            type: 'string',
+            describe:
+              'Exact version or semver keyword to apply to the selected release group.',
+          })
+          .option('preid', {
+            type: 'string',
+            describe:
+              'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+            default: '',
+          })
+          .option('yes', {
+            type: 'boolean',
+            alias: 'y',
+            description:
+              'Automatically answer yes to the confirmation prompt for publishing.',
+          })
+          .option('skip-publish', {
+            type: 'boolean',
+            description:
+              'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
+          })
+          .check((argv) => {
+            if (argv.yes !== undefined && argv.skipPublish !== undefined) {
+              throw new Error(
+                'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
+              );
+            }
+            return true;
+          })
+      )
+    ),
   handler: async (args) => {
     const release = await import('./release');
     const result = await release.releaseCLIHandler(args);
@@ -244,28 +248,25 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
   builder: (yargs) =>
     withFirstReleaseOptions(
       withGitOptions(
-        yargs
-          .positional('specifier', {
-            type: 'string',
-            describe:
-              'Exact version or semver keyword to apply to the selected release group.',
-          })
-          .option('preid', {
-            type: 'string',
-            describe:
-              'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
-            default: '',
-          })
-          .option('stage-changes', {
-            type: 'boolean',
-            describe:
-              'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-          })
-          .options('dockerVersionScheme', {
-            type: 'string',
-            describe:
-              'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
-          })
+        withDockerVersionSchemeOptions(
+          yargs
+            .positional('specifier', {
+              type: 'string',
+              describe:
+                'Exact version or semver keyword to apply to the selected release group.',
+            })
+            .option('preid', {
+              type: 'string',
+              describe:
+                'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+              default: '',
+            })
+            .option('stage-changes', {
+              type: 'boolean',
+              describe:
+                'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
+            })
+        )
       )
     ),
   handler: async (args) => {
@@ -497,5 +498,15 @@ function withFirstReleaseOptions<T>(
     type: 'boolean',
     description:
       'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
+  });
+}
+
+function withDockerVersionSchemeOptions<T>(
+  yargs: Argv<T>
+): Argv<T & DockerVersionSchemeArgs> {
+  return yargs.option('dockerVersionScheme', {
+    type: 'string',
+    describe:
+      'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
   });
 }

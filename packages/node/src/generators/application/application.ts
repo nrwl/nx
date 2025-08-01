@@ -116,7 +116,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  const installTask = addProjectDependencies(tree, options);
+  const { installTask, frameworkDependencies } = addProjectDependencies(
+    tree,
+    options
+  );
   tasks.push(installTask);
 
   if (options.bundler === 'webpack') {
@@ -142,7 +145,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   addAppFiles(tree, options);
-  addProject(tree, options);
+  addProject(tree, options, frameworkDependencies);
 
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project

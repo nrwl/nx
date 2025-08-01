@@ -1,29 +1,5 @@
 import { normalizeContent } from './feed-answer';
 
-jest.mock('@nx/graph/legacy/tooltips', () => {
-  return {
-    Tooltip: jest.fn(() => null),
-  };
-});
-
-jest.mock('@nx/graph/legacy/icons', () => {
-  return {
-    Icon: jest.fn(() => null),
-  };
-});
-
-jest.mock('@nx/graph/legacy/components', () => {
-  return {
-    CopyToClipboardButton: jest.fn(() => null),
-  };
-});
-
-jest.mock('@nx/graph/legacy/shared', () => {
-  return {
-    ExpandedTargetsContext: jest.fn(() => null),
-  };
-});
-
 jest.mock('@nx/nx-dev-ui-primitives', () => {
   return {
     cx: jest.fn(() => null),

@@ -36,6 +36,9 @@
       "path": "../ui-common/tsconfig.lib.json"
     },
     {
+      "path": "../shared/tsconfig.lib.json"
+    },
+    {
       "path": "../migrate/tsconfig.lib.json"
     },
     {

@@ -1,16 +1,32 @@
-import { getGraphService } from '../../machines/graph.service';
+import { InvokeCallback } from 'xstate';
+import {
+  ProjectGraphClientActor,
+  ProjectGraphMachineEvents,
+} from './interfaces';
+import { ProjectGraphEvent } from '@nx/graph/projects';
+import { RenderGraphConfigEvent } from '@nx/graph';
 
-export const graphActor = (callback, receive) => {
-  const graphService = getGraphService();
+export const graphClientActor =
+  ({
+    graphClient,
+    send,
+    sendRenderConfigEvent,
+  }: ProjectGraphClientActor): InvokeCallback<
+    ProjectGraphEvent | RenderGraphConfigEvent,
+    ProjectGraphMachineEvents
+  > =>
+  (callback, onReceive) => {
+    onReceive((event) => {
+      if (
+        event.type === 'ThemeChange' ||
+        event.type === 'ResetLayout' ||
+        event.type === 'RankDirChange'
+      ) {
+        sendRenderConfigEvent(event);
+      } else {
+        send(event);
+      }
 
-  receive((e) => {
-    const { selectedProjectNames, perfReport, compositeNodes } =
-      graphService.handleProjectEvent(e);
-    callback({
-      type: 'setSelectedProjectsFromGraph',
-      selectedProjectNames,
-      perfReport,
-      compositeNodes,
+      callback({ type: 'setGraphClientState', state: graphClient.graphState });
     });
-  });
-};
+  };

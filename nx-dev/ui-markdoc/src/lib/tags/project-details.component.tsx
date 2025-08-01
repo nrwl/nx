@@ -7,11 +7,11 @@ import {
   useLayoutEffect,
   useState,
 } from 'react';
-import { ProjectDetails as ProjectDetailsUi } from '@nx/graph-internal-ui-project-details';
-import * as graphShared from '@nx/graph/legacy/shared';
+import {
+  ProjectDetails as ProjectDetailsUi,
+  ExpandedTargetsProvider,
+} from '@nx/graph-internal-ui-project-details';
 import { twMerge } from 'tailwind-merge';
-
-const { ExpandedTargetsProvider } = graphShared;
 
 export function Loading() {
   return (
