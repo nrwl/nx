@@ -1,6 +1,7 @@
 import { sendPageViewEvent } from '@nx/nx-dev-feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
+import Script from 'next/script';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -76,6 +77,14 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      <Script
+        id="Cookiebot"
+        src="https://consent.cookiebot.com/uc.js"
+        data-cbid="51526f26-f410-4417-b833-0479ccf7530d"
+        data-blockingmode="auto"
+        type="text/javascript"
+        strategy="beforeInteractive"
+      />
       <Link
         id="skip-to-content-link"
         href="#main"
