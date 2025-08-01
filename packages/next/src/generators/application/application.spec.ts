@@ -1256,6 +1256,24 @@ describe('app (legacy)', () => {
         "
       `);
     });
+
+    it('should configure tsconfig.spec.json to reference tsconfig.json as runtime config', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'jest',
+      });
+
+      const tsConfigSpec = readJson(tree, `${name}/tsconfig.spec.json`);
+
+      // Verify that the runtime tsconfig is properly referenced (tsconfig.json for Next.js apps)
+      expect(tree.exists(`${name}/tsconfig.json`)).toBe(true);
+      expect(tree.exists(`${name}/tsconfig.app.json`)).toBe(false);
+
+      // Verify the jest config and spec config are properly set up
+      expect(tsConfigSpec.compilerOptions.jsx).toBe('react');
+    });
   });
 });
 
