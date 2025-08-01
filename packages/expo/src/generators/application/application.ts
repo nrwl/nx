@@ -8,6 +8,7 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -42,10 +43,15 @@ export async function expoApplicationGeneratorInternal(
   schema: Schema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    host,
+    schema.addPlugin,
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
     formatter: schema.formatter,
     platform: 'web',
   });
