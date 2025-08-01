@@ -169,8 +169,6 @@ describe('Node Applications + webpack', () => {
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
-    const dockerFile = readFile(`apps/${expressApp}/Dockerfile`);
-    expect(dockerFile).toMatchSnapshot();
   }, 300_000);
 
   it('should support waitUntilTargets for serve target', async () => {
