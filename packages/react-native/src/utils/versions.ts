@@ -2,7 +2,7 @@ export const nxVersion = require('../../package.json').version;
 
 export const reactNativeVersion = '~0.76.3';
 
-export const typesNodeVersion = '18.16.9';
+export const typesNodeVersion = '20.19.9';
 
 export const reactNativeCommunityCliVersion = '~15.0.1';
 export const reactNativeCommunityCliPlatformAndroidVersion = '~15.0.1';
