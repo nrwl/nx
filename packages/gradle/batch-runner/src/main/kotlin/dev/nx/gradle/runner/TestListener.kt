@@ -7,6 +7,15 @@ import org.gradle.tooling.events.ProgressEvent
 import org.gradle.tooling.events.task.TaskFinishEvent
 import org.gradle.tooling.events.test.*
 
+private fun findNxTaskIdByClassName(className: String?, tasks: Map<String, GradleTask>): String? {
+  return className?.let {
+    val simpleClassName = it.substringAfterLast('.')
+    tasks.entries
+        .find { (_, v) -> v.testClassName == simpleClassName || v.testClassName == className }
+        ?.key
+  }
+}
+
 fun testListener(
     tasks: Map<String, GradleTask>,
     testTaskStatus: MutableMap<String, Boolean>,
@@ -32,50 +41,41 @@ fun testListener(
 
       is TestStartEvent -> {
         val descriptor = event.descriptor as? JvmTestOperationDescriptor
+        val nxTaskId = findNxTaskIdByClassName(descriptor?.className, tasks)
 
-        descriptor?.className?.let { className ->
-          val simpleClassName = className.substringAfterLast('.')
-          tasks.entries
-              .find { (_, v) -> v.testClassName == simpleClassName }
-              ?.key
-              ?.let { nxTaskId ->
-                testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
-                logger.info("🏁 Test start: $nxTaskId $className")
-              }
+        nxTaskId?.let {
+          testStartTimes.computeIfAbsent(it) { event.eventTime }
+          logger.info("🏁 Test start: $it ${descriptor?.className}")
         }
       }
 
       is TestFinishEvent -> {
         val descriptor = event.descriptor as? JvmTestOperationDescriptor
-        val nxTaskId =
-            descriptor?.className?.let { className ->
-              val simpleClassName = className.substringAfterLast('.')
-              tasks.entries.find { (_, v) -> v.testClassName == simpleClassName }?.key
-            }
+        val nxTaskId = findNxTaskIdByClassName(descriptor?.className, tasks)
 
         nxTaskId?.let {
           testEndTimes[it] = event.result.endTime
-          val name = descriptor.className ?: "unknown"
+          val name = descriptor?.className ?: "unknown"
 
           when (event.result) {
             is TestSuccessResult -> {
               testTaskStatus[it] = true
-              logger.info("✅ Test passed at ${formatMillis(event.result.endTime)}: $nxTaskId $name")
+              logger.info("✅ Test passed at ${formatMillis(event.result.endTime)}: $it $name")
             }
 
             is TestFailureResult -> {
               testTaskStatus[it] = false
-              logger.warning("❌ Test failed: $nxTaskId $name")
+              logger.warning("❌ Test failed: $it $name")
             }
 
             is TestSkippedResult -> {
               testTaskStatus[it] = true
-              logger.warning("⚠️ Test skipped: $nxTaskId $name")
+              logger.warning("⚠️ Test skipped: $it $name")
             }
 
             else -> {
               testTaskStatus[it] = true
-              logger.warning("⚠️ Unknown test result: $nxTaskId $name")
+              logger.warning("⚠️ Unknown test result: $it $name")
             }
           }
         }
