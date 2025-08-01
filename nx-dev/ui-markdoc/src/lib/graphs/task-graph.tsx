@@ -62,10 +62,11 @@ export function NxDevTaskGraph({
           menu={graphMenu.props}
           virtualElement={graphMenu.virtualElement}
           placement="top"
+          menuItemsContainerClassName="dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           {{
             task: ({ data }) => (
-              <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2">
+              <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
                 <div className="flex items-center gap-2">
                   <Tag>{data.executor}</Tag>
                   <span className="font-mono">{data.label}</span>

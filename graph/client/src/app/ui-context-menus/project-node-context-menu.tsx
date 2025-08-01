@@ -25,7 +25,7 @@ export function ProjectNodeContextMenu({
   tracingStart,
 }: ProjectNodeContextMenuProps) {
   return (
-    <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2">
+    <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Tag>{data.projectType}</Tag>
@@ -91,7 +91,7 @@ function ProjectNodeContextMenuActions({
           className="flex flex-row items-center"
           onClick={() => onAction({ type: 'start-trace' })}
         >
-          <MapPinIcon className="mr-2 h-5 w-5 text-slate-500"></MapPinIcon>
+          <MapPinIcon className="mr-2 h-5 w-5 text-slate-500 dark:text-slate-400"></MapPinIcon>
           Start
         </TooltipButton>
       ) : (
@@ -99,7 +99,7 @@ function ProjectNodeContextMenuActions({
           className="flex flex-row items-center"
           onClick={() => onAction({ type: 'end-trace' })}
         >
-          <FlagIcon className="mr-2 h-5 w-5 text-slate-500"></FlagIcon>
+          <FlagIcon className="mr-2 h-5 w-5 text-slate-500 dark:text-slate-400"></FlagIcon>
           End
         </TooltipButton>
       )}

@@ -21,12 +21,7 @@ import {
   useRouteConstructor,
 } from '@nx/graph-shared';
 import { Tooltip, ErrorToast, Dropdown } from '@nx/graph-ui-common';
-import {
-  getSystemTheme,
-  Theme,
-  ThemePanel,
-  useTheme,
-} from '@nx/graph-internal-ui-theme';
+import { ThemePanel, useTheme } from '@nx/graph-internal-ui-theme';
 import classNames from 'classnames';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
@@ -478,6 +473,7 @@ function InnerShell({
                 menu={graphMenu.props}
                 virtualElement={graphMenu.virtualElement}
                 placement="bottom-start"
+                menuItemsContainerClassName="dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
               >
                 {{
                   // TODO: (chau) refactor this for graph consistency CLOUD-3443
@@ -616,13 +612,31 @@ function InnerShell({
                         onConfirm={handleDialogConfirm}
                         onCancel={handleDialogCancel}
                         classNames={{
+                          container: 'dark:bg-slate-800 dark:text-slate-200',
+                          header: 'dark:text-white',
+                          searchInput:
+                            'dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400 dark:focus:ring-sky-500',
                           checkbox:
-                            'data-checked:bg-blue-500 data-checked:border-blue-500 dark:data-checked:bg-sky-500 dark:data-checked:border-sky-500',
+                            'dark:border-slate-500 dark:bg-slate-700 data-checked:bg-blue-500 data-checked:border-blue-500 dark:data-checked:bg-sky-500 dark:data-checked:border-sky-500',
+                          label: 'dark:text-slate-300',
+                          selectedCount: 'dark:text-slate-400',
+                          primaryButton:
+                            'dark:bg-sky-600 dark:hover:bg-sky-700 dark:disabled:bg-slate-600',
+                          secondaryButton:
+                            'dark:bg-slate-700 dark:hover:bg-slate-600 dark:border-slate-600 dark:text-slate-200',
+                          scrollArea: 'dark:border-slate-700 dark:bg-slate-900',
+                          sectionTitle: 'dark:text-slate-300',
+                          nodeLabel: 'dark:text-slate-200',
+                          affectedBadge: 'dark:bg-blue-900 dark:text-blue-200',
+                          emptyState: 'dark:text-slate-400',
+                          actionBar: 'dark:bg-slate-800',
                         }}
                       />
                     ),
+                    dialogContainerClassName: 'dark:bg-slate-800',
                   }}
                   onClose={handleDialogCancel}
+                  className="dark:bg-slate-900/50"
                 />
               )}
 

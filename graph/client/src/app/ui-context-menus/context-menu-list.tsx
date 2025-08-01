@@ -24,7 +24,7 @@ export function ContextMenuList({
   return (
     <div
       className={classNames(
-        'rounded-md border border-slate-200 dark:border-slate-800',
+        'rounded-md border border-slate-200 dark:border-slate-700',
         {
           'max-h-[432px] overflow-auto': isMultiSection,
           'overflow-hidden': !isMultiSection,
@@ -50,10 +50,10 @@ function ListSection({ label, items }: ContextMenuListSection) {
 
   return (
     <div>
-      <div className="bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+      <div className="bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-700 dark:text-slate-400">
         <span>{label}</span>
       </div>
-      <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+      <ul className="divide-y divide-slate-200 dark:divide-slate-700">
         {items.map((item) => (
           <li
             key={item}

@@ -43,7 +43,7 @@ export function ProjectEdgeContextMenu({
   }, [data.sourceData, data.targetData]);
 
   return (
-    <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2">
+    <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
       <div className="flex items-center gap-2">
         <Tag>{data.depType ?? 'unknown'}</Tag>
         <span className="font-mono">{edgeLabel}</span>
