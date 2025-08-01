@@ -51,6 +51,9 @@
       },
       {
         "env": "NX_E2E_RUN_E2E"
+      },
+      {
+        "runtime": "echo 'e2e-bust-1'"
       }
     ]
   },
