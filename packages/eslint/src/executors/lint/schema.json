@@ -155,6 +155,11 @@
       "items": {
         "type": "string"
       }
+    },
+    "suppressionsLocation": {
+      "type": "string",
+      "description": "Specify the location of the suppressions file. This is equivalent to the `--suppressions-location` flag on the ESLint CLI. Defaults to 'eslint-suppressions.json' in the project root. Requires ESLint v9.24.0 or higher.",
+      "x-completion-type": "file"
     }
   },
   "examplesFile": "../../../docs/eslint-examples.md"
