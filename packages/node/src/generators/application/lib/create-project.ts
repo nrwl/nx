@@ -17,7 +17,11 @@ import {
   getPruneTargets,
 } from './create-targets';
 
-export function addProject(tree: Tree, options: NormalizedSchema) {
+export function addProject(
+  tree: Tree,
+  options: NormalizedSchema,
+  frameworkDependencies: Record<string, string>
+) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
@@ -49,6 +53,7 @@ export function addProject(tree: Tree, options: NormalizedSchema) {
     name: options.importPath,
     version: '0.0.1',
     private: true,
+    dependencies: { ...frameworkDependencies },
   };
 
   if (!options.useProjectJson) {

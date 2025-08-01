@@ -24,7 +24,10 @@ import { NormalizedSchema } from './normalized-schema';
 export function addProjectDependencies(
   tree: Tree,
   options: NormalizedSchema
-): GeneratorCallback {
+): {
+  installTask: GeneratorCallback;
+  frameworkDependencies: Record<string, string>;
+} {
   const bundlers = {
     webpack: {
       '@nx/webpack': nxVersion,
@@ -59,27 +62,19 @@ export function addProjectDependencies(
     fastify: {},
   };
 
-  const projectPackageJson = joinPathFragments(
-    options.appProjectRoot,
-    'package.json'
-  );
-  if (tree.exists(projectPackageJson)) {
-    updateJson(tree, projectPackageJson, (json) => {
-      json.dependencies ??= { ...frameworkDependencies };
-      return json;
-    });
-  }
-
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      ...frameworkDependencies[options.framework],
-      tslib: tslibVersion,
-    },
-    {
-      ...frameworkDevDependencies[options.framework],
-      ...bundlers[options.bundler],
-      '@types/node': typesNodeVersion,
-    }
-  );
+  return {
+    installTask: addDependenciesToPackageJson(
+      tree,
+      {
+        ...frameworkDependencies[options.framework],
+        tslib: tslibVersion,
+      },
+      {
+        ...frameworkDevDependencies[options.framework],
+        ...bundlers[options.bundler],
+        '@types/node': typesNodeVersion,
+      }
+    ),
+    frameworkDependencies: frameworkDependencies[options.framework],
+  };
 }
