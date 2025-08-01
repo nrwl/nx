@@ -44,7 +44,7 @@ export async function withModuleFederationForSSR(
         ...(config.plugins ?? []),
         new (require('@module-federation/enhanced').ModuleFederationPlugin)(
           {
-            name: normalizeProjectName(this._options.config.name),
+            name: normalizeProjectName(options.name),
             filename: 'remoteEntry.js',
             exposes: options.exposes,
             remotes: mappedRemotes,

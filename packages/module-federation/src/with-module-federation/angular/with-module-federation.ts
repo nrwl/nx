@@ -47,7 +47,7 @@ export async function withModuleFederation(
       plugins: [
         ...(config.plugins ?? []),
         new ModuleFederationPlugin({
-          name: normalizeProjectName(this._options.config.name),
+          name: normalizeProjectName(options.name),
           filename: 'remoteEntry.mjs',
           exposes: options.exposes,
           remotes: mappedRemotes,
