@@ -2626,7 +2626,7 @@
             {
               "name": "Heartbeat",
               "id": "heartbeat",
-              "file": "nx-cloud/concepts/heartbeat"
+              "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling"
             },
             {
               "name": "Nx Cloud AI",
