@@ -62,15 +62,16 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
             </div> */}
           </div>
           <div className="w-full md:w-1/2">
+            {/* gradient is too complex for svg and doesn't look good in avif */}
             <Image
-              src="/images/home/features-while-scaling-org.svg"
+              src="/images/home/features-while-scaling-org.webp"
               width={800}
               height={800}
               alt=""
               className="max-w-[full] lg:max-w-[full] dark:hidden"
             />
             <Image
-              src="/images/home/features-while-scaling-org-dark.svg"
+              src="/images/home/features-while-scaling-org-dark.webp"
               width={800}
               height={800}
               alt=""
