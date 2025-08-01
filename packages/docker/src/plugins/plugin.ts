@@ -113,6 +113,15 @@ async function createDockerTargets(
 
   const namedInputs = getNamedInputs(projectRoot, context);
   const targets: Record<string, TargetConfiguration> = {};
+  const metadata = {
+    targetGroups: {
+      ['Docker']: [
+        `${options.buildTarget}`,
+        `${options.runTarget}`,
+        'nx-release-publish',
+      ],
+    },
+  };
 
   targets[options.buildTarget] = {
     command: `docker build .`,
@@ -169,7 +178,7 @@ async function createDockerTargets(
     executor: '@nx/docker:release-publish',
   };
 
-  return { targets, metadata: {} };
+  return { targets, metadata };
 }
 
 function normalizePluginOptions(
