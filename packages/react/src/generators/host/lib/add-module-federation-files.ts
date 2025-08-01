@@ -44,6 +44,7 @@ export function addModuleFederationFiles(
           ...options,
           static: !options?.dynamic,
           tmpl: '',
+          offsetFromRoot: offsetFromRoot(options.appProjectRoot),
           remotes: defaultRemoteManifest.map(({ name, port }) => {
             return {
               ...names(name),
