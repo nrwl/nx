@@ -1,8 +1,27 @@
 import { workspaceRoot } from '@nx/devkit';
-import { mergeConfig } from 'metro-config';
-import type { MetroConfig } from 'metro-config';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'path';
+
+// Cache for metro-config module
+let metroConfig: any = null;
+
+/**
+ * Lazily require metro-config to handle cases where it might not be installed
+ */
+function getMetroConfig() {
+  if (!metroConfig) {
+    try {
+      metroConfig = require('metro-config');
+    } catch (error) {
+      throw new Error(
+        'metro-config is required but not installed. Please install metro-config >= 0.82.0'
+      );
+    }
+  }
+  return metroConfig;
+}
+
+type MetroConfig = any; // We'll use any to avoid importing the type
 
 import { getResolveRequest } from './metro-resolver';
 
@@ -69,5 +88,6 @@ export async function withNxMetro(
     watchFolders,
   };
 
+  const { mergeConfig } = getMetroConfig();
   return mergeConfig(userConfig, nxConfig);
 }

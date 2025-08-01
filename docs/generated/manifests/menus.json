@@ -2596,14 +2596,6 @@
                             "disableCollapsible": false
                           },
                           {
-                            "id": "upgrade-native",
-                            "path": "/technologies/react/react-native/api/generators/upgrade-native",
-                            "name": "upgrade-native",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
                             "id": "web-configuration",
                             "path": "/technologies/react/react-native/api/generators/web-configuration",
                             "name": "web-configuration",

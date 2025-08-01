@@ -44,6 +44,9 @@ describe('@nx/react-native', () => {
   it('should test and lint', async () => {
     expect(() => runCLI(`test ${appName}`)).not.toThrow();
     expect(() => runCLI(`lint ${appName}`)).not.toThrow();
+
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
+    expect(() => runCLI(`lint ${libName}`)).not.toThrow();
   });
 
   it('should have dependencies synced after React Native app creation', () => {
@@ -76,7 +79,7 @@ describe('@nx/react-native', () => {
 
   it('should start the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8082;
 
     try {
       process = await runCommandUntil(

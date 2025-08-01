@@ -111,12 +111,8 @@ describe('app', () => {
       ])
     );
     const packageJson = readJson(appTree, 'package.json');
-    expect(packageJson.devDependencies['react-test-renderer']).toBeDefined();
     expect(
       packageJson.devDependencies['@testing-library/react-native']
-    ).toBeDefined();
-    expect(
-      packageJson.devDependencies['@testing-library/jest-native']
     ).toBeDefined();
     expect(packageJson.devDependencies['jest-expo']).toBeDefined();
   });
@@ -391,6 +387,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
+          "scripts",
+          "dependencies",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -437,6 +435,7 @@ describe('app', () => {
             "jest.config.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
+            "jest.resolver.js",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -450,6 +449,8 @@ describe('app', () => {
             "**/*.tsx",
             "**/*.js",
             "**/*.jsx",
+            ".expo/types/**/*.ts",
+            "expo-env.d.ts",
           ],
         }
       `);
@@ -482,6 +483,7 @@ describe('app', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
+            "jest.resolver.js",
           ],
           "references": [
             {
@@ -515,9 +517,13 @@ describe('app', () => {
           "name",
           "version",
           "private",
+          "scripts",
           "nx",
+          "dependencies",
         ]
       `);
+
+      expect(packageJson).toHaveProperty('dependencies.expo');
     });
 
     it('should generate project.json if useProjectJson is true', async () => {

@@ -313,7 +313,6 @@
             - [application](/technologies/react/react-native/api/generators/application)
             - [library](/technologies/react/react-native/api/generators/library)
             - [component](/technologies/react/react-native/api/generators/component)
-            - [upgrade-native](/technologies/react/react-native/api/generators/upgrade-native)
             - [web-configuration](/technologies/react/react-native/api/generators/web-configuration)
             - [convert-to-inferred](/technologies/react/react-native/api/generators/convert-to-inferred)
           - [migrations](/technologies/react/react-native/api/migrations)

@@ -19,12 +19,17 @@ import { join } from 'path';
 
 describe('@nx/expo', () => {
   let appName: string;
+  let libName: string;
 
   beforeAll(() => {
     newProject();
     appName = uniq('app');
+    libName = uniq('lib');
     runCLI(
       `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --linter=eslint`
+    );
+    runCLI(
+      `generate @nx/expo:library ${libName} --buildable --publishable --importPath=@proj/${libName} --unitTestRunner=jest --linter=eslint`
     );
   });
 
@@ -39,6 +44,41 @@ describe('@nx/expo', () => {
     expect(expoPlugin.options).toBeDefined();
     expect(expoPlugin.options.exportTargetName).toEqual('export');
     expect(expoPlugin.options.startTargetName).toEqual('start');
+  });
+
+  it('should test, lint and build library', async () => {
+    const componentName = uniq('Component');
+
+    runCLI(
+      `generate @nx/expo:component ${libName}/src/${componentName} --name ${componentName} --export --no-interactive`
+    );
+
+    updateFile(`${appName}/src/app/App.tsx`, (content) => {
+      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '@proj/${libName}';\n${content}`;
+      return updated;
+    });
+
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
+
+    const appLintResults = await runCLIAsync(`lint ${appName}`);
+    expect(appLintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
+
+    const libLintResults = await runCLIAsync(`lint ${libName}`);
+    expect(libLintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
+
+    const buildResults = await runCLIAsync(`build ${libName}`);
+    expect(buildResults.combinedOutput).toContain(
+      'Successfully ran target build'
+    );
+    checkFilesExist(
+      `dist/${libName}/index.esm.js`,
+      `dist/${libName}/src/index.d.ts`
+    );
   });
 
   it('should export the app', async () => {
