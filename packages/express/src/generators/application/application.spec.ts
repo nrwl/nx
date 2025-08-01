@@ -188,10 +188,14 @@ describe('app', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
+          "dependencies": {
+            "express": "^4.21.2",
+          },
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -383,6 +387,7 @@ describe('app', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
     });
