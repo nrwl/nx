@@ -63,7 +63,7 @@ describe('application generator', () => {
               "buildTarget": "build",
             },
             "outputs": [
-              "dist/my-node-app/workspace_modules",
+              "{workspaceRoot}/dist/my-node-app/workspace_modules",
             ],
           },
           "prune": {
@@ -83,8 +83,8 @@ describe('application generator', () => {
               "buildTarget": "build",
             },
             "outputs": [
-              "dist/my-node-app/package.json",
-              "dist/my-node-app/package-lock.json",
+              "{workspaceRoot}/dist/my-node-app/package.json",
+              "{workspaceRoot}/dist/my-node-app/package-lock.json",
             ],
           },
           "serve": {
@@ -259,6 +259,7 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
+          "dependencies": {},
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -288,7 +289,7 @@ describe('application generator', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/workspace_modules",
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
               },
               "prune": {
@@ -308,8 +309,8 @@ describe('application generator', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/package.json",
-                  "myapp/dist/package-lock.json",
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
                 ],
               },
               "serve": {
@@ -438,6 +439,7 @@ describe('application generator', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
     });
@@ -488,7 +490,7 @@ describe('application generator', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/workspace_modules",
+                "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
             },
             "prune": {
@@ -508,8 +510,8 @@ describe('application generator', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/package.json",
-                "myapp/dist/package-lock.json",
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
               ],
             },
             "serve": {

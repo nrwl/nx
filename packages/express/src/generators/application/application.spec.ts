@@ -188,10 +188,14 @@ describe('app', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
+          "dependencies": {
+            "express": "^4.21.2",
+          },
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -229,7 +233,7 @@ describe('app', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/workspace_modules",
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
               },
               "lint": {
@@ -252,8 +256,8 @@ describe('app', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "myapp/dist/package.json",
-                  "myapp/dist/package-lock.json",
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
                 ],
               },
               "serve": {
@@ -383,6 +387,7 @@ describe('app', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
     });
@@ -439,7 +444,7 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/workspace_modules",
+                "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
             },
             "lint": {
@@ -462,8 +467,8 @@ describe('app', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "myapp/dist/package.json",
-                "myapp/dist/package-lock.json",
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
               ],
             },
             "serve": {

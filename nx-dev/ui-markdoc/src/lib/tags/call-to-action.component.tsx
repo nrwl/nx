@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { Framework, frameworkIcons } from '@nx/graph/legacy/icons';
+import { type Framework, frameworkIcons } from '@nx/graph-ui-icons';
 import classNames from 'classnames';
 
 const iconSizeClasses: Record<

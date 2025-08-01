@@ -1,4 +1,4 @@
-import { useEnvironmentConfig } from '@nx/graph/legacy/shared';
+import { useEnvironmentConfig } from '@nx/graph-shared';
 import { Children, cloneElement } from 'react';
 
 export function ExperimentalFeature(props) {
