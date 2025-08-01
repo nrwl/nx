@@ -11,7 +11,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
 /docs/nx-cloud @StalkAltan @rarmatei @nixallover @nrwl/nx-docs-reviewers
-/graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @xiongemi
+/graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @xiongemi @Coly010 @jaysoo
 /images @nrwl/nx-docs-reviewers
 /nx-dev/** @nrwl/nx-docs-reviewers
 /typedoc-theme @nrwl/nx-docs-reviewers
