@@ -34,8 +34,9 @@ fun testListener(
         val descriptor = event.descriptor as? JvmTestOperationDescriptor
 
         descriptor?.className?.let { className ->
+          val simpleClassName = className.substringAfterLast('.')
           tasks.entries
-              .find { (_, v) -> v.testClassName == className }
+              .find { (_, v) -> v.testClassName == simpleClassName }
               ?.key
               ?.let { nxTaskId ->
                 testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
@@ -48,7 +49,8 @@ fun testListener(
         val descriptor = event.descriptor as? JvmTestOperationDescriptor
         val nxTaskId =
             descriptor?.className?.let { className ->
-              tasks.entries.find { (_, v) -> v.testClassName == className }?.key
+              val simpleClassName = className.substringAfterLast('.')
+              tasks.entries.find { (_, v) -> v.testClassName == simpleClassName }?.key
             }
 
         nxTaskId?.let {
