@@ -1,45 +1,51 @@
-import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join, parse, relative, resolve } from 'node:path';
-
 import {
-  CreateNodes,
-  CreateNodesContext,
+  type CreateNodes,
+  type CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
-  ProjectConfiguration,
+  type ProjectConfiguration,
   readJsonFile,
-  TargetConfiguration,
+  type TargetConfiguration,
+  type TargetDependencyConfig,
   writeJsonFile,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-
-import type { PlaywrightTestConfig } from '@playwright/test';
-import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
-import { minimatch } from 'minimatch';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { getLockFileName } from '@nx/js';
+import type { PlaywrightTestConfig } from '@playwright/test';
+import { minimatch } from 'minimatch';
+import { readdirSync } from 'node:fs';
+import { dirname, join, parse, posix, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 
 const pmc = getPackageManagerCommand();
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
+  mergeReports?: boolean;
+  mergeReportsTargetName?: string;
+  atomizedBlobReportOutputDir?: string;
 }
 
 interface NormalizedOptions {
   targetName: string;
-  ciTargetName?: string;
+  ciTargetName: string;
+  mergeReports: boolean;
+  mergeReportsTargetName: string;
+  atomizedBlobReportOutputDir: string;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+type ReporterOutput = [reporter: string, output?: string];
 
 function readTargetsCache(
   cachePath: string
@@ -119,7 +125,10 @@ async function createNodesInternal(
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    normalizedOptions,
+    {
+      ...normalizedOptions,
+      CI: process.env.CI,
+    },
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -237,7 +246,7 @@ async function buildPlaywrightTargets(
     // Playwright defaults to the following pattern.
     playwrightConfig.testMatch ??= '**/*.@(spec|test).?(c|m)[jt]s?(x)';
 
-    const dependsOn: TargetConfiguration['dependsOn'] = [];
+    const dependsOn: TargetDependencyConfig[] = [];
 
     const testFiles = await getAllTestFiles({
       context,
@@ -276,13 +285,20 @@ async function buildPlaywrightTargets(
         ...ciBaseTargetConfig,
         options: {
           ...ciBaseTargetConfig.options,
-          env: getOutputEnvVars(reporterOutputs, outputSubfolder),
+          env: getAtomizedTaskOutputEnvVars(
+            reporterOutputs,
+            outputSubfolder,
+            options.mergeReports,
+            options.atomizedBlobReportOutputDir
+          ),
         },
-        outputs: getTargetOutputs(
+        outputs: getAtomizedTaskOutputs(
           testOutput,
           reporterOutputs,
           context.workspaceRoot,
           projectRoot,
+          options.mergeReports,
+          options.atomizedBlobReportOutputDir,
           outputSubfolder
         ),
         command: `${
@@ -290,7 +306,7 @@ async function buildPlaywrightTargets(
         } ${relativeSpecFilePath} --output=${join(
           testOutput,
           outputSubfolder
-        )}`,
+        )}${options.mergeReports ? ` --reporter=blob` : ''}`,
         metadata: {
           technologies: ['playwright'],
           description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
@@ -304,6 +320,7 @@ async function buildPlaywrightTargets(
           },
         },
       };
+
       dependsOn.push({
         target: targetName,
         projects: 'self',
@@ -337,8 +354,24 @@ async function buildPlaywrightTargets(
     if (!webserverCommandTasks.length) {
       targets[options.ciTargetName].parallelism = false;
     }
-
     ciTargetGroup.push(options.ciTargetName);
+
+    if (options.mergeReports) {
+      targets[options.mergeReportsTargetName] = {
+        executor: '@nx/playwright:merge-reports',
+        options: {
+          blobReportsDir: options.atomizedBlobReportOutputDir,
+          config: posix.relative(projectRoot, configFilePath),
+          expectedSuites: dependsOn.length,
+        },
+        metadata: {
+          technologies: ['playwright'],
+          description:
+            'Merges Playwright blob reports and aggregate the results.',
+        },
+      };
+      ciTargetGroup.push(options.mergeReportsTargetName);
+    }
   }
 
   return { targets, metadata };
@@ -382,6 +415,11 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     ...options,
     targetName: options?.targetName ?? 'e2e',
     ciTargetName: options?.ciTargetName ?? 'e2e-ci',
+    mergeReports: options?.mergeReports ?? false,
+    mergeReportsTargetName:
+      options?.mergeReportsTargetName ?? 'e2e-ci--merge-reports',
+    atomizedBlobReportOutputDir:
+      options?.atomizedBlobReportOutputDir ?? '.nx-atomized-blob-reports',
   };
 }
 
@@ -396,43 +434,72 @@ function getTestOutput(playwrightConfig: PlaywrightTestConfig): string {
 
 function getReporterOutputs(
   playwrightConfig: PlaywrightTestConfig
-): Array<[string, string]> {
-  const outputs: Array<[string, string]> = [];
+): Array<ReporterOutput> {
+  const reporters: Array<ReporterOutput> = [];
 
-  const { reporter } = playwrightConfig;
+  const reporterConfig = playwrightConfig.reporter;
+  if (!reporterConfig) {
+    // `list` is the default reporter except in CI where `dot` is the default.
+    // https://playwright.dev/docs/test-reporters#list-reporter
+    return [[process.env.CI ? 'dot' : 'list']];
+  }
 
-  if (reporter) {
-    const DEFAULT_REPORTER_OUTPUT = 'playwright-report';
-    if (reporter === 'html') {
-      outputs.push([reporter, DEFAULT_REPORTER_OUTPUT]);
-    } else if (reporter === 'json') {
-      outputs.push([reporter, DEFAULT_REPORTER_OUTPUT]);
-    } else if (Array.isArray(reporter)) {
-      for (const r of reporter) {
-        const [reporter, opts] = r;
-        // There are a few different ways to specify an output file or directory
-        // depending on the reporter. This is a best effort to find the output.
-        if (opts?.outputFile) {
-          outputs.push([reporter, opts.outputFile]);
-        } else if (opts?.outputDir) {
-          outputs.push([reporter, opts.outputDir]);
-        } else if (opts?.outputFolder) {
-          outputs.push([reporter, opts.outputFolder]);
-        } else {
-          outputs.push([reporter, DEFAULT_REPORTER_OUTPUT]);
-        }
+  const defaultHtmlOutputDir = 'playwright-report';
+  const defaultBlobOutputDir = 'blob-report';
+  if (reporterConfig === 'html') {
+    reporters.push([reporterConfig, defaultHtmlOutputDir]);
+  } else if (reporterConfig === 'blob') {
+    reporters.push([reporterConfig, defaultBlobOutputDir]);
+  } else if (typeof reporterConfig === 'string') {
+    reporters.push([reporterConfig]);
+  } else if (Array.isArray(reporterConfig)) {
+    for (const [reporter, opts] of reporterConfig) {
+      // There are a few different ways to specify an output file or directory
+      // depending on the reporter. This is a best effort to find the output.
+      if (opts?.outputFile) {
+        reporters.push([reporter, opts.outputFile]);
+      } else if (opts?.outputDir) {
+        reporters.push([reporter, opts.outputDir]);
+      } else if (opts?.outputFolder) {
+        reporters.push([reporter, opts.outputFolder]);
+      } else if (reporter === 'html') {
+        reporters.push([reporter, defaultHtmlOutputDir]);
+      } else if (reporter === 'blob') {
+        reporters.push([reporter, defaultBlobOutputDir]);
+      } else {
+        reporters.push([reporter]);
       }
     }
   }
 
-  return outputs;
+  return reporters;
 }
 
 function getTargetOutputs(
   testOutput: string,
-  reporterOutputs: Array<[string, string]>,
+  reporterOutputs: Array<ReporterOutput>,
+  workspaceRoot: string,
+  projectRoot: string
+): string[] {
+  const outputs = new Set<string>();
+  outputs.add(normalizeOutput(testOutput, workspaceRoot, projectRoot));
+  for (const [, output] of reporterOutputs) {
+    if (!output) {
+      continue;
+    }
+
+    outputs.add(normalizeOutput(output, workspaceRoot, projectRoot));
+  }
+  return Array.from(outputs);
+}
+
+function getAtomizedTaskOutputs(
+  testOutput: string,
+  reporterOutputs: Array<ReporterOutput>,
   workspaceRoot: string,
   projectRoot: string,
+  mergeOutputs: boolean,
+  atomizedBlobReportOutputDir: string,
   subFolder?: string
 ): string[] {
   const outputs = new Set<string>();
@@ -443,15 +510,31 @@ function getTargetOutputs(
       projectRoot
     )
   );
-  for (const [, output] of reporterOutputs) {
+
+  if (mergeOutputs) {
     outputs.add(
       normalizeOutput(
-        addSubfolderToOutput(output, subFolder),
+        getAtomizedBlobReportOutputFile(atomizedBlobReportOutputDir, subFolder),
         workspaceRoot,
         projectRoot
       )
     );
+  } else {
+    for (const [, output] of reporterOutputs) {
+      if (!output) {
+        continue;
+      }
+
+      outputs.add(
+        normalizeOutput(
+          addSubfolderToOutput(output, subFolder),
+          workspaceRoot,
+          projectRoot
+        )
+      );
+    }
   }
+
   return Array.from(outputs);
 }
 
@@ -551,23 +634,53 @@ function normalizeOutput(
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 
-function getOutputEnvVars(
-  reporterOutputs: Array<[string, string]>,
+function getAtomizedTaskOutputEnvVars(
+  reporterOutputs: Array<ReporterOutput>,
+  outputSubfolder: string,
+  mergeOutputs: boolean,
+  atomizedBlobReportOutputDir: string
+): Record<string, string> {
+  if (mergeOutputs) {
+    return {
+      PLAYWRIGHT_BLOB_OUTPUT_FILE: getAtomizedBlobReportOutputFile(
+        atomizedBlobReportOutputDir,
+        outputSubfolder
+      ),
+    };
+  }
+
+  return getReporterEnvVars(reporterOutputs, outputSubfolder);
+}
+
+function getAtomizedBlobReportOutputFile(
+  atomizedBlobReportOutputDir: string,
   outputSubfolder: string
+): string {
+  return join(atomizedBlobReportOutputDir, `${outputSubfolder}.zip`);
+}
+
+function getReporterEnvVars(
+  reporterOutputs: Array<ReporterOutput>,
+  outputSubfolder?: string
 ): Record<string, string> {
   const env: Record<string, string> = {};
   for (let [reporter, output] of reporterOutputs) {
-    if (outputSubfolder) {
-      const isFile = parse(output).ext !== '';
-      const envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
-        isFile ? 'FILE' : 'DIR'
-      }`;
-      env[envVarName] = addSubfolderToOutput(output, outputSubfolder);
-      // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
-      // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
-      if (reporter === 'html') {
-        env['PLAYWRIGHT_HTML_REPORT'] = env[envVarName];
-      }
+    if (!output) {
+      continue;
+    }
+
+    const isFile = parse(output).ext !== '';
+    let envVarName: string;
+    envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
+      isFile ? 'FILE' : 'DIR'
+    }`;
+    env[envVarName] = outputSubfolder
+      ? addSubfolderToOutput(output, outputSubfolder)
+      : output;
+    // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
+    // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
+    if (reporter === 'html') {
+      env['PLAYWRIGHT_HTML_REPORT'] = env[envVarName];
     }
   }
   return env;
