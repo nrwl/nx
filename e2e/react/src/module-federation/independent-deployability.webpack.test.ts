@@ -28,9 +28,13 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const host = uniq('host');
 
+    const shellPort = await getAvailablePort();
+
     runCLI(
-      `generate @nx/react:host ${host} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
+      `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
     );
+
+    const remotePort = readPort(remote);
 
     // Update remote to be loaded via script
     updateFile(
@@ -61,7 +65,7 @@ describe('Independent Deployability', () => {
             [
               '${remote}',
               \`promise new Promise(resolve => {
-            const remoteUrl = 'http://localhost:4201/remoteEntry.js';
+            const remoteUrl = 'http://localhost:${remotePort}/remoteEntry.js';
             const script = document.createElement('script');
             script.src = remoteUrl;
             script.onload = () => {
@@ -132,7 +136,6 @@ describe('Independent Deployability', () => {
     );
 
     const hostPort = readPort(host);
-    const remotePort = readPort(remote);
 
     // Build host and remote
     const buildOutput = runCLI(`build ${host}`);
@@ -162,15 +165,16 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const lib = uniq('lib');
 
+    const shellPort = await getAvailablePort();
+
     runCLI(
-      `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
+      `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
     runCLI(
       `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --skipFormat`
     );
 
-    const shellPort = readPort(shell);
     const remotePort = readPort(remote);
 
     updateFile(

@@ -13,7 +13,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { readPort, runCLI } from './utils';
+import { runCLI } from './utils';
 
 describe('Dynamic Module Federation', () => {
   beforeAll(() => {
@@ -58,7 +58,9 @@ describe('Dynamic Module Federation', () => {
       `${shell}/src/assets/module-federation.manifest.json`
     );
     expect(manifest[remote]).toBeDefined();
-    expect(manifest[remote]).toEqual('http://localhost:4205/mf-manifest.json');
+    expect(manifest[remote]).toEqual(
+      `http://localhost:${remotePort}/mf-manifest.json`
+    );
 
     // update e2e
     updateFile(
