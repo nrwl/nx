@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  getAvailablePort,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -23,8 +24,10 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
+    const shellPort = await getAvailablePort();
+
     runCLI(
-      `generate @nx/react:host ${host} --bundler=webpack --remotes=${remote} --e2eTestRunner=cypress --no-interactive --skipFormat`
+      `generate @nx/react:host ${host} --bundler=webpack --remotes=${remote} --devServerPort=${shellPort} --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
@@ -122,8 +125,10 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
+    const shellPort = await getAvailablePort();
+
     runCLI(
-      `generate @nx/react:host ${host} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
+      `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
