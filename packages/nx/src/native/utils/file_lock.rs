@@ -102,8 +102,22 @@ impl FileLock {
 
     #[napi]
     pub fn lock(&mut self) -> napi::Result<()> {
-        self.file.lock_exclusive()?;
+        fs4::fs_std::FileExt::lock_exclusive(&self.file)?;
         self.locked = true;
+        Ok(())
+    }
+
+    /// Synchronously wait for the lock to be released
+    /// This blocks the thread until the lock is available
+    #[napi]
+    pub fn wait_sync(&mut self) -> napi::Result<()> {
+        if self.locked {
+            // Acquire a shared lock - this will block until any exclusive lock is released
+            fs4::fs_std::FileExt::lock_shared(&self.file)?;
+            // Immediately unlock since we just wanted to wait
+            fs4::fs_std::FileExt::unlock(&self.file)?;
+            self.locked = false;
+        }
         Ok(())
     }
 }
