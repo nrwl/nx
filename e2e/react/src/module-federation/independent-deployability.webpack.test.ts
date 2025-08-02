@@ -314,7 +314,7 @@ describe('Independent Deployability', () => {
     const shellPort = await getAvailablePort();
 
     runCLI(
-      `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
+      `generate @nx/react:host ${shell} --devServerPort=${shellPort} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
     const remotePort = readPort(remote);
