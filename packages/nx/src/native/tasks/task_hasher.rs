@@ -110,7 +110,6 @@ impl TaskHasher {
                     .iter()
                     .map(move |instruction| (task_id, instruction))
             })
-            .par_bridge()
             .try_for_each(|(task_id, instruction)| {
                 let hash_detail = self.hash_instruction(
                     task_id,
