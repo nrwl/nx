@@ -57,6 +57,7 @@ export interface PlaywrightExecutorSchema {
   uiHost?: string;
   uiPort?: number;
   skipInstall?: boolean;
+  granularInputs?: boolean;
 }
 
 export async function playwrightExecutor(
