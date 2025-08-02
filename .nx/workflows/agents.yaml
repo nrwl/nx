@@ -22,6 +22,14 @@ launch-templates:
       - name: Check Node Version
         script: node --version
 
+      - name: Set NODE_OPTIONS for Node 24
+        script: |
+          if [ -n "$NODE_OPTIONS" ]; then
+            echo "NODE_OPTIONS=$NODE_OPTIONS --no-experimental-strip-types" >> $NX_CLOUD_ENV
+          else
+            echo "NODE_OPTIONS=--no-experimental-strip-types" >> $NX_CLOUD_ENV
+          fi
+
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
@@ -103,6 +111,14 @@ launch-templates:
 
       - name: Check Node Version
         script: node --version
+
+      - name: Set NODE_OPTIONS for Node 24
+        script: |
+          if [ -n "$NODE_OPTIONS" ]; then
+            echo "NODE_OPTIONS=$NODE_OPTIONS --no-experimental-strip-types" >> $NX_CLOUD_ENV
+          else
+            echo "NODE_OPTIONS=--no-experimental-strip-types" >> $NX_CLOUD_ENV
+          fi
 
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
