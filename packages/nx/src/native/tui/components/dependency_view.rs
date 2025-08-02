@@ -230,11 +230,12 @@ impl<'a> DependencyView<'a> {
     fn render_dependency_list(
         &self,
         state: &mut DependencyViewState,
-        area: Rect,
+        inner_area: Rect,
+        outer_area: Rect,
         buf: &mut Buffer,
     ) {
         if state.dependencies.is_empty() {
-            self.render_no_dependencies(state, area, buf);
+            self.render_no_dependencies(state, inner_area, buf);
             return;
         }
 
@@ -285,7 +286,7 @@ impl<'a> DependencyView<'a> {
 
         // Calculate scrolling parameters
         let content_height = lines.len();
-        let viewport_height = area.height as usize;
+        let viewport_height = inner_area.height as usize;
         let max_scroll = content_height.saturating_sub(viewport_height);
 
         // Update scrollbar state
@@ -316,21 +317,26 @@ impl<'a> DependencyView<'a> {
             .alignment(Alignment::Left)
             .style(Style::default());
 
-        // Render the scrollable area (leave space for scrollbar if needed)
-        let content_area = if needs_scrollbar {
-            Rect {
-                x: area.x,
-                y: area.y,
-                width: area.width.saturating_sub(1),
-                height: area.height,
-            }
-        } else {
-            area
+        // Apply safety bounds to content area
+        let content_area = Rect {
+            x: inner_area.x,
+            y: inner_area.y,
+            width: inner_area
+                .width
+                .min(buf.area().width.saturating_sub(inner_area.x)),
+            height: inner_area
+                .height
+                .min(buf.area().height.saturating_sub(inner_area.y)),
         };
+
+        // Add additional safety check
+        if content_area.width == 0 || content_area.height == 0 {
+            return; // Don't render if the area is invalid
+        }
 
         Widget::render(paragraph, content_area, buf);
 
-        // Render scrollbar if needed
+        // Render scrollbar if needed (using outer_area to extend to border edge)
         if needs_scrollbar {
             let border_style = if state.is_focused {
                 Style::default().fg(THEME.info)
@@ -346,7 +352,42 @@ impl<'a> DependencyView<'a> {
                 .end_symbol(Some("↓"))
                 .style(border_style);
 
-            scrollbar.render(area, buf, &mut state.scrollbar_state);
+            scrollbar.render(outer_area, buf, &mut state.scrollbar_state);
+
+            // Render padding around scrollbar
+            let padding_text = Line::from(vec![Span::raw("  ")]);
+            let padding_width = 2;
+            let right_margin = 3;
+            let width_padding = 2;
+
+            // Ensure paddings don't extend past outer area
+            if padding_width + right_margin < outer_area.width {
+                // Top padding
+                let top_right_area = Rect {
+                    x: outer_area.x + outer_area.width - padding_width - right_margin,
+                    y: outer_area.y,
+                    width: padding_width + width_padding,
+                    height: 1,
+                };
+
+                Paragraph::new(padding_text.clone())
+                    .alignment(Alignment::Right)
+                    .style(border_style)
+                    .render(top_right_area, buf);
+
+                // Bottom padding
+                let bottom_right_area = Rect {
+                    x: outer_area.x + outer_area.width - padding_width - right_margin,
+                    y: outer_area.y + outer_area.height - 1,
+                    width: padding_width + width_padding,
+                    height: 1,
+                };
+
+                Paragraph::new(padding_text)
+                    .alignment(Alignment::Right)
+                    .style(border_style)
+                    .render(bottom_right_area, buf);
+            }
         }
     }
 }
@@ -404,7 +445,7 @@ impl<'a> StatefulWidget for DependencyView<'a> {
 
         // Only show dependency info for pending tasks
         if matches!(state.task_status, TaskStatus::NotStarted) {
-            self.render_dependency_list(state, inner_area, buf);
+            self.render_dependency_list(state, inner_area, area, buf);
         } else {
             // Show a message indicating why the dependency view is not relevant
             let message = match state.task_status {
