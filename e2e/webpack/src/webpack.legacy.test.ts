@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getAvailablePort,
   killProcessAndPorts,
   newProject,
   readFile,
@@ -50,7 +51,7 @@ describe('Webpack Plugin (legacy)', () => {
 
   it('should run serve-static', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = await getAvailablePort();
 
     try {
       process = await runCommandUntil(
