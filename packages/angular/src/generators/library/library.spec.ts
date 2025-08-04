@@ -1521,11 +1521,10 @@ describe('lib', () => {
       expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { Component } from '@angular/core';
-        import { CommonModule } from '@angular/common';
 
         @Component({
           selector: 'lib-my-lib',
-          imports: [CommonModule],
+          imports: [],
           templateUrl: './my-lib.component.html',
           styleUrl: './my-lib.component.css'
         })
@@ -1933,11 +1932,10 @@ describe('lib', () => {
       expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { Component } from '@angular/core';
-        import { CommonModule } from '@angular/common';
 
         @Component({
           selector: 'lib-my-lib',
-          imports: [CommonModule],
+          imports: [],
           templateUrl: './my-lib.component.html',
           styleUrl: './my-lib.component.css'
         })
