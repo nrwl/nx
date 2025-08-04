@@ -6,7 +6,7 @@ A big challenge in building a task distribution engine is tracking when the main
 For example, your agents might be busy running your Nx tasks, but GitHub Actions suddenly decides to kill your main job because it is consuming too many resources.
 In that case, regardless of how you configured your pipeline or how many shutdown hooks we add to the code, we simply do not have enough time to tell Nx Cloud it can stop running tasks on agents.
 
-To fix this, the first time you run `nx affected` commands, we create a small background process on your main job that pings Nx Cloud every few seconds. The moment
+To fix this, the first time you run `nx` commands, we create a small background process on your main job that pings Nx Cloud every few seconds. The moment
 we stop receiving these pings, we assume the main job has died, and we will fail the CI run and shut down the agents.
 
 This is useful not just for worst-case scenarios, but it also keeps your CI config simple:
@@ -55,7 +55,7 @@ it might be because Nx Cloud thought the distribution had ended already, and it 
 
 The heartbeat process is especially vulnerable during these "transition phases" between steps.
 
-To fix this, you can either manage completion explicitly (as mentioned above) or move all your Nx tasks into a single `affected` command. Both would fix the issue.
+To fix this, you can either manage completion explicitly (as mentioned above) or move all your Nx tasks into a single step or `nx` command. Both would fix the issue.
 
 #### Multi-job pipelines with different stages
 
@@ -71,7 +71,11 @@ For example, you might want to:
 If Nx Cloud doesn't hear back from the heartbeat after a few seconds, it assumes something went wrong and fails the workflow.
 When moving from one stage to the next, you need to turn off the first machine and wait for the next machines to boot up and start their heartbeats. This can cause you to go over the heartbeat threshold.
 
-⚠️**Workflows involving multiple machines/jobs are the main source of heartbeat-related issues**, simply because of how long it usually takes to restart the heartbeat after shutting it down.
+
+{% callout type="warning" title="Multi Machine/Job workflows" %}
+Workflows involving multiple machines/jobs are the main source of heartbeat-related issues, simply because of how long it usually takes to restart the heartbeat after shutting it down.
+
+{% /callout %}
 
 The only fix in this scenario is to handle completion yourself and run `npx nx-cloud complete-ci-run` as the last command on your last machine in the pipeline.
 
@@ -82,7 +86,7 @@ While both the heartbeat and `--stop-agents-after` tell Nx Cloud when it can shu
 1.  `--stop-agents-after` is useful purely to avoid wasting unnecessary compute.
     - So, while you might still have agents actively running tasks, Nx Cloud can tell that you won't be sending it any more tasks in the future because of how you configured `--stop-agents-after`.
     - So, it can turn off any agents that are no longer running tasks.
-    - You can read about configuring it [here](/ci/reference/nx-cloud-cli#stopagentsafter).
+    -  [Read more about configuring `--stop-agents-after`](/ci/reference/nx-cloud-cli#stopagentsafter).
 2.  The heartbeat, on the other hand, marks the completion of the main job.
     - It makes sure Nx Cloud instantly knows when the main job exited so it can update the status of its CI run.
     - In case of errors, it makes sure that it can instantly abandon any in-progress tasks.
