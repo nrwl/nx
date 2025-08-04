@@ -25,7 +25,7 @@ export const ALL_TOPICS: Topic[] = [
     heading: 'All Blogs',
   },
   {
-    label: 'Stories',
+    label: 'Customer Stories',
     icon: BookOpenIcon,
     value: 'customer story',
     heading: 'Customer Stories',
