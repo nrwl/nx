@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`remote generator bundler=rspack should create the remote with the correct config files 1`] = `
 "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
