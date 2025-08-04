@@ -71,7 +71,6 @@ For example, you might want to:
 If Nx Cloud doesn't hear back from the heartbeat after a few seconds, it assumes something went wrong and fails the workflow.
 When moving from one stage to the next, you need to turn off the first machine and wait for the next machines to boot up and start their heartbeats. This can cause you to go over the heartbeat threshold.
 
-
 {% callout type="warning" title="Multi Machine/Job workflows" %}
 Workflows involving multiple machines/jobs are the main source of heartbeat-related issues, simply because of how long it usually takes to restart the heartbeat after shutting it down.
 
@@ -86,7 +85,7 @@ While both the heartbeat and `--stop-agents-after` tell Nx Cloud when it can shu
 1.  `--stop-agents-after` is useful purely to avoid wasting unnecessary compute.
     - So, while you might still have agents actively running tasks, Nx Cloud can tell that you won't be sending it any more tasks in the future because of how you configured `--stop-agents-after`.
     - So, it can turn off any agents that are no longer running tasks.
-    -  [Read more about configuring `--stop-agents-after`](/ci/reference/nx-cloud-cli#stopagentsafter).
+    - [Read more about configuring `--stop-agents-after`](/ci/reference/nx-cloud-cli#stopagentsafter).
 2.  The heartbeat, on the other hand, marks the completion of the main job.
     - It makes sure Nx Cloud instantly knows when the main job exited so it can update the status of its CI run.
     - In case of errors, it makes sure that it can instantly abandon any in-progress tasks.
