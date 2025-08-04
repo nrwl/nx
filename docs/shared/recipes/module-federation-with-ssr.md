@@ -21,7 +21,7 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ✔ Would you like remote caching to make your build faster? · skip
 ```
 
-{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/ci/intro/ci-with-nx" /%}
+{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/ci/recipes/set-up" /%}
 
 ### Install your framework plugin
 

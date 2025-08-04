@@ -32,7 +32,7 @@ To enable task distribution with Nx Agents, make sure your Nx workspace is conne
 npx nx@latest connect
 ```
 
-Check out the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for more details.
+Check out the [connect to Nx Cloud recipe](/ci/recipes/set-up) for more details.
 
 Then, adjust your CI pipeline configuration to **enable task distribution**. If you don't have a CI config yet, you can generate a new one using the following command:
 

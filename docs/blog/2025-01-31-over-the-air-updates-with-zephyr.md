@@ -58,7 +58,7 @@ Nx mitigates these risks. With its enforcement of a [single-version policy](/con
 
 Beyond just mitigating risk of changing dependencies that can cause runtime errors, Nx will also ensure your application to scale to more developers and more feature teams. With features such as [Task Caching](/features/cache-task-results) and [Task Orchestration](/features/run-tasks#defining-a-task-pipeline) developers will know when they make their changes if they are introducing regressions or breaking changes to other areas within the system faster - before it hits production.
 
-If you sprinkle [Nx Cloud](/ci/intro/why-nx-cloud) on top - you can ensure your CI remains fast as you scale out your application through [Nx Replay](/ci/features/remote-cache#use-remote-caching-nx-replay) and [Nx Agents](/ci/features/distribute-task-execution). Increased scalability does not come with an increased maintenance cost of managing CI machines manually thanks to declarative [config files](/ci/recipes/set-up/monorepo-ci-github-actions).
+If you sprinkle [Nx Cloud](/ci/features) on top - you can ensure your CI remains fast as you scale out your application through [Nx Replay](/ci/features/remote-cache#use-remote-caching-nx-replay) and [Nx Agents](/ci/features/distribute-task-execution). Increased scalability does not come with an increased maintenance cost of managing CI machines manually thanks to declarative [config files](/ci/recipes/set-up/monorepo-ci-github-actions).
 
 You can learn more about Why to use Nx beyond Module Federation support [here](/getting-started/intro).
 

@@ -211,9 +211,9 @@ These plugins come with the [Atomizer](/ci/features/split-e2e-tasks) feature.
 
 The Atomizer splits potentially slow tasks into separate tasks per file. This feature along with [task distribution](/ci/features/distribute-task-execution) can speed up CI by distributing the split tasks among many agents.
 
-To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/intro/connect-to-nx-cloud), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/plugin-registry) for more details.
+To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/recipes/set-up), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/plugin-registry) for more details.
 
-{% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/ci/intro/connect-to-nx-cloud" /%}
+{% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/ci/recipes/set-up" /%}
 
 ## Troubleshooting
 
