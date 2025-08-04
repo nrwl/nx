@@ -40,7 +40,9 @@ fun createNodeForProject(
             targets = gradleTargets.targets,
             metadata =
                 NodeMetadata(gradleTargets.targetGroups, listOf("gradle"), project.description),
-            name = project.name)
+            name =
+                if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
+                else project.buildTreePath)
     nodes = mapOf(projectRoot to projectNode)
     externalNodes = gradleTargets.externalNodes
     logger.info(
