@@ -349,9 +349,6 @@ module.exports = {
     );
 
     checkFilesExist(`${nestapp}/Dockerfile`);
-
-    const dockerFile = readFile(`${nestapp}/Dockerfile`);
-    expect(dockerFile).toMatchSnapshot();
   });
 
   // TODO(crystal, @ndcunningham): how do we handle this now?

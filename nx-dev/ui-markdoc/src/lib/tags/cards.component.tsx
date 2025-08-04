@@ -4,15 +4,13 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
-import { Framework } from '@nx/graph/legacy/icons';
-import * as uiIcons from '@nx/graph/legacy/icons';
+import { type Framework, frameworkIcons } from '@nx/graph-ui-icons';
 import * as nxDevIcons from '@nx/nx-dev-ui-icons';
 import * as heroIcons from '@heroicons/react/24/outline';
 
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { ReactNode } from 'react';
 import Link from 'next/link';
-const { frameworkIcons } = uiIcons;
 
 const colsClasses: Record<number, string> = {
   1: 'grid-cols-1',

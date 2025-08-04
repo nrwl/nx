@@ -3,6 +3,7 @@ import {
   getBuildTargetNameFromMFDevServer,
   getModuleFederationConfig,
   getRemotes,
+  normalizeProjectName,
   parseStaticRemotesConfig,
   parseStaticSsrRemotesConfig,
   startRemoteProxies,
@@ -65,8 +66,8 @@ export async function startRemoteIterators(
       remotes.devRemotes.map((r) =>
         typeof r === 'string' ? r : r.remoteName
       ) ?? []
-    ).map((r) => r.replace(/-/g, '_')),
-    project.name.replace(/-/g, '_'),
+    ).map((r) => normalizeProjectName(r)),
+    normalizeProjectName(project.name),
   ]);
 
   const staticRemotesConfig = isServer

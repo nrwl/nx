@@ -3,6 +3,7 @@ export * from './dependencies';
 export * from './package-json';
 export * from './remotes';
 export * from './models';
+export * from './normalize-project-name';
 export * from './get-remotes-for-host';
 export * from './parse-static-remotes-config';
 export * from './start-remote-proxies';

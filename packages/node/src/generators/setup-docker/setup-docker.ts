@@ -7,10 +7,15 @@ import {
   runTasksInSerial,
   Tree,
   updateProjectConfiguration,
+  detectPackageManager,
+  workspaceRoot,
+  offsetFromRoot,
+  joinPathFragments,
 } from '@nx/devkit';
 import { initGenerator as dockerInitGenerator } from '@nx/docker/generators';
 import { SetUpDockerOptions } from './schema';
 import { join } from 'path';
+import { existsSync } from 'fs';
 
 function normalizeOptions(
   tree: Tree,
@@ -61,7 +66,11 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
   let buildLocation: string;
   if (options.skipDockerPlugin) {
     // Legacy mode: use workspace-relative paths
-    buildLocation = finalOutputPath;
+    // docker target is set to run at project root, so ensure offset to workspace root
+    buildLocation = joinPathFragments(
+      offsetFromRoot(projectConfig.root),
+      finalOutputPath
+    );
   } else {
     // New mode: use project-relative paths
     // Remove the project root prefix from the output path
@@ -73,6 +82,10 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
       : 'dist';
   }
 
+  const packageManager = existsSync(projectConfig.root)
+    ? detectPackageManager(projectConfig.root)
+    : detectPackageManager(workspaceRoot);
+
   generateFiles(tree, join(__dirname, './files'), projectConfig.root, {
     tmpl: '',
     buildLocation,
@@ -80,6 +93,7 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
     projectPath: projectConfig.root,
     sanitizedProjectName,
     skipDockerPlugin: options.skipDockerPlugin,
+    packageManager,
   });
 
   return installTask;
