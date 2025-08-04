@@ -32,9 +32,9 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            The only build platform that provides a powerful local development
-            experience and an ultra-fast self-healing CI, built for humans and
-            AI.
+            Drop Nx into any repo and watch it automatically optimize your
+            builds, scale your CI, and fix failed PRs. Built for developers and
+            AI agents.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink

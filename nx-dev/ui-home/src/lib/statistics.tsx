@@ -10,6 +10,7 @@ const statistics = [
   {
     id: 2,
     name: 'companies use Nx to ship their products',
+    prefix: 'Over ',
     value: 70,
     suffix: '%',
     associative: 'of Fortune 500',
@@ -38,6 +39,7 @@ export function Statistics(): JSX.Element {
               </dt>
               <dd className="order-first text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">
                 <span className="text-blue-500 dark:text-sky-500">
+                  {stat.prefix}
                   {stat.value}
                   {stat.suffix}
                 </span>{' '}

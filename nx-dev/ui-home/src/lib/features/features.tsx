@@ -1,12 +1,5 @@
-import {
-  ButtonLink,
-  SectionHeading,
-  Strong,
-  TextLink,
-} from '@nx/nx-dev-ui-common';
+import { SectionHeading, TextLink } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
-import { FeatureContainer } from './feature-container';
-import Image from 'next/image';
 import { FeaturesWhileCoding } from './features-while-coding';
 import { FeaturesWhileRunningCI } from './features-while-running-ci';
 import { FeaturesWhileScalingYourOrganization } from './features-while-scaling-your-organization';
@@ -19,11 +12,12 @@ export function Features(): ReactElement {
           Build Products, Not Build Systems
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
-          Nx is an open-source build platform designed to manage codebases of
-          any scale. From small single projects to large enterprise{' '}
-          <TextLink href="">monorepos</TextLink>, Nx provides the platform to
-          efficiently get from starting a feature in your editor to a green,
-          review-ready PR.
+          Whether you're a startup shipping fast or managing enterprise{' '}
+          <TextLink href="/concepts/decisions/why-monorepos">
+            monorepos
+          </TextLink>{' '}
+          with thousands of projects, Nx lets you focus on what matters and
+          deliver faster.
         </SectionHeading>
       </article>
       <div className="mt-12 lg:mt-20">
