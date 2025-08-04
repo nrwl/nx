@@ -110,12 +110,15 @@ function StatCard({
 }): ReactElement {
   // https://v3.tailwindcss.com/docs/customizing-colors
   const variants = {
-    purple: 'from-purple-100 to-purple-300',
-    violet: 'from-violet-100 to-violet-300',
-    indigo: 'from-indigo-100 to-indigo-300',
-    blue: 'from-blue-100 to-blue-300',
-    sky: 'from-sky-100 to-sky-300',
-    cyan: 'from-cyan-100 to-cyan-300',
+    purple:
+      'from-purple-100 to-purple-300 dark:from-purple-950 dark:to-purple-900',
+    violet:
+      'from-violet-100 to-violet-300 dark:from-violet-950 dark:to-violet-900',
+    indigo:
+      'from-indigo-100 to-indigo-300 dark:from-indigo-950 dark:to-indigo-900',
+    blue: 'from-blue-100 to-blue-300 dark:from-blue-950 dark:to-blue-900',
+    sky: 'from-sky-100 to-sky-300 dark:from-sky-950 dark:to-sky-900',
+    cyan: 'from-cyan-100 to-cyan-300 dark:from-cyan-950 dark:to-cyan-900',
   };
 
   return (
@@ -125,8 +128,11 @@ function StatCard({
       <SectionHeading as="h3" variant="title" className="mb-2 text-lg">
         {title}
       </SectionHeading>
-      <div className="mb-8 font-semibold text-slate-500">{description}</div>
-      <Link href={link} className="flex items-center gap-2 text-slate-950">
+      <div className="mb-8 font-semibold dark:text-white/50">{description}</div>
+      <Link
+        href={link}
+        className="flex items-center gap-2 text-slate-950 dark:text-white"
+      >
         {company === 'Caseware' && (
           <CasewareIcon aria-hidden="true" className="size-10" />
         )}
