@@ -11,6 +11,8 @@ Docker support in Nx Release is currently experimental and only available in the
 
 This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo using calendar-based versioning.
 
+{% youtube title="What is Nx?" src="https://www.youtube.com/embed/TOPxKJXUaqw" /%}
+
 ## Prerequisites
 
 Before starting, ensure you have:
