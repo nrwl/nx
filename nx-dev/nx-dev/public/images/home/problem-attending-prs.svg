@@ -4,8 +4,8 @@
     <style>
       .cls-1 {
         fill: #333;
-        font-family: PTMono-Bold, 'PT Mono';
-        font-size: 21.01px;
+        font-family: monospace;
+        font-size: 21px;
         font-weight: 700;
       }
 

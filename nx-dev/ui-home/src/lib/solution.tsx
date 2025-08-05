@@ -145,7 +145,7 @@ function StatCard({
         {company === 'UKG' && (
           <UkgIcon aria-hidden="true" className="size-10" />
         )}
-        {/* Vattenfall doesn't have a monotone version of their logo */}
+
         <span className="text-xl font-bold">{company}</span>
       </div>
     </Link>

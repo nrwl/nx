@@ -55,10 +55,6 @@ export function FeaturesWhileRunningCI(): ReactElement {
               green PR.
             </SectionHeading>
 
-            <div className="relative">
-              <CiProviderVerticalMarquees />
-            </div>
-
             <div className="mt-10 flex gap-x-6">
               <Link
                 href="/nx-cloud?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
@@ -95,60 +91,5 @@ export function FeaturesWhileRunningCI(): ReactElement {
         </div>
       </FeatureContainer>
     </article>
-  );
-}
-
-export function CiProviderVerticalMarquees(): JSX.Element {
-  const ICON_DATA = [
-    {
-      Icon: GitHubIcon,
-    },
-    {
-      Icon: JenkinsIcon,
-    },
-    {
-      Icon: BitbucketIcon,
-    },
-    {
-      Icon: AzureDevOpsIcon,
-    },
-    {
-      Icon: TravisCiIcon,
-    },
-    {
-      Icon: GitlabIcon,
-    },
-  ];
-  const ICON_DATA_REVERSED = ICON_DATA.reverse();
-  return (
-    <div className="bg-background absolute inset-y-0 right-0 flex h-full w-40 flex-col items-center justify-center gap-4 overflow-hidden">
-      <div className="flex flex-row gap-6 [perspective:300px]">
-        <Marquee
-          className="h-96 justify-center overflow-hidden [--duration:60s] [--gap:1rem]"
-          vertical
-        >
-          {ICON_DATA.map((data, idx) => (
-            <data.Icon
-              key={'ci-provider-icon-1-' + idx}
-              aria-hidden="true"
-              className="mx-auto size-8"
-            />
-          ))}
-        </Marquee>
-        <Marquee
-          className="hidden h-96 justify-center overflow-hidden [--duration:60s] [--gap:1rem] md:flex"
-          vertical
-          reverse
-        >
-          {ICON_DATA_REVERSED.map((data, idx) => (
-            <data.Icon
-              key={'ci-provider-icon-2-' + idx}
-              aria-hidden="true"
-              className="mx-auto size-8"
-            />
-          ))}
-        </Marquee>
-      </div>
-    </div>
   );
 }
