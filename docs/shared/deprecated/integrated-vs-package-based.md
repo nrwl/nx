@@ -62,7 +62,7 @@ Nx plugins, especially the [generators](/features/generate-code), [executors](/c
 
 Someone whose main focus is on improving their single application will be most interested in the following features of Nx:
 
-- Set up a [fast CI system](/ci/intro/ci-with-nx) without CI expertise
+- Set up a [fast CI system](/ci/recipes/set-up) without CI expertise
 - Easily [add new tooling](/plugin-registry)
 
 {% cards %}

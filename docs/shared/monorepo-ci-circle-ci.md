@@ -7,6 +7,8 @@ description: Learn how to set up Circle CI for your Nx workspace using the Nx Or
 
 Below is an example of a Circle CI setup, building, and testing only what is affected.
 
+> Need a starting point? Generate a new workflow file with `nx g ci-workflow --ci=circleci`
+
 ```yaml {% fileName=".circleci/config.yml" %}
 version: 2.1
 

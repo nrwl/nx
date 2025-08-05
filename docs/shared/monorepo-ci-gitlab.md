@@ -7,6 +7,8 @@ description: Learn how to set up GitLab CI for your Nx workspace with examples o
 
 Below is an example of a GitLab setup, building and testing only what is affected.
 
+> Need a starting point? Generate a new workflow file with `nx g ci-workflow --ci=gitlab`
+
 ```yaml {% fileName=".gitlab-ci.yml" %}
 image: node:20
 variables:

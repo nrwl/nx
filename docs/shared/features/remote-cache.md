@@ -30,7 +30,7 @@ To use **Nx Replay**, you need to connect your workspace to Nx Cloud (if you hav
 npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
 
 ## Why use Remote Caching (Nx Replay)?
 
