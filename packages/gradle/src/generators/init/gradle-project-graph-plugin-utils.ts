@@ -193,8 +193,14 @@ async function addNxProjectGraphPluginToBuildGradle(
   );
   if (buildGradleContent.includes('allprojects {')) {
     if (!applyPluginPattern.test(buildGradleContent)) {
-      logger.warn(
-        `Please add the ${gradleProjectGraphPluginName} plugin to your ${gradleFilePath}:\nallprojects {\n  apply {\n      plugin(\"${gradleProjectGraphPluginName}\")\n  }\n}`
+      // Add plugin to existing allprojects block
+      const applyPlugin = isKotlinDsl
+        ? `plugin("${gradleProjectGraphPluginName}")`
+        : `plugin "${gradleProjectGraphPluginName}"`;
+
+      buildGradleContent = buildGradleContent.replace(
+        /allprojects\s*\{/,
+        `allprojects {\n    apply ${applyPlugin}`
       );
     }
   } else {
