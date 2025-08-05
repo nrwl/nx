@@ -4,6 +4,7 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../../utils/models';
 import { getModuleFederationConfig } from '../../../with-module-federation/rspack/utils';
+import { normalizeProjectName } from '../../../utils';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
@@ -53,7 +54,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     }
 
     new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)({
-      name: this._options.config.name.replace(/-/g, '_'),
+      name: normalizeProjectName(this._options.config.name),
       filename: 'remoteEntry.js',
       exposes: this._options.config.exposes,
       remotes: mappedRemotes,

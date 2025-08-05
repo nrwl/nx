@@ -50,7 +50,15 @@ describe('@nx/docker', () => {
           {
             "projects": {
               "proj": {
-                "metadata": {},
+                "metadata": {
+                  "targetGroups": {
+                    "Docker": [
+                      "docker:build",
+                      "docker:run",
+                      "nx-release-publish",
+                    ],
+                  },
+                },
                 "root": "proj",
                 "targets": {
                   "docker:build": {
@@ -149,7 +157,15 @@ describe('@nx/docker', () => {
           {
             "projects": {
               "proj": {
-                "metadata": {},
+                "metadata": {
+                  "targetGroups": {
+                    "Docker": [
+                      "docker:build",
+                      "docker:run",
+                      "nx-release-publish",
+                    ],
+                  },
+                },
                 "root": "proj",
                 "targets": {
                   "docker:build": {
@@ -244,7 +260,15 @@ describe('@nx/docker', () => {
           {
             "projects": {
               "proj": {
-                "metadata": {},
+                "metadata": {
+                  "targetGroups": {
+                    "Docker": [
+                      "build-docker",
+                      "run-docker",
+                      "nx-release-publish",
+                    ],
+                  },
+                },
                 "root": "proj",
                 "targets": {
                   "build-docker": {
@@ -336,7 +360,15 @@ describe('@nx/docker', () => {
           {
             "projects": {
               "apps/api": {
-                "metadata": {},
+                "metadata": {
+                  "targetGroups": {
+                    "Docker": [
+                      "docker:build",
+                      "docker:run",
+                      "nx-release-publish",
+                    ],
+                  },
+                },
                 "root": "apps/api",
                 "targets": {
                   "docker:build": {
@@ -485,7 +517,15 @@ describe('@nx/docker', () => {
           {
             "projects": {
               ".": {
-                "metadata": {},
+                "metadata": {
+                  "targetGroups": {
+                    "Docker": [
+                      "docker:build",
+                      "docker:run",
+                      "nx-release-publish",
+                    ],
+                  },
+                },
                 "root": ".",
                 "targets": {
                   "docker:build": {

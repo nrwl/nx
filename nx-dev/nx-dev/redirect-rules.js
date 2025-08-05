@@ -1482,6 +1482,11 @@ const ciTutorialRedirects = {
     '/ci/recipes/set-up/monorepo-ci-github-actions',
 };
 
+const dockerReleaseRedirect = {
+  '/recipes/nx-release/get-started-with-nx-release':
+    '/recipes/nx-release/release-npm-packages',
+};
+
 /**
  * Public export API
  */
@@ -1524,4 +1529,5 @@ module.exports = {
   gettingStartedRedirects,
   pricingRedirects,
   ciTutorialRedirects,
+  dockerReleaseRedirect,
 };

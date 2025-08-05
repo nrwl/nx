@@ -10,11 +10,10 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
-/* eslint-enable @nx/enforce-module-boundaries */
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
 import { ProjectDetailsPage } from '@nx/graph-internal-project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';

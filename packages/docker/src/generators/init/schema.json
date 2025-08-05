@@ -30,11 +30,6 @@
       "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
       "default": false
-    },
-    "addPlugin": {
-      "type": "boolean",
-      "description": "Add the plugin to the nx.json file.",
-      "default": true
     }
   },
   "required": []

@@ -36,6 +36,7 @@
     "@nx/jest": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
+    "@nx/docker": "workspace:*",
     "tcp-port-used": "^1.0.2",
     "kill-port": "^1.6.1"
   },

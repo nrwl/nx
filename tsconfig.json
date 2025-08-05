@@ -387,6 +387,15 @@
     },
     {
       "path": "./astro-docs"
+    },
+    {
+      "path": "./e2e/docker"
+    },
+    {
+      "path": "./graph/shared"
+    },
+    {
+      "path": "./graph/ui-icons"
     }
   ],
   "extends": "./tsconfig.base.json"

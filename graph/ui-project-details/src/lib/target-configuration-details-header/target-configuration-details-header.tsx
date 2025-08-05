@@ -1,7 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { CopyToClipboardButton } from '@nx/graph/legacy/components';
+import { CopyToClipboardButton, Tooltip } from '@nx/graph-ui-common';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -9,7 +9,6 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 
-import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';

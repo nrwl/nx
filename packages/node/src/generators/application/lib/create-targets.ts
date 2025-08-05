@@ -3,9 +3,11 @@ import {
   ProjectConfiguration,
   Tree,
   TargetConfiguration,
+  detectPackageManager,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { NormalizedSchema } from './normalized-schema';
+import { getLockFileName } from '@nx/js';
 
 export function getWebpackBuildConfig(
   tree: Tree,
@@ -123,6 +125,47 @@ export function getNestWebpackBuildConfig(): TargetConfiguration {
       development: {
         args: ['--node-env=development'],
       },
+    },
+  };
+}
+
+export function getPruneTargets(
+  buildTarget: string,
+  outputPath: string
+): {
+  prune: TargetConfiguration;
+  'prune-lockfile': TargetConfiguration;
+  'copy-workspace-modules': TargetConfiguration;
+} {
+  const lockFileName =
+    getLockFileName(detectPackageManager() ?? 'npm') ?? 'package-lock.json';
+  return {
+    'prune-lockfile': {
+      dependsOn: ['build'],
+      cache: true,
+      executor: '@nx/js:prune-lockfile',
+      outputs: [
+        `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
+        `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
+      ],
+      options: {
+        buildTarget,
+      },
+    },
+    'copy-workspace-modules': {
+      dependsOn: ['build'],
+      cache: true,
+      outputs: [
+        `{workspaceRoot}/${joinPathFragments(outputPath, 'workspace_modules')}`,
+      ],
+      executor: '@nx/js:copy-workspace-modules',
+      options: {
+        buildTarget,
+      },
+    },
+    prune: {
+      dependsOn: ['prune-lockfile', 'copy-workspace-modules'],
+      executor: 'nx:noop',
     },
   };
 }

@@ -831,6 +831,7 @@ function resolveChangelogVersions(
       for (const projectName of releaseGroupProjectNames) {
         if (!args.versionData) {
           versionData[projectName] = {
+            dockerVersion: args.version,
             newVersion: args.version,
             currentVersion: '', // not relevant within changelog/commit generation
             dependentProjects: [], // not relevant within changelog/commit generation

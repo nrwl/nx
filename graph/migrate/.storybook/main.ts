@@ -18,7 +18,9 @@ const config: StorybookConfig = {
     } = require('@nx/vite/plugins/nx-tsconfig-paths.plugin');
     return mergeConfig(config, { plugins: [nxViteTsPaths()] });
   },
-
+  typescript: {
+    reactDocgen: 'react-docgen-typescript',
+  },
   docs: {},
 };
 

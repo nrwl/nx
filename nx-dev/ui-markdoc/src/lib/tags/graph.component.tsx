@@ -20,21 +20,16 @@ export function Loading() {
  * dynamic() can't be used inside of React rendering as it needs to be marked
  * in the top level of the module for preloading to work, similar to React.lazy.
  */
-const NxProjectGraphViz = dynamic(
+const NxDevProjectGraph = dynamic(
   () =>
-    import('@nx/graph/legacy/graph').then((module) => module.NxProjectGraphViz),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  }
+    import('../graphs/project-graph').then(
+      (module) => module.NxDevProjectGraph
+    ),
+  { ssr: false, loading: () => <Loading /> }
 );
-const NxTaskGraphViz = dynamic(
-  () =>
-    import('@nx/graph/legacy/graph').then((module) => module.NxTaskGraphViz),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  }
+const NxDevTaskGraph = dynamic(
+  () => import('../graphs/task-graph').then((module) => module.NxDevTaskGraph),
+  { ssr: false, loading: () => <Loading /> }
 );
 
 export function Graph({
@@ -100,27 +95,22 @@ export function Graph({
       </div>
       {type === 'project' ? (
         <div style={{ height }}>
-          <NxProjectGraphViz
-            renderMode="nx-docs"
-            groupByFolder={false}
+          <NxDevProjectGraph
             theme={theme}
             projects={parsedProps.projects}
-            composite={parsedProps.composite}
-            fileMap={{}}
-            workspaceLayout={parsedProps.workspaceLayout}
             dependencies={parsedProps.dependencies}
-            affectedProjectIds={parsedProps.affectedProjectIds}
-            enableTooltips={parsedProps.enableTooltips}
+            affectedProjects={parsedProps.affectedProjectIds}
+            enableContextMenu={parsedProps.enableTooltips}
+            composite={parsedProps.composite}
           />
         </div>
       ) : (
-        <NxTaskGraphViz
-          height={height}
+        <NxDevTaskGraph
           theme={theme}
           projects={parsedProps.projects}
           taskGraphs={parsedProps.taskGraphs}
           taskId={parsedProps.taskId}
-          enableTooltips={parsedProps.enableTooltips}
+          enableContextMenu={parsedProps.enableTooltips}
         />
       )}
     </div>

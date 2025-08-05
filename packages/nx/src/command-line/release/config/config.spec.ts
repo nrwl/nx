@@ -12315,6 +12315,37 @@ describe('createNxReleaseConfig()', () => {
       `);
     });
 
+    it('should use releaseTagPattern from base config for independent release groups as long as {projectName} is used', async () => {
+      let res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        releaseTagPattern: 'release/{projectName}/{version}',
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            projectsRelationship: 'independent',
+          },
+        },
+      });
+
+      expect(res.nxReleaseConfig.groups['group-1'].releaseTagPattern).toEqual(
+        'release/{projectName}/{version}'
+      );
+
+      // The specified pattern may conflict between independent projects, so use the default independent tag pattern.
+      res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        releaseTagPattern: 'v{version}',
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            projectsRelationship: 'independent',
+          },
+        },
+      });
+
+      expect(res.nxReleaseConfig.groups['group-1'].releaseTagPattern).toEqual(
+        '{projectName}@{version}'
+      );
+    });
+
     /**
      * TODO: make this the default behavior in v20 (it's a breaking change)
      */

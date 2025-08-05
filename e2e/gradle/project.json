@@ -3,7 +3,11 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/gradle",
   "projectType": "application",
-  "implicitDependencies": ["gradle"],
+  "implicitDependencies": [
+    "gradle",
+    "gradle-project-graph",
+    "gradle-batch-runner"
+  ],
   "// targets": "to see all targets run: nx show project e2e-gradle --web",
   "targets": {}
 }

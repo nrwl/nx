@@ -11,7 +11,7 @@ import {
   MenuItems,
   Transition,
 } from '@headlessui/react';
-import { cx } from '@nx/nx-dev-ui-primitives';
+
 import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 
 export interface FiltersProps {
@@ -72,44 +72,33 @@ export function Filters({
   return (
     <>
       {/* DESKTOP */}
-      <ul className="hidden gap-2 lg:flex" aria-label="Filter blog posts">
-        {filters.map((filter) => (
-          <li key={filter.value}>
-            <Link
-              href={updateFilter(filter.value)}
-              aria-label={`Filter by ${filter.label}`}
-              aria-current={
-                filter.value === selectedFilter ? 'page' : undefined
-              }
-              scroll={false}
-              prefetch={false}
-              className={cx(
-                'flex items-center justify-center gap-2 rounded-full bg-white px-3 py-2 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
-                {
-                  'ring-2 ring-slate-500 ring-offset-1 ring-offset-transparent dark:ring-slate-600':
-                    filter.value === selectedFilter,
-                },
-                {
-                  'border border-slate-400 dark:border-slate-700':
-                    filter.value !== selectedFilter,
-                }
-              )}
-              onClick={() => setSelectedFilterHeading(filter.heading)}
-            >
-              {filter.icon && (
-                <filter.icon className="h-5 w-5" aria-hidden="true" />
-              )}
-              {filter.label}
-            </Link>
-          </li>
-        ))}
+      <ul className="hidden gap-1.5 lg:flex" aria-label="Filter blog posts">
+        {filters
+          .filter((filter) => filter.value !== selectedFilter)
+          .map((filter) => (
+            <li key={filter.value}>
+              <Link
+                href={updateFilter(filter.value)}
+                aria-label={`Filter by ${filter.label}`}
+                scroll={false}
+                prefetch={false}
+                className="flex items-center justify-center gap-2 rounded-full border border-slate-400 bg-white px-2.5 py-1.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                onClick={() => setSelectedFilterHeading(filter.heading)}
+              >
+                {filter.icon && (
+                  <filter.icon className="h-5 w-5" aria-hidden="true" />
+                )}
+                {filter.label}
+              </Link>
+            </li>
+          ))}
       </ul>
 
       {/* MOBILE */}
       <div className="relative lg:hidden">
         <Menu as="div" className="inline-block text-left">
           <MenuButton
-            className="inline-flex w-full justify-center rounded-md border border-slate-400 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="inline-flex w-full justify-center rounded-md border border-slate-400 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             aria-label="Select filter topic"
           >
             Topics
@@ -132,23 +121,25 @@ export function Filters({
               className="absolute right-0 z-[31] mt-2 flex w-56 origin-top-right flex-col gap-4 rounded-md bg-white p-4 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-slate-800 dark:text-white"
               aria-label="Filter topics"
             >
-              {filters.map((filter) => (
-                <MenuItem as="li" className="text-lg" key={filter.value}>
-                  <Link
-                    className={cx('flex items-center gap-2')}
-                    href={updateFilter(filter.value)}
-                    onClick={() => setSelectedFilterHeading(filter.heading)}
-                    prefetch={false}
-                    scroll={false}
-                    aria-label={`Filter by ${filter.label}`}
-                  >
-                    {filter.icon && (
-                      <filter.icon className="h-5 w-5" aria-hidden="true" />
-                    )}
-                    {filter.label}
-                  </Link>
-                </MenuItem>
-              ))}
+              {filters
+                .filter((filter) => filter.value !== selectedFilter)
+                .map((filter) => (
+                  <MenuItem as="li" className="text-lg" key={filter.value}>
+                    <Link
+                      className="flex items-center gap-2"
+                      href={updateFilter(filter.value)}
+                      onClick={() => setSelectedFilterHeading(filter.heading)}
+                      prefetch={false}
+                      scroll={false}
+                      aria-label={`Filter by ${filter.label}`}
+                    >
+                      {filter.icon && (
+                        <filter.icon className="h-5 w-5" aria-hidden="true" />
+                      )}
+                      {filter.label}
+                    </Link>
+                  </MenuItem>
+                ))}
             </MenuItems>
           </Transition>
         </Menu>

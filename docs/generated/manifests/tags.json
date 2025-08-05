@@ -672,10 +672,24 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/nx-release/get-started-with-nx-release",
-      "id": "get-started-with-nx-release",
-      "name": "Get Started with Nx Release",
-      "path": "/recipes/nx-release/get-started-with-nx-release"
+      "file": "shared/recipes/nx-release/release-typescript-packages-to-npm",
+      "id": "release-npm-packages",
+      "name": "Release TypeScript/JavaScript Packages to NPM",
+      "path": "/recipes/nx-release/release-npm-packages"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/release-docker-images",
+      "id": "release-docker-images",
+      "name": "Release Docker Images",
+      "path": "/recipes/nx-release/release-docker-images"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-rust-crates",
+      "id": "publish-rust-crates",
+      "name": "Release Rust Crates",
+      "path": "/recipes/nx-release/publish-rust-crates"
     },
     {
       "description": "",
@@ -739,13 +753,6 @@
       "id": "automate-gitlab-releases",
       "name": "Automate GitLab Releases",
       "path": "/recipes/nx-release/automate-gitlab-releases"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/publish-rust-crates",
-      "id": "publish-rust-crates",
-      "name": "Publish Rust Crates",
-      "path": "/recipes/nx-release/publish-rust-crates"
     },
     {
       "description": "",
@@ -1660,6 +1667,15 @@
       "id": "affected",
       "name": "affected",
       "path": "/reference/core-api/nx/documents/affected"
+    }
+  ],
+  "mcp": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/mcp",
+      "id": "mcp",
+      "name": "mcp",
+      "path": "/reference/core-api/nx/documents/mcp"
     }
   ],
   "nx-cloud": [
