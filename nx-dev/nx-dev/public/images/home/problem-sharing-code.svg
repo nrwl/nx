@@ -3,7 +3,7 @@
   <defs>
     <style>
       .cls-1 {
-        filter: url(#drop-shadow-4);
+        filter: url(#drop-shadow-5);
       }
 
       .cls-2 {
@@ -46,62 +46,62 @@
         stroke: url(#linear-gradient);
       }
     </style>
-    <filter id="drop-shadow-4" x="-6.5" y="19.43" width="218" height="165" filterUnits="userSpaceOnUse">
-      <feOffset dx="4" dy="4"/>
+    <filter id="drop-shadow-5" x="-3.5" y="26.43" width="212" height="161" filterUnits="userSpaceOnUse">
+      <feOffset dx="2" dy="2"/>
       <feGaussianBlur result="blur" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
       <feComposite in2="blur" operator="in"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <linearGradient id="linear-gradient" x1="32.55" y1="43.44" x2="76.81" y2="43.44" gradientTransform="translate(83.95 175.06) scale(1 -1)" gradientUnits="userSpaceOnUse">
+    <linearGradient id="linear-gradient" x1="37.09" y1="34.51" x2="81.35" y2="34.51" gradientTransform="translate(83.95 175.06) scale(1 -1)" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#000" stop-opacity="0"/>
       <stop offset="1" stop-color="#000"/>
     </linearGradient>
-    <linearGradient id="linear-gradient-2" x1="83.54" y1="88.09" x2="39.28" y2="88.09" gradientTransform="matrix(1,0,0,1,0,0)" xlink:href="#linear-gradient"/>
-    <linearGradient id="linear-gradient-3" x1="114.81" y1="87.53" x2="159.07" y2="87.53" gradientTransform="matrix(1,0,0,1,0,0)" xlink:href="#linear-gradient"/>
-    <linearGradient id="linear-gradient-4" x1="34.62" y1="43.48" x2="78.88" y2="43.48" gradientTransform="translate(118.02 175.06) rotate(-180)" xlink:href="#linear-gradient"/>
+    <linearGradient id="linear-gradient-2" x1="88.08" y1="97.02" x2="43.82" y2="97.02" gradientTransform="matrix(1,0,0,1,0,0)" xlink:href="#linear-gradient"/>
+    <linearGradient id="linear-gradient-3" x1="119.35" y1="96.46" x2="163.61" y2="96.46" gradientTransform="matrix(1,0,0,1,0,0)" xlink:href="#linear-gradient"/>
+    <linearGradient id="linear-gradient-4" x1="30.08" y1="34.55" x2="74.34" y2="34.55" gradientTransform="translate(118.02 175.06) rotate(-180)" xlink:href="#linear-gradient"/>
   </defs>
   <g class="cls-1">
-    <line class="cls-8" x1="116.75" y1="119.06" x2="160.52" y2="144.19"/>
-    <line class="cls-5" x1="83.29" y1="100.66" x2="39.53" y2="75.53"/>
-    <line class="cls-4" x1="115.06" y1="100.09" x2="158.82" y2="74.96"/>
-    <line class="cls-3" x1="83.15" y1="119.01" x2="39.39" y2="144.14"/>
-    <polygon class="cls-2" points="65.79 71.58 65.79 109.69 98.35 128.8 131.58 109.69 131.48 71.2 99.11 52.38 65.79 71.58"/>
-    <polygon class="cls-2" points="149.22 46.33 149.22 68.98 168.57 80.33 188.32 68.98 188.26 46.1 169.02 34.92 149.22 46.33"/>
-    <polygon class="cls-2" points="9.82 46.87 9.82 69.52 29.17 80.87 48.91 69.52 48.85 46.64 29.62 35.46 9.82 46.87"/>
-    <polygon class="cls-2" points="9.16 126.77 9.16 149.42 28.51 160.78 48.25 149.42 48.2 126.55 28.96 115.36 9.16 126.77"/>
-    <polygon class="cls-7" points="65.79 71.58 98.82 90.78 131.48 71.2 99.11 52.38 65.79 71.58"/>
+    <line class="cls-8" x1="117.57" y1="125.08" x2="159.82" y2="149.34"/>
+    <line class="cls-5" x1="85.26" y1="107.32" x2="43.01" y2="83.06"/>
+    <line class="cls-4" x1="115.93" y1="106.77" x2="158.18" y2="82.51"/>
+    <line class="cls-3" x1="85.13" y1="125.04" x2="42.88" y2="149.3"/>
+    <polygon class="cls-2" points="68.36 79.24 68.36 116.04 99.8 134.49 131.88 116.04 131.79 78.88 100.53 60.7 68.36 79.24"/>
+    <polygon class="cls-2" points="148.92 54.86 148.92 76.73 167.6 87.69 186.66 76.73 186.6 54.65 168.03 43.85 148.92 54.86"/>
+    <polygon class="cls-2" points="14.33 55.38 14.33 77.25 33.01 88.21 52.07 77.25 52.02 55.17 33.44 44.37 14.33 55.38"/>
+    <polygon class="cls-2" points="13.69 132.53 13.69 154.4 32.37 165.36 51.43 154.4 51.38 132.31 32.81 121.51 13.69 132.53"/>
+    <polygon class="cls-7" points="68.36 79.24 100.26 97.78 131.79 78.88 100.53 60.7 68.36 79.24"/>
     <g>
-      <polyline class="cls-6" points="110.31 96.19 103.7 107.27 110.31 110.4"/>
-      <polyline class="cls-6" points="120.09 90.54 126.7 93.99 120.09 104.76"/>
-      <line class="cls-6" x1="118.02" y1="89.85" x2="112.24" y2="111.19"/>
+      <polyline class="cls-6" points="111.35 103 104.97 113.7 111.35 116.73"/>
+      <polyline class="cls-6" points="120.79 97.55 127.17 100.88 120.79 111.27"/>
+      <line class="cls-6" x1="118.79" y1="96.88" x2="113.21" y2="117.48"/>
     </g>
     <g>
-      <polyline class="cls-9" points="175.93 59.52 172.23 65.71 175.93 67.47"/>
-      <polyline class="cls-9" points="181.4 56.36 185.1 58.29 181.4 64.31"/>
-      <line class="cls-9" x1="180.24" y1="55.97" x2="177.01" y2="67.91"/>
+      <polyline class="cls-9" points="174.7 67.6 171.13 73.58 174.7 75.27"/>
+      <polyline class="cls-9" points="179.99 64.54 183.55 66.41 179.99 72.22"/>
+      <line class="cls-9" x1="178.87" y1="64.17" x2="175.74" y2="75.7"/>
     </g>
     <g>
-      <polyline class="cls-9" points="35.85 139.89 32.16 146.08 35.85 147.84"/>
-      <polyline class="cls-9" points="41.33 136.73 45.02 138.66 41.33 144.68"/>
-      <line class="cls-9" x1="40.17" y1="136.34" x2="36.93" y2="148.28"/>
+      <polyline class="cls-9" points="39.46 145.19 35.89 151.17 39.46 152.87"/>
+      <polyline class="cls-9" points="44.75 142.14 48.32 144 44.75 149.82"/>
+      <line class="cls-9" x1="43.63" y1="141.76" x2="40.5" y2="153.29"/>
     </g>
     <g>
-      <polyline class="cls-9" points="36.51 59.98 32.82 66.18 36.51 67.93"/>
-      <polyline class="cls-9" points="41.99 56.82 45.68 58.75 41.99 64.77"/>
-      <line class="cls-9" x1="40.82" y1="56.43" x2="37.59" y2="68.37"/>
+      <polyline class="cls-9" points="40.1 68.04 36.53 74.03 40.1 75.72"/>
+      <polyline class="cls-9" points="45.38 64.99 48.95 66.86 45.38 72.67"/>
+      <line class="cls-9" x1="44.26" y1="64.62" x2="41.14" y2="76.14"/>
     </g>
-    <polyline class="cls-7" points="149.22 46.33 169.13 57.74 188.26 46.1"/>
-    <polyline class="cls-7" points="8.9 126.49 28.81 137.9 47.94 126.26"/>
-    <polyline class="cls-7" points="10.12 46.86 30.03 58.28 49.16 46.64"/>
+    <polyline class="cls-7" points="148.92 54.86 168.13 65.88 186.6 54.65"/>
+    <polyline class="cls-7" points="13.44 132.25 32.66 143.27 51.13 132.04"/>
+    <polyline class="cls-7" points="14.62 55.38 33.84 66.4 52.31 55.17"/>
     <g>
-      <polygon class="cls-2" points="148.08 126.73 148.08 149.38 167.43 160.73 187.17 149.38 187.11 126.5 167.87 115.32 148.08 126.73"/>
+      <polygon class="cls-2" points="147.81 132.48 147.81 154.35 166.49 165.31 185.55 154.35 185.5 132.27 166.92 121.47 147.81 132.48"/>
       <g>
-        <polyline class="cls-9" points="174.77 139.84 171.07 146.04 174.77 147.79"/>
-        <polyline class="cls-9" points="180.24 136.68 183.94 138.61 180.24 144.63"/>
-        <line class="cls-9" x1="179.08" y1="136.29" x2="175.85" y2="148.23"/>
+        <polyline class="cls-9" points="173.58 145.14 170.01 151.13 173.58 152.82"/>
+        <polyline class="cls-9" points="178.87 142.09 182.43 143.96 178.87 149.77"/>
+        <line class="cls-9" x1="177.74" y1="141.72" x2="174.62" y2="153.24"/>
       </g>
-      <polyline class="cls-7" points="147.82 126.44 167.72 137.86 186.85 126.22"/>
+      <polyline class="cls-7" points="147.56 132.21 166.78 143.23 185.25 131.99"/>
     </g>
   </g>
 </svg>

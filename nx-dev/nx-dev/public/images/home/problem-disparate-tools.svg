@@ -3,7 +3,7 @@
   <defs>
     <style>
       .cls-1 {
-        filter: url(#drop-shadow-2);
+        filter: url(#drop-shadow-3);
       }
 
       .cls-2 {
@@ -13,7 +13,7 @@
         stroke-width: 2px;
       }
     </style>
-    <filter id="drop-shadow-2" x="20.39" y="20.43" width="173" height="171" filterUnits="userSpaceOnUse">
+    <filter id="drop-shadow-3" x="20.39" y="20.43" width="173" height="171" filterUnits="userSpaceOnUse">
       <feOffset dx="4" dy="4"/>
       <feGaussianBlur result="blur" stdDeviation="6"/>
       <feFlood flood-color="#000" flood-opacity=".45"/>
