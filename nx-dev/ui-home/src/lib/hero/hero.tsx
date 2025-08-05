@@ -1,5 +1,5 @@
 'use client';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { RustIcon, TypeScriptIcon } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 import { NxHeroVideo } from './nx-hero-video';

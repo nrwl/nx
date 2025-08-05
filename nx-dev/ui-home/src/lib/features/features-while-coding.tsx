@@ -1,4 +1,4 @@
-import { SectionHeading, Strong, TextLink } from '@nx/nx-dev-ui-common';
+import { SectionHeading, TextLink } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import { FeatureContainer } from './feature-container';
 import Image from 'next/image';

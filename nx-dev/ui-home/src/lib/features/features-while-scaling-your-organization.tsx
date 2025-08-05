@@ -1,9 +1,4 @@
-import {
-  ButtonLink,
-  SectionHeading,
-  Strong,
-  TextLink,
-} from '@nx/nx-dev-ui-common';
+import { SectionHeading, TextLink } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import { FeatureContainer } from './feature-container';
 import Image from 'next/image';
@@ -50,16 +45,6 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               automated updates keep everything current without the overhead of
               managing separate repositories.
             </SectionHeading>
-            {/* <div className="mt-10 flex gap-x-6">
-              <ButtonLink
-                href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
-                title="Get started"
-                variant="primary"
-                size="large"
-              >
-                Try Nx for yourself
-              </ButtonLink>
-            </div> */}
           </div>
           <div className="w-full md:w-1/2">
             {/* gradient is too complex for svg and doesn't look good in avif */}

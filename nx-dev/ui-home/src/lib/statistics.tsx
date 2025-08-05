@@ -6,7 +6,6 @@ const statistics = [
     suffix: ' million',
     associative: 'developers',
   },
-  // Over
   {
     id: 2,
     name: 'companies use Nx to ship their products',

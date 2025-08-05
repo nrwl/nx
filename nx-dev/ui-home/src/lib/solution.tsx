@@ -1,4 +1,4 @@
-import { CheckBadgeIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { CheckIcon } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 import {
@@ -6,7 +6,6 @@ import {
   HetznerCloudIcon,
   PayfitIcon,
   SiriusxmAlternateIcon,
-  SiriusxmIcon,
   UkgIcon,
 } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
