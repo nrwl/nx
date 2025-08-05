@@ -48,7 +48,7 @@ export function Solution(): ReactElement {
 
 function StatsSection(): ReactElement {
   return (
-    <div className="mt-20 flex flex-nowrap gap-4 overflow-x-scroll py-8">
+    <div className="mt-20 grid grid-cols-1 gap-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="700+"
         description="projects easily managed at scale"
@@ -77,7 +77,7 @@ function StatsSection(): ReactElement {
         link="https://youtu.be/Q0ky-8oJcro"
         color="blue"
       />
-      <StatCard
+      {/* <StatCard
         title="Instant"
         description="builds with unified codebase across web and mobile"
         company="UKG"
@@ -90,7 +90,7 @@ function StatsSection(): ReactElement {
         company="Vattenfall"
         link="/blog/nx-agents-changes-the-math"
         color="cyan"
-      />
+      /> */}
     </div>
   );
 }
@@ -122,17 +122,15 @@ function StatCard({
   };
 
   return (
-    <div
-      className={`min-w-72 rounded-lg bg-white bg-gradient-to-br p-6 ${variants[color]}`}
+    <Link
+      href={link}
+      className={`w-full rounded-lg bg-white bg-gradient-to-br p-6 ${variants[color]}`}
     >
       <SectionHeading as="h3" variant="title" className="mb-2 text-lg">
         {title}
       </SectionHeading>
       <div className="mb-8 font-semibold dark:text-white/50">{description}</div>
-      <Link
-        href={link}
-        className="flex items-center gap-2 text-slate-950 dark:text-white"
-      >
+      <div className="flex items-center gap-2 text-slate-950 dark:text-white">
         {company === 'Caseware' && (
           <CasewareIcon aria-hidden="true" className="size-10" />
         )}
@@ -150,8 +148,8 @@ function StatCard({
         )}
         {/* Vattenfall doesn't have a monotone version of their logo */}
         <span className="text-xl font-bold">{company}</span>
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 }
 
@@ -163,9 +161,11 @@ function ChecklistItem({
   description: string;
 }): ReactElement {
   return (
-    <li className="flex items-center text-lg">
+    <li className="inline-flex items-center text-lg">
       <CheckIcon className="mr-2 h-6 w-6 shrink-0" />
-      <strong className="mr-1">{title}</strong> <span>{description}</span>
+      <span>
+        <strong className="mr-1">{title}</strong> <span>{description}</span>
+      </span>
     </li>
   );
 }
