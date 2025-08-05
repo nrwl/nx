@@ -216,6 +216,10 @@ export async function normalizeOptions(
         type: budget.type as any,
       }));
 
+  const zoneless = options.polyfills
+    ? !options.polyfills.includes('zone.js')
+    : true;
+
   const stylePreprocessorOptions = options.stylePreprocessorOptions ?? {};
   if (stylePreprocessorOptions.includePaths?.length) {
     stylePreprocessorOptions.includePaths = [
@@ -273,6 +277,7 @@ export async function normalizeOptions(
     vendorChunk: options.vendorChunk ?? false,
     verbose: options.verbose ?? false,
     watch: options.watch ?? false,
+    zoneless,
   };
 }
 

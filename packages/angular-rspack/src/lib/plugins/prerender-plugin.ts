@@ -57,15 +57,11 @@ export class PrerenderPlugin implements RspackPluginInstance {
       this.#_options.index as IndexExpandedDefinition
     );
 
-    const zonePackage = require.resolve('zone.js', {
-      paths: [workspaceRoot],
-    });
-
     const worker = new WorkerPool({
       filename: require.resolve('./tools/render-worker'),
       maxThreads: maxWorkers(),
       workerData: {
-        zonePackage,
+        zonePackage: this.#resolveZonePackage(workspaceRoot),
       },
       recordTiming: false,
     });
@@ -145,15 +141,11 @@ export class PrerenderPlugin implements RspackPluginInstance {
       this.#_options.index as IndexExpandedDefinition
     );
 
-    const zonePackage = require.resolve('zone.js', {
-      paths: [workspaceRoot],
-    });
-
     const worker = new WorkerPool({
       filename: require.resolve('./tools/render-worker'),
       maxThreads: maxWorkers(),
       workerData: {
-        zonePackage,
+        zonePackage: this.#resolveZonePackage(workspaceRoot),
       },
       recordTiming: false,
     });
@@ -270,7 +262,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
           indexFile,
           outputPath,
           serverBundlePath,
-          zonePackage: require.resolve('zone.js', { paths: [workspaceRoot] }),
+          zonePackage: this.#resolveZonePackage(workspaceRoot),
         },
         recordTiming: false,
       });
@@ -302,5 +294,10 @@ export class PrerenderPlugin implements RspackPluginInstance {
     }
 
     return this.#_options.prerender;
+  }
+
+  #resolveZonePackage(workspaceRoot: string): string | false {
+    if (this.#_options.zoneless) return false;
+    return require.resolve('zone.js', { paths: [workspaceRoot] });
   }
 }
