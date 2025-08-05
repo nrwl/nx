@@ -379,4 +379,5 @@ export interface NormalizedAngularRspackPluginOptions
   tsConfig: string;
   vendorChunk: boolean;
   watch: boolean;
+  zoneless: boolean;
 }
