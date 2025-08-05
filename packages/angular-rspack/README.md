@@ -13,7 +13,6 @@
 
 An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
 
-
 ## Build Angular with Rspack
 
 The goal of `@nx/angular-rspack` is to make easy and straightforward to build Angular applications with [rspack](https://rspack.dev).

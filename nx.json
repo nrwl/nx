@@ -94,6 +94,7 @@
       "angular-rspack": {
         "projects": ["angular-rspack-compiler", "angular-rspack"],
         "version": {
+          "preserveLocalDependencyProtocols": true,
           "manifestRootsToUpdate": ["packages/{projectName}"]
         }
       }
@@ -221,7 +222,10 @@
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["packages/angular-rspack-compiler/**", "packages/angular-rspack/**"],
+      "include": [
+        "packages/angular-rspack-compiler/**",
+        "packages/angular-rspack/**"
+      ],
       "options": {
         "testTargetName": "test"
       }

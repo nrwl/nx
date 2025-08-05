@@ -109,10 +109,21 @@
     "targets": {
       "build": {},
       "test": {
-        "dependsOn": ["test-native", "build-native", "^build-native"],
-        "inputs": ["default", "^production", "{projectRoot}/vitest.config.mts"],
+        "dependsOn": [
+          "test-native",
+          "build-native",
+          "^build-native",
+          "angular-rspack-compiler:build"
+        ],
+        "inputs": [
+          "default",
+          "^production",
+          "{projectRoot}/vitest.config.mts"
+        ],
         "options": {
-          "args": ["--passWithNoTests"]
+          "args": [
+            "--passWithNoTests"
+          ]
         }
       },
       "nx-release-publish": {

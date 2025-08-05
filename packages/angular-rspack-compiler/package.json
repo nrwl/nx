@@ -1,6 +1,7 @@
 {
   "name": "@nx/angular-rspack-compiler",
   "private": false,
+  "version": "0.0.1",
   "publishConfig": {
     "access": "public"
   },
@@ -21,7 +22,6 @@
     "rsbuild",
     "compiler"
   ],
-  "version": "0.0.1",
   "scripts": {
     "postinstall": "node ./patch/patch-angular-build.js"
   },
@@ -61,10 +61,20 @@
     "targets": {
       "build": {},
       "test": {
-        "dependsOn": ["test-native", "build-native", "^build-native"],
-        "inputs": ["default", "^production", "{projectRoot}/vitest.config.mts"],
+        "dependsOn": [
+          "test-native",
+          "build-native",
+          "^build-native"
+        ],
+        "inputs": [
+          "default",
+          "^production",
+          "{projectRoot}/vitest.config.mts"
+        ],
         "options": {
-          "args": ["--passWithNoTests"]
+          "args": [
+            "--passWithNoTests"
+          ]
         }
       },
       "nx-release-publish": {
