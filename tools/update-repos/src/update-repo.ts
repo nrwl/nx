@@ -179,7 +179,7 @@ async function getNxVersion(
   }
 }
 
-async function createPullRequest(
+async function createOrUpdatePullRequest(
   repoName: string,
   repoDir: string,
   updateBranch: string,
@@ -194,26 +194,48 @@ async function createPullRequest(
     const title = `chore(repo): update nx to ${toVersion}`;
     const description = `Updating Nx from ${fromVersion} to ${toVersion}`;
 
-    log(`Creating pull request: ${title}`);
+    // Check if PR already exists for this branch
+    let prExists = false;
+    try {
+      await execAsync(`gh pr view ${updateBranch} --json number`, {
+        cwd: repoDir,
+      });
+      prExists = true;
+      log(`Pull request already exists for branch ${updateBranch}`);
+    } catch {
+      log(`No existing pull request found for branch ${updateBranch}`);
+    }
 
-    // Create PR using GitHub CLI
-    const createPrCommand = `gh pr create --title "${title}" --body "${description}" --base ${baseBranch} --head ${updateBranch}`;
-    const { stdout } = await execAsync(createPrCommand, { cwd: repoDir });
+    if (prExists) {
+      log(`Updating existing pull request: ${title}`);
 
-    const prUrl = stdout.trim();
-    log(`Pull request created successfully: ${prUrl}`);
+      // Update PR title and description
+      const updatePrCommand = `gh pr edit ${updateBranch} --title "${title}" --body "${description}"`;
+      await execAsync(updatePrCommand, { cwd: repoDir });
 
-    // Open PR in browser
+      log(`Pull request updated successfully with new title and description`);
+    } else {
+      log(`Creating new pull request: ${title}`);
+
+      // Create PR using GitHub CLI
+      const createPrCommand = `gh pr create --title "${title}" --body "${description}" --base ${baseBranch} --head ${updateBranch}`;
+      const { stdout } = await execAsync(createPrCommand, { cwd: repoDir });
+
+      const prUrl = stdout.trim();
+      log(`Pull request created successfully: ${prUrl}`);
+    }
+
+    // Always open PR in browser (for both new and updated PRs)
     log(`🌐 Opening pull request in browser...`);
     const openPrCommand = `gh pr view ${updateBranch} --web`;
     await execAsync(openPrCommand, { cwd: repoDir });
   } catch (error) {
     log(
-      `Warning: Failed to create pull request for ${repoName}: ${getErrorMessage(
+      `Warning: Failed to create/update pull request for ${repoName}: ${getErrorMessage(
         error
       )}`
     );
-    // Don't throw error here - PR creation failure shouldn't fail the entire update
+    // Don't throw error here - PR creation/update failure shouldn't fail the entire update
   }
 }
 
@@ -315,6 +337,29 @@ async function updateRepository(repoName: string): Promise<void> {
         'Applying Nx migrations (auto-commits enabled)'
       );
 
+      // Clean up migrations.json after successful migration
+      if (fs.existsSync(migrationsFile)) {
+        log('🧹 Cleaning up migrations.json after successful migration');
+        fs.unlinkSync(migrationsFile);
+
+        // Commit the removal of migrations.json if there are any changes
+        try {
+          await execWithOutput(
+            'git add .',
+            repoDir,
+            'Staging migration cleanup'
+          );
+          await execWithOutput(
+            'git commit -m "chore(repo): clean up migrations.json after migration"',
+            repoDir,
+            'Committing migration cleanup'
+          );
+        } catch (error) {
+          // It's okay if there's nothing to commit
+          log('📋 No additional cleanup needed');
+        }
+      }
+
       log('✅ Nx migrations completed with automatic commits');
     } else {
       log('📋 No migrations.json found, migration setup complete');
@@ -327,9 +372,9 @@ async function updateRepository(repoName: string): Promise<void> {
       'Pushing update branch to remote (force)'
     );
 
-    // Create pull request with correct versions
-    log('🔄 Creating pull request...');
-    await createPullRequest(
+    // Create or update pull request with correct versions
+    log('🔄 Creating or updating pull request...');
+    await createOrUpdatePullRequest(
       repoName,
       repoDir,
       updateBranch,
