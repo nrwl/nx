@@ -28,26 +28,30 @@ export function FeaturesWhileCoding(): ReactElement {
               <SectionHeading as="p" variant="subtitle" className="mt-6">
                 Drop Nx into any codebase and it automatically understands your
                 project structure,{' '}
-                <TextLink href="/features/run-tasks">
+                <TextLink href="/features/run-tasks?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                   executing tasks efficiently
                 </TextLink>{' '}
                 with intelligent{' '}
-                <TextLink href="/features/cache-task-results">caching</TextLink>{' '}
+                <TextLink href="/features/cache-task-results?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+                  caching
+                </TextLink>{' '}
                 and a clean{' '}
-                <TextLink href="/recipes/running-tasks/terminal-ui">
+                <TextLink href="/recipes/running-tasks/terminal-ui?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                   terminal interface
                 </TextLink>{' '}
                 that keeps you focused on what matters.
               </SectionHeading>
               <SectionHeading as="p" variant="subtitle" className="mt-6">
-                <TextLink href="/concepts/nx-plugins">Nx plugins</TextLink>{' '}
+                <TextLink href="/concepts/nx-plugins?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+                  Nx plugins
+                </TextLink>{' '}
                 eliminate the complexity of juggling multiple tools and
                 configurations, handling setup and coordination across different
                 technologies so you don't have to.
               </SectionHeading>
               <SectionHeading as="p" variant="subtitle" className="mt-6">
                 Your{' '}
-                <TextLink href="/features/enhance-AI">
+                <TextLink href="/features/enhance-AI?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                   AI coding assistant
                 </TextLink>{' '}
                 gets complete workspace context through Nx, understanding
@@ -57,7 +61,7 @@ export function FeaturesWhileCoding(): ReactElement {
             </div>
             <div className="mt-10 flex gap-x-6">
               <Link
-                href="/getting-started/intro"
+                href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
                 title="Find out about Nx"
                 prefetch={false}
                 className="group text-xl font-semibold leading-6 text-slate-950 dark:text-white"
@@ -77,7 +81,7 @@ export function FeaturesWhileCoding(): ReactElement {
               src="/images/home/features-while-coding.svg"
               width={800}
               height={800}
-              alt=""
+              alt="Illustration of an editor window, with a project graph and AI"
               className="max-w-[full] lg:max-w-[full] dark:hidden"
             />
             <Image

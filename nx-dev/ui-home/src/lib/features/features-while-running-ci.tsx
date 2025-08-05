@@ -36,13 +36,15 @@ export function FeaturesWhileRunningCI(): ReactElement {
             <SectionHeading as="p" variant="subtitle" className="mt-6">
               Nx works with your CI provider to compress the entire validation
               process.{' '}
-              <TextLink href="/ci/features/remote-cache">Remote cache</TextLink>{' '}
+              <TextLink href="/ci/features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+                Remote cache
+              </TextLink>{' '}
               and{' '}
-              <TextLink href="/ci/features/distribute-task-execution">
+              <TextLink href="/ci/features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                 automatic task distribution
               </TextLink>{' '}
               speed up CI, while{' '}
-              <TextLink href="/ci/features/self-healing-ci">
+              <TextLink href="/ci/features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                 self-healing systems
               </TextLink>{' '}
               automatically rerun flaky tests and fix code issues—instantly.
@@ -59,7 +61,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
 
             <div className="mt-10 flex gap-x-6">
               <Link
-                href="/nx-cloud"
+                href="/nx-cloud?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
                 title="Add Nx Cloud to your CI workflow"
                 prefetch={false}
                 className="group text-xl font-semibold leading-6 text-slate-950 dark:text-white"
@@ -79,7 +81,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
               src="/images/home/features-while-running-ci.svg"
               width={800}
               height={800}
-              alt=""
+              alt="Illustration of a PR's timeline, with task distribution and self-healing CI"
               className="max-w-[full] lg:max-w-[full] dark:hidden"
             />
             <Image

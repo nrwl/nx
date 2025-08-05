@@ -26,19 +26,22 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               Nx defines clear project boundaries and leverages monorepo
               concepts—shared tooling, atomic changes, and coordinated
               releases—so code stays easy to maintain.{' '}
-              <TextLink href="/nx-enterprise/powerpack/owners">
+              <TextLink href="/nx-enterprise/powerpack/owners?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                 Ownership
               </TextLink>{' '}
               is defined at the project level, while{' '}
-              <TextLink href="/nx-enterprise/powerpack/conformance">
+              <TextLink href="/nx-enterprise/powerpack/conformance?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                 conformance rules
               </TextLink>{' '}
               enforce organizational standards automatically across your{' '}
               <strong>entire codebase</strong>.
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              <TextLink href="/plugin-registry">Nx plugins</TextLink> and{' '}
-              <TextLink href="/features/generate-code">
+              <TextLink href="/plugin-registry?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+                Nx plugins
+              </TextLink>{' '}
+              and{' '}
+              <TextLink href="/features/generate-code?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
                 code generation
               </TextLink>{' '}
               standardize best practices and eliminate duplication, while
@@ -52,7 +55,7 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               src="/images/home/features-while-scaling-org.webp"
               width={800}
               height={800}
-              alt=""
+              alt="Illustration of a cluster of plugins, rules, and code generation tools, with branches sprouting from them"
               className="max-w-[full] lg:max-w-[full] dark:hidden"
             />
             <Image

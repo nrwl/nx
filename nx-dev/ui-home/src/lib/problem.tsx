@@ -98,14 +98,14 @@ export function ProblemListItem({
         src={`/images/home/problem-${imageId}.svg`}
         width={350}
         height={250}
-        alt="problem"
+        alt=""
         className="max-w-48 dark:hidden"
       />
       <Image
         src={`/images/home/problem-${imageId}-dark.svg`}
         width={350}
         height={250}
-        alt="problem"
+        alt=""
         className="hidden max-w-48 dark:block"
       />
       <span className="mx-4">{children}</span>
