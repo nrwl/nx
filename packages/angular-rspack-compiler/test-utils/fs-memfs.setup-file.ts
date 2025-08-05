@@ -6,13 +6,12 @@ import {
   beforeAll,
   afterAll,
 } from 'vitest';
-import { MEMFS_VOLUME } from '@ng-rspack/testing-utils';
 
 /**
  * Mocks the fs and fs/promises modules with memfs.
  */
-
 type Memfs = typeof import('memfs');
+export const MEMFS_VOLUME = '/memfs';
 
 vi.mock('fs', async () => {
   const memfs: Memfs = await vi.importActual('memfs');
@@ -34,7 +33,7 @@ vi.mock('fs/promises', async () => {
  * - `readFile(join(process.cwd(), 'file.txt'))` reads MEMFS_VOLUME/file.txt
  * - `readFile('file.txt')` reads file.txt
  */
-let cwdSpy: MockInstance<[], string>;
+let cwdSpy: MockInstance;
 
 // This covers arrange blocks at the top of a "describe" block
 beforeAll(() => {

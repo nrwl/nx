@@ -8,13 +8,13 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'node',
-    include: ['src/**/*.unit.test.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['src/**/*.spec.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: ['./test-utils/fs-memfs.setup-file.ts'],
     reporters: ['default'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      reportsDirectory: '../../coverage/angular-rspack-compiler/unit',
+      reportsDirectory: './coverage/angular-rspack-compiler/unit',
       exclude: [
         'mocks/**',
         '**/types.ts',

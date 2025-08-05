@@ -322,7 +322,6 @@ describe('createConfig', () => {
         );
         expect(NgRspackPlugin).toBeDefined();
         expect(
-          // @ts-expect-error - TS cannot index correctly because of multiple potential types
           NgRspackPlugin['pluginOptions'] as AngularRspackPluginOptions
         ).toEqual(
           expect.objectContaining({

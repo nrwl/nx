@@ -86,7 +86,15 @@ export class I18nInlinePlugin implements RspackPluginInstance {
             locale.translation,
             this.#pluginOptions.advancedOptimizations
           );
-          localeFiles.set(filename, { text: result.code, map: result.map });
+          const sourceMap = new sources.SourceMapSource(
+            result.code,
+            filename,
+            result.map
+          );
+          localeFiles.set(filename, {
+            text: result.code,
+            map: sourceMap.map(),
+          });
           // TODO: Add support for diagnostics
         }
         for (const [filename, source] of additionalFiles.entries()) {
@@ -105,7 +113,7 @@ export class I18nInlinePlugin implements RspackPluginInstance {
         for (const [filename, { text, map }] of files.entries()) {
           const localeFileName = `${localeSubPath}/${filename}`;
           const asset = compilation.getAsset(filename);
-          const assetInfo = asset?.info;
+          const assetInfo = asset ? asset.info : undefined;
 
           if (map) {
             compilation.emitAsset(

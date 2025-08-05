@@ -42,8 +42,6 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #sourceFileCache: SourceFileCache;
   #javascriptTransformer: ResolvedJavascriptTransformer;
   // This will be defined in the apply method correctly
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
   #angularCompilation: AngularCompilation;
 
   constructor(

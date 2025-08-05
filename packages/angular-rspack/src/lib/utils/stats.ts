@@ -143,7 +143,8 @@ function statsToString(
 
         rawSize += asset.size;
 
-        const assetInfo = stats.compilation.getAsset(asset.name)?.info;
+        const compilationAsset = stats.compilation.getAsset(asset.name);
+        const assetInfo = compilationAsset ? compilationAsset.info : undefined;
         if (assetInfo) {
           if (typeof assetInfo.estimatedTransferSize === 'number') {
             if (estimatedTransferSize === undefined) {

@@ -1,23 +1,26 @@
-![Nx](https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg)
-<div style="text-align: center;">
+<p style="text-align: center;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
+    <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+  </picture>
+</p>
 
-# @nx/angular-rspack
-
-[![GitHub Actions](https://github.com/nrwl/angular-rspack/actions/workflows/ci.yml/badge.svg)](https://github.com/nrwl/angular-rspack/actions/workflows/ci.yml)
-![License](https://img.shields.io/badge/License-MIT-blue)
-[![NPM Version](https://img.shields.io/npm/v/%40ng-rspack%2Fbuild?label=%40nx%2Fangular-rspack)](https://www.npmjs.com/package/@ng-rspack/build)
-
-</div>
+{{links}}
 
 <hr>
 
-# Build Angular with Rspack
+# Nx: Smart Repos · Fast Builds
+
+An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
+
+
+## Build Angular with Rspack
 
 The goal of `@nx/angular-rspack` is to make easy and straightforward to build Angular applications with [rspack](https://rspack.dev).
 
-## Getting Started
+### Getting Started
 
-### Step 1: Create a new Nx Workspace with Angular Rspack Application
+#### Step 1: Create a new Nx Workspace with Angular Rspack Application
 
 ```bash
 npx create-nx-workspace myorg
@@ -36,21 +39,9 @@ NX   Let's create a new workspace [[https://nx.dev/getting-started/intro](https:
 NX   Creating your v20.8.0 workspace.
 ```
 
-### Step 2: Run Build and Serve commands
+#### Step 2: Run Build and Serve commands
 
 ```bash
 npx nx build myorg
 npx nx serve myorg
 ```
-
-
-## Documentation and Resources
-
-- [Read the Angular Rspack Documentation](https://nx.dev/recipes/angular/rspack/introduction)
-- [Nx.Dev: Documentation, Guides, Tutorials](https://nx.dev)
-- [Intro to Nx](https://nx.dev/getting-started/intro)
-- [Official Nx YouTube Channel](https://www.youtube.com/@NxDevtools)
-- [Blog Posts About Nx](https://nx.dev/blog)
-
-<p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-courses-and-videos.svg" 
-width="100%" alt="Nx - Smart Monorepos · Fast CI"></a></p>

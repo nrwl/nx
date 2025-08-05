@@ -72,10 +72,7 @@ export async function _createConfig(
       i18n,
       defaultConfig
     );
-    const mergedConfig = rspackMerge(
-      serverConfig,
-      (rspackConfigOverrides as unknown) ?? {}
-    );
+    const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
     configs.push(mergedConfig);
   }
 
@@ -85,10 +82,7 @@ export async function _createConfig(
     hashFormat,
     defaultConfig
   );
-  const mergedConfig = rspackMerge(
-    browserConfig,
-    (rspackConfigOverrides as unknown) ?? {}
-  );
+  const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);
   return configs;
 }

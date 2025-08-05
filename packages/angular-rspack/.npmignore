@@ -1,8 +1,6 @@
 !dist
 dist/tsconfig.lib.tsbuildinfo
-code-pushup.config.ts
-eslint.next.config.js
-eslint.config.js
+.eslintrc.json
 project.json
 tsconfig.json
 tsconfig.lib.json
@@ -12,4 +10,4 @@ src/**/*.ts
 !src/lib/patch
 .swcrc
 vitest.config.mts
-vitest.integration.config.mts
+test-utils

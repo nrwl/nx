@@ -84,14 +84,15 @@
         "projects": [
           "packages/*",
           "packages/nx/native-packages/*",
-          "!angular-rspack-compiler"
+          "!angular-rspack-compiler",
+          "!angular-rspack"
         ],
         "version": {
           "manifestRootsToUpdate": ["dist/packages/{projectName}"]
         }
       },
       "angular-rspack": {
-        "projects": ["angular-rspack-compiler"],
+        "projects": ["angular-rspack-compiler", "angular-rspack"],
         "version": {
           "manifestRootsToUpdate": ["packages/{projectName}"]
         }
@@ -220,7 +221,7 @@
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["packages/angular-rspack-compiler/**"],
+      "include": ["packages/angular-rspack-compiler/**", "packages/angular-rspack/**"],
       "options": {
         "testTargetName": "test"
       }

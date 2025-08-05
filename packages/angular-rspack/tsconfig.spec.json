@@ -1,33 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/packages/angular-rspack/spec",
     "types": [
       "vitest/globals",
       "vitest/importMeta",
-      "vite/client",
       "node",
       "vitest"
     ],
-    "paths": {
-      "@ng-rspack/testing-setup": ["../../testing/setup/index.ts"]
-    }
   },
   "references": [
     {
       "path": "tsconfig.lib.json"
     },
-    {
-      "path": "../../testing/setup/tsconfig.lib.json"
-    },
-    {
-      "path": "../../testing/utils/tsconfig.lib.json"
-    }
   ],
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
-    "vitest.integration.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
