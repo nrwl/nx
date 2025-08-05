@@ -25,7 +25,7 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 Let's create your workspace. The setup process takes about 2 minutes and will configure React, testing, and CI/CD automatically.
 
-{% call-to-action title="Start Building React Apps 10x Faster →" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="Zero-config setup with caching, testing, and CI ready out of the box" /%}
+{% call-to-action variant="inverted" title="Start Building React Apps 10x Faster →" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="Zero-config setup with caching, testing, and CI ready out of the box" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -530,7 +530,7 @@ As expected, the CI check fails because of the test failure in the `demo` app. B
 
 ### Fix CI from Your Editor
 
-From the Nx Console notification, you can click `Show Suggested Fix` button. Review the suggested fix, which in this case is to change the typo `Welcmoe `to the correct `Welcome` spelling. Approve this fix by clicking `ApplyFix` and that's it!
+From the Nx Console notification, you can click `Show Suggested Fix` button. Review the suggested fix, which in this case is to change the typo `Welcmoe`to the correct `Welcome` spelling. Approve this fix by clicking `ApplyFix` and that's it!
 
 ![Suggestion to fix the typo in the editor](/shared/images/tutorials/react-ci-suggestion.avif)
 
