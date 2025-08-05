@@ -14,7 +14,7 @@ To connect your workspace to Nx Cloud run:
 npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
 
 ## How Nx Identifies Flaky Tasks
 

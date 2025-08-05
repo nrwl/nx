@@ -29,6 +29,7 @@ import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -56,8 +57,10 @@ export async function expoLibraryGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
+    addTsPlugin,
     skipFormat: true,
   });
   tasks.push(jsInitTask);

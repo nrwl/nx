@@ -145,7 +145,7 @@
             {
               "name": "CI Features",
               "id": "ci-features",
-              "description": "Features of Nx and Nx Cloud that improve CI",
+              "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
               "itemList": [
                 {
                   "name": "AI-Powered Self-Healing CI",
@@ -2512,32 +2512,9 @@
       "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
       "itemList": [
         {
-          "name": "Intro",
-          "id": "intro",
-          "description": "Learn about basic Nx Cloud knowledge.",
-          "file": "nx-cloud/intro/ci-with-nx",
-          "itemList": [
-            {
-              "name": "CI with Nx",
-              "id": "ci-with-nx",
-              "file": "nx-cloud/intro/ci-with-nx"
-            },
-            {
-              "name": "Why Nx Cloud?",
-              "id": "why-nx-cloud",
-              "file": "nx-cloud/intro/why-nx-cloud"
-            },
-            {
-              "name": "Connect to Nx Cloud",
-              "id": "connect-to-nx-cloud",
-              "file": "nx-cloud/intro/connect-to-cloud"
-            }
-          ]
-        },
-        {
           "name": "Features",
           "id": "features",
-          "description": "Features of Nx and Nx Cloud that improve CI",
+          "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
           "itemList": [
             {
               "name": "AI-Powered Self-Healing CI",
@@ -2586,11 +2563,13 @@
             {
               "name": "Explain With AI",
               "id": "explain-with-ai",
+              "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
               "file": "nx-cloud/features/explain-with-ai"
             },
             {
               "name": "GitHub Integration",
               "id": "github-integration",
+              "description": "Learn how to setup the GitHub integration for Nx Cloud.",
               "file": "nx-cloud/features/github-integration"
             }
           ]
@@ -2639,13 +2618,13 @@
         {
           "name": "Guides",
           "id": "recipes",
-          "description": "Learn how to set up Nx Cloud for your workspace.",
+          "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
           "itemList": [
             {
               "name": "Set Up CI",
               "id": "set-up",
-              "description": "Learn how to set up Nx Cloud for your workspace.",
-              "tags": ["distribute-task-execution"],
+              "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
+              "tags": ["distribute-task-execution", "self-heeded-ci"],
               "itemList": [
                 {
                   "name": "Setting up Azure Pipelines",
@@ -2862,7 +2841,7 @@
             {
               "name": "Other",
               "id": "other",
-              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
               "itemList": [
                 {
                   "name": "Record Non-Nx Commands",
