@@ -5,10 +5,22 @@ import { ReactElement } from 'react';
 export function Problem(): ReactElement {
   return (
     <section
-      id="ci-bottleneck"
-      className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
+      id="problem"
+      className="relative scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
     >
-      <article className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
+        aria-hidden="true"
+      >
+        <div
+          className="aspect-[1108/632] w-[69.25rem] flex-none bg-gradient-to-r from-pink-500 to-orange-600 opacity-20"
+          style={{
+            clipPath:
+              'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 0%, 92.5% 84.9%, 75.7% 64%, 10% 47.5%, 46.5% 20%, 20% 70%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 50.6% 51%)',
+          }}
+        />
+      </div>
+      <article className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mb-12 flex flex-col items-center gap-24">
           <SectionHeading
             as="h2"
