@@ -55,7 +55,6 @@ export function FeaturesWhileCoding(): ReactElement {
                 codebase-specific guidance.
               </SectionHeading>
             </div>
-
             <div className="mt-10 flex gap-x-6">
               <Link
                 href="/getting-started/intro"

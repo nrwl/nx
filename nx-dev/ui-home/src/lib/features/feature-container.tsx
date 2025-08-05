@@ -28,7 +28,7 @@ export function FeatureContainer({
         </div>
         <div className="hidden h-full w-[3px] bg-gradient-to-b from-slate-200 via-purple-500 to-slate-50 md:block dark:from-slate-800 dark:via-purple-500 dark:to-slate-900"></div>
       </div>
-      <div className="mb-32 md:ml-16">{children}</div>
+      <div className="mb-32 mt-1 md:ml-16">{children}</div>
     </div>
   );
 }

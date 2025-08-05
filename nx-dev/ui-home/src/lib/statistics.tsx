@@ -32,7 +32,7 @@ export function Statistics(): JSX.Element {
           {statistics.map((stat) => (
             <div
               key={stat.id}
-              className="mx-auto flex max-w-xs flex-col gap-y-2"
+              className="mx-auto flex max-w-sm flex-col gap-y-2"
             >
               <dt className="text-base leading-7 text-slate-600 dark:text-slate-400">
                 {stat.name}

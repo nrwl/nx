@@ -13,7 +13,7 @@ export function Problem(): ReactElement {
         aria-hidden="true"
       >
         <div
-          className="aspect-[1108/632] w-[69.25rem] flex-none bg-gradient-to-r from-pink-500 to-orange-600 opacity-20"
+          className="aspect-[1108/632] w-[69.25rem] flex-none bg-gradient-to-r from-pink-500 to-fuchsia-600 opacity-20"
           style={{
             clipPath:
               'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 0%, 92.5% 84.9%, 75.7% 64%, 10% 47.5%, 46.5% 20%, 20% 70%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 50.6% 51%)',
@@ -21,7 +21,7 @@ export function Problem(): ReactElement {
         />
       </div>
       <article className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mb-12 flex flex-col items-center gap-24">
+        <div className="mb-12 flex flex-col items-center gap-12 md:gap-24">
           <SectionHeading
             as="h2"
             variant="title"
@@ -34,11 +34,11 @@ export function Problem(): ReactElement {
             as="h2"
             variant="title"
             id=""
-            className="max-w-[32rem] scroll-mt-24 text-center font-normal sm:leading-tight"
+            className="text-center font-normal lg:mt-16 lg:max-w-[32rem] lg:leading-tight"
           >
             Most engineering work isn't that. It's:
           </SectionHeading>
-          <ul className="mt-4 flex flex-col items-start gap-12 lg:flex-row">
+          <ul className="grid grid-cols-1 items-start sm:grid-cols-2 lg:flex lg:justify-between">
             <ProblemListItem imageId="sharing-code" position={['top', 'left']}>
               Figuring out how to share code between teams
             </ProblemListItem>
@@ -92,7 +92,7 @@ export function ProblemListItem({
 
   return (
     <li
-      className={`${positionClass} mb-2 flex flex-col items-center gap-2 p-2 text-center`}
+      className={`${positionClass} mb-2 flex w-full flex-col items-center gap-2 p-2 text-center`}
     >
       <Image
         src={`/images/home/problem-${imageId}.svg`}
