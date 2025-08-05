@@ -18,7 +18,7 @@ Here is some key terminology often used with monorepos:
 - A **workspace** encompasses the entire monorepo structure
 - **Projects** represent individual applications, libraries, or services within that workspace
 - **Source dependencies** compile directly from code within the repository, eliminating the need for package registries between internal projects
-- The **project graph** maps relationshiops between projects which enables tools to determine which changes affect which components
+- The **project graph** maps relationships between projects which enables tools to determine which changes affect which components
 
 Common myths about monorepos include:
 
