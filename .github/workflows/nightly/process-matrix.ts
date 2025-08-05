@@ -43,6 +43,7 @@ const matrixData: MatrixData = {
   ],
   projects: [
     { name: 'e2e-cypress', codeowners: 'S04T16BTJJY', is_golden: true },
+    { name: 'e2e-docker', codeowners: 'S04SJ6HHP0X', is_golden: true },
     { name: 'e2e-detox', codeowners: 'S04TNCNJG5N' , is_golden: true},
     { name: 'e2e-esbuild', codeowners: 'S04SJ6HHP0X' , is_golden: true},
     { name: 'e2e-gradle', codeowners: 'S04TNCNJG5N' , is_golden: true},
