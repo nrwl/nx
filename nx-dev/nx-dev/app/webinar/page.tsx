@@ -31,6 +31,7 @@ export const metadata: Metadata = {
 async function getWebinars() {
   return await webinarApi.getWebinarBlogs();
 }
+
 export default async function Page() {
   const webinars = await getWebinars();
   return (

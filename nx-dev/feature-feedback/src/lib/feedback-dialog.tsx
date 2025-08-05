@@ -105,7 +105,7 @@ function FeedbackDialog({
                 </DialogTitle>
 
                 {/* The anatomy here should be
-              
+
             ************* [Title] *********[Close button] *************
                     [ Github feedback] | [ Idea feedback ]
                     [ Feedback text area ]

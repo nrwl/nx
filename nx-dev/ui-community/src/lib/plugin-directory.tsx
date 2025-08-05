@@ -27,6 +27,7 @@ type OrderByStatus =
   | 'githubStars'
   | 'nxVersion'
   | undefined;
+
 interface Modifiers {
   term: string;
   officialStatus: 'official' | 'community' | undefined;
@@ -78,6 +79,7 @@ export function PluginDirectory({
     orderBy: undefined,
     orderDirection: 'ASC',
   });
+
   function setOrderBy(status: OrderByStatus) {
     if (modifiers.orderBy === status) {
       setModifiers({
@@ -91,6 +93,7 @@ export function PluginDirectory({
       });
     }
   }
+
   return (
     <div id="plugin-directory">
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
@@ -240,6 +243,7 @@ export function PluginDirectory({
                 '>= 13': 15,
                 official: 1000,
               };
+
               function getValueFromVersion(version: string = 'unknown') {
                 const mapKey =
                   Object.keys(versionValueMap).find((key) =>
@@ -247,6 +251,7 @@ export function PluginDirectory({
                   ) || 'unknown';
                 return versionValueMap[mapKey];
               }
+
               return (
                 (modifiers.orderDirection === 'ASC' ? 1 : -1) *
                 (getValueFromVersion(a.nxVersion) -

@@ -30,9 +30,9 @@ export function TalkToOurTeam(): ReactElement {
             </p>
             <div className="mt-4">
               <ul className="ml-4 list-inside list-disc space-y-2">
-                <li> Learn about our products and solutions. </li>
-                <li> Demo our products firsthand and see the difference. </li>
-                <li> Find the right plan for your unique needs. </li>
+                <li> Learn about our products and solutions.</li>
+                <li> Demo our products firsthand and see the difference.</li>
+                <li> Find the right plan for your unique needs.</li>
               </ul>
             </div>
             <p className="mt-5 text-lg font-bold leading-relaxed">

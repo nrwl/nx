@@ -31,6 +31,7 @@ export const metadata: Metadata = {
 async function getPodcasts() {
   return await podcastApi.getPodcastBlogs();
 }
+
 export default async function Page() {
   const podcasts = await getPodcasts();
   return (

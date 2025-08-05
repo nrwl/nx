@@ -347,6 +347,7 @@ export function ProjectsCreatedEveryMonth(): JSX.Element {
     </div>
   );
 }
+
 //
 
 //
@@ -395,6 +396,7 @@ export function HalveYouBill(): JSX.Element {
     </div>
   );
 }
+
 //
 
 //

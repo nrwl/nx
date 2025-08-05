@@ -21,6 +21,7 @@ const coFounders = [
     },
   },
 ];
+
 export function CoFounders(): JSX.Element {
   return (
     <section>

@@ -24,6 +24,7 @@ interface PluginInfo {
   url: string;
   pluginType: PluginType;
 }
+
 interface BrowseProps {
   pluginList: PluginInfo[];
   menu: MenuItem[];

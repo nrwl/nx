@@ -213,6 +213,7 @@ const teamMembers = [
     imageUrl: 'zack-derose.avif',
   },
 ];
+
 export function TheTeam(): ReactElement {
   return (
     <section>

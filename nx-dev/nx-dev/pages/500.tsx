@@ -23,7 +23,8 @@ export default function FiveOhOh(): JSX.Element {
                   className="drop-shadow"
                 />
                 <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl lg:ml-8 dark:text-slate-100">
-                  <div className="sr-only">500 - </div>Internal Server Error!
+                  <div className="sr-only">500 -</div>
+                  Internal Server Error!
                 </h1>
               </div>
               <p className="mt-8 text-lg">

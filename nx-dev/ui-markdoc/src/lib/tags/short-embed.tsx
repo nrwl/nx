@@ -11,6 +11,7 @@ import markdoc from '@markdoc/markdoc';
 import { Transition } from '@headlessui/react';
 import { Button } from '@nx/nx-dev/ui-common';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+
 const { Tag } = markdoc;
 
 interface VideoData {

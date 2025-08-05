@@ -32,6 +32,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
 };
+
 async function getBlogs() {
   return await blogApi.getBlogs((p) => !!p.published);
 }

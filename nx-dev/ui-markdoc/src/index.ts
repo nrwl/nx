@@ -55,6 +55,7 @@ import { tableOfContents } from './lib/tags/table-of-contents.schema';
 import { Testimonial, testimonial } from './lib/tags/testimonial.component';
 import { metrics } from './lib/tags/metrics.schema';
 import { Metrics } from './lib/tags/metrics.component';
+
 export { CallToAction };
 
 const { parse, renderers, Tokenizer, transform } = markdoc;
