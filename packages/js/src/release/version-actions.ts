@@ -111,7 +111,15 @@ export default class JsVersionActions extends VersionActions {
             if (error) {
               return reject(error);
             }
-            if (stderr) {
+            // Only reject on stderr if it contains actual errors, not just npm warnings
+            // npm 11+ writes "npm warn" messages to stderr even on successful commands
+            if (
+              stderr &&
+              !stderr
+                .trim()
+                .split('\n')
+                .every((line) => line.startsWith('npm warn'))
+            ) {
               return reject(stderr);
             }
             return resolve(stdout.trim());
