@@ -60,6 +60,13 @@
     ],
     "targets": {
       "build": {},
+      "test": {
+        "dependsOn": ["test-native", "build-native", "^build-native"],
+        "inputs": ["default", "^production", "{projectRoot}/vitest.config.mts"],
+        "options": {
+          "args": ["--passWithNoTests"]
+        }
+      },
       "nx-release-publish": {
         "executor": "@nx/js:release-publish",
         "options": {

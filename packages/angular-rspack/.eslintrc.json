@@ -46,7 +46,29 @@
               "jsonc-eslint-parser",
               "vitest",
               "memfs",
-              "tslib"
+              "tslib",
+              // it's only a type import, so it won't be required at runtime
+              "sass",
+              // shown as unused because it's required using `createRequire`
+              "tailwindcss",
+              // allow following packages to differ as they need to specific to angular
+              "@babel/core",
+              "autoprefixer",
+              "css-loader",
+              "jsonc-parser",
+              "less-loader",
+              "loader-utils",
+              "open",
+              "ora",
+              "parse5-html-rewriting-stream",
+              "piscina",
+              "postcss",
+              "postcss-loader",
+              "rxjs",
+              "sass-loader",
+              "sass-embedded",
+              "webpack-merge",
+              "ws"
             ]
           }
         ]

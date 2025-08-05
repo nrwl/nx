@@ -110,3 +110,6 @@ tasks/
 .upstreamdocs.local.json
 
 astro-docs/.netlify
+
+packages/angular-rspack/coverage
+packages/angular-rspack-compiler/coverage
