@@ -1,11 +1,20 @@
-<div style="text-align: center;">
+<p style="text-align: center;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
+    <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+  </picture>
+</p>
 
-<img src="http://github.com/nrwl/angular-rspack/raw/main/rsbuild-plugin-angular.png" alt="Rsbuild Plugin Angular" />
+{{links}}
 
-</div>
+<hr>
+
+# Nx: Smart Repos · Fast Builds
+
+An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
 
 # @nx/angular-rspack-compiler
 
-## Compilation Utilities for Angular with Rspack and Rsbuild
+## Compilation Utilities for Angular with Rspack
 
-This library provides utilities for compiling Angular applications with Rspack and Rsbuild.
+This library provides utilities for compiling Angular applications with Rspack.

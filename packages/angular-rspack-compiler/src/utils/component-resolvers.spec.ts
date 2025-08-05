@@ -1,4 +1,4 @@
-import { describe, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   getStyleUrls,
   getTemplateUrls,
