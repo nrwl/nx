@@ -55,7 +55,6 @@
     ]
   },
   "release": {
-    "projects": ["packages/*", "packages/nx/native-packages/*"],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
@@ -76,9 +75,26 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
+      }
+    },
+    "groups": {
+      "nx-packages": {
+        "projects": [
+          "packages/*",
+          "packages/nx/native-packages/*",
+          "!angular-rspack-compiler"
+        ],
+        "version": {
+          "manifestRootsToUpdate": ["dist/packages/{projectName}"]
+        }
+      },
+      "angular-rspack": {
+        "projects": ["angular-rspack-compiler"],
+        "version": {
+          "manifestRootsToUpdate": ["packages/{projectName}"]
+        }
       }
     }
   },
@@ -202,6 +218,13 @@
   },
   "plugins": [
     "@monodon/rust",
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["packages/angular-rspack-compiler/**"],
+      "options": {
+        "testTargetName": "test"
+      }
+    },
     {
       "plugin": "@nx/js/typescript",
       "options": {

@@ -1,14 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"]
+  },
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "../../testing/setup"
-    },
-    {
-      "path": "../../testing/utils"
-    },
     {
       "path": "./tsconfig.lib.json"
     },

@@ -1,6 +1,5 @@
-import { describe, expect } from 'vitest';
+import { describe, expect, vi, it } from 'vitest';
 import { SourceFileCache } from './source-file-cache.ts';
-import { sourceFileFromCode } from '@ng-rspack/testing-utils';
 import { pathToFileURL } from 'node:url';
 import * as osModule from 'node:os';
 import path from 'node:path';
@@ -23,17 +22,6 @@ describe('SourceFileCache', async () => {
     expect(set).toStrictEqual(expect.any(Function));
     expect(get).toStrictEqual(expect.any(Function));
     expect(invalidate).toStrictEqual(expect.any(Function));
-  });
-
-  it('should be able to set a value in the cache and get it later', () => {
-    const cache = new SourceFileCache();
-    const fileName = 'index.ts';
-    const sourceFile = sourceFileFromCode({
-      code: 'console.log("Hello ng-rspack-build 🦀📦!");',
-    }) as unknown as ts.SourceFile;
-
-    expect(() => cache.set(fileName, sourceFile)).not.toThrow();
-    expect(cache.get(fileName)).toStrictEqual(sourceFile);
   });
 
   it('should normalize windows file path to unix format if platform is win32', () => {

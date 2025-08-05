@@ -1,0 +1,58 @@
+{
+  "extends": "../../.eslintrc.json",
+  "rules": {},
+  "ignorePatterns": ["!**/*", "node_modules"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredFiles": [
+              "{projectRoot}/eslint.config.{js,cjs,mjs}",
+              "{projectRoot}/vite.config.{js,ts,mjs,mts}"
+            ],
+            "ignoredDependencies": [
+              "@angular/core",
+              "@code-pushup/models",
+              "@code-pushup/utils",
+              "jsonc-eslint-parser",
+              "vitest",
+              "memfs",
+              "tslib"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

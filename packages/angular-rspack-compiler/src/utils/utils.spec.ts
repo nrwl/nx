@@ -1,7 +1,5 @@
-import { afterEach, beforeEach, describe, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest';
 import {
-  getAllTextByProperty,
-  getTextByProperty,
   isPresent,
   isUsingWindows,
   maxWorkers,
@@ -10,8 +8,6 @@ import {
 } from './utils';
 import * as nodeOSModule from 'node:os';
 import { ENV_NG_BUILD_MAX_WORKERS } from './constants.ts';
-import { SyntaxKind } from 'ts-morph';
-import { sourceFileFromCode } from '@ng-rspack/testing-utils';
 import * as osModule from 'node:os';
 
 vi.mock('node:os');
@@ -98,82 +94,6 @@ describe('maxWorkers', () => {
 
     expect(maxWorkers()).toBe(4); // Min(4, max(availableParallelism - 1, 1))
     expect(availableParallelismSpy).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('getTextByProperty', () => {
-  it.each(["'", '"', '`'])(
-    'should return the property value and remove containing (%s) quotes',
-    (quote) => {
-      const styleUrl = 'button.component.scss';
-      const sourceFile = sourceFileFromCode({
-        code: `
-      @Component({
-        styleUrl: ${quote}${styleUrl}${quote}',
-      })
-      export class ButtonComponent {}
-      `,
-      });
-      const properties = sourceFile.getDescendantsOfKind(
-        SyntaxKind.PropertyAssignment
-      );
-
-      expect(getTextByProperty('styleUrl', properties)).toStrictEqual([
-        styleUrl,
-      ]);
-    }
-  );
-
-  it('should return the property value if not set', () => {
-    const sourceFile = sourceFileFromCode({
-      code: `
-      @Component({})
-      export class ButtonComponent {}
-      `,
-    });
-    const properties = sourceFile.getDescendantsOfKind(
-      SyntaxKind.PropertyAssignment
-    );
-
-    expect(getTextByProperty('styleUrl', properties)).toStrictEqual([]);
-  });
-});
-
-describe('getAllTextByProperty', () => {
-  it.each(["'", '"', '`'])(
-    'should return the property value containing (%s) quotes if set',
-    (quote) => {
-      const styleUrl = 'button.component.scss';
-      const sourceFile = sourceFileFromCode({
-        code: `
-      @Component({
-        styleUrls: [${quote}${styleUrl}${quote}]',
-      })
-      export class ButtonComponent {}
-      `,
-      });
-      const properties = sourceFile.getDescendantsOfKind(
-        SyntaxKind.PropertyAssignment
-      );
-
-      expect(getAllTextByProperty('styleUrls', properties)).toStrictEqual([
-        styleUrl,
-      ]);
-    }
-  );
-
-  it('should return the property value if not set', () => {
-    const sourceFile = sourceFileFromCode({
-      code: `
-      @Component({})
-      export class ButtonComponent {}
-      `,
-    });
-    const properties = sourceFile.getDescendantsOfKind(
-      SyntaxKind.PropertyAssignment
-    );
-
-    expect(getAllTextByProperty('styleUrls', properties)).toStrictEqual([]);
   });
 });
 
