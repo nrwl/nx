@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import Script from 'next/script';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
 // import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
@@ -61,6 +62,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
+      {process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+        <Script
+          id="Cookiebot"
+          src="https://consent.cookiebot.com/uc.js"
+          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
+          data-blockingmode="auto"
+          type="text/javascript"
+          strategy="beforeInteractive"
+        />
+      ) : null}
       <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
       <head>
         <meta
