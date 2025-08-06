@@ -55,6 +55,7 @@
     ]
   },
   "release": {
+    "projects": ["packages/*", "packages/nx/native-packages/*"],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
@@ -75,28 +76,9 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
-      }
-    },
-    "groups": {
-      "nx-packages": {
-        "projects": [
-          "packages/*",
-          "packages/nx/native-packages/*",
-          "!angular-rspack-compiler",
-          "!angular-rspack"
-        ],
-        "version": {
-          "manifestRootsToUpdate": ["dist/packages/{projectName}"]
-        }
-      },
-      "angular-rspack": {
-        "projects": ["angular-rspack-compiler", "angular-rspack"],
-        "version": {
-          "preserveLocalDependencyProtocols": true,
-          "manifestRootsToUpdate": ["packages/{projectName}"]
-        }
       }
     }
   },
