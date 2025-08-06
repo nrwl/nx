@@ -13774,7 +13774,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/ci/intro/ci-with-nx",
+        "path": "/ci/features",
         "tags": ["cache-task-results", "distribute-task-execution"]
       },
       {
@@ -13859,7 +13859,7 @@
     "path": "/see-also",
     "tags": []
   },
-  "/ci/intro/ci-with-nx": {
+  "/ci/features": {
     "id": "ci",
     "name": "CI Documentation",
     "description": "",
@@ -13867,7 +13867,7 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/ci/intro/ci-with-nx",
+    "path": "/ci/features",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
   "/nx-api/nx/documents/affected#skip-nx-cache": {
