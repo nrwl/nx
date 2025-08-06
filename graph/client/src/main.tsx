@@ -89,6 +89,9 @@ if (window.__NX_RENDER_GRAPH__ === false) {
   };
 
   window.renderProjectGraph = (projectData: any) => {
+    // Create event bridge for external communication
+    const eventListeners = new Map<string, Set<Function>>();
+
     // Create a simple state machine service for external control
     const stateMachine = createMachine({
       id: 'projectGraph',
@@ -98,6 +101,8 @@ if (window.__NX_RENDER_GRAPH__ === false) {
           on: {
             RENDER: 'rendering',
             UPDATE: 'updating',
+            FOCUS_NODE: 'focusing',
+            HIGHLIGHT_EDGE: 'highlighting',
           },
         },
         rendering: {
@@ -110,11 +115,39 @@ if (window.__NX_RENDER_GRAPH__ === false) {
             COMPLETE: 'idle',
           },
         },
+        focusing: {
+          on: {
+            COMPLETE: 'idle',
+          },
+        },
+        highlighting: {
+          on: {
+            COMPLETE: 'idle',
+          },
+        },
       },
     });
 
     const service = interpret(stateMachine).start();
     let graphClient: any = null;
+
+    // Event bridge functions
+    const emit = (eventType: string, data?: any) => {
+      const listeners = eventListeners.get(eventType) || new Set();
+      listeners.forEach((listener) => listener(data));
+    };
+
+    const on = (eventType: string, callback: Function) => {
+      if (!eventListeners.has(eventType)) {
+        eventListeners.set(eventType, new Set());
+      }
+      eventListeners.get(eventType)!.add(callback);
+
+      // Return unsubscribe function
+      return () => {
+        eventListeners.get(eventType)?.delete(callback);
+      };
+    };
 
     render(
       <StrictMode>
@@ -122,31 +155,82 @@ if (window.__NX_RENDER_GRAPH__ === false) {
           projectData={projectData}
           onGraphReady={(client) => {
             graphClient = client;
+
+            // Set up event listeners for graph state changes
+            if (graphClient.on) {
+              graphClient.on('nodeClick', (nodeId: string) => {
+                emit('nodeClick', { nodeId });
+              });
+
+              graphClient.on('edgeClick', (edgeId: string) => {
+                emit('edgeClick', { edgeId });
+              });
+
+              graphClient.on('backgroundClick', () => {
+                emit('backgroundClick');
+              });
+            }
+
             service.send('COMPLETE');
+            emit('ready', { client: graphClient });
           }}
         />
       </StrictMode>,
       document.getElementById('app')
     );
 
-    // Return service with send/receive capabilities
+    // Return enhanced API with event bridge
     return {
       service,
       send: (event: any) => {
-        if (graphClient) {
-          graphClient.send(event);
+        // Allow sending events from outside
+        if (typeof event === 'string') {
+          event = { type: event };
         }
+
+        // Handle specific event types
+        switch (event.type) {
+          case 'FOCUS_NODE':
+            if (graphClient?.focusNode) {
+              graphClient.focusNode(event.nodeId);
+            }
+            break;
+          case 'HIGHLIGHT_EDGE':
+            if (graphClient?.highlightEdge) {
+              graphClient.highlightEdge(event.edgeId);
+            }
+            break;
+          case 'UPDATE_DATA':
+            if (graphClient?.updateData) {
+              graphClient.updateData(event.data);
+            }
+            break;
+          default:
+            if (graphClient?.send) {
+              graphClient.send(event);
+            }
+        }
+
         return service.send(event);
       },
       receive: (callback: (event: any) => void) => {
-        if (graphClient) {
-          graphClient.on('*', callback);
-        }
+        // Set up event listeners for graph state changes
+        on('nodeClick', callback);
+        on('edgeClick', callback);
+        on('backgroundClick', callback);
+        on('ready', callback);
       },
+      on, // Expose the on method for custom events
+      emit, // Expose emit for triggering custom events
+      getState: () => service.state.value,
+      getGraphClient: () => graphClient,
     };
   };
 
   window.renderTaskGraph = (taskData: any) => {
+    // Create event bridge for external communication
+    const eventListeners = new Map<string, Set<Function>>();
+
     // Create a simple state machine service for external control
     const stateMachine = createMachine({
       id: 'taskGraph',
@@ -156,6 +240,8 @@ if (window.__NX_RENDER_GRAPH__ === false) {
           on: {
             RENDER: 'rendering',
             UPDATE: 'updating',
+            SELECT_TASK: 'selecting',
+            RUN_TASK: 'running',
           },
         },
         rendering: {
@@ -168,11 +254,40 @@ if (window.__NX_RENDER_GRAPH__ === false) {
             COMPLETE: 'idle',
           },
         },
+        selecting: {
+          on: {
+            COMPLETE: 'idle',
+          },
+        },
+        running: {
+          on: {
+            COMPLETE: 'idle',
+            FAILED: 'idle',
+          },
+        },
       },
     });
 
     const service = interpret(stateMachine).start();
     let graphClient: any = null;
+
+    // Event bridge functions
+    const emit = (eventType: string, data?: any) => {
+      const listeners = eventListeners.get(eventType) || new Set();
+      listeners.forEach((listener) => listener(data));
+    };
+
+    const on = (eventType: string, callback: Function) => {
+      if (!eventListeners.has(eventType)) {
+        eventListeners.set(eventType, new Set());
+      }
+      eventListeners.get(eventType)!.add(callback);
+
+      // Return unsubscribe function
+      return () => {
+        eventListeners.get(eventType)?.delete(callback);
+      };
+    };
 
     render(
       <StrictMode>
@@ -180,27 +295,83 @@ if (window.__NX_RENDER_GRAPH__ === false) {
           taskData={taskData}
           onGraphReady={(client) => {
             graphClient = client;
+
+            // Set up event listeners for task-specific events
+            if (graphClient.on) {
+              graphClient.on('taskClick', (taskId: string) => {
+                emit('taskClick', { taskId });
+              });
+
+              graphClient.on('taskRun', (taskId: string) => {
+                emit('taskRun', { taskId });
+              });
+
+              graphClient.on(
+                'taskComplete',
+                (taskId: string, status: string) => {
+                  emit('taskComplete', { taskId, status });
+                }
+              );
+
+              graphClient.on('backgroundClick', () => {
+                emit('backgroundClick');
+              });
+            }
+
             service.send('COMPLETE');
+            emit('ready', { client: graphClient });
           }}
         />
       </StrictMode>,
       document.getElementById('app')
     );
 
-    // Return service with send/receive capabilities
+    // Return enhanced API with event bridge
     return {
       service,
       send: (event: any) => {
-        if (graphClient) {
-          graphClient.send(event);
+        // Allow sending events from outside
+        if (typeof event === 'string') {
+          event = { type: event };
         }
+
+        // Handle specific event types
+        switch (event.type) {
+          case 'SELECT_TASK':
+            if (graphClient?.selectTask) {
+              graphClient.selectTask(event.taskId);
+            }
+            break;
+          case 'RUN_TASK':
+            if (graphClient?.runTask) {
+              graphClient.runTask(event.taskId);
+            }
+            break;
+          case 'UPDATE_TASKS':
+            if (graphClient?.updateTasks) {
+              graphClient.updateTasks(event.tasks);
+            }
+            break;
+          default:
+            if (graphClient?.send) {
+              graphClient.send(event);
+            }
+        }
+
         return service.send(event);
       },
       receive: (callback: (event: any) => void) => {
-        if (graphClient) {
-          graphClient.on('*', callback);
-        }
+        // Set up event listeners for task events
+        on('taskClick', callback);
+        on('taskRun', callback);
+        on('taskComplete', callback);
+        on('backgroundClick', callback);
+        on('ready', callback);
       },
+      on, // Expose the on method for custom events
+      emit, // Expose emit for triggering custom events
+      getState: () => service.state.value,
+      getGraphClient: () => graphClient,
     };
   };
 } else {
