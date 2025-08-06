@@ -59,15 +59,13 @@ async function setupClone(
   }
 
   try {
-    // Clone repository using gh cli
-    log(`Cloning ${repoName} from ${repoIdentifier}...`);
-    await execAsync(
-      `gh repo clone "${repoIdentifier}" "${cloneDir}" -- --depth 1`
+    // Clone repository using gh cli with specific branch
+    log(
+      `Cloning ${repoName} from ${repoIdentifier} (branch: ${repoBranch})...`
     );
-
-    // Checkout the specified branch
-    log(`Checking out branch: ${repoBranch}`);
-    await execAsync(`cd "${cloneDir}" && git checkout "${repoBranch}"`);
+    await execAsync(
+      `gh repo clone "${repoIdentifier}" "${cloneDir}" -- --depth 1 --branch "${repoBranch}"`
+    );
 
     log(`Clone for ${repoName} created at ${cloneDir}`);
   } catch (error) {
