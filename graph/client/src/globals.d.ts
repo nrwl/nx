@@ -42,11 +42,19 @@ export declare global {
       service: Interpreter<any, any, any>;
       send: (event: any) => any;
       receive: (callback: (event: any) => void) => void;
+      on: (eventType: string, callback: Function) => () => void;
+      emit: (eventType: string, data?: any) => void;
+      getState: () => any;
+      getGraphClient: () => any;
     };
     renderTaskGraph?: (taskData: any) => {
       service: Interpreter<any, any, any>;
       send: (event: any) => any;
       receive: (callback: (event: any) => void) => void;
+      on: (eventType: string, callback: Function) => () => void;
+      emit: (eventType: string, data?: any) => void;
+      getState: () => any;
+      getGraphClient: () => any;
     };
   }
 }
