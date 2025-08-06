@@ -24,7 +24,7 @@ export function sendPageViewEvent(data: {
   if (
     typeof window !== 'undefined' &&
     window.Cookiebot &&
-    !window.Cookiebot.consent.statistics
+    !window.Cookiebot.consent?.statistics
   ) {
     return;
   }
@@ -57,7 +57,7 @@ export function sendCustomEvent(
   if (
     typeof window !== 'undefined' &&
     window.Cookiebot &&
-    !window.Cookiebot.consent.statistics
+    !window.Cookiebot.consent?.statistics
   ) {
     return;
   }
