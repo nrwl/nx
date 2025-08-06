@@ -6,7 +6,7 @@ import { FeaturesWhileScalingYourOrganization } from './features-while-scaling-y
 
 export function Features(): ReactElement {
   return (
-    <section className="mt-32 scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
+    <section className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
       <article className="mx-auto max-w-7xl px-6 lg:px-8">
         <SectionHeading as="h2" variant="title" id="" className="scroll-mt-24">
           Build Products, Not Build Systems
