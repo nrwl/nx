@@ -56,7 +56,7 @@ function StatsSection(): ReactElement {
         color="purple"
       />
       <StatCard
-        title="15x"
+        title="360x"
         description="faster deployments from 5 days to 20 minutes"
         company="PayFit"
         link="/blog/payfit-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
@@ -84,8 +84,8 @@ function StatsSection(): ReactElement {
         color="sky"
       />
       <StatCard
-        title="25x"
-        description="more concurrency with Nx Agents, 44% faster CI"
+        title="44%"
+        description="faster CI with Nx Agents unlocking concurrency limits"
         company="Vattenfall"
         link="/blog/nx-agents-changes-the-math"
         color="cyan"
