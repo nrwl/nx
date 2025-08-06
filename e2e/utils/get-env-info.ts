@@ -135,6 +135,12 @@ export const packageManagerLockFile = {
 };
 
 export function ensureCypressInstallation() {
+  // Skip Cypress installation on CI where it's pre-installed in agents.yaml
+  if (isCI) {
+    e2eConsoleLogger('Running on CI - Cypress pre-installed via agents.yaml');
+    return;
+  }
+
   let cypressVerified = true;
   try {
     const r = execSync('npx cypress verify', {
@@ -160,18 +166,53 @@ export function ensureCypressInstallation() {
 }
 
 export function ensurePlaywrightBrowsersInstallation() {
+  // Skip browser installation on CI where browsers are pre-installed in agents.yaml
+  if (isCI) {
+    e2eConsoleLogger(
+      'Running on CI - Playwright browsers pre-installed via agents.yaml'
+    );
+    return;
+  }
+
+  // Lightweight check: try to get Playwright browser path
+  try {
+    const browserPath = execSync('npx playwright install --dry-run', {
+      stdio: 'pipe',
+      encoding: 'utf-8',
+      cwd: tmpProjPath(),
+    });
+
+    // If browsers are up to date, skip installation
+    if (browserPath.includes('browser binaries are up to date')) {
+      e2eConsoleLogger('Playwright browsers already installed locally');
+      return;
+    }
+  } catch {
+    // If dry-run fails, browsers likely need installation
+  }
+
+  // Only install browsers for local development
   const playwrightInstallArgs =
     process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
-  execSync(`npx playwright install ${playwrightInstallArgs}`, {
-    stdio: isVerbose() ? 'inherit' : 'pipe',
-    encoding: 'utf-8',
-    cwd: tmpProjPath(),
-  });
-  e2eConsoleLogger(
-    `Playwright browsers ${execSync('npx playwright --version')
-      .toString()
-      .trim()} installed.`
-  );
+
+  e2eConsoleLogger('Installing Playwright browsers for local development...');
+
+  try {
+    execSync(`npx playwright install ${playwrightInstallArgs}`, {
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      encoding: 'utf-8',
+      cwd: tmpProjPath(),
+    });
+
+    e2eConsoleLogger(
+      `Playwright browsers ${execSync('npx playwright --version')
+        .toString()
+        .trim()} installed.`
+    );
+  } catch (error) {
+    e2eConsoleLogger('Failed to install Playwright browsers:', error);
+    throw error;
+  }
 }
 
 export function getStrippedEnvironmentVariables() {
