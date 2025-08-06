@@ -86,14 +86,12 @@ export class I18nInlinePlugin implements RspackPluginInstance {
             locale.translation,
             this.#pluginOptions.advancedOptimizations
           );
-          const sourceMap = new sources.SourceMapSource(
-            result.code,
-            filename,
-            result.map
-          );
+          const sourceMap = result.map
+            ? new sources.SourceMapSource(result.code, filename, result.map)
+            : undefined;
           localeFiles.set(filename, {
             text: result.code,
-            map: sourceMap.map(),
+            map: sourceMap ? sourceMap.map() : undefined,
           });
           // TODO: Add support for diagnostics
         }
