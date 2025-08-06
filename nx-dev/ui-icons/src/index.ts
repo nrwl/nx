@@ -67,6 +67,7 @@ export * from './lib/customers/sentry';
 export * from './lib/customers/sharp';
 export * from './lib/customers/shopify';
 export * from './lib/customers/siriusxm';
+export * from './lib/customers/vattenfall';
 export * from './lib/customers/splice';
 // export * from './lib/customers/storybook'; // Present in "Technologies".
 export * from './lib/customers/strapi';

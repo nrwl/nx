@@ -24,18 +24,24 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               </strong>
             </p>
             <p>
-              Nx defines clear project boundaries and leverages monorepo
-              concepts—shared tooling, atomic changes, and coordinated
-              releases—so code stays easy to maintain.{' '}
+              Nx defines{' '}
               <TextLink
-                href="/nx-enterprise/powerpack/owners?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                href="/features/enforce-module-boundaries"
+                className="decoration-2"
+              >
+                clear project boundaries
+              </TextLink>{' '}
+              and leverages monorepo concepts—shared tooling, atomic changes,
+              and coordinated releases—so code stays easy to maintain.{' '}
+              <TextLink
+                href="/nx-enterprise/powerpack/owners"
                 className="decoration-2"
               >
                 Ownership
               </TextLink>{' '}
               is defined at the project level, while{' '}
               <TextLink
-                href="/nx-enterprise/powerpack/conformance?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                href="/nx-enterprise/powerpack/conformance"
                 className="decoration-2"
               >
                 conformance rules
@@ -44,22 +50,22 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               <strong>entire codebase</strong>.
             </p>
             <p>
-              <TextLink
-                href="/plugin-registry?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
-                className="decoration-2"
-              >
+              <TextLink href="/plugin-registry" className="decoration-2">
                 Nx plugins
               </TextLink>{' '}
               and{' '}
-              <TextLink
-                href="/features/generate-code?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
-                className="decoration-2"
-              >
+              <TextLink href="/features/generate-code" className="decoration-2">
                 code generation
               </TextLink>{' '}
-              standardize best practices and eliminate duplication, while
-              automated updates keep everything current without the overhead of
-              managing separate repositories.
+              standardize best practices and eliminate duplication, while{' '}
+              <TextLink
+                href="/features/automate-updating-dependencies"
+                className="decoration-2"
+              >
+                automated updates
+              </TextLink>{' '}
+              keep everything current without the overhead of managing separate
+              repositories.
             </p>
           </div>
           <div className="w-full md:w-1/2">

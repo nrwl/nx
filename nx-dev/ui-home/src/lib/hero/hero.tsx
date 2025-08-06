@@ -14,11 +14,11 @@ export function Hero(): ReactElement {
               Smart
             </span>{' '}
             Repos
-            <br className="sm:hidden" />
+            <div className="lg:hidden" />
             <svg
               viewBox="0 0 2 2"
               fill="currentColor"
-              className="mx-6 hidden size-2 sm:inline-flex xl:size-3"
+              className="mx-6 hidden size-2 lg:inline-flex"
             >
               <circle cx={1} cy={1} r={1} />
             </svg>

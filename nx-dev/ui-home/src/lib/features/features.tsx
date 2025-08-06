@@ -9,7 +9,8 @@ export function Features(): ReactElement {
     <section className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
       <article className="mx-auto max-w-7xl px-6 lg:px-8">
         <SectionHeading as="h2" variant="title" id="" className="scroll-mt-24">
-          Build Products, Not Build Systems
+          Build Products,
+          <br className="sm:hidden" /> Not Build Systems
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           Whether you're a startup shipping fast or managing enterprise{' '}
