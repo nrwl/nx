@@ -109,7 +109,4 @@ tasks/
 .upstreamdocs.local.json
 
 astro-docs/.netlify
-# Repository update system
-tools/update-repos/repos/
-tools/update-repos/dist/
 
