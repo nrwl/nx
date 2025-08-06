@@ -1,0 +1,64 @@
+.nx-json-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-controls {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.apply-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.apply-button:hover {
+  background-color: #218838;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+}
+
+.updating-message {
+  color: #007bff;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.editor-hints {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.editor-hints h4 {
+  margin: 0 0 0.5rem 0;
+  color: #495057;
+  font-size: 14px;
+}
+
+.editor-hints ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.editor-hints li {
+  margin: 0.25rem 0;
+  font-size: 13px;
+  color: #6c757d;
+}

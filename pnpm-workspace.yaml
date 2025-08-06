@@ -6,3 +6,4 @@ packages:
   - 'tools/*'
   - 'typedoc-theme'
   - 'astro-docs'
+  - 'apps/*'

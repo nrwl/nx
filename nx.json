@@ -278,6 +278,33 @@
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static:storybook"
       }
+    },
+    {
+      "plugin": "@nx/react/router-plugin",
+      "include": ["apps/nx-graph-diff/*"],
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start",
+        "watchDepsTargetName": "watch-deps",
+        "buildDepsTargetName": "build-deps",
+        "typecheckTargetName": "typecheck"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["apps/nx-graph-diff/*"],
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
@@ -391,5 +418,22 @@
         }
       }
     ]
+  },
+  "generators": {
+    "@nx/react": {
+      "application": {
+        "babel": true,
+        "style": "css",
+        "linter": "none",
+        "bundler": "vite"
+      },
+      "component": {
+        "style": "css"
+      },
+      "library": {
+        "style": "css",
+        "linter": "none"
+      }
+    }
   }
 }

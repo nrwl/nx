@@ -1,0 +1,97 @@
+.app {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+header {
+  background-color: #002147;
+  color: white;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+header p {
+  margin: 0.5rem 0 0 0;
+  opacity: 0.9;
+}
+
+header .warning {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #856404;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.main-content {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  height: calc(100vh - 120px);
+}
+
+.editor-section {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-section h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.graph-section {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.graph-controls {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.graph-controls button {
+  background-color: #002147;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.graph-controls button:hover {
+  background-color: #003366;
+}
+
+.graph-controls button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.restore-button {
+  background-color: #6c757d !important;
+}
+
+.restore-button:hover:not(:disabled) {
+  background-color: #5a6268 !important;
+}

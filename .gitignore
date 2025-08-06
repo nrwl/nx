@@ -109,3 +109,5 @@ tasks/
 .upstreamdocs.local.json
 
 astro-docs/.netlify
+
+vitest.config.*.timestamp*

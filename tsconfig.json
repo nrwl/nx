@@ -396,6 +396,9 @@
     },
     {
       "path": "./graph/ui-icons"
+    },
+    {
+      "path": "./apps/nx-graph-diff"
     }
   ],
   "extends": "./tsconfig.base.json"

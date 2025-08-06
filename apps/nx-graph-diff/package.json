@@ -1,0 +1,11 @@
+{
+  "name": "@nx/nx-graph-diff",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "deep-equal": "^2.2.3",
+    "diff": "^8.0.2",
+    "monaco-editor": "^0.52.2"
+  }
+}

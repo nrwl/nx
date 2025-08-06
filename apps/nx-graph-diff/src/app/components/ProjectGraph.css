@@ -1,0 +1,149 @@
+.project-graph {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.project-graph h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.projects-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  gap: 1rem;
+}
+
+.project-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #fafafa;
+  transition: box-shadow 0.2s;
+}
+
+.project-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.project-card h4 {
+  margin: 0 0 0.5rem 0;
+  color: #002147;
+  font-size: 1.1rem;
+}
+
+.project-info {
+  margin-bottom: 1rem;
+}
+
+.project-info p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.project-info strong {
+  color: #333;
+}
+
+.targets {
+  margin-top: 0.5rem;
+}
+
+.targets h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #444;
+}
+
+.targets ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.target-item {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.target-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.target-header strong {
+  color: #495057;
+}
+
+.executor {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.target-details {
+  margin-left: 0.5rem;
+}
+
+.target-property {
+  margin: 0.4rem 0;
+  font-size: 0.85rem;
+}
+
+.property-label {
+  color: #6c757d;
+  font-weight: 500;
+  margin-right: 0.5rem;
+  display: inline-block;
+  min-width: 80px;
+}
+
+.property-value {
+  color: #495057;
+}
+
+.property-list {
+  margin-top: 0.25rem;
+  margin-left: 80px;
+}
+
+.input-item,
+.output-item {
+  background-color: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  margin: 0.2rem 0;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.8rem;
+  border-left: 3px solid #dee2e6;
+  word-break: break-all;
+}
+
+.input-item {
+  border-left-color: #007bff;
+}
+
+.output-item {
+  border-left-color: #28a745;
+}
+
+.cache-value {
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.cache-value.enabled {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.cache-value.disabled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
