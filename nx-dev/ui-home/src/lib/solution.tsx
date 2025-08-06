@@ -59,14 +59,14 @@ function StatsSection(): ReactElement {
         title="15x"
         description="faster deployments from 5 days to 20 minutes"
         company="PayFit"
-        link="/blog/payfit-success-story"
+        link="/blog/payfit-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
         color="violet"
       />
       <StatCard
         title="60x"
         description="faster testing from 20 minutes to seconds"
         company="Hetzner"
-        link="/blog/hetzner-cloud-success-story"
+        link="/blog/hetzner-cloud-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
         color="indigo"
       />
       <StatCard
