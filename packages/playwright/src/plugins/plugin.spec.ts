@@ -882,7 +882,7 @@ describe('@nx/playwright/plugin', () => {
     `);
   });
 
-  it('should create spec specific inputs when granularInputs is true', async () => {
+  it('should create spec specific inputs when atomizedInputs is true', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
       reporter: [
@@ -900,7 +900,7 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
-        granularInputs: true,
+        atomizedInputs: true,
       },
       context
     );
@@ -955,7 +955,7 @@ describe('@nx/playwright/plugin', () => {
     `);
   });
 
-  it('should create spec specific inputs when testIsolation is true and its relative imports', async () => {
+  it('should create spec specific inputs when atomizedInputs is true including its relative imports', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
       reporter: [
@@ -982,7 +982,7 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
-        granularInputs: true,
+        atomizedInputs: true,
       },
       context
     );
