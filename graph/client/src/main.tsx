@@ -22,9 +22,11 @@ import { ExternalApiImpl } from './app/external-api-impl';
 import { render } from 'preact';
 import { ErrorPage } from './app/ui-components/error-page';
 import { ProjectDetailsApp } from './app/console-project-details/project-details.app';
-import { interpret } from 'xstate';
+import { createMachine, interpret } from 'xstate';
 import { MigrateApp } from './app/console-migrate/migrate.app';
 import { migrateMachine } from './app/console-migrate/migrate.machine';
+import { StandaloneProjectGraph } from './app/standalone-project-graph';
+import { StandaloneTaskGraph } from './app/standalone-task-graph';
 
 if (window.__NX_RENDER_GRAPH__ === false) {
   window.externalApi = new ExternalApiImpl();
@@ -84,6 +86,122 @@ if (window.__NX_RENDER_GRAPH__ === false) {
     );
 
     return service;
+  };
+
+  window.renderProjectGraph = (projectData: any) => {
+    // Create a simple state machine service for external control
+    const stateMachine = createMachine({
+      id: 'projectGraph',
+      initial: 'idle',
+      states: {
+        idle: {
+          on: {
+            RENDER: 'rendering',
+            UPDATE: 'updating',
+          },
+        },
+        rendering: {
+          on: {
+            COMPLETE: 'idle',
+          },
+        },
+        updating: {
+          on: {
+            COMPLETE: 'idle',
+          },
+        },
+      },
+    });
+
+    const service = interpret(stateMachine).start();
+    let graphClient: any = null;
+
+    render(
+      <StrictMode>
+        <StandaloneProjectGraph
+          projectData={projectData}
+          onGraphReady={(client) => {
+            graphClient = client;
+            service.send('COMPLETE');
+          }}
+        />
+      </StrictMode>,
+      document.getElementById('app')
+    );
+
+    // Return service with send/receive capabilities
+    return {
+      service,
+      send: (event: any) => {
+        if (graphClient) {
+          graphClient.send(event);
+        }
+        return service.send(event);
+      },
+      receive: (callback: (event: any) => void) => {
+        if (graphClient) {
+          graphClient.on('*', callback);
+        }
+      },
+    };
+  };
+
+  window.renderTaskGraph = (taskData: any) => {
+    // Create a simple state machine service for external control
+    const stateMachine = createMachine({
+      id: 'taskGraph',
+      initial: 'idle',
+      states: {
+        idle: {
+          on: {
+            RENDER: 'rendering',
+            UPDATE: 'updating',
+          },
+        },
+        rendering: {
+          on: {
+            COMPLETE: 'idle',
+          },
+        },
+        updating: {
+          on: {
+            COMPLETE: 'idle',
+          },
+        },
+      },
+    });
+
+    const service = interpret(stateMachine).start();
+    let graphClient: any = null;
+
+    render(
+      <StrictMode>
+        <StandaloneTaskGraph
+          taskData={taskData}
+          onGraphReady={(client) => {
+            graphClient = client;
+            service.send('COMPLETE');
+          }}
+        />
+      </StrictMode>,
+      document.getElementById('app')
+    );
+
+    // Return service with send/receive capabilities
+    return {
+      service,
+      send: (event: any) => {
+        if (graphClient) {
+          graphClient.send(event);
+        }
+        return service.send(event);
+      },
+      receive: (callback: (event: any) => void) => {
+        if (graphClient) {
+          graphClient.on('*', callback);
+        }
+      },
+    };
   };
 } else {
   if (window.useXstateInspect === true) {
