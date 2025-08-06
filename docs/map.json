@@ -2277,7 +2277,7 @@
               "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/ci/intro/ci-with-nx",
+              "path": "/ci/features",
               "isExternal": true
             },
             {
