@@ -58,6 +58,14 @@
     "tags": [
       "publishable"
     ],
+    "release": {
+      "version": {
+        "preserveLocalDependencyProtocols": true,
+        "manifestRootsToUpdate": [
+          "packages/{projectName}"
+        ]
+      }
+    },
     "targets": {
       "build": {},
       "test": {
