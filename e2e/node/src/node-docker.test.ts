@@ -6,7 +6,7 @@ import {
   newProject,
   runCLI,
   runCommand,
-  stripIndents,
+  isDockerAvailable,
   uniq,
   updateFile,
   updateJson,
@@ -14,30 +14,34 @@ import {
 
 let originalEnvPort;
 describe('Node Docker Applications', () => {
-  describe.each(['npm', 'yarn', 'pnpm'])(
-    '%s',
-    (packageManager: 'npm' | 'yarn' | 'pnpm') => {
-      beforeEach(() => {
-        originalEnvPort = process.env.PORT;
-        newProject({
-          preset: 'ts',
-          packageManager,
+  if (isDockerAvailable()) {
+    describe.each(['npm', 'yarn', 'pnpm'])(
+      '%s',
+      (packageManager: 'npm' | 'yarn' | 'pnpm') => {
+        beforeEach(() => {
+          originalEnvPort = process.env.PORT;
+          newProject({
+            preset: 'ts',
+            packageManager,
+          });
         });
-      });
 
-      afterEach(() => {
-        process.env.PORT = originalEnvPort;
-        cleanupProject();
-      });
+        afterEach(() => {
+          process.env.PORT = originalEnvPort;
+          cleanupProject();
+        });
 
-      it(`should generate ${packageManager} compliant dockerfile and use it`, async () => {
-        const { nodeapp } = setupTest(packageManager);
-        expect(runCLI(`docker:build ${nodeapp} --network=host`)).toContain(
-          `Successfully ran target docker:build for project @proj/${nodeapp}`
-        );
-      });
-    }
-  );
+        it(`should generate ${packageManager} compliant dockerfile and use it`, async () => {
+          const { nodeapp } = setupTest(packageManager);
+          expect(runCLI(`docker:build ${nodeapp} --network=host`)).toContain(
+            `Successfully ran target docker:build for project @proj/${nodeapp}`
+          );
+        });
+      }
+    );
+  } else {
+    it('docker is not available', () => expect(true).toBe(true));
+  }
 });
 
 function setupTest(packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun') {

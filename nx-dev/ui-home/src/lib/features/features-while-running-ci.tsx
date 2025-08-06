@@ -2,15 +2,6 @@ import { SectionHeading, TextLink } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import { FeatureContainer } from './feature-container';
 import Image from 'next/image';
-import {
-  AzureDevOpsIcon,
-  BitbucketIcon,
-  GitHubIcon,
-  GitlabIcon,
-  JenkinsIcon,
-  TravisCiIcon,
-} from '@nx/nx-dev-ui-icons';
-import { Marquee } from '@nx/nx-dev-ui-animations';
 import Link from 'next/link';
 
 export function FeaturesWhileRunningCI(): ReactElement {
@@ -21,46 +12,55 @@ export function FeaturesWhileRunningCI(): ReactElement {
           as="h3"
           variant="subtitle"
           id="features-while-running-ci"
-          className="scroll-mt-24 font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+          className="scroll-mt-24 text-2xl font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
         >
           While Running CI
         </SectionHeading>
         <div className="flex flex-col items-start gap-8 md:flex-row">
-          <div className="w-full md:w-1/2">
-            <SectionHeading as="p" variant="subtitle" className="mt-6">
+          <div className="prose-lg mt-6 w-full md:w-1/2">
+            <p>
               <strong>
                 As teams scale, more code means CI becomes the bottleneck.
               </strong>
-            </SectionHeading>
+            </p>
 
-            <SectionHeading as="p" variant="subtitle" className="mt-6">
+            <p>
               Nx works with your CI provider to compress the entire validation
               process.{' '}
-              <TextLink href="/ci/features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+              <TextLink
+                href="/ci/features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                className="decoration-2"
+              >
                 Remote cache
               </TextLink>{' '}
               and{' '}
-              <TextLink href="/ci/features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+              <TextLink
+                href="/ci/features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                className="decoration-2"
+              >
                 automatic task distribution
               </TextLink>{' '}
               speed up CI, while{' '}
-              <TextLink href="/ci/features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+              <TextLink
+                href="/ci/features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                className="decoration-2"
+              >
                 self-healing systems
               </TextLink>{' '}
               automatically rerun flaky tests and fix code issues—instantly.
-            </SectionHeading>
+            </p>
 
-            <SectionHeading as="p" variant="subtitle" className="mt-6">
+            <p>
               The result is a short, predictable, and fully automated path to a
               green PR.
-            </SectionHeading>
+            </p>
 
             <div className="mt-10 flex gap-x-6">
               <Link
                 href="/nx-cloud?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
                 title="Add Nx Cloud to your CI workflow"
                 prefetch={false}
-                className="group text-xl font-semibold leading-6 text-slate-950 dark:text-white"
+                className="group font-semibold leading-6 text-slate-950 dark:text-white"
               >
                 Learn more about Nx Cloud{' '}
                 <span

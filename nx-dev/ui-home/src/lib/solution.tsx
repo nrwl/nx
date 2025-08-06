@@ -7,39 +7,46 @@ import {
   PayfitIcon,
   SiriusxmAlternateIcon,
   UkgIcon,
+  VattenfallIcon,
 } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 
 export function Solution(): ReactElement {
   return (
-    <article className="mx-auto max-w-7xl px-6 lg:px-8">
-      <SectionHeading as="h2" variant="title" id="" className="scroll-mt-24">
-        Skip the tedium. Get to coding.
-      </SectionHeading>
-      <SectionHeading as="p" variant="subtitle" className="mt-6">
-        We built Nx, an open-source build platform to solve exactly these
-        problems. Drop it into any codebase and it immediately maps your project
-        structure, delivering:
-      </SectionHeading>
-      <ul className="mt-6 flex flex-col gap-4">
-        <ChecklistItem
-          title="Lightning-fast builds"
-          description="through intelligent caching and task distribution"
-        />
-        <ChecklistItem
-          title="PRs that fix themselves"
-          description="with AI-powered self-healing that fix broken code and flaky tests"
-        />
-        <ChecklistItem
-          title="Instant code sharing"
-          description="across teams with repo-aware dependency management"
-        />
-      </ul>
-      <p className="mt-12 text-balance text-3xl font-normal tracking-tight text-slate-950 sm:text-5xl dark:text-white">
-        Works with <strong>any</strong> tech stack. Works with{' '}
-        <strong>any</strong> CI provider.
-      </p>
-
+    <article>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeading
+          as="h2"
+          variant="title"
+          id="skip-tedium"
+          className="scroll-mt-24"
+        >
+          Skip the tedium. Get to coding.
+        </SectionHeading>
+        <SectionHeading as="p" variant="subtitle" className="mt-6">
+          We built Nx, an open-source build platform to solve exactly these
+          problems. Drop it into any codebase and it immediately maps your
+          project structure, delivering:
+        </SectionHeading>
+        <ul className="mt-6 flex flex-col gap-4">
+          <ChecklistItem
+            title="Lightning-fast builds"
+            description="through intelligent caching and task distribution"
+          />
+          <ChecklistItem
+            title="PRs that fix themselves"
+            description="with AI-powered self-healing that fix broken code and flaky tests"
+          />
+          <ChecklistItem
+            title="Instant code sharing"
+            description="across teams with repo-aware dependency management"
+          />
+        </ul>
+        <p className="mt-12 text-balance text-3xl font-normal tracking-tight text-slate-950 sm:text-5xl dark:text-white">
+          Works with <strong>any</strong> tech stack. Works with{' '}
+          <strong>any</strong> CI provider.
+        </p>
+      </div>
       <StatsSection />
     </article>
   );
@@ -47,7 +54,7 @@ export function Solution(): ReactElement {
 
 function StatsSection(): ReactElement {
   return (
-    <div className="mt-20 grid grid-cols-1 gap-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mx-auto mt-20 grid max-w-[100rem] grid-cols-1 justify-center gap-4 px-6 py-8 sm:grid-cols-2 xl:grid-cols-6">
       <StatCard
         title="700+"
         description="projects easily managed at scale"
@@ -56,17 +63,17 @@ function StatsSection(): ReactElement {
         color="purple"
       />
       <StatCard
-        title="15x"
+        title="360x"
         description="faster deployments from 5 days to 20 minutes"
         company="PayFit"
-        link="/blog/payfit-success-story"
+        link="/blog/payfit-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
         color="violet"
       />
       <StatCard
         title="60x"
         description="faster testing from 20 minutes to seconds"
         company="Hetzner"
-        link="/blog/hetzner-cloud-success-story"
+        link="/blog/hetzner-cloud-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
         color="indigo"
       />
       <StatCard
@@ -76,7 +83,7 @@ function StatsSection(): ReactElement {
         link="https://youtu.be/Q0ky-8oJcro"
         color="blue"
       />
-      {/* <StatCard
+      <StatCard
         title="Instant"
         description="builds with unified codebase across web and mobile"
         company="UKG"
@@ -84,12 +91,12 @@ function StatsSection(): ReactElement {
         color="sky"
       />
       <StatCard
-        title="25x"
-        description="more concurrency with Nx Agents, 44% faster CI"
+        title="44%"
+        description="faster CI with Nx Agents unlocking concurrency limits"
         company="Vattenfall"
-        link="/blog/nx-agents-changes-the-math"
+        link="/blog/nx-agents-changes-the-math?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
         color="cyan"
-      /> */}
+      />
     </div>
   );
 }
@@ -123,13 +130,15 @@ function StatCard({
   return (
     <Link
       href={link}
-      className={`w-full rounded-lg bg-white bg-gradient-to-br p-6 ${variants[color]}`}
+      className={`flex w-full transform flex-col rounded-lg bg-white bg-gradient-to-br p-6 transition duration-300 hover:scale-105 ${variants[color]}`}
     >
-      <SectionHeading as="h3" variant="title" className="mb-2 text-lg">
+      <SectionHeading as="h3" variant="title" className="mb-2">
         {title}
       </SectionHeading>
-      <div className="mb-8 font-semibold dark:text-white/50">{description}</div>
-      <div className="flex items-center gap-2 text-slate-950 dark:text-white">
+      <div className="mb-8 flex-grow font-semibold dark:text-white/50">
+        {description}
+      </div>
+      <div className="mt-auto flex items-center gap-2 text-slate-950 dark:text-white">
         {company === 'Caseware' && (
           <CasewareIcon aria-hidden="true" className="size-10" />
         )}
@@ -144,6 +153,9 @@ function StatCard({
         )}
         {company === 'UKG' && (
           <UkgIcon aria-hidden="true" className="size-10" />
+        )}
+        {company === 'Vattenfall' && (
+          <VattenfallIcon aria-hidden="true" className="size-10" />
         )}
 
         <span className="text-xl font-bold">{company}</span>
