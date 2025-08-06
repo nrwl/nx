@@ -7,6 +7,7 @@ import {
   PayfitIcon,
   SiriusxmAlternateIcon,
   UkgIcon,
+  VattenfallIcon,
 } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 
@@ -14,7 +15,12 @@ export function Solution(): ReactElement {
   return (
     <article>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <SectionHeading as="h2" variant="title" id="" className="scroll-mt-24">
+        <SectionHeading
+          as="h2"
+          variant="title"
+          id="skip-tedium"
+          className="scroll-mt-24"
+        >
           Skip the tedium. Get to coding.
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
@@ -147,6 +153,9 @@ function StatCard({
         )}
         {company === 'UKG' && (
           <UkgIcon aria-hidden="true" className="size-10" />
+        )}
+        {company === 'Vattenfall' && (
+          <VattenfallIcon aria-hidden="true" className="size-10" />
         )}
 
         <span className="text-xl font-bold">{company}</span>
