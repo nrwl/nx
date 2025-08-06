@@ -36,6 +36,18 @@ export declare global {
     renderMigrate?: (
       data: any
     ) => Interpreter<MigrateState, any, MigrateEvents>;
+
+    // New graph rendering functions
+    renderProjectGraph?: (projectData: any) => {
+      service: Interpreter<any, any, any>;
+      send: (event: any) => any;
+      receive: (callback: (event: any) => void) => void;
+    };
+    renderTaskGraph?: (taskData: any) => {
+      service: Interpreter<any, any, any>;
+      send: (event: any) => any;
+      receive: (callback: (event: any) => void) => void;
+    };
   }
 }
 declare module 'cytoscape' {
