@@ -1501,7 +1501,7 @@ async function determineReactRouter(
       choices: [
         {
           name: 'Yes',
-          hint: 'I want to use React Router',
+          hint: 'I want to use React Router. (Vite will be selected as the bundler)',
         },
         {
           name: 'No',
