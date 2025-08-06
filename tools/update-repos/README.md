@@ -9,7 +9,9 @@ This system automatically updates repositories with the latest Nx migrations by:
 - Cloning repositories using GitHub CLI for enhanced authentication
 - Detecting package managers and running appropriate commands
 - Executing Nx migrations with automatic commit generation
-- Creating pull requests with consistent formatting
+- Creating or updating pull requests with consistent formatting
+- Automatically cleaning up migrations.json files after successful migration
+- Opening PRs in browser for both new and updated pull requests
 - Providing real-time progress tracking through Nx TUI
 
 ## Directory Structure
@@ -21,15 +23,17 @@ tools/update-repos/
 │   └── update-repo.ts          # Update repos with migrations
 ├── config/
 │   └── repos.json              # Repository configuration
-├── repos/                      # Git clones (located in OS temp dir/updating-nx/repos)
-│   ├── nx/                     # Nx repo clone
-│   ├── ocean/                  # Ocean repo clone
-│   └── nx-examples/            # Nx examples repo clone
+├── dist/                       # Compiled TypeScript output
+│   └── src/
+│       ├── setup-repos.js      # Compiled setup script
+│       └── update-repo.js      # Compiled update script
 ├── project.json                # Nx project configuration
 ├── tsconfig.json               # TypeScript configuration
 ├── tsconfig.lib.json           # TypeScript library configuration
 └── README.md                   # This file
 ```
+
+**Note**: Repository clones are stored in the OS temp directory at `{OS_TEMP_DIR}/updating-nx/repos/`, not within the project structure.
 
 ## Prerequisites
 
@@ -142,12 +146,24 @@ The update process follows this workflow:
    npx nx migrate --run-migrations --create-commits
    ```
 
-6. **Git Operations**:
+6. **Migration Cleanup**:
+   ```bash
+   # After successful migrations
+   rm migrations.json
+   git add .
+   git commit -m "chore(repo): clean up migrations.json after migration"
+   ```
+
+7. **Git Operations**:
    ```bash
    git push -u origin upnx --force
+   # Smart PR handling - creates new or updates existing
    gh pr create --title "chore(repo): update nx to {version}" \
                 --body "Updating Nx from {fromVersion} to {toVersion}"
-   gh pr view upnx --web  # Opens in browser
+   # OR if PR exists:
+   gh pr edit upnx --title "chore(repo): update nx to {version}" \
+                   --body "Updating Nx from {fromVersion} to {toVersion}"
+   gh pr view upnx --web  # Always opens in browser
    ```
 
 ### 3. Automatic Commit Generation
@@ -201,7 +217,14 @@ The system provides detailed progress information:
 - Proper remote tracking with `git fetch origin`
 - Clean branch creation from remote main branch
 - Force push support for reliable branch management
-- Automatic cleanup of migrations.json
+- Automatic cleanup of migrations.json after successful migration
+
+### Smart Pull Request Management
+
+- **Existing PR Detection**: Automatically detects if PR already exists for the update branch
+- **Create vs Update**: Creates new PRs or updates existing ones with latest version information
+- **Universal Browser Opening**: Always opens PR in browser regardless of creation vs update
+- **Title/Description Updates**: Refreshes PR metadata when updating existing PRs
 
 ## Pull Request Format
 
