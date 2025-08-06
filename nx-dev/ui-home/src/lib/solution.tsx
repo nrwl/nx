@@ -124,13 +124,15 @@ function StatCard({
   return (
     <Link
       href={link}
-      className={`w-full transform rounded-lg bg-white bg-gradient-to-br p-6 transition duration-300 hover:scale-105 ${variants[color]}`}
+      className={`flex w-full transform flex-col rounded-lg bg-white bg-gradient-to-br p-6 transition duration-300 hover:scale-105 ${variants[color]}`}
     >
       <SectionHeading as="h3" variant="title" className="mb-2">
         {title}
       </SectionHeading>
-      <div className="mb-8 font-semibold dark:text-white/50">{description}</div>
-      <div className="flex items-center gap-2 text-slate-950 dark:text-white">
+      <div className="mb-8 flex-grow font-semibold dark:text-white/50">
+        {description}
+      </div>
+      <div className="mt-auto flex items-center gap-2 text-slate-950 dark:text-white">
         {company === 'Caseware' && (
           <CasewareIcon aria-hidden="true" className="size-10" />
         )}
