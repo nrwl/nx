@@ -110,6 +110,7 @@
       "build": {},
       "test": {
         "dependsOn": [
+          "build",
           "test-native",
           "build-native",
           "^build-native",
