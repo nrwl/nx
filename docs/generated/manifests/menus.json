@@ -6492,7 +6492,7 @@
         "children": [
           {
             "name": "CI Documentation",
-            "path": "/ci/intro/ci-with-nx",
+            "path": "/ci/features",
             "id": "ci",
             "isExternal": true,
             "children": [],

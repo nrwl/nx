@@ -272,7 +272,7 @@
       "file": "",
       "id": "ci",
       "name": "CI Documentation",
-      "path": "/ci/intro/ci-with-nx"
+      "path": "/ci/features"
     },
     {
       "description": "",
@@ -1545,7 +1545,7 @@
       "file": "",
       "id": "ci",
       "name": "CI Documentation",
-      "path": "/ci/intro/ci-with-nx"
+      "path": "/ci/features"
     },
     {
       "description": "",
