@@ -11,6 +11,7 @@ import {
 import type { NxRemixGeneratorSchema } from './schema';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -31,17 +32,20 @@ export async function remixLibraryGeneratorInternal(
   schema: NxRemixGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
+
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
+  const jsInitTask = await jsInitGenerator(tree, {
+    js: schema.js,
+    addTsPlugin,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const options = await normalizeOptions(tree, schema);
 
   if (options.isUsingTsSolutionConfig) {
     await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
-
-  const jsInitTask = await jsInitGenerator(tree, {
-    js: options.js,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
 
   const libGenTask = await libraryGenerator(tree, {
     directory: options.directory,

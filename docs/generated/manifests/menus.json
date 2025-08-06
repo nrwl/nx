@@ -6790,39 +6790,6 @@
     "id": "ci",
     "menu": [
       {
-        "name": "Intro",
-        "path": "/ci/intro",
-        "id": "intro",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "CI with Nx",
-            "path": "/ci/intro/ci-with-nx",
-            "id": "ci-with-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Why Nx Cloud?",
-            "path": "/ci/intro/why-nx-cloud",
-            "id": "why-nx-cloud",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Connect to Nx Cloud",
-            "path": "/ci/intro/connect-to-nx-cloud",
-            "id": "connect-to-nx-cloud",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
         "name": "Features",
         "path": "/ci/features",
         "id": "features",
@@ -6937,6 +6904,14 @@
             "name": "Cache Security",
             "path": "/ci/concepts/cache-security",
             "id": "cache-security",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Heartbeat",
+            "path": "/ci/concepts/heartbeat",
+            "id": "heartbeat",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false

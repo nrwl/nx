@@ -49,8 +49,8 @@ export async function withModuleFederationForSSR(
            */
           ...(configOverride ? configOverride : {}),
           experiments: {
-            federationRuntime: 'hoisted',
-            // We should allow users to override federationRuntime
+            asyncStartup: true,
+            // We should allow users to override experiments
             ...(configOverride?.experiments ?? {}),
           },
           runtimePlugins:

@@ -31,6 +31,7 @@ import { tsLibVersion } from '../../utils/versions';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -47,19 +48,24 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-  const options = await normalizeOptions(host, schema);
 
-  showPossibleWarnings(host, options);
-
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    host,
+    schema.addPlugin,
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(host, {
-    js: options.js,
-    skipPackageJson: options.skipPackageJson,
+    js: schema.js,
+    skipPackageJson: schema.skipPackageJson,
     skipFormat: true,
-    addTsPlugin: options.isTsSolutionSetup,
-    formatter: options.formatter,
+    addTsPlugin,
+    formatter: schema.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
+  showPossibleWarnings(host, options);
 
   const nextTask = await nextInitGenerator(host, {
     ...options,

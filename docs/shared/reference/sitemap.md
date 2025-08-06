@@ -816,10 +816,6 @@
       - [Overview](/extending-nx/api/plugin/overview)
 
 - Ci
-  - [Intro](/ci/intro)
-    - [CI with Nx](/ci/intro/ci-with-nx)
-    - [Why Nx Cloud?](/ci/intro/why-nx-cloud)
-    - [Connect to Nx Cloud](/ci/intro/connect-to-nx-cloud)
   - [Features](/ci/features)
     - [AI-Powered Self-Healing CI](/ci/features/self-healing-ci)
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
@@ -835,6 +831,7 @@
     - [Reduce Wasted Time in CI](/ci/concepts/reduce-waste)
     - [Parallelization and Distribution](/ci/concepts/parallelization-distribution)
     - [Cache Security](/ci/concepts/cache-security)
+    - [Heartbeat](/ci/concepts/heartbeat)
     - [Nx Cloud AI](/ci/concepts/nx-cloud-ai)
   - [Guides](/ci/recipes)
     - [Set Up CI](/ci/recipes/set-up)
