@@ -61,8 +61,10 @@ export default defineConfig({
       },
       sidebar,
       components: {
-        Sidebar: './src/components/layout/Sidebar.astro',
         Footer: './src/components/layout/Footer.astro',
+        PageFrame: './src/components/layout/PageFrame.astro',
+        Sidebar: './src/components/layout/Sidebar.astro',
+        TwoColumnContent: './src/components/layout/TwoColumnContent.astro',
       },
     }),
     react(),

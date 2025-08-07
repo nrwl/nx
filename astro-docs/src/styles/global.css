@@ -8,6 +8,19 @@
 
 /* Custom styles for Nx documentation */
 
+:root {
+  --sl-sidebar-width: var(--container-2xs);
+}
+
+[data-has-sidebar] {
+  --sl-content-inline-start: 0;
+}
+
+@media (min-width: 50em) {
+  [data-has-sidebar] {
+    --sl-content-inline-start: var(--container-2xs);
+  }
+}
 /* Dark mode colors. */
 
 :root[data-theme='dark'] {
@@ -21,15 +34,15 @@
   --sl-color-accent-high: var(--color-sky-300);
   --sl-color-text-accent: var(--color-sky-400);
   --sl-color-gray-1: var(--color-slate-100);
-  --sl-color-gray-2: var(--color-slate-200);
-  --sl-color-gray-3: var(--color-slate-300);
-  --sl-color-gray-4: var(--color-slate-500);
+  --sl-color-gray-2: var(--color-slate-400);
+  --sl-color-gray-3: var(--color-slate-500);
+  --sl-color-gray-4: var(--color-slate-600);
   --sl-color-gray-5: var(--color-slate-800);
   --sl-color-gray-6: var(--color-slate-900);
 }
 
 /* Light mode colors. */
-:root {
+:root[data-theme='light'] {
   --sl-color-bg: var(--color-white);
   --sl-color-bg-nav: var(--color-slate-50);
   --sl-color-bg-sidebar: var(--color-white);
@@ -87,4 +100,12 @@ h6:hover .anchor-link {
 
 .anchor-link:hover {
   color: var(--sl-color-accent);
+}
+
+.right-sidebar {
+  border-inline-start: none;
+}
+
+.content-panel + .content-panel {
+  border-top: 0;
 }
