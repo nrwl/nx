@@ -345,11 +345,11 @@ When the build task fails, you'll see Nx Cloud begin to analyze the failure and 
 
 You can also see the fix link on the GitHub PR comment that Nx Cloud leaves.
 
-![Nx Cloud PR comment with AI fix suggestion](/shared/tutorials/nx-cloud-gh-comment-self-healing-coment.avif)
+![Nx Cloud PR comment with AI fix suggestion](/src/assets/tutorials/nx-cloud-gh-comment-self-healing-coment.avif)
 
 From here you can manually apply or reject the fix:
 
-![Nx Cloud apply AI fix suggestion](/shared/tutorials/nx-cloud-apply-fix-self-healing-ci.avif)
+![Nx Cloud apply AI fix suggestion](/src/assets/tutorials/nx-cloud-apply-fix-self-healing-ci.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [CI guides](/ci/recipes/set-up)
 

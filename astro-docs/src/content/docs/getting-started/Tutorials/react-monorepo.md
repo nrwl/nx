@@ -39,7 +39,7 @@ Please verify closely that you have the following setup:
 
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
-![](/shared/images/tutorials/connected-workspace.avif)
+![](/src/assets/tutorials/connected-workspace.avif)
 
 If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=react).
 
@@ -86,7 +86,7 @@ The app is served at [http://localhost:4200](http://localhost:4200).
 
 Nx uses the following syntax to run tasks:
 
-![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/src/assets/getting-started/run-target-syntax.svg)
 
 ### Inferred Tasks
 
@@ -370,7 +370,7 @@ export default App;
 
 Serve your app again (`npx nx serve demo`) and you should see the new Hero component from the `ui` library rendered on the home page.
 
-![](/shared/images/tutorials/react-demo-with-hero.avif)
+![](/src/assets/tutorials/react-demo-with-hero.avif)
 
 If you have keen eyes, you may have noticed that there is a typo in the `App` component. This mistake is intentional, and we'll see later how Nx can fix this issue automatically in CI.
 
@@ -528,13 +528,13 @@ git push origin add-hero-component
 
 As expected, the CI check fails because of the test failure in the `demo` app. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and that it has a suggested fix for the failing test. This means that you don't have to waste time **babysitting your PRs**, and the fix can be applied directly from your editor.
 
-![Nx Console with failure notification](/shared/images/tutorials/react-ci-notification.avif)
+![Nx Console with failure notification](/src/assets/tutorials/react-ci-notification.avif)
 
 ### Fix CI from Your Editor
 
 From the Nx Console notification, you can click `Show Suggested Fix` button. Review the suggested fix, which in this case is to change the typo `Welcmoe`to the correct `Welcome` spelling. Approve this fix by clicking `ApplyFix` and that's it!
 
-![Suggestion to fix the typo in the editor](/shared/images/tutorials/react-ci-suggestion.avif)
+![Suggestion to fix the typo in the editor](/src/assets/tutorials/react-ci-suggestion.avif)
 
 You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
@@ -542,11 +542,11 @@ You didn't have to leave your editor or do any manual work to fix it. This is th
 
 After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
-![Tasks with remote cache hit](/shared/images/tutorials/react-remote-cache-notification.avif)
+![Tasks with remote cache hit](/src/assets/tutorials/react-remote-cache-notification.avif)
 
 When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The lint and test tasks for the `ui` library were read from remote cache and did not have to run again, thus each taking less than a second to complete.
 
-![Nx Cloud run showing remote cache hits](/shared/images/tutorials/react-remote-cache-cloud.avif)
+![Nx Cloud run showing remote cache hits](/src/assets/tutorials/react-remote-cache-cloud.avif)
 
 This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/ci/features/remote-cache). In this case, since the last fix was applied only to the `demo` app's source code, none of the tasks for `ui` library had to be run again.
 
@@ -558,7 +558,7 @@ Outputs from cached tasks, such as the `dist` folder for builds or `coverage` fo
 
 This pull request is now ready to be merged with the help of Nx Cloud's self-healing CI and remote caching.
 
-![Pull request is green](/shared/images/tutorials/react-ci-green.avif)
+![Pull request is green](/src/assets/tutorials/react-ci-green.avif)
 
 ## Next Steps
 
