@@ -1,11 +1,12 @@
 import { defineCollection, z } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
+import { file } from 'astro/loaders';
 import { PluginLoader } from './plugins/plugin.loader';
 import { CliLoader } from './plugins/cli.loader';
 import { DevkitLoader } from './plugins/devkit.loader';
-import { file } from 'astro/loaders';
 import { CnwLoader } from './plugins/cnw.loader.ts';
+import { CommunityPluginsLoader } from './plugins/community-plugins.loader';
 
 // Default docs collection handled by Starlight
 const docs = defineCollection({
@@ -27,8 +28,28 @@ const pluginDocs = defineCollection({
     title: z.string(),
     pluginName: z.string(),
     packageName: z.string(),
-    docType: z.enum(['generators', 'executors', 'migrations']),
+    docType: z.enum(['generators', 'executors', 'migrations', 'overview']),
+    features: z.array(z.string()).optional(),
+    totalDocs: z.number().optional(),
     description: z.string(),
+    npmDownloads: z.number().optional(),
+    githubStars: z.number().optional(),
+    lastPublishedDate: z.date().optional(),
+    lastFetched: z.date().optional(),
+  }),
+});
+
+const communityPlugins = defineCollection({
+  loader: CommunityPluginsLoader(),
+  schema: z.object({
+    slug: z.string(),
+    description: z.string(),
+    url: z.string(),
+    lastPublishedDate: z.date().optional(),
+    npmDownloads: z.number().optional(),
+    githubStars: z.number().optional(),
+    nxVersion: z.string().optional(),
+    lastFetched: z.date().optional(),
   }),
 });
 
@@ -84,4 +105,5 @@ export const collections = {
   'plugin-docs': pluginDocs,
   'devkit-docs': devkitDocs,
   'cnw-docs': cnwDocs,
+  'community-plugins': communityPlugins,
 };
