@@ -266,6 +266,7 @@ async function runPublishOnProjects(
   await runPreTasksExecution({
     workspaceRoot,
     nxJsonConfiguration: nxJson,
+    argv: process.argv,
   });
 
   /**
@@ -300,6 +301,7 @@ async function runPublishOnProjects(
     taskResults,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
+    argv: process.argv,
   });
 
   return publishProjectsResult;
