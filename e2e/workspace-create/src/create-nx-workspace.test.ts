@@ -21,6 +21,15 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
+  it('should reject workspace names starting with numbers', () => {
+    expect(() => {
+      runCreateWorkspace('4invalidname', {
+        preset: 'apps',
+        packageManager,
+      });
+    }).toThrow();
+  });
+
   it('should create a workspace with a single angular app at the root without routing', () => {
     const wsName = uniq('angular');
 
