@@ -174,10 +174,8 @@ export function Footer({
       </h2>
       <div
         className={
-          disableOuterPadding
-            ? ''
-            : 'px-4 pt-12 sm:px-6 lg:px-8 lg:pt-16 ' +
-              ' mx-auto max-w-7xl transition-opacity lg:opacity-50 lg:hover:opacity-100'
+          (disableOuterPadding ? '' : 'px-4 pt-12 sm:px-6 lg:px-8 lg:pt-16 ') +
+          ' mx-auto max-w-7xl transition-opacity lg:opacity-50 lg:hover:opacity-100'
         }
       >
         <div

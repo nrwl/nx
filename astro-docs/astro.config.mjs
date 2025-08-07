@@ -23,7 +23,8 @@ export default defineConfig({
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
-        src: './src/assets/nx/Nx-light.png',
+        light: './src/assets/nx/Nx-dark.png',
+        dark: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
       plugins: [
