@@ -2,7 +2,7 @@
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { execSync } from 'node:child_process';
-import { rmSync, writeFileSync } from 'node:fs';
+import { rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
@@ -122,6 +122,24 @@ const VALID_AUTHORS_FOR_LATEST = [
     process.exit(0);
   }
 
+  // TODO(colum): Remove when we have a better way to handle this
+  let angularRspackPrevVersion = '0.0.1';
+  let angularRspackCompilerPrevVersion = '0.0.1';
+  if (options.local) {
+    angularRspackPrevVersion = JSON.parse(
+      readFileSync(
+        join(workspaceRoot, 'packages/angular-rspack/package.json'),
+        'utf-8'
+      )
+    ).version;
+    angularRspackCompilerPrevVersion = JSON.parse(
+      readFileSync(
+        join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
+        'utf-8'
+      )
+    ).version;
+  }
+
   runNxReleaseVersion();
 
   execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
@@ -208,6 +226,46 @@ const VALID_AUTHORS_FOR_LATEST = [
 
     console.log(chalk.green` > Published version: ` + version);
     console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+  }
+
+  // TODO(colum): Remove when we have a better way to handle this
+  if (options.local) {
+    console.log(
+      'Resetting angular-rspack package.json versions to previous versions'
+    );
+    writeFileSync(
+      join(workspaceRoot, 'packages/angular-rspack/package.json'),
+      JSON.stringify({
+        ...JSON.parse(
+          readFileSync(
+            join(workspaceRoot, 'packages/angular-rspack/package.json'),
+            'utf-8'
+          )
+        ),
+        version: angularRspackPrevVersion,
+      })
+    );
+    writeFileSync(
+      join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
+      JSON.stringify({
+        ...JSON.parse(
+          readFileSync(
+            join(
+              workspaceRoot,
+              'packages/angular-rspack-compiler/package.json'
+            ),
+            'utf-8'
+          )
+        ),
+        version: angularRspackCompilerPrevVersion,
+      })
+    );
+    execSync(
+      `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
+      {
+        cwd: workspaceRoot,
+      }
+    );
   }
 
   process.exit(0);
