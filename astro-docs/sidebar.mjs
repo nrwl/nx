@@ -10,10 +10,10 @@ export const sidebar = [
       },
       {
         label: 'Add to existing project',
-        link: 'getting-started/start-with-existing-project',
+        link: 'getting-started/adding-to-existing',
       },
       { label: 'Editor Integration', link: 'getting-started/editor-setup' },
-      { label: 'AI Integration', link: 'getting-started/ai-setup' },
+      { label: 'AI Integration', link: 'getting-started/ai-integration' },
       {
         label: 'Tutorials',
         collapsed: true,
@@ -102,37 +102,37 @@ export const sidebar = [
       {
         label: 'Installation',
         collapsed: true,
-        autogenerate: { directory: 'guides/installation' },
+        autogenerate: { directory: 'recipes/installation' },
       },
       {
         label: 'Tasks & Caching',
         collapsed: true,
-        autogenerate: { directory: 'guides/tasks-caching' },
+        autogenerate: { directory: 'recipes/running-tasks' },
       },
       {
         label: 'Adopting Nx',
         collapsed: true,
-        autogenerate: { directory: 'guides/adopting-nx' },
+        autogenerate: { directory: 'recipes/adopting-nx' },
       },
       {
         label: 'Nx Release',
         collapsed: true,
-        autogenerate: { directory: 'guides/nx-release' },
+        autogenerate: { directory: 'recipes/nx-release' },
       },
       {
         label: 'Nx Console',
         collapsed: true,
-        autogenerate: { directory: 'guides/nx-console' },
+        autogenerate: { directory: 'recipes/nx-console' },
       },
       {
         label: 'Enforce Module Boundaries',
         collapsed: true,
-        autogenerate: { directory: 'guides/enforce-module-boundaries' },
+        autogenerate: { directory: 'recipes/enforce-module-boundaries' },
       },
       {
         label: 'Tips and tricks',
         collapsed: true,
-        autogenerate: { directory: 'guides/tips-and-tricks' },
+        autogenerate: { directory: 'recipes/tips-n-tricks' },
       },
     ],
   },
@@ -239,14 +239,14 @@ export const sidebar = [
         items: [
           { label: 'Introduction', link: 'technologies/vue/introduction' },
           {
-            label: 'Guides',
-            collapsed: true,
-            autogenerate: { directory: 'technologies/vue/guides' },
-          },
-          {
             label: 'API',
             collapsed: true,
             autogenerate: { directory: 'technologies/vue/api' },
+          },
+          {
+            label: 'Nuxt',
+            collapsed: true,
+            autogenerate: { directory: 'technologies/vue/nuxt' },
           },
         ],
       },
@@ -378,7 +378,7 @@ export const sidebar = [
   {
     label: 'Enterprise',
     collapsed: true,
-    autogenerate: { directory: 'enterprise' },
+    autogenerate: { directory: 'nx-enterprise' },
   },
   {
     label: 'Showcase',
@@ -468,5 +468,10 @@ export const sidebar = [
         link: 'troubleshooting/convert-to-inferred',
       },
     ],
+  },
+  {
+    label: 'Deprecated',
+    collapsed: true,
+    autogenerate: { directory: 'deprecated' },
   },
 ];
