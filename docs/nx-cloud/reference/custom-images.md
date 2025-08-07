@@ -23,7 +23,7 @@ RUN sudo chmod ....
 {% /tab %}
 {% tab label="Manual setup" %}
 
-> It's recommended to use Ubuntu as the base
+> It's required to use Ubuntu as the base
 
 ```yaml {% fileName="nx-agent-base-image.dockerfile" %}
 FROM ubuntu:22.04 as base
@@ -57,4 +57,4 @@ ENTRYPOINT [ "/home/workflows/executor-binary/nx-cloud-workflow-executor" ]
    - If your image must remain behind a private registry, please contact your DPE to discuss potential solutions.
 2. `USER`, `WORKDIR` and `ENTRYPOINT` are not overridden
    - If manually setting they are correctly configured as outlined in the _Manual_ step above.
-3. Image is used in a [custom launch template](/ci/reference/launch-templates#launchtemplatestemplatenameimage) via it's fully qualified path
+3. Image is used in a [custom launch template](/ci/reference/launch-templates#launchtemplatestemplatenameimage) via its fully qualified path
