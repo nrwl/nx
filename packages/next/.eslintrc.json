@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -90,6 +90,7 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "@nx/webpack",
               "@nx/cypress",
@@ -102,12 +103,13 @@
               "@babel/plugin-proposal-decorators",
               "tailwindcss",
               "file-loader",
-              "@svgr/webpack"
+              "@svgr/webpack",
+              "@nx/next"
             ]
           }
         ]
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

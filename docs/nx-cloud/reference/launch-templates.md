@@ -59,7 +59,7 @@ The following resource classes are available:
 - `docker_linux_arm64/extra_large`
 - `windows/medium`
 
-See their detailed description and pricing at [nx.dev/pricing](/pricing#plan-detail?sutm_source=nx.dev&utm_medium=launch-templates).
+See their detailed description and pricing in the [credits pricing reference](/ci/reference/credits-pricing?utm_source=nx.dev&utm_medium=launch-templates).
 
 ### `launch-templates.<template-name>.image`
 

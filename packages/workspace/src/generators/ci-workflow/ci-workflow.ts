@@ -14,6 +14,58 @@ import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup';
 
+function getNxCloudRecordCommand(
+  ci: Schema['ci'],
+  packageManagerPrefix: string
+): Command {
+  const baseCommand = `${packageManagerPrefix} nx-cloud record -- echo Hello World`;
+  const prefix = getCiPrefix(ci);
+  const exampleComment = `${prefix}${baseCommand}`;
+
+  return {
+    comments: [
+      `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
+      exampleComment,
+    ],
+  };
+}
+
+function getNxTasksCommand(
+  ci: Schema['ci'],
+  packageManagerPrefix: string,
+  mainBranch: string,
+  hasTypecheck: boolean,
+  hasE2E: boolean,
+  useRunMany: boolean = false
+): Command {
+  const tasks = `lint test build${hasTypecheck ? ' typecheck' : ''}${
+    hasE2E ? ' e2e' : ''
+  }`;
+
+  const commandType = useRunMany ? 'run-many' : 'affected';
+  const nxCommandComments = hasE2E
+    ? [`When you enable task distribution, run the e2e-ci task instead of e2e`]
+    : [];
+
+  const args = getCiArgs(ci, mainBranch, useRunMany);
+  const nxCommand = `${packageManagerPrefix} nx ${commandType} ${args}-t ${tasks}`;
+
+  return {
+    comments: nxCommandComments,
+    command: nxCommand,
+  };
+}
+
+function getNxCloudFixCiCommand(packageManagerPrefix: string): Command {
+  return {
+    comments: [
+      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
+    ],
+    command: `${packageManagerPrefix} nx fix-ci`,
+    alwaysRun: true,
+  };
+}
+
 function getCiCommands(
   ci: Schema['ci'],
   packageManagerPrefix: string,
@@ -22,50 +74,17 @@ function getCiCommands(
   hasE2E: boolean,
   useRunMany: boolean = false
 ): Command[] {
-  // Build task list
-  const tasks = `lint test build${hasTypecheck ? ' typecheck' : ''}${
-    hasE2E ? ' e2e' : ''
-  }`;
-
-  // Create nx-cloud record example comment with CI-specific prefix
-  const baseCommand = `${packageManagerPrefix} nx-cloud record -- echo Hello World`;
-  const prefix = getCiPrefix(ci);
-  const exampleComment = `${prefix}${baseCommand}`;
-
-  // Build nx-cloud record comments
-  const nxCloudComments = [
-    `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
-    exampleComment,
-  ];
-
-  // Build nx command comments and command
-  const commandType = useRunMany ? 'run-many' : 'affected';
-  const nxCommandComments = useRunMany
-    ? [
-        `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ]
-    : [
-        `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ];
-
-  if (hasE2E) {
-    nxCommandComments.push(
-      `When you enable task distribution, run the e2e-ci task instead of e2e`
-    );
-  }
-
-  // Build nx command with CI-specific args
-  const args = getCiArgs(ci, mainBranch, useRunMany);
-  const nxCommand = `${packageManagerPrefix} nx ${commandType} ${args}-t ${tasks}`;
-
   return [
-    {
-      comments: nxCloudComments,
-    },
-    {
-      comments: nxCommandComments,
-      command: nxCommand,
-    },
+    getNxCloudRecordCommand(ci, packageManagerPrefix),
+    getNxTasksCommand(
+      ci,
+      packageManagerPrefix,
+      mainBranch,
+      hasTypecheck,
+      hasE2E,
+      useRunMany
+    ),
+    getNxCloudFixCiCommand(packageManagerPrefix),
   ];
 }
 
@@ -116,13 +135,6 @@ function getBitbucketBranchCommands(
 
   // Build nx command comments and command
   const commandType = useRunMany ? 'run-many' : 'affected';
-  const nxCommandComments = useRunMany
-    ? [
-        `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ]
-    : [
-        `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ];
 
   // Build command with conditional base arg
   const baseArg = useRunMany ? '' : ' --base=HEAD~1';
@@ -133,13 +145,16 @@ function getBitbucketBranchCommands(
       comments: nxCloudComments,
     },
     {
-      comments: nxCommandComments,
       command,
     },
   ];
 }
 
-export type Command = { command?: string; comments?: string[] };
+export type Command = {
+  command?: string;
+  comments?: string[];
+  alwaysRun?: boolean;
+};
 
 export interface Schema {
   name: string;

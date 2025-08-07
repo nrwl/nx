@@ -1,7 +1,7 @@
 import {
   ModelContextProtocolIcon,
   NxConsoleSmallIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import Image from 'next/image';
 
 export interface TechnicalImplementationProps {

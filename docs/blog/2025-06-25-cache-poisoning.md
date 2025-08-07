@@ -26,8 +26,6 @@ In each case, attackers turned trusted build processes into deployment pipelines
 
 If you use a build system with remote caching, assume you're affected. This isn't hyperbole. **Most organizations are unknowingly giving every PR author the power to poison production without leaving a trace.**
 
-{% call-to-action size="lg" title="Join our webinar + live Q&A on July 9th and 16th" url="https://bit.ly/4kkSHiy" icon="nxcloud" description="Join Nx co-founders, Jeff and Victor, for an essential security briefing on protecting your build infrastructure from emerging threats." /%}
-
 {% toc /%}
 
 ## Understanding Remote Cache
@@ -241,8 +239,6 @@ Any implementation that writes directly to S3, GCS, Azure, **including the packa
 Remote caching is critical for build performance, but we need to treat it with the same rigor we apply to production access.
 
 If you have questions about assessing your exposure or implementing secure caching, [reach out to our team](/contact/engineering).
-
-{% call-to-action size="lg" title="Join our webinar + live Q&A on July 9th and 16th" url="https://bit.ly/4npF0BA" icon="nxcloud" description="Join Nx co-founders, Jeff and Victor, for an essential security briefing on protecting your build infrastructure from emerging threats." /%}
 
 ---
 

@@ -15,7 +15,7 @@ import { setupIntegratedWorkspace } from './integrated-workspace';
 import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
 import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
-import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
 
 const defaultCacheableOperations: string[] = [
   'build',

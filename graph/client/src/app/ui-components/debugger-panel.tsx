@@ -1,21 +1,28 @@
 import { memo } from 'react';
 import { GraphPerfReport } from '../interfaces';
-import { Dropdown } from '@nx/graph/legacy/components';
-import type { WorkspaceData } from '@nx/graph/legacy/shared';
+import { Dropdown } from '@nx/graph-ui-common';
+import type { WorkspaceData } from '@nx/graph-shared';
+import { ProjectGraphHandleEventResult } from '@nx/graph/projects';
+import { TaskGraphHandleEventResult } from '@nx/graph/tasks';
 
 export interface DebuggerPanelProps {
   projects: WorkspaceData[];
   selectedProject: string;
   selectedProjectChange: (projectName: string) => void;
-  lastPerfReport: GraphPerfReport;
+  graphEventResult: ProjectGraphHandleEventResult | TaskGraphHandleEventResult;
 }
 
 export const DebuggerPanel = memo(function ({
   projects,
   selectedProject,
   selectedProjectChange,
-  lastPerfReport,
+  graphEventResult,
 }: DebuggerPanelProps) {
+  const nodesCount =
+    graphEventResult.type === 'project'
+      ? graphEventResult.composites.length + graphEventResult.projects.length
+      : graphEventResult.tasks.length;
+
   return (
     <div
       data-cy="debugger-panel"
@@ -38,10 +45,11 @@ export const DebuggerPanel = memo(function ({
         })}
       </Dropdown>
       <p className="text-sm">
-        Last render took {lastPerfReport.renderTime}ms:{' '}
-        <b className="text-medium font-mono">{lastPerfReport.numNodes} nodes</b>{' '}
-        |{' '}
-        <b className="text-medium font-mono">{lastPerfReport.numEdges} edges</b>
+        Last render took {graphEventResult.renderDuration}ms:{' '}
+        <b className="text-medium font-mono">{nodesCount} nodes</b> |{' '}
+        <b className="text-medium font-mono">
+          {graphEventResult.edges.length} edges
+        </b>
         .
       </p>
     </div>

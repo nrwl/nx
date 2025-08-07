@@ -17,6 +17,7 @@ import { readConfig } from 'jest-config';
 import { join, normalize, posix } from 'node:path';
 import { createNodesV2, type JestPluginOptions } from '../../plugins/plugin';
 import { jestConfigExtensions } from '../../utils/config/config-file';
+import { getInstalledJestMajorVersion } from '../../utils/version-utils';
 
 interface Schema {
   project?: string;
@@ -182,18 +183,33 @@ async function updateOptions(
     delete targetOptions.testFile;
   }
 
+  let testPathPatternsOptionName: string;
   if ('testPathPattern' in targetOptions) {
+    testPathPatternsOptionName = 'testPathPattern';
     testPathPatterns.push(
       ...targetOptions.testPathPattern.map((pattern: string) =>
         toProjectRelativeRegexPath(pattern, projectRoot)
       )
     );
+  } else if ('testPathPatterns' in targetOptions) {
+    testPathPatternsOptionName = 'testPathPatterns';
+    testPathPatterns.push(
+      ...targetOptions.testPathPatterns.map((pattern: string) =>
+        toProjectRelativeRegexPath(pattern, projectRoot)
+      )
+    );
+  } else {
+    const jestMajorVersion = getInstalledJestMajorVersion();
+    testPathPatternsOptionName =
+      jestMajorVersion >= 30 ? 'testPathPatterns' : 'testPathPattern';
   }
 
   if (testPathPatterns.length > 1) {
-    targetOptions.testPathPattern = `\"${testPathPatterns.join('|')}\"`;
+    targetOptions[testPathPatternsOptionName] = `\"${testPathPatterns.join(
+      '|'
+    )}\"`;
   } else if (testPathPatterns.length === 1) {
-    targetOptions.testPathPattern = testPathPatterns[0];
+    targetOptions[testPathPatternsOptionName] = testPathPatterns[0];
   }
 
   if ('testPathIgnorePatterns' in targetOptions) {

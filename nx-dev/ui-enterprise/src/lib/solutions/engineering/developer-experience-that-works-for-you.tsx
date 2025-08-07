@@ -5,7 +5,7 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { ReactElement } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 const features = [

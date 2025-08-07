@@ -11,7 +11,7 @@ import {
   runNgNew,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { PackageManager } from 'nx/src/utils/package-manager';
 
 describe('convert Angular CLI workspace to an Nx workspace', () => {

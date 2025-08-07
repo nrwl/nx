@@ -3,6 +3,7 @@ import type { Configuration } from '@rspack/core';
 import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -58,7 +59,7 @@ export async function withModuleFederation(
 
     config.plugins.push(
       new ModuleFederationPlugin({
-        name: options.name.replace(/-/g, '_'),
+        name: normalizeProjectName(options.name),
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,

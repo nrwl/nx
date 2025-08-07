@@ -4,9 +4,14 @@
   "sourceRoot": "packages/esbuild",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/esbuild/README.md"],
+      "commands": ["node ./scripts/copy-readme.js esbuild"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/esbuild",
@@ -42,10 +47,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/esbuild/README.md"],
-      "commands": ["node ./scripts/copy-readme.js esbuild"]
     }
   }
 }

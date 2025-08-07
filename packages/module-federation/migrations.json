@@ -58,6 +58,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "21.3.0": {
+      "version": "21.3.0-beta.8",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.17.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.17.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

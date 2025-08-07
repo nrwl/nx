@@ -10,6 +10,7 @@ use super::{
 };
 
 pub mod countdown_popup;
+pub mod dependency_view;
 pub mod help_popup;
 pub mod help_text;
 pub mod layout_manager;

@@ -25,7 +25,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   let isVerboseLogging = process.env.NX_VERBOSE_LOGGING === 'true';
 
   if (options.clearLocalRegistry) {
-    rmSync(join(__dirname, '../build/local-registry/storage'), {
+    rmSync(join(__dirname, '../dist/local-registry/storage'), {
       recursive: true,
       force: true,
     });
@@ -42,7 +42,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   if (!options.local && process.env.NODE_AUTH_TOKEN) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
-    execSync('find ./build -name "*.node" -delete', {
+    execSync('find ./dist -name "*.node" -delete', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
       windowsHide: false,
@@ -173,6 +173,14 @@ const VALID_AUTHORS_FOR_LATEST = [
       );
     }
   }
+
+  // Clean up tsconfig files before publishing
+  console.log('Cleaning up tsconfig files...');
+  execSync('node ./scripts/cleanup-tsconfig-files.js', {
+    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+    maxBuffer: LARGE_BUFFER,
+    windowsHide: false,
+  });
 
   // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
   let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;

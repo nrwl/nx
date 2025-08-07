@@ -1,4 +1,4 @@
-import type { BlogAuthor } from '@nx/nx-dev/data-access-documents/node-only';
+import type { BlogAuthor } from '@nx/nx-dev-data-access-documents/node-only';
 
 export interface Course {
   id: string;

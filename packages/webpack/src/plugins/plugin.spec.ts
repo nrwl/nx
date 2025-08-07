@@ -1,3 +1,16 @@
+// Needed so the current environment is not used
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  getPackageManagerCommand: jest.fn(() => ({
+    exec: 'npx',
+  })),
+}));
+
+// Needed so the current environment is not used
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';

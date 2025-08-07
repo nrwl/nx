@@ -70,32 +70,11 @@ jobs:
       - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
         run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
 
-      - name: Run commands in parallel
-        run: |
-          # initialize an array to store process IDs (PIDs)
-          pids=()
+      - name: Check the formatting
+        run: npx nx-cloud record -- nx format:check
 
-          # function to run commands and store the PID
-          function run_command() {
-            local command=$1
-            $command &  # run the command in the background
-            pids+=($!)  # store the PID of the background process
-          }
-
-          # list of commands to be run on main has env flag NX_CLOUD_DISTRIBUTED_EXECUTION set to false
-          run_command "NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- nx format:check"
-
-          # list of commands to be run on agents
-          run_command "npx nx affected -t lint,test,build,e2e-ci --parallel=3"
-
-          # wait for all background processes to finish
-          for pid in ${pids[*]}; do
-            if ! wait $pid; then
-              exit 1  # exit with an error status if any process fails
-            fi
-          done
-
-          exit 0 # exits with success status if a all processes complete successfully
+      - name: Lint, test, build, and run e2e
+        run: npx nx affected -t lint,test,build,e2e-ci --configuration=ci
 
   agents:
     name: Agent ${{ matrix.agent }}

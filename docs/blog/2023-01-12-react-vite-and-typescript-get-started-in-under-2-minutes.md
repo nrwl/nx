@@ -509,7 +509,7 @@ If you're currently on a [CRA](https://create-react-app.dev/) setup, you can eas
 {% youtube src="https://youtu.be/zvYb7XCLQzU" /%}
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 Read more on the Nx docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)

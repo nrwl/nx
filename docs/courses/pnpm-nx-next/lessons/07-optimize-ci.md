@@ -17,4 +17,4 @@ We’ll also take a quick detour to discuss `namedInputs` in `nx.json`, ensuring
 ## Relevant Links
 
 - [Run Only Tasks Affected by a PR](/ci/features/affected)
-- [Tutorial: Github Actions with Nx](/ci/intro/tutorials/github-actions#create-a-ci-workflow)
+- [Guide: Github Actions with Nx](/ci/recipes/set-up/monorepo-ci-github-actions)

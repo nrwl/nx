@@ -188,10 +188,14 @@ describe('app', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
+          "dependencies": {
+            "express": "^4.21.2",
+          },
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -219,8 +223,42 @@ describe('app', () => {
                   "{options.outputPath}",
                 ],
               },
+              "copy-workspace-modules": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:copy-workspace-modules",
+                "options": {
+                  "buildTarget": "build",
+                },
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
+                ],
+              },
               "lint": {
                 "executor": "@nx/eslint:lint",
+              },
+              "prune": {
+                "dependsOn": [
+                  "prune-lockfile",
+                  "copy-workspace-modules",
+                ],
+                "executor": "nx:noop",
+              },
+              "prune-lockfile": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:prune-lockfile",
+                "options": {
+                  "buildTarget": "build",
+                },
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
+                ],
               },
               "serve": {
                 "configurations": {
@@ -243,9 +281,14 @@ describe('app', () => {
                 },
               },
               "test": {
+                "executor": "@nx/jest:jest",
                 "options": {
+                  "jestConfig": "myapp/jest.config.ts",
                   "passWithNoTests": true,
                 },
+                "outputs": [
+                  "{projectRoot}/test-output/jest/coverage",
+                ],
               },
             },
           },
@@ -344,6 +387,7 @@ describe('app', () => {
           "version",
           "private",
           "nx",
+          "dependencies",
         ]
       `);
     });
@@ -390,8 +434,42 @@ describe('app', () => {
                 "{options.outputPath}",
               ],
             },
+            "copy-workspace-modules": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+              "outputs": [
+                "{workspaceRoot}/myapp/dist/workspace_modules",
+              ],
+            },
             "lint": {
               "executor": "@nx/eslint:lint",
+            },
+            "prune": {
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
+              },
+              "outputs": [
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
+              ],
             },
             "serve": {
               "configurations": {
@@ -414,9 +492,14 @@ describe('app', () => {
               },
             },
             "test": {
+              "executor": "@nx/jest:jest",
               "options": {
+                "jestConfig": "myapp/jest.config.ts",
                 "passWithNoTests": true,
               },
+              "outputs": [
+                "{projectRoot}/test-output/jest/coverage",
+              ],
             },
           },
         }

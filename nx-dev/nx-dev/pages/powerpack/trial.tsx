@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
-import { TrialNxPowerpack } from '@nx/nx-dev/ui-powerpack';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
+import { TrialNxPowerpack } from '@nx/nx-dev-ui-powerpack';
 import { type ReactElement } from 'react';
 
 export function PowerpackTrial(): ReactElement {

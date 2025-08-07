@@ -161,7 +161,7 @@ It uses Nx for running and building your project. Nx relies on the Angular Devki
 If you have an existing Angular CLI project, you can also [add Nx support to it](/technologies/angular/migration/angular) by running:
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 If you already know you want to go straight to an Nx monorepo, you can add the `--integrated` flag to the `nx init` command.

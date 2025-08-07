@@ -10,10 +10,19 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../ui-project-details"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../shared"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ],
   "extends": "../../tsconfig.base.json"

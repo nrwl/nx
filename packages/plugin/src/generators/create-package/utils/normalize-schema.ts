@@ -5,7 +5,10 @@ import {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
 } from '@nx/js/src/utils/generator-prompts';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  shouldConfigureTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { CreatePackageSchema } from '../schema';
 
 export interface NormalizedSchema extends CreatePackageSchema {
@@ -45,7 +48,13 @@ export async function normalizeSchema(
     directory: schema.directory,
   });
 
-  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
+  // this helper is called before the other generators that end up calling the
+  // jsLibraryGenerator, so, if the TS solution setup is not configured, we
+  // additionally check if the TS solution setup will be configured by the
+  // jsLibraryGenerator
+  const isTsSolutionSetup =
+    isUsingTsSolutionSetup(host) ||
+    shouldConfigureTsSolutionSetup(host, schema.addPlugin);
   const nxJson = readNxJson(host);
   const addPlugin =
     schema.addPlugin ??

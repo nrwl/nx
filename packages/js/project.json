@@ -4,11 +4,21 @@
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "main": "packages/js/src/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
+          {
+            "input": "packages/js",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/js",
+            "glob": "**/creator-files/**",
+            "output": "/"
+          },
           {
             "input": "packages/js",
             "glob": "**/files/**",
@@ -28,7 +38,7 @@
           {
             "input": "packages/js",
             "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
+            "ignore": ["**/jest.config.js", "src/index.js"],
             "output": "/"
           },
           {
@@ -45,7 +55,7 @@
       }
     },
     "build": {
-      "outputs": ["{workspaceRoot}/build/packages/js/README.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/js/README.md"],
       "command": "node ./scripts/copy-readme.js js"
     }
   },

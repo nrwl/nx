@@ -1,10 +1,11 @@
 import type { ProjectGraph } from '@nx/devkit';
-import type { WorkspaceLibrary } from './models';
-import { readTsPathMappings } from './typescript';
 import {
   getOutputsForTargetAndConfiguration,
   parseTargetString,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { WorkspaceLibrary } from './models';
+import { readTsPathMappings } from './typescript';
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,
@@ -66,7 +67,7 @@ function getLibraryImportPath(
     buildLibsFromSource = process.env.NX_BUILD_LIBS_FROM_SOURCE === 'true';
   }
   const libraryNode = projectGraph.nodes[library];
-  let sourceRoots = [libraryNode.data.sourceRoot];
+  let sourceRoots = [getProjectSourceRoot(libraryNode.data)];
 
   if (!buildLibsFromSource && process.env.NX_BUILD_TARGET) {
     const buildTarget = parseTargetString(

@@ -40,6 +40,11 @@
         "type": "string",
         "description": "SSL certificate to use for serving `HTTPS`."
       },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Path to proxy configuration file. For more information, see https://rspack.rs/config/dev-server#devserverproxy.",
+        "x-completion-type": "file"
+      },
       "publicHost": {
         "type": "string",
         "description": "Public URL where the application will be served."

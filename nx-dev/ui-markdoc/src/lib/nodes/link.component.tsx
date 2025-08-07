@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export function CustomLink(props: any) {
   const target =

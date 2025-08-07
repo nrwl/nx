@@ -20,7 +20,7 @@ export async function resolveNxJsonConfigErrorMessage(
         ? `, line ${errorLines.startLine}`
         : `, lines ${errorLines.startLine}-${errorLines.endLine}`;
   }
-  return nxJsonMessage;
+  return nxJsonMessage + '.';
 }
 
 async function getJsonConfigLinesForErrorMessage(

@@ -14,7 +14,7 @@ import {
   killPorts,
   createFile,
   removeFile,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('@nx/expo', () => {

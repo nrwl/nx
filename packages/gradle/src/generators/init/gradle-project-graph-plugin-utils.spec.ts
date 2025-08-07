@@ -164,6 +164,32 @@ describe('Gradle Project Graph Plugin Utils', () => {
         expect(content).not.toContain('version "1.0.0"');
         expect(content).toContain('allprojects {');
       });
+
+      it('should add plugin to existing allprojects block', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle': '',
+          'proj/build.gradle': `plugins {
+    id "java"
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle', 'utf-8');
+        expect(content).toMatch(
+          /plugins\s*{\s*id\s*['"]dev\.nx\.gradle\.project-graph['"]\s*version\s*['"][^'"]+['"]/
+        );
+        expect(content).toMatch(
+          /allprojects\s*{\s*apply\s*plugin\s*['"]dev\.nx\.gradle\.project-graph['"]/
+        );
+        expect(content).toContain('repositories {');
+      });
     });
 
     describe('Kotlin DSL (build.gradle.kts)', () => {
@@ -198,6 +224,32 @@ describe('Gradle Project Graph Plugin Utils', () => {
         expect(content).toMatch(
           /^plugins\s*{\s*id\(['"]dev\.nx\.gradle\.project-graph['"]\)\s*version\(['"][^'"]+['"]\)\s*}\s*apply\(plugin =/
         );
+      });
+
+      it('should add plugin to existing allprojects block', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    id("java")
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        expect(content).toMatch(
+          /plugins\s*{\s*id\(['"]dev\.nx\.gradle\.project-graph['"]\)\s*version\(['"][^'"]+['"]\)/
+        );
+        expect(content).toMatch(
+          /allprojects\s*{\s*apply\s*plugin\(['"]dev\.nx\.gradle\.project-graph['"]\)/
+        );
+        expect(content).toContain('repositories {');
       });
     });
 

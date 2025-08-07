@@ -7,6 +7,33 @@
   "files": [],
   "references": [
     {
+      "path": "../../packages/workspace"
+    },
+    {
+      "path": "../../packages/js"
+    },
+    {
+      "path": "../../packages/jest"
+    },
+    {
+      "path": "../../packages/react"
+    },
+    {
+      "path": "../../packages/angular"
+    },
+    {
+      "path": "../../packages/storybook"
+    },
+    {
+      "path": "../utils"
+    },
+    {
+      "path": "../../packages/devkit"
+    },
+    {
+      "path": "../../packages/nx"
+    },
+    {
       "path": "./tsconfig.spec.json"
     }
   ]

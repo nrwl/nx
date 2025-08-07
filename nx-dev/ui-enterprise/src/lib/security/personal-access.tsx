@@ -8,9 +8,9 @@ import {
   SectionDescription,
   SectionHeading,
   Strong,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
-import { GitHubIcon } from '@nx/nx-dev/ui-icons';
+import { GitHubIcon } from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
 
 export function PersonalAccess(): ReactElement {

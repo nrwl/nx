@@ -56,3 +56,11 @@ export async function killProcessAndPorts(
     expect(err).toBeFalsy();
   }
 }
+
+/**
+ * Generates a random port number between 1024 and 9999.
+ * Ports below 1024 are reserved for system services.
+ */
+export function getRandomPort() {
+  return Math.floor(1024 + Math.random() * 8976);
+}

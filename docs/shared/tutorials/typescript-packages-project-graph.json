@@ -2,21 +2,21 @@
   "hash": "b403577d293fcd1162049fb6cd70752277d68eecc34268aa57452ce597b7352e",
   "projects": [
     {
-      "name": "@tuskdesign/animals",
+      "name": "@acme/animals",
       "type": "lib",
       "data": {
         "tags": []
       }
     },
     {
-      "name": "@tuskdesign/names",
+      "name": "@acme/utils",
       "type": "lib",
       "data": {
         "tags": []
       }
     },
     {
-      "name": "@tuskdesign/zoo",
+      "name": "@acme/zoo",
       "type": "lib",
       "data": {
         "tags": []
@@ -24,23 +24,23 @@
     }
   ],
   "dependencies": {
-    "@tuskdesign/animals": [],
-    "@tuskdesign/names": [
+    "@acme/animals": [
       {
-        "source": "@tuskdesign/names",
-        "target": "@tuskdesign/animals",
+        "source": "@acme/animals",
+        "target": "@acme/utils",
         "type": "static"
       }
     ],
-    "@tuskdesign/zoo": [
+    "@acme/utils": [],
+    "@acme/zoo": [
       {
-        "source": "@tuskdesign/zoo",
-        "target": "@tuskdesign/animals",
+        "source": "@acme/zoo",
+        "target": "@acme/animals",
         "type": "static"
       },
       {
-        "source": "@tuskdesign/zoo",
-        "target": "@tuskdesign/names",
+        "source": "@acme/zoo",
+        "target": "@acme/utils",
         "type": "static"
       }
     ]

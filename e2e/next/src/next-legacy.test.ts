@@ -17,7 +17,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 import { mkdirSync, removeSync } from 'fs-extra';
 import { join } from 'path';
 import { checkApp } from './utils';

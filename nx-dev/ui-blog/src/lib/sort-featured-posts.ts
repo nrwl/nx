@@ -1,4 +1,4 @@
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 
 // first five blog posts should prioritize pinned posts, then show recent posts
 // if there are fewer than 5 pinned posts, fill remaining spots with newest posts by date

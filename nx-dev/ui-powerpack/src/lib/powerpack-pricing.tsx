@@ -1,6 +1,6 @@
 'use client';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
-import { ButtonLink } from '@nx/nx-dev/ui-common';
+import { ButtonLink } from '@nx/nx-dev-ui-common';
 
 export function PowerpackPricing() {
   return (

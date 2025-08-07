@@ -4,6 +4,7 @@ import {
   joinPathFragments,
   readNxJson,
   Tree,
+  GeneratorCallback,
   writeJson,
 } from '@nx/devkit';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
@@ -12,7 +13,10 @@ import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
-export async function addE2e(host: Tree, options: NormalizedSchema) {
+export async function addE2e(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   const nxJson = readNxJson(host);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'

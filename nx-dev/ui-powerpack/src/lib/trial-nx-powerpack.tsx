@@ -1,4 +1,4 @@
-import { HubspotForm, SectionHeading } from '@nx/nx-dev/ui-common';
+import { HubspotForm, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 import {
   CapitalOneIcon,
@@ -6,7 +6,7 @@ import {
   CaterpillarIcon,
   RoyalBankOfCanadaIcon,
   ShopifyIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import { ArrowLongRightIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 

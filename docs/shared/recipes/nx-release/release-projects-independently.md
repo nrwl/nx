@@ -43,6 +43,8 @@ For example, to generate the tags `release/pkg-1/1.1.0` and `release/pkg-2/1.2.1
 }
 ```
 
+See the [`releaseTagPattern` documentation](/reference/nx-json#release-tag-pattern) for more details on how to customize the tag pattern.
+
 ### Different Commit Message Structure
 
 Even though Nx Release creates a git tag for each project, it will still create a single commit for the entire release. The commit message will still include all of the projects being released with their corresponding version. For example:
@@ -71,7 +73,7 @@ Nx Release will no longer generate and update a workspace level `CHANGELOG.md` f
 }
 ```
 
-Just like with [fixed releases](/recipes/nx-release/get-started-with-nx-release), you can preview changes to the changelog files by running Nx Release with the `--dry-run` option.
+Just like with [fixed releases](/recipes/nx-release/release-npm-packages), you can preview changes to the changelog files by running Nx Release with the `--dry-run` option.
 
 ## Use the Projects Filter
 

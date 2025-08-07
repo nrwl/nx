@@ -1,0 +1,58 @@
+---
+import { getCollection, render } from 'astro:content';
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import type { CollectionEntry } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+export async function getStaticPaths() {
+  const pluginDocs = await getCollection('plugin-docs', (entry) => entry.data.docType !== 'overview');
+
+  // Group docs by plugin name
+  const docsByPlugin = pluginDocs.reduce(
+    (acc, doc) => {
+      const pluginName = doc.data.pluginName;
+      if (!acc[pluginName]) {
+        acc[pluginName] = [];
+      }
+      acc[pluginName].push(doc);
+      return acc;
+    },
+    {} as Record<string, CollectionEntry<'plugin-docs'>[]>
+  );
+
+  // Generate paths for each plugin
+  return Object.entries(docsByPlugin).map(([pluginName, docs]) => ({
+    params: { plugin: pluginName },
+    props: {
+      pluginName,
+      docs: docs.sort((a, b) => {
+        const order = ['generators', 'executors', 'migrations'];
+        return order.indexOf(a.data.docType) - order.indexOf(b.data.docType);
+      })
+    }
+  }));
+
+}
+
+const { pluginName, docs } = Astro.props;
+---
+
+<StarlightPage
+  frontmatter={{
+    title: `@nx/${pluginName}`,
+    description: `Complete reference for @nx/${pluginName} plugin`
+  }}
+>
+
+  <CardGrid>
+
+    {
+      docs.map(({ data }) => (
+        <LinkCard title={data.docType.charAt(0).toUpperCase() + data.docType.slice(1)}
+                  href={`./${pluginName}/${data.docType}`}>
+        </LinkCard>
+      ))
+    }
+
+  </CardGrid>
+</StarlightPage>

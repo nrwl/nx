@@ -246,7 +246,7 @@ exports[`ngrx-feature-store NgModule should generate the files with the correct 
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule, Store } from '@ngrx/store';
-import { readFirst } from '@nx/angular/testing';
+import { firstValueFrom } from 'rxjs';
 
 import * as UsersActions from './users.actions';
 import { UsersEffects } from './users.effects';
@@ -301,16 +301,16 @@ describe('UsersFacade', () => {
      * The initially generated facade::loadAll() returns empty array
      */
     it('loadAll() should return empty list with loaded == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
 
       facade.init();
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(true);
@@ -320,8 +320,8 @@ describe('UsersFacade', () => {
      * Use \`loadUsersSuccess\` to manually update list
      */
     it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
@@ -332,8 +332,8 @@ describe('UsersFacade', () => {
         })
       );
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(2);
       expect(isLoaded).toBe(true);
@@ -702,7 +702,7 @@ exports[`ngrx-feature-store Standalone APIs should generate the files with the c
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule, Store } from '@ngrx/store';
-import { readFirst } from '@nx/angular/testing';
+import { firstValueFrom } from 'rxjs';
 
 import * as UsersActions from './users.actions';
 import { UsersEffects } from './users.effects';
@@ -757,16 +757,16 @@ describe('UsersFacade', () => {
      * The initially generated facade::loadAll() returns empty array
      */
     it('loadAll() should return empty list with loaded == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
 
       facade.init();
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(true);
@@ -776,8 +776,8 @@ describe('UsersFacade', () => {
      * Use \`loadUsersSuccess\` to manually update list
      */
     it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
-      let list = await readFirst(facade.allUsers$);
-      let isLoaded = await readFirst(facade.loaded$);
+      let list = await firstValueFrom(facade.allUsers$);
+      let isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
@@ -789,8 +789,8 @@ describe('UsersFacade', () => {
         ]})
       );
 
-      list = await readFirst(facade.allUsers$);
-      isLoaded = await readFirst(facade.loaded$);
+      list = await firstValueFrom(facade.allUsers$);
+      isLoaded = await firstValueFrom(facade.loaded$);
 
       expect(list.length).toBe(2);
       expect(isLoaded).toBe(true);

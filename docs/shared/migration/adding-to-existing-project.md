@@ -315,7 +315,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 Now connect your repository to Nx Cloud with the following command:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
@@ -391,10 +391,13 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Run details](/shared/tutorials/nx-cloud-run-details.avif)
 
-For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
+For more information about how Nx can improve your CI pipeline, check out one of these guides:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+- [GitHub Actions with Nx](/ci/recipes/set-up/monorepo-ci-github-actions)
+- [Circle CI with Nx](/ci/recipes/set-up/monorepo-ci-circle-ci)
+- [Azure Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-azure)
+- [Bitbucket Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
+- [GitLab with Nx](/ci/recipes/set-up/monorepo-ci-gitlab)
 
 ## Learn More
 

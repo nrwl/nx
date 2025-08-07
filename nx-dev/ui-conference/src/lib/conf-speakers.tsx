@@ -1,4 +1,4 @@
-import { Member } from '@nx/nx-dev/ui-member-card';
+import { Member } from '@nx/nx-dev-ui-member-card';
 import { Speakers } from './components/speakers';
 
 export function ConfSpeakers(): JSX.Element {

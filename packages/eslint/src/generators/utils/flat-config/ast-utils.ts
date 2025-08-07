@@ -1754,7 +1754,14 @@ export function generateAst<T>(
     return ts.factory.createStringLiteral(input) as T;
   }
   if (typeof input === 'number') {
-    return ts.factory.createNumericLiteral(input) as T;
+    if (input < 0) {
+      return ts.factory.createPrefixUnaryExpression(
+        ts.SyntaxKind.MinusToken,
+        ts.factory.createNumericLiteral(Math.abs(input))
+      ) as T;
+    } else {
+      return ts.factory.createNumericLiteral(input) as T;
+    }
   }
   if (typeof input === 'boolean') {
     return (input ? ts.factory.createTrue() : ts.factory.createFalse()) as T;

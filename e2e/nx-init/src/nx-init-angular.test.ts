@@ -9,7 +9,7 @@ import {
   runCLI,
   runCommand,
   runNgNew,
-} from '../../utils';
+} from '@nx/e2e-utils';
 
 describe('nx init (Angular CLI - legacy)', () => {
   let project: string;

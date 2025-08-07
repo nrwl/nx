@@ -1,4 +1,4 @@
-import { newProject, runCLI, runCLIAsync, uniq } from '@nx/e2e/utils';
+import { newProject, runCLI, runCLIAsync, uniq } from '@nx/e2e-utils';
 
 describe('Jest root projects', () => {
   const myapp = uniq('myapp');

@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs';
+import { posix } from 'node:path';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import type { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readCachedProjectGraph } from '../project-graph/project-graph';
 
 export function projectHasTarget(
@@ -27,7 +30,11 @@ export function projectHasTargetAndConfiguration(
 export function getSourceDirOfDependentProjects(
   projectName: string,
   projectGraph: ProjectGraph = readCachedProjectGraph()
-): [projectDirs: string[], warnings: string[]] {
+): [
+  projectDirs: string[],
+  // this is kept for backwards compatibility, but it's not used anymore
+  warnings: string[]
+] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
       `Couldn't find project "${projectName}" in this Nx workspace`
@@ -37,11 +44,10 @@ export function getSourceDirOfDependentProjects(
   const nodeNames = findAllProjectNodeDependencies(projectName, projectGraph);
   return nodeNames.reduce(
     (result, nodeName) => {
-      if (projectGraph.nodes[nodeName].data.sourceRoot) {
-        result[0].push(projectGraph.nodes[nodeName].data.sourceRoot);
-      } else {
-        result[1].push(nodeName);
-      }
+      const sourceRoot = getProjectSourceRoot(
+        projectGraph.nodes[nodeName].data
+      );
+      result[0].push(sourceRoot);
       return result;
     },
     [[], []] as [projectDirs: string[], warnings: string[]]
@@ -114,4 +120,15 @@ function collectDependentProjectNodesNames(
       includeExternalDependencies
     );
   }
+}
+
+export function getProjectSourceRoot(
+  project: ProjectConfiguration
+): string | undefined {
+  return (
+    project.sourceRoot ??
+    (existsSync(posix.join(project.root, 'src'))
+      ? posix.join(project.root, 'src')
+      : project.root)
+  );
 }

@@ -26,13 +26,17 @@ For MCP-compatible clients like **Claude Desktop**, **Cursor**, or other AI assi
   "servers": {
     "nx-mcp": {
       "command": "npx",
-      "args": ["nx-mcp@latest", "/path/to/your/workspace"]
+      "args": ["nx-mcp@latest"]
     }
   }
 }
 ```
 
-Replace `/path/to/your/workspace` with your actual workspace path.
+For Claude Code:
+
+```shell
+claude mcp add nx-mcp npx nx-mcp@latest
+```
 
 ## What This Integration Enables
 

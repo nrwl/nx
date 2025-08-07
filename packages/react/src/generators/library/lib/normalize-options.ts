@@ -102,11 +102,7 @@ export async function normalizeOptions(
       );
     }
 
-    const appSourceRoot = getProjectSourceRoot(
-      host,
-      appProjectConfig.sourceRoot,
-      appProjectConfig.root
-    );
+    const appSourceRoot = getProjectSourceRoot(appProjectConfig, host);
 
     normalized.appMain =
       appProjectConfig.targets.build?.options?.main ??

@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -34,17 +34,19 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "typescript",
               // Type imports only
               "eslint",
               "rollup",
-              "vite"
+              "vite",
+              "@nx/cypress"
             ]
           }
         ]
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

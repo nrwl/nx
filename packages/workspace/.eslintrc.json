@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -47,6 +47,7 @@
             "ignoredDependencies": [
               "nx",
               "prettier",
+              "tslib",
               "typescript",
               "@angular-devkit/schematics",
               "@angular-devkit/core",
@@ -57,5 +58,5 @@
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

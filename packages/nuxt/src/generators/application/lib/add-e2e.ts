@@ -1,6 +1,7 @@
 import {
   addProjectConfiguration,
   ensurePackage,
+  GeneratorCallback,
   joinPathFragments,
   readNxJson,
   Tree,
@@ -11,7 +12,10 @@ import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
-export async function addE2e(host: Tree, options: NormalizedSchema) {
+export async function addE2e(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   const e2eWebServerInfo = await getNuxtE2EWebServerInfo(
     host,
     options.projectName,

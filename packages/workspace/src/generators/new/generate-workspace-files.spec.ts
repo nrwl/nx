@@ -21,7 +21,7 @@ jest.mock(
 );
 jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
   ...jest.requireActual('nx/src/nx-cloud/utilities/url-shorten'),
-  createNxCloudOnboardingURL: async (source, token) => {
+  createNxCloudOnboardingURL: async (source, token, meta, forceManual) => {
     return `https://test.nx.app/connect?source=${source}&token=${token}`;
   },
 }));

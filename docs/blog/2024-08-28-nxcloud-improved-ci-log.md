@@ -33,14 +33,14 @@ If you prefer the previous log view in your CI, you can opt-out of the new table
 If you're not on Nx Cloud yet, you can **connect your Nx workspace** by running:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 This command will guide you through the setup. We recently introduced a [new Hobby plan](/pricing), which lets you experiment with all the Nx Cloud features for free. This is a great way to see if it's a good fit for your team.
 
 ## Learn More
 
-- [Nx on CI](/ci/intro/ci-with-nx)
+- [Nx on CI](/ci/recipes/set-up)
 - [Task Distribution with Nx Agents](/ci/features/distribute-task-execution)
 - [Automated e2e Test Splitting](/ci/features/split-e2e-tasks)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)

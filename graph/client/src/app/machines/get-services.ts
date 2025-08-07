@@ -1,7 +1,5 @@
 import { interpret, InterpreterStatus } from 'xstate';
 import { projectGraphMachine } from '../feature-projects/machines/project-graph.machine';
-import { getGraphService } from './graph.service';
-import { GraphTooltipService } from '@nx/graph/legacy/graph';
 
 let projectGraphService = interpret(projectGraphMachine, {
   devTools: !!window.useXstateInspect,
@@ -13,15 +11,4 @@ export function getProjectGraphService() {
   }
 
   return projectGraphService;
-}
-
-let tooltipService: GraphTooltipService;
-
-export function getTooltipService(): GraphTooltipService {
-  if (!tooltipService) {
-    const graph = getGraphService();
-    tooltipService = new GraphTooltipService(graph);
-  }
-
-  return tooltipService;
 }

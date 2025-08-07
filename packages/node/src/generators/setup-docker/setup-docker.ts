@@ -2,16 +2,20 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  joinPathFragments,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateProjectConfiguration,
+  detectPackageManager,
+  workspaceRoot,
+  offsetFromRoot,
+  joinPathFragments,
 } from '@nx/devkit';
-
+import { initGenerator as dockerInitGenerator } from '@nx/docker/generators';
 import { SetUpDockerOptions } from './schema';
 import { join } from 'path';
+import { existsSync } from 'fs';
 
 function normalizeOptions(
   tree: Tree,
@@ -20,8 +24,9 @@ function normalizeOptions(
   return {
     ...setupOptions,
     project: setupOptions.project ?? readNxJson(tree).defaultProject,
-    targetName: setupOptions.targetName ?? 'docker-build',
+    targetName: setupOptions.targetName ?? 'docker:build',
     buildTarget: setupOptions.buildTarget ?? 'build',
+    skipDockerPlugin: setupOptions.skipDockerPlugin ?? false,
   };
 }
 
@@ -34,7 +39,11 @@ function sanitizeProjectName(projectName: string): string {
     .replace(/^-|-$/g, '');
 }
 
-function addDocker(tree: Tree, options: SetUpDockerOptions) {
+async function addDocker(tree: Tree, options: SetUpDockerOptions) {
+  let installTask = () => {};
+  if (!options.skipDockerPlugin) {
+    installTask = await dockerInitGenerator(tree, { skipFormat: true });
+  }
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const outputPath =
@@ -51,29 +60,64 @@ function addDocker(tree: Tree, options: SetUpDockerOptions) {
   }
 
   const sanitizedProjectName = sanitizeProjectName(options.project);
+  const finalOutputPath = options.outputPath ?? outputPath;
+
+  // Calculate build location based on skipDockerPlugin flag
+  let buildLocation: string;
+  if (options.skipDockerPlugin) {
+    // Legacy mode: use workspace-relative paths
+    // docker target is set to run at project root, so ensure offset to workspace root
+    buildLocation = joinPathFragments(
+      offsetFromRoot(projectConfig.root),
+      finalOutputPath
+    );
+  } else {
+    // New mode: use project-relative paths
+    // Remove the project root prefix from the output path
+    const projectRootWithSlash = projectConfig.root + '/';
+    buildLocation = finalOutputPath.startsWith(projectRootWithSlash)
+      ? finalOutputPath.substring(projectRootWithSlash.length)
+      : finalOutputPath.startsWith(projectConfig.root)
+      ? finalOutputPath.substring(projectConfig.root.length)
+      : 'dist';
+  }
+
+  const packageManager = existsSync(projectConfig.root)
+    ? detectPackageManager(projectConfig.root)
+    : detectPackageManager(workspaceRoot);
 
   generateFiles(tree, join(__dirname, './files'), projectConfig.root, {
     tmpl: '',
-    buildLocation: options.outputPath ?? outputPath,
+    buildLocation,
     project: options.project,
     projectPath: projectConfig.root,
     sanitizedProjectName,
+    skipDockerPlugin: options.skipDockerPlugin,
+    packageManager,
   });
+
+  return installTask;
 }
 
 export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
   let projectConfig = readProjectConfiguration(tree, options.project);
 
-  // Use sanitized project name for Docker image tag
-  const sanitizedProjectName = sanitizeProjectName(options.project);
+  if (options.skipDockerPlugin) {
+    // Use sanitized project name for Docker image tag
+    const sanitizedProjectName = sanitizeProjectName(options.project);
 
-  projectConfig.targets[`${options.targetName}`] = {
-    dependsOn: [`${options.buildTarget}`],
-    command: `docker build -f ${joinPathFragments(
-      projectConfig.root,
-      'Dockerfile'
-    )} . -t ${sanitizedProjectName}`,
-  };
+    projectConfig.targets[`${options.targetName}`] = {
+      dependsOn: [`${options.buildTarget}`, 'prune'],
+      command: `docker build . -t ${sanitizedProjectName}`,
+      options: {
+        cwd: projectConfig.root,
+      },
+    };
+  } else {
+    projectConfig.targets[`${options.targetName}`] = {
+      dependsOn: [`${options.buildTarget}`, 'prune'],
+    };
+  }
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 }
@@ -84,8 +128,9 @@ export async function setupDockerGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(tree, setupOptions);
-  // Should check if the node project exists
-  addDocker(tree, options);
+
+  const installTask = await addDocker(tree, options);
+  tasks.push(installTask);
   updateProjectConfig(tree, options);
 
   if (!options.skipFormat) {

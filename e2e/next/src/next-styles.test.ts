@@ -6,7 +6,7 @@ import {
   runCLI,
   uniq,
   readFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { checkApp } from './utils';
 
 describe('Next.js Styles', () => {

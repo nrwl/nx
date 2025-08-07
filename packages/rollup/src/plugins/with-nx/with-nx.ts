@@ -1,8 +1,3 @@
-import { existsSync } from 'node:fs';
-import { dirname, join, parse } from 'node:path';
-import * as rollup from 'rollup';
-import { getBabelInputPlugin } from '@rollup/plugin-babel';
-import * as autoprefixer from 'autoprefixer';
 import {
   logger,
   type ProjectGraph,
@@ -10,24 +5,31 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 import {
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
-
-import { analyze } from '../analyze';
-import { swc } from '../swc';
-import { generatePackageJson } from '../package-json/generate-package-json';
-import { getProjectNode } from './get-project-node';
-import { deleteOutput } from '../delete-output';
-import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
-import { normalizeOptions } from './normalize-options';
+import * as autoprefixer from 'autoprefixer';
+import { existsSync } from 'node:fs';
+import { dirname, join, parse } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import * as rollup from 'rollup';
+import { analyze } from '../analyze';
+import { deleteOutput } from '../delete-output';
+import { generatePackageJson } from '../package-json/generate-package-json';
+import { swc } from '../swc';
+import { getProjectNode } from './get-project-node';
+import { normalizeOptions } from './normalize-options';
+import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -85,9 +87,10 @@ export function withNx(
     dependencies = result.dependencies;
   }
 
+  const projectSourceRoot = getProjectSourceRoot(projectNode.data);
   const options = normalizeOptions(
     projectNode.data.root,
-    projectNode.data.sourceRoot,
+    projectSourceRoot,
     rawOptions
   );
 
@@ -313,10 +316,7 @@ export function withNx(
             supportsStaticESM: true,
             isModern: true,
           },
-          cwd: join(
-            workspaceRoot,
-            projectNode.data.sourceRoot ?? projectNode.data.root
-          ),
+          cwd: join(workspaceRoot, projectSourceRoot),
           rootMode: options.babelUpwardRootMode ? 'upward' : undefined,
           babelrc: true,
           extensions: fileExtensions,

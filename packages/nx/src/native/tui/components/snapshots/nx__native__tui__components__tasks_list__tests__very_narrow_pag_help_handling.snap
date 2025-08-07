@@ -3,12 +3,12 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                         "
-" NX    Ru        Duration"
+" NX    Running Test Tasks"
 "                         "
-"  ⠋    ta             ..."
+"  ⠋    task1             "
 "                         "
-"> ·    ta             ..."
-"  ·    ta             ..."
+"> ·    task2             "
+"  ·    task3             "
 "                         "
 "                         "
 "                         "

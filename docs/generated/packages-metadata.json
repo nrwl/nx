@@ -440,6 +440,46 @@
     ],
     "migrations": [
       {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.4.0-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-ngrx-package-updates",
+        "version": "21.4.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.4.0-ngrx-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
+        "hidden": false,
+        "name": "21.3.5-jest-package-updates",
+        "version": "21.3.5-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.3.5-jest-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "Update the @angular/cli package version to ~20.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-1-0",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-angular-cli-version-20-1-0",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Update the @angular/cli package version to ~20.0.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
         "hidden": false,
@@ -1649,6 +1689,38 @@
     "source": "/packages/devkit/src"
   },
   {
+    "description": "The Nx Plugin for Docker to aid in containerizing projects.",
+    "documents": [],
+    "executors": [
+      {
+        "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+        "file": "generated/packages/docker/executors/release-publish.json",
+        "hidden": true,
+        "name": "release-publish",
+        "originalFilePath": "/packages/docker/src/executors/release-publish/schema.json",
+        "path": "docker/executors/release-publish",
+        "type": "executor"
+      }
+    ],
+    "generators": [
+      {
+        "description": "Initialize the `@nx/docker` plugin. **Experimental**: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.",
+        "file": "generated/packages/docker/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/docker/src/generators/init/schema.json",
+        "path": "docker/generators/init",
+        "type": "generator"
+      }
+    ],
+    "migrations": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "docker",
+    "packageName": "@nx/docker",
+    "root": "/packages/docker",
+    "source": "/packages/docker/src"
+  },
+  {
     "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
     "documents": [
       {
@@ -2250,6 +2322,16 @@
     ],
     "migrations": [
       {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.4 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-4.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-4",
+        "version": "21.3.11-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-4",
+        "type": "migration"
+      },
+      {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-2.json",
         "hidden": false,
@@ -2382,6 +2464,56 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.3-jest-util-package-updates.json",
+        "hidden": false,
+        "name": "21.3.3-jest-util-package-updates",
+        "version": "21.3.3-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/21.3.3-jest-util-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.3-package-updates.json",
+        "hidden": false,
+        "name": "21.3.3-package-updates",
+        "version": "21.3.3-beta.0",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/21.3.3-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
+        "file": "generated/packages/jest/migrations/rename-test-path-pattern.json",
+        "hidden": false,
+        "name": "rename-test-path-pattern",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/rename-test-path-pattern",
+        "type": "migration"
+      },
+      {
+        "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+        "file": "generated/packages/jest/migrations/replace-removed-matcher-aliases.json",
+        "hidden": false,
+        "name": "replace-removed-matcher-aliases",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/replace-removed-matcher-aliases",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
         "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
@@ -2710,6 +2842,16 @@
     "executors": [],
     "generators": [],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/module-federation",
+        "path": "module-federation/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/module-federation/migrations/21.2.0-package-updates.json",
@@ -3516,6 +3658,17 @@
         "originalFilePath": "generated/cli/add"
       },
       {
+        "id": "mcp",
+        "name": "mcp",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/mcp",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/mcp",
+        "tags": ["mcp"],
+        "originalFilePath": "generated/cli/mcp"
+      },
+      {
         "id": "login",
         "name": "login",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -3536,6 +3689,39 @@
         "path": "nx/documents/logout",
         "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
+      },
+      {
+        "id": "fix-ci",
+        "name": "fix-ci",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/fix-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/fix-ci",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/fix-ci"
+      },
+      {
+        "id": "record",
+        "name": "record",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/record",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/record",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/record"
+      },
+      {
+        "id": "start-ci-run",
+        "name": "start-ci-run",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/start-ci-run",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/start-ci-run",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/start-ci-run"
       }
     ],
     "executors": [
@@ -4963,6 +5149,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/rspack/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
         "hidden": false,
         "name": "21.0.1-package-updates",
@@ -5321,6 +5517,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/vite/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "vite/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/vite/migrations/21.2.0-package-updates.json",

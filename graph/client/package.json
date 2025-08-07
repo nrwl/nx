@@ -1,0 +1,20 @@
+{
+  "name": "@nx/graph-client",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
+  "dependencies": {
+    "@nx/graph-internal-ui-theme": "workspace:",
+    "@nx/graph-internal-project-details": "workspace:",
+    "@nx/graph-internal-ui-project-details": "workspace:",
+    "@nx/graph-migrate": "workspace:",
+    "@nx/graph-shared": "workspace:",
+    "@nx/graph-ui-common": "workspace:",
+    "@nx/graph-ui-code-block": "workspace:"
+  }
+}

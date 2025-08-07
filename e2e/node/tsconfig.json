@@ -7,6 +7,12 @@
   "files": [],
   "references": [
     {
+      "path": "../utils"
+    },
+    {
+      "path": "../../packages/devkit"
+    },
+    {
       "path": "./tsconfig.spec.json"
     }
   ]

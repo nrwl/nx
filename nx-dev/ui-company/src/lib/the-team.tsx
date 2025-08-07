@@ -1,4 +1,4 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 
 const teamMembers = [
@@ -126,11 +126,6 @@ const teamMembers = [
     name: 'Juri Strumpflohner',
     title: 'Director of Developer Experience',
     imageUrl: 'juri-strumpflohner.avif',
-  },
-  {
-    name: 'Katerina Skroumpelou',
-    title: 'Senior Engineer',
-    imageUrl: 'katerina-skroumpelou.avif',
   },
   {
     name: 'Leosvel Perez Espinosa',

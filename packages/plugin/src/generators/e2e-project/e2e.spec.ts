@@ -143,6 +143,38 @@ describe('NxPlugin e2e-project Generator', () => {
     `);
   });
 
+  it('should not update create e2e target if target covered by existing plugin', async () => {
+    updateJson(tree, 'nx.json', (json) => {
+      return {
+        ...(json ?? {}),
+        plugins: [
+          ...(json.plugins ?? []),
+          {
+            plugin: '@nx/jest/plugin',
+            include: ['e2e/**/*'],
+            options: {
+              targetName: 'e2e',
+              ciTargetName: 'e2e-ci',
+            },
+          },
+        ],
+      };
+    });
+
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      addPlugin: true,
+    });
+
+    const project = readProjectConfiguration(tree, 'my-plugin-e2e');
+
+    expect(project).toBeTruthy();
+    expect(project.root).toEqual('my-plugin-e2e');
+    expect(project.targets.e2e).toBeFalsy();
+  });
+
   it('should add jest support', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',

@@ -9,6 +9,7 @@ import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
 import type { Schema } from '../schema';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export type NormalizedNgRxRootStoreGeneratorOptions = Schema & {
   parent: string;
@@ -31,15 +32,11 @@ export function normalizeOptions(
 
   const project = readProjectConfiguration(tree, options.project);
   const isStandalone = isNgStandaloneApp(tree, options.project);
-  const appConfigPath = joinPathFragments(
-    project.sourceRoot,
-    'app/app.config.ts'
-  );
+  const sourceRoot = getProjectSourceRoot(project, tree);
+  const appConfigPath = joinPathFragments(sourceRoot, 'app/app.config.ts');
   let appMainPath =
     project.targets.build.options.main ?? project.targets.build.options.browser;
   if (!appMainPath) {
-    const sourceRoot =
-      project.sourceRoot ?? joinPathFragments(project.root, 'src');
     appMainPath = joinPathFragments(sourceRoot, 'main.ts');
   }
 
@@ -50,9 +47,9 @@ export function normalizeOptions(
    * --> If so, use that
    * --> If not, use main.ts
    */
-  let ngModulePath = joinPathFragments(project.sourceRoot, 'app/app.module.ts');
+  let ngModulePath = joinPathFragments(sourceRoot, 'app/app.module.ts');
   if (!tree.exists(ngModulePath)) {
-    ngModulePath = joinPathFragments(project.sourceRoot, 'app/app-module.ts');
+    ngModulePath = joinPathFragments(sourceRoot, 'app/app-module.ts');
   }
   const parent =
     !isStandalone && tree.exists(ngModulePath)

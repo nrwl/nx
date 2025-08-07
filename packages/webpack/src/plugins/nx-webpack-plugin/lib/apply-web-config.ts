@@ -77,7 +77,7 @@ export function applyWebConfig(
   if (stylesOptimization) {
     minimizer.push(
       new CssMinimizerPlugin({
-        test: /\.(?:css|scss|sass|less|styl)$/,
+        test: /\.(?:css|scss|sass|less)$/,
       })
     );
   }
@@ -151,7 +151,7 @@ export function applyWebConfig(
             sassOptions: {
               fiber: false,
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -169,24 +169,6 @@ export function applyWebConfig(
             lessOptions: {
               paths: includePaths,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.module\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForCssModules(options, includePaths),
-        {
-          loader: path.join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -218,7 +200,7 @@ export function applyWebConfig(
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -238,25 +220,6 @@ export function applyWebConfig(
               javascriptEnabled: true,
               ...lessPathOptions,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalCss(options, includePaths),
-        {
-          loader: path.join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -288,7 +251,7 @@ export function applyWebConfig(
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -313,30 +276,11 @@ export function applyWebConfig(
         },
       ],
     },
-    {
-      test: /\.styl$/,
-      include: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalStyle(options, includePaths),
-        {
-          loader: path.join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
-            },
-          },
-        },
-      ],
-    },
   ];
 
   const rules: RuleSetRule[] = [
     {
-      test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+      test: /\.css$|\.scss$|\.sass$|\.less$/,
       oneOf: [...cssModuleRules, ...globalCssRules, ...globalStyleRules],
     },
   ];

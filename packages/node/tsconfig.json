@@ -7,10 +7,25 @@
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../docker"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../jest"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

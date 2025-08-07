@@ -68,7 +68,7 @@ By default, Nx caches task results locally. The biggest benefit of caching comes
 To enable remote caching, connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 Learn more about [remote caching with Nx Cloud](/ci/features/remote-cache).

@@ -22,6 +22,7 @@ import { ensureTypescript } from '../../../utilities/typescript';
 import { NormalizedSchema } from '../schema';
 import { normalizePathSlashes } from './utils';
 import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '../../utils/project-config';
 
 let tsModule: typeof import('typescript');
 
@@ -56,8 +57,7 @@ export function updateImports(
   let serverEntryPointImportPath: string;
   if (tree.exists(tsConfigPath)) {
     tsConfig = readJson(tree, tsConfigPath);
-    const sourceRoot =
-      project.sourceRoot ?? joinPathFragments(project.root, 'src');
+    const sourceRoot = getProjectSourceRoot(project, tree);
 
     mainEntryPointImportPath = Object.keys(
       tsConfig.compilerOptions?.paths ?? {}

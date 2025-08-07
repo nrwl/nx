@@ -65,7 +65,7 @@ When you run `nx init` in your existing Nuxt.js project, Nx does the following:
 To begin the integration process, simply navigate to the root of your existing Nuxt.js project and run:
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 This approach offers several key benefits for teams looking to adopt Nx:

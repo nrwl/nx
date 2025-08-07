@@ -757,6 +757,32 @@ An implicit dependency could also be a glob pattern:
 {% /tab %}
 {% /tabs %}
 
+### Release
+
+The `release` property allows project-level overrides for the [nx release](/features/manage-releases) command. This is particularly useful for configuring Docker image publishing.
+
+#### Docker Configuration (Experimental)
+
+{% callout type="warning" title="Experimental Feature" %}
+Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /callout %}
+
+Projects with Docker images can override the global Docker configuration:
+
+```jsonc {% fileName="project.json" %}
+{
+  "name": "api",
+  "release": {
+    "docker": {
+      // Override the repository name for this specific project
+      "repositoryName": "acme/api"
+    }
+  }
+}
+```
+
+The `repositoryName` specified here will override any global or group-level Docker repository configuration when publishing this project's Docker image.
+
 ### Metadata
 
 You can add additional metadata to be attached to the project. For example, you can provide a description for your

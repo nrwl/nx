@@ -8,13 +8,28 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-code-block"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../migrate"
+    },
+    {
+      "path": "../ui-project-details"
+    },
+    {
+      "path": "../project-details"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
       "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    },
-    {
-      "path": "./tsconfig.storybook.json"
     }
   ]
 }

@@ -37,7 +37,7 @@ impl Theme {
         Self {
             is_dark_mode: true,
             primary_fg: Color::White,
-            secondary_fg: Color::DarkGray,
+            secondary_fg: Color::Gray,
             error: Color::Red,
             success: Color::Green,
             warning: Color::Yellow,
@@ -50,7 +50,7 @@ impl Theme {
         Self {
             is_dark_mode: false,
             primary_fg: Color::Black,
-            secondary_fg: Color::Gray,
+            secondary_fg: Color::DarkGray,
             error: Color::Red,
             success: Color::Green,
             warning: Color::Yellow,

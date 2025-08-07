@@ -48,5 +48,6 @@ export class ProjectLogger {
     this.logs.forEach((msg) => {
       console.log(this.color.instance.bold(this.projectName) + ' ' + msg);
     });
+    this.logs = [];
   }
 }

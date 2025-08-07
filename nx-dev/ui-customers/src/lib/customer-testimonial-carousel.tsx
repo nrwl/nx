@@ -26,7 +26,7 @@ import {
   SiriusxmIcon,
   UkgIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 interface Testimonial {
   title: string;
   subtitle: string;

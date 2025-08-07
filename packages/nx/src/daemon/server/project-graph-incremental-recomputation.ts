@@ -88,8 +88,18 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       if (!cachedSerializedProjectGraphPromise) {
         cachedSerializedProjectGraphPromise =
           processFilesAndCreateAndSerializeProjectGraph(plugins);
+        serverLogger.log(
+          'No files changed, but no in-memory cached project graph found. Recomputing it...'
+        );
+      } else {
+        serverLogger.log(
+          'Reusing in-memory cached project graph because no files changed.'
+        );
       }
     } else {
+      serverLogger.log(
+        `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
+      );
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(plugins);
     }

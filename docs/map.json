@@ -145,13 +145,14 @@
             {
               "name": "CI Features",
               "id": "ci-features",
-              "description": "Features of Nx and Nx Cloud that improve CI",
+              "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
               "itemList": [
                 {
-                  "name": "Run Only Tasks Affected by a PR",
-                  "id": "affected",
+                  "name": "AI-Powered Self-Healing CI",
+                  "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
+                  "id": "self-healing-ci",
                   "file": "",
-                  "path": "/ci/features/affected",
+                  "path": "/ci/features/self-healing-ci",
                   "isExternal": true
                 },
                 {
@@ -168,6 +169,13 @@
                   "id": "distribute-task-execution",
                   "file": "",
                   "path": "/ci/features/distribute-task-execution",
+                  "isExternal": true
+                },
+                {
+                  "name": "Run Only Tasks Affected by a PR",
+                  "id": "affected",
+                  "file": "",
+                  "path": "/ci/features/affected",
                   "isExternal": true
                 },
                 {
@@ -355,10 +363,22 @@
               "description": "Recipes for releasing with Nx release.",
               "itemList": [
                 {
-                  "name": "Get Started with Nx Release",
-                  "id": "get-started-with-nx-release",
+                  "name": "Release TypeScript/JavaScript Packages to NPM",
+                  "id": "release-npm-packages",
                   "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
+                  "file": "shared/recipes/nx-release/release-typescript-packages-to-npm"
+                },
+                {
+                  "name": "Release Docker Images",
+                  "id": "release-docker-images",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-docker-images"
+                },
+                {
+                  "name": "Release Rust Crates",
+                  "id": "publish-rust-crates",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-rust-crates"
                 },
                 {
                   "name": "Release Projects Independently",
@@ -413,12 +433,6 @@
                   "id": "automate-gitlab-releases",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/automate-gitlab-releases"
-                },
-                {
-                  "name": "Publish Rust Crates",
-                  "id": "publish-rust-crates",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-rust-crates"
                 },
                 {
                   "name": "Update Your Local Registry Setup to use Nx Release",
@@ -2263,7 +2277,7 @@
               "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/ci/intro/ci-with-nx",
+              "path": "/ci/features",
               "isExternal": true
             },
             {
@@ -2498,56 +2512,15 @@
       "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
       "itemList": [
         {
-          "name": "Intro",
-          "id": "intro",
-          "description": "Learn about basic Nx Cloud knowledge.",
-          "file": "nx-cloud/intro/ci-with-nx",
-          "itemList": [
-            {
-              "name": "CI with Nx",
-              "id": "ci-with-nx",
-              "file": "nx-cloud/intro/ci-with-nx"
-            },
-            {
-              "name": "Why Nx Cloud?",
-              "id": "why-nx-cloud",
-              "file": "nx-cloud/intro/why-nx-cloud"
-            },
-            {
-              "name": "Connect to Nx Cloud",
-              "id": "connect-to-nx-cloud",
-              "file": "nx-cloud/intro/connect-to-cloud"
-            },
-            {
-              "name": "Tutorials",
-              "id": "tutorials",
-              "description": "Tutorials setting up CI with Nx",
-              "itemList": [
-                {
-                  "name": "Circle CI with Nx",
-                  "id": "circle",
-                  "file": "nx-cloud/tutorial/circle"
-                },
-                {
-                  "name": "GitHub Actions with Nx",
-                  "id": "github-actions",
-                  "file": "nx-cloud/tutorial/github-actions"
-                }
-              ]
-            }
-          ]
-        },
-        {
           "name": "Features",
           "id": "features",
-          "description": "Features of Nx and Nx Cloud that improve CI",
+          "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
           "itemList": [
             {
-              "name": "Run Only Tasks Affected by a PR",
-              "description": "This allows to only run tasks on projects that got changed in a given PR.",
-              "tags": ["run-tasks"],
-              "id": "affected",
-              "file": "shared/using-nx/affected"
+              "name": "AI-Powered Self-Healing CI",
+              "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
+              "id": "self-healing-ci",
+              "file": "shared/features/self-healing-ci"
             },
             {
               "name": "Use Remote Caching (Nx Replay)",
@@ -2563,6 +2536,19 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
+              "name": "Run Only Tasks Affected by a PR",
+              "description": "This allows to only run tasks on projects that got changed in a given PR.",
+              "tags": ["run-tasks"],
+              "id": "affected",
+              "file": "shared/using-nx/affected"
+            },
+            {
+              "name": "Dynamically Allocate Agents",
+              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+              "id": "dynamic-agents",
+              "file": "nx-cloud/features/dynamic-agents"
+            },
+            {
               "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
               "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
@@ -2575,19 +2561,15 @@
               "file": "nx-cloud/features/flaky-tasks"
             },
             {
-              "name": "Dynamically Allocate Agents",
-              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-              "id": "dynamic-agents",
-              "file": "nx-cloud/features/dynamic-agents"
-            },
-            {
               "name": "Explain With AI",
               "id": "explain-with-ai",
+              "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
               "file": "nx-cloud/features/explain-with-ai"
             },
             {
               "name": "GitHub Integration",
               "id": "github-integration",
+              "description": "Learn how to setup the GitHub integration for Nx Cloud.",
               "file": "nx-cloud/features/github-integration"
             }
           ]
@@ -2621,6 +2603,11 @@
               "file": "nx-cloud/concepts/cache-security"
             },
             {
+              "name": "Heartbeat",
+              "id": "heartbeat",
+              "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling"
+            },
+            {
               "name": "Nx Cloud AI",
               "id": "nx-cloud-ai",
               "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
@@ -2631,13 +2618,13 @@
         {
           "name": "Guides",
           "id": "recipes",
-          "description": "Learn how to set up Nx Cloud for your workspace.",
+          "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
           "itemList": [
             {
               "name": "Set Up CI",
               "id": "set-up",
-              "description": "Learn how to set up Nx Cloud for your workspace.",
-              "tags": ["distribute-task-execution"],
+              "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
+              "tags": ["distribute-task-execution", "self-heeded-ci"],
               "itemList": [
                 {
                   "name": "Setting up Azure Pipelines",
@@ -2854,7 +2841,7 @@
             {
               "name": "Other",
               "id": "other",
-              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
               "itemList": [
                 {
                   "name": "Record Non-Nx Commands",
@@ -2910,6 +2897,11 @@
               "name": "Environment Variables",
               "id": "env-vars",
               "file": "nx-cloud/reference/env-vars"
+            },
+            {
+              "name": "Credit Pricing",
+              "id": "credits-pricing",
+              "file": "nx-cloud/reference/nx-cloud-credits-pricing"
             },
             {
               "name": "Release Notes",
@@ -3096,6 +3088,12 @@
               "file": "generated/cli/add"
             },
             {
+              "name": "mcp",
+              "id": "mcp",
+              "tags": ["mcp"],
+              "file": "generated/cli/mcp"
+            },
+            {
               "name": "login",
               "id": "login",
               "tags": ["login"],
@@ -3106,6 +3104,24 @@
               "id": "logout",
               "tags": ["login"],
               "file": "generated/cli/logout"
+            },
+            {
+              "name": "fix-ci",
+              "id": "fix-ci",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/fix-ci"
+            },
+            {
+              "name": "record",
+              "id": "record",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/record"
+            },
+            {
+              "name": "start-ci-run",
+              "id": "start-ci-run",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/start-ci-run"
             }
           ]
         },

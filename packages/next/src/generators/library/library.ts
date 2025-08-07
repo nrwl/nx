@@ -22,6 +22,7 @@ import {
   isUsingTsSolutionSetup,
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
+  shouldConfigureTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
@@ -34,16 +35,21 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
-  const options = await normalizeOptions(host, rawOptions);
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    host,
+    rawOptions.addPlugin
+  );
   const jsInitTask = await jsInitGenerator(host, {
-    js: options.js,
-    skipPackageJson: options.skipPackageJson,
+    js: rawOptions.js,
+    addTsPlugin,
+    skipPackageJson: rawOptions.skipPackageJson,
     skipFormat: true,
   });
   tasks.push(jsInitTask);
 
+  const options = await normalizeOptions(host, rawOptions);
   const initTask = await nextInitGenerator(host, {
     ...options,
     skipFormat: true,

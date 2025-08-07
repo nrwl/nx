@@ -141,7 +141,7 @@ A paid service that hosts and manages customizable worker machines to run parts 
 
 The umbrella term for all CI-related products that Nx provides.
 
-> See: [CI with Nx](/ci/intro/ci-with-nx)
+> See: [CI with Nx](/ci/recipes/set-up)
 
 ### Nx Replay
 

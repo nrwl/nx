@@ -24,6 +24,8 @@ import {
   ProjectGraphErrorTypes,
   StaleProjectGraphCacheError,
 } from './error-types';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { serverLogger } from '../daemon/server/logger';
 
 export interface FileMapCache {
   version: string;
@@ -233,6 +235,15 @@ export function writeCache(
         writeJsonFile(tmpFileMapPath, cache);
         renameSync(tmpFileMapPath, nxFileMap);
       }
+
+      if (isOnDaemon()) {
+        serverLogger.log(
+          `Wrote project graph cache to ${nxProjectGraph}${
+            errors.length > 0 ? ' with errors' : ''
+          }`
+        );
+      }
+
       done = true;
     } catch (err: any) {
       if (err instanceof Error) {
@@ -247,6 +258,11 @@ export function writeCache(
       ++retry;
     }
   } while (!done && retry < 5);
+  if (!done) {
+    throw new Error(
+      `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts.`
+    );
+  }
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
 }

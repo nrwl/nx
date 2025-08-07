@@ -1,16 +1,17 @@
 import {
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
   readJson,
   stripIndents,
   Tree,
   updateJson,
   visitNotIgnoredFiles,
-  normalizePath,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { basename, dirname, extname, relative } from 'path';
 import type { StringLiteral } from 'typescript';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
@@ -83,8 +84,9 @@ export function createNewCypressConfig(
     ...restOfConfig
   } = cypressConfigJson;
 
+  const sourceRoot = getProjectSourceRoot(projectConfig, tree);
   const newIntegrationFolder = tree.exists(
-    joinPathFragments(projectConfig.sourceRoot, 'integration')
+    joinPathFragments(sourceRoot, 'integration')
   )
     ? 'src/e2e'
     : integrationFolder;
@@ -97,12 +99,8 @@ export function createNewCypressConfig(
       // otherwise we will use the existing folder location/falsey value
       supportFile:
         (supportFile &&
-          tree.exists(
-            joinPathFragments(projectConfig.sourceRoot, 'support', 'index.ts')
-          )) ||
-        tree.exists(
-          joinPathFragments(projectConfig.sourceRoot, 'support', 'e2e.ts')
-        )
+          tree.exists(joinPathFragments(sourceRoot, 'support', 'index.ts'))) ||
+        tree.exists(joinPathFragments(sourceRoot, 'support', 'e2e.ts'))
           ? 'src/support/e2e.ts'
           : supportFile,
       // if the default location is used then will update to the new location otherwise keep the custom location
@@ -166,6 +164,7 @@ export function updateProjectPaths(
 ) {
   const { integrationFolder, supportFile } = cypressConfigTs['e2e'];
 
+  const sourceRoot = getProjectSourceRoot(projectConfig, tree);
   const oldIntegrationFolder = joinPathFragments(
     projectConfig.root,
     cypressConfigJson.integrationFolder
@@ -201,14 +200,14 @@ export function updateProjectPaths(
     newSupportFile = supportFile;
     // rename the default support file even if not in use to keep the system in sync with cypress v10
     const defaultSupportFile = joinPathFragments(
-      projectConfig.sourceRoot,
+      sourceRoot,
       'support',
       'index.ts'
     );
 
     if (tree.exists(defaultSupportFile)) {
       const newSupportDefaultPath = joinPathFragments(
-        projectConfig.sourceRoot,
+        sourceRoot,
         'support',
         'e2e.ts'
       );
@@ -225,7 +224,7 @@ export function updateProjectPaths(
     const newImportPaths = createSupportFileImport(
       oldSupportFile,
       newSupportFile,
-      projectConfig.sourceRoot
+      sourceRoot
     );
     oldImportLeafPath = newImportPaths.oldImportPathLeaf;
     newImportLeafPath = newImportPaths.newImportPathLeaf;
@@ -233,7 +232,7 @@ export function updateProjectPaths(
 
   // tree.rename doesn't work on directories must update each file within
   // the directory to the new directory
-  visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (path) => {
+  visitNotIgnoredFiles(tree, sourceRoot, (path) => {
     const normalizedPath = normalizePath(path);
     if (!normalizedPath.includes(oldIntegrationFolder)) {
       return;

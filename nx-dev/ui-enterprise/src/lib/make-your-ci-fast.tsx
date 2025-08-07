@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function MakeYourCiFast(): ReactElement {
   return (

@@ -7,6 +7,12 @@
   "files": [],
   "references": [
     {
+      "path": "../nx"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

@@ -77,10 +77,13 @@ export class CopyAssetsHandler {
     this.ignore = ignore();
     const gitignore = pathPosix.join(opts.rootDir, '.gitignore');
     const nxignore = pathPosix.join(opts.rootDir, '.nxignore');
-    if (existsSync(gitignore))
+
+    if (existsSync(gitignore)) {
       this.ignore.add(readFileSync(gitignore).toString());
-    if (existsSync(nxignore))
+    }
+    if (existsSync(nxignore)) {
       this.ignore.add(readFileSync(nxignore).toString());
+    }
 
     this.assetGlobs = opts.assets.map((f) => {
       let isGlob = false;
@@ -129,6 +132,8 @@ export class CopyAssetsHandler {
           cwd: this.rootDir,
           dot: true, // enable hidden files
           expandDirectories: false,
+          // Ignore common directories that should not be copied or processed
+          ignore: ['**/node_modules/**', '**/.git/**'],
         });
 
         this.callback(this.filesToEvent(files, ag));
@@ -145,6 +150,7 @@ export class CopyAssetsHandler {
         cwd: this.rootDir,
         dot: true, // enable hidden files
         expandDirectories: false,
+        ignore: ['**/node_modules/**', '**/.git/**'],
       });
 
       this.callback(this.filesToEvent(files, ag));
@@ -173,11 +179,15 @@ export class CopyAssetsHandler {
   }
 
   async processWatchEvents(events: ChangedFile[]): Promise<void> {
+    if (events.length === 0) return;
+
     const fileEvents: FileEvent[] = [];
+
     for (const event of events) {
       const pathFromRoot = event.path.startsWith(this.rootDir)
         ? path.relative(this.rootDir, event.path)
         : event.path;
+
       for (const ag of this.assetGlobs) {
         if (
           picomatch(ag.pattern)(pathFromRoot) &&

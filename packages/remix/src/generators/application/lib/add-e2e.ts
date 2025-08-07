@@ -3,6 +3,7 @@ import {
   addProjectConfiguration,
   joinPathFragments,
   ensurePackage,
+  GeneratorCallback,
   readNxJson,
   writeJson,
 } from '@nx/devkit';
@@ -11,7 +12,10 @@ import { getPackageVersion } from '../../../utils/versions';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
-export async function addE2E(tree: Tree, options: NormalizedSchema) {
+export async function addE2E(
+  tree: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   const hasRemixPlugin = readNxJson(tree).plugins?.find((p) =>
     typeof p === 'string'
       ? p === '@nx/remix/plugin'

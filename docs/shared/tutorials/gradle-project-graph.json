@@ -830,7 +830,18 @@
       }
     ],
     "library": [],
-    "gradle-tutorial": []
+    "gradle-tutorial": [
+      {
+        "source": "gradle-tutorial",
+        "target": "application",
+        "type": "static"
+      },
+      {
+        "source": "gradle-tutorial",
+        "target": "library",
+        "type": "static"
+      }
+    ]
   },
   "fileMap": {
     "gradle-tutorial": [

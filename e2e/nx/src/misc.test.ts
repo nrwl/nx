@@ -19,7 +19,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
@@ -188,10 +188,37 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('@nx/workspace');
 
       // temporarily make it look like this isn't installed
-      renameSync(
-        tmpProjPath('node_modules/@nx/next'),
-        tmpProjPath('node_modules/@nx/next_tmp')
-      );
+      // For pnpm, we need to rename the actual package in .pnpm directory, not just the symlink
+      const { readdirSync, statSync } = require('fs');
+      const pnpmDir = tmpProjPath('node_modules/.pnpm');
+      let renamedPnpmEntry = null;
+
+      if (require('fs').existsSync(pnpmDir)) {
+        const entries = readdirSync(pnpmDir);
+        const nextEntries = entries.filter((entry) =>
+          entry.includes('nx+next@')
+        );
+
+        // Rename all nx+next entries
+        const renamedEntries = [];
+        for (const entry of nextEntries) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${entry}`),
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`)
+          );
+          renamedEntries.push(entry);
+        }
+        renamedPnpmEntry = renamedEntries;
+      }
+
+      // Also rename the symlink
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next'))) {
+        renameSync(
+          tmpProjPath('node_modules/@nx/next'),
+          tmpProjPath('node_modules/@nx/next_tmp')
+        );
+      }
 
       listOutput = runCLI('list');
       expect(listOutput).toContain('NX   Also available');
@@ -218,7 +245,7 @@ describe('Nx Commands', () => {
       // check for builders
       expect(listOutput).toContain('package');
 
-      // // look for uninstalled core plugin
+      // look for uninstalled core plugin
       listOutput = runCLI('list @nx/next');
 
       expect(listOutput).toContain('NX   @nx/next is not currently installed');
@@ -230,11 +257,23 @@ describe('Nx Commands', () => {
         'NX   @wibble/fish is not currently installed'
       );
 
-      // put back the @nx/angular module (or all the other e2e tests after this will fail)
-      renameSync(
-        tmpProjPath('node_modules/@nx/next_tmp'),
-        tmpProjPath('node_modules/@nx/next')
-      );
+      // put back the @nx/next module (or all the other e2e tests after this will fail)
+      if (renamedPnpmEntry && Array.isArray(renamedPnpmEntry)) {
+        for (const entry of renamedPnpmEntry) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`),
+            tmpProjPath(`node_modules/.pnpm/${entry}`)
+          );
+        }
+      }
+
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next_tmp'))) {
+        renameSync(
+          tmpProjPath('node_modules/@nx/next_tmp'),
+          tmpProjPath('node_modules/@nx/next')
+        );
+      }
     }, 120000);
   });
 
@@ -523,6 +562,12 @@ describe('migrate', () => {
   });
 
   it('should run migrations', () => {
+    // Ensure package.json has a trailing newline so migration can preserve it
+    const packageJsonContent = readFile('package.json');
+    if (!packageJsonContent.endsWith('\n')) {
+      updateFile('package.json', packageJsonContent + '\n');
+    }
+
     updateJson('nx.json', (j: NxJsonConfiguration) => {
       j.installation = {
         version: getPublishedVersion(),
@@ -563,6 +608,7 @@ describe('migrate', () => {
     );
     // should keep new line on package
     const packageContent = readFile('package.json');
+    console.log('[DEBUG]: Package contents', packageContent);
     expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
 
     // creates migrations.json

@@ -1,0 +1,15 @@
+{
+  "name": "21.4.0-ngrx-package-updates",
+  "version": "21.4.0-beta.3",
+  "requires": { "@angular/core": "^20.0.0" },
+  "packages": {
+    "@ngrx/store": { "version": "^20.0.0", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

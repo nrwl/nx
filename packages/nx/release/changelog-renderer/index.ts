@@ -234,9 +234,15 @@ export default class DefaultChangelogRenderer {
   }
 
   protected renderVersionTitle(): string {
-    const isMajorVersion =
-      `${major(this.changelogEntryVersion)}.0.0` ===
-      this.changelogEntryVersion.replace(/^v/, '');
+    let isMajorVersion = true;
+    try {
+      isMajorVersion =
+        `${major(this.changelogEntryVersion)}.0.0` ===
+        this.changelogEntryVersion.replace(/^v/, '');
+    } catch {
+      // Do nothing with the error
+      // Prevent non-semver versions from erroring out
+    }
     let maybeDateStr = '';
     if (this.changelogRenderOptions.versionTitleDate) {
       const dateStr = new Date().toISOString().slice(0, 10);

@@ -351,7 +351,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     // null means that all projects are versioned together but there were no changes
     if (versionResult.workspaceVersion !== null) {
       hasNewVersion = Object.values(versionResult.projectsVersionData).some(
-        (version) => version.newVersion !== null
+        (version) =>
+          /**
+           * There is a scenario where applications will not have a newVersion created by VerisonActions,
+           * however, there will still be a dockerVersion created from the docker release.
+           */
+
+          version.newVersion !== null || version.dockerVersion !== null
       );
     }
 

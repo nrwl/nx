@@ -1,15 +1,12 @@
 import { assign } from '@xstate/immer';
-import { send } from 'xstate';
 import { ProjectGraphStateNodeConfig } from './interfaces';
 
 export const focusedStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
     assign((ctx, event) => {
-      if (event.type !== 'focusProject') return;
-
-      ctx.focusedProject = event.projectName;
+      if (event.type !== 'focusNode') return;
+      ctx.focusedProject = event.nodeId;
     }),
-    'notifyGraphFocusProject',
   ],
   exit: [
     assign((ctx) => {
@@ -18,41 +15,19 @@ export const focusedStateConfig: ProjectGraphStateNodeConfig = {
   ],
   on: {
     incrementSearchDepth: {
-      actions: ['incrementSearchDepth', 'notifyGraphFocusProject'],
+      actions: ['incrementSearchDepth'],
     },
     decrementSearchDepth: {
-      actions: ['decrementSearchDepth', 'notifyGraphFocusProject'],
+      actions: ['decrementSearchDepth'],
     },
     setSearchDepthEnabled: {
-      actions: ['setSearchDepthEnabled', 'notifyGraphFocusProject'],
+      actions: ['setSearchDepthEnabled'],
     },
     setSearchDepth: {
-      actions: ['setSearchDepth', 'notifyGraphFocusProject'],
+      actions: ['setSearchDepth'],
     },
-    unfocusProject: {
+    unfocusNode: {
       target: 'unselected',
-    },
-    updateGraph: {
-      actions: [
-        'setGraph',
-        send(
-          (ctx, event) => ({
-            type: 'notifyGraphUpdateGraph',
-            projects: ctx.projects,
-            dependencies: ctx.dependencies,
-            fileMap: ctx.fileMap,
-            affectedProjects: ctx.affectedProjects,
-            workspaceLayout: ctx.workspaceLayout,
-            groupByFolder: ctx.groupByFolder,
-            selectedProjects: ctx.selectedProjects,
-            composite: ctx.compositeGraph,
-          }),
-          {
-            to: (context) => context.graphActor,
-          }
-        ),
-        'notifyGraphFocusProject',
-      ],
     },
   },
 };

@@ -1,5 +1,5 @@
 import { HeartIcon } from '@heroicons/react/24/solid';
-import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
+import { ThemeSwitcher } from '@nx/nx-dev-ui-theme';
 import Link from 'next/link';
 import { DiscordIcon } from './discord-icon';
 import { VersionPicker } from './version-picker';
@@ -11,7 +11,7 @@ const navigation = {
   ],
   nxCloud: [
     { name: 'App', href: 'https://cloud.nx.app' },
-    { name: 'Docs', href: '/ci/intro/ci-with-nx' },
+    { name: 'Docs', href: '/ci/features' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],

@@ -4,12 +4,16 @@ import {
   readJson,
   Tree,
   updateJson,
+  GeneratorCallback,
 } from '@nx/devkit';
 
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
-export async function addJest(host: Tree, options: NormalizedSchema) {
+export async function addJest(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   if (options.unitTestRunner !== 'jest') {
     return () => {};
   }

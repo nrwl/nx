@@ -8,7 +8,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -22,6 +22,7 @@ export declare class AppLifeCycle {
   setTaskStatus(taskId: string, status: TaskStatus): void
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
+  setEstimatedTaskTimings(timings: Record<string, number>): void
 }
 
 export declare class ChildProcess {
@@ -252,6 +253,9 @@ export declare export declare function installNxConsole(): void
 
 export const IS_WASM: boolean
 
+/** Detects if the current process is being run by an AI agent */
+export declare export declare function isAiAgent(): boolean
+
 export declare export declare function logDebug(message: string): void
 
 /** Stripped version of the NxJson interface for use in rust */
@@ -322,6 +326,7 @@ export interface TaskGraph {
   roots: Array<string>
   tasks: Record<string, Task>
   dependencies: Record<string, Array<string>>
+  continuousDependencies: Record<string, Array<string>>
 }
 
 export interface TaskResult {

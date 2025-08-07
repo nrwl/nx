@@ -21,6 +21,9 @@ module.exports = {
   ],
   darkMode: 'class', // or 'media' or 'class'
   theme: {
+    data: {
+      checked: 'headlessui-state~="checked"',
+    },
     extend: {
       typography: {
         DEFAULT: {

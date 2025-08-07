@@ -61,7 +61,7 @@ import { handleErrors } from '../../utils/handle-errors';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
-} from '../connect/connect-to-nx-cloud';
+} from '../nx-cloud/connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
 import { existsSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';

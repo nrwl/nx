@@ -25,6 +25,13 @@ describe('resolveCurrentVersion', () => {
       preserveLocalDependencyProtocols: true,
       manifestRootsToUpdate: [],
       versionActionsOptions: {},
+      dockerOptions: {
+        preVersionCommand: undefined,
+        skipVersionActions: undefined,
+        versionSchemes: undefined,
+        repositoryName: undefined,
+        registryUrl: undefined,
+      },
     };
 
     class TestVersionActions extends VersionActions {

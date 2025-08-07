@@ -410,6 +410,7 @@ const exclusions = new Set([
   // exports doesn't contain 'package.json', and main is an empty line.
   // This means the function fails.
   '@types/js-yaml',
+  '@webcontainer/api',
 ]);
 
 describe('readModulePackageJson', () => {

@@ -5,7 +5,7 @@ description: Install Nx globally via npm, Homebrew, Chocolatey, or apt. Add Nx t
 
 # Installation
 
-To install Nx on your machine, choose one of the following methods based on your operating system and package manager. You can also use `npx` to run Nx without installing it globally.
+To install Nx CLI on your machine, choose one of the following methods based on your operating system and package manager. You can also use `npx` to run the Nx CLI without installing it globally.
 
 {% tabs %}
 {% tab label="npm" %}

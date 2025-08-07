@@ -292,10 +292,12 @@
         ]
       },
       "loader": {
-        "description": "Defines the type of loader to use with a specified file extension when used with a JavaScript `import`. `text` inlines the content as a string; `binary` inlines the content as a Uint8Array; `file` emits the file and provides the runtime location of the file; `empty` considers the content to be empty and not include it in bundles.",
+        "description": "Defines the type of loader to use with a specified file extension when used with a JavaScript `import`. `text` inlines the content as a string; `binary` inlines the content as a Uint8Array; `file` emits the file and provides the runtime location of the file; `dataurl` inlines the content as a data URL with best guess of MIME type; `base64` inlines the content as a Base64-encoded string; `empty` considers the content to be empty and not include it in bundles. _Note: `dataurl` and `base64` are only supported in Angular versions >= 20.1.0_.",
         "type": "object",
         "patternProperties": {
-          "^\\.\\S+$": { "enum": ["text", "binary", "file", "empty"] }
+          "^\\.\\S+$": {
+            "enum": ["text", "binary", "file", "dataurl", "base64", "empty"]
+          }
         }
       },
       "define": {

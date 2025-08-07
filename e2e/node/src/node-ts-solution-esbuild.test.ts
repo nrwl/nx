@@ -2,15 +2,15 @@ import { names } from '@nx/devkit';
 import {
   cleanupProject,
   getPackageManagerCommand,
+  getRandomPort,
   getSelectedPackageManager,
   newProject,
-  readFile,
   runCLI,
   runCommand,
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 let originalEnvPort;
 
@@ -85,7 +85,3 @@ describe('Node Esbuild Applications', () => {
     );
   });
 });
-
-function getRandomPort() {
-  return Math.floor(1000 + Math.random() * 7000);
-}

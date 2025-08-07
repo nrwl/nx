@@ -32,8 +32,8 @@ export function pruneProjectGraph(
     builder
   );
 
-  for (const nodeName of workspacePackages.keys()) {
-    const node = graph.nodes[nodeName];
+  for (const project of workspacePackages.values()) {
+    const node = graph.nodes[project.name];
     builder.addNode(node);
   }
 
@@ -135,7 +135,9 @@ export function addNodesAndDependencies(
     } else if (workspacePackages.has(name)) {
       // Workspace Node
       const node = graph.nodes[name];
-      traverseWorkspaceNode(graph, builder, node);
+      if (node) {
+        traverseWorkspaceNode(graph, builder, node);
+      }
     }
   });
 }

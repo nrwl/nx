@@ -21,6 +21,16 @@ export interface CreateWorkspaceOptions {
    * @default false
    */
   skipGit?: boolean; // Skip initializing a git repository
+  /**
+   * @description Skip pushing to GitHub via gh CLI
+   * @default false
+   */
+  skipGitHubPush?: boolean; // Skip pushing to GitHub via gh CLI
+  /**
+   * @description Enable verbose logging
+   * @default false
+   */
+  verbose?: boolean; // Enable verbose logging
   commit?: {
     name: string; // Name to use for the initial commit
     email: string; // Email to use for the initial commit

@@ -1,0 +1,15 @@
+{
+  "name": "21.3.3-jest-util-package-updates",
+  "version": "21.3.3-beta.3",
+  "requires": { "jest": ">=30.0.0 <31.0.0", "ts-jest": ">=29.4.0" },
+  "packages": {
+    "jest-util": { "version": "~30.0.0", "addToPackageJson": "devDependencies" }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/jest",
+  "schema": null,
+  "type": "migration"
+}

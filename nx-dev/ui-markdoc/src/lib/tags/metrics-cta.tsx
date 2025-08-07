@@ -2,8 +2,8 @@
 
 /* this is a separate component s.t. it can be client-side only to avoid hydration errors*/
 
-import { ButtonLink } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { ButtonLink } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function MetricsCTA() {
   return (
@@ -12,7 +12,7 @@ export function MetricsCTA() {
         Ready to get started?
       </h3>
       <ButtonLink
-        href="/enterprise/trial"
+        href="/contact/sales"
         title="Reach out"
         variant="primary"
         size="default"

@@ -53,6 +53,6 @@ checker.init(
         'This report contains the licenses for all dependencies used by any project for the Nx monorepo.'
       )
     );
-    writeFileSync(join(__dirname, '../build/license-report.md'), md);
+    writeFileSync(join(__dirname, '../dist/license-report.md'), md);
   }
 );

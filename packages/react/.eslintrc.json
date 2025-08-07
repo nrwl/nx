@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -48,6 +48,7 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "eslint",
               "prettier",
@@ -84,7 +85,6 @@
               "sass",
               "sass-loader",
               "style-loader",
-              "stylus-loader",
               "swc-loader",
               "tsconfig-paths-webpack-plugin",
               "webpack",
@@ -97,5 +97,5 @@
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

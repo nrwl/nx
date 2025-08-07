@@ -1,10 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
-    "declaration": true
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "declaration": true,
+    "composite": false,
+    "outDir": "../../dist/packages/angular"
   },
-  "include": ["index.ts", "src/runtime/**/*", "mf/**/*", "testing/**/*"],
+  "include": ["index.ts", "mf/**/*"],
   "angularCompilerOptions": {
     "compilationMode": "partial"
   }

@@ -8,13 +8,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     ...options,
     directory: '.',
     // Since `--style` is not passed down to custom preset, we're using individual flags for now.
-    style: options.sass
-      ? 'scss'
-      : options.less
-      ? 'less'
-      : options.stylus
-      ? 'styl'
-      : 'css',
+    style: options.sass ? 'scss' : options.less ? 'less' : 'css',
   });
 
   updateJson(tree, 'package.json', (json) => {

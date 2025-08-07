@@ -4,7 +4,7 @@ import {
   getPackageManagerCommand,
   getPublishedVersion,
   runCLI,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 
@@ -25,7 +25,9 @@ describe('nx init (for NestCLI - legacy)', () => {
     removeSync(projectRoot);
   });
 
-  it('should convert NestCLI application to Nx standalone', () => {
+  // TODO(jack,nicholas,colum): Enable this when Nest 11.0.8 issue is resolved
+  // See: https://github.com/nestjs/nest-cli/issues/3110
+  it.skip('should convert NestCLI application to Nx standalone', () => {
     execSync(
       `${pmc.runUninstalledPackage} @nestjs/cli new ${projectName} --package-manager=npm`,
       {
@@ -48,7 +50,7 @@ describe('nx init (for NestCLI - legacy)', () => {
       }
     );
 
-    expect(output).toContain('Run it again to replay the cached computation.');
+    expect(output).toContain('Learn more about what to do next');
 
     // nest-cli.json is removed
     expect(exists(`${projectRoot}/nest-cli.json`)).toBeFalsy();

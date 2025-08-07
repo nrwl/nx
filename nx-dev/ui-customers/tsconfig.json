@@ -11,6 +11,18 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-enterprise"
+    },
+    {
+      "path": "../feature-analytics"
+    },
+    {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],
