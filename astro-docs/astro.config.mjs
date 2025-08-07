@@ -59,6 +59,9 @@ export default defineConfig({
         baseUrl: 'https://github.com/nrwl/nx/tree/main/',
       },
       sidebar,
+      components: {
+        Sidebar: './src/components/layout/Sidebar.astro',
+      },
     }),
     react(),
   ],
