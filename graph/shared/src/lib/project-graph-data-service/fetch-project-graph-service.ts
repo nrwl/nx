@@ -48,6 +48,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
 
   async getTaskGraphMetadata(url: string): Promise<TaskGraphMetadata> {
     const request = new Request(url, { mode: 'no-cors' });
+    console.log('here???', request);
 
     const response = await fetch(request);
 
