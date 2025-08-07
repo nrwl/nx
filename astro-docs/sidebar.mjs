@@ -1,54 +1,11 @@
+/**
+ * @type {import('@astrojs/starlight/types').StarlightUserConfig['sidebar']}
+ **/
 export const sidebar = [
   {
     label: 'Getting Started',
-    items: [
-      {
-        label: 'Introduction',
-        link: 'getting-started/intro',
-      },
-      {
-        label: 'Installation',
-        link: 'getting-started/installation',
-      },
-      {
-        label: 'Start a new project',
-        link: 'getting-started/start-new-project',
-      },
-      {
-        label: 'Add to existing project',
-        link: 'getting-started/adding-to-existing',
-      },
-      {
-        label: 'Editor Integration',
-        link: 'getting-started/editor-setup',
-      },
-      {
-        label: 'AI Integration',
-        link: 'getting-started/ai-integration',
-      },
-      {
-        label: 'Tutorials',
-        collapsed: true,
-        items: [
-          {
-            label: 'TypeScript Monorepo',
-            link: 'getting-started/tutorials/typescript-packages-tutorial',
-          },
-          {
-            label: 'React Monorepo',
-            link: 'getting-started/tutorials/react-monorepo-tutorial',
-          },
-          {
-            label: 'Angular Monorepo',
-            link: 'getting-started/tutorials/angular-monorepo-tutorial',
-          },
-          {
-            label: 'Gradle Monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
-          },
-        ],
-      },
-    ],
+    collapsed: false,
+    autogenerate: { directory: 'getting-started', collapsed: true },
   },
   {
     label: 'Features',
