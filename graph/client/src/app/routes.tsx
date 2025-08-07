@@ -7,6 +7,8 @@ import { Shell } from './shell';
 import type {
   GraphError,
   ProjectGraphClientResponse,
+  TaskGraphClientResponse,
+  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
@@ -20,6 +22,11 @@ import { ErrorBoundary } from './ui-components/error-boundary';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
+
+// Extended type to include metadata
+type TaskGraphClientResponseWithMetadata = TaskGraphClientResponse & {
+  metadata?: TaskGraphMetadata;
+};
 
 export function getRoutesForEnvironment() {
   if (getEnvironmentConfig().environment === 'dev') {
@@ -56,11 +63,31 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   return { ...projectGraph, targets, sourceMaps };
 };
 
-const taskDataLoader = async (selectedWorkspaceId: string) => {
+const taskDataLoader = async (
+  selectedWorkspaceId: string
+): Promise<TaskGraphClientResponseWithMetadata> => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  // Check if we should load metadata instead of full graph
+  if (
+    workspaceInfo.taskGraphMetadataUrl &&
+    projectGraphDataService.getTaskGraphMetadata
+  ) {
+    // Load metadata for initial display
+    const metadata = await projectGraphDataService.getTaskGraphMetadata(
+      workspaceInfo.taskGraphMetadataUrl
+    );
+    // Return a response that includes metadata but empty task graphs
+    return {
+      taskGraphs: {},
+      errors: {},
+      metadata,
+    };
+  }
+
+  // Fall back to loading full task graph
   return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
 };
 
@@ -71,6 +98,44 @@ const sourceMapsLoader = async (selectedWorkspaceId: string) => {
 
   return await projectGraphDataService.getSourceMaps(
     workspaceInfo.sourceMapsUrl
+  );
+};
+
+const selectedTargetLoader = async ({ params, request }) => {
+  const selectedWorkspaceId =
+    params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
+  const selectedTarget = params.selectedTarget;
+
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  // Check URL for specific projects
+  const url = new URL(request.url);
+  const projectsParam = url.searchParams.get('projects');
+
+  if (!projectGraphDataService.getSpecificTaskGraph) {
+    // Fallback to empty response if method not available
+    return { taskGraphs: {}, errors: {} };
+  }
+
+  if (projectsParam) {
+    // Load task graphs for specific projects
+    const projects = projectsParam.split(' ').filter(Boolean);
+    return await projectGraphDataService.getSpecificTaskGraph(
+      workspaceInfo.taskGraphUrl,
+      projects, // array of projects
+      selectedTarget,
+      null
+    );
+  }
+
+  // Load task graphs for all projects with this target
+  return await projectGraphDataService.getSpecificTaskGraph(
+    workspaceInfo.taskGraphUrl,
+    null, // no specific projects - get all with target
+    selectedTarget,
+    null
   );
 };
 
@@ -139,13 +204,13 @@ const childRoutes: RouteObject[] = [
     ],
   },
   {
-    loader: async ({ request, params }) => {
+    loader: async ({ params }) => {
       const selectedWorkspaceId =
         params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
       return taskDataLoader(selectedWorkspaceId);
     },
     path: 'tasks',
-    id: 'selectedTarget',
+    id: 'tasks',
     errorElement: <TasksSidebarErrorBoundary />,
     shouldRevalidate: ({ currentParams, nextParams }) => {
       return (
@@ -160,6 +225,8 @@ const childRoutes: RouteObject[] = [
       },
       {
         path: ':selectedTarget',
+        id: 'selectedTarget',
+        loader: selectedTargetLoader,
         element: <TasksSidebar />,
         children: [
           {

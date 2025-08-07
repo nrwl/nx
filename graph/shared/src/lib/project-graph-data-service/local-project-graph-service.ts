@@ -1,6 +1,7 @@
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
+  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
 
@@ -23,6 +24,21 @@ export class LocalProjectGraphService implements ProjectGraphService {
     return new Promise((resolve) =>
       resolve(window.expandedTaskInputsResponse[taskId])
     );
+  }
+
+  async getTaskGraphMetadata(_url: string): Promise<TaskGraphMetadata> {
+    return new Promise((resolve) => resolve(window.taskGraphMetadataResponse));
+  }
+
+  async getSpecificTaskGraph(
+    _url: string,
+    projects: string | string[] | null,
+    target: string,
+    configuration?: string
+  ): Promise<TaskGraphClientResponse> {
+    // In local mode, we still return the full task graph
+    // The filtering would happen on the client side if needed
+    return new Promise((resolve) => resolve(window.taskGraphResponse));
   }
 
   async getSourceMaps(

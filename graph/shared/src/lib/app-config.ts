@@ -10,6 +10,7 @@ export interface WorkspaceData {
   label: string;
   projectGraphUrl: string;
   taskGraphUrl: string;
+  taskGraphMetadataUrl: string;
   taskInputsUrl: string;
   sourceMapsUrl: string;
 }

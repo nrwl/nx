@@ -5,6 +5,7 @@ import type {
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
+  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
 
@@ -78,6 +79,31 @@ export class MockProjectGraphService implements ProjectGraphService {
   }
 
   getTaskGraph(_url: string): Promise<TaskGraphClientResponse> {
+    return new Promise((resolve) => resolve(this.taskGraphsResponse));
+  }
+
+  getTaskGraphMetadata(_url: string): Promise<TaskGraphMetadata> {
+    // Generate mock metadata from existing projects
+    const metadata: TaskGraphMetadata = {
+      projects: this.projectGraphsResponse.projects.map((project) => ({
+        name: project.name,
+        targets: [
+          { name: 'build', configurations: ['production', 'development'] },
+          { name: 'test' },
+          { name: 'lint' },
+        ],
+      })),
+    };
+    return new Promise((resolve) => resolve(metadata));
+  }
+
+  getSpecificTaskGraph(
+    _url: string,
+    projects: string | string[] | null,
+    target: string,
+    configuration?: string
+  ): Promise<TaskGraphClientResponse> {
+    // In mock mode, return the full task graph
     return new Promise((resolve) => resolve(this.taskGraphsResponse));
   }
 
