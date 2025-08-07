@@ -127,8 +127,17 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
   );
 
   const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
+    getPackageManagerCommand(pm).view,
+    packageName,
   ];
+
+  // Since only yarn does not support multiple specific fields, we'll then fetch the complete data
+  if (pm !== 'yarn') {
+    npmViewCommandSegments.push('versions dist-tags');
+  }
+  npmViewCommandSegments.push(`--json --"${registryConfigKey}=${registry}"`);
+
+  // Unlike npm, none of the other package managers appear to have a dedicated equivalent to the "npm dist-tag" command for managing tags after publication
   const npmDistTagAddCommandSegments = [
     `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];

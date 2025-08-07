@@ -50,6 +50,7 @@ export interface PackageManagerCommands {
     registryConfigKey: string,
     tag: string
   ) => string;
+  view: string;
 }
 
 /**
@@ -138,6 +139,7 @@ export function getPackageManagerCommand(
           : 'yarn config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        view: 'yarn info',
       };
     },
     pnpm: () => {
@@ -184,6 +186,7 @@ export function getPackageManagerCommand(
           `pnpm publish "${packageRoot}" --json --"${
             allowRegistryConfigKey ? registryConfigKey : 'registry'
           }=${registry}" --tag=${tag} --no-git-checks`,
+        view: 'pnpm view',
       };
     },
     npm: () => {
@@ -205,6 +208,7 @@ export function getPackageManagerCommand(
         getRegistryUrl: 'npm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        view: 'npm view',
       };
     },
     bun: () => {
@@ -223,6 +227,7 @@ export function getPackageManagerCommand(
         // Unlike npm, bun publish does not support a custom registryConfigKey option
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
+        view: 'bun info',
       };
     },
   };
