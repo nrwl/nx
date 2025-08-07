@@ -883,6 +883,7 @@
     - [Launch Templates](/ci/reference/launch-templates)
     - [Assignment Rules](/ci/reference/assignment-rules)
     - [Custom Steps](/ci/reference/custom-steps)
+    - [Custom Images](/ci/reference/custom-images)
     - [Environment Variables](/ci/reference/env-vars)
     - [Credit Pricing](/ci/reference/credits-pricing)
     - [Release Notes](/ci/reference/release-notes)

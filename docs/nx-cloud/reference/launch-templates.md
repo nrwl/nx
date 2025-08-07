@@ -95,7 +95,7 @@ Nx Cloud provides the following images:
 
 > Note: Windows-based images can only run on Windows-based [resource classes](#launch-templatestemplate-nameresourceclass).
 
-Enterprise accounts can use custom images.
+Enterprise accounts [can use custom images](/ci/reference/custom-images).
 
 ### `launch-templates.<template-name>.env`
 
