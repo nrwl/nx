@@ -43,7 +43,6 @@
     "@nx/eslint": "workspace:*",
     "@nx/web": "workspace:*",
     "@nx/vite": "workspace:*",
-    "@nx/module-federation": "workspace:*",
     "@nx/rollup": "workspace:*",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3",
@@ -51,6 +50,14 @@
   },
   "devDependencies": {
     "nx": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nx/module-federation": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/module-federation": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

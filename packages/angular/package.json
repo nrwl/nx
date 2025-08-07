@@ -50,7 +50,6 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/module-federation": "workspace:*",
     "@nx/rspack": "workspace:*",
     "@nx/web": "workspace:*",
     "@nx/webpack": "workspace:*",
@@ -74,6 +73,7 @@
     "@angular-devkit/build-angular": ">= 18.0.0 < 21.0.0",
     "@angular-devkit/core": ">= 18.0.0 < 21.0.0",
     "@angular-devkit/schematics": ">= 18.0.0 < 21.0.0",
+    "@nx/module-federation": "workspace:*",
     "@schematics/angular": ">= 18.0.0 < 21.0.0",
     "ng-packagr": ">= 18.0.0 < 21.0.0",
     "rxjs": "^6.5.3 || ^7.5.0"
@@ -83,6 +83,9 @@
       "optional": true
     },
     "@angular-devkit/build-angular": {
+      "optional": true
+    },
+    "@nx/module-federation": {
       "optional": true
     },
     "ng-packagr": {
