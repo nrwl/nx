@@ -64,7 +64,7 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   }
 
   printFlakyTasksMessage() {
-    if (this.flakyTasks.length > 0) {
+    if (this.flakyTasks?.length > 0) {
       output.warn({
         title: `Nx detected ${
           this.flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'

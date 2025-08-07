@@ -1047,9 +1047,7 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
   const historyLifeCycle = getTasksHistoryLifeCycle();
-  if (historyLifeCycle) {
-    lifeCycles.push(historyLifeCycle);
-  }
+  lifeCycles.push(historyLifeCycle);
   return lifeCycles;
 }
 
