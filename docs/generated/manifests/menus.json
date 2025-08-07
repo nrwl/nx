@@ -7335,14 +7335,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Custom Images",
-            "path": "/ci/reference/custom-images",
-            "id": "custom-images",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Environment Variables",
             "path": "/ci/reference/env-vars",
             "id": "env-vars",

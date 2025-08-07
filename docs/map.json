@@ -2894,11 +2894,6 @@
               "file": "nx-cloud/reference/custom-steps"
             },
             {
-              "name": "Custom Images",
-              "id": "custom-images",
-              "file": "nx-cloud/reference/custom-images"
-            },
-            {
               "name": "Environment Variables",
               "id": "env-vars",
               "file": "nx-cloud/reference/env-vars"

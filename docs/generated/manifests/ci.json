@@ -1898,17 +1898,6 @@
         "tags": []
       },
       {
-        "id": "custom-images",
-        "name": "Custom Images",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/reference/custom-images",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/reference/custom-images",
-        "tags": []
-      },
-      {
         "id": "env-vars",
         "name": "Environment Variables",
         "description": "",
@@ -1999,17 +1988,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/custom-steps",
-    "tags": []
-  },
-  "/ci/reference/custom-images": {
-    "id": "custom-images",
-    "name": "Custom Images",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/reference/custom-images",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/reference/custom-images",
     "tags": []
   },
   "/ci/reference/env-vars": {
