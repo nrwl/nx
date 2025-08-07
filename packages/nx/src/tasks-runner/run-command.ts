@@ -1176,6 +1176,7 @@ function getTasksRunnerPath(
       nxJson.tasksRunnerOptions?.[runner]?.runner
     ) ||
     // Cloud access token specified in env var.
+    process.env.NX_CLOUD_AUTH_TOKEN ||
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;
