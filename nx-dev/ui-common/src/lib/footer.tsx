@@ -157,12 +157,10 @@ const navigation = {
 
 export function Footer({
   className = '',
-  disableOuterPadding = false,
-  disableResponsiveLayout = false,
+  disableThemeSwitcher = false,
 }: {
   className?: string;
-  disableOuterPadding?: boolean;
-  disableResponsiveLayout?: boolean;
+  disableThemeSwitcher?: boolean;
 } = {}): JSX.Element {
   return (
     <footer
@@ -172,22 +170,9 @@ export function Footer({
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
-      <div
-        className={
-          (disableOuterPadding ? '' : 'px-4 pt-12 sm:px-6 lg:px-8 lg:pt-16 ') +
-          ' mx-auto max-w-7xl transition-opacity lg:opacity-50 lg:hover:opacity-100'
-        }
-      >
-        <div
-          className={
-            disableResponsiveLayout ? '' : 'xl:grid xl:grid-cols-3 xl:gap-8'
-          }
-        >
-          <div
-            className={`space-y-4 text-slate-700 dark:text-slate-300 ${
-              disableResponsiveLayout ? '' : 'xl:col-span-1'
-            }`}
-          >
+      <div className="mx-auto max-w-7xl px-4 pt-12 transition-opacity sm:px-6 lg:px-8 lg:pt-16 lg:opacity-50 lg:hover:opacity-100">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+          <div className="space-y-4 text-slate-700 xl:col-span-1 dark:text-slate-300">
             <svg
               className="h-14 subpixel-antialiased"
               role="img"
@@ -239,15 +224,13 @@ export function Footer({
                 )
               )}
             </div>
-            <div className="flex items-center text-sm">
-              Theme <ThemeSwitcher />
-            </div>
+            {disableThemeSwitcher ? null : (
+              <div className="flex items-center text-sm">
+                Theme <ThemeSwitcher />
+              </div>
+            )}
           </div>
-          <div
-            className={`grid grid-cols-2 gap-8 ${
-              disableResponsiveLayout ? 'mt-12' : 'mt-12 xl:col-span-2 xl:mt-0'
-            }`}
-          >
+          <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
@@ -262,7 +245,7 @@ export function Footer({
                           target="_blank"
                           title={item.name}
                           rel="noreferer"
-                          className="text-sm text-slate-500 no-underline no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                         >
                           {item.name}
                         </a>
@@ -280,7 +263,7 @@ export function Footer({
                   ))}
                 </ul>
               </div>
-              <div className={disableResponsiveLayout ? '' : 'mt-12 md:mt-0'}>
+              <div className="mt-12 md:mt-0">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Solutions
                 </h3>
@@ -332,7 +315,7 @@ export function Footer({
                   ))}
                 </ul>
               </div>
-              <div className={disableResponsiveLayout ? '' : 'mt-12 md:mt-0'}>
+              <div className="mt-12 md:mt-0">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Company
                 </h3>
@@ -355,11 +338,7 @@ export function Footer({
           </div>
         </div>
         <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
-          <div
-            className={`flex items-center gap-1 text-sm text-slate-400 ${
-              disableResponsiveLayout ? '' : 'xl:justify-center'
-            }`}
-          >
+          <div className="flex items-center gap-1 text-sm text-slate-400 xl:justify-center">
             <span>&copy; 2025 made with</span>
             <HeartIcon className="inline h-4 w-4" />
             <span>by</span>
