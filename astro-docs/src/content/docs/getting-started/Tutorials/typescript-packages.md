@@ -39,7 +39,7 @@ Please verify closely that you have the following setup:
 
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
-![](/shared/images/tutorials/connected-workspace.avif)
+![](/src/assets/tutorials/connected-workspace.avif)
 
 If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=typescript).
 
@@ -167,7 +167,7 @@ node packages/zoo/dist/index.js
 
 Nx uses the following syntax to run tasks:
 
-![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/src/assets/getting-started/run-target-syntax.svg)
 
 ### Inferred Tasks
 
@@ -596,13 +596,13 @@ git push origin add-zoo-packages
 
 As expected, the CI check may show failures or issues. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and if there are any issues, it may have suggested fixes. This means that you don't have to waste time **babysitting your PRs**, and fixes can be applied directly from your editor.
 
-![Nx Console with notification](/shared/images/tutorials/ts-ci-notification.avif)
+![Nx Console with notification](/src/assets/tutorials/ts-ci-notification.avif)
 
 ### Fix CI from Your Editor
 
 From the Nx Console notification, if there's a suggested fix (such as fixing the typo "formated" to "formatted"), you can click `Show Suggested Fix` button. Review the suggested fix and approve it by clicking `Apply Fix`.
 
-![Suggestion to fix the typo in the editor](/shared/images/tutorials/ts-ci-suggestion.avif)
+![Suggestion to fix the typo in the editor](/src/assets/tutorials/ts-ci-suggestion.avif)
 
 You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
@@ -610,11 +610,11 @@ You didn't have to leave your editor or do any manual work to fix it. This is th
 
 After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
-![Notication of successful run](/shared/images/tutorials/ts-remote-cache-notification.avif)
+![Notication of successful run](/src/assets/tutorials/ts-remote-cache-notification.avif)
 
 When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The tasks for packages that weren't affected by your change were read from remote cache and did not have to run again, thus each taking less than a second to complete.
 
-![Nx Cloud run showing remote cache hits](/shared/images/tutorials/ts-remote-cache-cloud.avif)
+![Nx Cloud run showing remote cache hits](/src/assets/tutorials/ts-remote-cache-cloud.avif)
 
 This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/ci/features/remote-cache).
 
@@ -626,7 +626,7 @@ Outputs from cached tasks, such as the `dist` folder for builds or `coverage` fo
 
 This pull request is now ready to be merged with the help of Nx Cloud's self-healing CI and remote caching.
 
-![Pull request is green](/shared/images/tutorials/ts-ci-green.avif)
+![Pull request is green](/src/assets/tutorials/ts-ci-green.avif)
 
 The next section deals with publishing packages to a registry like NPM, but if you are not interested in publishing your packages, you can skip to [the end](#next-steps).
 
