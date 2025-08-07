@@ -54,6 +54,7 @@ export interface PackageManagerCommands {
   ) => string;
   // yarn berry doesn't support ignoring scripts via flag
   ignoreScriptsFlag?: string;
+  view: string;
 }
 
 /**
@@ -156,6 +157,7 @@ export function getPackageManagerCommand(
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
         ignoreScriptsFlag: useBerry ? undefined : `--ignore-scripts`,
+        view: 'yarn info',
       };
     },
     pnpm: () => {
@@ -204,6 +206,7 @@ export function getPackageManagerCommand(
             allowRegistryConfigKey ? registryConfigKey : 'registry'
           }=${registry}" --tag=${tag} --no-git-checks`,
         ignoreScriptsFlag: '--ignore-scripts',
+        view: 'pnpm view',
       };
     },
     npm: () => {
@@ -224,6 +227,7 @@ export function getPackageManagerCommand(
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
         ignoreScriptsFlag: '--ignore-scripts',
+        view: 'npm view',
       };
     },
     bun: () => {
@@ -244,6 +248,7 @@ export function getPackageManagerCommand(
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
         ignoreScriptsFlag: '--ignore-scripts',
+        view: 'bun info',
       };
     },
   };
