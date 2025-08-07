@@ -61,6 +61,7 @@ export default defineConfig({
       sidebar,
       components: {
         Sidebar: './src/components/layout/Sidebar.astro',
+        Footer: './src/components/layout/Footer.astro',
       },
     }),
     react(),
