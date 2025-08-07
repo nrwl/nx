@@ -1,0 +1,19 @@
+---
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+---
+
+<div class="sidebar-wrapper">
+  <Default {...Astro.props} />
+</div>
+
+<style>
+.sidebar-wrapper :global(a[aria-current=page]) {
+  background-color: transparent;
+  color: var(--color-blue-500);
+  font-weight: var(--font-weight-medium);
+}
+.sidebar-wrapper :global(ul ul .large) {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+</style>
