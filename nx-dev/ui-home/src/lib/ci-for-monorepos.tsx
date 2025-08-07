@@ -413,7 +413,7 @@ export function IntegratesToYouCurrentCiProvider(): JSX.Element {
           </p>
           <div className="mt-4 flex items-center">
             <Link
-              href="/ci/intro/connect-to-nx-cloud?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/ci/recipes/set-up?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add Nx Cloud to your CI workflow"
               prefetch={false}
               className="group font-semibold leading-6 text-slate-950 dark:text-white"

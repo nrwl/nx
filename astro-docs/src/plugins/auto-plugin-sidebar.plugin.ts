@@ -1,13 +1,19 @@
-import type { StarlightPlugin } from '@astrojs/starlight/types';
+import type {
+  StarlightPlugin,
+  StarlightUserConfig,
+} from '@astrojs/starlight/types';
 import { readdirSync, existsSync, readFileSync } from 'fs';
 import { join, basename, extname } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 
+// Starlight doesn't export these types, so we extract the few we need
+type SidebarItem = NonNullable<StarlightUserConfig['sidebar']>[number];
+
 function getStaticPluginFiles(
   pluginDir: string,
   workspaceRoot: string
-): Array<{ label: string; slug: string }> {
-  const staticFiles: Array<{ label: string; slug: string }> = [];
+): SidebarItem[] {
+  const staticFiles: SidebarItem[] = [];
   const pluginContentDir = join(
     workspaceRoot,
     'astro-docs',
@@ -44,7 +50,7 @@ function getStaticPluginFiles(
       }
     }
   } catch (error) {
-    // Ignore errors when reading static files
+    console.warn(`Skipping ${pluginDir}. Issue reading static files:`, error);
   }
 
   return staticFiles;
@@ -64,12 +70,7 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
           throw new Error('Packages directory does not exist: ' + packagesDir);
         }
 
-        const pluginItems: Array<{
-          label: string;
-          link?: string;
-          items?: any[];
-          collapsed?: boolean;
-        }> = [];
+        const pluginItems: SidebarItem[] = [];
 
         try {
           const directories = readdirSync(packagesDir, { withFileTypes: true })
@@ -104,6 +105,7 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
               continue;
             }
 
+            logger.info(`Processing plugin: ${packageName} (${dir})`);
             const item = generatePluginSideBarConfig(
               packagesDir,
               dir,
@@ -111,9 +113,6 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
             );
             pluginItems.push(item);
           }
-
-          // Sort plugin items alphabetically
-          pluginItems.sort((a, b) => a.label.localeCompare(b.label));
 
           logger.info(`Found ${pluginItems.length} plugins`);
 
@@ -127,10 +126,27 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
           );
 
           if (apiRefIndex !== -1) {
-            const apiRefSection = sidebar[apiRefIndex] as any;
+            const apiRefSection = sidebar[apiRefIndex];
 
-            if (apiRefSection.items) {
+            if (typeof apiRefSection === 'object' && 'items' in apiRefSection) {
               apiRefSection.items.push(...pluginItems);
+
+              // NOTE: there are already some hard defined references in the astro config. such as devkit (plugin doc w/ children items)
+              //  and the cli docs (no children items)
+              //  those that do not have children items need to be sorted alphabetically
+              //  the others will remain in place at the top of the reference section
+              apiRefSection.items.sort((a, b) => {
+                if (
+                  typeof a === 'string' ||
+                  typeof b === 'string' ||
+                  !('items' in a) ||
+                  !('items' in b)
+                ) {
+                  return 0;
+                } else {
+                  return a.label.localeCompare(b.label);
+                }
+              });
 
               updateConfig({ sidebar });
               logger.info(
@@ -150,7 +166,7 @@ function generatePluginSideBarConfig(
   packagesDir: string,
   dir: string,
   packageName: string
-) {
+): SidebarItem {
   const pluginDir = join(packagesDir, dir);
 
   // Check for generators.json, executors.json, and migrations.json
@@ -159,7 +175,7 @@ function generatePluginSideBarConfig(
   const hasMigrations = existsSync(join(pluginDir, 'migrations.json'));
 
   // Create sub-items for generated docs and static files
-  const subItems: any[] = [];
+  const subItems: SidebarItem[] = [];
 
   if (hasGenerators) {
     subItems.push({

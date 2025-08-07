@@ -52,6 +52,7 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   isUsingTypeScriptPlugin,
+  shouldConfigureTsSolutionSetup,
 } from '../../utils/typescript/ts-solution-setup';
 import {
   esbuildVersion,
@@ -91,12 +92,14 @@ export async function libraryGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
   tasks.push(
     await jsInitGenerator(tree, {
       ...schema,
       skipFormat: true,
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
+      addTsPlugin,
       // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
       formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })

@@ -1,11 +1,10 @@
 import { joinPathFragments, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { NormalizedSchema } from '../schema';
 
 export async function normalizeRemoteName(
   tree: Tree,
   remote: string,
-  options: NormalizedSchema
+  options: { directory: string }
 ) {
   const { projectName: remoteName } = await determineProjectNameAndRootOptions(
     tree,
@@ -21,7 +20,7 @@ export async function normalizeRemoteName(
 
 export function normalizeRemoteDirectory(
   remote: string,
-  options: NormalizedSchema
+  options: { directory: string; appProjectRoot: string }
 ) {
   /**
    * With the `as-provided` format, the provided directory would be the root

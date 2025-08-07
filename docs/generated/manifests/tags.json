@@ -272,7 +272,7 @@
       "file": "",
       "id": "ci",
       "name": "CI Documentation",
-      "path": "/ci/intro/ci-with-nx"
+      "path": "/ci/features"
     },
     {
       "description": "",
@@ -1545,7 +1545,7 @@
       "file": "",
       "id": "ci",
       "name": "CI Documentation",
-      "path": "/ci/intro/ci-with-nx"
+      "path": "/ci/features"
     },
     {
       "description": "",
@@ -1555,7 +1555,7 @@
       "path": "/ci/concepts/parallelization-distribution"
     },
     {
-      "description": "Learn how to set up Nx Cloud for your workspace.",
+      "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
       "file": "",
       "id": "set-up",
       "name": "Set Up CI",
@@ -1585,6 +1585,15 @@
       "id": "remote-cache",
       "name": "Use Remote Caching (Nx Replay)",
       "path": "/ci/features/remote-cache"
+    }
+  ],
+  "self-heeded-ci": [
+    {
+      "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
+      "file": "",
+      "id": "set-up",
+      "name": "Set Up CI",
+      "path": "/ci/recipes/set-up"
     }
   ],
   "login": [

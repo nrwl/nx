@@ -9,6 +9,7 @@ let globalId = 0;
 
 declare const window: {
   hbspt: any;
+  Cookiebot?: any;
 };
 
 interface HubspotFormProps {
@@ -40,6 +41,12 @@ export class HubspotForm extends Component<
 
   createForm(): void {
     if (typeof window === 'undefined') return;
+
+    // Check if user has consented to marketing cookies
+    if (window.Cookiebot && !window.Cookiebot.consent.marketing) {
+      // Don't create form if marketing consent is not given
+      return;
+    }
 
     if (window.hbspt) {
       // protect against component unmounting before window.hbspt is available
@@ -73,6 +80,12 @@ export class HubspotForm extends Component<
   }
 
   loadScript() {
+    // Check if user has consented to marketing cookies
+    if (window.Cookiebot && !window.Cookiebot.consent.marketing) {
+      // Don't load script if marketing consent is not given
+      return;
+    }
+
     const script = document.createElement(`script`);
     script.defer = true;
     script.onload = () => {
@@ -100,11 +113,26 @@ export class HubspotForm extends Component<
   }
 
   override componentDidMount() {
-    if (!window.hbspt && !this.props.noScript) {
-      this.loadScript();
+    // Function to initialize when consent is available
+    const initialize = () => {
+      if (!window.hbspt && !this.props.noScript) {
+        this.loadScript();
+      } else {
+        this.createForm();
+        this.findFormElement();
+      }
+    };
+
+    // Check if Cookiebot is loaded and consent is given
+    if (window.Cookiebot && window.Cookiebot.consent?.marketing) {
+      initialize();
     } else {
-      this.createForm();
-      this.findFormElement();
+      // Listen for consent acceptance
+      window.addEventListener('CookiebotOnAccept', () => {
+        if (window.Cookiebot && window.Cookiebot.consent?.marketing) {
+          initialize();
+        }
+      });
     }
   }
 

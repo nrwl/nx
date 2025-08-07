@@ -17,7 +17,7 @@ import { addModuleFederationFiles } from './lib/add-module-federation-files';
 import {
   normalizeRemoteDirectory,
   normalizeRemoteName,
-} from './lib/normalize-remote';
+} from '../../utils/normalize-remote';
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
 import { NormalizedSchema, Schema } from './schema';

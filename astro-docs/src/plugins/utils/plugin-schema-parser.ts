@@ -1,5 +1,10 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import type { Schema } from 'nx/src/utils/params';
+
+export type PluginSchemaWithExamples = Schema & {
+  examplesFile?: string;
+};
 
 export function getPropertyType(property: any): string {
   if (property.type) {
@@ -33,9 +38,15 @@ export function getPropertyDefault(property: any): string {
   return '';
 }
 
+export type PluginItem = {
+  config: Record<string, any>;
+  schema: PluginSchemaWithExamples;
+  schemaPath: string;
+};
+
 export function parseGenerators(
   pluginPath: string
-): Map<string, { config: any; schema: any; schemaPath: string }> | null {
+): Map<string, PluginItem> | null {
   const generatorsJsonPath = join(pluginPath, 'generators.json');
 
   if (!existsSync(generatorsJsonPath)) {
@@ -64,7 +75,9 @@ export function parseGenerators(
   return generators;
 }
 
-export function parseExecutors(pluginPath: string): Map<string, any> | null {
+export function parseExecutors(
+  pluginPath: string
+): Map<string, PluginItem> | null {
   const executorsJsonPath = join(pluginPath, 'executors.json');
 
   if (!existsSync(executorsJsonPath)) {
@@ -86,13 +99,17 @@ export function parseExecutors(pluginPath: string): Map<string, any> | null {
 
     if (existsSync(schemaPath)) {
       const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
-      executors.set(name, { config, schema });
+      executors.set(name, { config, schema, schemaPath });
     }
   }
 
   return executors;
 }
 
+export type PluginMigrationItem = {
+  config: Record<string, any>;
+  type: 'packageJsonUpdate' | 'generator';
+};
 export function parseMigrations(pluginPath: string): Map<string, any> | null {
   const migrationsJsonPath = join(pluginPath, 'migrations.json');
 

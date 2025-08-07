@@ -7,6 +7,8 @@ description: Learn how to set up Bitbucket Pipelines for your Nx workspace to ru
 
 Below is an example of a Bitbucket Pipelines, building and testing only what is affected.
 
+> Need a starting point? Generate a new workflow file with `nx g ci-workflow --ci=bitbucket-pipelines`
+
 ```yaml {% fileName="bitbucket-pipelines.yml" %}
 image: node:20
 

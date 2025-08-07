@@ -27,6 +27,7 @@ import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -47,10 +48,15 @@ export async function reactNativeApplicationGeneratorInternal(
   schema: Schema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    host,
+    schema.addPlugin,
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
     formatter: schema.formatter,
     platform: 'web',
   });

@@ -94,7 +94,7 @@ export function DocumentationHeader({
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
       name: 'CI',
-      href: '/ci/intro/ci-with-nx',
+      href: '/ci/features',
       current: isCI,
     },
     {

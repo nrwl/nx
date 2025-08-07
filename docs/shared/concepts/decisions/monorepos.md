@@ -1,52 +1,72 @@
 ---
 title: Monorepos
-description: Understand the benefits of monorepos including shared code, atomic changes, developer mobility, and consistent dependencies across your organization.
+description: Monorepos enable seamless code sharing, atomic changes, and consistent development practices across projects.
 ---
 
 # Monorepos
 
-A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
+A **monorepo stores code for multiple projects in a single version-controlled repository**, enabling teams to share code seamlessly, make atomic changes across project boundaries, and maintain consistent development practices at scale. This approach fundamentally changes how organizations structure their codebases and collaborate on software development.
 
-## What are the benefits of a monorepo?
+## What is a monorepo?
 
-- **Shared code and visibility** - [Keeps your code DRY across your entire organization.](/concepts/decisions/code-ownership) Reuse validation code, UI components, and types across the codebase. Reuse code between the backend, the frontend, and utility libraries.
+A monorepo represents a different approach to organizing code compared to the traditional model of one _repository per project_ (often also called "polyrepo"). In a monorepo, **multiple distinct projects (applications, libraries, services, and tools) coexist in a single repository while remaining logically independent**.
 
-- **Atomic changes** - Change a server API and modify the downstream applications that consume that API in the same commit. You can change a button component in a shared library and the applications that use that component in the same commit. A monorepo saves the pain of trying to coordinate commits across multiple repositories.
+The mental model shifts from isolated projects to a **shared workspace where teams collaborate within clear boundaries**. Like a well-organized office building where each team occupies its own floor while sharing common facilities and following building-wide standards.
 
-- **Developer mobility** - Get a consistent way of building and testing applications written using different tools and technologies. Developers can confidently contribute to other teams' applications and verify that their changes are safe.
+Here is some key terminology often used with monorepos:
 
-- **Single set of dependencies** - [Use a single version of all third-party dependencies](/concepts/decisions/dependency-management), reducing inconsistencies between applications. Less actively developed applications are still kept up-to-date with the latest version of a framework, library, or build tool.
+- A **workspace** encompasses the entire monorepo structure
+- **Projects** represent individual applications, libraries, or services within that workspace
+- **Source dependencies** compile directly from code within the repository, eliminating the need for package registries between internal projects
+- The **project graph** maps relationships between projects which enables tools to determine which changes affect which components
 
-## Why not just code collocation?
+Common myths about monorepos include:
 
-A naive implementation of a monorepo is code collocation, where you combine all the code from multiple repositories into the same repo. Many large companies that use monorepos don't "simply" put all the code in one place. **That's not enough**. Without adequate tooling to coordinate everything, problems arise with simply collocating code.
+- **Monorepos are monoliths** - They can contain any architectural pattern. A monorepo can host anything from a monolith to a microservice or microfrontend.
+- **Everything must be released together** - Modern monorepos support independent release cycles. Atomic commits enable coordinated changes during development but don't necessarily require synchronized deployments.
+- **You need one massive repository** - Unlike Google and Meta, most companies don't have a single organization-wide monorepo. Instead, they might have multiple monorepos hosting projects that are related from a business perspective and where fast iteration and collaboration is beneficial.
+- **Other teams will break your code** - Proper tooling like CODEOWNERS files provides directory-level access control.
 
-- **Running unnecessary tests** - All tests in the entire repository run to ensure nothing breaks from a given change. Even code in projects that are unrelated to the actual change.
+## Why have a monorepo
 
-- **No code boundaries** - Bugs and inconsistencies are added by a developer from another team changing code in your project. Or worse, another team uses code that you only intended for private use in their application. Now another project code depends on it, keeping you from making changes that may break their application.
+The advantages of monorepos address some of the most persistent challenges in software development, particularly around **integration and collaboration**.
 
-- **Inconsistent tooling** - Each project uses its own set of commands for running tests, building, serving, linting, deploying, and so forth. Inconsistency creates mental overhead remembering which commands to use from project to project.
+### Atomic commits across projects
 
-Tools like Lerna and Yarn Workspaces help optimize the installation of node modules, but they **do not** enable Monorepo-style development. In other words, they solve an orthogonal problem and can even be used in combination with Nx. Read more on it [here](https://blog.nrwl.io/why-you-should-switch-from-lerna-to-nx-463bcaf6821).
+Atomic commits eliminate coordination complexity that plagues multi-repository setups. Engineers can **make changes spanning modules atomically in just one commit** instead of coordinating releases across multiple repositories. Not only does this cut implementation times drastically but also allows for better upfront integration testing.
 
-## Nx + code collocation = monorepo
+### Simplifying dependency management
 
-Nx provides tools to give you the benefits of a monorepo without the drawbacks of simple code collocation.
+A monorepo eliminates internal package versioning complexity by enabling projects to **consume shared code directly from source**. Instead of the time-consuming workflow of publishing preview versions and coordinating releases across repositories, teams work directly with the latest source code. This accelerates development cycles and removes the overhead of managing internal package registries.
 
-### Scaling your monorepo with Nx
+### Breaking down silos and improving collaboration
 
-- **Consistent Command Execution** - Executors allow for consistent commands to test, serve, build, and lint each project using various tools.
+Collaboration barriers dissolve when code visibility increases. Engineers can gain a deeper understanding of dependencies. **The real value lies in improving communication and integration** by clearly seeing integration points with other software parts, leading to better system design, faster cross-service feature development, reduced code duplication through visible shared libraries, and more consistent development practices across teams.
 
-- **Consistent Code Generation** - Generators allow you to customize and standardize organizational conventions and structure, removing the need to perform the same manual setup tasks repetitively.
+### Eliminating waste through consolidation
 
-- **Affected Commands** - [Nx's affected commands](/reference/core-api/nx/documents/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
+Monorepos excel at **identifying and eliminating duplication** that often goes unnoticed in polyrepo setups. **Code-level** duplication becomes visible and consolidatable. **Infrastructure-level** waste disappears through **CI pipelines, deployment scripts, and development tooling** set up once at the workspace level, with new projects automatically inheriting existing infrastructure. **Configuration standardization** through shared linting rules, testing frameworks, and build processes reduces maintenance overhead across repositories.
 
-- **Remote Caching** - Nx provides local caching and support for remote caching of command executions. With remote caching, when someone on your team runs a command, everyone else gets access to those artifacts to speed up their command executions, bringing them down from minutes to seconds. Nx helps you scale your development to massive applications and libraries even more with distributed task execution and incremental builds.
+### Enhancing developer mobility
 
-### Scaling your organization with Nx
+Monorepos provide **consistent building and testing workflows** across applications written with different tools and technologies. Developers gain confidence to **contribute to other teams' applications** without navigating disparate development environments, toolchains, or testing procedures. This uniformity enables engineers to **verify their changes are safe** using familiar commands and processes, regardless of the underlying technology stack, fostering cross-team collaboration and reducing the learning curve when working across different parts of the system.
 
-- **Controlled Code Sharing** - While sharing code becomes much easier to share, there should also be constraints of when and how code should be depended on. Libraries are defined with specific enforced APIs. Rules should be put in place to define which libraries can depend on each other. Also, even though everyone has access to the repo does not mean that anyone should change any project. Projects should have owners such that changes to that project requires their approval. This can be defined using a `CODEOWNERS` file.
+## When to adopt a monorepo
 
-- **Consistent Code Generation** - Generators allow you to automate code creation and modification tasks. Instead of writing a 7 steps guide in a readme file, you can create a generator to prompt the developer for inputs and modify the code directly. Nrwl provides plugins containing useful executors and generators for many popular tools. Also, Nx workspaces are extended further through a growing number of community-provided plugins.
+Contrary to popular belief, monorepos aren't just for large organizations. The decision should be based on team needs, project relationships, and organizational culture rather than size alone. **Small teams and startups** benefit from faster iteration and reduced overhead of managing multiple repositories. **Growing teams (20-100 developers)** often hit the sweet spot with sufficient coordination benefits to justify tooling investment. **Large organizations** benefit through enhanced collaboration, breaking down silos, avoiding duplication, enforcing consistency, and centralized dependency management.
 
-- **Accurate Architecture Diagram** - Most architecture diagrams become obsolete in an instant. And every diagram becomes out of date as soon as the code changes. Because Nx understands your code, it generates an up-to-date and accurate diagram of how projects depend on each other. The Nx project dependencies are also pluggable to extend to other programming languages and ecosystems.
+## Overcoming downsides of monorepos
+
+While monorepos offer significant advantages, they introduce challenges that require thoughtful solutions, particularly as organizations scale.
+
+### Build performance and scaling
+
+Traditional build systems that rebuild entire repositories for small changes quickly become unusable. **You cannot just rebuild everything every time**. Nx solves this through [dependency graph analysis](/features/explore-graph), [building only affected projects](/ci/features/affected), intelligent [caching](/features/cache-task-results) (reusing build artifacts when inputs haven't changed), and [distributed execution](/ci/features/distribute-task-execution) (parallelizing tasks across multiple machines or CI agents).
+
+### Enforcing boundaries
+
+In a monorepo, the physical separation between repositories disappears, requiring **mechanisms to enforce logical boundaries that don't exist anymore**. Without proper tooling, teams might accidentally create inappropriate dependencies between projects that should remain independent. Nx provides solutions through [module boundary rules](/features/enforce-module-boundaries) that prevent unauthorized imports and maintain the logical separation between different domains, libraries, and applications within the same repository.
+
+### Managing ownership and access control
+
+Large monorepos need **mechanisms for managing and enforcing ownership** to prevent chaos as teams grow, including code ownership (defining who can approve changes), access control (protecting sensitive code), and review processes (workflows that scale with team size). Modern platforms and tools address these needs through CODEOWNERS files, automated review assignment, and [CODEOWNERS integration](/nx-enterprise/powerpack/owners) for directory-level access control.

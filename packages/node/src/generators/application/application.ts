@@ -14,6 +14,7 @@ import { configurationGenerator } from '@nx/jest';
 import { initGenerator as jsInitGenerator, tsConfigBaseOptions } from '@nx/js';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -73,11 +74,16 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    schema.addPlugin,
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
   });
   tasks.push(jsInitTask);
 

@@ -336,7 +336,7 @@ nx connect
 
 {% cards %}
 {% link-card title="nx connect" type="API Reference" url="/reference/core-api/nx/documents/connect-to-nx-cloud" /%}
-{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/intro/connect-to-nx-cloud" /%}
+{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/recipes/set-up" /%}
 {% /cards %}
 
 ### login

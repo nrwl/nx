@@ -480,7 +480,7 @@ For more information about Zephyr Cloud I highly recommend checking out their [d
 
 ## Learn More
 
-- [Nx on CI](/ci/intro/ci-with-nx)
+- [Nx on CI](/ci/recipes/set-up)
 - [Task Distribution with Nx Agents](/ci/features/distribute-task-execution)
 - [Automated e2e Test Splitting](/ci/features/split-e2e-tasks)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
