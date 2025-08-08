@@ -45,6 +45,37 @@ export class FetchProjectGraphService implements ProjectGraphService {
     this.taskInputsUrl = url;
   }
 
+  async getSpecificTaskGraph(
+    url: string,
+    projects: string | string[] | null,
+    target: string,
+    configuration?: string
+  ): Promise<TaskGraphClientResponse> {
+    const params = new URLSearchParams();
+
+    if (projects) {
+      if (Array.isArray(projects)) {
+        // Multiple projects from UI
+        params.append('projects', projects.join(' '));
+      } else {
+        // Single project from CLI
+        params.append('project', projects);
+      }
+    }
+
+    params.append('target', target);
+
+    if (configuration) {
+      params.append('configuration', configuration);
+    }
+
+    const request = new Request(`${url}?${params.toString()}`, {
+      mode: 'no-cors',
+    });
+
+    return await fetch(request).then((res) => res.json());
+  }
+
   async getExpandedTaskInputs(
     taskId: string
   ): Promise<Record<string, string[]>> {

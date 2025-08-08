@@ -46,8 +46,8 @@ importers:
         specifier: ^0.1.52
         version: 0.1.73
       '@nx/graph':
-        specifier: 0.5.2
-        version: 0.5.2(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-copy-to-clipboard@5.1.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)
+        specifier: 0.5.7
+        version: 0.5.7(@floating-ui/dom@1.7.2)(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(@tailwindcss/forms@0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(@tailwindcss/typography@0.5.13(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(react-copy-to-clipboard@5.1.0(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)
       '@react-spring/three':
         specifier: ^9.7.3
         version: 9.7.5(@react-three/fiber@8.18.0(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1)
@@ -8583,23 +8583,23 @@ packages:
   '@nx/gradle@21.4.0-beta.6':
     resolution: {integrity: sha512-SH+MbLaOndgZlnyu9clRjbvB/IY7VlsiQ3jI0ox7yZsshvsyNJ6dwKGCANSdpuyzUl4Q/nBr0DI+50T0euZACQ==}
 
-  '@nx/graph@0.5.2':
-    resolution: {integrity: sha512-WET6Hx6NvL8K8PekAMMyZOuBs3hRpvXfoAfyrsJG/z+4Zuh0L9MyyYGHgdznq3CoYnEnNK0M3st73rAmK8ltPw==}
+  '@nx/graph@0.5.7':
+    resolution: {integrity: sha512-BIA95dK6JgthMd+zmPltKDOKvf6gVgF/58DF6xFazxGzV5rQeJN5TM3Jhpd8cy7eAQv273zNtjOfCLgkIT3yuQ==}
     peerDependencies:
-      '@floating-ui/react': ^0.27.7
+      '@floating-ui/dom': 1.6.13
+      '@floating-ui/react': 0.27.2
       '@headlessui/react': '>= 2.0.0 < 3.0.0'
       '@heroicons/react': '>= 2.0.0 < 3.0.0'
       '@nx/devkit': 21.3.11
-      classnames: ~2.5.1
+      '@tailwindcss/forms': ^0.5.10
+      '@tailwindcss/typography': ^0.5.16
+      classnames: '*'
       cmdk: ~1.1.1
       cytoscape: '>= 3.0.0 < 4.0.0'
       cytoscape-dagre: '>= 2.5.0 < 3.0.0'
-      cytoscape-popper: '>= 4.0.0 < 5.0.0'
-      nx: '>= 19 < 22'
+      cytoscape-popper: '*'
       react: '>= 18 < 20'
-      react-copy-to-clipboard: ~5.1.0
-      react-dom: '>= 18 < 20'
-      react-router-dom: '>= 6.0.0'
+      react-copy-to-clipboard: '*'
       tailwind-merge: '>= 3.2.0 < 4.0.0'
     peerDependenciesMeta:
       '@floating-ui/react':
@@ -31508,15 +31508,15 @@ snapshots:
       - '@swc/core'
       - debug
 
-  '@nx/graph@0.5.2(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-copy-to-clipboard@5.1.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)':
+  '@nx/graph@0.5.7(@floating-ui/dom@1.7.2)(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(@tailwindcss/forms@0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(@tailwindcss/typography@0.5.13(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(react-copy-to-clipboard@5.1.0(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)':
     dependencies:
+      '@floating-ui/dom': 1.7.2
       '@nx/devkit': 21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@tailwindcss/forms': 0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3)))
+      '@tailwindcss/typography': 0.5.13(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3)))
       cytoscape: 3.32.1
       cytoscape-dagre: 2.5.0(cytoscape@3.32.1)
-      nx: 21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      react-router-dom: 6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       '@floating-ui/react': 0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react': 2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

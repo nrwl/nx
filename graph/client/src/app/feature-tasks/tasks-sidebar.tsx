@@ -35,10 +35,22 @@ function TasksSidebarInner() {
   ) as ProjectGraphClientResponse & { targets: string[] };
   const workspaceLayout = selectedWorkspaceRouteData.layout;
 
-  const routeData = useRouteLoaderData(
+  const allTasksRouteData = useRouteLoaderData(
+    'allTasks'
+  ) as TaskGraphClientResponse | null;
+
+  const selectedTargetRouteData = useRouteLoaderData(
     'selectedTarget'
-  ) as TaskGraphClientResponse;
-  const { taskGraphs, errors } = routeData;
+  ) as TaskGraphClientResponse | null;
+
+  // Use selectedTarget data if available, otherwise empty defaults
+  const { taskGraphs, errors } = useMemo(() => {
+    return (allTasksRouteData ||
+      selectedTargetRouteData || {
+        taskGraphs: {},
+        errors: {},
+      }) as TaskGraphClientResponse;
+  }, [selectedTargetRouteData, allTasksRouteData]);
   let { projects, targets } = selectedWorkspaceRouteData;
 
   const selectedTarget = useMemo(
@@ -71,10 +83,10 @@ function TasksSidebarInner() {
   function selectTarget(target: string) {
     if (target === selectedTarget) return;
     hideAllProjects();
-    navigate({
-      pathname: `../${encodeURIComponent(target)}`,
-      search: searchParams.toString(),
-    });
+    const pathname = params['selectedTarget']
+      ? `../${encodeURIComponent(target)}`
+      : `./${encodeURIComponent(target)}`;
+    navigate({ pathname, search: searchParams.toString() });
   }
 
   function toggleProject(project: string) {
@@ -161,6 +173,14 @@ function TasksSidebarInner() {
       taskGraphs,
     });
   }, [selectedWorkspaceRouteData]);
+
+  useEffect(() => {
+    send({
+      type: 'mergeGraph',
+      projects: selectedWorkspaceRouteData.projects,
+      taskGraphs,
+    });
+  }, [selectedWorkspaceRouteData, taskGraphs, isAllRoute]);
 
   useEffect(() => {
     send({ type: 'toggleGroupByProject', groupByProject });

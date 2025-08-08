@@ -24,6 +24,17 @@ export class NxConsoleProjectGraphService implements ProjectGraphService {
     return res ? res[taskId] : {};
   }
 
+  async getSpecificTaskGraph(
+    url: string,
+    projects: string | string[] | null,
+    target: string,
+    configuration?: string
+  ): Promise<TaskGraphClientResponse> {
+    // Use the regular task graph loading through external API
+    // NxConsole will handle the filtering
+    return await window.externalApi.loadTaskGraph?.(url);
+  }
+
   async getSourceMaps(
     url: string
   ): Promise<Record<string, Record<string, string[]>>> {
