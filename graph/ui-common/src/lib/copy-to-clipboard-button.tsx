@@ -3,7 +3,8 @@ import {
   ClipboardDocumentIcon,
 } from '@heroicons/react/24/outline';
 import { ReactNode, useEffect, useState } from 'react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import clipboard from 'react-copy-to-clipboard';
+const { CopyToClipboard } = clipboard;
 
 export interface CopyToClipboardButtonProps {
   text: string;

@@ -26,12 +26,32 @@ export function Loading() {
   );
 }
 
+function getInitialPropsForAstro(children: ReactElement) {
+  if (!children || !children.hasOwnProperty('props') || !children.props.value)
+    return null;
+  try {
+    return parseAstroHtmlWrappedJson(children.props.value.toString() as any);
+  } catch {
+    return null;
+  }
+}
+
+function parseAstroHtmlWrappedJson(htmlString: string) {
+  const cleanedString = htmlString
+    .trim()
+    .replace(/^<\w>|<\/\w>$/g, '')
+    .trim()
+    .replace(/&quot;/g, '"');
+  return JSON.parse(cleanedString);
+}
+
 export type ProjectDetailsProps = {
   height: string;
   title: string;
   jsonFile?: string;
   expandedTargets?: string[];
   children: ReactElement;
+  isAstro?: boolean;
 };
 
 export function ProjectDetails({
@@ -40,8 +60,11 @@ export function ProjectDetails({
   jsonFile,
   expandedTargets = [],
   children,
+  isAstro = false,
 }: ProjectDetailsProps): JSX.Element {
-  const [parsedProps, setParsedProps] = useState<any>();
+  const [parsedProps, setParsedProps] = useState<any>(
+    isAstro ? getInitialPropsForAstro(children) : null
+  );
   const elementRef = createRef<HTMLDivElement>();
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
@@ -102,11 +125,8 @@ export function ProjectDetails({
       );
     }
   }
-  if (!parsedProps) {
-    return <Loading />;
-  }
 
-  return (
+  return parsedProps ? (
     <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       {title && (
         <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
@@ -130,5 +150,7 @@ export function ProjectDetails({
         </div>
       </div>
     </div>
+  ) : (
+    <Loading />
   );
 }
