@@ -64,6 +64,27 @@ export default defineMarkdocConfig({
         },
       },
     },
+    card: {
+      render: component('./src/components/markdoc/Card.astro'),
+      attributes: {
+        title: {
+          type: 'String',
+          required: true,
+        },
+        description: {
+          type: 'String',
+          default: '',
+        },
+        type: {
+          type: 'String',
+          default: 'documentation',
+        },
+        url: {
+          type: 'String',
+          default: '',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
