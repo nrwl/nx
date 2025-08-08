@@ -268,6 +268,24 @@ export default defineMarkdocConfig({
     personas: {
       render: component('./src/components/markdoc/Personas.astro'),
     },
+    project_details: {
+      render: component('./src/components/markdoc/ProjectDetails.astro'),
+      children: [],
+      attributes: {
+        jsonFile: {
+          type: 'String',
+        },
+        title: {
+          type: 'String',
+        },
+        height: {
+          type: 'String',
+        },
+        expandedTargets: {
+          type: 'Array',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},

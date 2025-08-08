@@ -26,19 +26,21 @@ export function Loading() {
   );
 }
 
+export type ProjectDetailsProps = {
+  height: string;
+  title: string;
+  jsonFile?: string;
+  expandedTargets?: string[];
+  children: ReactElement;
+};
+
 export function ProjectDetails({
   height,
   title,
   jsonFile,
   expandedTargets = [],
   children,
-}: {
-  height: string;
-  title: string;
-  jsonFile?: string;
-  expandedTargets?: string[];
-  children: ReactElement;
-}): JSX.Element {
+}: ProjectDetailsProps): JSX.Element {
   const [parsedProps, setParsedProps] = useState<any>();
   const elementRef = createRef<HTMLDivElement>();
   const getData = async (path: string) => {
