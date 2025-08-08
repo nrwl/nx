@@ -196,12 +196,15 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
   "release": {
     "dockerVersionScheme": {
       "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
-      "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}"
+      "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
+      "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
     }
   }
 }
 ```
 
-The above configuration swaps `hotfix` scheme for `staging`. You can customize this list to fit your needs, and you can also change the patterns for each scheme.
+The above configuration swaps `hotfix` scheme for `staging` and adds a `ci` scheme that uses an environment variable. You can customize this list to fit your needs, and you can also change the patterns for each scheme.
+
+Version patterns can include environment variables using the `{env.VAR_NAME}` syntax, allowing you to inject CI/CD pipeline information like build numbers or deployment environments directly into your Docker tags.
 
 See the [`docker.versionScheme` documentation](/reference/nx-json#version-scheme-syntax) for more details on how to customize the tag pattern.
