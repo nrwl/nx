@@ -298,92 +298,9 @@ export const sidebar = [
     ],
   },
   {
-    label: 'Core Concepts',
+    label: 'Concepts',
     collapsed: true,
-    items: [
-      {
-        label: 'Mental Model',
-        link: 'concepts/mental-model',
-      },
-      {
-        label: 'How Caching Works',
-        link: 'concepts/how-caching-works',
-      },
-      {
-        label: 'What is a Task Pipeline',
-        link: 'concepts/task-pipeline-configuration',
-      },
-      {
-        label: 'What Are Nx Plugins',
-        link: 'concepts/nx-plugins',
-      },
-      {
-        label: 'Inferred Tasks',
-        link: 'concepts/inferred-tasks',
-      },
-      {
-        label: 'Types of Configuration',
-        link: 'concepts/types-of-configuration',
-      },
-      {
-        label: 'Executors and Configurations',
-        link: 'concepts/executors-and-configurations',
-      },
-      {
-        label: 'Common Tasks',
-        link: 'concepts/common-tasks',
-      },
-      {
-        label: 'Nx Daemon',
-        link: 'concepts/nx-daemon',
-      },
-      {
-        label: 'Sync Generators',
-        link: 'concepts/sync-generators',
-      },
-      {
-        label: 'TypeScript Project Linking',
-        link: 'concepts/typescript-project-linking',
-      },
-      {
-        label: 'Buildable and Publishable Libraries',
-        link: 'concepts/buildable-and-publishable-libraries',
-      },
-      {
-        label: 'Organizational Decisions',
-        collapsed: true,
-        items: [
-          {
-            label: 'Overview',
-            link: 'concepts/decisions/overview',
-          },
-          {
-            label: 'Monorepos',
-            link: 'concepts/decisions/why-monorepos',
-          },
-          {
-            label: 'Dependency Management',
-            link: 'concepts/decisions/dependency-management',
-          },
-          {
-            label: 'Code Ownership',
-            link: 'concepts/decisions/code-ownership',
-          },
-          {
-            label: 'Project Size',
-            link: 'concepts/decisions/project-size',
-          },
-          {
-            label: 'Project Dependency Rules',
-            link: 'concepts/decisions/project-dependency-rules',
-          },
-          {
-            label: 'Folder Structure',
-            link: 'concepts/decisions/folder-structure',
-          },
-        ],
-      },
-    ],
+    autogenerate: { directory: 'concepts', collapsed: true },
   },
   {
     label: 'Technologies',
