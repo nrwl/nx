@@ -37,10 +37,11 @@ describe('next library', () => {
       ...baseOptions,
       directory: 'my-lib',
     });
-    const tsconfigTypes = readJson(appTree, 'my-lib/tsconfig.lib.json')
-      .compilerOptions.types;
+    const tsconfig = readJson(appTree, 'my-lib/tsconfig.lib.json');
 
-    expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
+    expect(tsconfig.files).toContain(
+      '../node_modules/@nx/next/typings/image.d.ts'
+    );
   });
 
   it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
@@ -217,10 +218,7 @@ describe('next library', () => {
             "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts",
               "next",
-              "@nx/next/typings/image.d.ts",
             ],
           },
           "exclude": [
@@ -240,6 +238,11 @@ describe('next library', () => {
             "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
+          "files": [
+            "../node_modules/@nx/react/typings/cssmodule.d.ts",
+            "../node_modules/@nx/react/typings/image.d.ts",
+            "../node_modules/@nx/next/typings/image.d.ts",
+          ],
           "include": [
             "src/**/*.js",
             "src/**/*.jsx",

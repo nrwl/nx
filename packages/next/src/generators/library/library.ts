@@ -3,6 +3,7 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  offsetFromRoot,
   runTasksInSerial,
   Tree,
   updateJson,
@@ -151,11 +152,19 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       if (!json.compilerOptions.types) {
         json.compilerOptions.types = [];
       }
-      json.compilerOptions.types = [
-        ...json.compilerOptions.types,
-        'next',
-        '@nx/next/typings/image.d.ts',
+      json.compilerOptions.types = [...json.compilerOptions.types, 'next'];
+
+      // Add Next.js typings to files array instead of types for better pnpm compatibility
+      if (!json.files) {
+        json.files = [];
+      }
+      json.files = [
+        ...json.files,
+        `${offsetFromRoot(
+          options.projectRoot
+        )}node_modules/@nx/next/typings/image.d.ts`,
       ];
+
       return json;
     }
   );
