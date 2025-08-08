@@ -408,7 +408,7 @@
       {
         "id": "ci-features",
         "name": "CI Features",
-        "description": "Features of Nx and Nx Cloud that improve CI",
+        "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
         "mediaImage": "",
         "file": "",
         "itemList": [
@@ -601,7 +601,7 @@
   "/features/ci-features": {
     "id": "ci-features",
     "name": "CI Features",
-    "description": "Features of Nx and Nx Cloud that improve CI",
+    "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
@@ -1057,14 +1057,36 @@
         "file": "",
         "itemList": [
           {
-            "id": "get-started-with-nx-release",
-            "name": "Get Started with Nx Release",
+            "id": "release-npm-packages",
+            "name": "Release TypeScript/JavaScript Packages to NPM",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/nx-release/get-started-with-nx-release",
+            "file": "shared/recipes/nx-release/release-typescript-packages-to-npm",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/nx-release/get-started-with-nx-release",
+            "path": "/recipes/nx-release/release-npm-packages",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "release-docker-images",
+            "name": "Release Docker Images",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/release-docker-images",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/release-docker-images",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "publish-rust-crates",
+            "name": "Release Rust Crates",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/publish-rust-crates",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/publish-rust-crates",
             "tags": ["nx-release"]
           },
           {
@@ -1164,17 +1186,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/automate-gitlab-releases",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "publish-rust-crates",
-            "name": "Publish Rust Crates",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/publish-rust-crates",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/publish-rust-crates",
             "tags": ["nx-release"]
           },
           {
@@ -2026,14 +2037,36 @@
     "file": "",
     "itemList": [
       {
-        "id": "get-started-with-nx-release",
-        "name": "Get Started with Nx Release",
+        "id": "release-npm-packages",
+        "name": "Release TypeScript/JavaScript Packages to NPM",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/get-started-with-nx-release",
+        "file": "shared/recipes/nx-release/release-typescript-packages-to-npm",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/get-started-with-nx-release",
+        "path": "/recipes/nx-release/release-npm-packages",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "release-docker-images",
+        "name": "Release Docker Images",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/release-docker-images",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/release-docker-images",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "publish-rust-crates",
+        "name": "Release Rust Crates",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/publish-rust-crates",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/publish-rust-crates",
         "tags": ["nx-release"]
       },
       {
@@ -2136,17 +2169,6 @@
         "tags": ["nx-release"]
       },
       {
-        "id": "publish-rust-crates",
-        "name": "Publish Rust Crates",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/publish-rust-crates",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/publish-rust-crates",
-        "tags": ["nx-release"]
-      },
-      {
         "id": "update-local-registry-setup",
         "name": "Update Your Local Registry Setup to use Nx Release",
         "description": "",
@@ -2195,15 +2217,37 @@
     "path": "/recipes/nx-release",
     "tags": []
   },
-  "/recipes/nx-release/get-started-with-nx-release": {
-    "id": "get-started-with-nx-release",
-    "name": "Get Started with Nx Release",
+  "/recipes/nx-release/release-npm-packages": {
+    "id": "release-npm-packages",
+    "name": "Release TypeScript/JavaScript Packages to NPM",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/get-started-with-nx-release",
+    "file": "shared/recipes/nx-release/release-typescript-packages-to-npm",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/get-started-with-nx-release",
+    "path": "/recipes/nx-release/release-npm-packages",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/release-docker-images": {
+    "id": "release-docker-images",
+    "name": "Release Docker Images",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/release-docker-images",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/release-docker-images",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/publish-rust-crates": {
+    "id": "publish-rust-crates",
+    "name": "Release Rust Crates",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/publish-rust-crates",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/publish-rust-crates",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/release-projects-independently": {
@@ -2303,17 +2347,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/automate-gitlab-releases",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/publish-rust-crates": {
-    "id": "publish-rust-crates",
-    "name": "Publish Rust Crates",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/publish-rust-crates",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/publish-rust-crates",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/update-local-registry-setup": {
@@ -13741,7 +13774,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/ci/intro/ci-with-nx",
+        "path": "/ci/features",
         "tags": ["cache-task-results", "distribute-task-execution"]
       },
       {
@@ -13826,7 +13859,7 @@
     "path": "/see-also",
     "tags": []
   },
-  "/ci/intro/ci-with-nx": {
+  "/ci/features": {
     "id": "ci",
     "name": "CI Documentation",
     "description": "",
@@ -13834,7 +13867,7 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/ci/intro/ci-with-nx",
+    "path": "/ci/features",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
   "/nx-api/nx/documents/affected#skip-nx-cache": {

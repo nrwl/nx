@@ -1,14 +1,30 @@
+import classNames from 'classnames';
 import { memo } from 'react';
 
 export interface CollapseEdgesPanelProps {
   collapseEdges: boolean;
   collapseEdgesChanged: (checked: boolean) => void;
+  disabled?: boolean;
 }
 
 export const CollapseEdgesPanel = memo(
-  ({ collapseEdges, collapseEdgesChanged }: CollapseEdgesPanelProps) => {
+  ({
+    collapseEdges,
+    collapseEdgesChanged,
+    disabled,
+  }: CollapseEdgesPanelProps) => {
     return (
-      <div className="px-4">
+      <div
+        className={classNames(
+          'px-4',
+          disabled ? 'cursor-not-allowed opacity-50' : ''
+        )}
+        title={
+          disabled
+            ? 'Group by folder is not enabled'
+            : 'Collapse edges between groups of projects'
+        }
+      >
         <div className="flex items-start">
           <div className="flex h-5 items-center">
             <input
@@ -19,6 +35,7 @@ export const CollapseEdgesPanel = memo(
               className="h-4 w-4 accent-purple-500"
               onChange={(event) => collapseEdgesChanged(event.target.checked)}
               checked={collapseEdges}
+              disabled={disabled}
             />
           </div>
           <div className="ml-3 text-sm">

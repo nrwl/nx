@@ -1,15 +1,20 @@
 import { assign } from '@xstate/immer';
-import { send } from 'xstate';
 import { ProjectGraphStateNodeConfig } from './interfaces';
+import { send } from 'xstate';
 
 export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
     assign((ctx, event) => {
-      if (event.type !== 'filterByText') return;
-
-      ctx.textFilter = event.search;
+      if (event.type !== 'filter' || typeof event.filterBy !== 'string') return;
+      ctx.textFilter = event.filterBy;
+      ctx.includePath = event.includeEdges ?? ctx.includePath;
     }),
-    'notifyGraphFilterProjectsByText',
+  ],
+  exit: [
+    assign((ctx) => {
+      ctx.textFilter = '';
+      ctx.includePath = false;
+    }),
   ],
   on: {
     clearTextFilter: {
@@ -20,38 +25,29 @@ export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
       }),
     },
     setIncludeProjectsByPath: {
-      actions: ['setIncludeProjectsByPath', 'notifyGraphFilterProjectsByText'],
+      actions: [
+        'setIncludeProjectsByPath',
+        send(
+          (ctx) => ({
+            type: 'filter',
+            filterBy: ctx.textFilter,
+            includeEdges: ctx.includePath,
+          }),
+          { to: (ctx) => ctx.graphActor }
+        ),
+      ],
     },
     incrementSearchDepth: {
-      actions: ['incrementSearchDepth', 'notifyGraphFilterProjectsByText'],
+      actions: ['incrementSearchDepth'],
     },
     decrementSearchDepth: {
-      actions: ['decrementSearchDepth', 'notifyGraphFilterProjectsByText'],
+      actions: ['decrementSearchDepth'],
     },
     setSearchDepthEnabled: {
-      actions: ['setSearchDepthEnabled', 'notifyGraphFilterProjectsByText'],
+      actions: ['setSearchDepthEnabled'],
     },
     updateGraph: {
-      actions: [
-        'setGraph',
-        send(
-          (ctx, event) => ({
-            type: 'notifyGraphUpdateGraph',
-            projects: ctx.projects,
-            dependencies: ctx.dependencies,
-            fileMap: ctx.fileMap,
-            affectedProjects: ctx.affectedProjects,
-            workspaceLayout: ctx.workspaceLayout,
-            groupByFolder: ctx.groupByFolder,
-            selectedProjects: ctx.selectedProjects,
-            composite: ctx.compositeGraph,
-          }),
-          {
-            to: (context) => context.graphActor,
-          }
-        ),
-        'notifyGraphFilterProjectsByText',
-      ],
+      actions: ['setGraph'],
     },
   },
 };

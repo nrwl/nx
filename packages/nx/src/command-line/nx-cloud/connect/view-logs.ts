@@ -8,7 +8,6 @@ import {
   connectWorkspaceToCloud,
 } from './connect-to-nx-cloud';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { repoUsesGithub } from '../../../nx-cloud/utilities/url-shorten';
 
 export async function viewLogs(): Promise<number> {
   const cloudUsed = isNxCloudUsed(readNxJson());
@@ -34,11 +33,10 @@ export async function viewLogs(): Promise<number> {
     output.log({
       title: 'Connecting to Nx Cloud',
     });
-    const token = await connectWorkspaceToCloud({
+    await connectWorkspaceToCloud({
       installationSource: 'view-logs',
+      generateToken: true,
     });
-
-    await printSuccessMessage(token, 'view-logs', await repoUsesGithub());
   } catch (e) {
     output.log({
       title: 'Failed to connect to Nx Cloud',
@@ -56,7 +54,7 @@ export async function viewLogs(): Promise<number> {
   if (!cloudUsed) {
     output.note({
       title: 'Your workspace is now connected to Nx Cloud',
-      bodyLines: [`Learn more about Nx Cloud at https://nx.app`],
+      bodyLines: [`Learn more about Nx Cloud at https://nx.dev/nx-cloud`],
     });
   }
   return 0;

@@ -27,10 +27,10 @@ Nx **restores terminal output, along with the files and artifacts** created from
 To use **Nx Replay**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
 
 ## Why use Remote Caching (Nx Replay)?
 

@@ -8,6 +8,4 @@ export interface PresetGeneratorSchema {
 export interface NormalizedPresetGeneratorOptions
   extends PresetGeneratorSchema {
   createPackageName: string;
-  useProjectJson: boolean;
-  addPlugin: boolean;
 }

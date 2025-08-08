@@ -67,6 +67,7 @@ import {
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  shouldPreferDockerVersionForReleaseGroup,
   handleDuplicateGitTags,
   isPrerelease,
   noDiffInChangelogMessage,
@@ -830,6 +831,7 @@ function resolveChangelogVersions(
       for (const projectName of releaseGroupProjectNames) {
         if (!args.versionData) {
           versionData[projectName] = {
+            dockerVersion: args.version,
             newVersion: args.version,
             currentVersion: '', // not relevant within changelog/commit generation
             dependentProjects: [], // not relevant within changelog/commit generation
@@ -1245,13 +1247,19 @@ async function generateChangelogForProjects({
      */
     if (
       !projectsVersionData[project.name] ||
-      projectsVersionData[project.name].newVersion === null
+      (projectsVersionData[project.name].newVersion === null &&
+        !projectsVersionData[project.name].dockerVersion)
     ) {
       continue;
     }
 
+    const preferDockerVersion =
+      shouldPreferDockerVersionForReleaseGroup(releaseGroup);
     const releaseVersion = new ReleaseVersion({
-      version: projectsVersionData[project.name].newVersion,
+      version:
+        preferDockerVersion && projectsVersionData[project.name].dockerVersion
+          ? projectsVersionData[project.name].dockerVersion
+          : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTagPattern,
       projectName: project.name,
     });

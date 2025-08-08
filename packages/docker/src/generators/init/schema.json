@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "Init",
+  "title": "Nx Docker Init Generator",
+  "type": "object",
+  "description": "Docker init generator.",
+  "properties": {
+    "rootProject": {
+      "type": "boolean",
+      "x-priority": "internal"
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    },
+    "updatePackageScripts": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Update package scripts",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": []
+}

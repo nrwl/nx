@@ -26,6 +26,7 @@ import {
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
@@ -57,8 +58,10 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
+    addTsPlugin,
     skipFormat: true,
   });
   tasks.push(jsInitTask);

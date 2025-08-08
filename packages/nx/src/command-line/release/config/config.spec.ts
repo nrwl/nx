@@ -264,6 +264,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -278,6 +279,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -469,6 +471,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -483,6 +486,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -677,6 +681,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -691,6 +696,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -916,6 +922,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -930,6 +937,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -1139,6 +1147,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -1153,6 +1162,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -1371,6 +1381,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -1385,6 +1396,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                   "nx",
@@ -1601,6 +1613,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -1615,6 +1628,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -1816,6 +1830,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -1830,6 +1845,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -2026,6 +2042,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -2040,6 +2057,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -2238,6 +2256,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -2252,6 +2271,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -2278,6 +2298,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                 ],
@@ -2476,6 +2497,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -2501,6 +2523,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -2692,6 +2715,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -2717,6 +2741,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -2750,6 +2775,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                 ],
@@ -2938,6 +2964,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -2963,6 +2990,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -3155,6 +3183,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -3169,6 +3198,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -3191,6 +3221,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                 ],
@@ -3233,6 +3264,768 @@ describe('createNxReleaseConfig()', () => {
               },
               "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow groups to define their own docker options', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+                hotfix: '{currentDate|YYMM.DD}-hotfix',
+              },
+            },
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YY.MM.DD}',
+                hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+              },
+            },
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "docker": undefined,
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}-hotfix",
+                    "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                  },
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                    "production": "{currentDate|YY.MM.DD}",
+                  },
+                },
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
+            "releaseTagPatternStrictPreid": false,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow groups to define their own docker groupPreVersionCommand', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+                hotfix: '{currentDate|YYMM.DD}-hotfix',
+              },
+              groupPreVersionCommand: 'npx nx run-many -t docker-build',
+            },
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YY.MM.DD}',
+                hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+              },
+              groupPreVersionCommand: 'npx nx run-many -t docker:build',
+            },
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "docker": undefined,
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "npx nx run-many -t docker-build",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}-hotfix",
+                    "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                  },
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "npx nx run-many -t docker:build",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                    "production": "{currentDate|YY.MM.DD}",
+                  },
+                },
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
+            "releaseTagPatternStrictPreid": false,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+    it('should not apply top level prevserion command to docker groups', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        version: {
+          preVersionCommand: 'npx nx run-many -t build',
+        },
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+                hotfix: '{currentDate|YYMM.DD}-hotfix',
+              },
+              groupPreVersionCommand: 'npx nx run-many -t docker-build',
+            },
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YY.MM.DD}',
+                hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+              },
+              groupPreVersionCommand: 'npx nx run-many -t docker:build',
+            },
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "docker": undefined,
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "npx nx run-many -t docker-build",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}-hotfix",
+                    "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                  },
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "npx nx run-many -t docker:build",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                    "production": "{currentDate|YY.MM.DD}",
+                  },
+                },
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
+            "releaseTagPatternStrictPreid": false,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "npx nx run-many -t build",
               "preserveLocalDependencyProtocols": true,
               "specifierSource": undefined,
               "updateDependents": "auto",
@@ -3390,6 +4183,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -3404,6 +4198,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -3607,6 +4402,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": true,
               "commitArgs": "--no-verify",
@@ -3621,6 +4417,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -3821,6 +4618,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -3835,6 +4633,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -4031,6 +4830,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -4045,6 +4845,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -4246,6 +5047,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -4260,6 +5062,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -4451,6 +5254,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -4465,6 +5269,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -4487,6 +5292,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                 ],
@@ -4678,6 +5484,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -4692,6 +5499,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -4714,6 +5522,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                 ],
@@ -4740,6 +5549,467 @@ describe('createNxReleaseConfig()', () => {
             "releaseTagPatternCheckAllBranchesWhen": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow setting top level docker options', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        docker: {
+          preVersionCommand: 'npx nx run-many docker:build -p lib-a',
+          versionSchemes: {
+            production: '{currentDate|YY.MM.DD}.prod',
+            staging: '{currentDate|YY.MM.DD}.staging',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "docker": {
+              "preVersionCommand": "npx nx run-many docker:build -p lib-a",
+              "registryUrl": undefined,
+              "repositoryName": undefined,
+              "skipVersionActions": undefined,
+              "versionSchemes": {
+                "production": "{currentDate|YY.MM.DD}.prod",
+                "staging": "{currentDate|YY.MM.DD}.staging",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "",
+                  "registryUrl": undefined,
+                  "repositoryName": undefined,
+                  "skipVersionActions": undefined,
+                  "versionSchemes": {
+                    "production": "{currentDate|YY.MM.DD}.prod",
+                    "staging": "{currentDate|YY.MM.DD}.staging",
+                  },
+                },
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
+            "releaseTagPatternStrictPreid": false,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+    it('should allow setting top level docker as true to infer defaults', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        docker: true,
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "docker": {
+              "preVersionCommand": "npx nx run-many -t docker:build",
+              "registryUrl": undefined,
+              "repositoryName": undefined,
+              "skipVersionActions": undefined,
+              "versionSchemes": {
+                "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "",
+                  "registryUrl": undefined,
+                  "repositoryName": undefined,
+                  "skipVersionActions": undefined,
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                    "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                  },
+                },
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
+            "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -4928,6 +6198,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -4942,6 +6213,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -5136,6 +6408,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -5150,6 +6423,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -5356,6 +6630,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -5381,6 +6656,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "nx",
                 ],
@@ -5571,6 +6847,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -5585,6 +6862,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -5803,6 +7081,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -5828,6 +7107,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -6036,6 +7316,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -6061,6 +7342,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -6258,6 +7540,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -6272,6 +7555,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -6474,6 +7758,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -6488,6 +7773,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -6693,6 +7979,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -6707,6 +7994,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -6912,6 +8200,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -6926,6 +8215,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -7132,6 +8422,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -7146,6 +8437,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -7415,6 +8707,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -7444,6 +8737,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -7651,6 +8945,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -7680,6 +8975,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -8068,6 +9364,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -8082,6 +9379,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -8277,6 +9575,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -8291,6 +9590,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -8522,6 +9822,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -8536,6 +9837,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -8743,6 +10045,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -8757,6 +10060,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -8967,6 +10271,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -8981,6 +10286,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -9192,6 +10498,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -9206,6 +10513,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -9420,6 +10728,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -9434,6 +10743,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -9660,6 +10970,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -9689,6 +11000,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -9711,6 +11023,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                 ],
@@ -9744,6 +11057,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "nx",
                 ],
@@ -9970,6 +11284,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -9999,6 +11314,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -10222,6 +11538,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -10251,6 +11568,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -10455,6 +11773,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -10484,6 +11803,7 @@ describe('createNxReleaseConfig()', () => {
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
                 },
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -10922,6 +12242,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -10936,6 +12257,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -10991,6 +12313,37 @@ describe('createNxReleaseConfig()', () => {
           },
         }
       `);
+    });
+
+    it('should use releaseTagPattern from base config for independent release groups as long as {projectName} is used', async () => {
+      let res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        releaseTagPattern: 'release/{projectName}/{version}',
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            projectsRelationship: 'independent',
+          },
+        },
+      });
+
+      expect(res.nxReleaseConfig.groups['group-1'].releaseTagPattern).toEqual(
+        'release/{projectName}/{version}'
+      );
+
+      // The specified pattern may conflict between independent projects, so use the default independent tag pattern.
+      res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        releaseTagPattern: 'v{version}',
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            projectsRelationship: 'independent',
+          },
+        },
+      });
+
+      expect(res.nxReleaseConfig.groups['group-1'].releaseTagPattern).toEqual(
+        '{projectName}@{version}'
+      );
     });
 
     /**
@@ -11314,6 +12667,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -11328,6 +12682,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -11350,6 +12705,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-b",
                   "nx",
@@ -11534,6 +12890,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -11548,6 +12905,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -11748,6 +13106,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -11762,6 +13121,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -11967,6 +13327,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -11981,6 +13342,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -12185,6 +13547,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -12199,6 +13562,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -12406,6 +13770,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -12420,6 +13785,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "nx",
                 ],
@@ -12619,6 +13985,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -12633,6 +14000,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -12880,6 +14248,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -12894,6 +14263,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -13094,6 +14464,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -13108,6 +14479,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",
@@ -13314,6 +14686,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -13328,6 +14701,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "nx",
                 ],
@@ -13351,6 +14725,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -13546,6 +14921,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -13560,6 +14936,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "nx",
                 ],
@@ -13587,6 +14964,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -13782,6 +15160,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -13796,6 +15175,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "nx",
                 ],
@@ -13818,6 +15198,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -14016,6 +15397,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -14030,6 +15412,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "nx",
                 ],
@@ -14052,6 +15435,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "group-2": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                 ],
@@ -14287,6 +15671,7 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "docker": undefined,
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -14301,6 +15686,7 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "__default__": {
                 "changelog": false,
+                "docker": undefined,
                 "projects": [
                   "lib-a",
                   "lib-b",

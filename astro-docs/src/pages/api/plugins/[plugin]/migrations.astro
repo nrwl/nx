@@ -2,8 +2,6 @@
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { getCollection, render } from 'astro:content';
 
-import { parseMarkdownToHtml } from '../../../../utils/markdown';
-
 export async function getStaticPaths() {
   const pluginDocs = await getCollection(
     'plugin-docs',

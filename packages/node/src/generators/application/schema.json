@@ -18,7 +18,7 @@
     "name": {
       "description": "The name of the application.",
       "type": "string",
-      "pattern": "^[a-zA-Z][^:]*$",
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
       "x-priority": "important"
     },
     "skipFormat": {
@@ -123,6 +123,11 @@
     "docker": {
       "type": "boolean",
       "description": "Add a docker build target"
+    },
+    "skipDockerPlugin": {
+      "type": "boolean",
+      "description": "Skip the @nx/docker plugin and use the legacy docker build target instead.",
+      "default": false
     },
     "useProjectJson": {
       "type": "boolean",

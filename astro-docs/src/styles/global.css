@@ -1,0 +1,111 @@
+@layer base, starlight, theme, components, utilities;
+
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@source '../../node_modules/@nx/nx-dev-*';
+
+/* Custom styles for Nx documentation */
+
+:root {
+  --sl-sidebar-width: var(--container-2xs);
+}
+
+[data-has-sidebar] {
+  --sl-content-inline-start: 0;
+}
+
+@media (min-width: 50em) {
+  [data-has-sidebar] {
+    --sl-content-inline-start: var(--container-2xs);
+  }
+}
+/* Dark mode colors. */
+
+:root[data-theme='dark'] {
+  --sl-color-bg: var(--color-slate-900);
+  --sl-color-bg-nav: var(--color-slate-800);
+  --sl-color-bg-sidebar: var(--color-slate-900);
+  --sl-color-hairline: var(--color-slate-700);
+  --sl-color-hairline-shade: var(--color-slate-700);
+  --sl-color-accent-low: var(--color-sky-800);
+  --sl-color-accent: var(--color-sky-400);
+  --sl-color-accent-high: var(--color-sky-300);
+  --sl-color-text-accent: var(--color-sky-400);
+  --sl-color-gray-1: var(--color-slate-100);
+  --sl-color-gray-2: var(--color-slate-200);
+  --sl-color-gray-3: var(--color-slate-300);
+  --sl-color-gray-4: var(--color-slate-500);
+  --sl-color-gray-5: var(--color-slate-700);
+  --sl-color-gray-6: var(--color-slate-800);
+}
+
+/* Light mode colors. */
+:root[data-theme='light'] {
+  --sl-color-bg: var(--color-white);
+  --sl-color-bg-nav: var(--color-slate-50);
+  --sl-color-bg-sidebar: var(--color-white);
+  --sl-color-hairline: var(--color-slate-300);
+  --sl-color-hairline-shade: var(--color-slate-300);
+  --sl-color-accent-low: var(--color-sky-100);
+  --sl-color-accent: var(--color-sky-600);
+  --sl-color-accent-high: var(--color-sky-700);
+  --sl-color-text-accent: var(--color-sky-600);
+  --sl-color-gray-1: var(--color-slate-900);
+  --sl-color-gray-2: var(--color-slate-800);
+  --sl-color-gray-3: var(--color-slate-600);
+  --sl-color-gray-4: var(--color-slate-500);
+  --sl-color-gray-5: var(--color-slate-300);
+  --sl-color-gray-6: var(--color-slate-200);
+}
+
+/* Custom font for code blocks */
+@font-face {
+  font-family: 'Input Mono';
+  src: url('/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('/fonts/InputMono-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apply custom font to code elements */
+code,
+pre,
+.astro-code {
+  font-family: 'Input Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* Additional custom styles can be added here */
+
+/* Anchor link styles for headings */
+.anchor-link {
+  opacity: 0;
+  text-decoration: none;
+  margin-left: 0.5em;
+  font-weight: normal;
+  color: var(--sl-color-gray-3);
+  transition: opacity 0.2s ease;
+}
+
+h1:hover .anchor-link,
+h2:hover .anchor-link,
+h3:hover .anchor-link,
+h4:hover .anchor-link,
+h5:hover .anchor-link,
+h6:hover .anchor-link {
+  opacity: 1;
+}
+
+.anchor-link:hover {
+  color: var(--sl-color-accent);
+}
+
+.right-sidebar {
+  border-inline-start: none;
+}
+
+.content-panel + .content-panel {
+  border-top: 0;
+}

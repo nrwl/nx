@@ -64,7 +64,15 @@ fun processTask(
           task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] = mapOf("taskName" to "${projectBuildPath}:${task.name}")
+  target["options"] =
+      if (continuous) {
+        mapOf(
+            "taskName" to "${projectBuildPath}:${task.name}",
+            "continuous" to true,
+            "excludeDependsOn" to shouldExcludeDependsOn(task))
+      } else {
+        mapOf("taskName" to "${projectBuildPath}:${task.name}")
+      }
 
   return target
 }
@@ -367,4 +375,10 @@ private val nonCacheableTasks = setOf("bootRun", "run")
 
 fun isCacheable(task: Task): Boolean {
   return !nonCacheableTasks.contains(task.name)
+}
+
+private val tasksWithDependsOn = setOf("bootRun", "bootJar")
+
+fun shouldExcludeDependsOn(task: Task): Boolean {
+  return !tasksWithDependsOn.contains(task.name)
 }

@@ -5,7 +5,7 @@ import type { CollectionEntry } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
 export async function getStaticPaths() {
-  const pluginDocs = await getCollection('plugin-docs');
+  const pluginDocs = await getCollection('plugin-docs', (entry) => entry.data.docType !== 'overview');
 
   // Group docs by plugin name
   const docsByPlugin = pluginDocs.reduce(

@@ -462,9 +462,25 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Get Started with Nx Release",
-                "path": "/recipes/nx-release/get-started-with-nx-release",
-                "id": "get-started-with-nx-release",
+                "name": "Release TypeScript/JavaScript Packages to NPM",
+                "path": "/recipes/nx-release/release-npm-packages",
+                "id": "release-npm-packages",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Release Docker Images",
+                "path": "/recipes/nx-release/release-docker-images",
+                "id": "release-docker-images",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Release Rust Crates",
+                "path": "/recipes/nx-release/publish-rust-crates",
+                "id": "publish-rust-crates",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -537,14 +553,6 @@
                 "name": "Automate GitLab Releases",
                 "path": "/recipes/nx-release/automate-gitlab-releases",
                 "id": "automate-gitlab-releases",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Publish Rust Crates",
-                "path": "/recipes/nx-release/publish-rust-crates",
-                "id": "publish-rust-crates",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5614,6 +5622,14 @@
                         "disableCollapsible": false
                       },
                       {
+                        "id": "mcp",
+                        "path": "/reference/core-api/nx/documents/mcp",
+                        "name": "mcp",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
                         "id": "login",
                         "path": "/reference/core-api/nx/documents/login",
                         "name": "login",
@@ -6484,7 +6500,7 @@
         "children": [
           {
             "name": "CI Documentation",
-            "path": "/ci/intro/ci-with-nx",
+            "path": "/ci/features",
             "id": "ci",
             "isExternal": true,
             "children": [],
@@ -6774,39 +6790,6 @@
     "id": "ci",
     "menu": [
       {
-        "name": "Intro",
-        "path": "/ci/intro",
-        "id": "intro",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "CI with Nx",
-            "path": "/ci/intro/ci-with-nx",
-            "id": "ci-with-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Why Nx Cloud?",
-            "path": "/ci/intro/why-nx-cloud",
-            "id": "why-nx-cloud",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Connect to Nx Cloud",
-            "path": "/ci/intro/connect-to-nx-cloud",
-            "id": "connect-to-nx-cloud",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
         "name": "Features",
         "path": "/ci/features",
         "id": "features",
@@ -6921,6 +6904,14 @@
             "name": "Cache Security",
             "path": "/ci/concepts/cache-security",
             "id": "cache-security",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Heartbeat",
+            "path": "/ci/concepts/heartbeat",
+            "id": "heartbeat",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -7339,6 +7330,14 @@
             "name": "Custom Steps",
             "path": "/ci/reference/custom-steps",
             "id": "custom-steps",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Custom Images",
+            "path": "/ci/reference/custom-images",
+            "id": "custom-images",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false

@@ -23,10 +23,10 @@ Manually splitting large e2e test projects can be complex and require ongoing ma
 To use **automated e2e task splitting**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
 
 ### Step 2: Add the Appropriate Plugin
 

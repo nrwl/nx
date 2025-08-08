@@ -1,6 +1,7 @@
 import { sendPageViewEvent } from '@nx/nx-dev-feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
+import Script from 'next/script';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -76,6 +77,16 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      {process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+        <Script
+          id="Cookiebot"
+          src="https://consent.cookiebot.com/uc.js"
+          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
+          data-blockingmode="auto"
+          type="text/javascript"
+          strategy="beforeInteractive"
+        />
+      ) : null}
       <Link
         id="skip-to-content-link"
         href="#main"
@@ -86,7 +97,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      <WebinarNotifier />
+      {/* <WebinarNotifier /> */}
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

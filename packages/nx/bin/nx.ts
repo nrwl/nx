@@ -94,7 +94,11 @@ async function main() {
     }
 
     // this file is already in the local workspace
-    if (isLocalInstall) {
+    if (isNxCloudCommand(process.argv[2])) {
+      // nx-cloud commands can run without local Nx installation
+      process.env.NX_DAEMON = 'false';
+      require('nx/src/command-line/nx-commands').commandsObject.argv;
+    } else if (isLocalInstall) {
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
@@ -105,10 +109,6 @@ async function main() {
       } else {
         require(localNx);
       }
-    } else if (isNxCloudCommand(process.argv[2])) {
-      // nx-cloud commands can run without local Nx installation
-      process.env.NX_DAEMON = 'false';
-      require('nx/src/command-line/nx-commands').commandsObject.argv;
     }
   }
 }

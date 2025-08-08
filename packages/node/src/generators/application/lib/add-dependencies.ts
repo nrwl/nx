@@ -1,7 +1,9 @@
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
+  joinPathFragments,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import {
@@ -22,7 +24,10 @@ import { NormalizedSchema } from './normalized-schema';
 export function addProjectDependencies(
   tree: Tree,
   options: NormalizedSchema
-): GeneratorCallback {
+): {
+  installTask: GeneratorCallback;
+  frameworkDependencies: Record<string, string>;
+} {
   const bundlers = {
     webpack: {
       '@nx/webpack': nxVersion,
@@ -56,16 +61,20 @@ export function addProjectDependencies(
     },
     fastify: {},
   };
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      ...frameworkDependencies[options.framework],
-      tslib: tslibVersion,
-    },
-    {
-      ...frameworkDevDependencies[options.framework],
-      ...bundlers[options.bundler],
-      '@types/node': typesNodeVersion,
-    }
-  );
+
+  return {
+    installTask: addDependenciesToPackageJson(
+      tree,
+      {
+        ...frameworkDependencies[options.framework],
+        tslib: tslibVersion,
+      },
+      {
+        ...frameworkDevDependencies[options.framework],
+        ...bundlers[options.bundler],
+        '@types/node': typesNodeVersion,
+      }
+    ),
+    frameworkDependencies: frameworkDependencies[options.framework],
+  };
 }

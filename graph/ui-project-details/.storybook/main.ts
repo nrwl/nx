@@ -20,6 +20,9 @@ const config: StorybookConfig = {
       plugins: [nxViteTsPaths()],
     });
   },
+  typescript: {
+    reactDocgen: 'react-docgen-typescript',
+  },
 
   docs: {},
 };

@@ -125,7 +125,7 @@ Then update the JSON configuration as follows, making sure the `cwd` points to t
 If you haven't already connected your Nx workspace to Nx Cloud, run:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 This command will walk you through connecting your existing Nx workspace to a new Nx Cloud account. **There's a [free hobby plan](/pricing)**. Run it for a couple of weeks and then try out these conversational analytics features.

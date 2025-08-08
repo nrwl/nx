@@ -8,7 +8,6 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   runTasksInSerial,
-  stripIndents,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -19,6 +18,7 @@ import { isValidVariable } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
+import { normalizeRemoteName } from '../../utils/normalize-remote';
 import { maybeJs } from '../../utils/maybe-js';
 import {
   moduleFederationEnhancedVersion,
@@ -114,9 +114,11 @@ export function addModuleFederationFiles(
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
+  const name = await normalizeRemoteName(host, schema.name, schema);
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, {
       ...schema,
+      name,
       useProjectJson: true,
     })),
     // when js is set to true, we want to use the js configuration
@@ -142,14 +144,10 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   }
 
   await ensureRootProjectName(options, 'application');
-  const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
-  const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
-  if (!remoteNameRegex.test(options.projectName)) {
+  const isValidRemote = isValidVariable(options.projectName);
+  if (!isValidRemote.isValid) {
     throw new Error(
-      stripIndents`Invalid remote name: ${options.projectName}. Remote project names must:
-      - Start with a letter, dollar sign ($) or underscore (_)
-      - Followed by any valid character (letters, digits, underscores, or dollar signs)
-      The regular expression used is ${REMOTE_NAME_REGEX}.`
+      `Invalid remote name provided: ${options.projectName}. ${isValidRemote.message}`
     );
   }
   const initAppTask = await applicationGenerator(host, {

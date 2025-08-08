@@ -315,6 +315,15 @@ nx daemon
 {% link-card title="Nx Daemon" type="Concept" url="/concepts/nx-daemon" /%}
 {% /cards %}
 
+### mcp
+
+Starts the Nx [MCP server](https://modelcontextprotocol.io/introduction) for exposing Nx tools to various AI systems (VSCode, Cursor, Claude, ...)
+
+{% cards %}
+{% link-card title="MCP" type="API Reference" url="/reference/core-api/nx/documents/mcp" /%}
+{% link-card title="Enhance Your LLM" type="Feature" url="/features/enhance-AI" /%}
+{% /cards %}
+
 ## Integrate with Nx Cloud
 
 ### connect
@@ -327,7 +336,7 @@ nx connect
 
 {% cards %}
 {% link-card title="nx connect" type="API Reference" url="/reference/core-api/nx/documents/connect-to-nx-cloud" /%}
-{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/intro/connect-to-nx-cloud" /%}
+{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/recipes/set-up" /%}
 {% /cards %}
 
 ### login

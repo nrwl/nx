@@ -5,12 +5,10 @@ import { readJson, updateJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import {
-  repoUsesGithub,
-  createNxCloudOnboardingURL,
-} from '../../utilities/url-shorten';
+import { createNxCloudOnboardingURL } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
 import { join } from 'path';
+import { getVcsRemoteInfo } from '../../../utils/git-utils';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -94,13 +92,13 @@ async function createNxCloudWorkspaceV2(
 
 export async function printSuccessMessage(
   token: string | undefined,
-  installationSource: string,
-  usesGithub: boolean
+  installationSource: string
 ) {
   const connectCloudUrl = await createNxCloudOnboardingURL(
     installationSource,
     token,
-    usesGithub
+    undefined,
+    false
   );
   output.note({
     title: `Your Self-Healing CI and Remote Caching setup is almost complete`,
@@ -178,8 +176,8 @@ export async function connectToNxCloud(
     printCloudConnectionDisabledMessage();
     return null;
   }
-  const isGitHubDetected =
-    schema.github ?? (await repoUsesGithub(schema.github));
+  const remoteInfo = await getVcsRemoteInfo();
+  const isGitHubDetected = schema.github ?? remoteInfo?.domain === 'github.com';
 
   let responseFromCreateNxCloudWorkspaceV1:
     | {

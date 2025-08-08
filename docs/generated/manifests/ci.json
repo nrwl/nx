@@ -1,86 +1,8 @@
 {
-  "/ci/intro": {
-    "id": "intro",
-    "name": "Intro",
-    "description": "Learn about basic Nx Cloud knowledge.",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/ci-with-nx",
-    "itemList": [
-      {
-        "id": "ci-with-nx",
-        "name": "CI with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/ci-with-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/ci-with-nx",
-        "tags": []
-      },
-      {
-        "id": "why-nx-cloud",
-        "name": "Why Nx Cloud?",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/why-nx-cloud",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/why-nx-cloud",
-        "tags": []
-      },
-      {
-        "id": "connect-to-nx-cloud",
-        "name": "Connect to Nx Cloud",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/connect-to-cloud",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/connect-to-nx-cloud",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/ci/intro",
-    "tags": []
-  },
-  "/ci/intro/ci-with-nx": {
-    "id": "ci-with-nx",
-    "name": "CI with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/ci-with-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/ci-with-nx",
-    "tags": []
-  },
-  "/ci/intro/why-nx-cloud": {
-    "id": "why-nx-cloud",
-    "name": "Why Nx Cloud?",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/why-nx-cloud",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/why-nx-cloud",
-    "tags": []
-  },
-  "/ci/intro/connect-to-nx-cloud": {
-    "id": "connect-to-nx-cloud",
-    "name": "Connect to Nx Cloud",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/connect-to-cloud",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/connect-to-nx-cloud",
-    "tags": []
-  },
   "/ci/features": {
     "id": "features",
     "name": "Features",
-    "description": "Features of Nx and Nx Cloud that improve CI",
+    "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
@@ -164,7 +86,7 @@
       {
         "id": "explain-with-ai",
         "name": "Explain With AI",
-        "description": "",
+        "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
         "mediaImage": "",
         "file": "nx-cloud/features/explain-with-ai",
         "itemList": [],
@@ -175,7 +97,7 @@
       {
         "id": "github-integration",
         "name": "GitHub Integration",
-        "description": "",
+        "description": "Learn how to setup the GitHub integration for Nx Cloud.",
         "mediaImage": "",
         "file": "nx-cloud/features/github-integration",
         "itemList": [],
@@ -268,7 +190,7 @@
   "/ci/features/explain-with-ai": {
     "id": "explain-with-ai",
     "name": "Explain With AI",
-    "description": "",
+    "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
     "mediaImage": "",
     "file": "nx-cloud/features/explain-with-ai",
     "itemList": [],
@@ -279,7 +201,7 @@
   "/ci/features/github-integration": {
     "id": "github-integration",
     "name": "GitHub Integration",
-    "description": "",
+    "description": "Learn how to setup the GitHub integration for Nx Cloud.",
     "mediaImage": "",
     "file": "nx-cloud/features/github-integration",
     "itemList": [],
@@ -336,6 +258,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/concepts/cache-security",
+        "tags": []
+      },
+      {
+        "id": "heartbeat",
+        "name": "Heartbeat",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/heartbeat",
         "tags": []
       },
       {
@@ -398,6 +331,17 @@
     "path": "/ci/concepts/cache-security",
     "tags": []
   },
+  "/ci/concepts/heartbeat": {
+    "id": "heartbeat",
+    "name": "Heartbeat",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/heartbeat",
+    "tags": []
+  },
   "/ci/concepts/nx-cloud-ai": {
     "id": "nx-cloud-ai",
     "name": "Nx Cloud AI",
@@ -412,14 +356,14 @@
   "/ci/recipes": {
     "id": "recipes",
     "name": "Guides",
-    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
       {
         "id": "set-up",
         "name": "Set Up CI",
-        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
         "mediaImage": "",
         "file": "",
         "itemList": [
@@ -492,7 +436,7 @@
         ],
         "isExternal": false,
         "path": "/ci/recipes/set-up",
-        "tags": ["distribute-task-execution"]
+        "tags": ["distribute-task-execution", "self-heeded-ci"]
       },
       {
         "id": "security",
@@ -855,7 +799,7 @@
       {
         "id": "other",
         "name": "Other",
-        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
         "mediaImage": "",
         "file": "",
         "itemList": [
@@ -905,7 +849,7 @@
   "/ci/recipes/set-up": {
     "id": "set-up",
     "name": "Set Up CI",
-    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
@@ -978,7 +922,7 @@
     ],
     "isExternal": false,
     "path": "/ci/recipes/set-up",
-    "tags": ["distribute-task-execution"]
+    "tags": ["distribute-task-execution", "self-heeded-ci"]
   },
   "/ci/recipes/set-up/monorepo-ci-azure": {
     "id": "monorepo-ci-azure",
@@ -1816,7 +1760,7 @@
   "/ci/recipes/other": {
     "id": "other",
     "name": "Other",
-    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
@@ -1954,6 +1898,17 @@
         "tags": []
       },
       {
+        "id": "custom-images",
+        "name": "Custom Images",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/custom-images",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/custom-images",
+        "tags": []
+      },
+      {
         "id": "env-vars",
         "name": "Environment Variables",
         "description": "",
@@ -2044,6 +1999,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/custom-steps",
+    "tags": []
+  },
+  "/ci/reference/custom-images": {
+    "id": "custom-images",
+    "name": "Custom Images",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/custom-images",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/custom-images",
     "tags": []
   },
   "/ci/reference/env-vars": {

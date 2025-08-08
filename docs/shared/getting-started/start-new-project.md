@@ -34,7 +34,7 @@ Nx will detect the underlying workspace configuration, ask you a couple of quest
 
 - [configure caching](/features/cache-task-results)
 - [adding Nx plugins to help refine your workflows](/plugin-registry)
-- [optimizing your CI](/ci/intro/ci-with-nx)
+- [optimizing your CI](/ci/recipes/set-up)
 
 ## Option 2: Create a new workspace with presets
 

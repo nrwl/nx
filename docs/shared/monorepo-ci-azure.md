@@ -7,6 +7,8 @@ description: Learn how to set up Azure Pipelines for your Nx workspace to run af
 
 Below is an example of an Azure Pipelines setup building and testing only what is affected.
 
+> Need a starting point? Generate a new workflow file with `nx g ci-workflow --ci=azure`
+
 ```yaml {% fileName="azure-pipelines.yml" %}
 name: CI
 

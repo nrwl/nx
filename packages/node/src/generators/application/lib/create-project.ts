@@ -14,9 +14,14 @@ import {
   getNestWebpackBuildConfig,
   getServeConfig,
   getWebpackBuildConfig,
+  getPruneTargets,
 } from './create-targets';
 
-export function addProject(tree: Tree, options: NormalizedSchema) {
+export function addProject(
+  tree: Tree,
+  options: NormalizedSchema,
+  frameworkDependencies: Record<string, string>
+) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
@@ -38,12 +43,17 @@ export function addProject(tree: Tree, options: NormalizedSchema) {
       project.targets.build = getNestWebpackBuildConfig();
     }
   }
+  project.targets = {
+    ...project.targets,
+    ...getPruneTargets('build', options.outputPath),
+  };
   project.targets.serve = getServeConfig(options);
 
   const packageJson: PackageJson = {
     name: options.importPath,
     version: '0.0.1',
     private: true,
+    dependencies: { ...frameworkDependencies },
   };
 
   if (!options.useProjectJson) {

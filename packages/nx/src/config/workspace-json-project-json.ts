@@ -2,6 +2,7 @@ import type { PackageJson } from '../utils/package-json';
 import type {
   LegacyNxReleaseVersionConfiguration,
   NxJsonConfiguration,
+  NxReleaseDockerConfiguration,
   NxReleaseVersionConfiguration,
 } from './nx-json';
 
@@ -125,6 +126,7 @@ export interface ProjectConfiguration {
           | 'versionPrefix'
           | 'preserveLocalDependencyProtocols'
         >;
+    docker?: NxReleaseDockerConfiguration | true;
   };
 
   /**
