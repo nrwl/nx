@@ -523,13 +523,13 @@ export async function generateGraph(
     if (target) {
       url.pathname += '/' + target;
     }
-    if (args.all) {
-      url.pathname += '/all';
-    } else if (args.projects) {
+    if (args.projects) {
       url.searchParams.append(
         'projects',
         args.projects.map((projectName) => projectName).join(' ')
       );
+    } else if (args.all) {
+      url.pathname += '/all';
     } else if (args.affected) {
       url.pathname += '/affected';
     }
