@@ -286,6 +286,15 @@ export default defineMarkdocConfig({
         },
       },
     },
+    pill: {
+      render: component('./src/components/markdoc/Pill.astro'),
+      attributes: {
+        url: {
+          type: 'String',
+          default: '',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},

@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
+export type PillProps = {
+  url: string;
+  children: ReactNode;
+};
+
 export function Pill({
   url,
   children,
-}: {
-  url: string;
-  children: ReactNode;
-}): JSX.Element {
+}: PillProps): JSX.Element {
   return (
     <span className="group relative mb-2 mr-2 inline-flex rounded-md border border-slate-200 bg-slate-50/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800">
       <span className="flex flex-col p-3">
