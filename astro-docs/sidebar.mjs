@@ -3231,35 +3231,7 @@ export const sidebar = [
   },
   {
     label: 'Troubleshooting',
-    items: [
-      {
-        label: 'Resolve Circular Dependencies',
-        link: 'troubleshooting/resolve-circular-dependencies',
-      },
-      {
-        label: 'Troubleshoot Nx Install Issues',
-        link: 'troubleshooting/troubleshoot-nx-install-issues',
-      },
-      {
-        label: 'Troubleshoot Cache Misses',
-        link: 'troubleshooting/troubleshoot-cache-misses',
-      },
-      {
-        label: 'Unknown Local Cache Error',
-        link: 'troubleshooting/unknown-local-cache',
-      },
-      {
-        label: 'Profiling Build Performance',
-        link: 'troubleshooting/performance-profiling',
-      },
-      {
-        label: 'Troubleshoot Nx Console Issues',
-        link: 'recipes/nx-console/console-troubleshooting',
-      },
-      {
-        label: 'Troubleshoot Convert to Inferred Migration',
-        link: 'troubleshooting/convert-to-inferred',
-      },
-    ],
+    collapsed: false,
+    autogenerate: { directory: 'troubleshooting', collapsed: true },
   },
 ];
