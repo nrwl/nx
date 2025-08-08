@@ -5,7 +5,7 @@ description: 'Watch for changes within projects, and execute commands.'
 
 # watch
 
-Watch for changes within projects, and execute commands.
+Watch for changes within projects, and execute commands. Please be aware that file saving with Vim/Nvim is only registered the first time if you don't have `nowritebackup` set.
 
 ## Usage
 
