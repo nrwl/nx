@@ -358,6 +358,15 @@ export default defineMarkdocConfig({
         },
       },
     },
+    toc: {
+      render: component('./src/components/markdoc/TableOfContents.astro'),
+      attributes: {
+        maxDepth: {
+          type: 'Number',
+          default: 3,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},

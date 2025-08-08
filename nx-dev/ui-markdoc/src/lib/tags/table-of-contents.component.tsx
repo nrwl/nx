@@ -8,7 +8,7 @@ interface TocItem {
   level: number;
 }
 
-interface TableOfContentsProps {
+export interface TableOfContentsProps {
   maxDepth?: number;
 }
 
