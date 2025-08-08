@@ -603,7 +603,8 @@ export async function createNxReleaseConfig(
     }
   }
   if (userConfig.version?.conventionalCommits === false) {
-    delete rootVersionWithoutGlobalOptions.generatorOptions?.currentVersionResolver;
+    delete rootVersionWithoutGlobalOptions.generatorOptions
+      ?.currentVersionResolver;
     delete rootVersionWithoutGlobalOptions.generatorOptions?.specifierSource;
     delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
       .currentVersionResolver;
