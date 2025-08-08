@@ -182,6 +182,23 @@ export default defineMarkdocConfig({
         },
       },
     },
+    iframe: {
+      render: component('./src/components/markdoc/Iframe.astro'),
+      attributes: {
+        src: {
+          type: 'String',
+          required: true,
+        },
+        title: {
+          type: 'String',
+          required: true,
+        },
+        width: {
+          type: 'String',
+          default: '50%',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
