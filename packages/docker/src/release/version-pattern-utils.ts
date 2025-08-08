@@ -7,7 +7,7 @@ import { getLatestCommitSha } from 'nx/src/utils/git-utils';
  * {currentDate|DATE FORMAT} - the current date with custom format such as YYMM.DD
  * {commitSha} - The full commit sha for the current commit
  * {shortCommitSha} - The seven character commit sha for the current commit
- * {env:VAR_NAME} - The value of the environment variable VAR_NAME
+ * {env.VAR_NAME} - The value of the environment variable VAR_NAME
  */
 export interface PatternTokens {
   projectName: string;
@@ -16,7 +16,7 @@ export interface PatternTokens {
   shortCommitSha: string;
 }
 
-const tokenRegex = /\{(env:([^}]+)|([^|{}]+)(?:\|([^{}]+))?)\}/g;
+const tokenRegex = /\{(env\.([^}]+)|([^|{}]+)(?:\|([^{}]+))?)\}/g;
 
 function formatDate(date: Date, format: string) {
   const year = String(date.getUTCFullYear());

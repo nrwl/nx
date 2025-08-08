@@ -199,7 +199,7 @@ describe('version-pattern-utils', () => {
       it('should interpolate environment variables', () => {
         process.env.BUILD_NUMBER = '123';
         const result = interpolateVersionPattern(
-          'build-{env:BUILD_NUMBER}',
+          'build-{env.BUILD_NUMBER}',
           {}
         );
         expect(result).toBe('build-123');
@@ -209,7 +209,7 @@ describe('version-pattern-utils', () => {
         process.env.STAGE = 'QA';
         process.env.BUILD_NUMBER = '456';
         const result = interpolateVersionPattern(
-          'build-{env:STAGE}.{env:BUILD_NUMBER}',
+          'build-{env.STAGE}.{env.BUILD_NUMBER}',
           {}
         );
         expect(result).toBe('build-QA.456');
@@ -217,16 +217,16 @@ describe('version-pattern-utils', () => {
 
       it('should keep unknown environment variables as-is', () => {
         const result = interpolateVersionPattern(
-          'build-{env:NON_EXISTENT_VAR}',
+          'build-{env.NON_EXISTENT_VAR}',
           {}
         );
-        expect(result).toBe('build-{env:NON_EXISTENT_VAR}');
+        expect(result).toBe('build-{env.NON_EXISTENT_VAR}');
       });
 
       it('should combine environment variables with other tokens', () => {
         process.env.TASK = 'builder';
         const result = interpolateVersionPattern(
-          '{projectName}-{env:TASK}-{shortCommitSha}',
+          '{projectName}-{env.TASK}-{shortCommitSha}',
           {
             projectName: 'api',
           }
@@ -236,14 +236,14 @@ describe('version-pattern-utils', () => {
 
       it('should handle environment variables with underscores and numbers', () => {
         process.env.MY_VAR_123 = 'test-value';
-        const result = interpolateVersionPattern('prefix-{env:MY_VAR_123}', {});
+        const result = interpolateVersionPattern('prefix-{env.MY_VAR_123}', {});
         expect(result).toBe('prefix-test-value');
       });
 
       it('should handle empty environment variable values', () => {
         process.env.EMPTY_VAR = '';
         const result = interpolateVersionPattern(
-          'prefix-{env:EMPTY_VAR}-suffix',
+          'prefix-{env.EMPTY_VAR}-suffix',
           {}
         );
         expect(result).toBe('prefix--suffix');
@@ -254,7 +254,7 @@ describe('version-pattern-utils', () => {
         process.env.ENVIRONMENT = 'production';
         const testDate = new Date('2024-01-15T10:30:45.000Z');
         const result = interpolateVersionPattern(
-          '{env:VERSION}-{projectName}-{env:ENVIRONMENT}-{currentDate|YYYY.MM.DD}',
+          '{env.VERSION}-{projectName}-{env.ENVIRONMENT}-{currentDate|YYYY.MM.DD}',
           {
             projectName: 'webapp',
             currentDate: testDate,
@@ -266,10 +266,10 @@ describe('version-pattern-utils', () => {
       it('should handle undefined environment variables', () => {
         delete process.env.UNDEFINED_VAR;
         const result = interpolateVersionPattern(
-          'build-{env:UNDEFINED_VAR}',
+          'build-{env.UNDEFINED_VAR}',
           {}
         );
-        expect(result).toBe('build-{env:UNDEFINED_VAR}');
+        expect(result).toBe('build-{env.UNDEFINED_VAR}');
       });
     });
   });
