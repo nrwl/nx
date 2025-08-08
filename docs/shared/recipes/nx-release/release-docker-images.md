@@ -187,6 +187,20 @@ After the first release, you can run `nx release` without the `--first-release` 
 
 These are the default schemes that come with Nx Release. These schemes support workflows where you have a stable branch that developers continuously integrate with, and a hotfix branch reserved for urgent production fixes.
 
+### Using Explicit Docker Versions
+
+If you need to specify an exact Docker version instead of using version schemes, you can use the `--dockerVersion` flag:
+
+```shell
+nx release --dockerVersion=1.2.3
+```
+
+This will bypass the version scheme logic entirely and tag your Docker images with the exact version you specify. This is useful when you need to:
+
+- Align Docker versions with external versioning systems
+- Override the calendar-based versioning for specific releases
+- Set custom version tags that don't follow the standard patterns
+
 ### Customizing Version Schemes
 
 You can customize Docker version schemes in your `nx.json` to match your deployment workflow. The version patterns support several interpolation tokens:

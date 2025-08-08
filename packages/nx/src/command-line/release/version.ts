@@ -311,7 +311,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         ],
       });
     }
-    await processor.processDockerProjects(args.dockerVersionScheme);
+    await processor.processDockerProjects(
+      args.dockerVersionScheme,
+      args.dockerVersion
+    );
 
     const versionData = processor.getVersionData();
 

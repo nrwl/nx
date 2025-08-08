@@ -760,7 +760,10 @@ export class ReleaseGroupProcessor {
     };
   }
 
-  async processDockerProjects(dockerVersionScheme?: string) {
+  async processDockerProjects(
+    dockerVersionScheme?: string,
+    dockerVersion?: string
+  ) {
     const dockerProjects = new Map<string, FinalConfigForProject>();
     for (const project of this.versionData.keys()) {
       const finalConfigForProject = this.finalConfigsByProject.get(project);
@@ -777,7 +780,8 @@ export class ReleaseGroupProcessor {
       workspaceRoot: string,
       projectGraphNode: ProjectGraphProjectNode,
       finalConfigForProject: FinalConfigForProject,
-      dockerVersionScheme?: string
+      dockerVersionScheme?: string,
+      dockerVersion?: string
     ) => Promise<{ newVersion: string; logs: string[] }>;
     try {
       const {
@@ -798,7 +802,8 @@ export class ReleaseGroupProcessor {
         workspaceRoot,
         projectNode,
         finalConfigForProject,
-        dockerVersionScheme
+        dockerVersionScheme,
+        dockerVersion
       );
 
       logs.forEach((log) =>
