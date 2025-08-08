@@ -10,8 +10,15 @@ pub struct NxDbConnection {
     pub conn: Option<Connection>,
 }
 
+#[cfg(not(test))]
 const MAX_RETRIES: u32 = 20;
+#[cfg(test)]
+const MAX_RETRIES: u32 = 5;
+
+#[cfg(not(test))]
 const RETRY_DELAY: u64 = 25;
+#[cfg(test)]
+const RETRY_DELAY: u64 = 1;
 
 /// macro for handling the db when its busy
 /// This is a macro instead of a function because some database operations need to take a &mut Connection, while returning a reference
@@ -158,5 +165,96 @@ impl NxDbConnection {
         } else {
             anyhow::bail!("No database connection available")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::OpenFlags;
+    use std::time::{Duration, Instant};
+    use std::thread;
+
+    fn shared_memory_connection(name: &str) -> (Connection, NxDbConnection) {
+        let uri = format!("file:{}?mode=memory&cache=shared", name);
+        let flags = OpenFlags::SQLITE_OPEN_READ_WRITE
+            | OpenFlags::SQLITE_OPEN_CREATE
+            | OpenFlags::SQLITE_OPEN_URI
+            | OpenFlags::SQLITE_OPEN_FULL_MUTEX;
+        let c1 = Connection::open_with_flags(&uri, flags).unwrap();
+        let c2 = Connection::open_with_flags(&uri, flags).unwrap();
+        (c1, NxDbConnection::new(c2))
+    }
+
+    #[test]
+    fn execute_handles_busy_then_succeeds() -> Result<()> {
+        let (mut lock_conn, nx) = shared_memory_connection("execute_ok");
+        lock_conn.execute_batch("BEGIN EXCLUSIVE;")?;
+        let handle = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(15));
+            lock_conn.execute_batch("COMMIT;").unwrap();
+        });
+
+        nx.execute("CREATE TABLE test (id INTEGER)", [])?;
+        handle.join().unwrap();
+        Ok(())
+    }
+
+    #[test]
+    fn execute_batch_handles_busy_then_succeeds() -> Result<()> {
+        let (mut lock_conn, nx) = shared_memory_connection("execute_batch_ok");
+        lock_conn.execute_batch("BEGIN EXCLUSIVE;")?;
+        let handle = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(15));
+            lock_conn.execute_batch("COMMIT;").unwrap();
+        });
+
+        nx.execute_batch("CREATE TABLE test (id INTEGER);")?;
+        handle.join().unwrap();
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_handles_busy_then_succeeds() -> Result<()> {
+        let (mut lock_conn, nx) = shared_memory_connection("prepare_ok");
+        lock_conn.execute_batch("BEGIN EXCLUSIVE;")?;
+        let handle = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(15));
+            lock_conn.execute_batch("COMMIT;").unwrap();
+        });
+
+        nx.prepare("SELECT 1")?;
+        handle.join().unwrap();
+        Ok(())
+    }
+
+    #[test]
+    fn execute_times_out_after_max_retries() {
+        let (mut lock_conn, nx) = shared_memory_connection("execute_timeout");
+        lock_conn.execute_batch("BEGIN EXCLUSIVE;").unwrap();
+        let start = Instant::now();
+        let err = nx.execute("CREATE TABLE t (id INTEGER)", []).unwrap_err();
+        assert!(err.to_string().contains("Database busy"));
+        assert!(start.elapsed() >= Duration::from_millis(30));
+    }
+
+    #[test]
+    fn execute_batch_times_out_after_max_retries() {
+        let (mut lock_conn, nx) = shared_memory_connection("execute_batch_timeout");
+        lock_conn.execute_batch("BEGIN EXCLUSIVE;").unwrap();
+        let start = Instant::now();
+        let err = nx.execute_batch("CREATE TABLE t (id INTEGER);").unwrap_err();
+        assert!(err.to_string().contains("Database busy"));
+        assert!(start.elapsed() >= Duration::from_millis(30));
+    }
+
+    #[test]
+    fn prepare_times_out_after_max_retries() {
+        let (mut lock_conn, nx) = shared_memory_connection("prepare_timeout");
+        lock_conn.execute_batch("BEGIN EXCLUSIVE;").unwrap();
+        let start = Instant::now();
+        let err = nx.prepare("SELECT 1").unwrap_err();
+        assert!(err.to_string().contains("Database busy"));
+        assert!(start.elapsed() >= Duration::from_millis(30));
     }
 }
