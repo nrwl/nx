@@ -27,6 +27,7 @@ import { migrateMachine } from './app/console-migrate/migrate.machine';
 import { ProjectDetailsApp } from './app/console-project-details/project-details.app';
 import { ExternalApiImpl } from './app/external-api-impl';
 import { ErrorPage } from './app/ui-components/error-page';
+import { NxGraphProjectGraphProvider } from '@nx/graph/projects';
 
 console.log('hello', window.__NX_RENDER_GRAPH__);
 if (true) {
@@ -90,7 +91,6 @@ if (true) {
   };
 
   window.renderProjectGraph = (projectGraph: ProjectGraph) => {
-    // Create a simple state machine service for external control
     const service = interpret(projectGraphMachine).start();
     service.send({
       type: 'loadData',

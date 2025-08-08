@@ -1,5 +1,5 @@
 import { ProjectGraph } from '@nx/devkit';
-import { assign } from '@xstate/immer';
+import { assign } from 'xstate';
 import { createMachine } from 'xstate';
 
 export interface ProjectGraphState {
@@ -29,8 +29,8 @@ export const projectGraphMachine = createMachine<
       {
         target: 'loaded',
         actions: [
-          assign((ctx, event) => {
-            ctx.projectGraph = event.projectGraph;
+          assign({
+            projectGraph: (_, event) => event.projectGraph,
           }),
         ],
       },
