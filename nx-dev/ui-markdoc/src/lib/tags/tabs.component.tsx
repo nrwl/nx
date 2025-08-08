@@ -18,10 +18,7 @@ export type TabsProps = {
   children: ReactNode;
 };
 
-export function Tabs({
-  labels,
-  children,
-}: TabsProps) {
+export function Tabs({ labels, children }: TabsProps) {
   const [currentTab, setCurrentTab] = useState<string>(labels[0]);
 
   useEffect(() => {
@@ -96,10 +93,7 @@ export type TabProps = {
   children: ReactNode;
 };
 
-export function Tab({
-  label,
-  children,
-}: TabProps) {
+export function Tab({ label, children }: TabProps) {
   const currentTab = useContext(TabContext);
   const isActive = label === currentTab;
 

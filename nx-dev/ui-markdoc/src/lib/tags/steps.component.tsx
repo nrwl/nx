@@ -38,10 +38,7 @@ export type StepProps = {
   children: ReactNode;
 };
 
-export function Step({
-  title,
-  children,
-}: StepProps) {
+export function Step({ title, children }: StepProps) {
   const passPropsToChildren = (children: ReactNode) => {
     return React.Children.map(children, (child) => {
       if (React.isValidElement(child) && typeof child.type !== 'string') {

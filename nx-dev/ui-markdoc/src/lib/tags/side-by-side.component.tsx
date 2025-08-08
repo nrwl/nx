@@ -6,10 +6,7 @@ export type SideBySideProps = {
   children: ReactNode;
 };
 
-export function SideBySide({
-  align,
-  children,
-}: SideBySideProps) {
+export function SideBySide({ align, children }: SideBySideProps) {
   const [first, ...rest] = Children.toArray(children);
   return (
     <div
