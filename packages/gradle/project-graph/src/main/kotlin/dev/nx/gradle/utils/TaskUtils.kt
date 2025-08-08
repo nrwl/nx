@@ -245,11 +245,14 @@ fun getDependsOnForTask(
 ): List<String>? {
 
   fun mapTasksToNames(tasks: Collection<Task>): List<String> {
-    return tasks.map { depTask ->
+    return tasks.mapNotNull { depTask ->
       val depProject = depTask.project
       val taskProject = task.project
 
-      if (task.name != "buildDependents" && depProject != taskProject && dependencies != null) {
+      if (task.name != "buildDependents" &&
+          depProject != taskProject &&
+          dependencies != null &&
+          taskProject.buildFile.exists()) {
         dependencies.add(
             Dependency(
                 taskProject.projectDir.path,
@@ -257,8 +260,12 @@ fun getDependsOnForTask(
                 taskProject.buildFile.path))
       }
 
-      val taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
-      "${depProject.name}:${taskName}"
+      if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
+        val taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
+        "${depProject.name}:${taskName}"
+      } else {
+        null
+      }
     }
   }
 
@@ -359,8 +366,10 @@ fun getExternalDepFromInputFile(
  */
 fun replaceRootInPath(path: String, projectRoot: String, workspaceRoot: String): String? {
   return when {
-    path.startsWith(projectRoot) -> path.replace(projectRoot, "{projectRoot}")
-    path.startsWith(workspaceRoot) -> path.replace(workspaceRoot, "{workspaceRoot}")
+    path == projectRoot -> "{projectRoot}"
+    path.startsWith("$projectRoot/") -> path.replace(projectRoot, "{projectRoot}")
+    path == workspaceRoot -> "{workspaceRoot}"
+    path.startsWith("$workspaceRoot/") -> path.replace(workspaceRoot, "{workspaceRoot}")
     else -> null
   }
 }
