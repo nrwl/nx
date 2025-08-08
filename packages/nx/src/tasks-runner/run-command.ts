@@ -437,6 +437,7 @@ export async function runCommand(
       await runPreTasksExecution({
         workspaceRoot,
         nxJsonConfiguration: nxJson,
+        argv: process.argv,
       });
 
       const { taskResults, completed } = await runCommandForTasks(
@@ -469,6 +470,7 @@ export async function runCommand(
         taskResults,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
+        argv: process.argv,
       });
 
       return exitCode;
