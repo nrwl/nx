@@ -376,6 +376,23 @@ export default defineMarkdocConfig({
         },
       },
     },
+    course_video: {
+      render: component('./src/components/markdoc/CourseVideo.astro'),
+      attributes: {
+        src: {
+          type: 'String',
+          required: true,
+        },
+        courseTitle: {
+          type: 'String',
+          required: true,
+        },
+        courseUrl: {
+          type: 'String',
+          required: true,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
