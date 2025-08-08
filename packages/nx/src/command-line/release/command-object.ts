@@ -40,6 +40,7 @@ interface GitOptions {
 
 export type DockerVersionSchemeArgs = {
   dockerVersionScheme?: string;
+  dockerVersion?: string;
 };
 
 export type VersionOptions = NxReleaseArgs &
@@ -504,9 +505,15 @@ function withFirstReleaseOptions<T>(
 function withDockerVersionSchemeOptions<T>(
   yargs: Argv<T>
 ): Argv<T & DockerVersionSchemeArgs> {
-  return yargs.option('dockerVersionScheme', {
-    type: 'string',
-    describe:
-      'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
-  });
+  return yargs
+    .option('dockerVersionScheme', {
+      type: 'string',
+      describe:
+        'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
+    })
+    .option('dockerVersion', {
+      type: 'string',
+      describe:
+        'Exact docker version to use, bypassing the version scheme logic. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
+    });
 }
