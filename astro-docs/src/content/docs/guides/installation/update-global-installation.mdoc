@@ -3,7 +3,6 @@ title: Update Your Global Nx Installation
 description: Learn how to update your global Nx installation to avoid common errors when the workspace structure changes, including steps to identify and remove outdated installations.
 ---
 
-# Update Your Global Nx Installation
 
 There are some cases where an issue could arise when using an outdated global installation of Nx. If the structure of your Nx workspace no longer matches up with what the globally installed copy of Nx expects, it may fail to hand off to your local installation properly and instead error. This commonly results in errors such as:
 
@@ -16,62 +15,62 @@ In most cases, you can update a globally installed npm package by rerunning the 
 
 If you cannot remember which package manager you installed Nx globally with or are still encountering issues, you can locate other installations of Nx with these commands:
 
-{% tabs %}
-{% tab label="npm" %}
+{% tabs syncKey="install-type" %}
+{% tabitem label="npm" %}
 
-```shell
+```shell {% frame="none" %}
 npm list --global nx
 ```
 
-{% /tab %}
-{% tab label="yarn" %}
+{% /tabitem %}
+{% tabitem label="yarn" %}
 
 **yarn 2+**
 
-```shell
+```shell {% frame="none" %}
 yarn dlx list nx
 ```
 
 yarn 1.x
 
-```shell
+```shell {% frame="none" %}
 yarn global list nx
 ```
 
-{% /tab %}
-{% tab label="pnpm" %}
+{% /tabitem %}
+{% tabitem label="pnpm" %}
 
-```shell
+```shell {% frame="none" %}
 pnpm list --global nx
 ```
 
-{% /tab %}
+{% /tabitem %}
 {% /tabs %}
 
 You can then remove the extra global installations by running the following commands for the duplicate installations:
 
-{% tabs %}
-{% tab label="npm" %}
+{% tabs syncKey="install-type" %}
+{% tabitem label="npm" %}
 
-```shell
+```shell {% frame="none" %}
 npm rm --global nx
 ```
 
-{% /tab %}
-{% tab label="yarn" %}
+{% /tabitem %}
+{% tabitem label="yarn" %}
 
-```shell
+```shell {% frame="none" %}
 yarn global remove nx
 ```
 
-{% /tab %}
-{% tab label="pnpm" %}
+{% /tabitem %}
+{% tabitem label="pnpm" %}
 
-```shell
+```shell {% frame="none" %}
 pnpm rm --global nx
 ```
 
-{% /tab %}
+{% /tabitem %}
 {% /tabs %}
 
 Finally, to complete your global installation update, simply reinstall it as described [above](#update-your-global-nx-installation).

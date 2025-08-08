@@ -13,289 +13,290 @@ export const sidebar = [
     autogenerate: { directory: 'features', collapsed: true },
   },
   {
-    label: 'Core Guides',
+    label: 'Guides',
     collapsed: true,
-    items: [
-      {
-        label: 'Installation',
-        collapsed: true,
-        items: [
-          {
-            label: 'Install Nx in a Non-Javascript Repo',
-            link: 'recipes/installation/install-non-javascript',
-          },
-          {
-            label: 'Update Your Global Nx Installation',
-            link: 'recipes/installation/update-global-installation',
-          },
-        ],
-      },
-      {
-        label: 'Tasks & Caching',
-        collapsed: true,
-        items: [
-          {
-            label: 'Configure Inputs for Task Caching',
-            link: 'recipes/running-tasks/configure-inputs',
-          },
-          {
-            label: 'Configure Outputs for Task Caching',
-            link: 'recipes/running-tasks/configure-outputs',
-          },
-          {
-            label: 'Define a Task Pipeline',
-            link: 'recipes/running-tasks/defining-task-pipeline',
-          },
-          {
-            label: 'Use the Terminal UI',
-            link: 'recipes/running-tasks/terminal-ui',
-          },
-          {
-            label: 'Run Custom Commands',
-            link: 'recipes/running-tasks/run-commands-executor',
-          },
-          {
-            label: 'Pass Args to Commands',
-            link: 'recipes/running-tasks/pass-args-to-commands',
-          },
-          {
-            label: 'Run Tasks in Parallel',
-            link: 'recipes/running-tasks/run-tasks-in-parallel',
-          },
-          {
-            label: 'Run Root-Level NPM Scripts with Nx',
-            link: 'recipes/running-tasks/root-level-scripts',
-          },
-          {
-            label: 'Workspace Watching',
-            link: 'recipes/running-tasks/workspace-watching',
-          },
-          {
-            label: 'Reduce Repetitive Configuration',
-            link: 'recipes/running-tasks/reduce-repetitive-configuration',
-          },
-          {
-            label: 'Change Cache Location',
-            link: 'recipes/running-tasks/change-cache-location',
-          },
-          {
-            label: 'Skip Task Caching',
-            link: 'recipes/running-tasks/skipping-cache',
-          },
-          {
-            label: 'Migrate to Inferred Tasks (Project Crystal)',
-            link: 'recipes/running-tasks/convert-to-inferred',
-          },
-          {
-            label: 'Remote Cache',
-            link: 'recipes/running-tasks/self-hosted-caching',
-          },
-        ],
-      },
-      {
-        label: 'Adopting Nx',
-        collapsed: true,
-        items: [
-          {
-            label: 'NPM/Yarn/PNPM workspaces',
-            link: 'recipes/adopting-nx/adding-to-monorepo',
-          },
-          {
-            label: 'Migrate From Turborepo',
-            link: 'recipes/adopting-nx/from-turborepo',
-          },
-          {
-            label: 'Add to any Project',
-            link: 'recipes/adopting-nx/adding-to-existing-project',
-          },
-          {
-            label: 'Import an Existing Project into an Nx Workspace',
-            link: 'recipes/adopting-nx/import-project',
-          },
-          {
-            label: 'Preserving Git Histories',
-            link: 'recipes/adopting-nx/preserving-git-histories',
-          },
-          {
-            label: 'Manual migration',
-            link: 'recipes/adopting-nx/manual',
-          },
-        ],
-      },
-      {
-        label: 'Nx Release',
-        collapsed: true,
-        items: [
-          {
-            label: 'Release TypeScript/JavaScript Packages to NPM',
-            link: 'recipes/nx-release/release-npm-packages',
-          },
-          {
-            label: 'Release Docker Images',
-            link: 'recipes/nx-release/release-docker-images',
-          },
-          {
-            label: 'Release Rust Crates',
-            link: 'recipes/nx-release/publish-rust-crates',
-          },
-          {
-            label: 'Release Projects Independently',
-            link: 'recipes/nx-release/release-projects-independently',
-          },
-          {
-            label:
-              'Updating Version References in Manifest Files (e.g. package.json)',
-            link: 'recipes/nx-release/updating-version-references',
-          },
-          {
-            label: 'Automatically Version with Conventional Commits',
-            link: 'recipes/nx-release/automatically-version-with-conventional-commits',
-          },
-          {
-            label: 'Customize Conventional Commit Types',
-            link: 'recipes/nx-release/customize-conventional-commit-types',
-          },
-          {
-            label: 'File Based Versioning (Version Plans)',
-            link: 'recipes/nx-release/file-based-versioning-version-plans',
-          },
-          {
-            label: 'Configure Custom Registries',
-            link: 'recipes/nx-release/configure-custom-registries',
-          },
-          {
-            label: 'Publish in CI/CD',
-            link: 'recipes/nx-release/publish-in-ci-cd',
-          },
-          {
-            label: 'Automate GitHub Releases',
-            link: 'recipes/nx-release/automate-github-releases',
-          },
-          {
-            label: 'Automate GitLab Releases',
-            link: 'recipes/nx-release/automate-gitlab-releases',
-          },
-          {
-            label: 'Update Your Local Registry Setup to use Nx Release',
-            link: 'recipes/nx-release/update-local-registry-setup',
-          },
-          {
-            label: 'Configure Changelog Format',
-            link: 'recipes/nx-release/configure-changelog-format',
-          },
-          {
-            label: 'Build Before Versioning',
-            link: 'recipes/nx-release/build-before-versioning',
-          },
-          {
-            label: 'Configuring Version Prefix for Dependency Versions',
-            link: 'recipes/nx-release/configuration-version-prefix',
-          },
-        ],
-      },
-      {
-        label: 'Nx Console',
-        collapsed: true,
-        items: [
-          {
-            label: 'Telemetry',
-            link: 'recipes/nx-console/console-telemetry',
-          },
-          {
-            label: 'Project Details View',
-            link: 'recipes/nx-console/console-project-details',
-          },
-          {
-            label: 'Generate Command',
-            link: 'recipes/nx-console/console-generate-command',
-          },
-          {
-            label: 'Run Command',
-            link: 'recipes/nx-console/console-run-command',
-          },
-          {
-            label: 'Nx Cloud Integration',
-            link: 'recipes/nx-console/console-nx-cloud',
-          },
-          {
-            label: 'Migrate UI',
-            link: 'recipes/nx-console/console-migrate-ui',
-          },
-          {
-            label: 'Troubleshooting',
-            link: 'recipes/nx-console/console-troubleshooting',
-          },
-        ],
-      },
-      {
-        label: 'Enforce Module Boundaries',
-        collapsed: true,
-        items: [
-          {
-            label: 'Ban Dependencies with Certain Tags',
-            link: 'recipes/enforce-module-boundaries/ban-dependencies-with-tags',
-          },
-          {
-            label: 'Tag in Multiple Dimensions',
-            link: 'recipes/enforce-module-boundaries/tag-multiple-dimensions',
-          },
-          {
-            label: 'Ban External Imports',
-            link: 'recipes/enforce-module-boundaries/ban-external-imports',
-          },
-          {
-            label: 'Tags Allow List',
-            link: 'recipes/enforce-module-boundaries/tags-allow-list',
-          },
-        ],
-      },
-      {
-        label: 'Tips and tricks',
-        collapsed: true,
-        items: [
-          {
-            label: 'Convert from a Standalone Repository to a Monorepo',
-            link: 'recipes/tips-n-tricks/standalone-to-monorepo',
-          },
-          {
-            label: 'Keep Nx Versions in Sync',
-            link: 'recipes/tips-n-tricks/keep-nx-versions-in-sync',
-          },
-          {
-            label: 'Define Environment Variables',
-            link: 'recipes/tips-n-tricks/define-environment-variables',
-          },
-          {
-            label: 'Configuring Browser Support',
-            link: 'recipes/tips-n-tricks/browser-support',
-          },
-          {
-            label: 'Include Assets in Build',
-            link: 'recipes/tips-n-tricks/include-assets-in-build',
-          },
-          {
-            label: 'Include All package.json Files as Projects',
-            link: 'recipes/tips-n-tricks/include-all-packagejson',
-          },
-          {
-            label: 'Identify Dependencies Between Folders',
-            link: 'recipes/tips-n-tricks/identify-dependencies-between-folders',
-          },
-          {
-            label: 'Disable Graph Links Created from Analyzing Source Files',
-            link: 'recipes/tips-n-tricks/analyze-source-files',
-          },
-          {
-            label: 'Altering Migration Process',
-            link: 'recipes/tips-n-tricks/advanced-update',
-          },
-          {
-            label: 'Using Yarn PnP',
-            link: 'recipes/tips-n-tricks/yarn-pnp',
-          },
-        ],
-      },
-    ],
+    autogenerate: { directory: 'guides', collapsed: true },
+    // items: [
+    //   {
+    //     label: 'Installation',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'Install Nx in a Non-Javascript Repo',
+    //         link: 'recipes/installation/install-non-javascript',
+    //       },
+    //       {
+    //         label: 'Update Your Global Nx Installation',
+    //         link: 'recipes/installation/update-global-installation',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     label: 'Tasks & Caching',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'Configure Inputs for Task Caching',
+    //         link: 'recipes/running-tasks/configure-inputs',
+    //       },
+    //       {
+    //         label: 'Configure Outputs for Task Caching',
+    //         link: 'recipes/running-tasks/configure-outputs',
+    //       },
+    //       {
+    //         label: 'Define a Task Pipeline',
+    //         link: 'recipes/running-tasks/defining-task-pipeline',
+    //       },
+    //       {
+    //         label: 'Use the Terminal UI',
+    //         link: 'recipes/running-tasks/terminal-ui',
+    //       },
+    //       {
+    //         label: 'Run Custom Commands',
+    //         link: 'recipes/running-tasks/run-commands-executor',
+    //       },
+    //       {
+    //         label: 'Pass Args to Commands',
+    //         link: 'recipes/running-tasks/pass-args-to-commands',
+    //       },
+    //       {
+    //         label: 'Run Tasks in Parallel',
+    //         link: 'recipes/running-tasks/run-tasks-in-parallel',
+    //       },
+    //       {
+    //         label: 'Run Root-Level NPM Scripts with Nx',
+    //         link: 'recipes/running-tasks/root-level-scripts',
+    //       },
+    //       {
+    //         label: 'Workspace Watching',
+    //         link: 'recipes/running-tasks/workspace-watching',
+    //       },
+    //       {
+    //         label: 'Reduce Repetitive Configuration',
+    //         link: 'recipes/running-tasks/reduce-repetitive-configuration',
+    //       },
+    //       {
+    //         label: 'Change Cache Location',
+    //         link: 'recipes/running-tasks/change-cache-location',
+    //       },
+    //       {
+    //         label: 'Skip Task Caching',
+    //         link: 'recipes/running-tasks/skipping-cache',
+    //       },
+    //       {
+    //         label: 'Migrate to Inferred Tasks (Project Crystal)',
+    //         link: 'recipes/running-tasks/convert-to-inferred',
+    //       },
+    //       {
+    //         label: 'Remote Cache',
+    //         link: 'recipes/running-tasks/self-hosted-caching',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     label: 'Adopting Nx',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'NPM/Yarn/PNPM workspaces',
+    //         link: 'recipes/adopting-nx/adding-to-monorepo',
+    //       },
+    //       {
+    //         label: 'Migrate From Turborepo',
+    //         link: 'recipes/adopting-nx/from-turborepo',
+    //       },
+    //       {
+    //         label: 'Add to any Project',
+    //         link: 'recipes/adopting-nx/adding-to-existing-project',
+    //       },
+    //       {
+    //         label: 'Import an Existing Project into an Nx Workspace',
+    //         link: 'recipes/adopting-nx/import-project',
+    //       },
+    //       {
+    //         label: 'Preserving Git Histories',
+    //         link: 'recipes/adopting-nx/preserving-git-histories',
+    //       },
+    //       {
+    //         label: 'Manual migration',
+    //         link: 'recipes/adopting-nx/manual',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     label: 'Nx Release',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'Release TypeScript/JavaScript Packages to NPM',
+    //         link: 'recipes/nx-release/release-npm-packages',
+    //       },
+    //       {
+    //         label: 'Release Docker Images',
+    //         link: 'recipes/nx-release/release-docker-images',
+    //       },
+    //       {
+    //         label: 'Release Rust Crates',
+    //         link: 'recipes/nx-release/publish-rust-crates',
+    //       },
+    //       {
+    //         label: 'Release Projects Independently',
+    //         link: 'recipes/nx-release/release-projects-independently',
+    //       },
+    //       {
+    //         label:
+    //           'Updating Version References in Manifest Files (e.g. package.json)',
+    //         link: 'recipes/nx-release/updating-version-references',
+    //       },
+    //       {
+    //         label: 'Automatically Version with Conventional Commits',
+    //         link: 'recipes/nx-release/automatically-version-with-conventional-commits',
+    //       },
+    //       {
+    //         label: 'Customize Conventional Commit Types',
+    //         link: 'recipes/nx-release/customize-conventional-commit-types',
+    //       },
+    //       {
+    //         label: 'File Based Versioning (Version Plans)',
+    //         link: 'recipes/nx-release/file-based-versioning-version-plans',
+    //       },
+    //       {
+    //         label: 'Configure Custom Registries',
+    //         link: 'recipes/nx-release/configure-custom-registries',
+    //       },
+    //       {
+    //         label: 'Publish in CI/CD',
+    //         link: 'recipes/nx-release/publish-in-ci-cd',
+    //       },
+    //       {
+    //         label: 'Automate GitHub Releases',
+    //         link: 'recipes/nx-release/automate-github-releases',
+    //       },
+    //       {
+    //         label: 'Automate GitLab Releases',
+    //         link: 'recipes/nx-release/automate-gitlab-releases',
+    //       },
+    //       {
+    //         label: 'Update Your Local Registry Setup to use Nx Release',
+    //         link: 'recipes/nx-release/update-local-registry-setup',
+    //       },
+    //       {
+    //         label: 'Configure Changelog Format',
+    //         link: 'recipes/nx-release/configure-changelog-format',
+    //       },
+    //       {
+    //         label: 'Build Before Versioning',
+    //         link: 'recipes/nx-release/build-before-versioning',
+    //       },
+    //       {
+    //         label: 'Configuring Version Prefix for Dependency Versions',
+    //         link: 'recipes/nx-release/configuration-version-prefix',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     label: 'Nx Console',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'Telemetry',
+    //         link: 'recipes/nx-console/console-telemetry',
+    //       },
+    //       {
+    //         label: 'Project Details View',
+    //         link: 'recipes/nx-console/console-project-details',
+    //       },
+    //       {
+    //         label: 'Generate Command',
+    //         link: 'recipes/nx-console/console-generate-command',
+    //       },
+    //       {
+    //         label: 'Run Command',
+    //         link: 'recipes/nx-console/console-run-command',
+    //       },
+    //       {
+    //         label: 'Nx Cloud Integration',
+    //         link: 'recipes/nx-console/console-nx-cloud',
+    //       },
+    //       {
+    //         label: 'Migrate UI',
+    //         link: 'recipes/nx-console/console-migrate-ui',
+    //       },
+    //       {
+    //         label: 'Troubleshooting',
+    //         link: 'recipes/nx-console/console-troubleshooting',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     label: 'Enforce Module Boundaries',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'Ban Dependencies with Certain Tags',
+    //         link: 'recipes/enforce-module-boundaries/ban-dependencies-with-tags',
+    //       },
+    //       {
+    //         label: 'Tag in Multiple Dimensions',
+    //         link: 'recipes/enforce-module-boundaries/tag-multiple-dimensions',
+    //       },
+    //       {
+    //         label: 'Ban External Imports',
+    //         link: 'recipes/enforce-module-boundaries/ban-external-imports',
+    //       },
+    //       {
+    //         label: 'Tags Allow List',
+    //         link: 'recipes/enforce-module-boundaries/tags-allow-list',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     label: 'Tips and tricks',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'Convert from a Standalone Repository to a Monorepo',
+    //         link: 'recipes/tips-n-tricks/standalone-to-monorepo',
+    //       },
+    //       {
+    //         label: 'Keep Nx Versions in Sync',
+    //         link: 'recipes/tips-n-tricks/keep-nx-versions-in-sync',
+    //       },
+    //       {
+    //         label: 'Define Environment Variables',
+    //         link: 'recipes/tips-n-tricks/define-environment-variables',
+    //       },
+    //       {
+    //         label: 'Configuring Browser Support',
+    //         link: 'recipes/tips-n-tricks/browser-support',
+    //       },
+    //       {
+    //         label: 'Include Assets in Build',
+    //         link: 'recipes/tips-n-tricks/include-assets-in-build',
+    //       },
+    //       {
+    //         label: 'Include All package.json Files as Projects',
+    //         link: 'recipes/tips-n-tricks/include-all-packagejson',
+    //       },
+    //       {
+    //         label: 'Identify Dependencies Between Folders',
+    //         link: 'recipes/tips-n-tricks/identify-dependencies-between-folders',
+    //       },
+    //       {
+    //         label: 'Disable Graph Links Created from Analyzing Source Files',
+    //         link: 'recipes/tips-n-tricks/analyze-source-files',
+    //       },
+    //       {
+    //         label: 'Altering Migration Process',
+    //         link: 'recipes/tips-n-tricks/advanced-update',
+    //       },
+    //       {
+    //         label: 'Using Yarn PnP',
+    //         link: 'recipes/tips-n-tricks/yarn-pnp',
+    //       },
+    //     ],
+    //   },
+    // ],
   },
   {
     label: 'Concepts',
