@@ -406,6 +406,15 @@ export default defineMarkdocConfig({
         },
       },
     },
+    metrics: {
+      render: component('./src/components/markdoc/Metrics.astro'),
+      attributes: {
+        metrics: {
+          type: 'Array',
+          required: true,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
