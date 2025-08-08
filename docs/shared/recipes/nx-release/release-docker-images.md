@@ -187,6 +187,20 @@ After the first release, you can run `nx release` without the `--first-release` 
 
 These are the default schemes that come with Nx Release. These schemes support workflows where you have a stable branch that developers continuously integrate with, and a hotfix branch reserved for urgent production fixes.
 
+### Using Explicit Docker Versions
+
+If you need to specify an exact Docker version instead of using version schemes, you can use the `--dockerVersion` flag:
+
+```shell
+nx release --dockerVersion=1.2.3
+```
+
+This will bypass the version scheme logic entirely and tag your Docker images with the exact version you specify. This is useful when you need to:
+
+- Align Docker versions with external versioning systems
+- Override the calendar-based versioning for specific releases
+- Set custom version tags that don't follow the standard patterns
+
 ### Customizing Version Schemes
 
 You can customize Docker version schemes in your `nx.json` to match your deployment workflow. The version patterns support several interpolation tokens:
@@ -196,12 +210,15 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
   "release": {
     "dockerVersionScheme": {
       "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
-      "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}"
+      "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
+      "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
     }
   }
 }
 ```
 
-The above configuration swaps `hotfix` scheme for `staging`. You can customize this list to fit your needs, and you can also change the patterns for each scheme.
+The above configuration swaps `hotfix` scheme for `staging` and adds a `ci` scheme that uses an environment variable. You can customize this list to fit your needs, and you can also change the patterns for each scheme.
+
+Version patterns can include environment variables using the `{env.VAR_NAME}` syntax, allowing you to inject CI/CD pipeline information like build numbers or deployment environments directly into your Docker tags.
 
 See the [`docker.versionScheme` documentation](/reference/nx-json#version-scheme-syntax) for more details on how to customize the tag pattern.

@@ -1,4 +1,4 @@
-import { redirect, RouteObject, json } from 'react-router-dom';
+import { redirect, RouteObject, json, LoaderFunction } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
 import { Shell } from './shell';
@@ -7,6 +7,7 @@ import { Shell } from './shell';
 import type {
   GraphError,
   ProjectGraphClientResponse,
+  TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
@@ -17,6 +18,7 @@ import {
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
 import { ProjectDetailsPage } from '@nx/graph-internal-project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';
+import { taskGraphCache } from './task-graph-cache';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -56,14 +58,6 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   return { ...projectGraph, targets, sourceMaps };
 };
 
-const taskDataLoader = async (selectedWorkspaceId: string) => {
-  const workspaceInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId
-  );
-
-  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
-};
-
 const sourceMapsLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
@@ -72,6 +66,117 @@ const sourceMapsLoader = async (selectedWorkspaceId: string) => {
   return await projectGraphDataService.getSourceMaps(
     workspaceInfo.sourceMapsUrl
   );
+};
+
+const selectedTargetLoader: LoaderFunction = async ({ params, request }) => {
+  if (!projectGraphDataService.getSpecificTaskGraph) {
+    // Fallback to empty response if method not available
+    return { taskGraphs: {}, errors: {} };
+  }
+
+  const selectedWorkspaceId =
+    params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
+  const selectedTarget = params.selectedTarget;
+
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  // Set the workspace to handle cache invalidation
+  taskGraphCache.setWorkspace(selectedWorkspaceId);
+
+  // Check URL for specific projects
+  const url = new URL(request.url);
+  const projectsParam = url.searchParams.get('projects');
+  const requestedProjects = projectsParam
+    ? projectsParam.split(' ').filter(Boolean)
+    : undefined;
+
+  if (!requestedProjects && !url.pathname.endsWith('all')) {
+    return { taskGraphs: {}, errors: {} };
+  }
+
+  // Check if we have cached data
+  const cached = taskGraphCache.getCached(selectedTarget, requestedProjects);
+  if (cached) {
+    // We have all the data we need in cache
+    console.log(
+      'Returning cached task graphs for',
+      selectedTarget,
+      requestedProjects
+    );
+    return cached;
+  }
+
+  // Determine what we need to fetch
+  const missingProjects = taskGraphCache.getMissingProjects(
+    selectedTarget,
+    requestedProjects
+  );
+
+  console.log('Missing projects for', selectedTarget, ':', missingProjects);
+
+  let response: TaskGraphClientResponse;
+
+  if (missingProjects === null) {
+    // Need to fetch all projects for this target
+    console.log('Fetching all projects for target:', selectedTarget);
+    response = await projectGraphDataService.getSpecificTaskGraph(
+      workspaceInfo.taskGraphUrl,
+      null,
+      selectedTarget,
+      null
+    );
+
+    // Return merged response (cache + new data)
+    return taskGraphCache.getMergedResponse(
+      selectedTarget,
+      response,
+      requestedProjects,
+      true // isAllProjects
+    );
+  } else if (missingProjects.length > 0) {
+    // Fetch only the missing projects
+    console.log(
+      'Fetching missing projects:',
+      missingProjects,
+      'for target:',
+      selectedTarget
+    );
+    response = await projectGraphDataService.getSpecificTaskGraph(
+      workspaceInfo.taskGraphUrl,
+      missingProjects,
+      selectedTarget,
+      null
+    );
+
+    // Return merged response (cache + new data)
+    return taskGraphCache.getMergedResponse(
+      selectedTarget,
+      response,
+      requestedProjects,
+      false
+    );
+  } else {
+    // All requested projects are already cached, but getCached() returned null
+    // This shouldn't happen, but let's handle it
+    console.log(
+      'Unexpected case: all projects cached but getCached returned null'
+    );
+    response = await projectGraphDataService.getSpecificTaskGraph(
+      workspaceInfo.taskGraphUrl,
+      requestedProjects || null,
+      selectedTarget,
+      null
+    );
+
+    return taskGraphCache.getMergedResponse(
+      selectedTarget,
+      response,
+      requestedProjects,
+      !requestedProjects
+    );
+  }
 };
 
 const projectDetailsLoader = async (
@@ -139,13 +244,8 @@ const childRoutes: RouteObject[] = [
     ],
   },
   {
-    loader: async ({ request, params }) => {
-      const selectedWorkspaceId =
-        params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
-      return taskDataLoader(selectedWorkspaceId);
-    },
     path: 'tasks',
-    id: 'selectedTarget',
+    id: 'tasks',
     errorElement: <TasksSidebarErrorBoundary />,
     shouldRevalidate: ({ currentParams, nextParams }) => {
       return (
@@ -160,10 +260,14 @@ const childRoutes: RouteObject[] = [
       },
       {
         path: ':selectedTarget',
+        id: 'selectedTarget',
+        loader: selectedTargetLoader,
         element: <TasksSidebar />,
         children: [
           {
             path: 'all',
+            id: 'allTasks',
+            loader: selectedTargetLoader,
             element: <TasksSidebar />,
           },
         ],
@@ -194,7 +298,7 @@ export const devRoutes: RouteObject[] = [
             currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
           );
         },
-        loader: async ({ request, params }) => {
+        loader: async ({ params }) => {
           const selectedWorkspaceId =
             params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
           return workspaceDataLoader(selectedWorkspaceId);

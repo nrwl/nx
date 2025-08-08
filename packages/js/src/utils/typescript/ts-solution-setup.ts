@@ -32,6 +32,34 @@ export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   );
 }
 
+export function shouldConfigureTsSolutionSetup(
+  tree: Tree,
+  addPlugins: boolean,
+  addTsPlugin?: boolean
+): boolean {
+  if (addTsPlugin !== undefined) {
+    return addTsPlugin;
+  }
+
+  if (addPlugins === undefined) {
+    const nxJson = readNxJson(tree);
+    addPlugins =
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false;
+  }
+
+  if (!addPlugins) {
+    return false;
+  }
+
+  if (!isUsingPackageManagerWorkspaces(tree)) {
+    return false;
+  }
+
+  // if there are no root tsconfig files, we should configure the TS solution setup
+  return !tree.exists('tsconfig.base.json') && !tree.exists('tsconfig.json');
+}
+
 export function isUsingTsSolutionSetup(tree?: Tree): boolean {
   tree ??= new FsTree(workspaceRoot, false);
 
@@ -41,6 +69,15 @@ export function isUsingTsSolutionSetup(tree?: Tree): boolean {
   );
 }
 
+/**
+ * The TS solution setup requires:
+ * - `tsconfig.base.json`: TS config with common compiler options needed by the
+ *    majority of projects in the workspace. It's meant to be extended by other
+ *    tsconfig files in the workspace to reuse them.
+ * - `tsconfig.json`: TS solution config file that references all other projects
+ *    in the repo. It shouldn't include any file and it's not meant to be
+ *    extended or define any common compiler options.
+ */
 function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   if (!tree.exists('tsconfig.base.json') || !tree.exists('tsconfig.json')) {
     return false;
@@ -52,31 +89,33 @@ function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   }
 
   /**
-   * New setup:
-   * - `files` is defined and set to an empty array
-   * - `references` is defined and set to an empty array
-   * - `include` is not defined or is set to an empty array
+   * TS solution setup requires:
+   * - One of `files` or `include` defined
+   * - If set, they must be empty arrays
+   *
+   * Note: while the TS solution setup uses TS project references, in the initial
+   * state of the workspace, where there are no projects, `references` is not
+   * required to be defined.
    */
   if (
-    !tsconfigJson.files ||
-    tsconfigJson.files.length > 0 ||
-    !tsconfigJson.references ||
-    !!tsconfigJson.include?.length
+    (!tsconfigJson.files && !tsconfigJson.include) ||
+    tsconfigJson.files?.length > 0 ||
+    tsconfigJson.include?.length > 0
   ) {
     return false;
   }
 
+  /**
+   * TS solution setup requires:
+   * - `compilerOptions.composite`: true
+   * - `compilerOptions.declaration`: true or not set (default to true)
+   */
   const baseTsconfigJson = readJson(tree, 'tsconfig.base.json');
   if (
     !baseTsconfigJson.compilerOptions ||
     !baseTsconfigJson.compilerOptions.composite ||
     baseTsconfigJson.compilerOptions.declaration === false
   ) {
-    return false;
-  }
-
-  const { compilerOptions, ...rest } = baseTsconfigJson;
-  if (Object.keys(rest).length > 0) {
     return false;
   }
 

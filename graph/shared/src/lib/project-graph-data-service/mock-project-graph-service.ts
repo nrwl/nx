@@ -81,6 +81,16 @@ export class MockProjectGraphService implements ProjectGraphService {
     return new Promise((resolve) => resolve(this.taskGraphsResponse));
   }
 
+  getSpecificTaskGraph(
+    _url: string,
+    projects: string | string[] | null,
+    target: string,
+    configuration?: string
+  ): Promise<TaskGraphClientResponse> {
+    // In mock mode, return the full task graph
+    return new Promise((resolve) => resolve(this.taskGraphsResponse));
+  }
+
   getSourceMaps(
     _url: string
   ): Promise<Record<string, Record<string, string[]>>> {

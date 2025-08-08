@@ -437,6 +437,7 @@ export async function runCommand(
       await runPreTasksExecution({
         workspaceRoot,
         nxJsonConfiguration: nxJson,
+        argv: process.argv,
       });
 
       const { taskResults, completed } = await runCommandForTasks(
@@ -469,6 +470,7 @@ export async function runCommand(
         taskResults,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
+        argv: process.argv,
       });
 
       return exitCode;
@@ -1047,9 +1049,7 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
   const historyLifeCycle = getTasksHistoryLifeCycle();
-  if (historyLifeCycle) {
-    lifeCycles.push(historyLifeCycle);
-  }
+  lifeCycles.push(historyLifeCycle);
   return lifeCycles;
 }
 
@@ -1176,6 +1176,7 @@ function getTasksRunnerPath(
       nxJson.tasksRunnerOptions?.[runner]?.runner
     ) ||
     // Cloud access token specified in env var.
+    process.env.NX_CLOUD_AUTH_TOKEN ||
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;

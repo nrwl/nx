@@ -27,7 +27,8 @@ describe('Node Esbuild Applications', () => {
     cleanupProject();
   });
 
-  it('it should generate an app that cosumes a non-buildable ts library', () => {
+  // TODO: Re-enable this test once https://github.com/pinojs/pino/issues/2253 is resolved
+  it.skip('it should generate an app that cosumes a non-buildable ts library', () => {
     const nodeapp = uniq('nodeapp');
     const lib = uniq('lib');
     const port = getRandomPort();

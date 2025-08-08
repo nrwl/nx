@@ -601,12 +601,15 @@ Docker version schemes support calendar-based patterns using the following place
   - `ss` - 2-digit seconds (00-59)
 - `{shortCommitSha}` - First 7 characters of the current commit SHA
 - `{commitSha}` - Full commit SHA
+- `{env.VAR_NAME}` - The value of the environment variable VAR_NAME
 
 Example patterns:
 
 - `{currentDate|YYMM.DD}.{shortCommitSha}` - Results in: 2501.30.a1b2c3d
 - `{projectName}-{currentDate|YYYY.MM.DD}` - Results in: api-2025.01.30
 - `{currentDate|YY.MM.DD.HHmm}-{commitSha}` - Results in: 25.01.30.1430-abcdef1234567890
+- `{env.BUILD_NUMBER}-{projectName}` - Results in: 123-api (when BUILD_NUMBER=123)
+- `{env.STAGE}-{currentDate|YYMM.DD}` - Results in: production-2501.30 (when STAGE=production)
 
 #### Group-Level Docker Configuration
 

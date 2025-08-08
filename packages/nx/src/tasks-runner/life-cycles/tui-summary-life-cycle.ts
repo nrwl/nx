@@ -139,7 +139,7 @@ export function getTuiTerminalSummaryLifeCycle({
         cancelled,
       });
     }
-    getTasksHistoryLifeCycle()?.printFlakyTasksMessage();
+    getTasksHistoryLifeCycle().printFlakyTasksMessage();
   };
 
   const printRunOneSummary = ({

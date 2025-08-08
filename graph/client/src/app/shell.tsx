@@ -389,7 +389,10 @@ function InnerShell({
                     data-cy="route-select"
                     defaultValue={topLevelRoute}
                     onChange={(event) => {
-                      projectGraphService.send('deselectAll');
+                      if (topLevelRoute === '/projects') {
+                        projectGraphService.send('deselectAll');
+                      }
+
                       if (environmentConfig.environment === 'dev') {
                         navigate(
                           `/${encodeURIComponent(workspace)}${

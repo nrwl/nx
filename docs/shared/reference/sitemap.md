@@ -816,10 +816,6 @@
       - [Overview](/extending-nx/api/plugin/overview)
 
 - Ci
-  - [Intro](/ci/intro)
-    - [CI with Nx](/ci/intro/ci-with-nx)
-    - [Why Nx Cloud?](/ci/intro/why-nx-cloud)
-    - [Connect to Nx Cloud](/ci/intro/connect-to-nx-cloud)
   - [Features](/ci/features)
     - [AI-Powered Self-Healing CI](/ci/features/self-healing-ci)
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
@@ -887,6 +883,7 @@
     - [Launch Templates](/ci/reference/launch-templates)
     - [Assignment Rules](/ci/reference/assignment-rules)
     - [Custom Steps](/ci/reference/custom-steps)
+    - [Custom Images](/ci/reference/custom-images)
     - [Environment Variables](/ci/reference/env-vars)
     - [Credit Pricing](/ci/reference/credits-pricing)
     - [Release Notes](/ci/reference/release-notes)

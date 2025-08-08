@@ -7,6 +7,7 @@ import { getLatestCommitSha } from 'nx/src/utils/git-utils';
  * {currentDate|DATE FORMAT} - the current date with custom format such as YYMM.DD
  * {commitSha} - The full commit sha for the current commit
  * {shortCommitSha} - The seven character commit sha for the current commit
+ * {env.VAR_NAME} - The value of the environment variable VAR_NAME
  */
 export interface PatternTokens {
   projectName: string;
@@ -15,7 +16,7 @@ export interface PatternTokens {
   shortCommitSha: string;
 }
 
-const tokenRegex = /\{([^|{}]+)(?:\|([^{}]+))?\}/g;
+const tokenRegex = /\{(env\.([^}]+)|([^|{}]+)(?:\|([^{}]+))?)\}/g;
 
 function formatDate(date: Date, format: string) {
   const year = String(date.getUTCFullYear());
@@ -47,22 +48,32 @@ export function interpolateVersionPattern(
     shortCommitSha: data.shortCommitSha ?? commitSha.slice(0, 7),
   };
 
-  return versionPattern.replace(tokenRegex, (match, identifier, format) => {
-    const value = substitutions[identifier];
-
-    if (value === undefined) {
-      return match; // Keep original token if no data
-    }
-
-    // Handle date formatting
-    if (identifier === 'currentDate') {
-      if (format) {
-        return formatDate(value, format);
-      } else {
-        return (value as Date).toISOString();
+  return versionPattern.replace(
+    tokenRegex,
+    (match, fullMatch, envVarName, identifier, format) => {
+      // Handle environment variables
+      if (envVarName) {
+        const envValue = process.env[envVarName];
+        return envValue !== undefined ? envValue : match;
       }
-    }
 
-    return value;
-  });
+      // Handle other tokens
+      const value = substitutions[identifier];
+
+      if (value === undefined) {
+        return match; // Keep original token if no data
+      }
+
+      // Handle date formatting
+      if (identifier === 'currentDate') {
+        if (format) {
+          return formatDate(value, format);
+        } else {
+          return (value as Date).toISOString();
+        }
+      }
+
+      return value;
+    }
+  );
 }

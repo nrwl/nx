@@ -1,12 +1,14 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
+export type StackblitzButtonProps = {
+  url: string;
+  title: string;
+};
+
 export function StackblitzButton({
   url,
   title,
-}: {
-  url: string;
-  title: string;
-}): JSX.Element {
+}: StackblitzButtonProps): JSX.Element {
   const resolvedUrl = url.replace('https://', '');
 
   return (

@@ -1,10 +1,15 @@
-import { CommandModule } from 'yargs';
+import { Argv, CommandModule } from 'yargs';
 
 export const yargsMcpCommand: CommandModule = {
   command: 'mcp',
   describe: 'Starts the Nx MCP server.',
-  builder: (y) =>
-    y
+  // @ts-expect-error - yargs types are outdated, refer to docs - https://github.com/yargs/yargs/blob/main/docs/api.md#commandmodule
+  builder: async (y: Argv, helpOrVersionSet: boolean) => {
+    if (helpOrVersionSet) {
+      (await Promise.resolve().then(() => require('./mcp'))).showHelp();
+      process.exit(0);
+    }
+    return y
       .version(false)
       .strict(false)
       .parserConfiguration({
@@ -13,10 +18,8 @@ export const yargsMcpCommand: CommandModule = {
       })
       .usage('')
       .help(false)
-      .showHelp(async () => {
-        await (await import('./mcp')).showHelp();
-        process.exit(0);
-      }),
+      .showHelpOnFail(false);
+  },
   handler: async (args: any) => {
     await (await import('./mcp')).mcpHandler(args);
     process.exit(0);

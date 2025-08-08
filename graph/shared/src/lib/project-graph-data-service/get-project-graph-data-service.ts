@@ -13,6 +13,12 @@ export interface ProjectGraphService {
   getHash: () => Promise<string>;
   getProjectGraph: (url: string) => Promise<ProjectGraphClientResponse>;
   getTaskGraph: (url: string) => Promise<TaskGraphClientResponse>;
+  getSpecificTaskGraph?: (
+    url: string,
+    projects: string | string[] | null,
+    target: string,
+    configuration?: string
+  ) => Promise<TaskGraphClientResponse>;
   setTaskInputsUrl?: (url: string) => void;
   getExpandedTaskInputs?: (taskId: string) => Promise<Record<string, string[]>>;
   getSourceMaps?: (

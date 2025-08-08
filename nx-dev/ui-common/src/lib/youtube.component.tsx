@@ -96,14 +96,16 @@ const youtubeIcon = (
   </svg>
 );
 
-export function YouTube(props: {
+export type YouTubeProps = {
   title: string;
   caption?: string;
   src: string;
   width?: string;
   disableRoundedCorners?: boolean;
   imageOnly?: boolean;
-}): JSX.Element {
+};
+
+export function YouTube(props: YouTubeProps): JSX.Element {
   return (
     <div className="text-center">
       {' '}

@@ -22,23 +22,30 @@ export async function handleDockerVersion(
   workspaceRoot: string,
   projectGraphNode: ProjectGraphProjectNode,
   finalConfigForProject: FinalConfigForProject,
-  dockerVersionScheme?: string
+  dockerVersionScheme?: string,
+  dockerVersion?: string
 ) {
-  const availableVersionSchemes =
-    finalConfigForProject.dockerOptions.versionSchemes ??
-    DEFAULT_VERSION_SCHEMES;
-  const versionScheme =
-    dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
-      ? dockerVersionScheme
-      : await promptForNewVersion(
-          availableVersionSchemes,
-          projectGraphNode.name
-        );
-  const newVersion = calculateNewVersion(
-    projectGraphNode.name,
-    versionScheme,
-    availableVersionSchemes
-  );
+  // If an explicit dockerVersion is provided, use it directly
+  let newVersion: string;
+  if (dockerVersion) {
+    newVersion = dockerVersion;
+  } else {
+    const availableVersionSchemes =
+      finalConfigForProject.dockerOptions.versionSchemes ??
+      DEFAULT_VERSION_SCHEMES;
+    const versionScheme =
+      dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
+        ? dockerVersionScheme
+        : await promptForNewVersion(
+            availableVersionSchemes,
+            projectGraphNode.name
+          );
+    newVersion = calculateNewVersion(
+      projectGraphNode.name,
+      versionScheme,
+      availableVersionSchemes
+    );
+  }
   const logs = updateProjectVersion(
     newVersion,
     workspaceRoot,

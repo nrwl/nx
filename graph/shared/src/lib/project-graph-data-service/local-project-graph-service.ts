@@ -25,6 +25,17 @@ export class LocalProjectGraphService implements ProjectGraphService {
     );
   }
 
+  async getSpecificTaskGraph(
+    _url: string,
+    projects: string | string[] | null,
+    target: string,
+    configuration?: string
+  ): Promise<TaskGraphClientResponse> {
+    // In local mode, we still return the full task graph
+    // The filtering would happen on the client side if needed
+    return new Promise((resolve) => resolve(window.taskGraphResponse));
+  }
+
   async getSourceMaps(
     _url: string
   ): Promise<Record<string, Record<string, string[]>>> {

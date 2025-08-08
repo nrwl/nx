@@ -55,13 +55,15 @@ export const ShortEmbedContext = createContext<{
   userInteraction: boolean;
 }>({ current: null, userInteraction: false });
 
+export type ShortEmbedsProps = {
+  videoData: VideoData[];
+  children: ReactNode;
+};
+
 export function ShortEmbeds({
   videoData,
   children,
-}: {
-  videoData: VideoData[];
-  children: ReactNode;
-}): JSX.Element | null {
+}: ShortEmbedsProps): JSX.Element | null {
   const [currentVideo, setCurrentVideo] = useState<VideoData>(videoData[0]);
   const [isShowing, setIsShowing] = useState(false);
   const [userInteraction, setUserInteraction] = useState(false);
@@ -155,7 +157,9 @@ export function ShortEmbeds({
   );
 }
 
-export function ShortVideo({ embedUrl, title }: VideoData) {
+export type ShortVideoProps = VideoData;
+
+export function ShortVideo({ embedUrl, title }: ShortVideoProps) {
   const { current, userInteraction } = useContext(ShortEmbedContext);
 
   if (embedUrl !== current?.embedUrl) {

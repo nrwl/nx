@@ -41,7 +41,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/intro/ci-with-nx"
+            href="/ci/features"
             title="Learn how to speed up CI"
             prefetch={false}
             className="text-sm/6 font-semibold"
