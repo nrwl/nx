@@ -1,0 +1,35 @@
+{
+  "name": "examples-angular-rspack-zoneless-csr-css",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "@nx/angular-rspack": "workspace:*"
+  },
+  "devDependencies": {
+    "@rspack/core": "1.3.9",
+    "@rspack/cli": "1.3.9"
+  },
+  "nx": {
+    "targets": {
+      "serve-api": {
+        "continuous": true,
+        "command": "node ./src/api.mjs",
+        "options": {
+          "cwd": "examples/angular-rspack/zoneless-csr-css"
+        }
+      },
+      "serve": {
+        "dependsOn": [
+          "^build",
+          "serve-api"
+        ]
+      },
+      "build": {
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@ node_modules
 /.fleet
 /.vscode
 dist
+out-tsc
 /build
 /coverage
 ./test
@@ -109,3 +110,6 @@ tasks/
 .upstreamdocs.local.json
 
 astro-docs/.netlify
+
+packages/angular-rspack/coverage
+packages/angular-rspack-compiler/coverage

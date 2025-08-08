@@ -396,6 +396,12 @@
     },
     {
       "path": "./graph/ui-icons"
+    },
+    {
+      "path": "./packages/angular-rspack-compiler"
+    },
+    {
+      "path": "./packages/angular-rspack"
     }
   ],
   "extends": "./tsconfig.base.json"

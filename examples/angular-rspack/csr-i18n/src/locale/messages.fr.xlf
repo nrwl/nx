@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-GB" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="6947830843539421219" datatype="html">
+        <source>Hello World!</source>
+        <target>Bonjour Monde!</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">1</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="myCustomTitle" datatype="html">
+              <source>Custom Title!</source>
+              <target>Titre personnalis</target>
+              <context-group purpose="location">
+                <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+                <context context-type="linenumber">2</context>
+              </context-group>
+            </trans-unit>
+      <trans-unit id="187187500641108332" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{toggle()}}"/></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3637693698844161036" datatype="html">
+        <source>this should be Translated</source>
+        <target>Ceci devrait être traduit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4606963464835766483" datatype="html">
+        <source>Updated <x id="ICU" equiv-text="{minutes(), plural, =0 {just now} =1 {one minute ago} other {{{ minutes() }} minutes ago}}" xid="1887283401472369100"/></source>
+        <target>Mis à jour <x id="ICU" equiv-text="{minutes(), plural, =0 {tout à l' heure} =1 {il y a une minute} other {{{ minutes() }} minutes}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2002272803511843863" datatype="html">
+        <source>{VAR_PLURAL, plural, =0 {just now} =1 {one minute ago} other {<x id="INTERPOLATION"/> minutes ago}}</source>
+        <target>{VAR_PLURAL, plural, =0 {tout à l' heure} =1 {il y a une minute} other {<x id="INTERPOLATION"/> minutes}}</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3560311772637911677" datatype="html">
+        <source>The author is <x id="ICU" equiv-text="{gender(), select, male {male} female {female} other {other}}" xid="7670372064920373295"/></source>
+        <target>L' auteur est <x id="ICU" equiv-text="{gender(), select, male {homme} female {femme} other {autre}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7670372064920373295" datatype="html">
+        <source>{VAR_SELECT, select, male {male} female {female} other {other}}</source>
+        <target>{VAR_SELECT, select, male {homme} female {femme} other {autre}}</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5099090789665564680" datatype="html">
+        <source>Angular Rspack Logo</source>
+        <target>Logo d'Angular Rspack</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.html</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5747086067021442421" datatype="html">
+        <source>Show</source>
+        <target>Afficher</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.ts</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5355346251098498999" datatype="html">
+        <source>Hide</source>
+        <target>Masquer</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.ts</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+        <note priority="1" from="description">A button to toggle status</note>
+        <note priority="1" from="meaning">Toggle Button</note>
+      </trans-unit>
+      <trans-unit id="1575043997803425733" datatype="html">
+        <source>interpolatedTranslation:This is an interpolated translation for <x id="PH" equiv-text="this.valueToInterpolate"/></source>
+        <target>interpolatedTranslation:Ceci est une traduction interpolée pour <x id="PH" equiv-text="this.valueToInterpolate"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">e2e/fixtures/rspack-csr-i18n/src/app/app.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

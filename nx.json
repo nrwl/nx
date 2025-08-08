@@ -112,7 +112,6 @@
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "cache": true
     },
     "test-native": {
@@ -203,7 +202,18 @@
   "plugins": [
     "@monodon/rust",
     {
+      "plugin": "@nx/vite/plugin",
+      "include": [
+        "packages/angular-rspack-compiler/**",
+        "packages/angular-rspack/**"
+      ],
+      "options": {
+        "testTargetName": "test"
+      }
+    },
+    {
       "plugin": "@nx/js/typescript",
+      "exclude": ["examples/angular-rspack/**/*"],
       "options": {
         "typecheck": true,
         "build": {
@@ -277,6 +287,17 @@
         "buildStorybookTargetName": "build:storybook",
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static:storybook"
+      }
+    },
+    {
+      "plugin": "@nx/rspack/plugin",
+      "include": ["examples/angular-rspack/**"],
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ],
