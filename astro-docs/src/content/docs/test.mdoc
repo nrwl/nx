@@ -3,9 +3,18 @@ title: Markdoc Tags Test Page
 description: Test page for all custom Markdoc tags
 ---
 
-# All Markdoc Custom Tags Test
+We're not including the following since there are built-in ones in Starlight that we don't have to maintain:
 
-This page tests all 27 custom markdoc tags to ensure they render correctly.
+- Tabs
+- Steps
+- Callout
+
+The `side-by-side` will not be migrated over since it's broken, and it's fine to not have content side-by-side in the docs (makes responsiveness easier too)
+
+The following are only for blog posts so we'll exclude:
+
+- Tweet
+- ToC
 
 ## 1. Install Nx Console
 
@@ -15,23 +24,11 @@ This page tests all 27 custom markdoc tags to ensure they render correctly.
 
 {% youtube src="https://youtu.be/OQ-Zc5tcxJE" title="Example YouTube Video" width="100%" /%}
 
-## 3. Callout
-
-{% callout type="note" title="This is a Note" %}
-This is the content of the callout. It can contain paragraphs and lists.
-{% /callout %}
-
-{% callout type="warning" title="Warning Example" expanded=true %}
-This callout is expanded by default.
-- List item 1
-- List item 2
-{% /callout %}
-
-## 4. Call to Action
+## 3. Call to Action
 
 {% call_to_action title="Get Started with Nx" url="/getting-started/intro" description="Learn how to use Nx in your project" icon="nxcloud" variant="gradient" size="lg" /%}
 
-## 5. Cards with Card and Link Card
+## 4. Cards with Card and Link Card
 
 {% cards cols=3 smCols=1 mdCols=2 lgCols=3 %}
 {% card title="Documentation" description="Learn about Nx concepts" type="documentation" url="/concepts/mental-model" /%}
@@ -39,17 +36,16 @@ This callout is expanded by default.
 {% link_card title="GitHub" type="external" url="https://github.com/nrwl/nx" icon="github" /%}
 {% /cards %}
 
-## 6. GitHub Repository
+## 5. GitHub Repository
 
 {% github_repository url="https://github.com/nrwl/nx-examples" title="Nx Examples Repository" /%}
 
-## 7. Stackblitz Button
+## 6. Stackblitz Button
 
 {% stackblitz_button url="github.com/nrwl/nx-recipes/tree/main/angular-standalone?file=README.md" title="Open in StackBlitz" /%}
 
-## 8. Graph (DISABLED - Causes rendering error with CopyToClipboard)
+## 7. Graph
 
-<!-- DISABLED DUE TO ERROR: CopyToClipboard import issue
 {% graph title="Project Dependencies" height="450px" type="project" %}
 ```json
 {
@@ -69,17 +65,16 @@ This callout is expanded by default.
 }
 ```
 {% /graph %}
--->
 
-## 9. Iframe
+## 8. Iframe
 
 {% iframe src="https://nx.dev" title="Nx Documentation" width="100%" /%}
 
-## 10. Video Player
+## 9. Video Player
 
 {% video_player src="/assets/videos/demo.mp4" alt="Demo video" showControls=true autoPlay=false loop=false /%}
 
-## 11. Personas
+## 10. Personas
 
 {% personas %}
 {% persona type="integrated" title="Integrated Monorepo" url="/concepts/integrated-vs-package-based" %}
@@ -93,7 +88,7 @@ For JavaScript developers getting started with Nx.
 {% /persona %}
 {% /personas %}
 
-## 12. Project Details (DISABLED - Causes rendering error with CopyToClipboard)
+## 11. Project Details (DISABLED - Causes rendering error with CopyToClipboard)
 
 <!-- DISABLED DUE TO ERROR: CopyToClipboard import issue
 {% project_details title="Project Configuration" height="400px" %}
@@ -113,137 +108,24 @@ For JavaScript developers getting started with Nx.
 {% /project_details %}
 -->
 
-## 13. Pill
+## 12. Pill
 
 {% pill url="/concepts/mental-model" %}Mental Model{% /pill %}
 
-## 14. Short Embeds with Short Video (DISABLED - Causes rendering error)
-
-<!-- DISABLED DUE TO ERROR: Cannot read properties of undefined (reading '0')
-{% short_embeds %}
-{% short_video title="Quick Demo" embedUrl="https://www.youtube.com/embed/dQw4w9WgXcQ" /%}
-{% short_video title="Tutorial" embedUrl="https://www.youtube.com/embed/dQw4w9WgXcQ" /%}
-{% /short_embeds %}
--->
-
-## 15. Side by Side
-
-{% side_by_side align="center" %}
-**Left Content**
-
-This is the left side content.
-
-**Right Content**
-
-This is the right side content.
-{% /side_by_side %}
-
-## 16. Steps
-
-{% steps %}
-{% step title="Install Nx" %}
-First, install Nx in your workspace:
-```bash
-npx nx@latest init
-```
-{% /step %}
-{% step title="Create an Application" %}
-Generate a new application:
-```bash
-nx g @nx/react:app my-app
-```
-{% /step %}
-{% step title="Run the Application" %}
-Start the development server:
-```bash
-nx serve my-app
-```
-{% /step %}
-{% /steps %}
-
-## 17. Tabs (DISABLED - Causes rendering error)
-
-<!-- DISABLED DUE TO ERROR: Cannot read properties of undefined (reading '0')
-{% tabs %}
-{% tab label="npm" %}
-NPM installation instructions:
-```bash
-npm install @nx/workspace
-```
-{% /tab %}
-{% tab label="yarn" %}
-Yarn installation instructions:
-```bash
-yarn add @nx/workspace
-```
-{% /tab %}
-{% tab label="pnpm" %}
-PNPM installation instructions:
-```bash
-pnpm add @nx/workspace
-```
-{% /tab %}
-{% /tabs %}
--->
-
-## 18. Testimonial
+## 13. Testimonial
 
 {% testimonial name="John Doe" title="Senior Developer at Example Corp" image="https://via.placeholder.com/150" %}
 Nx has transformed how we manage our monorepo. The build times are incredible and the developer experience is unmatched.
 {% /testimonial %}
 
-## 19. Table of Contents
-
-{% toc maxDepth=3 /%}
-
-## 20. Tweet
-
-{% tweet url="https://twitter.com/NxDevTools/status/1234567890123456789" /%}
-
-## 21. Course Video
+## 14. Course Video
 
 {% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" /%}
 
-## 22. Video Link
+## 15. Video Link
 
 {% video_link link="https://youtu.be/OQ-Zc5tcxJE?t=64" text="Watch the video tutorial" /%}
 
-## 23. Metrics
+## 16. Metrics
 
 {% metrics metrics=[{"value": "50%", "label": "Faster builds"}, {"value": "3x", "label": "Improved DX"}, {"value": "90%", "label": "Cache hit rate"}] /%}
-
-## End of Test
-
-All 27 custom markdoc tags have been tested above. The tags are:
-
-1. install_nx_console ✓
-2. youtube ✓
-3. callout ✓
-4. call_to_action ✓
-5. card ✓
-6. cards ✓
-7. link_card ✓
-8. github_repository ✓
-9. stackblitz_button ✓
-10. graph ✓
-11. iframe ✓
-12. video_player ✓
-13. persona ✓
-14. personas ✓
-15. project_details ✓
-16. pill ✓
-17. short_embeds ✓
-18. short_video ✓
-19. side_by_side ✓
-20. step ✓
-21. steps ✓
-22. tab ✓
-23. tabs ✓
-24. testimonial ✓
-25. toc ✓
-26. tweet ✓
-27. course_video ✓
-28. video_link ✓
-29. metrics ✓
-
-Note: All hyphenated tag names have been converted to underscored versions as required.
