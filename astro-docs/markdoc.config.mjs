@@ -31,6 +31,39 @@ export default defineMarkdocConfig({
         },
       },
     },
+    call_to_action: {
+      render: component('./src/components/markdoc/CallToAction.astro'),
+      attributes: {
+        url: {
+          type: 'String',
+          required: true,
+        },
+        title: {
+          type: 'String',
+          required: true,
+        },
+        description: {
+          type: 'String',
+          required: false,
+        },
+        icon: {
+          type: 'String',
+          required: false,
+        },
+        variant: {
+          type: 'String',
+          required: false,
+          default: 'default',
+          matches: ['default', 'gradient', 'inverted', 'gradient-alt'],
+        },
+        size: {
+          type: 'String',
+          required: false,
+          default: 'sm',
+          matches: ['sm', 'md', 'lg'],
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
