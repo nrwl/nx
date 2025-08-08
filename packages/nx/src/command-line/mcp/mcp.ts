@@ -5,10 +5,16 @@ import { workspaceRoot } from '../../utils/workspace-root';
 export async function mcpHandler(args: any) {
   const packageManagerCommands = getPackageManagerCommand();
 
-  spawnSync(packageManagerCommands.dlx, ['-y', 'nx-mcp@latest', ...args['_']], {
-    stdio: 'inherit',
-    cwd: workspaceRoot,
-  });
+  const passthroughArgs =
+    args['_'][0] === 'mcp' ? args['_'].slice(1) : args['_'];
+  spawnSync(
+    packageManagerCommands.dlx,
+    ['-y', 'nx-mcp@latest', ...passthroughArgs],
+    {
+      stdio: 'inherit',
+      cwd: workspaceRoot,
+    }
+  );
 }
 
 export async function showHelp() {
