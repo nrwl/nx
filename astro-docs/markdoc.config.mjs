@@ -367,6 +367,15 @@ export default defineMarkdocConfig({
         },
       },
     },
+    tweet: {
+      render: component('./src/components/markdoc/Tweet.astro'),
+      attributes: {
+        url: {
+          type: 'String',
+          required: true,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
