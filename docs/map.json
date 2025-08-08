@@ -2277,7 +2277,7 @@
               "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/ci/intro/ci-with-nx",
+              "path": "/ci/features",
               "isExternal": true
             },
             {
@@ -2892,6 +2892,11 @@
               "name": "Custom Steps",
               "id": "custom-steps",
               "file": "nx-cloud/reference/custom-steps"
+            },
+            {
+              "name": "Custom Images",
+              "id": "custom-images",
+              "file": "nx-cloud/reference/custom-images"
             },
             {
               "name": "Environment Variables",

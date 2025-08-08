@@ -8,6 +8,7 @@ import {
   CreateNodesFunction,
   workspaceRoot,
   ProjectGraphExternalNode,
+  normalizePath,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
@@ -107,11 +108,12 @@ export const makeCreateNodesForGradleConfigFile =
     if (!project) {
       return {};
     }
-    project.root = projectRoot;
+    const normalizedProjectRoot = normalizePath(projectRoot);
+    project.root = normalizedProjectRoot;
 
     return {
       projects: {
-        [projectRoot]: project,
+        [normalizedProjectRoot]: project,
       },
       externalNodes: externalNodes,
     };

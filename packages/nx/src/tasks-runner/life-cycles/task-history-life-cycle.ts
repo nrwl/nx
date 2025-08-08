@@ -6,8 +6,6 @@ import { getTaskHistory, TaskHistory } from '../../utils/task-history';
 import { isTuiEnabled } from '../is-tui-enabled';
 import { LifeCycle, TaskResult } from '../life-cycle';
 import { LegacyTaskHistoryLifeCycle } from './task-history-life-cycle-old';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { readNxJson } from '../../config/nx-json';
 
 interface TaskRun extends NativeTaskRun {
   target: Task['target'];
@@ -17,18 +15,15 @@ let tasksHistoryLifeCycle: TaskHistoryLifeCycle | LegacyTaskHistoryLifeCycle;
 
 export function getTasksHistoryLifeCycle():
   | TaskHistoryLifeCycle
-  | LegacyTaskHistoryLifeCycle
-  | null {
-  if (!isNxCloudUsed(readNxJson())) {
-    if (!tasksHistoryLifeCycle) {
-      tasksHistoryLifeCycle =
-        process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
-          ? new TaskHistoryLifeCycle()
-          : new LegacyTaskHistoryLifeCycle();
-    }
-    return tasksHistoryLifeCycle;
+  | LegacyTaskHistoryLifeCycle {
+  if (!tasksHistoryLifeCycle) {
+    tasksHistoryLifeCycle =
+      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
+        ? new TaskHistoryLifeCycle()
+        : new LegacyTaskHistoryLifeCycle();
   }
-  return null;
+
+  return tasksHistoryLifeCycle;
 }
 
 export class TaskHistoryLifeCycle implements LifeCycle {
@@ -85,7 +80,7 @@ export class TaskHistoryLifeCycle implements LifeCycle {
   }
 
   printFlakyTasksMessage() {
-    if (this.flakyTasks.length > 0) {
+    if (this.flakyTasks?.length > 0) {
       output.warn({
         title: `Nx detected ${
           this.flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'

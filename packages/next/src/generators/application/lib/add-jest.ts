@@ -30,6 +30,7 @@ export async function addJest(
     setupFile: 'none',
     compiler: 'babel',
     skipFormat: true,
+    runtimeTsconfigFileName: 'tsconfig.json',
   });
 
   const tsConfigSpecJson = readJson(

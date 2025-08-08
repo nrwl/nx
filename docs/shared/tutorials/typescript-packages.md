@@ -25,7 +25,7 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 Let's create your workspace. The setup process takes about 2 minutes and will configure TypeScript, testing, and CI/CD automatically.
 
-{% call-to-action title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
+{% call-to-action variant="gradient" title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
 
 ### Step 2: Verify Your Setup
 

@@ -6500,7 +6500,7 @@
         "children": [
           {
             "name": "CI Documentation",
-            "path": "/ci/intro/ci-with-nx",
+            "path": "/ci/features",
             "id": "ci",
             "isExternal": true,
             "children": [],
@@ -7330,6 +7330,14 @@
             "name": "Custom Steps",
             "path": "/ci/reference/custom-steps",
             "id": "custom-steps",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Custom Images",
+            "path": "/ci/reference/custom-images",
+            "id": "custom-images",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false

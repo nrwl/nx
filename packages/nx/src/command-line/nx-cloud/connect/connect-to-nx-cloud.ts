@@ -31,8 +31,11 @@ export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
     // - If access token defined, uses cloud runner
     // - If no access token defined, uses default
     return (
-      !(nxJson.nxCloudAccessToken ?? process.env.NX_CLOUD_ACCESS_TOKEN) &&
-      !nxJson.nxCloudId
+      !(
+        nxJson.nxCloudAccessToken ??
+        process.env.NX_CLOUD_AUTH_TOKEN ??
+        process.env.NX_CLOUD_ACCESS_TOKEN
+      ) && !nxJson.nxCloudId
     );
   }
 
@@ -94,6 +97,7 @@ export async function connectToNxCloudCommand(
 
   if (isNxCloudUsed(nxJson)) {
     const token =
+      process.env.NX_CLOUD_AUTH_TOKEN ||
       process.env.NX_CLOUD_ACCESS_TOKEN ||
       nxJson.nxCloudAccessToken ||
       nxJson.nxCloudId;

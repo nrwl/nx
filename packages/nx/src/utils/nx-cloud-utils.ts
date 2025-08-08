@@ -6,6 +6,7 @@ export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
   }
 
   return (
+    !!process.env.NX_CLOUD_AUTH_TOKEN ||
     !!process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
     !!nxJson.nxCloudId ||
@@ -21,7 +22,11 @@ export function getNxCloudUrl(nxJson: NxJsonConfiguration): string {
   );
   if (
     !cloudRunner &&
-    !(nxJson.nxCloudAccessToken || process.env.NX_CLOUD_ACCESS_TOKEN) &&
+    !(
+      nxJson.nxCloudAccessToken ||
+      process.env.NX_CLOUD_AUTH_TOKEN ||
+      process.env.NX_CLOUD_ACCESS_TOKEN
+    ) &&
     !nxJson.nxCloudId
   )
     throw new Error('nx-cloud runner not found in nx.json');
