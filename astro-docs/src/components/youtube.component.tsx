@@ -60,7 +60,7 @@ export function computeThumbnailURL(youtubeURL: string) {
   const videoID = computeVideoID(youtubeURL);
   if (!videoID) {
     throw new Error(
-      `Could not properly compute the thumbnail URL for ${youtubeURL}`,
+      `Could not properly compute the thumbnail URL for ${youtubeURL}`
     );
   }
   return `https://i.ytimg.com/vi_webp/${videoID}/maxresdefault.webp`;
@@ -70,7 +70,7 @@ export function computeWatchOnYoutubeURL(youtubeURL: string) {
   const videoID = computeVideoID(youtubeURL);
   if (!videoID) {
     throw new Error(
-      `Could not properly compute the embed URL for ${youtubeURL}`,
+      `Could not properly compute the embed URL for ${youtubeURL}`
     );
   }
   return 'https://www.youtube.com/watch?v=' + videoID;
@@ -80,7 +80,7 @@ export function computeEmbedURL(youtubeURL: string) {
   const videoID = computeVideoID(youtubeURL);
   if (!videoID) {
     throw new Error(
-      `Could not properly compute the embed URL for ${youtubeURL}`,
+      `Could not properly compute the embed URL for ${youtubeURL}`
     );
   }
   return 'https://www.youtube.com/embed/' + videoID;
@@ -124,7 +124,7 @@ export function YouTube(props: {
               {
                 'rounded-lg shadow-lg': !props.disableRoundedCorners,
               },
-              'aspect-video border-2 border-slate-200 hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700',
+              'aspect-video border-2 border-slate-200 hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700'
             )}
           />
         </a>
