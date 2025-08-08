@@ -4,6 +4,33 @@ import starlightMarkdoc from '@astrojs/starlight-markdoc';
 export default defineMarkdocConfig({
   extends: [starlightMarkdoc()],
   tags: {
+    callout: {
+      render: component('./src/components/markdoc/Callout.astro'),
+      children: ['paragraph', 'tag', 'list'],
+      attributes: {
+        type: {
+          type: 'String',
+          default: 'note',
+          matches: [
+            'announcement',
+            'caution',
+            'check',
+            'note',
+            'warning',
+            'deepdive',
+          ],
+          errorLevel: 'critical',
+        },
+        title: {
+          type: 'String',
+          required: true,
+        },
+        expanded: {
+          type: 'Boolean',
+          default: false,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
