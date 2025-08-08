@@ -1,13 +1,10 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type {
-  TaskGraph,
-  TaskGraphClientResponse,
-} from 'nx/src/command-line/graph/graph';
+import type { TaskGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 
 interface CacheEntry {
-  taskGraphs: Record<string, TaskGraph>;
+  taskGraphs: TaskGraphClientResponse['taskGraphs'];
   errors: Record<string, string>;
   // Track which projects we've fetched for this target
   fetchedProjects: Set<string>;
@@ -61,7 +58,7 @@ class TaskGraphCache {
 
     if (missingProjects.length === 0) {
       // We have all requested projects, return filtered result
-      const filteredGraphs: Record<string, TaskGraph> = {};
+      const filteredGraphs: TaskGraphClientResponse['taskGraphs'] = {};
       const filteredErrors: Record<string, string> = {};
 
       for (const project of requestedProjects) {
@@ -181,7 +178,7 @@ class TaskGraphCache {
 
     // Return only the requested projects
     const cached = this.cache.get(target);
-    const filteredGraphs: Record<string, TaskGraph> = {};
+    const filteredGraphs: TaskGraphClientResponse['taskGraphs'] = {};
     const filteredErrors: Record<string, string> = {};
 
     for (const project of requestedProjects) {

@@ -53,19 +53,8 @@ function TasksSidebarInner() {
   // Use selectedTarget data if available, otherwise fall back to tasks data
   const activeRouteData = selectedTargetRouteData || tasksRouteData;
 
-  const {
-    taskGraphs: initialTaskGraphs,
-    errors: initialErrors,
-    metadata,
-  } = activeRouteData;
+  const { taskGraphs, errors, metadata } = activeRouteData;
   let { projects, targets } = selectedWorkspaceRouteData;
-
-  // State to track loaded task graphs and errors
-  const [taskGraphs, setTaskGraphs] = useState(initialTaskGraphs || {});
-  const [errors, setErrors] = useState(initialErrors || {});
-  const [loadingProjects, setLoadingProjects] = useState<Set<string>>(
-    new Set()
-  );
 
   const selectedTarget = useMemo(
     () => params['selectedTarget'] ?? targets[0],
@@ -97,10 +86,10 @@ function TasksSidebarInner() {
   function selectTarget(target: string) {
     if (target === selectedTarget) return;
     hideAllProjects();
-    navigate({
-      pathname: `./${encodeURIComponent(target)}`,
-      search: searchParams.toString(),
-    });
+    const pathname = params['selectedTarget']
+      ? `../${encodeURIComponent(target)}`
+      : `./${encodeURIComponent(target)}`;
+    navigate({ pathname, search: searchParams.toString() });
   }
 
   function toggleProject(project: string) {
@@ -183,6 +172,14 @@ function TasksSidebarInner() {
   useEffect(() => {
     send({
       type: 'initGraph',
+      projects: selectedWorkspaceRouteData.projects,
+      taskGraphs,
+    });
+  }, [selectedWorkspaceRouteData]);
+
+  useEffect(() => {
+    send({
+      type: 'mergeGraph',
       projects: selectedWorkspaceRouteData.projects,
       taskGraphs,
     });

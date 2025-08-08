@@ -76,21 +76,13 @@ const taskDataLoader = async (
     workspaceInfo.taskGraphMetadataUrl &&
     projectGraphDataService.getTaskGraphMetadata
   ) {
-    console.log(projectGraphDataService, workspaceInfo.taskGraphMetadataUrl);
-
     // Load metadata for initial display
     const metadata = await projectGraphDataService.getTaskGraphMetadata(
       workspaceInfo.taskGraphMetadataUrl
     );
 
-    console.log('here????', metadata);
-
     // Return a response that includes metadata but empty task graphs
-    return {
-      taskGraphs: {},
-      errors: {},
-      metadata,
-    };
+    return { taskGraphs: {}, errors: {}, metadata };
   }
 
   // Fall back to loading full task graph
@@ -282,7 +274,6 @@ const childRoutes: RouteObject[] = [
     loader: async ({ params }) => {
       const selectedWorkspaceId =
         params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
-      console.log('here?????');
       return taskDataLoader(selectedWorkspaceId);
     },
     path: 'tasks',
