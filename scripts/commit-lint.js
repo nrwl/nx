@@ -1,39 +1,49 @@
 #!/usr/bin/env node
 
 const { types, scopes } = require('./commitizen.js');
+const fs = require('fs');
 
 console.log('🐟🐟🐟 Validating git commit message 🐟🐟🐟');
 
 const childProcess = require('child_process');
 
-let gitLogCmd = 'git log -1 --no-merges';
+let gitMessage;
 
-const gitRemotes = childProcess
-  .execSync('git remote -v')
-  .toString()
-  .trim()
-  .split('\n');
-const upstreamRemote = gitRemotes.find((remote) =>
-  remote.includes('nrwl/nx.git')
-);
-if (upstreamRemote) {
-  const upstreamRemoteIdentifier = upstreamRemote.split('\t')[0].trim();
-  console.log(`Comparing against remote ${upstreamRemoteIdentifier}`);
-  const currentBranch = childProcess
-    .execSync('git branch --show-current')
-    .toString()
-    .trim();
-
-  // exclude all commits already present in upstream/master
-  gitLogCmd =
-    gitLogCmd + ` ${currentBranch} ^${upstreamRemoteIdentifier}/master`;
+// Check if a commit message file is provided (commit-msg hook)
+const commitMsgFile = process.argv[2];
+if (commitMsgFile) {
+  gitMessage = fs.readFileSync(commitMsgFile, 'utf8').trim();
 } else {
-  console.error(
-    'No upstream remote found for nrwl/nx.git. Skipping comparison against upstream master.'
-  );
-}
+  // Original logic for post-push validation
+  let gitLogCmd = 'git log -1 --no-merges';
 
-const gitMessage = childProcess.execSync(gitLogCmd).toString().trim();
+  const gitRemotes = childProcess
+    .execSync('git remote -v')
+    .toString()
+    .trim()
+    .split('\n');
+  const upstreamRemote = gitRemotes.find((remote) =>
+    remote.includes('nrwl/nx.git')
+  );
+  if (upstreamRemote) {
+    const upstreamRemoteIdentifier = upstreamRemote.split('\t')[0].trim();
+    console.log(`Comparing against remote ${upstreamRemoteIdentifier}`);
+    const currentBranch = childProcess
+      .execSync('git branch --show-current')
+      .toString()
+      .trim();
+
+    // exclude all commits already present in upstream/master
+    gitLogCmd =
+      gitLogCmd + ` ${currentBranch} ^${upstreamRemoteIdentifier}/master`;
+  } else {
+    console.error(
+      'No upstream remote found for nrwl/nx.git. Skipping comparison against upstream master.'
+    );
+  }
+
+  gitMessage = childProcess.execSync(gitLogCmd).toString().trim();
+}
 
 if (!gitMessage) {
   console.log('No commits found. Skipping commit message validation.');
@@ -48,7 +58,8 @@ const commitMsgRegex = `(${allowedTypes})\\((${allowedScopes})\\)!?:\\s(([a-z0-9
 const matchCommit = new RegExp(commitMsgRegex, 'g').test(gitMessage);
 const matchRevert = /Revert/gi.test(gitMessage);
 const matchRelease = /Release/gi.test(gitMessage);
-const exitCode = +!(matchRelease || matchRevert || matchCommit);
+const matchWip = /wip/gi.test(gitMessage);
+const exitCode = +!(matchRelease || matchRevert || matchCommit || matchWip);
 
 if (exitCode === 0) {
   console.log('Commit ACCEPTED 👍');
