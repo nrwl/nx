@@ -199,6 +199,43 @@ export default defineMarkdocConfig({
         },
       },
     },
+    video_player: {
+      render: component('./src/components/markdoc/VideoPlayer.astro'),
+      attributes: {
+        src: {
+          type: 'String',
+          required: true,
+        },
+        alt: {
+          type: 'String',
+          required: false,
+        },
+        link: {
+          type: 'String',
+          required: false,
+        },
+        showDescription: {
+          type: 'Boolean',
+          required: false,
+          default: false,
+        },
+        showControls: {
+          type: 'Boolean',
+          required: false,
+          default: false,
+        },
+        autoPlay: {
+          type: 'Boolean',
+          required: false,
+          default: false,
+        },
+        loop: {
+          type: 'Boolean',
+          required: false,
+          default: false,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
