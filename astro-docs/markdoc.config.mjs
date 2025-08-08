@@ -327,6 +327,10 @@ export default defineMarkdocConfig({
         },
       },
     },
+    steps: {
+      render: component('./src/components/markdoc/Steps.astro'),
+      attributes: {},
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
