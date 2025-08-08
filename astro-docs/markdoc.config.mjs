@@ -265,6 +265,9 @@ export default defineMarkdocConfig({
         },
       },
     },
+    personas: {
+      render: component('./src/components/markdoc/Personas.astro'),
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
