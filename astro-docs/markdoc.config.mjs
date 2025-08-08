@@ -148,6 +148,19 @@ export default defineMarkdocConfig({
         },
       },
     },
+    stackblitz_button: {
+      render: component('./src/components/markdoc/StackblitzButton.astro'),
+      attributes: {
+        url: {
+          type: 'String',
+          required: true,
+        },
+        title: {
+          type: 'String',
+          required: false,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
