@@ -393,6 +393,19 @@ export default defineMarkdocConfig({
         },
       },
     },
+    video_link: {
+      render: component('./src/components/markdoc/VideoLink.astro'),
+      attributes: {
+        link: {
+          type: 'String',
+          required: true,
+        },
+        text: {
+          type: 'String',
+          required: false,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
