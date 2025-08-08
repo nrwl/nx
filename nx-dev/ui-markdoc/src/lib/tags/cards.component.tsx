@@ -53,6 +53,15 @@ const lgColsClasses: Record<number, string> = {
   8: 'lg:grid-cols-8',
 };
 
+export type CardsProps = {
+  cols: number;
+  smCols: number;
+  mdCols: number;
+  lgCols: number;
+  children: ReactNode;
+  moreLink?: string;
+};
+
 export function Cards({
   cols = 2,
   smCols = cols,
@@ -60,14 +69,7 @@ export function Cards({
   lgCols = mdCols,
   children,
   moreLink,
-}: {
-  cols: number;
-  smCols: number;
-  mdCols: number;
-  lgCols: number;
-  children: ReactNode;
-  moreLink?: string;
-}): JSX.Element {
+}: CardsProps): JSX.Element {
   // <div className="mt-8 grid grid-cols-2 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4">
   return (
     <div
@@ -108,19 +110,21 @@ function callIfFunction(fn: any, props: { [key: string]: string } = {}) {
   return fn;
 }
 
+export type LinkCardProps = {
+  title: string;
+  type: string;
+  icon: string; // Can be either a component name or a direct image URL
+  url: string;
+  appearance?: 'default' | 'small';
+};
+
 export function LinkCard({
   title,
   type,
   icon,
   url,
   appearance = 'default',
-}: {
-  title: string;
-  type: string;
-  icon: string; // Can be either a component name or a direct image URL
-  url: string;
-  appearance?: 'default' | 'small';
-}): JSX.Element {
+}: LinkCardProps): JSX.Element {
   return (
     <Link
       key={title}
@@ -175,17 +179,19 @@ export function LinkCard({
   );
 }
 
+export type CardProps = {
+  title: string;
+  description: string;
+  type: 'documentation' | 'external' | 'video';
+  url: string;
+};
+
 export function Card({
   description,
   title,
   type = 'documentation',
   url,
-}: {
-  title: string;
-  description: string;
-  type: 'documentation' | 'external' | 'video';
-  url: string;
-}): JSX.Element {
+}: CardProps): JSX.Element {
   const iconMap = {
     documentation: <DocumentIcon className="mr-3 h-5 w-5 shrink-0" />,
     external: <ArrowTopRightOnSquareIcon className="mr-3 h-5 w-5 shrink-0" />,

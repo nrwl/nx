@@ -1,0 +1,8 @@
+---
+import { type GraphProps, Graph as Default } from '@nx/nx-dev-ui-markdoc/src/lib/tags/graph.component';
+type Props = GraphProps;
+---
+
+<Default client:visible {...Astro.props} isAstro={true}>
+  <slot />
+</Default>

@@ -99,17 +99,19 @@ const typeMap: Record<
   },
 };
 
+export type CalloutProps = {
+  title: string;
+  type: CalloutType;
+  children: ReactNode;
+  expanded?: boolean;
+};
+
 export function Callout({
   title,
   type,
   children,
   expanded = false,
-}: {
-  title: string;
-  type: CalloutType;
-  children: ReactNode;
-  expanded?: boolean;
-}): ReactElement {
+}: CalloutProps): ReactElement {
   const [isOpen, setIsOpen] = useState(type !== 'deepdive' || expanded);
   const ui = typeMap[type] || typeMap.note;
   const isCollapsible = type === 'deepdive';

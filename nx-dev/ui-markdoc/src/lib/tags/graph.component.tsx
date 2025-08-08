@@ -32,21 +32,46 @@ const NxDevTaskGraph = dynamic(
   { ssr: false, loading: () => <Loading /> }
 );
 
+function getInitialPropsForAstro(children: ReactElement) {
+  if (!children || !children.hasOwnProperty('props') || !children.props.value)
+    return null;
+  try {
+    return parseAstroHtmlWrappedJson(children.props.value.toString() as any);
+  } catch {
+    return null;
+  }
+}
+
+function parseAstroHtmlWrappedJson(htmlString: string) {
+  const cleanedString = htmlString
+    .trim()
+    .replace(/^<\w>|<\/\w>$/g, '')
+    .trim()
+    .replace(/&quot;/g, '"');
+  return JSON.parse(cleanedString);
+}
+
+export type GraphProps = {
+  height: string;
+  title: string;
+  type: 'project' | 'task';
+  jsonFile?: string;
+  children: ReactElement;
+  isAstro?: boolean;
+};
+
 export function Graph({
   height,
   title,
   type,
   jsonFile,
   children,
-}: {
-  height: string;
-  title: string;
-  type: 'project' | 'task';
-  jsonFile?: string;
-  children: ReactElement;
-}): JSX.Element {
+  isAstro = false,
+}: GraphProps): JSX.Element {
   const [theme] = useTheme();
-  const [parsedProps, setParsedProps] = useState<any>();
+  const [parsedProps, setParsedProps] = useState<any>(
+    isAstro ? getInitialPropsForAstro(children) : null
+  );
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
       headers: {
@@ -84,11 +109,8 @@ export function Graph({
       );
     }
   }
-  if (!parsedProps) {
-    return <Loading />;
-  }
 
-  return (
+  return parsedProps ? (
     <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
         {title}
@@ -114,5 +136,7 @@ export function Graph({
         />
       )}
     </div>
+  ) : (
+    <Loading />
   );
 }

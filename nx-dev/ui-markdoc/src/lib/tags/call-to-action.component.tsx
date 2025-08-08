@@ -49,6 +49,15 @@ const variantClasses: Record<
   },
 };
 
+export type CallToActionProps = {
+  url: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'gradient' | 'inverted' | 'gradient-alt';
+};
+
 export function CallToAction({
   url,
   title,
@@ -56,14 +65,7 @@ export function CallToAction({
   icon = 'nx',
   size = 'sm',
   variant = 'default',
-}: {
-  url: string;
-  title: string;
-  description?: string;
-  icon?: string;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'gradient' | 'inverted' | 'gradient-alt';
-}): JSX.Element {
+}: CallToActionProps): JSX.Element {
   const iconClasses = iconSizeClasses[size];
   const colorClasses = variantClasses?.[variant] ?? variantClasses['default'];
 

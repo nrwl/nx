@@ -3,7 +3,7 @@
 import { MetricsCTA } from './metrics-cta';
 import { Metric } from './metrics.schema';
 
-interface MetricsProps {
+export interface MetricsProps {
   metrics: Metric[];
   variant?: 'horizontal' | 'vertical';
 }
