@@ -997,8 +997,10 @@ async function createTaskGraphClientResponse(
   const taskGraphs = getAllTaskGraphsForWorkspace(graph);
   performance.mark('task graph generation:end');
 
-  // Use cached HashPlanner instead of creating a new one
-  const planner = getHashPlanner(nxJson, graph);
+  const planner = new HashPlanner(
+    nxJson,
+    transferProjectGraph(transformProjectGraphForRust(graph))
+  );
   performance.mark('task hash plan generation:start');
   const plans: Record<string, string[]> = {};
   for (const individualTaskGraph of Object.values(taskGraphs.taskGraphs)) {
@@ -1148,38 +1150,10 @@ function createTaskId(
 const taskGraphCache = new Map<string, TaskGraphClientResponse>();
 let taskGraphMetadataCache: TaskGraphMetadata | null = null;
 
-// Cache the HashPlanner to avoid recreating it for each request
-let cachedHashPlanner: HashPlanner | null = null;
-let cachedProjectGraphHash: string | null = null;
-
 // Clear cache when project graph changes
 function clearTaskGraphCache() {
   taskGraphCache.clear();
   taskGraphMetadataCache = null;
-  cachedHashPlanner = null;
-  cachedProjectGraphHash = null;
-}
-
-// Get or create a cached HashPlanner
-function getHashPlanner(
-  nxJson: NxJson,
-  projectGraph: ProjectGraph
-): HashPlanner {
-  // Use the project graph hash to detect changes
-  const currentHash = currentProjectGraphClientResponse?.hash;
-
-  if (cachedHashPlanner && cachedProjectGraphHash === currentHash) {
-    return cachedHashPlanner;
-  }
-
-  // Create new planner and cache it
-  cachedHashPlanner = new HashPlanner(
-    nxJson,
-    transferProjectGraph(transformProjectGraphForRust(projectGraph))
-  );
-  cachedProjectGraphHash = currentHash;
-
-  return cachedHashPlanner;
 }
 
 /**
@@ -1292,11 +1266,14 @@ async function createTaskGraphsForTargetAndProjects(
   performance.mark(`target task graphs generation:end`);
 
   // Generate hash plans
-  const planner = getHashPlanner(nxJson, graph);
+  const planner = new HashPlanner(
+    nxJson,
+    transferProjectGraph(transformProjectGraphForRust(graph))
+  );
   performance.mark('target task hash plan generation:start');
   const plans: Record<string, string[]> = {};
 
-  for (const [taskId, taskGraph] of Object.entries(taskGraphs)) {
+  for (const taskGraph of Object.values(taskGraphs)) {
     const taskIds = Object.keys(taskGraph.tasks);
     if (taskIds.length > 0) {
       const taskPlans = planner.getPlans(taskIds, taskGraph);
@@ -1391,8 +1368,10 @@ async function createSpecificTaskGraphResponse(
 
   performance.mark(`specific task graph generation:end`);
 
-  // Use cached HashPlanner instead of creating a new one
-  const planner = getHashPlanner(nxJson, graph);
+  const planner = new HashPlanner(
+    nxJson,
+    transferProjectGraph(transformProjectGraphForRust(graph))
+  );
 
   performance.mark('specific task hash plan generation:start');
   const plans: Record<string, string[]> = {};
