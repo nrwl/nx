@@ -515,5 +515,16 @@ function withDockerVersionSchemeOptions<T>(
       type: 'string',
       describe:
         'Exact docker version to use, bypassing the version scheme logic. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
+    })
+    .check((argv) => {
+      if (
+        argv.dockerVersionScheme !== undefined &&
+        argv.dockerVersion !== undefined
+      ) {
+        throw new Error(
+          'The --dockerVersionScheme and --dockerVersion options are mutually exclusive, please use one or the other.'
+        );
+      }
+      return true;
     });
 }
