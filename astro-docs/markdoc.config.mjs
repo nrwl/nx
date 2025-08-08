@@ -236,6 +236,35 @@ export default defineMarkdocConfig({
         },
       },
     },
+    persona: {
+      render: component('./src/components/markdoc/Persona.astro'),
+      children: ['paragraph', 'tag', 'list'],
+      attributes: {
+        title: {
+          type: 'String',
+        },
+        type: {
+          type: 'String',
+          default: 'integrated',
+          required: true,
+          matches: [
+            'cache',
+            'distribute',
+            'javascript',
+            'lerna',
+            'react',
+            'angular',
+            'integrated',
+          ],
+          errorLevel: 'critical',
+        },
+        url: {
+          type: 'String',
+          required: true,
+          errorLevel: 'critical',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
