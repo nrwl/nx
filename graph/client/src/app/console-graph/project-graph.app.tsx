@@ -1,4 +1,7 @@
-import { useProjectGraphClient } from '@nx/graph/projects';
+import {
+  useProjectGraphClient,
+  useProjectGraphContext,
+} from '@nx/graph/projects';
 import { useSelector } from '@xstate/react';
 import { useEffect } from 'react';
 import { Interpreter } from 'xstate';
@@ -14,7 +17,6 @@ export function ProjectGraphApp({
       renderPlatform: 'nx-console',
       styles: [],
     });
-
   const projectGraph = useSelector(
     service,
     (state) => state.context.projectGraph
@@ -22,7 +24,8 @@ export function ProjectGraphApp({
 
   useEffect(() => {
     console.log('graph client', graphClient);
-    if (!graphClient) return;
+    console.log('projectGraph', projectGraph);
+    if (!graphClient || !projectGraph) return;
 
     send({
       type: 'initGraph',
@@ -30,7 +33,14 @@ export function ProjectGraphApp({
       dependencies: projectGraph.dependencies,
       affectedProjects: [],
     });
-  }, [graphClient]);
+  }, [graphClient, projectGraph, send]);
 
-  return <div ref={containerRef} className="h-full w-full" />;
+  return (
+    <div className="relative h-full w-full overflow-hidden">
+      <div
+        ref={containerRef}
+        className="flex h-full w-full cursor-pointer"
+      ></div>
+    </div>
+  );
 }
