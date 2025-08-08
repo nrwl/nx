@@ -39,6 +39,9 @@
     },
     {
       "path": "../nx-dev/ui-icons"
+    },
+    {
+      "path": "../nx-dev/ui-common"
     }
   ]
 }

@@ -1111,6 +1111,9 @@ importers:
       '@astrojs/starlight-tailwind':
         specifier: ^4.0.1
         version: 4.0.1(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(lightningcss@1.30.1)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))(tailwindcss@4.1.11)
+      '@nx/nx-dev-ui-common':
+        specifier: workspace:*
+        version: link:../nx-dev/ui-common
       '@nx/nx-dev-ui-icons':
         specifier: workspace:*
         version: link:../nx-dev/ui-icons

@@ -23,7 +23,8 @@ export default defineConfig({
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
-        src: './src/assets/nx/Nx-light.png',
+        light: './src/assets/nx/Nx-dark.png',
+        dark: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
       plugins: [
@@ -60,7 +61,10 @@ export default defineConfig({
       },
       sidebar,
       components: {
+        Footer: './src/components/layout/Footer.astro',
+        PageFrame: './src/components/layout/PageFrame.astro',
         Sidebar: './src/components/layout/Sidebar.astro',
+        TwoColumnContent: './src/components/layout/TwoColumnContent.astro',
       },
     }),
     react(),
