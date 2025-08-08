@@ -110,6 +110,31 @@ export default defineMarkdocConfig({
         },
       },
     },
+    link_card: {
+      render: component('./src/components/markdoc/LinkCard.astro'),
+      attributes: {
+        title: {
+          type: 'String',
+          required: true,
+        },
+        type: {
+          type: 'String',
+          required: true,
+        },
+        icon: {
+          type: 'String',
+          required: false,
+        },
+        url: {
+          type: 'String',
+          default: '',
+        },
+        appearance: {
+          type: 'String',
+          default: 'default',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
