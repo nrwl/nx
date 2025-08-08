@@ -343,6 +343,21 @@ export default defineMarkdocConfig({
       render: component('./src/components/markdoc/Tabs.astro'),
       attributes: {},
     },
+    testimonial: {
+      render: component('./src/components/markdoc/Testimonial.astro'),
+      children: ['paragraph'],
+      attributes: {
+        name: {
+          type: 'String',
+        },
+        title: {
+          type: 'String',
+        },
+        image: {
+          type: 'String',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},

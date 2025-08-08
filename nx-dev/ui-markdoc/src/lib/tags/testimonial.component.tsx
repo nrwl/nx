@@ -18,17 +18,19 @@ export const testimonial: Schema = {
   },
 };
 
+export type TestimonialProps = {
+  title: string;
+  name: string;
+  children: ReactNode;
+  image: string;
+};
+
 export function Testimonial({
   children,
   name,
   title,
   image,
-}: {
-  title: string;
-  name: string;
-  children: ReactNode;
-  image: string;
-}) {
+}: TestimonialProps) {
   return (
     <figure className="not-prose">
       <blockquote className="relative pt-6">
