@@ -4,8 +4,12 @@ import starlightMarkdoc from '@astrojs/starlight-markdoc';
 export default defineMarkdocConfig({
   extends: [starlightMarkdoc()],
   tags: {
+    install_nx_console: {
+      render: component('./src/components/markdoc/InstallNxConsole.astro'),
+      attributes: {},
+    },
     youtube: {
-      render: component('./src/components/Youtube.astro'),
+      render: component('./src/components/markdoc/Youtube.astro'),
       attributes: {
         src: {
           type: 'String',

@@ -10,6 +10,7 @@
     "@astrojs/starlight": "0.34.6",
     "@astrojs/starlight-markdoc": "^0.4.0",
     "@astrojs/starlight-tailwind": "^4.0.1",
+    "@nx/nx-dev-ui-common": "workspace:*",
     "@nx/nx-dev-ui-icons": "workspace:*",
     "@nx/nx-dev-ui-markdoc": "workspace:*",
     "@tailwindcss/vite": "^4.1.11",
