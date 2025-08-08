@@ -9,78 +9,8 @@ export const sidebar = [
   },
   {
     label: 'Features',
-    items: [
-      {
-        label: 'Run Tasks',
-        link: 'features/run-tasks',
-      },
-      {
-        label: 'Cache Task Results',
-        link: 'features/cache-task-results',
-      },
-      {
-        label: 'Enhance Your LLM',
-        link: 'features/enhance-AI',
-      },
-      {
-        label: 'Explore Your Workspace',
-        link: 'features/explore-graph',
-      },
-      {
-        label: 'Generate Code',
-        link: 'features/generate-code',
-      },
-      {
-        label: 'Maintain TypeScript Monorepos',
-        link: 'features/maintain-ts-monorepos',
-      },
-      {
-        label: 'Automate Updating Dependencies',
-        link: 'features/automate-updating-dependencies',
-      },
-      {
-        label: 'Enforce Module Boundaries',
-        link: 'features/enforce-module-boundaries',
-      },
-      {
-        label: 'Manage Releases',
-        link: 'features/manage-releases',
-      },
-      {
-        label: 'CI Features',
-        collapsed: true,
-        items: [
-          {
-            label: 'AI-Powered Self-Healing CI',
-            link: 'ci/features/self-healing-ci',
-          },
-          {
-            label: 'Use Remote Caching (Nx Replay)',
-            link: 'ci/features/remote-cache',
-          },
-          {
-            label: 'Distribute Task Execution (Nx Agents)',
-            link: 'ci/features/distribute-task-execution',
-          },
-          {
-            label: 'Run Only Tasks Affected by a PR',
-            link: 'ci/features/affected',
-          },
-          {
-            label: 'Dynamically Allocate Agents',
-            link: 'ci/features/dynamic-agents',
-          },
-          {
-            label: 'Automatically Split E2E Tasks',
-            link: 'ci/features/split-e2e-tasks',
-          },
-          {
-            label: 'Identify and Re-run Flaky Tasks',
-            link: 'ci/features/flaky-tasks',
-          },
-        ],
-      },
-    ],
+    collapsed: false,
+    autogenerate: { directory: 'features', collapsed: true },
   },
   {
     label: 'Core Guides',
