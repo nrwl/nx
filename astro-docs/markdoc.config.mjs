@@ -4,33 +4,6 @@ import starlightMarkdoc from '@astrojs/starlight-markdoc';
 export default defineMarkdocConfig({
   extends: [starlightMarkdoc()],
   tags: {
-    callout: {
-      render: component('./src/components/markdoc/Callout.astro'),
-      children: ['paragraph', 'tag', 'list'],
-      attributes: {
-        type: {
-          type: 'String',
-          default: 'note',
-          matches: [
-            'announcement',
-            'caution',
-            'check',
-            'note',
-            'warning',
-            'deepdive',
-          ],
-          errorLevel: 'critical',
-        },
-        title: {
-          type: 'String',
-          required: true,
-        },
-        expanded: {
-          type: 'Boolean',
-          default: false,
-        },
-      },
-    },
     call_to_action: {
       render: component('./src/components/markdoc/CallToAction.astro'),
       attributes: {
@@ -61,6 +34,33 @@ export default defineMarkdocConfig({
           required: false,
           default: 'sm',
           matches: ['sm', 'md', 'lg'],
+        },
+      },
+    },
+    callout: {
+      render: component('./src/components/markdoc/Callout.astro'),
+      children: ['paragraph', 'tag', 'list'],
+      attributes: {
+        type: {
+          type: 'String',
+          default: 'note',
+          matches: [
+            'announcement',
+            'caution',
+            'check',
+            'note',
+            'warning',
+            'deepdive',
+          ],
+          errorLevel: 'critical',
+        },
+        title: {
+          type: 'String',
+          required: true,
+        },
+        expanded: {
+          type: 'Boolean',
+          default: false,
         },
       },
     },
@@ -110,46 +110,25 @@ export default defineMarkdocConfig({
         },
       },
     },
-    link_card: {
-      render: component('./src/components/markdoc/LinkCard.astro'),
+    course_video: {
+      render: component('./src/components/markdoc/CourseVideo.astro'),
       attributes: {
-        title: {
+        src: {
           type: 'String',
           required: true,
         },
-        type: {
+        courseTitle: {
           type: 'String',
           required: true,
         },
-        icon: {
+        courseUrl: {
           type: 'String',
-          required: false,
-        },
-        url: {
-          type: 'String',
-          default: '',
-        },
-        appearance: {
-          type: 'String',
-          default: 'default',
+          required: true,
         },
       },
     },
     github_repository: {
       render: component('./src/components/markdoc/GithubRepository.astro'),
-      attributes: {
-        url: {
-          type: 'String',
-          required: true,
-        },
-        title: {
-          type: 'String',
-          required: false,
-        },
-      },
-    },
-    stackblitz_button: {
-      render: component('./src/components/markdoc/StackblitzButton.astro'),
       attributes: {
         url: {
           type: 'String',
@@ -199,6 +178,144 @@ export default defineMarkdocConfig({
         },
       },
     },
+    install_nx_console: {
+      render: component('./src/components/markdoc/InstallNxConsole.astro'),
+      attributes: {},
+    },
+    link_card: {
+      render: component('./src/components/markdoc/LinkCard.astro'),
+      attributes: {
+        title: {
+          type: 'String',
+          required: true,
+        },
+        type: {
+          type: 'String',
+          required: true,
+        },
+        icon: {
+          type: 'String',
+          required: false,
+        },
+        url: {
+          type: 'String',
+          default: '',
+        },
+        appearance: {
+          type: 'String',
+          default: 'default',
+        },
+      },
+    },
+    metrics: {
+      render: component('./src/components/markdoc/Metrics.astro'),
+      attributes: {
+        metrics: {
+          type: 'Array',
+          required: true,
+        },
+      },
+    },
+    persona: {
+      render: component('./src/components/markdoc/Persona.astro'),
+      children: ['paragraph', 'tag', 'list'],
+      attributes: {
+        title: {
+          type: 'String',
+        },
+        type: {
+          type: 'String',
+          default: 'integrated',
+          required: true,
+          matches: [
+            'cache',
+            'distribute',
+            'javascript',
+            'lerna',
+            'react',
+            'angular',
+            'integrated',
+          ],
+          errorLevel: 'critical',
+        },
+        url: {
+          type: 'String',
+          required: true,
+          errorLevel: 'critical',
+        },
+      },
+    },
+    personas: {
+      render: component('./src/components/markdoc/Personas.astro'),
+    },
+    pill: {
+      render: component('./src/components/markdoc/Pill.astro'),
+      attributes: {
+        url: {
+          type: 'String',
+          default: '',
+        },
+      },
+    },
+    project_details: {
+      render: component('./src/components/markdoc/ProjectDetails.astro'),
+      children: [],
+      attributes: {
+        jsonFile: {
+          type: 'String',
+        },
+        title: {
+          type: 'String',
+        },
+        height: {
+          type: 'String',
+        },
+        expandedTargets: {
+          type: 'Array',
+        },
+      },
+    },
+    stackblitz_button: {
+      render: component('./src/components/markdoc/StackblitzButton.astro'),
+      attributes: {
+        url: {
+          type: 'String',
+          required: true,
+        },
+        title: {
+          type: 'String',
+          required: false,
+        },
+      },
+    },
+    testimonial: {
+      render: component('./src/components/markdoc/Testimonial.astro'),
+      children: ['paragraph'],
+      attributes: {
+        name: {
+          type: 'String',
+        },
+        title: {
+          type: 'String',
+        },
+        image: {
+          type: 'String',
+        },
+      },
+    },
+    video_link: {
+      render: component('./src/components/markdoc/VideoLink.astro'),
+      attributes: {
+        link: {
+          type: 'String',
+          required: true,
+        },
+        text: {
+          type: 'String',
+          required: false,
+        },
+      },
+    },
     video_player: {
       render: component('./src/components/markdoc/VideoPlayer.astro'),
       attributes: {
@@ -235,123 +352,6 @@ export default defineMarkdocConfig({
           default: false,
         },
       },
-    },
-    persona: {
-      render: component('./src/components/markdoc/Persona.astro'),
-      children: ['paragraph', 'tag', 'list'],
-      attributes: {
-        title: {
-          type: 'String',
-        },
-        type: {
-          type: 'String',
-          default: 'integrated',
-          required: true,
-          matches: [
-            'cache',
-            'distribute',
-            'javascript',
-            'lerna',
-            'react',
-            'angular',
-            'integrated',
-          ],
-          errorLevel: 'critical',
-        },
-        url: {
-          type: 'String',
-          required: true,
-          errorLevel: 'critical',
-        },
-      },
-    },
-    personas: {
-      render: component('./src/components/markdoc/Personas.astro'),
-    },
-    project_details: {
-      render: component('./src/components/markdoc/ProjectDetails.astro'),
-      children: [],
-      attributes: {
-        jsonFile: {
-          type: 'String',
-        },
-        title: {
-          type: 'String',
-        },
-        height: {
-          type: 'String',
-        },
-        expandedTargets: {
-          type: 'Array',
-        },
-      },
-    },
-    pill: {
-      render: component('./src/components/markdoc/Pill.astro'),
-      attributes: {
-        url: {
-          type: 'String',
-          default: '',
-        },
-      },
-    },
-    testimonial: {
-      render: component('./src/components/markdoc/Testimonial.astro'),
-      children: ['paragraph'],
-      attributes: {
-        name: {
-          type: 'String',
-        },
-        title: {
-          type: 'String',
-        },
-        image: {
-          type: 'String',
-        },
-      },
-    },
-    course_video: {
-      render: component('./src/components/markdoc/CourseVideo.astro'),
-      attributes: {
-        src: {
-          type: 'String',
-          required: true,
-        },
-        courseTitle: {
-          type: 'String',
-          required: true,
-        },
-        courseUrl: {
-          type: 'String',
-          required: true,
-        },
-      },
-    },
-    video_link: {
-      render: component('./src/components/markdoc/VideoLink.astro'),
-      attributes: {
-        link: {
-          type: 'String',
-          required: true,
-        },
-        text: {
-          type: 'String',
-          required: false,
-        },
-      },
-    },
-    metrics: {
-      render: component('./src/components/markdoc/Metrics.astro'),
-      attributes: {
-        metrics: {
-          type: 'Array',
-          required: true,
-        },
-      },
-    },
-    install_nx_console: {
-      render: component('./src/components/markdoc/InstallNxConsole.astro'),
-      attributes: {},
     },
     youtube: {
       render: component('./src/components/markdoc/Youtube.astro'),
