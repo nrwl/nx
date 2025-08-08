@@ -11,7 +11,7 @@ export function ProjectGraphApp({
 }) {
   const { containerRef, graphClient, sendRenderConfigEvent, send } =
     useProjectGraphClient({
-      renderPlatform: 'nx-dev',
+      renderPlatform: 'nx-console',
       styles: [],
     });
 
@@ -21,6 +21,7 @@ export function ProjectGraphApp({
   );
 
   useEffect(() => {
+    console.log('graph client', graphClient);
     if (!graphClient) return;
 
     send({
@@ -29,7 +30,7 @@ export function ProjectGraphApp({
       dependencies: projectGraph.dependencies,
       affectedProjects: [],
     });
-  }, [graphClient, projectGraph]);
+  }, [graphClient]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }
