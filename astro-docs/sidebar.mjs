@@ -2742,522 +2742,492 @@ export const sidebar = [
   },
   {
     label: 'Reference',
-    items: [
-      {
-        label: 'Commands',
-        link: 'reference/nx-commands',
-      },
-      {
-        label: 'Nx Configuration',
-        link: 'reference/nx-json',
-      },
-      {
-        label: 'Project Configuration',
-        link: 'reference/project-configuration',
-      },
-      {
-        label: 'Inputs and Named Inputs',
-        link: 'reference/inputs',
-      },
-      {
-        label: '.nxignore',
-        link: 'reference/nxignore',
-      },
-      {
-        label: 'Environment Variables',
-        link: 'reference/environment-variables',
-      },
-      {
-        label: 'Glossary',
-        link: 'reference/glossary',
-      },
-      {
-        label: 'Releases',
-        link: 'reference/releases',
-      },
-      {
-        label: 'API',
-        collapsed: true,
-        items: [
-          {
-            label: 'nx',
-            collapsed: true,
-            items: [
-              {
-                label: 'documents',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'create-nx-workspace',
-                    link: 'reference/core-api/nx/documents/create-nx-workspace',
-                  },
-                  {
-                    label: 'init',
-                    link: 'reference/core-api/nx/documents/init',
-                  },
-                  {
-                    label: 'generate',
-                    link: 'reference/core-api/nx/documents/generate',
-                  },
-                  {
-                    label: 'run',
-                    link: 'reference/core-api/nx/documents/run',
-                  },
-                  {
-                    label: 'daemon',
-                    link: 'reference/core-api/nx/documents/daemon',
-                  },
-                  {
-                    label: 'graph',
-                    link: 'reference/core-api/nx/documents/dep-graph',
-                  },
-                  {
-                    label: 'run-many',
-                    link: 'reference/core-api/nx/documents/run-many',
-                  },
-                  {
-                    label: 'affected',
-                    link: 'reference/core-api/nx/documents/affected',
-                  },
-                  {
-                    label: 'format:check',
-                    link: 'reference/core-api/nx/documents/format-check',
-                  },
-                  {
-                    label: 'format:write',
-                    link: 'reference/core-api/nx/documents/format-write',
-                  },
-                  {
-                    label: 'migrate',
-                    link: 'reference/core-api/nx/documents/migrate',
-                  },
-                  {
-                    label: 'report',
-                    link: 'reference/core-api/nx/documents/report',
-                  },
-                  {
-                    label: 'list',
-                    link: 'reference/core-api/nx/documents/list',
-                  },
-                  {
-                    label: 'connect-to-nx-cloud',
-                    link: 'reference/core-api/nx/documents/connect-to-nx-cloud',
-                  },
-                  {
-                    label: 'reset',
-                    link: 'reference/core-api/nx/documents/reset',
-                  },
-                  {
-                    label: 'repair',
-                    link: 'reference/core-api/nx/documents/repair',
-                  },
-                  {
-                    label: 'sync',
-                    link: 'reference/core-api/nx/documents/sync',
-                  },
-                  {
-                    label: 'sync:check',
-                    link: 'reference/core-api/nx/documents/sync-check',
-                  },
-                  {
-                    label: 'import',
-                    link: 'reference/core-api/nx/documents/import',
-                  },
-                  {
-                    label: 'exec',
-                    link: 'reference/core-api/nx/documents/exec',
-                  },
-                  {
-                    label: 'watch',
-                    link: 'reference/core-api/nx/documents/watch',
-                  },
-                  {
-                    label: 'show',
-                    link: 'reference/core-api/nx/documents/show',
-                  },
-                  {
-                    label: 'view-logs',
-                    link: 'reference/core-api/nx/documents/view-logs',
-                  },
-                  {
-                    label: 'release',
-                    link: 'reference/core-api/nx/documents/release',
-                  },
-                  {
-                    label: 'add',
-                    link: 'reference/core-api/nx/documents/add',
-                  },
-                  {
-                    label: 'mcp',
-                    link: 'reference/core-api/nx/documents/mcp',
-                  },
-                  {
-                    label: 'login',
-                    link: 'reference/core-api/nx/documents/login',
-                  },
-                  {
-                    label: 'logout',
-                    link: 'reference/core-api/nx/documents/logout',
-                  },
-                  {
-                    label: 'fix-ci',
-                    link: 'reference/core-api/nx/documents/fix-ci',
-                  },
-                  {
-                    label: 'record',
-                    link: 'reference/core-api/nx/documents/record',
-                  },
-                  {
-                    label: 'start-ci-run',
-                    link: 'reference/core-api/nx/documents/start-ci-run',
-                  },
-                ],
-              },
-              {
-                label: 'executors',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'noop',
-                    link: 'reference/core-api/nx/executors/noop',
-                  },
-                  {
-                    label: 'run-commands',
-                    link: 'reference/core-api/nx/executors/run-commands',
-                  },
-                  {
-                    label: 'run-script',
-                    link: 'reference/core-api/nx/executors/run-script',
-                  },
-                ],
-              },
-              {
-                label: 'generators',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'connect-to-nx-cloud',
-                    link: 'reference/core-api/nx/generators/connect-to-nx-cloud',
-                  },
-                ],
-              },
-              {
-                label: 'migrations',
-                link: 'reference/core-api/nx/migrations',
-              },
-            ],
-          },
-          {
-            label: 'workspace',
-            collapsed: true,
-            items: [
-              {
-                label: 'documents',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'Overview',
-                    link: 'reference/core-api/workspace/documents/overview',
-                  },
-                  {
-                    label: 'Nx, NodeJS and Typescript Versions',
-                    link: 'reference/core-api/workspace/documents/nx-nodejs-typescript-version-matrix',
-                  },
-                ],
-              },
-              {
-                label: 'executors',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'counter',
-                    link: 'reference/core-api/workspace/executors/counter',
-                  },
-                ],
-              },
-              {
-                label: 'generators',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'preset',
-                    link: 'reference/core-api/workspace/generators/preset',
-                  },
-                  {
-                    label: 'move',
-                    link: 'reference/core-api/workspace/generators/move',
-                  },
-                  {
-                    label: 'remove',
-                    link: 'reference/core-api/workspace/generators/remove',
-                  },
-                  {
-                    label: 'convert-to-monorepo',
-                    link: 'reference/core-api/workspace/generators/convert-to-monorepo',
-                  },
-                  {
-                    label: 'new',
-                    link: 'reference/core-api/workspace/generators/new',
-                  },
-                  {
-                    label: 'run-commands',
-                    link: 'reference/core-api/workspace/generators/run-commands',
-                  },
-                  {
-                    label: 'fix-configuration',
-                    link: 'reference/core-api/workspace/generators/fix-configuration',
-                  },
-                  {
-                    label: 'npm-package',
-                    link: 'reference/core-api/workspace/generators/npm-package',
-                  },
-                  {
-                    label: 'ci-workflow',
-                    link: 'reference/core-api/workspace/generators/ci-workflow',
-                  },
-                  {
-                    label: 'infer-targets',
-                    link: 'reference/core-api/workspace/generators/infer-targets',
-                  },
-                ],
-              },
-              {
-                label: 'migrations',
-                link: 'reference/core-api/workspace/migrations',
-              },
-            ],
-          },
-          {
-            label: 'owners',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: 'reference/core-api/owners/overview',
-              },
-              {
-                label: 'generators',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'init',
-                    link: 'reference/core-api/owners/generators/init',
-                  },
-                  {
-                    label: 'sync-codeowners-file',
-                    link: 'reference/core-api/owners/generators/sync-codeowners-file',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: 'conformance',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: 'reference/core-api/conformance/overview',
-              },
-              {
-                label: 'Create a Conformance Rule',
-                link: 'reference/core-api/conformance/create-conformance-rule',
-              },
-              {
-                label: 'documents',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'Overview',
-                    link: 'reference/core-api/conformance/documents/overview',
-                  },
-                  {
-                    label: 'Create a Conformance Rule',
-                    link: 'reference/core-api/conformance/documents/create-conformance-rule',
-                  },
-                ],
-              },
-              {
-                label: 'executors',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'bundle-rules',
-                    link: 'reference/core-api/conformance/executors/bundle-rules',
-                  },
-                ],
-              },
-              {
-                label: 'generators',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'create-rule',
-                    link: 'reference/core-api/conformance/generators/create-rule',
-                  },
-                  {
-                    label: 'preset',
-                    link: 'reference/core-api/conformance/generators/preset',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: 'azure-cache',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: 'reference/core-api/azure-cache/overview',
-              },
-            ],
-          },
-          {
-            label: 'gcs-cache',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: 'reference/core-api/gcs-cache/overview',
-              },
-            ],
-          },
-          {
-            label: 's3-cache',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: 'reference/core-api/s3-cache/overview',
-              },
-            ],
-          },
-          {
-            label: 'shared-fs-cache',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: 'reference/core-api/shared-fs-cache/overview',
-              },
-              {
-                label: 'generators',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'init',
-                    link: 'reference/core-api/shared-fs-cache/generators/init',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: 'devkit',
-            collapsed: true,
-            items: [
-              {
-                label: 'documents',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'Overview',
-                    link: 'reference/core-api/devkit/documents/nx_devkit',
-                  },
-                  {
-                    label: 'Ng CLI Adapter',
-                    link: 'reference/core-api/devkit/documents/ngcli_adapter',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: 'plugin',
-            collapsed: true,
-            items: [
-              {
-                label: 'generators',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'plugin',
-                    link: 'reference/core-api/plugin/generators/plugin',
-                  },
-                  {
-                    label: 'create-package',
-                    link: 'reference/core-api/plugin/generators/create-package',
-                  },
-                  {
-                    label: 'e2e-project',
-                    link: 'reference/core-api/plugin/generators/e2e-project',
-                  },
-                  {
-                    label: 'migration',
-                    link: 'reference/core-api/plugin/generators/migration',
-                  },
-                  {
-                    label: 'generator',
-                    link: 'reference/core-api/plugin/generators/generator',
-                  },
-                  {
-                    label: 'executor',
-                    link: 'reference/core-api/plugin/generators/executor',
-                  },
-                  {
-                    label: 'plugin-lint-checks',
-                    link: 'reference/core-api/plugin/generators/plugin-lint-checks',
-                  },
-                  {
-                    label: 'preset',
-                    link: 'reference/core-api/plugin/generators/preset',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: 'web',
-            collapsed: true,
-            items: [
-              {
-                label: 'executors',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'file-server',
-                    link: 'reference/core-api/web/executors/file-server',
-                  },
-                ],
-              },
-              {
-                label: 'generators',
-                collapsed: true,
-                items: [
-                  {
-                    label: 'init',
-                    link: 'reference/core-api/web/generators/init',
-                  },
-                  {
-                    label: 'application',
-                    link: 'reference/core-api/web/generators/application',
-                  },
-                  {
-                    label: 'static-config',
-                    link: 'reference/core-api/web/generators/static-config',
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: 'create-nx-workspace',
-            link: 'reference/core-api/create-nx-workspace',
-          },
-        ],
-      },
-    ],
+    collapsed: false,
+    autogenerate: { directory: 'references', collapsed: true },
+    // items: [
+    //   {
+    //     label: 'API',
+    //     collapsed: true,
+    //     items: [
+    //       {
+    //         label: 'nx',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'documents',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'create-nx-workspace',
+    //                 link: 'reference/core-api/nx/documents/create-nx-workspace',
+    //               },
+    //               {
+    //                 label: 'init',
+    //                 link: 'reference/core-api/nx/documents/init',
+    //               },
+    //               {
+    //                 label: 'generate',
+    //                 link: 'reference/core-api/nx/documents/generate',
+    //               },
+    //               {
+    //                 label: 'run',
+    //                 link: 'reference/core-api/nx/documents/run',
+    //               },
+    //               {
+    //                 label: 'daemon',
+    //                 link: 'reference/core-api/nx/documents/daemon',
+    //               },
+    //               {
+    //                 label: 'graph',
+    //                 link: 'reference/core-api/nx/documents/dep-graph',
+    //               },
+    //               {
+    //                 label: 'run-many',
+    //                 link: 'reference/core-api/nx/documents/run-many',
+    //               },
+    //               {
+    //                 label: 'affected',
+    //                 link: 'reference/core-api/nx/documents/affected',
+    //               },
+    //               {
+    //                 label: 'format:check',
+    //                 link: 'reference/core-api/nx/documents/format-check',
+    //               },
+    //               {
+    //                 label: 'format:write',
+    //                 link: 'reference/core-api/nx/documents/format-write',
+    //               },
+    //               {
+    //                 label: 'migrate',
+    //                 link: 'reference/core-api/nx/documents/migrate',
+    //               },
+    //               {
+    //                 label: 'report',
+    //                 link: 'reference/core-api/nx/documents/report',
+    //               },
+    //               {
+    //                 label: 'list',
+    //                 link: 'reference/core-api/nx/documents/list',
+    //               },
+    //               {
+    //                 label: 'connect-to-nx-cloud',
+    //                 link: 'reference/core-api/nx/documents/connect-to-nx-cloud',
+    //               },
+    //               {
+    //                 label: 'reset',
+    //                 link: 'reference/core-api/nx/documents/reset',
+    //               },
+    //               {
+    //                 label: 'repair',
+    //                 link: 'reference/core-api/nx/documents/repair',
+    //               },
+    //               {
+    //                 label: 'sync',
+    //                 link: 'reference/core-api/nx/documents/sync',
+    //               },
+    //               {
+    //                 label: 'sync:check',
+    //                 link: 'reference/core-api/nx/documents/sync-check',
+    //               },
+    //               {
+    //                 label: 'import',
+    //                 link: 'reference/core-api/nx/documents/import',
+    //               },
+    //               {
+    //                 label: 'exec',
+    //                 link: 'reference/core-api/nx/documents/exec',
+    //               },
+    //               {
+    //                 label: 'watch',
+    //                 link: 'reference/core-api/nx/documents/watch',
+    //               },
+    //               {
+    //                 label: 'show',
+    //                 link: 'reference/core-api/nx/documents/show',
+    //               },
+    //               {
+    //                 label: 'view-logs',
+    //                 link: 'reference/core-api/nx/documents/view-logs',
+    //               },
+    //               {
+    //                 label: 'release',
+    //                 link: 'reference/core-api/nx/documents/release',
+    //               },
+    //               {
+    //                 label: 'add',
+    //                 link: 'reference/core-api/nx/documents/add',
+    //               },
+    //               {
+    //                 label: 'mcp',
+    //                 link: 'reference/core-api/nx/documents/mcp',
+    //               },
+    //               {
+    //                 label: 'login',
+    //                 link: 'reference/core-api/nx/documents/login',
+    //               },
+    //               {
+    //                 label: 'logout',
+    //                 link: 'reference/core-api/nx/documents/logout',
+    //               },
+    //               {
+    //                 label: 'fix-ci',
+    //                 link: 'reference/core-api/nx/documents/fix-ci',
+    //               },
+    //               {
+    //                 label: 'record',
+    //                 link: 'reference/core-api/nx/documents/record',
+    //               },
+    //               {
+    //                 label: 'start-ci-run',
+    //                 link: 'reference/core-api/nx/documents/start-ci-run',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'executors',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'noop',
+    //                 link: 'reference/core-api/nx/executors/noop',
+    //               },
+    //               {
+    //                 label: 'run-commands',
+    //                 link: 'reference/core-api/nx/executors/run-commands',
+    //               },
+    //               {
+    //                 label: 'run-script',
+    //                 link: 'reference/core-api/nx/executors/run-script',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'generators',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'connect-to-nx-cloud',
+    //                 link: 'reference/core-api/nx/generators/connect-to-nx-cloud',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'migrations',
+    //             link: 'reference/core-api/nx/migrations',
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'workspace',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'documents',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'Overview',
+    //                 link: 'reference/core-api/workspace/documents/overview',
+    //               },
+    //               {
+    //                 label: 'Nx, NodeJS and Typescript Versions',
+    //                 link: 'reference/core-api/workspace/documents/nx-nodejs-typescript-version-matrix',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'executors',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'counter',
+    //                 link: 'reference/core-api/workspace/executors/counter',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'generators',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'preset',
+    //                 link: 'reference/core-api/workspace/generators/preset',
+    //               },
+    //               {
+    //                 label: 'move',
+    //                 link: 'reference/core-api/workspace/generators/move',
+    //               },
+    //               {
+    //                 label: 'remove',
+    //                 link: 'reference/core-api/workspace/generators/remove',
+    //               },
+    //               {
+    //                 label: 'convert-to-monorepo',
+    //                 link: 'reference/core-api/workspace/generators/convert-to-monorepo',
+    //               },
+    //               {
+    //                 label: 'new',
+    //                 link: 'reference/core-api/workspace/generators/new',
+    //               },
+    //               {
+    //                 label: 'run-commands',
+    //                 link: 'reference/core-api/workspace/generators/run-commands',
+    //               },
+    //               {
+    //                 label: 'fix-configuration',
+    //                 link: 'reference/core-api/workspace/generators/fix-configuration',
+    //               },
+    //               {
+    //                 label: 'npm-package',
+    //                 link: 'reference/core-api/workspace/generators/npm-package',
+    //               },
+    //               {
+    //                 label: 'ci-workflow',
+    //                 link: 'reference/core-api/workspace/generators/ci-workflow',
+    //               },
+    //               {
+    //                 label: 'infer-targets',
+    //                 link: 'reference/core-api/workspace/generators/infer-targets',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'migrations',
+    //             link: 'reference/core-api/workspace/migrations',
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'owners',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'Overview',
+    //             link: 'reference/core-api/owners/overview',
+    //           },
+    //           {
+    //             label: 'generators',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'init',
+    //                 link: 'reference/core-api/owners/generators/init',
+    //               },
+    //               {
+    //                 label: 'sync-codeowners-file',
+    //                 link: 'reference/core-api/owners/generators/sync-codeowners-file',
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'conformance',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'Overview',
+    //             link: 'reference/core-api/conformance/overview',
+    //           },
+    //           {
+    //             label: 'Create a Conformance Rule',
+    //             link: 'reference/core-api/conformance/create-conformance-rule',
+    //           },
+    //           {
+    //             label: 'documents',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'Overview',
+    //                 link: 'reference/core-api/conformance/documents/overview',
+    //               },
+    //               {
+    //                 label: 'Create a Conformance Rule',
+    //                 link: 'reference/core-api/conformance/documents/create-conformance-rule',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'executors',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'bundle-rules',
+    //                 link: 'reference/core-api/conformance/executors/bundle-rules',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'generators',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'create-rule',
+    //                 link: 'reference/core-api/conformance/generators/create-rule',
+    //               },
+    //               {
+    //                 label: 'preset',
+    //                 link: 'reference/core-api/conformance/generators/preset',
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'azure-cache',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'Overview',
+    //             link: 'reference/core-api/azure-cache/overview',
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'gcs-cache',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'Overview',
+    //             link: 'reference/core-api/gcs-cache/overview',
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 's3-cache',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'Overview',
+    //             link: 'reference/core-api/s3-cache/overview',
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'shared-fs-cache',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'Overview',
+    //             link: 'reference/core-api/shared-fs-cache/overview',
+    //           },
+    //           {
+    //             label: 'generators',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'init',
+    //                 link: 'reference/core-api/shared-fs-cache/generators/init',
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'devkit',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'documents',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'Overview',
+    //                 link: 'reference/core-api/devkit/documents/nx_devkit',
+    //               },
+    //               {
+    //                 label: 'Ng CLI Adapter',
+    //                 link: 'reference/core-api/devkit/documents/ngcli_adapter',
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'plugin',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'generators',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'plugin',
+    //                 link: 'reference/core-api/plugin/generators/plugin',
+    //               },
+    //               {
+    //                 label: 'create-package',
+    //                 link: 'reference/core-api/plugin/generators/create-package',
+    //               },
+    //               {
+    //                 label: 'e2e-project',
+    //                 link: 'reference/core-api/plugin/generators/e2e-project',
+    //               },
+    //               {
+    //                 label: 'migration',
+    //                 link: 'reference/core-api/plugin/generators/migration',
+    //               },
+    //               {
+    //                 label: 'generator',
+    //                 link: 'reference/core-api/plugin/generators/generator',
+    //               },
+    //               {
+    //                 label: 'executor',
+    //                 link: 'reference/core-api/plugin/generators/executor',
+    //               },
+    //               {
+    //                 label: 'plugin-lint-checks',
+    //                 link: 'reference/core-api/plugin/generators/plugin-lint-checks',
+    //               },
+    //               {
+    //                 label: 'preset',
+    //                 link: 'reference/core-api/plugin/generators/preset',
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'web',
+    //         collapsed: true,
+    //         items: [
+    //           {
+    //             label: 'executors',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'file-server',
+    //                 link: 'reference/core-api/web/executors/file-server',
+    //               },
+    //             ],
+    //           },
+    //           {
+    //             label: 'generators',
+    //             collapsed: true,
+    //             items: [
+    //               {
+    //                 label: 'init',
+    //                 link: 'reference/core-api/web/generators/init',
+    //               },
+    //               {
+    //                 label: 'application',
+    //                 link: 'reference/core-api/web/generators/application',
+    //               },
+    //               {
+    //                 label: 'static-config',
+    //                 link: 'reference/core-api/web/generators/static-config',
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         label: 'create-nx-workspace',
+    //         link: 'reference/core-api/create-nx-workspace',
+    //       },
+    //     ],
+    //  },
+    // ],
   },
   {
     label: 'Troubleshooting',
