@@ -85,6 +85,31 @@ export default defineMarkdocConfig({
         },
       },
     },
+    cards: {
+      render: component('./src/components/markdoc/Cards.astro'),
+      attributes: {
+        cols: {
+          type: 'Number',
+          required: true,
+        },
+        smCols: {
+          type: 'Number',
+          required: true,
+        },
+        mdCols: {
+          type: 'Number',
+          required: true,
+        },
+        lgCols: {
+          type: 'Number',
+          required: true,
+        },
+        moreLink: {
+          type: 'String',
+          required: false,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
