@@ -1,4 +1,4 @@
-import { redirect, RouteObject, json } from 'react-router-dom';
+import { redirect, RouteObject, json, LoaderFunction } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
 import { Shell } from './shell';
@@ -68,7 +68,7 @@ const sourceMapsLoader = async (selectedWorkspaceId: string) => {
   );
 };
 
-const selectedTargetLoader = async ({ params, request }) => {
+const selectedTargetLoader: LoaderFunction = async ({ params, request }) => {
   if (!projectGraphDataService.getSpecificTaskGraph) {
     // Fallback to empty response if method not available
     return { taskGraphs: {}, errors: {} };
@@ -91,6 +91,10 @@ const selectedTargetLoader = async ({ params, request }) => {
   const requestedProjects = projectsParam
     ? projectsParam.split(' ').filter(Boolean)
     : undefined;
+
+  if (!requestedProjects && !url.pathname.endsWith('all')) {
+    return { taskGraphs: {}, errors: {} };
+  }
 
   // Check if we have cached data
   const cached = taskGraphCache.getCached(selectedTarget, requestedProjects);
@@ -262,6 +266,8 @@ const childRoutes: RouteObject[] = [
         children: [
           {
             path: 'all',
+            id: 'allTasks',
+            loader: selectedTargetLoader,
             element: <TasksSidebar />,
           },
         ],
@@ -292,7 +298,7 @@ export const devRoutes: RouteObject[] = [
             currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
           );
         },
-        loader: async ({ request, params }) => {
+        loader: async ({ params }) => {
           const selectedWorkspaceId =
             params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
           return workspaceDataLoader(selectedWorkspaceId);

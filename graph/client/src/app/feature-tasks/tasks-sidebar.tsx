@@ -35,17 +35,22 @@ function TasksSidebarInner() {
   ) as ProjectGraphClientResponse & { targets: string[] };
   const workspaceLayout = selectedWorkspaceRouteData.layout;
 
+  const allTasksRouteData = useRouteLoaderData(
+    'allTasks'
+  ) as TaskGraphClientResponse | null;
+
   const selectedTargetRouteData = useRouteLoaderData(
     'selectedTarget'
   ) as TaskGraphClientResponse | null;
 
   // Use selectedTarget data if available, otherwise empty defaults
   const { taskGraphs, errors } = useMemo(() => {
-    return (selectedTargetRouteData || {
-      taskGraphs: {},
-      errors: {},
-    }) as TaskGraphClientResponse;
-  }, [selectedTargetRouteData]);
+    return (allTasksRouteData ||
+      selectedTargetRouteData || {
+        taskGraphs: {},
+        errors: {},
+      }) as TaskGraphClientResponse;
+  }, [selectedTargetRouteData, allTasksRouteData]);
   let { projects, targets } = selectedWorkspaceRouteData;
 
   const selectedTarget = useMemo(
@@ -175,7 +180,7 @@ function TasksSidebarInner() {
       projects: selectedWorkspaceRouteData.projects,
       taskGraphs,
     });
-  }, [selectedWorkspaceRouteData, taskGraphs]);
+  }, [selectedWorkspaceRouteData, taskGraphs, isAllRoute]);
 
   useEffect(() => {
     send({ type: 'toggleGroupByProject', groupByProject });
