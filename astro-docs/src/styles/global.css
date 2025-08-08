@@ -34,11 +34,11 @@
   --sl-color-accent-high: var(--color-sky-300);
   --sl-color-text-accent: var(--color-sky-400);
   --sl-color-gray-1: var(--color-slate-100);
-  --sl-color-gray-2: var(--color-slate-400);
-  --sl-color-gray-3: var(--color-slate-500);
-  --sl-color-gray-4: var(--color-slate-600);
-  --sl-color-gray-5: var(--color-slate-800);
-  --sl-color-gray-6: var(--color-slate-900);
+  --sl-color-gray-2: var(--color-slate-200);
+  --sl-color-gray-3: var(--color-slate-300);
+  --sl-color-gray-4: var(--color-slate-500);
+  --sl-color-gray-5: var(--color-slate-700);
+  --sl-color-gray-6: var(--color-slate-800);
 }
 
 /* Light mode colors. */
@@ -46,8 +46,8 @@
   --sl-color-bg: var(--color-white);
   --sl-color-bg-nav: var(--color-slate-50);
   --sl-color-bg-sidebar: var(--color-white);
-  --sl-color-hairline: var(--color-slate-200);
-  --sl-color-hairline-shade: var(--color-slate-200);
+  --sl-color-hairline: var(--color-slate-300);
+  --sl-color-hairline-shade: var(--color-slate-300);
   --sl-color-accent-low: var(--color-sky-100);
   --sl-color-accent: var(--color-sky-600);
   --sl-color-accent-high: var(--color-sky-700);
@@ -55,9 +55,9 @@
   --sl-color-gray-1: var(--color-slate-900);
   --sl-color-gray-2: var(--color-slate-800);
   --sl-color-gray-3: var(--color-slate-600);
-  --sl-color-gray-4: var(--color-slate-400);
-  --sl-color-gray-5: var(--color-slate-200);
-  --sl-color-gray-6: var(--color-slate-50);
+  --sl-color-gray-4: var(--color-slate-500);
+  --sl-color-gray-5: var(--color-slate-300);
+  --sl-color-gray-6: var(--color-slate-200);
 }
 
 /* Custom font for code blocks */
