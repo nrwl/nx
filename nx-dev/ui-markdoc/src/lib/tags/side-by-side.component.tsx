@@ -1,13 +1,15 @@
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { Children, ReactNode } from 'react';
 
+export type SideBySideProps = {
+  align: string;
+  children: ReactNode;
+};
+
 export function SideBySide({
   align,
   children,
-}: {
-  align: string;
-  children: ReactNode;
-}) {
+}: SideBySideProps) {
   const [first, ...rest] = Children.toArray(children);
   return (
     <div
