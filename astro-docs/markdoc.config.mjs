@@ -295,6 +295,21 @@ export default defineMarkdocConfig({
         },
       },
     },
+    short_embeds: {
+      render: component('./src/components/markdoc/ShortEmbeds.astro'),
+      attributes: {},
+    },
+    short_video: {
+      render: component('./src/components/markdoc/ShortVideo.astro'),
+      attributes: {
+        title: {
+          type: 'String',
+        },
+        embedUrl: {
+          type: 'String',
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
