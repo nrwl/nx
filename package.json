@@ -350,7 +350,7 @@
     "@mdx-js/react": "^3.0.0",
     "@monaco-editor/react": "^4.4.6",
     "@napi-rs/canvas": "^0.1.52",
-    "@nx/graph": "0.5.7",
+    "@nx/graph": "0.5.8",
     "@react-spring/three": "^9.7.3",
     "@react-three/drei": "^9.108.3",
     "@react-three/fiber": "^8.16.8",
