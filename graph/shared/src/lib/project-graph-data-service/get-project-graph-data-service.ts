@@ -1,7 +1,6 @@
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 import { FetchProjectGraphService } from './fetch-project-graph-service';
 import { LocalProjectGraphService } from './local-project-graph-service';
@@ -14,7 +13,6 @@ export interface ProjectGraphService {
   getHash: () => Promise<string>;
   getProjectGraph: (url: string) => Promise<ProjectGraphClientResponse>;
   getTaskGraph: (url: string) => Promise<TaskGraphClientResponse>;
-  getTaskGraphMetadata?: (url: string) => Promise<TaskGraphMetadata>;
   getSpecificTaskGraph?: (
     url: string,
     projects: string | string[] | null,

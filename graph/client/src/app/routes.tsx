@@ -8,7 +8,6 @@ import type {
   GraphError,
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
@@ -23,11 +22,6 @@ import { taskGraphCache } from './task-graph-cache';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
-
-// Extended type to include metadata
-type TaskGraphClientResponseWithMetadata = TaskGraphClientResponse & {
-  metadata?: TaskGraphMetadata;
-};
 
 export function getRoutesForEnvironment() {
   if (getEnvironmentConfig().environment === 'dev') {
@@ -62,31 +56,6 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
 
   return { ...projectGraph, targets, sourceMaps };
-};
-
-const taskDataLoader = async (
-  selectedWorkspaceId: string
-): Promise<TaskGraphClientResponseWithMetadata> => {
-  const workspaceInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId
-  );
-
-  // Check if we should load metadata instead of full graph
-  if (
-    workspaceInfo.taskGraphMetadataUrl &&
-    projectGraphDataService.getTaskGraphMetadata
-  ) {
-    // Load metadata for initial display
-    const metadata = await projectGraphDataService.getTaskGraphMetadata(
-      workspaceInfo.taskGraphMetadataUrl
-    );
-
-    // Return a response that includes metadata but empty task graphs
-    return { taskGraphs: {}, errors: {}, metadata };
-  }
-
-  // Fall back to loading full task graph
-  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
 };
 
 const sourceMapsLoader = async (selectedWorkspaceId: string) => {
@@ -271,11 +240,6 @@ const childRoutes: RouteObject[] = [
     ],
   },
   {
-    loader: async ({ params }) => {
-      const selectedWorkspaceId =
-        params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
-      return taskDataLoader(selectedWorkspaceId);
-    },
     path: 'tasks',
     id: 'tasks',
     errorElement: <TasksSidebarErrorBoundary />,

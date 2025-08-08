@@ -1,7 +1,6 @@
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
 
@@ -44,14 +43,6 @@ export class FetchProjectGraphService implements ProjectGraphService {
 
   setTaskInputsUrl(url: string) {
     this.taskInputsUrl = url;
-  }
-
-  async getTaskGraphMetadata(url: string): Promise<TaskGraphMetadata> {
-    const request = new Request(url, { mode: 'no-cors' });
-
-    const response = await fetch(request);
-
-    return response.json();
   }
 
   async getSpecificTaskGraph(

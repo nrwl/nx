@@ -89,16 +89,6 @@ export interface TaskGraphClientResponse {
   errors: Record<string, string>;
 }
 
-export interface TaskGraphMetadata {
-  projects: Array<{
-    name: string;
-    targets: Array<{
-      name: string;
-      configurations?: string[];
-    }>;
-  }>;
-}
-
 export interface ExpandedTaskInputsReponse {
   [taskId: string]: Record<string, string[]>;
 }
@@ -127,7 +117,6 @@ function buildEnvironmentJs(
   localMode: 'build' | 'serve',
   depGraphClientResponse?: ProjectGraphClientResponse,
   taskGraphClientResponse?: TaskGraphClientResponse,
-  taskGraphMetadataResponse?: TaskGraphMetadata,
   expandedTaskInputsReponse?: ExpandedTaskInputsReponse,
   sourceMapsResponse?: ConfigurationSourceMaps
 ) {
@@ -145,7 +134,6 @@ function buildEnvironmentJs(
         label: 'local',
         projectGraphUrl: 'project-graph.json',
         taskGraphUrl: 'task-graph.json',
-        taskGraphMetadataUrl: 'task-graph-metadata.json',
         taskInputsUrl: 'task-inputs.json',
         sourceMapsUrl: 'source-maps.json'
       }
@@ -164,10 +152,6 @@ function buildEnvironmentJs(
       taskGraphClientResponse
     )};
     `;
-    environmentJs += `window.taskGraphMetadataResponse = ${JSON.stringify(
-      taskGraphMetadataResponse
-    )};
-    `;
     environmentJs += `window.expandedTaskInputsResponse = ${JSON.stringify(
       expandedTaskInputsReponse
     )};`;
@@ -178,7 +162,6 @@ function buildEnvironmentJs(
   } else {
     environmentJs += `window.projectGraphResponse = null;`;
     environmentJs += `window.taskGraphResponse = null;`;
-    environmentJs += `window.taskGraphMetadataResponse = null;`;
     environmentJs += `window.expandedTaskInputsResponse = null;`;
     environmentJs += `window.sourceMapsResponse = null;`;
   }
@@ -450,7 +433,6 @@ export async function generateGraph(
         await createProjectGraphAndSourceMapClientResponse(affectedProjects);
 
       const taskGraphClientResponse = await createTaskGraphClientResponse();
-      const taskGraphMetadataResponse = await createTaskGraphMetadataResponse();
       const taskInputsReponse = await createExpandedTaskInputResponse(
         taskGraphClientResponse,
         projectGraphClientResponse
@@ -462,7 +444,6 @@ export async function generateGraph(
         !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
         projectGraphClientResponse,
         taskGraphClientResponse,
-        taskGraphMetadataResponse,
         taskInputsReponse,
         sourceMaps
       );
@@ -684,12 +665,6 @@ async function startServer(
         // Case 4: Legacy - load all task graphs
         res.end(JSON.stringify(await createTaskGraphClientResponse()));
       }
-      return;
-    }
-
-    if (sanitizePath === 'task-graph-metadata.json') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(await createTaskGraphMetadataResponse()));
       return;
     }
 
@@ -1148,48 +1123,10 @@ function createTaskId(
 
 // In-memory cache for task graphs to avoid regeneration
 const taskGraphCache = new Map<string, TaskGraphClientResponse>();
-let taskGraphMetadataCache: TaskGraphMetadata | null = null;
 
 // Clear cache when project graph changes
 function clearTaskGraphCache() {
   taskGraphCache.clear();
-  taskGraphMetadataCache = null;
-}
-
-/**
- * Creates a lightweight metadata response containing only project names and targets
- * This allows the UI to build the task selection tree without loading all task graphs
- */
-async function createTaskGraphMetadataResponse(): Promise<TaskGraphMetadata> {
-  // Check cache first
-  if (taskGraphMetadataCache) {
-    return taskGraphMetadataCache;
-  }
-
-  let graph: ProjectGraph;
-  try {
-    graph = await createProjectGraphAsync({ exitOnError: false });
-  } catch (e) {
-    if (e instanceof ProjectGraphError) {
-      graph = e.getPartialProjectGraph();
-    }
-  }
-
-  const projects = Object.values(graph.nodes).map((project) => ({
-    name: project.name,
-    targets: Object.entries(project.data.targets ?? {}).map(
-      ([targetName, target]) => ({
-        name: targetName,
-        configurations: target.configurations
-          ? Object.keys(target.configurations)
-          : undefined,
-      })
-    ),
-  }));
-
-  // Cache the result
-  taskGraphMetadataCache = { projects };
-  return taskGraphMetadataCache;
 }
 
 /**

@@ -2,7 +2,6 @@ import type {
   ExpandedTaskInputsReponse,
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 import { AppConfig } from './lib/app-config';
 import { ExternalApi } from './lib/external-api';
@@ -14,7 +13,6 @@ export declare global {
     localMode: 'serve' | 'build';
     projectGraphResponse?: ProjectGraphClientResponse;
     taskGraphResponse?: TaskGraphClientResponse;
-    taskGraphMetadataResponse?: TaskGraphMetadata;
     expandedTaskInputsResponse?: ExpandedTaskInputsReponse;
     sourceMapsResponse?: Record<string, Record<string, string[]>>;
     environment: 'dev' | 'watch' | 'release' | 'nx-console';

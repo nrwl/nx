@@ -131,7 +131,6 @@ function getAssets(nxConfiguration) {
         './src/favicon.ico',
         './src/assets/project-graphs/',
         './src/assets/task-graphs/',
-        './src/assets/task-metadata/',
         './src/assets/task-inputs/',
         './src/assets/source-maps/',
         {
@@ -147,7 +146,6 @@ function getAssets(nxConfiguration) {
         './src/assets/task-graphs/',
         './src/assets/generated-project-graphs/',
         './src/assets/generated-task-graphs/',
-        './src/assets/generated-task-metadata/',
         './src/assets/generated-task-inputs/',
         './src/assets/generated-source-maps/',
         {

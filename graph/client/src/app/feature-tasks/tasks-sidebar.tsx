@@ -10,24 +10,16 @@ import { TaskList } from './task-list';
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-  TaskGraphMetadata,
 } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
 import { Dropdown, Spinner } from '@nx/graph-ui-common';
-import {
-  useRouteConstructor,
-  getProjectGraphDataService,
-  getEnvironmentConfig,
-} from '@nx/graph-shared';
+import { useRouteConstructor } from '@nx/graph-shared';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ShowHideAll } from '../ui-components/show-hide-all';
 import { createTaskName } from '../util';
 import { useTaskGraphContext } from '@nx/graph/tasks';
-
-const projectGraphDataService = getProjectGraphDataService();
-const { appConfig } = getEnvironmentConfig();
 
 function TasksSidebarInner() {
   const { send } = useTaskGraphContext();
@@ -43,17 +35,17 @@ function TasksSidebarInner() {
   ) as ProjectGraphClientResponse & { targets: string[] };
   const workspaceLayout = selectedWorkspaceRouteData.layout;
 
-  const tasksRouteData = useRouteLoaderData(
-    'tasks'
-  ) as TaskGraphClientResponse & { metadata?: TaskGraphMetadata };
-  const selectedTargetRouteData = useRouteLoaderData('selectedTarget') as
-    | (TaskGraphClientResponse & { metadata?: TaskGraphMetadata })
-    | null;
+  const selectedTargetRouteData = useRouteLoaderData(
+    'selectedTarget'
+  ) as TaskGraphClientResponse | null;
 
-  // Use selectedTarget data if available, otherwise fall back to tasks data
-  const activeRouteData = selectedTargetRouteData || tasksRouteData;
-
-  const { taskGraphs, errors, metadata } = activeRouteData;
+  // Use selectedTarget data if available, otherwise empty defaults
+  const { taskGraphs, errors } = useMemo(() => {
+    return (selectedTargetRouteData || {
+      taskGraphs: {},
+      errors: {},
+    }) as TaskGraphClientResponse;
+  }, [selectedTargetRouteData]);
   let { projects, targets } = selectedWorkspaceRouteData;
 
   const selectedTarget = useMemo(
@@ -190,16 +182,11 @@ function TasksSidebarInner() {
   }, [searchParams]);
 
   useEffect(() => {
-    // Load task graphs for selected projects if using lazy loading
-    // if (metadata && selectedProjects.length > 0) {
-    //   selectedProjects.forEach((project) => loadTaskGraphForProject(project));
-    // }
-
     send({
       type: 'show',
       taskIds: selectedProjects.map((p) => createTaskName(p, selectedTarget)),
     });
-  }, [selectedProjects, selectedTarget, metadata]);
+  }, [selectedProjects, selectedTarget]);
 
   function groupByProjectChanged(checked: boolean) {
     setSearchParams(

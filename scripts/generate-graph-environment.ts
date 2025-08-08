@@ -33,7 +33,6 @@ function writeFile() {
         label: id,
         projectGraphUrl: join('assets/generated-project-graphs/', filename),
         taskGraphUrl: join('assets/generated-task-graphs/', filename),
-        taskGraphMetadataUrl: join('assets/generated-task-metadata/', filename),
         taskInputsUrl: join('assets/generated-task-inputs/', filename),
         sourceMapsUrl: join('assets/generated-source-maps/', filename),
       };
@@ -53,7 +52,6 @@ function writeFile() {
         label: id,
         projectGraphUrl: join('assets/project-graphs/', filename),
         taskGraphUrl: join('assets/task-graphs/', filename),
-        taskGraphMetadataUrl: join('assets/task-metadata/', filename),
         taskInputsUrl: join('assets/task-inputs/', filename),
         sourceMapsUrl: join('assets/source-maps/', filename),
       };
