@@ -3,4 +3,6 @@ import { type TestimonialProps, Testimonial as Default } from '@nx/nx-dev-ui-mar
 type Props = TestimonialProps;
 ---
 
-<Default {...Astro.props} />
+<Default {...Astro.props}>
+  <slot />
+</Default>

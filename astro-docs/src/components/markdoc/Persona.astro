@@ -3,4 +3,6 @@ import { type PersonaProps, Persona as Default } from '@nx/nx-dev-ui-markdoc/src
 type Props = PersonaProps;
 ---
 
-<Default {...Astro.props} />
+<Default {...Astro.props}>
+  <slot />
+</Default>
