@@ -331,6 +331,18 @@ export default defineMarkdocConfig({
       render: component('./src/components/markdoc/Steps.astro'),
       attributes: {},
     },
+    tab: {
+      render: component('./src/components/markdoc/Tab.astro'),
+      attributes: {
+        label: {
+          type: 'String',
+        },
+      },
+    },
+    tabs: {
+      render: component('./src/components/markdoc/Tabs.astro'),
+      attributes: {},
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
