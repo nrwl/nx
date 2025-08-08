@@ -28,7 +28,8 @@ import { ProjectDetailsApp } from './app/console-project-details/project-details
 import { ExternalApiImpl } from './app/external-api-impl';
 import { ErrorPage } from './app/ui-components/error-page';
 
-if (window.__NX_RENDER_GRAPH__ === false) {
+console.log('hello', window.__NX_RENDER_GRAPH__);
+if (true) {
   window.externalApi = new ExternalApiImpl();
 
   window.renderPDV = (data: {
