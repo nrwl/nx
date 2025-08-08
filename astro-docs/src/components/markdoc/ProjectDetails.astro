@@ -3,6 +3,6 @@ import { type ProjectDetailsProps, ProjectDetails as Default } from '@nx/nx-dev-
 type Props = ProjectDetailsProps;
 ---
 
-<Default client:load {...Astro.props} isAstro={true}>
+<Default client:visible {...Astro.props} isAstro={true}>
   <slot />
 </Default>

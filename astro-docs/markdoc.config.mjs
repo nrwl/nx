@@ -295,54 +295,6 @@ export default defineMarkdocConfig({
         },
       },
     },
-    short_embeds: {
-      render: component('./src/components/markdoc/ShortEmbeds.astro'),
-      attributes: {},
-    },
-    short_video: {
-      render: component('./src/components/markdoc/ShortVideo.astro'),
-      attributes: {
-        title: {
-          type: 'String',
-        },
-        embedUrl: {
-          type: 'String',
-        },
-      },
-    },
-    side_by_side: {
-      render: component('./src/components/markdoc/SideBySide.astro'),
-      attributes: {
-        align: {
-          type: 'String',
-        },
-      },
-    },
-    step: {
-      render: component('./src/components/markdoc/Step.astro'),
-      attributes: {
-        title: {
-          type: 'String',
-          required: false,
-        },
-      },
-    },
-    steps: {
-      render: component('./src/components/markdoc/Steps.astro'),
-      attributes: {},
-    },
-    tab: {
-      render: component('./src/components/markdoc/Tab.astro'),
-      attributes: {
-        label: {
-          type: 'String',
-        },
-      },
-    },
-    tabs: {
-      render: component('./src/components/markdoc/Tabs.astro'),
-      attributes: {},
-    },
     testimonial: {
       render: component('./src/components/markdoc/Testimonial.astro'),
       children: ['paragraph'],
@@ -355,24 +307,6 @@ export default defineMarkdocConfig({
         },
         image: {
           type: 'String',
-        },
-      },
-    },
-    toc: {
-      render: component('./src/components/markdoc/TableOfContents.astro'),
-      attributes: {
-        maxDepth: {
-          type: 'Number',
-          default: 3,
-        },
-      },
-    },
-    tweet: {
-      render: component('./src/components/markdoc/Tweet.astro'),
-      attributes: {
-        url: {
-          type: 'String',
-          required: true,
         },
       },
     },

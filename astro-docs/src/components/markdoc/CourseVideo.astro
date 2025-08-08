@@ -3,4 +3,4 @@ import { type CourseVideoProps, CourseVideo as Default } from '@nx/nx-dev-ui-com
 type Props = CourseVideoProps;
 ---
 
-<Default {...Astro.props} />
+<Default client:load {...Astro.props} />
