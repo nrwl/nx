@@ -135,6 +135,19 @@ export default defineMarkdocConfig({
         },
       },
     },
+    github_repository: {
+      render: component('./src/components/markdoc/GithubRepository.astro'),
+      attributes: {
+        url: {
+          type: 'String',
+          required: true,
+        },
+        title: {
+          type: 'String',
+          required: false,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
