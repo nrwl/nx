@@ -2645,30 +2645,7 @@ export const sidebar = [
   {
     label: 'Enterprise',
     collapsed: true,
-    items: [
-      {
-        label: 'Activate Powerpack',
-        link: 'nx-enterprise/activate-powerpack',
-      },
-      {
-        label: 'Powerpack Features',
-        collapsed: true,
-        items: [
-          {
-            label: 'Free Licenses & Trials',
-            link: 'nx-enterprise/powerpack/licenses-and-trials',
-          },
-          {
-            label: 'Run Language-Agnostic Conformance Rules',
-            link: 'nx-enterprise/powerpack/conformance',
-          },
-          {
-            label: 'Define Code Ownership at the Project Level',
-            link: 'nx-enterprise/powerpack/owners',
-          },
-        ],
-      },
-    ],
+    autogenerate: { directory: 'enterprise', collapsed: true },
   },
   {
     label: 'Showcase',
