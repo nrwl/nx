@@ -32,19 +32,21 @@ const NxDevTaskGraph = dynamic(
   { ssr: false, loading: () => <Loading /> }
 );
 
+export type GraphProps = {
+  height: string;
+  title: string;
+  type: 'project' | 'task';
+  jsonFile?: string;
+  children: ReactElement;
+};
+
 export function Graph({
   height,
   title,
   type,
   jsonFile,
   children,
-}: {
-  height: string;
-  title: string;
-  type: 'project' | 'task';
-  jsonFile?: string;
-  children: ReactElement;
-}): JSX.Element {
+}: GraphProps): JSX.Element {
   const [theme] = useTheme();
   const [parsedProps, setParsedProps] = useState<any>();
   const getData = async (path: string) => {

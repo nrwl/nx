@@ -161,6 +161,27 @@ export default defineMarkdocConfig({
         },
       },
     },
+    graph: {
+      render: component('./src/components/markdoc/Graph.astro'),
+      children: [],
+      attributes: {
+        jsonFile: {
+          type: 'String',
+        },
+        title: {
+          type: 'String',
+        },
+        type: {
+          type: 'String',
+          matches: ['project', 'task'],
+          default: 'project',
+        },
+        height: {
+          type: 'String',
+          required: true,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
