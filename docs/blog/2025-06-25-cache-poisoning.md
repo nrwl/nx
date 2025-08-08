@@ -230,7 +230,7 @@ That's why we recommend that all teams using build systems with remote cache to 
 Nx Cloud implements a multi-tiered cache (i.e., it's both safe and fast), so no action is required. Continue following security best practices for your CI/CD pipeline
 
 **For Nx users, using self-hosted remote cache:**  
-Any implementation that writes directly to S3, GCS, Azure, **including the packages Nx provides**, doesn't support Option 3. They are all vulnerable to the CREEP vulnerability. If you aren't sure, assume you are vulnerable. **Immediately switch to Option 2 (Safe but Slow): write to cache from the main branch, not from PRs. This will negatively affect performance but will make your setup safe. Use Nx Cloud or another provider that offers a multi-tier cache implementation to get the cache that is both fast ans secure.**
+Any implementation that writes directly to S3, GCS, Azure, **including the packages Nx provides**, doesn't support Option 3. They are all vulnerable to the CREEP vulnerability. If you aren't sure, assume you are vulnerable. **Immediately switch to Option 2 (Safe but Slow): write to cache from the main branch, not from PRs. This will negatively affect performance but will make your setup safe. Use Nx Cloud or another provider that offers a multi-tier cache implementation to get the cache that is both fast and secure.**
 
 **Other build systems and other remote cache solutions for Nx we are aware of are also vulnerable to the CREEP vulnerability.**
 
