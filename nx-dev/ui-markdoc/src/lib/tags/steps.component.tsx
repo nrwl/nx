@@ -2,7 +2,9 @@
 import cx from 'classnames';
 import React, { ReactNode } from 'react';
 
-export function Steps({ children }: { children: ReactNode }) {
+export type StepsProps = { children: ReactNode };
+
+export function Steps({ children }: StepsProps) {
   const steps = React.Children.toArray(children);
   const stepsCount = steps.length;
 
@@ -31,13 +33,15 @@ export function Steps({ children }: { children: ReactNode }) {
   );
 }
 
+export type StepProps = {
+  title?: string;
+  children: ReactNode;
+};
+
 export function Step({
   title,
   children,
-}: {
-  title?: string;
-  children: ReactNode;
-}) {
+}: StepProps) {
   const passPropsToChildren = (children: ReactNode) => {
     return React.Children.map(children, (child) => {
       if (React.isValidElement(child) && typeof child.type !== 'string') {

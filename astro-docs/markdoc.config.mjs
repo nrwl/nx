@@ -318,6 +318,15 @@ export default defineMarkdocConfig({
         },
       },
     },
+    step: {
+      render: component('./src/components/markdoc/Step.astro'),
+      attributes: {
+        title: {
+          type: 'String',
+          required: false,
+        },
+      },
+    },
     install_nx_console: {
       render: component('./src/components/markdoc/InstallNxConsole.astro'),
       attributes: {},
