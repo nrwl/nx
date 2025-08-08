@@ -1231,6 +1231,10 @@ export function getRunnerOptions(
     result.cacheDirectory ??= nxJson.cacheDirectory;
   }
 
+  if (nxJson.customProxyConfigPath) {
+    result.customProxyConfigPath ??= nxJson.customProxyConfigPath;
+  }
+
   if (defaultCacheableOperations.length) {
     result.cacheableOperations ??= [];
     result.cacheableOperations = result.cacheableOperations.concat(

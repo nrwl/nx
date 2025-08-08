@@ -746,6 +746,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudEncryptionKey?: string;
 
   /**
+   * Specifies the path to a custom proxy configuration file.
+   */
+  customProxyConfigPath?: string;
+
+  /**
    * Specifies how many tasks can be run in parallel.
    */
   parallel?: number;
