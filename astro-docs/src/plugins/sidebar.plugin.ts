@@ -5,13 +5,19 @@ import type {
 import { readdirSync, existsSync, readFileSync } from 'fs';
 import { join, basename, extname } from 'path';
 import { workspaceRoot } from '@nx/devkit';
+import {
+  formatTechnologyLabel,
+  getTechnologyCategory,
+} from './utils/plugin-mappings';
 
 // Starlight doesn't export these types, so we extract the few we need
 type SidebarItem = NonNullable<StarlightUserConfig['sidebar']>[number];
+type LabeledSidebarItem = Extract<SidebarItem, { label: string }>;
 
 function getStaticPluginFiles(
   pluginDir: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  technologyCategory: string
 ): SidebarItem[] {
   const staticFiles: SidebarItem[] = [];
   const pluginContentDir = join(
@@ -45,7 +51,7 @@ function getStaticPluginFiles(
 
         staticFiles.push({
           label,
-          slug: `api/plugins/${pluginDir}/${fileName}`,
+          slug: `technologies/${technologyCategory}/${pluginDir}/${fileName}`,
         });
       }
     }
@@ -61,7 +67,9 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
     name: 'auto-plugin-sidebar',
     hooks: {
       setup({ config, logger, updateConfig }) {
-        logger.info('Setting up auto-plugin-sidebar...');
+        logger.info(
+          'Setting up auto-plugin-sidebar for Technologies section...'
+        );
 
         // Get all directories in packages (look in parent directory for actual Nx packages)
         const packagesDir = join(workspaceRoot, 'packages');
@@ -70,12 +78,16 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
           throw new Error('Packages directory does not exist: ' + packagesDir);
         }
 
-        const pluginItems: SidebarItem[] = [];
-
         try {
           const directories = readdirSync(packagesDir, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name);
+
+          // Group plugins by technology category
+          const pluginsByTechnology: Record<
+            string,
+            Array<{ pluginName: string; packageName: string; dir: string }>
+          > = {};
 
           for (const dir of directories) {
             const packageJsonPath = join(packagesDir, dir, 'package.json');
@@ -91,6 +103,7 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
               readFileSync(packageJsonPath, 'utf-8')
             );
             const packageName = packageJson.name || `@nx/${dir}`;
+            logger.info(`Processing plugin: ${packageName} (${dir})`);
 
             // Only include @nx scoped packages
             if (!packageName.startsWith('@nx/')) {
@@ -101,58 +114,103 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
             }
 
             if (packageName === '@nx/devkit') {
-              // devkit is special handled
+              // devkit is special handled elsewhere
               continue;
             }
 
-            logger.info(`Processing plugin: ${packageName} (${dir})`);
-            const item = generatePluginSideBarConfig(
-              packagesDir,
+            // Get technology category for this plugin
+            const technologyCategory = getTechnologyCategory(dir);
+
+            if (!pluginsByTechnology[technologyCategory]) {
+              pluginsByTechnology[technologyCategory] = [];
+            }
+
+            pluginsByTechnology[technologyCategory].push({
+              pluginName: dir,
+              packageName,
               dir,
-              packageName
+            });
+
+            logger.info(
+              `Processing plugin: ${packageName} (${dir}) -> ${technologyCategory}`
             );
-            pluginItems.push(item);
           }
 
-          logger.info(`Found ${pluginItems.length} plugins`);
+          // Generate technology sections
+          const technologyItems: SidebarItem[] = [];
 
-          // Find the API Reference section in the sidebar
+          for (const [technologyCategory, plugins] of Object.entries(
+            pluginsByTechnology
+          )) {
+            const pluginItems: SidebarItem[] = [];
+
+            for (const { pluginName, packageName, dir } of plugins) {
+              const pluginItem = generatePluginSideBarConfig(
+                packagesDir,
+                dir,
+                packageName,
+                technologyCategory
+              );
+              pluginItems.push(pluginItem);
+            }
+
+            // Sort plugins within each technology alphabetically
+            pluginItems.sort((a, b) => {
+              if (isLabeledItem(a) && isLabeledItem(b)) {
+                return a.label.localeCompare(b.label);
+              }
+              return 0;
+            });
+
+            // Create technology section
+            const technologyLabel = formatTechnologyLabel(technologyCategory);
+            technologyItems.push({
+              label: technologyLabel,
+              collapsed: true,
+              items: pluginItems,
+            });
+          }
+
+          // Sort technologies alphabetically
+          technologyItems.sort((a, b) => {
+            if (isLabeledItem(a) && isLabeledItem(b)) {
+              return a.label.localeCompare(b.label);
+            }
+            return 0;
+          });
+
+          logger.info(
+            `Found ${technologyItems.length} technology categories with ${
+              Object.values(pluginsByTechnology).flat().length
+            } total plugins`
+          );
+
+          // Find the Technologies section in the sidebar
           const sidebar = config.sidebar || [];
-          const apiRefIndex = sidebar.findIndex(
+          const technologiesIndex = sidebar.findIndex(
             (item) =>
               typeof item === 'object' &&
               'label' in item &&
-              item.label === 'References'
+              item.label === 'Technologies'
           );
 
-          if (apiRefIndex !== -1) {
-            const apiRefSection = sidebar[apiRefIndex];
+          if (technologiesIndex !== -1) {
+            const technologiesSection = sidebar[technologiesIndex];
 
-            if (typeof apiRefSection === 'object' && 'items' in apiRefSection) {
-              apiRefSection.items.push(...pluginItems);
-
-              // NOTE: there are already some hard defined references in the astro config. such as devkit (plugin doc w/ children items)
-              //  and the cli docs (no children items)
-              //  those that do not have children items need to be sorted alphabetically
-              //  the others will remain in place at the top of the reference section
-              apiRefSection.items.sort((a, b) => {
-                if (
-                  typeof a === 'string' ||
-                  typeof b === 'string' ||
-                  !('items' in a) ||
-                  !('items' in b)
-                ) {
-                  return 0;
-                } else {
-                  return a.label.localeCompare(b.label);
-                }
-              });
+            if (
+              typeof technologiesSection === 'object' &&
+              'items' in technologiesSection
+            ) {
+              // Replace the empty items array with our generated technology items
+              technologiesSection.items = technologyItems;
 
               updateConfig({ sidebar });
               logger.info(
-                `Successfully added ${pluginItems.length} plugins directly to API Reference`
+                `Successfully populated Technologies section with ${technologyItems.length} technology categories`
               );
             }
+          } else {
+            logger.warn('Technologies section not found in sidebar');
           }
         } catch (error) {
           logger.error(`Error generating plugin sidebar: ${error}`);
@@ -165,7 +223,8 @@ export function autoPluginSidebarPlugin(): StarlightPlugin {
 function generatePluginSideBarConfig(
   packagesDir: string,
   dir: string,
-  packageName: string
+  packageName: string,
+  technologyCategory: string
 ): SidebarItem {
   const pluginDir = join(packagesDir, dir);
 
@@ -180,26 +239,30 @@ function generatePluginSideBarConfig(
   if (hasGenerators) {
     subItems.push({
       label: 'Generators',
-      link: `/api/plugins/${dir}/generators`,
+      link: `/technologies/${technologyCategory}/${dir}/generators`,
     });
   }
 
   if (hasExecutors) {
     subItems.push({
       label: 'Executors',
-      link: `/api/plugins/${dir}/executors`,
+      link: `/technologies/${technologyCategory}/${dir}/executors`,
     });
   }
 
   if (hasMigrations) {
     subItems.push({
       label: 'Migrations',
-      link: `/api/plugins/${dir}/migrations`,
+      link: `/technologies/${technologyCategory}/${dir}/migrations`,
     });
   }
 
   // Add static markdown files from content/docs/api/plugins/<plugin>/
-  const staticFiles = getStaticPluginFiles(dir, workspaceRoot);
+  const staticFiles = getStaticPluginFiles(
+    dir,
+    workspaceRoot,
+    technologyCategory
+  );
   subItems.push(...staticFiles);
 
   if (subItems.length > 0) {
@@ -214,6 +277,10 @@ function generatePluginSideBarConfig(
   return {
     // make the names pretty for the sidebar
     label: packageName.replace('@nx/', ''),
-    link: `/api/plugins/${dir}`,
+    link: `/technologies/${technologyCategory}/${dir}`,
   };
+}
+
+function isLabeledItem(item: unknown): item is NonNullable<LabeledSidebarItem> {
+  return item != null && typeof item === 'object' && 'label' in item;
 }

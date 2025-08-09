@@ -1,0 +1,73 @@
+---
+import { getCollection, render } from 'astro:content';
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import type { CollectionEntry } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+export async function getStaticPaths() {
+  const pluginDocs = await getCollection('plugin-docs', (entry) => entry.data.docType !== 'overview');
+
+  // Group docs by technology category and plugin name
+  const docsByTechnologyAndPlugin = pluginDocs.reduce(
+    (acc, doc) => {
+      const technologyCategory = doc.data.technologyCategory;
+      const pluginName = doc.data.pluginName;
+      
+      if (!acc[technologyCategory]) {
+        acc[technologyCategory] = {};
+      }
+      if (!acc[technologyCategory][pluginName]) {
+        acc[technologyCategory][pluginName] = [];
+      }
+      acc[technologyCategory][pluginName].push(doc);
+      return acc;
+    },
+    {} as Record<string, Record<string, CollectionEntry<'plugin-docs'>[]>>
+  );
+
+  // Generate paths for each technology/plugin combination
+  const paths = [];
+  for (const [technologyCategory, plugins] of Object.entries(docsByTechnologyAndPlugin)) {
+    for (const [pluginName, docs] of Object.entries(plugins)) {
+      paths.push({
+        params: { 
+          technology: technologyCategory, 
+          plugin: pluginName 
+        },
+        props: {
+          technologyCategory,
+          pluginName,
+          docs: docs.sort((a, b) => {
+            const order = ['generators', 'executors', 'migrations'];
+            return order.indexOf(a.data.docType) - order.indexOf(b.data.docType);
+          })
+        }
+      });
+    }
+  }
+  
+  return paths;
+}
+
+const { technologyCategory, pluginName, docs } = Astro.props;
+---
+
+<StarlightPage
+  frontmatter={{
+    title: `@nx/${pluginName}`,
+    description: `Complete reference for @nx/${pluginName} plugin`
+  }}
+>
+
+  <CardGrid>
+
+    {
+      docs.map(({ data }) => (
+        <LinkCard title={data.docType.charAt(0).toUpperCase() + data.docType.slice(1)}
+                  href={`./${pluginName}/${data.docType}`}>
+        </LinkCard>
+      ))
+    }
+
+  </CardGrid>
+</StarlightPage>
