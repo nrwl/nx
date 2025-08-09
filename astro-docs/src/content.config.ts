@@ -29,6 +29,7 @@ const pluginDocs = defineCollection({
     pluginName: z.string(),
     packageName: z.string(),
     docType: z.enum(['generators', 'executors', 'migrations', 'overview']),
+    technologyCategory: z.string(),
     features: z.array(z.string()).optional(),
     totalDocs: z.number().optional(),
     description: z.string(),

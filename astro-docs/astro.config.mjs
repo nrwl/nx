@@ -7,7 +7,7 @@ import linkValidator from 'starlight-links-validator';
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
-import { sidebar } from './sidebar.mjs';
+import { sidebar } from './sidebar';
 
 // https://astro.build/config
 export default defineConfig({
@@ -29,7 +29,7 @@ export default defineConfig({
       },
       plugins: [
         // linkValidator(),
-        sectionSidebarPlugin(),
+        // sectionSidebarPlugin(),
       ],
       routeMiddleware: ['./src/plugins/banner.middleware.ts'],
       markdown: {

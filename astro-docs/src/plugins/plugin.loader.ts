@@ -21,6 +21,7 @@ import {
   PLUGIN_IGNORE_LIST,
   shouldFetchStats,
 } from './utils/plugin-stats';
+import { getTechnologyCategory } from './utils/plugin-mappings';
 
 const PLUGIN_PATHS = readdirSync(join(workspaceRoot, 'packages'));
 
@@ -82,6 +83,9 @@ export async function generateAllPluginDocs(
     // special case for the main Nx package
     const packageName = pluginName === 'nx' ? 'nx' : `@nx/${pluginName}`;
 
+    // Get technology category for this plugin
+    const technologyCategory = getTechnologyCategory(pluginName);
+
     let pluginOverview = {} as DocEntry;
 
     if (shouldFetchStats(existingOverviewEntry)) {
@@ -100,6 +104,7 @@ export async function generateAllPluginDocs(
           description: pluginDescription,
           packageName,
           pluginName,
+          technologyCategory,
           features: [],
           totalDocs: 0,
           docType: 'overview',
@@ -127,6 +132,7 @@ export async function generateAllPluginDocs(
             title: `@nx/${pluginName} Generators`,
             pluginName,
             packageName: `@nx/${pluginName}`,
+            technologyCategory,
             docType: 'generators',
             description: pluginDescription,
           },
@@ -148,6 +154,7 @@ export async function generateAllPluginDocs(
             title: `@nx/${pluginName} Executors`,
             pluginName,
             packageName: `@nx/${pluginName}`,
+            technologyCategory,
             docType: 'executors',
             description: pluginDescription,
           },
@@ -168,6 +175,7 @@ export async function generateAllPluginDocs(
             title: `@nx/${pluginName} Migrations`,
             pluginName,
             packageName: `@nx/${pluginName}`,
+            technologyCategory,
             docType: 'migrations',
             description: pluginDescription,
           },
