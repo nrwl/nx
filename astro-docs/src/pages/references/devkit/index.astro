@@ -2,7 +2,7 @@
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { render, getEntry } from 'astro:content';
 
-const devkitDocs = await getEntry('devkit-docs', 'devkit-overview');
+const devkitDocs = await getEntry('nx-reference-packages', 'devkit-overview');
 
 if (!devkitDocs) {
   throw new Error('DevKit documentation not found');

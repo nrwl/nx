@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import { sectionSidebarPlugin } from './src/plugins/section-sidebar.plugin';
 import netlify from '@astrojs/netlify';
 import linkValidator from 'starlight-links-validator';
 import react from '@astrojs/react';
@@ -29,7 +28,6 @@ export default defineConfig({
       },
       plugins: [
         // linkValidator(),
-        // sectionSidebarPlugin(),
       ],
       routeMiddleware: ['./src/plugins/banner.middleware.ts'],
       markdown: {

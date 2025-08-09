@@ -4,9 +4,9 @@ import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const docs = await getCollection(
-    'devkit-docs',
+    'nx-reference-packages',
     // we don't want the overview page, this is custom handled via the index.astro page
-    (doc) => doc.id !== 'devkit-overview' && doc.data.docType === 'devkit'
+    (doc) => doc.id !== 'devkit-overview' && doc.data.docType === 'devkit' && doc.data.packageType === 'devkit'
   );
 
 

@@ -49,13 +49,6 @@ export const pluginToTechnology: Record<string, string> = {
   playwright: 'test-tools',
   storybook: 'test-tools',
   detox: 'test-tools',
-
-  // nx things, not technology plugins
-  devkit: 'nx',
-  plugin: 'nx',
-  nx: 'nx',
-  // apparently we put `web` in the nx api section?
-  web: 'nx',
 };
 
 /**
@@ -64,11 +57,7 @@ export const pluginToTechnology: Record<string, string> = {
  * @returns Technology category (e.g., 'react', 'build-tools') or 'other' if not found
  */
 export function getTechnologyCategory(pluginName: string): string {
-  if (pluginToTechnology[pluginName]) return pluginToTechnology[pluginName];
-
-  console.trace('OOOPS WRONG CAT LOOK UP??', pluginName);
-
-  return `BAD_FIX_ME ->> pluginName`;
+  return pluginToTechnology[pluginName];
 }
 
 /**
@@ -208,26 +197,66 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
   }
 
   try {
-    const files = readdirSync(pluginContentDir, { withFileTypes: true });
-
     const baseUrl = pluginContentDir.split(`/technologies/`).pop();
 
-    for (const file of files) {
-      if (
-        file.isFile() &&
-        (file.name.endsWith('.md') ||
-          file.name.endsWith('.mdx') ||
-          file.name.endsWith('.mdoc'))
-      ) {
-        const fileName = basename(file.name, extname(file.name));
-        const fileSlug = fileName.split(' ').join('-').toLowerCase();
+    // Recursive function to process directories and build nested structure
+    function processDirectory(
+      dirPath: string,
+      relativePath: string = ''
+    ): SidebarItem[] {
+      const items: SidebarItem[] = [];
+      const files = readdirSync(dirPath, { withFileTypes: true });
 
-        staticFiles.push({
-          label: fileName,
-          slug: `technologies/${baseUrl}/${fileSlug}`,
-        });
+      // Sort to ensure consistent ordering (directories first, then files)
+      files.sort((a, b) => {
+        if (a.isDirectory() && !b.isDirectory()) return -1;
+        if (!a.isDirectory() && b.isDirectory()) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      for (const file of files) {
+        const fullPath = join(dirPath, file.name);
+
+        if (file.isDirectory()) {
+          // Process subdirectory recursively
+          const newRelativePath = relativePath
+            ? `${relativePath}/${file.name}`
+            : file.name;
+          const subItems = processDirectory(fullPath, newRelativePath);
+
+          // Only add the directory group if it contains items
+          if (subItems.length > 0) {
+            items.push({
+              label: file.name,
+              items: subItems,
+            } as SidebarSubItem);
+          }
+        } else if (
+          file.isFile() &&
+          (file.name.endsWith('.md') ||
+            file.name.endsWith('.mdx') ||
+            file.name.endsWith('.mdoc'))
+        ) {
+          const fileName = basename(file.name, extname(file.name));
+          const fileSlug = fileName.split(' ').join('-').toLowerCase();
+
+          // Build the full slug including the relative path
+          const fullSlug = relativePath
+            ? `technologies/${baseUrl}/${relativePath}/${fileSlug}`
+            : `technologies/${baseUrl}/${fileSlug}`;
+
+          items.push({
+            label: fileName,
+            slug: fullSlug,
+          });
+        }
       }
+
+      return items;
     }
+
+    // Start processing from the root plugin content directory
+    return processDirectory(pluginContentDir);
   } catch (error) {
     console.warn(
       `Skipping ${pluginContentDir}. Issue reading static files:`,

@@ -1,7 +1,6 @@
 import type { StarlightUserConfig } from '@astrojs/starlight/types';
 import { getPluginItems } from './src/plugins/utils/plugin-mappings';
-
-const s: StarlightUserConfig['sidebar'] = [
+export const sidebar: StarlightUserConfig['sidebar'] = [
   {
     label: 'Getting Started',
     collapsed: false,
@@ -195,5 +194,3 @@ const s: StarlightUserConfig['sidebar'] = [
     autogenerate: { directory: 'troubleshooting', collapsed: true },
   },
 ];
-
-export const sidebar = s;

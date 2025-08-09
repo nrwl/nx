@@ -3,9 +3,7 @@ import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
 import { file } from 'astro/loaders';
 import { PluginLoader } from './plugins/plugin.loader';
-import { CliLoader } from './plugins/cli.loader';
-import { DevkitLoader } from './plugins/devkit.loader';
-import { CnwLoader } from './plugins/cnw.loader.ts';
+import { NxReferencePackagesLoader } from './plugins/nx-reference-packages.loader';
 import { CommunityPluginsLoader } from './plugins/community-plugins.loader';
 
 // Default docs collection handled by Starlight
@@ -14,11 +12,29 @@ const docs = defineCollection({
   schema: docsSchema(),
 });
 
-const nxCliDocs = defineCollection({
-  loader: CliLoader(),
+const nxReferencePackages = defineCollection({
+  loader: NxReferencePackagesLoader(),
   schema: z.object({
     title: z.string(),
-    docType: z.literal('cli'),
+    packageType: z.enum([
+      'cnw',
+      'devkit',
+      'nx-cli',
+      'nx',
+      'plugin',
+      'web',
+      'workspace',
+    ]),
+    docType: z.string(), // 'overview', 'generators', 'executors', 'cli', 'migrations', 'devkit', 'ngcli_adapter', etc.
+    description: z.string().optional(),
+    category: z.string().optional(),
+    kind: z.string().optional(),
+    features: z.array(z.string()).optional(),
+    totalDocs: z.number().optional(),
+    npmDownloads: z.number().optional(),
+    githubStars: z.number().optional(),
+    lastPublishedDate: z.date().optional(),
+    lastFetched: z.date().optional(),
   }),
 });
 
@@ -30,6 +46,7 @@ const pluginDocs = defineCollection({
     packageName: z.string(),
     docType: z.enum(['generators', 'executors', 'migrations', 'overview']),
     technologyCategory: z.string(),
+    slug: z.string(),
     features: z.array(z.string()).optional(),
     totalDocs: z.number().optional(),
     description: z.string(),
@@ -51,25 +68,6 @@ const communityPlugins = defineCollection({
     githubStars: z.number().optional(),
     nxVersion: z.string().optional(),
     lastFetched: z.date().optional(),
-  }),
-});
-
-const devkitDocs = defineCollection({
-  loader: DevkitLoader(),
-  schema: z.object({
-    title: z.string(),
-    docType: z.enum(['devkit', 'ngcli_adapter']),
-    description: z.string().optional(),
-    category: z.string().optional(),
-    kind: z.string().optional(),
-  }),
-});
-
-const cnwDocs = defineCollection({
-  loader: CnwLoader(),
-  schema: z.object({
-    title: z.string(),
-    docType: z.enum(['cnw']),
   }),
 });
 
@@ -102,9 +100,7 @@ const notifications = defineCollection({
 export const collections = {
   docs,
   notifications,
-  'nx-cli-docs': nxCliDocs,
+  'nx-reference-packages': nxReferencePackages,
   'plugin-docs': pluginDocs,
-  'devkit-docs': devkitDocs,
-  'cnw-docs': cnwDocs,
   'community-plugins': communityPlugins,
 };
