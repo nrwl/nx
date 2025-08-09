@@ -16,7 +16,7 @@ To mitigate these issues, Module Federation has a shared API. Its primary functi
 
 The Shared API maintains a registry of all the downloaded dependencies. When a federated module requests a dependency, the Shared API checks the registry. If the dependency already exists, the module is directed to use the existing copy. If not, the dependency is downloaded and added to the registry.
 
-![How Shared API works](./shared-api.png)
+![How Shared API works](/src/assets/concepts/module-federation/shared-api.png)
 
 {% aside type="note" title="Lost?" %}
 If you are not familiar with the concepts of federated modules, remotes, and hosts, please read the [Faster builds with module federation](/technologies/module-federation/concepts/faster-builds-with-module-federation) for an introduction.
@@ -63,7 +63,7 @@ A common use-case for this is if you want to enable tree-shaking for a library l
 
 **Nx** determines the version of a library by looking at a `package.json`. If the library is an npm package, the version is determined by the version declared in the workspace `package.json`. If the library is a workspace library, the version is determined by the version in the `package.json` of the project that consumes the shared library. RemoteA consumes Counter, which is a workspace library exposed and shared by RemoteB. The version of Counter is determined by the version in RemoteB's `package.json`. If the `package.json` does not exist or the library is not declared, Nx will use the version in the `package.json` of the workspace library.
 
-![How Nx determines library versions](./nx-library-version.png)
+![How Nx determines library versions](/src/assets/concepts/module-federation/nx-library-version.png)
 
 There are twos ways to manage library versions with **Nx**:
 

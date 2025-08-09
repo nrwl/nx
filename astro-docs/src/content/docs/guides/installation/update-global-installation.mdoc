@@ -1,0 +1,76 @@
+---
+title: Update Your Global Nx Installation
+description: Learn how to update your global Nx installation to avoid common errors when the workspace structure changes, including steps to identify and remove outdated installations.
+---
+
+
+There are some cases where an issue could arise when using an outdated global installation of Nx. If the structure of your Nx workspace no longer matches up with what the globally installed copy of Nx expects, it may fail to hand off to your local installation properly and instead error. This commonly results in errors such as:
+
+- `Could not find Nx modules in this workspace.`
+- `The current directory isn't part of an Nx workspace.`
+
+If you find yourself in this position, you will need to update your global installation of Nx.
+
+In most cases, you can update a globally installed npm package by rerunning the command you used to install it.
+
+If you cannot remember which package manager you installed Nx globally with or are still encountering issues, you can locate other installations of Nx with these commands:
+
+{% tabs syncKey="install-type" %}
+{% tabitem label="npm" %}
+
+```shell {% frame="none" %}
+npm list --global nx
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+**yarn 2+**
+
+```shell {% frame="none" %}
+yarn dlx list nx
+```
+
+yarn 1.x
+
+```shell {% frame="none" %}
+yarn global list nx
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```shell {% frame="none" %}
+pnpm list --global nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+You can then remove the extra global installations by running the following commands for the duplicate installations:
+
+{% tabs syncKey="install-type" %}
+{% tabitem label="npm" %}
+
+```shell {% frame="none" %}
+npm rm --global nx
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```shell {% frame="none" %}
+yarn global remove nx
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```shell {% frame="none" %}
+pnpm rm --global nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Finally, to complete your global installation update, simply reinstall it as described [above](#update-your-global-nx-installation).

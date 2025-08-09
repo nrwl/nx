@@ -5,19 +5,30 @@ import type { CollectionEntry } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
 export async function getStaticPaths() {
+  // Get plugin docs from both collections
   const pluginDocs = await getCollection('plugin-docs', (entry) => entry.data.docType !== 'overview');
+  const nxRefDocs = await getCollection('nx-reference-packages', (entry) => 
+    ['nx', 'plugin', 'web', 'workspace'].includes(entry.data.packageType) && 
+    entry.data.docType !== 'overview' &&
+    ['generators', 'executors', 'migrations'].includes(entry.data.docType)
+  );
 
-  // Group docs by plugin name
-  const docsByPlugin = pluginDocs.reduce(
+  // Combine all docs and group by plugin name
+  const allDocs = [...pluginDocs, ...nxRefDocs];
+  const docsByPlugin = allDocs.reduce(
     (acc, doc) => {
-      const pluginName = doc.data.pluginName;
+      // For nx-reference-packages, use packageType as the plugin name
+      const pluginName = doc.collection === 'nx-reference-packages' 
+        ? doc.data.packageType 
+        : doc.data.pluginName;
+        
       if (!acc[pluginName]) {
         acc[pluginName] = [];
       }
       acc[pluginName].push(doc);
       return acc;
     },
-    {} as Record<string, CollectionEntry<'plugin-docs'>[]>
+    {} as Record<string, (CollectionEntry<'plugin-docs'> | CollectionEntry<'nx-reference-packages'>)[]>
   );
 
   // Generate paths for each plugin

@@ -1,0 +1,120 @@
+{
+  "project": {
+    "name": "@acme/animals",
+    "type": "lib",
+    "data": {
+      "root": "packages/animals",
+      "targets": {
+        "typecheck": {
+          "dependsOn": ["^typecheck"],
+          "options": {
+            "cwd": "packages/animals",
+            "command": "tsc --build --emitDeclarationOnly"
+          },
+          "cache": true,
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["typescript"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "build": {
+          "options": {
+            "cwd": "packages/animals",
+            "command": "tsc --build tsconfig.lib.json"
+          },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["typescript"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        }
+      },
+      "name": "animals",
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "packages/animals/src",
+      "projectType": "library",
+      "tags": [],
+      "implicitDependencies": []
+    }
+  },
+  "sourceMap": {
+    "root": ["packages/animals/project.json", "nx/core/project-json"],
+    "targets": ["packages/animals/project.json", "nx/core/project-json"],
+    "targets.typecheck": ["packages/animals/project.json", "@nx/js/typescript"],
+    "targets.typecheck.command": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.options": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.cache": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.dependsOn": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.inputs": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.outputs": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.options.cwd": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build": ["packages/animals/project.json", "@nx/js/typescript"],
+    "targets.build.command": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.options": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.cache": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.dependsOn": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.inputs": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.outputs": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.options.cwd": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "name": ["packages/animals/project.json", "nx/core/project-json"],
+    "$schema": ["packages/animals/project.json", "nx/core/project-json"],
+    "sourceRoot": ["packages/animals/project.json", "nx/core/project-json"],
+    "projectType": ["packages/animals/project.json", "nx/core/project-json"],
+    "tags": ["packages/animals/project.json", "nx/core/project-json"]
+  }
+}

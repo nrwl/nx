@@ -1,0 +1,48 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const pluginDocs = await getCollection(
+    'plugin-docs',
+    (entry) => entry.data.docType !== 'overview' && entry.data.slug
+  );
+
+  // Generate paths for each plugin document with a slug
+  const paths = pluginDocs.map((doc) => {
+    // Parse the slug to extract the path segments
+    const slugParts = doc.data.slug!.split('/');
+    // Remove 'technologies' prefix and create the slug array
+    const slugArray = slugParts.slice(1);
+    
+    return {
+      params: { 
+        slug: slugArray.join('/') // Join the parts back as a string for catch-all routes
+      },
+      props: {
+        doc,
+      }
+    };
+  });
+  
+  return paths;
+}
+
+const { doc } = Astro.props;
+const { Content, headings } = await render(doc);
+const pluginName = doc.data.pluginName;
+const docType = doc.data.docType;
+
+// Capitalize the doc type for display
+const docTypeDisplay = docType.charAt(0).toUpperCase() + docType.slice(1);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: `@nx/${pluginName} - ${docTypeDisplay}`,
+    description: doc.data.description || `@nx/${pluginName} plugin ${docType}`,
+  }}
+  headings={headings || []}
+>
+  <Content />
+</StarlightPage>

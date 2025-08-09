@@ -2,7 +2,7 @@
 import { getEntry, render } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
-const doc = await getEntry('cnw-docs', 'cnw-cli');
+const doc = await getEntry('nx-reference-packages', 'cnw-cli');
 
 if (!doc) {
   throw new Error('CNW CLI documentation not found');

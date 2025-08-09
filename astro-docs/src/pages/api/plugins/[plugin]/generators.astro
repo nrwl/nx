@@ -7,16 +7,30 @@ export async function getStaticPaths() {
     'plugin-docs',
     (entry) => entry.data.docType === 'generators'
   );
+  
+  const nxRefDocs = await getCollection(
+    'nx-reference-packages',
+    (entry) => entry.data.docType === 'generators' && ['nx', 'plugin', 'web', 'workspace'].includes(entry.data.packageType)
+  );
 
-  // Generate paths for each plugin
-  return pluginDocs.map((p) => ({
+  // Generate paths for both collections
+  const pluginPaths = pluginDocs.map((p) => ({
     params: { plugin: p.data.pluginName },
     props: { doc: p },
   }));
+  
+  const nxRefPaths = nxRefDocs.map((p) => ({
+    params: { plugin: p.data.packageType },
+    props: { doc: p },
+  }));
+
+  return [...pluginPaths, ...nxRefPaths];
 }
 
 const { doc } = Astro.props;
-const pluginName = doc.data.pluginName;
+const pluginName = doc.collection === 'nx-reference-packages' 
+  ? doc.data.packageType 
+  : doc.data.pluginName;
 
 if (!doc.body) {
   throw new Error(`No content found for plugin: ${pluginName}`);
