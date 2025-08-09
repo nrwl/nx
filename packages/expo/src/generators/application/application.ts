@@ -13,7 +13,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
-import { addJest } from '../../utils/add-jest';
+import { addJest } from '../../utils/jest/add-jest';
 
 import { normalizeOptions } from './lib/normalize-options';
 import initGenerator from '../init/init';

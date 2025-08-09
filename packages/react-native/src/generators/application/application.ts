@@ -67,7 +67,7 @@ export async function reactNativeApplicationGeneratorInternal(
   tasks.push(initTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host));
+    tasks.push(ensureDependencies(host, options.unitTestRunner));
   }
 
   await createApplicationFiles(host, options);
