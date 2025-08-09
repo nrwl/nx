@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::native::tasks::types::TaskGraph;
 use crate::native::tui::components::tasks_list::TaskStatus;
-use crate::native::tui::graph_utils::is_task_continuous;
+use crate::native::tui::graph_utils::{get_dependency_chain_failures, is_task_continuous};
 use crate::native::tui::status_icons;
 use crate::native::tui::theme::THEME;
 use ratatui::{
@@ -94,9 +94,12 @@ impl DependencyViewState {
         self.pane_area = pane_area;
     }
 
-    /// Returns true if this dependency view should handle key events (i.e., task is pending)
+    /// Returns true if this dependency view should handle key events (i.e., task is pending or skipped with scrollable content)
     pub fn should_handle_key_events(&self) -> bool {
-        matches!(self.task_status, TaskStatus::NotStarted)
+        matches!(
+            self.task_status,
+            TaskStatus::NotStarted | TaskStatus::Skipped
+        )
     }
 
     /// Calculate viewport height from pane area, accounting for borders and padding
@@ -227,6 +230,73 @@ impl<'a> DependencyView<'a> {
         Widget::render(paragraph, area, buf);
     }
 
+    /// Get the header text for a dependency view based on task status
+    fn get_dependency_view_header(&self, state: &DependencyViewState) -> String {
+        match state.task_status {
+            TaskStatus::NotStarted => {
+                let total_count = state.dependencies.len();
+                let incomplete_count = state
+                    .dependencies
+                    .iter()
+                    .filter(|dep| self.is_task_incomplete(dep))
+                    .count();
+
+                if incomplete_count == 0 && total_count > 0 {
+                    "All dependencies satisfied, waiting for an available thread...".to_string()
+                } else {
+                    format!(
+                        "Not started yet, waiting for {} / {} tasks to complete...",
+                        incomplete_count, total_count
+                    )
+                }
+            }
+            TaskStatus::Skipped => {
+                let root_causes = get_dependency_chain_failures(
+                    &state.current_task,
+                    self.task_graph,
+                    self.status_map,
+                );
+
+                if let Some((root_task, _)) = root_causes.first() {
+                    format!("Skipped because {} failed.", root_task)
+                } else {
+                    "Skipped due to dependency failures.".to_string()
+                }
+            }
+            _ => "Dependencies:".to_string(),
+        }
+    }
+
+    /// Get the header style for a dependency view based on task status
+    fn get_dependency_view_header_style(&self, state: &DependencyViewState) -> Style {
+        let base_style = match state.task_status {
+            TaskStatus::NotStarted => {
+                let total_count = state.dependencies.len();
+                let incomplete_count = state
+                    .dependencies
+                    .iter()
+                    .filter(|dep| self.is_task_incomplete(dep))
+                    .count();
+
+                Style::default()
+                    .fg(if incomplete_count == 0 && total_count > 0 {
+                        THEME.success
+                    } else {
+                        THEME.primary_fg
+                    })
+                    .add_modifier(Modifier::BOLD)
+            }
+            TaskStatus::Skipped => Style::default()
+                .fg(THEME.warning)
+                .add_modifier(Modifier::BOLD),
+            _ => Style::default()
+                .fg(THEME.primary_fg)
+                .add_modifier(Modifier::BOLD),
+        };
+
+        Self::apply_focus_styling(base_style, state.is_focused)
+    }
+
     fn render_dependency_list(
         &self,
         state: &mut DependencyViewState,
@@ -241,33 +311,9 @@ impl<'a> DependencyView<'a> {
 
         let mut lines = Vec::new();
 
-        // Count incomplete dependencies
-        let total_count = state.dependencies.len();
-        let incomplete_count = state
-            .dependencies
-            .iter()
-            .filter(|dep| self.is_task_incomplete(dep))
-            .count();
-
-        // Add header with progress
-        let header_text = if incomplete_count == 0 && total_count > 0 {
-            "All dependencies satisfied, waiting for an available thread...".to_string()
-        } else {
-            format!(
-                "Not started yet, waiting for {} / {} tasks to complete...",
-                incomplete_count, total_count
-            )
-        };
-
-        let header_base_style = Style::default()
-            .fg(if incomplete_count == 0 && total_count > 0 {
-                THEME.success
-            } else {
-                THEME.primary_fg
-            })
-            .add_modifier(Modifier::BOLD);
-
-        let header_style = Self::apply_focus_styling(header_base_style, state.is_focused);
+        // Add header with status-specific text and styling
+        let header_text = self.get_dependency_view_header(state);
+        let header_style = self.get_dependency_view_header_style(state);
         let header = Line::from(vec![Span::styled(header_text, header_style)]);
         lines.push(header);
         lines.push(Line::from("")); // Empty line for spacing
@@ -338,11 +384,16 @@ impl<'a> DependencyView<'a> {
 
         // Render scrollbar if needed (using outer_area to extend to border edge)
         if needs_scrollbar {
-            let border_style = if state.is_focused {
-                Style::default().fg(THEME.info)
+            let border_color = match state.task_status {
+                TaskStatus::Skipped => THEME.warning,
+                _ => THEME.info,
+            };
+
+            let scrollbar_style = if state.is_focused {
+                Style::default().fg(border_color)
             } else {
                 Style::default()
-                    .fg(THEME.secondary_fg)
+                    .fg(border_color)
                     .add_modifier(Modifier::DIM)
             };
 
@@ -350,7 +401,7 @@ impl<'a> DependencyView<'a> {
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"))
-                .style(border_style);
+                .style(scrollbar_style);
 
             scrollbar.render(outer_area, buf, &mut state.scrollbar_state);
 
@@ -372,7 +423,7 @@ impl<'a> DependencyView<'a> {
 
                 Paragraph::new(padding_text.clone())
                     .alignment(Alignment::Right)
-                    .style(border_style)
+                    .style(scrollbar_style)
                     .render(top_right_area, buf);
 
                 // Bottom padding
@@ -385,7 +436,7 @@ impl<'a> DependencyView<'a> {
 
                 Paragraph::new(padding_text)
                     .alignment(Alignment::Right)
-                    .style(border_style)
+                    .style(scrollbar_style)
                     .render(bottom_right_area, buf);
             }
         }
@@ -396,16 +447,19 @@ impl<'a> StatefulWidget for DependencyView<'a> {
     type State = DependencyViewState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        // Safety check for minimum area
-        if area.width < 10 || area.height < 5 {
-            return;
-        }
+        // Update state with area info for responsive scrollbar
+        state.pane_area = area;
+
+        let border_color = match state.task_status {
+            TaskStatus::Skipped => THEME.warning,
+            _ => THEME.info,
+        };
 
         let border_style = if state.is_focused {
-            Style::default().fg(THEME.info)
+            Style::default().fg(border_color)
         } else {
             Style::default()
-                .fg(THEME.secondary_fg)
+                .fg(border_color)
                 .add_modifier(Modifier::DIM)
         };
 
@@ -443,8 +497,11 @@ impl<'a> StatefulWidget for DependencyView<'a> {
         let inner_area = block.inner(area);
         block.render(area, buf);
 
-        // Only show dependency info for pending tasks
-        if matches!(state.task_status, TaskStatus::NotStarted) {
+        // Show different content based on task status
+        if matches!(
+            state.task_status,
+            TaskStatus::NotStarted | TaskStatus::Skipped
+        ) {
             self.render_dependency_list(state, inner_area, area, buf);
         } else {
             // Show a message indicating why the dependency view is not relevant
@@ -452,7 +509,6 @@ impl<'a> StatefulWidget for DependencyView<'a> {
                 TaskStatus::InProgress => "Task is now running",
                 TaskStatus::Success => "Task completed successfully",
                 TaskStatus::Failure => "Task failed",
-                TaskStatus::Skipped => "Task was skipped",
                 _ => "Task is no longer pending",
             };
 

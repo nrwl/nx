@@ -17,7 +17,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use super::help_text::HelpText;
 use super::pagination::Pagination;
 use super::task_selection_manager::{SelectionMode, TaskSelectionManager};
-use crate::native::tui::theme::THEME;
+use crate::native::tui::{status_icons, theme::THEME};
 use crate::native::{
     tasks::types::{Task, TaskResult},
     tui::{
@@ -1071,68 +1071,26 @@ impl TasksList {
                     // Only consider rows for the parallel section if appropriate
                     let is_in_parallel_section = show_parallel && row_idx < self.max_parallel;
 
-                    let status_cell = match task.status {
-                        TaskStatus::Success
-                        | TaskStatus::LocalCacheKeptExisting
-                        | TaskStatus::LocalCache
-                        | TaskStatus::RemoteCache => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            Span::raw(" "),
-                            Span::styled("✔", Style::default().fg(THEME.success)),
-                            Span::raw(" "),
-                        ])),
-                        TaskStatus::Failure => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            Span::raw(" "),
-                            Span::styled("✖", Style::default().fg(THEME.error)),
-                            Span::raw(" "),
-                        ])),
-                        TaskStatus::Skipped => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            Span::raw(" "),
-                            Span::styled("⏭", Style::default().fg(THEME.warning)),
-                            Span::raw(" "),
-                        ])),
-                        TaskStatus::InProgress | TaskStatus::Shared => {
-                            let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-                            let throbber_char =
-                                throbber_chars[self.throbber_counter % throbber_chars.len()];
+                    let status_cell = {
+                        let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
 
-                            let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
-
-                            // Add vertical line for parallel section if needed (always takes 1 character width)
-                            if is_in_parallel_section
-                                && self.selection_manager.lock().unwrap().get_current_page() == 0
-                            {
-                                spans.push(Span::styled("│", Style::default().fg(THEME.info)));
-                            } else {
-                                spans.push(Span::raw(" "));
-                            }
-
-                            // Add the spinner with consistent spacing
-                            spans.push(Span::styled(
-                                throbber_char.to_string(),
-                                Style::default().fg(THEME.info_light),
-                            ));
-
-                            // Add trailing space to maintain consistent width
+                        // Add vertical line for parallel section if needed (InProgress/Shared tasks only)
+                        if matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
+                            && is_in_parallel_section
+                            && self.selection_manager.lock().unwrap().get_current_page() == 0
+                        {
+                            spans.push(Span::styled("│", Style::default().fg(THEME.info)));
+                        } else {
                             spans.push(Span::raw(" "));
-
-                            Cell::from(Line::from(spans))
                         }
-                        TaskStatus::Stopped => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            Span::raw(" "),
-                            Span::styled("◼", Style::default().fg(THEME.secondary_fg)),
-                            Span::raw(" "),
-                        ])),
-                        TaskStatus::NotStarted => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            // No need for parallel section check for pending tasks
-                            Span::raw(" "),
-                            Span::styled("·", Style::default().fg(THEME.secondary_fg)),
-                            Span::raw(" "),
-                        ])),
+
+                        // Use centralized status icon function for consistent styling
+                        let status_char =
+                            status_icons::get_status_char(task.status, self.throbber_counter);
+                        let status_style = status_icons::get_status_style(task.status);
+                        spans.push(Span::styled(format!("{}    ", status_char), status_style));
+
+                        Cell::from(Line::from(spans))
                     };
 
                     let name = {
