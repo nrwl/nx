@@ -216,7 +216,7 @@
     "gpt3-tokenizer": "^1.1.5",
     "handlebars": "4.7.7",
     "html-webpack-plugin": "5.5.0",
-    "http-proxy-middleware": "^3.0.3",
+    "http-proxy-middleware": "^3.0.5",
     "http-server": "14.1.0",
     "husky": "^9.1.5",
     "identity-obj-proxy": "3.0.0",
