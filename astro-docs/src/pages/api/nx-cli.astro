@@ -2,7 +2,7 @@
 import { getEntry, render } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
-const nxClI = await getEntry('nx-cli-docs', 'api/nx-cli');
+const nxClI = await getEntry('nx-reference-packages', 'nx-cli');
 if (!nxClI || !nxClI.rendered) {
   throw new Error('No content found for nx-cli docs');
 }

@@ -21,11 +21,52 @@ import {
   PLUGIN_IGNORE_LIST,
   shouldFetchStats,
 } from './utils/plugin-stats';
-import { getTechnologyCategory } from './utils/plugin-mappings';
+import {
+  getTechnologyCategory,
+  pluginToTechnology,
+} from './utils/plugin-mappings';
 
 const PLUGIN_PATHS = readdirSync(join(workspaceRoot, 'packages'));
 
 type DocEntry = CollectionEntry<'plugin-docs'>;
+
+/**
+ * Generate the URL slug for a plugin document
+ * @param pluginName The plugin name (e.g., 'react', 'next', 'webpack')
+ * @param docType The document type (e.g., 'generators', 'executors', 'migrations')
+ * @returns The URL slug or null if this is a special package handled elsewhere
+ */
+function getPluginSlug(pluginName: string, docType: string): string | null {
+  // Special packages are handled by nx-reference-packages.loader
+  if (['nx', 'devkit', 'plugin', 'web', 'workspace'].includes(pluginName)) {
+    return null;
+  }
+
+  const category = getTechnologyCategory(pluginName);
+
+  // Check if plugin is nested under a category or is top-level
+  // Top-level plugins are those where the plugin name matches the category
+  const isTopLevel = [
+    'typescript',
+    'angular',
+    'react',
+    'vue',
+    'node',
+    'module-federation',
+    'eslint',
+  ].includes(pluginName);
+
+  if (isTopLevel) {
+    // Top-level: /technologies/{plugin}/{docType}
+    return `technologies/${pluginName}/${docType}`;
+  } else if (category === 'java') {
+    // Java is special - gradle is at the top level for now
+    return `technologies/java/${docType}`;
+  } else {
+    // Nested: /technologies/{category}/{plugin}/{docType}
+    return `technologies/${category}/${pluginName}/${docType}`;
+  }
+}
 
 function getPluginDescription(pluginPath: string, pluginName: string): string {
   const packageJsonPath = join(pluginPath, 'package.json');
@@ -69,6 +110,15 @@ export async function generateAllPluginDocs(
     const pluginName = relativePath.split('/').pop() || '';
     if (PLUGIN_IGNORE_LIST.includes(pluginName)) {
       logger.warn(`Skipping ${pluginName} - listed as ignored plugin`);
+      skipCount++;
+      continue;
+    }
+
+    // Skip special packages that are handled by nx-reference-packages.loader
+    if (['nx', 'devkit', 'plugin', 'web', 'workspace'].includes(pluginName)) {
+      logger.info(
+        `Skipping ${pluginName} - handled by nx-reference-packages.loader`
+      );
       skipCount++;
       continue;
     }
@@ -124,64 +174,82 @@ export async function generateAllPluginDocs(
       const generators = parseGenerators(pluginPath);
       if (generators && generators.size > 0) {
         const markdown = getGeneratorsMarkdown(pluginName, generators);
-        store.set({
-          id: `${pluginName}-generators`,
-          body: markdown,
-          rendered: await renderMarkdown(markdown),
-          data: {
-            title: `@nx/${pluginName} Generators`,
-            pluginName,
-            packageName: `@nx/${pluginName}`,
-            technologyCategory,
-            docType: 'generators',
-            description: pluginDescription,
-          },
-        });
+        const slug = getPluginSlug(pluginName, 'generators');
+        if (slug) {
+          store.set({
+            id: `${pluginName}-generators`,
+            body: markdown,
+            rendered: await renderMarkdown(markdown),
+            data: {
+              title: `@nx/${pluginName} Generators`,
+              pluginName,
+              packageName: `@nx/${pluginName}`,
+              technologyCategory,
+              docType: 'generators',
+              description: pluginDescription,
+              slug,
+            },
+          });
+        }
 
-        pluginOverview.data.features!.push('generators');
-        pluginOverview.data.totalDocs!++;
+        if (slug) {
+          pluginOverview.data.features!.push('generators');
+          pluginOverview.data.totalDocs!++;
+        }
       }
 
       // Process executors
       const executors = parseExecutors(pluginPath);
       if (executors && executors.size > 0) {
         const markdown = getExecutorsMarkdown(pluginName, executors);
-        store.set({
-          id: `${pluginName}-executors`,
-          body: markdown,
-          rendered: await renderMarkdown(markdown),
-          data: {
-            title: `@nx/${pluginName} Executors`,
-            pluginName,
-            packageName: `@nx/${pluginName}`,
-            technologyCategory,
-            docType: 'executors',
-            description: pluginDescription,
-          },
-        });
-        pluginOverview.data.features!.push('executors');
-        pluginOverview.data.totalDocs!++;
+        const slug = getPluginSlug(pluginName, 'executors');
+        if (slug) {
+          store.set({
+            id: `${pluginName}-executors`,
+            body: markdown,
+            rendered: await renderMarkdown(markdown),
+            data: {
+              title: `@nx/${pluginName} Executors`,
+              pluginName,
+              packageName: `@nx/${pluginName}`,
+              technologyCategory,
+              docType: 'executors',
+              description: pluginDescription,
+              slug,
+            },
+          });
+        }
+        if (slug) {
+          pluginOverview.data.features!.push('executors');
+          pluginOverview.data.totalDocs!++;
+        }
       }
 
       // Process migrations
       const migrations = parseMigrations(pluginPath);
       if (migrations && migrations.size > 0) {
         const markdown = getMigrationsMarkdown(pluginName, migrations);
-        store.set({
-          id: `${pluginName}-migrations`,
-          body: markdown,
-          rendered: await renderMarkdown(markdown),
-          data: {
-            title: `@nx/${pluginName} Migrations`,
-            pluginName,
-            packageName: `@nx/${pluginName}`,
-            technologyCategory,
-            docType: 'migrations',
-            description: pluginDescription,
-          },
-        });
-        pluginOverview.data.features!.push('migrations');
-        pluginOverview.data.totalDocs!++;
+        const slug = getPluginSlug(pluginName, 'migrations');
+        if (slug) {
+          store.set({
+            id: `${pluginName}-migrations`,
+            body: markdown,
+            rendered: await renderMarkdown(markdown),
+            data: {
+              title: `@nx/${pluginName} Migrations`,
+              pluginName,
+              packageName: `@nx/${pluginName}`,
+              technologyCategory,
+              docType: 'migrations',
+              description: pluginDescription,
+              slug,
+            },
+          });
+        }
+        if (slug) {
+          pluginOverview.data.features!.push('migrations');
+          pluginOverview.data.totalDocs!++;
+        }
       }
 
       if (generators?.size || executors?.size || migrations?.size) {

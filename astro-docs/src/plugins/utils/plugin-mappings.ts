@@ -54,6 +54,7 @@ export const pluginToTechnology: Record<string, string> = {
   devkit: 'nx',
   plugin: 'nx',
   nx: 'nx',
+  workspace: 'nx',
   // apparently we put `web` in the nx api section?
   web: 'nx',
 };
