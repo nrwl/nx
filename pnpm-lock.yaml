@@ -758,7 +758,7 @@ importers:
         specifier: 5.5.0
         version: 5.5.0(webpack@5.99.9)
       http-proxy-middleware:
-        specifier: ^3.0.3
+        specifier: ^3.0.5
         version: 3.0.5
       http-server:
         specifier: 14.1.0
@@ -2768,7 +2768,7 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       http-proxy-middleware:
-        specifier: ^3.0.3
+        specifier: ^3.0.5
         version: 3.0.5
       picocolors:
         specifier: ^1.1.0
@@ -3156,7 +3156,7 @@ importers:
         specifier: ^6.2.0
         version: 6.2.0(webpack@5.99.9(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       http-proxy-middleware:
-        specifier: ^3.0.3
+        specifier: ^3.0.5
         version: 3.0.5
       minimatch:
         specifier: 9.0.3
@@ -3392,7 +3392,7 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       http-proxy-middleware:
-        specifier: ^3.0.3
+        specifier: ^3.0.5
         version: 3.0.5
       less-loader:
         specifier: ^11.1.0
