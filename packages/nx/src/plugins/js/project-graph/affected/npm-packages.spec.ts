@@ -332,4 +332,169 @@ describe('getTouchedNpmPackages', () => {
       'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in GitHub including the package.json file.'
     );
   });
+
+  it('should mark all projects as affected when overrides are changed for unknown packages', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['overrides', 'some-unknown-package'],
+              value: {
+                lhs: '1.0.0',
+                rhs: '2.0.0',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+        },
+        overrides: {
+          'some-unknown-package': '2.0.0',
+        },
+      },
+      projectGraph
+    );
+    expect(result).toEqual(['proj1', 'proj2']);
+  });
+
+  it('should mark specific package as affected when overrides are changed for known packages', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['overrides', 'happy-nrwl'],
+              value: {
+                lhs: '1.0.0',
+                rhs: '2.0.0',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+        },
+        overrides: {
+          'happy-nrwl': '2.0.0',
+        },
+      },
+      projectGraph
+    );
+    expect(result).toEqual(['npm:happy-nrwl']);
+  });
+
+  it('should mark all projects as affected when resolutions are changed for unknown packages', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Added,
+              path: ['resolutions', 'some-unknown-package'],
+              value: {
+                lhs: undefined,
+                rhs: '2.0.0',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+        },
+        resolutions: {
+          'some-unknown-package': '2.0.0',
+        },
+      },
+      projectGraph
+    );
+    expect(result).toEqual(['proj1', 'proj2']);
+  });
+
+  it('should mark specific package as affected when pnpm.overrides are changed for known packages', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Deleted,
+              path: ['pnpm', 'overrides', 'happy-nrwl'],
+              value: {
+                lhs: '1.0.0',
+                rhs: undefined,
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+        },
+        pnpm: {
+          overrides: {},
+        },
+      },
+      projectGraph
+    );
+    expect(result).toEqual(['npm:happy-nrwl']);
+  });
+
+  it('should mark all projects as affected when pnpm.overrides are changed for unknown packages', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Deleted,
+              path: ['pnpm', 'overrides', 'some-unknown-package'],
+              value: {
+                lhs: '1.0.0',
+                rhs: undefined,
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+        },
+        pnpm: {
+          overrides: {},
+        },
+      },
+      projectGraph
+    );
+    expect(result).toEqual(['proj1', 'proj2']);
+  });
 });
