@@ -81,6 +81,7 @@ export function Graph({
     });
     setParsedProps(await response.json());
   };
+
   useEffect(() => {
     if (jsonFile) {
       getData(jsonFile);
