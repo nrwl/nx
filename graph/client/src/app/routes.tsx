@@ -100,11 +100,6 @@ const selectedTargetLoader: LoaderFunction = async ({ params, request }) => {
   const cached = taskGraphCache.getCached(selectedTarget, requestedProjects);
   if (cached) {
     // We have all the data we need in cache
-    console.log(
-      'Returning cached task graphs for',
-      selectedTarget,
-      requestedProjects
-    );
     return cached;
   }
 
@@ -114,13 +109,10 @@ const selectedTargetLoader: LoaderFunction = async ({ params, request }) => {
     requestedProjects
   );
 
-  console.log('Missing projects for', selectedTarget, ':', missingProjects);
-
   let response: TaskGraphClientResponse;
 
   if (missingProjects === null) {
     // Need to fetch all projects for this target
-    console.log('Fetching all projects for target:', selectedTarget);
     response = await projectGraphDataService.getSpecificTaskGraph(
       workspaceInfo.taskGraphUrl,
       null,
@@ -137,12 +129,7 @@ const selectedTargetLoader: LoaderFunction = async ({ params, request }) => {
     );
   } else if (missingProjects.length > 0) {
     // Fetch only the missing projects
-    console.log(
-      'Fetching missing projects:',
-      missingProjects,
-      'for target:',
-      selectedTarget
-    );
+
     response = await projectGraphDataService.getSpecificTaskGraph(
       workspaceInfo.taskGraphUrl,
       missingProjects,
@@ -160,9 +147,6 @@ const selectedTargetLoader: LoaderFunction = async ({ params, request }) => {
   } else {
     // All requested projects are already cached, but getCached() returned null
     // This shouldn't happen, but let's handle it
-    console.log(
-      'Unexpected case: all projects cached but getCached returned null'
-    );
     response = await projectGraphDataService.getSpecificTaskGraph(
       workspaceInfo.taskGraphUrl,
       requestedProjects || null,
