@@ -44,7 +44,7 @@ export function replaceFiles(replacements: FileReplacement[]): {
         try {
           // return new file content
           return {
-            id: foundReplace.with,
+            id: resolved.id.replace(foundReplace.replace, foundReplace.with),
           };
         } catch (err) {
           console.error(err);
