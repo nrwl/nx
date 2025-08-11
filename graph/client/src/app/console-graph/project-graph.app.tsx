@@ -28,10 +28,13 @@ export function ProjectGraphApp({
   );
 
   useEffect(() => {
-    if (handleEventResult) {
-      console.log(handleEventResult);
-    }
-  });
+    if (!graphClient) return;
+
+    service.send({
+      type: 'setGraphClient',
+      graphClient: { graphClient, send, sendRenderConfigEvent },
+    });
+  }, [graphClient]);
 
   useEffect(() => {
     console.log('graph client', graphClient);
@@ -49,7 +52,7 @@ export function ProjectGraphApp({
       type: 'showAll',
       autoExpand: true,
     });
-  }, [graphClient, projectGraph, send]);
+  }, [graphClient]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

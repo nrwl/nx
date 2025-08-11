@@ -10,7 +10,7 @@ import { ProjectGraphContext, ProjectGraphMachineEvents } from './interfaces';
 import { compositeGraphStateConfig } from './composite-graph.state';
 
 // Define the set of events that should be forwarded to graphActor
-const GRAPH_CLIENT_EVENTS = new Set([
+export const GRAPH_CLIENT_EVENTS = new Set([
   'initGraph',
   'updateGraph',
   'showAll',

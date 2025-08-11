@@ -1,39 +1,80 @@
 import { ProjectGraph } from '@nx/devkit';
-import { assign } from 'xstate';
+import { ActorRef, assign, send, spawn } from 'xstate';
 import { createMachine } from 'xstate';
+import { ProjectGraphClientActor } from '../feature-projects/machines/interfaces';
+import { graphClientActor } from '../feature-projects/machines/graph.actor';
+import { ProjectGraphEvent } from '@nx/graph/projects/project-graph-event';
+import { RenderGraphConfigEvent } from '@nx/graph';
+import { GRAPH_CLIENT_EVENTS } from '../feature-projects/machines/project-graph.machine';
 
 export interface ProjectGraphState {
   projectGraph: null | ProjectGraph;
+  graphActor: ActorRef<ProjectGraphEvent | RenderGraphConfigEvent>;
 }
 
 const initialContext: ProjectGraphState = {
   projectGraph: null,
+  graphActor: null,
 };
-export type ProjectGraphEvents = {
-  type: 'loadData';
-  projectGraph: ProjectGraph;
-};
+export type ProjectGraphEvents =
+  | {
+      type: 'loadData';
+      projectGraph: ProjectGraph;
+    }
+  | {
+      type: 'setGraphClient';
+      graphClient: ProjectGraphClientActor;
+    };
 export const projectGraphMachine = createMachine<
   ProjectGraphState,
   ProjectGraphEvents
->({
-  id: 'projectGraph',
-  initial: 'idle',
-  context: initialContext,
-  states: {
-    idle: {},
-    loaded: {},
-  },
-  on: {
-    loadData: [
-      {
-        target: 'loaded',
+>(
+  {
+    id: 'projectGraph',
+    initial: 'idle',
+    context: initialContext,
+    states: {
+      idle: {},
+      loaded: {},
+    },
+    on: {
+      loadData: [
+        {
+          target: 'loaded',
+          actions: [
+            assign({
+              projectGraph: (_, event) => event.projectGraph,
+            }),
+          ],
+        },
+      ],
+      setGraphClient: {
         actions: [
           assign({
-            projectGraph: (_, event) => event.projectGraph,
+            graphActor: (_, event) =>
+              spawn(
+                graphClientActor(event.graphClient),
+                'projectGraphClientActor'
+              ),
           }),
         ],
       },
-    ],
+      '*': {
+        cond: 'isGraphClientEvent',
+        actions: ['sendToGraphActor'],
+      },
+    },
   },
-});
+  {
+    guards: {
+      isGraphClientEvent: (ctx, event) => {
+        return GRAPH_CLIENT_EVENTS.has(event.type) && ctx.graphActor !== null;
+      },
+    },
+    actions: {
+      sendToGraphActor: send((_, event) => event, {
+        to: (ctx) => ctx.graphActor,
+      }),
+    },
+  }
+);
