@@ -168,5 +168,15 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./bin/nx.d.ts",
+      "default": "./bin/nx.js"
+    },
+    "./src/*": "./src/*.ts",
+    "./release": "./release/index.js",
+    "./release/index": "./release/index.js"
   }
 }
