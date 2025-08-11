@@ -25,6 +25,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+        .replaceAll(/\d+B\s+fesm2022\//g, 'XXX.XXX kb fesm2022/')
         .replaceAll(/\d*B\s+src\//g, 'XXB src/')
         .replaceAll(/\d*B\s+lib\//g, 'XXB lib/')
         .replaceAll(/\d*B\s+index/g, 'XXB index')
