@@ -38,7 +38,7 @@
     "enquirer": "~2.3.6",
     "express": "^4.21.2",
     "ts-checker-rspack-plugin": "^1.1.1",
-    "http-proxy-middleware": "^3.0.3",
+    "http-proxy-middleware": "^3.0.5",
     "less-loader": "^11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "^2.0.3",

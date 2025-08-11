@@ -35,7 +35,7 @@
     "@module-federation/node": "^2.7.9",
     "@module-federation/sdk": "^0.17.0",
     "express": "^4.21.2",
-    "http-proxy-middleware": "^3.0.3"
+    "http-proxy-middleware": "^3.0.5"
   },
   "devDependencies": {
     "nx": "workspace:*"

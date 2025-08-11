@@ -2844,6 +2844,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/module-federation/migrations/21.4.0-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-package-updates",
+        "version": "21.4.0-beta.8",
+        "originalFilePath": "/packages/module-federation",
+        "path": "module-federation/migrations/21.4.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/module-federation/migrations/21.3.0-package-updates.json",
         "hidden": false,
         "name": "21.3.0-package-updates",
@@ -4304,6 +4314,16 @@
     ],
     "migrations": [
       {
+        "description": "",
+        "file": "generated/packages/react/migrations/21.4.0-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-package-updates",
+        "version": "21.4.0-beta.8",
+        "originalFilePath": "/packages/react",
+        "path": "react/migrations/21.4.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Replaces `classProperties.loose` option with `loose`.",
         "file": "generated/packages/react/migrations/update-21-0-0-update-babel-loose.json",
         "hidden": false,
@@ -5147,6 +5167,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.4.0-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-package-updates",
+        "version": "21.4.0-beta.8",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/21.4.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/rspack/migrations/21.3.0-package-updates.json",
