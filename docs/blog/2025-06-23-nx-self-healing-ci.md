@@ -113,47 +113,20 @@ Once connected, enable AI features in your [Nx Cloud dashboard](https://nx.app):
 
 ### 2. Configure Your CI Pipeline
 
-If you're using Nx Agents, Self-Healing CI is automatically enabled. Here's an example GitHub Actions configuration with Nx Agents:
+Add the `fix-ci` step to your pipeline. **Important**: This step must run at the end with `if: always()` to ensure it executes even when previous steps fail (which is exactly when you need the fix):
 
-```yaml
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[15,16] %}
 name: CI
-
-...
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      ...
-
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
       - run: npm ci
-      - uses: nrwl/nx-set-shas@v4
-      - run: npx nx affected -t lint test build
-```
 
-If you're not using Nx Agents yet, you can still enable Self-Healing CI by adding the `fix-ci` step to your pipeline. **Important**: This step must run at the end with `if: always()` to ensure it executes even when previous steps fail (which is exactly when you need the fix):
-
-```yaml
-name: CI
-
-...
-
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
       ...
-
-      - run: npm ci
-
-      - uses: nrwl/nx-set-shas@v4
 
       - run: npx nx affected -t lint test build
 

@@ -1,0 +1,1229 @@
+{
+  "project": {
+    "name": "application",
+    "type": "lib",
+    "data": {
+      "root": "application",
+      "name": "application",
+      "metadata": {
+        "targetGroups": {
+          "Application": ["bootRun", "bootTestRun"],
+          "Build": [
+            "assemble",
+            "bootBuildImage",
+            "bootJar",
+            "build",
+            "buildDependents",
+            "buildNeeded",
+            "classes",
+            "clean",
+            "jar",
+            "resolveMainClassName",
+            "resolveTestMainClassName",
+            "testClasses"
+          ],
+          "Documentation": ["javadoc"],
+          "Help": [
+            "buildEnvironment",
+            "dependencies",
+            "dependencyInsight",
+            "dependencyManagement",
+            "help",
+            "javaToolchains",
+            "outgoingVariants",
+            "projects",
+            "properties",
+            "resolvableConfigurations",
+            "tasks"
+          ],
+          "Reporting": ["projectReport"],
+          "Verification": ["check", "test"]
+        },
+        "technologies": ["gradle"]
+      },
+      "targets": {
+        "bootRun": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:bootRun"
+          },
+          "configurations": {}
+        },
+        "bootTestRun": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:bootTestRun"
+          },
+          "configurations": {}
+        },
+        "assemble": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:assemble"
+          },
+          "configurations": {}
+        },
+        "bootBuildImage": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:bootBuildImage"
+          },
+          "configurations": {}
+        },
+        "bootJar": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:bootJar"
+          },
+          "configurations": {}
+        },
+        "build": {
+          "cache": true,
+          "inputs": ["production", "^production"],
+          "outputs": ["{workspaceRoot}/application/build"],
+          "dependsOn": ["^build", "classes"],
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:build"
+          },
+          "configurations": {}
+        },
+        "buildDependents": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:buildDependents"
+          },
+          "configurations": {}
+        },
+        "buildNeeded": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:buildNeeded"
+          },
+          "configurations": {}
+        },
+        "classes": {
+          "cache": true,
+          "inputs": ["production", "^production"],
+          "outputs": ["{workspaceRoot}/application/build/classes"],
+          "dependsOn": ["^classes"],
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:classes"
+          },
+          "configurations": {}
+        },
+        "clean": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:clean"
+          },
+          "configurations": {}
+        },
+        "jar": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:jar"
+          },
+          "configurations": {}
+        },
+        "resolveMainClassName": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:resolveMainClassName"
+          },
+          "configurations": {}
+        },
+        "resolveTestMainClassName": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:resolveTestMainClassName"
+          },
+          "configurations": {}
+        },
+        "testClasses": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:testClasses"
+          },
+          "configurations": {}
+        },
+        "javadoc": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:javadoc"
+          },
+          "configurations": {}
+        },
+        "buildEnvironment": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:buildEnvironment"
+          },
+          "configurations": {}
+        },
+        "dependencies": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:dependencies"
+          },
+          "configurations": {}
+        },
+        "dependencyInsight": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:dependencyInsight"
+          },
+          "configurations": {}
+        },
+        "dependencyManagement": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:dependencyManagement"
+          },
+          "configurations": {}
+        },
+        "help": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:help"
+          },
+          "configurations": {}
+        },
+        "javaToolchains": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:javaToolchains"
+          },
+          "configurations": {}
+        },
+        "outgoingVariants": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:outgoingVariants"
+          },
+          "configurations": {}
+        },
+        "projects": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:projects"
+          },
+          "configurations": {}
+        },
+        "properties": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:properties"
+          },
+          "configurations": {}
+        },
+        "resolvableConfigurations": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:resolvableConfigurations"
+          },
+          "configurations": {}
+        },
+        "tasks": {
+          "cache": false,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:tasks"
+          },
+          "configurations": {}
+        },
+        "projectReport": {
+          "cache": false,
+          "outputs": ["{workspaceRoot}/application/build/reports/project"],
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:projectReport"
+          },
+          "configurations": {}
+        },
+        "check": {
+          "cache": true,
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:check"
+          },
+          "configurations": {}
+        },
+        "test": {
+          "cache": true,
+          "inputs": ["default", "^production"],
+          "dependsOn": ["classes"],
+          "metadata": {
+            "technologies": ["gradle"]
+          },
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "./gradlew :application:test"
+          },
+          "configurations": {}
+        }
+      },
+      "implicitDependencies": [],
+      "tags": []
+    }
+  },
+  "sourceMap": {
+    "root": ["application/build.gradle", "@nx/gradle"],
+    "name": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Application": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Application.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Application.1": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Build": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.0": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.1": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.2": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.3": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.4": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.5": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.6": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.7": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.8": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.9": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Build.10": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Build.11": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Documentation": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Documentation.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Help": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.0": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.1": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.2": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.3": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.4": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.5": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.6": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.7": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.8": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.9": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Help.10": ["application/build.gradle", "@nx/gradle"],
+    "metadata.targetGroups.Reporting": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Reporting.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Verification": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Verification.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.targetGroups.Verification.1": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "metadata.technologies": ["application/build.gradle", "@nx/gradle"],
+    "metadata.technologies.0": ["application/build.gradle", "@nx/gradle"],
+    "targets": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootRun.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootRun.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootRun.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootTestRun": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootTestRun.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootTestRun.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootTestRun.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.assemble": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.assemble.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.assemble.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.assemble.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootBuildImage.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootBuildImage.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootBuildImage.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootBuildImage.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootJar": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.bootJar.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootJar.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.bootJar.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.build": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.options.command": ["application/build.gradle", "@nx/gradle"],
+    "targets.build.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.build.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildDependents.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildDependents.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildDependents.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildNeeded": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildNeeded.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildNeeded.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildNeeded.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.classes": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.classes.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.classes.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.classes.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.clean": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.options.command": ["application/build.gradle", "@nx/gradle"],
+    "targets.clean.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.clean.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.jar": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.options.command": ["application/build.gradle", "@nx/gradle"],
+    "targets.jar.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.jar.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName": ["application/build.gradle", "@nx/gradle"],
+    "targets.resolveMainClassName.cache": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveMainClassName.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.cache": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolveTestMainClassName.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.testClasses": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.testClasses.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.testClasses.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.testClasses.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javadoc": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.javadoc.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javadoc.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javadoc.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment": ["application/build.gradle", "@nx/gradle"],
+    "targets.buildEnvironment.cache": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.buildEnvironment.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencies": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencies.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencies.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencies.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencies.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencies.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencies.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencies.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencies.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencies.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencies.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencyInsight.cache": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyInsight.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement": ["application/build.gradle", "@nx/gradle"],
+    "targets.dependencyManagement.cache": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.dependencyManagement.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.help": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.options.command": ["application/build.gradle", "@nx/gradle"],
+    "targets.help.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.help.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains": ["application/build.gradle", "@nx/gradle"],
+    "targets.javaToolchains.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.javaToolchains.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.javaToolchains.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.javaToolchains.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants": ["application/build.gradle", "@nx/gradle"],
+    "targets.outgoingVariants.cache": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.outgoingVariants.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projects": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.projects.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projects.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projects.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.properties": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.properties.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.properties.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.properties.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.cache": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.inputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.outputs": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.options": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.resolvableConfigurations.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.tasks": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.options.command": ["application/build.gradle", "@nx/gradle"],
+    "targets.tasks.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.tasks.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projectReport": ["application/build.gradle", "@nx/gradle"],
+    "targets.projectReport.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.projectReport.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.projectReport.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.projectReport.dependsOn": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projectReport.metadata": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projectReport.executor": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projectReport.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.projectReport.options.command": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projectReport.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.projectReport.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.check": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.options.command": ["application/build.gradle", "@nx/gradle"],
+    "targets.check.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.check.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.test": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.cache": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.inputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.outputs": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.dependsOn": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.metadata": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.executor": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.options": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.options.command": ["application/build.gradle", "@nx/gradle"],
+    "targets.test.metadata.technologies": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ],
+    "targets.test.metadata.technologies.0": [
+      "application/build.gradle",
+      "@nx/gradle"
+    ]
+  }
+}
