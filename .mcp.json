@@ -2,8 +2,14 @@
   "mcpServers": {
     "nx": {
       "command": "pnpm",
-      "args": ["nx-mcp"],
-      "env": {}
+      "args": [
+        "nx-mcp"
+      ],
+      "env": {},
+      "alwaysAllow": [
+        "nx_workspace",
+        "nx_available_plugins"
+      ]
     }
   }
 }

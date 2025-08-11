@@ -332,6 +332,10 @@ export class TaskOrchestrator {
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
     const taskEntries = Object.entries(batch.taskGraph.tasks);
+
+
+
+
     const tasks = taskEntries.map(([, task]) => task);
 
     // Wait for batch to be processed
