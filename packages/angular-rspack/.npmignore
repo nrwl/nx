@@ -11,3 +11,4 @@ src/**/*.ts
 .swcrc
 vitest.config.mts
 test-utils
+README.md__tpl__

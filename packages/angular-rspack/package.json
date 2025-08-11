@@ -6,7 +6,7 @@
     "access": "public"
   },
   "description": "Rspack Plugin and Loaders for building Angular.",
-  "author": "Colum Ferry",
+  "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
@@ -103,9 +103,6 @@
     "name": "angular-rspack",
     "sourceRoot": "packages/angular-rspack/src",
     "projectType": "library",
-    "tags": [
-      "publishable"
-    ],
     "release": {
       "version": {
         "preserveLocalDependencyProtocols": true,
@@ -115,12 +112,15 @@
       }
     },
     "targets": {
-      "build": {},
+      "build": {
+        "command": "node ./scripts/copy-readme.js angular-rspack packages/angular-rspack/README.md__tpl__ packages/angular-rspack/README.md",
+        "outputs": [
+          "{projectRoot}/README.md}"
+        ]
+      },
       "test": {
         "dependsOn": [
           "build",
-          "test-native",
-          "build-native",
           "^build-native",
           "angular-rspack-compiler:build"
         ],

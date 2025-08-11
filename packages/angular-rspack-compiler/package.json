@@ -6,7 +6,7 @@
     "access": "public"
   },
   "description": "Compilation utilities for Angular with Rspack and Rsbuild.",
-  "author": "Colum Ferry",
+  "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
@@ -55,9 +55,6 @@
     "sourceRoot": "packages/angular-rspack-compiler/src",
     "projectType": "library",
     "name": "angular-rspack-compiler",
-    "tags": [
-      "publishable"
-    ],
     "release": {
       "version": {
         "preserveLocalDependencyProtocols": true,
@@ -67,11 +64,14 @@
       }
     },
     "targets": {
-      "build": {},
+      "build": {
+        "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/README.md__tpl__ packages/angular-rspack-compiler/README.md",
+        "outputs": [
+          "{projectRoot}/README.md}"
+        ]
+      },
       "test": {
         "dependsOn": [
-          "test-native",
-          "build-native",
           "^build-native"
         ],
         "inputs": [

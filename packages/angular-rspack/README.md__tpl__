@@ -44,3 +44,7 @@ NX   Creating your v20.8.0 workspace.
 npx nx build myorg
 npx nx serve myorg
 ```
+
+{{content}}
+
+{{resources}}
