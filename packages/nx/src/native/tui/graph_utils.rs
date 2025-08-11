@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::native::tasks::types::TaskGraph;
+use crate::native::tui::components::tasks_list::TaskStatus;
 
 /// Recursively counts all dependencies for a given task.
 /// Returns the total count of direct dependencies, continuous dependencies,
@@ -139,4 +140,78 @@ pub fn is_task_continuous(task_graph: &TaskGraph, task_id: &str) -> bool {
 /// Helper function to get task count from TaskGraph.
 pub fn get_task_count(task_graph: &TaskGraph) -> usize {
     task_graph.tasks.len()
+}
+
+/// Gets all dependencies that have failed for a given task.
+/// Returns a vector of task names that are dependencies and have failed.
+pub fn get_failed_dependencies(
+    task_id: &str,
+    task_graph: &TaskGraph,
+    status_map: &HashMap<String, TaskStatus>,
+) -> Vec<String> {
+    let (all_dependencies, _) = collect_all_dependencies_with_levels(task_id, task_graph);
+
+    all_dependencies
+        .into_iter()
+        .filter(|dep| status_map.get(dep) == Some(&TaskStatus::Failure))
+        .collect()
+}
+
+/// Analyzes the dependency chain to find root cause failures.
+/// Returns a vector of (task_name, affected_count) tuples showing which failures
+/// caused the most downstream impacts.
+pub fn get_dependency_chain_failures(
+    task_id: &str,
+    task_graph: &TaskGraph,
+    status_map: &HashMap<String, TaskStatus>,
+) -> Vec<(String, usize)> {
+    let failed_deps = get_failed_dependencies(task_id, task_graph, status_map);
+    let mut root_causes = Vec::new();
+
+    for failed_task in failed_deps {
+        // Count how many tasks in the current task's dependency tree are affected by this failure
+        let affected_count =
+            count_affected_by_failure(&failed_task, task_id, task_graph, status_map);
+        if affected_count > 0 {
+            root_causes.push((failed_task, affected_count));
+        }
+    }
+
+    // Sort by affected count (descending) to show most impactful failures first
+    root_causes.sort_by(|a, b| b.1.cmp(&a.1));
+    root_causes
+}
+
+/// Helper function to count how many tasks are affected by a specific failure.
+/// This looks at all dependencies of the target task and counts how many are
+/// affected (either directly failed or skipped due to) the specific failed task.
+fn count_affected_by_failure(
+    failed_task: &str,
+    target_task: &str,
+    task_graph: &TaskGraph,
+    status_map: &HashMap<String, TaskStatus>,
+) -> usize {
+    let (all_dependencies, _) = collect_all_dependencies_with_levels(target_task, task_graph);
+
+    // Count dependencies that are either:
+    // 1. The failed task itself
+    // 2. Skipped or failed tasks that depend on the failed task
+    all_dependencies
+        .iter()
+        .filter(|dep| {
+            if *dep == failed_task {
+                return true;
+            }
+
+            // Check if this dependency is affected by the failed task
+            let dep_status = status_map.get(*dep).unwrap_or(&TaskStatus::NotStarted);
+            if matches!(dep_status, TaskStatus::Skipped | TaskStatus::Failure) {
+                // Check if the failed_task is a dependency of this dep
+                let (dep_dependencies, _) = collect_all_dependencies_with_levels(dep, task_graph);
+                dep_dependencies.contains(&failed_task.to_string())
+            } else {
+                false
+            }
+        })
+        .count()
 }
