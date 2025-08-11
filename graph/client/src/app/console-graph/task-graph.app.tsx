@@ -5,13 +5,24 @@ import {
 import { useSelector } from '@xstate/react';
 import { useEffect } from 'react';
 import { Interpreter } from 'xstate';
-import { ProjectGraphEvents, ProjectGraphState } from './project-graph.machine';
+import {
+  ProjectGraphStateMachineEvents,
+  ProjectGraphStateMachineContext,
+} from './project-graph.machine';
 import { useTaskGraphClient } from '@nx/graph/tasks/use-task-graph-client';
+import {
+  TaskGraphStateMachineEvents,
+  TaskGraphStateMachineContext,
+} from './task-graph.machine';
 
 export function ProjectGraphApp({
   service,
 }: {
-  service: Interpreter<ProjectGraphState, any, ProjectGraphEvents>;
+  service: Interpreter<
+    TaskGraphStateMachineContext,
+    any,
+    TaskGraphStateMachineEvents
+  >;
 }) {
   const {
     containerRef,
@@ -45,13 +56,7 @@ export function ProjectGraphApp({
     send({
       type: 'initGraph',
       projects: Object.values(projectGraph.nodes),
-      dependencies: projectGraph.dependencies,
-      affectedProjects: [],
-    });
-
-    send({
-      type: 'showAll',
-      autoExpand: true,
+      taskGraphs: {},
     });
   }, [graphClient]);
 

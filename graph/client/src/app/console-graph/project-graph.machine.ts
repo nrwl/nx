@@ -7,16 +7,16 @@ import { ProjectGraphEvent } from '@nx/graph/projects/project-graph-event';
 import { RenderGraphConfigEvent } from '@nx/graph';
 import { GRAPH_CLIENT_EVENTS } from '../feature-projects/machines/project-graph.machine';
 
-export interface ProjectGraphState {
+export interface ProjectGraphStateMachineContext {
   projectGraph: null | ProjectGraph;
   graphActor: ActorRef<ProjectGraphEvent | RenderGraphConfigEvent>;
 }
 
-const initialContext: ProjectGraphState = {
+const initialContext: ProjectGraphStateMachineContext = {
   projectGraph: null,
   graphActor: null,
 };
-export type ProjectGraphEvents =
+export type ProjectGraphStateMachineEvents =
   | {
       type: 'loadData';
       projectGraph: ProjectGraph;
@@ -26,8 +26,8 @@ export type ProjectGraphEvents =
       graphClient: ProjectGraphClientActor;
     };
 export const projectGraphMachine = createMachine<
-  ProjectGraphState,
-  ProjectGraphEvents
+  ProjectGraphStateMachineContext,
+  ProjectGraphStateMachineEvents
 >(
   {
     id: 'projectGraph',

@@ -5,12 +5,19 @@ import {
 import { useSelector } from '@xstate/react';
 import { useEffect } from 'react';
 import { Interpreter } from 'xstate';
-import { ProjectGraphEvents, ProjectGraphState } from './project-graph.machine';
+import {
+  ProjectGraphStateMachineEvents,
+  ProjectGraphStateMachineContext,
+} from './project-graph.machine';
 
 export function ProjectGraphApp({
   service,
 }: {
-  service: Interpreter<ProjectGraphState, any, ProjectGraphEvents>;
+  service: Interpreter<
+    ProjectGraphStateMachineContext,
+    any,
+    ProjectGraphStateMachineEvents
+  >;
 }) {
   const {
     containerRef,
