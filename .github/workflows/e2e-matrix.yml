@@ -80,7 +80,9 @@ jobs:
         run: brew install python-setuptools
 
       - name: Install packages
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -182,7 +184,9 @@ jobs:
           bun-version: latest
 
       - name: Install packages
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
