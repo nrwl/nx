@@ -2116,14 +2116,14 @@
       }
     },
     "migrations": {
-      "/technologies/java/api/migrations/change-plugin-version-0-1-3": {
-        "description": "Change dev.nx.gradle.project-graph to version 0.1.3 in build file",
-        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-3.json",
+      "/technologies/java/api/migrations/change-plugin-version-0-1-5": {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.5 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-5.json",
         "hidden": false,
-        "name": "change-plugin-version-0-1-3",
-        "version": "21.4.0-beta.1",
+        "name": "change-plugin-version-0-1-5",
+        "version": "21.4.0-beta.8",
         "originalFilePath": "/packages/gradle",
-        "path": "/technologies/java/api/migrations/change-plugin-version-0-1-3",
+        "path": "/technologies/java/api/migrations/change-plugin-version-0-1-5",
         "type": "migration"
       },
       "/technologies/java/api/migrations/change-plugin-version-0-1-4": {

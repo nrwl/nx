@@ -7,7 +7,7 @@ plugins {
   application
   id("com.github.johnrengelman.shadow") version "8.1.1"
   id("com.ncorti.ktfmt.gradle") version "+"
-  id("dev.nx.gradle.project-graph") version "0.1.3"
+  id("dev.nx.gradle.project-graph") version "0.1.5"
 }
 
 repositories {

@@ -42,17 +42,17 @@
       "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
       "factory": "./src/migrations/21-3-0/change-plugin-version-0-1-2"
     },
-    "change-plugin-version-0-1-3": {
-      "version": "21.4.0-beta.1",
-      "cli": "nx",
-      "description": "Change dev.nx.gradle.project-graph to version 0.1.3 in build file",
-      "factory": "./src/migrations/21-4-0/change-plugin-version-0-1-3"
-    },
     "change-plugin-version-0-1-4": {
       "version": "21.3.11-beta.0",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.4 in build file",
       "factory": "./src/migrations/21-3-11/change-plugin-version-0-1-4"
+    },
+    "change-plugin-version-0-1-5": {
+      "version": "21.4.0-beta.8",
+      "cli": "nx",
+      "description": "Change dev.nx.gradle.project-graph to version 0.1.5 in build file",
+      "factory": "./src/migrations/21-4-0/change-plugin-version-0-1-5"
     }
   },
   "packageJsonUpdates": {}

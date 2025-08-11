@@ -1,6 +1,6 @@
-#### Change dev.nx.gradle.project-graph to version 0.1.3
+#### Change dev.nx.gradle.project-graph to version 0.1.5
 
-Change dev.nx.gradle.project-graph to version 0.1.3 in build file
+Change dev.nx.gradle.project-graph to version 0.1.5 in build file
 
 #### Sample Code Changes
 
@@ -18,7 +18,7 @@ plugins {
 
 ```{% fileName="build.gradle" %}
 plugins {
-    id "dev.nx.gradle.project-graph" version "0.1.3"
+    id "dev.nx.gradle.project-graph" version "0.1.5"
 }
 ```
 
