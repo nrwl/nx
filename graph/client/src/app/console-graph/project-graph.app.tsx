@@ -12,15 +12,26 @@ export function ProjectGraphApp({
 }: {
   service: Interpreter<ProjectGraphState, any, ProjectGraphEvents>;
 }) {
-  const { containerRef, graphClient, sendRenderConfigEvent, send } =
-    useProjectGraphClient({
-      renderPlatform: 'nx-console',
-      styles: [],
-    });
+  const {
+    containerRef,
+    graphClient,
+    sendRenderConfigEvent,
+    send,
+    handleEventResult,
+  } = useProjectGraphClient({
+    renderPlatform: 'nx-console',
+    styles: [],
+  });
   const projectGraph = useSelector(
     service,
     (state) => state.context.projectGraph
   );
+
+  useEffect(() => {
+    if (handleEventResult) {
+      console.log(handleEventResult);
+    }
+  });
 
   useEffect(() => {
     console.log('graph client', graphClient);
@@ -32,6 +43,11 @@ export function ProjectGraphApp({
       projects: Object.values(projectGraph.nodes),
       dependencies: projectGraph.dependencies,
       affectedProjects: [],
+    });
+
+    send({
+      type: 'showAll',
+      autoExpand: true,
     });
   }, [graphClient, projectGraph, send]);
 
