@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -30,13 +30,15 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "eslint",
               "typescript",
               "@nx/cypress",
               "@nx/playwright",
               "@nx/vite",
-              "@module-federation/node"
+              "@module-federation/node",
+              "@nx/module-federation"
             ]
           }
         ]

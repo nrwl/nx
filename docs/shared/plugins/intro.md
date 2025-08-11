@@ -82,7 +82,7 @@ This generator calls the following functions:
 - `generateFiles` - Create files in the new project based on the template files in the `files` folder.
 - `formatFiles` - Format the newly created files with Prettier.
 
-You can find more helper functions in the [Nx Devkit reference documentation](/nx-api/devkit/documents/nx_devkit).
+You can find more helper functions in the [Nx Devkit reference documentation](/reference/core-api/devkit/documents/nx_devkit).
 
 ### Create a README Template File
 

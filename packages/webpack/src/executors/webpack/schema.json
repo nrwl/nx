@@ -370,7 +370,7 @@
               "type": "string",
               "description": "The file to include.",
               "x-completion-type": "file",
-              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
             },
             "bundleName": {
               "type": "string",
@@ -389,7 +389,7 @@
           "type": "string",
           "description": "The file to include.",
           "x-completion-type": "file",
-          "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+          "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
         }
       ]
     },

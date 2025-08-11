@@ -14,6 +14,7 @@ import {
 } from '../../generators/utils/version-utils';
 import { allTargetOptions } from '../../utils/targets';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const UNIVERSAL_PACKAGES = [
   '@nguniversal/common',
@@ -43,11 +44,11 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const projects = await getProjectsFilteredByDependencies(tree, [
+  const projects = await getProjectsFilteredByDependencies([
     'npm:@nguniversal/common',
     'npm:@nguniversal/express-engine',
   ]);
-  for (const { project } of projects) {
+  for (const { data: project } of projects) {
     if (project.projectType !== 'application') {
       continue;
     }
@@ -75,7 +76,7 @@ export default async function (tree: Tree) {
 
     // Replace all import specifiers in all files.
     let hasExpressTokens = false;
-    const root = project.sourceRoot ?? `${project.root}/src`;
+    const root = getProjectSourceRoot(project, tree);
     const tokensFilePath = `${root}/express.tokens.ts`;
 
     visitNotIgnoredFiles(tree, root, (path) => {

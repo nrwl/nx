@@ -1,6 +1,6 @@
-import type { Meta } from '@storybook/react';
+import type { Meta } from '@storybook/react-webpack5';
 import { ProjectDetails } from './project-details';
-import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
+import { ExpandedTargetsProvider } from '../expanded-targets-provider';
 
 const meta: Meta<typeof ProjectDetails> = {
   component: ProjectDetails,
@@ -111,12 +111,29 @@ export const Primary = {
             options: { lintFilePatterns: ['packages/jest'] },
             configurations: {},
           },
+          'docker:build': {
+            command: 'docker build .',
+            metadata: {
+              technologies: ['docker'],
+            },
+          },
+          'docker:run': {
+            command: 'docker {args} run .',
+            metadata: {
+              technologies: ['docker'],
+            },
+          },
         },
         $schema: '../../node_modules/nx/schemas/project-schema.json',
         sourceRoot: 'packages/jest',
         projectType: 'library',
         implicitDependencies: [],
         tags: [],
+        metadata: {
+          targetGroups: {
+            Docker: ['docker:build', 'docker:run'],
+          },
+        },
       },
     },
     sourceMap: {

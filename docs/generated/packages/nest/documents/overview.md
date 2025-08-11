@@ -4,6 +4,8 @@ description: Learn how to use the @nx/nest plugin to create and manage Nest.js a
 keywords: [nest, nestjs]
 ---
 
+# @nx/nest
+
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 
 - It has excellent TypeScript support.
@@ -123,9 +125,34 @@ By default, the serve command will run in `watch` mode. This allows code to be c
 
 Nest applications also have the `inspect` flag set, so you can attach your debugger to the running instance.
 
-Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` target in the `project.json`. Or by running the serve command with `--port <number>`.
+##### VSCode Integration
 
-For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
+When generating Nest applications, Nx automatically creates a VSCode debugging configuration for seamless development experience:
+
+- **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
+- **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
+- **Source map support**: Webpack configurations include `devtoolModuleFilenameTemplate` for accurate source mapping.
+- **Multi-format support**: Supports debugging `.js`, `.mjs`, and `.cjs` output files.
+
+To debug your Nest application in VSCode:
+
+1. Open your workspace in VSCode.
+2. Set breakpoints in your TypeScript source files.
+3. Go to the Debug panel `(Ctrl+Shift+D)`.
+4. Select "Debug `{your-app-name}` with Nx" from the dropdown.
+5. Click the play button or press `F5`.
+
+The debugger will automatically:
+
+- Start your application with `nx serve`.
+- Attach to the Node.js debugger on the allocated port.
+- Map compiled JavaScript back to your TypeScript source files.
+
+##### Manual Debugging
+
+For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the `project.json`, or by running the serve command with `--port <number>`.
+
+For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
 ### Lint
 
@@ -189,13 +216,13 @@ Ensuring a smooth and reliable deployment of a Nest.js application in a producti
    Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process.
 
 2. **Installing Dependencies on the Server:**
-   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/recipes/webpack/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
+   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
 
 3. **Transferring Pre-installed Dependencies:**
    Install dependencies during the build process, and transfer the build artifacts along with the `node_modules` directory to the server. Typically, the artifacts are archived for faster transfer and then unarchived on the server.
 
 4. **Bundling Dependencies:**
-   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/recipes/webpack/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
+   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
 
 {% callout type="note" title="Bundling Dependencies" %}
 Bundling dependencies is typically not recommended for Node applications.
@@ -203,4 +230,4 @@ Bundling dependencies is typically not recommended for Node applications.
 
 ## More Documentation
 
-- [Using Jest](/nx-api/jest)
+- [Using Jest](/technologies/test-tools/jest/introduction)

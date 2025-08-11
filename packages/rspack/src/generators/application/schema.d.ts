@@ -2,7 +2,7 @@ export interface ApplicationGeneratorSchema {
   directory: string;
   name?: string;
   framework?: Framework;
-  style: 'css' | 'scss' | 'less' | 'styl';
+  style: 'css' | 'scss' | 'less';
   unitTestRunner?: 'none' | 'jest';
   e2eTestRunner?: 'none' | 'cypress';
   tags?: string;

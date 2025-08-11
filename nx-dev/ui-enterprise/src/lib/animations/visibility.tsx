@@ -105,7 +105,7 @@ export function VisibilityAnimation({
   };
 
   // Effect to control animation playback
-  useEffect(() => {
+  useEffect((): (() => void) | void => {
     if (prefersReducedMotion) {
       controls.set('visible');
       setHasAnimated(true);
@@ -117,7 +117,7 @@ export function VisibilityAnimation({
     controls.start('visible').then(() => setHasAnimated(true));
 
     return () => controls.set('hidden');
-  }, [autoPlay, inView, controls, hasAnimated]);
+  }, [autoPlay, inView, controls, hasAnimated, prefersReducedMotion]);
 
   return (
     <motion.svg

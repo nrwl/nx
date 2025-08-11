@@ -9,9 +9,10 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # Docs Site + Graph
+/astro-docs @nrwl/nx-docs-reviewers
 /docs @nrwl/nx-docs-reviewers
 /docs/nx-cloud @StalkAltan @rarmatei @nixallover @nrwl/nx-docs-reviewers
-/graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @xiongemi
+/graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @Coly010 @jaysoo
 /images @nrwl/nx-docs-reviewers
 /nx-dev/** @nrwl/nx-docs-reviewers
 /typedoc-theme @nrwl/nx-docs-reviewers
@@ -137,6 +138,9 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /packages/storybook/** @nrwl/nx-storybook-reviewers
 /e2e/storybook/** @nrwl/nx-storybook-reviewers
 
+# Docker
+/packages/docker/** @nrwl/nx-core-reviewers @Coly010
+
 ## Devkit
 /docs/generated/devkit/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/devkit/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers
@@ -145,8 +149,8 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /packages/devkit/public-api.ts @FrozenPandaz @vsavkin
 
 # Gradle
-/packages/gradle/** @FrozenPandaz @MaxKless @xiongemi
-/e2e/gradle/** @FrozenPandaz @MaxKless @xiongemi
+/packages/gradle/** @FrozenPandaz @MaxKless
+/e2e/gradle/** @FrozenPandaz @MaxKless
 
 # Nx-Plugin
 /docs/generated/packages/plugin/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers
@@ -174,10 +178,10 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
-/e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin @mandarini
+/e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin
 /community @nrwl/nx-docs-reviewers
-/CONTRIBUTING.md @FrozenPandaz @isaacplmann
-/CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
+/CONTRIBUTING.md @FrozenPandaz
+/CODE_OF_CONDUCT.md @FrozenPandaz
 /CODEOWNERS @FrozenPandaz @AgentEnder
 /packages/nx/src/nx-cloud/utilities/url-shorten.ts @MaxKless
 
@@ -190,6 +194,11 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /.github/** @nrwl/nx-pipelines-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers
+
+# Claude AI Integration
+CLAUDE.md @FrozenPandaz
+.claude/** @FrozenPandaz
+.mcp.json @FrozenPandaz
 
 # Global Files
 project.json @FrozenPandaz @vsavkin

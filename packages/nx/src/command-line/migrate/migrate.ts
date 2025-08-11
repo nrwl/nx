@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { exec, execSync } from 'child_process';
+import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { dirname, join } from 'path';
 import {
@@ -61,7 +61,7 @@ import { handleErrors } from '../../utils/handle-errors';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
-} from '../connect/connect-to-nx-cloud';
+} from '../nx-cloud/connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
 import { existsSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -1835,6 +1835,8 @@ export function getImplementationPath(
 
 export function nxCliPath(nxWorkspaceRoot?: string) {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
   try {
     const packageManager = detectPackageManager();
     const pmc = getPackageManagerCommand(packageManager);
@@ -1851,18 +1853,25 @@ export function nxCliPath(nxWorkspaceRoot?: string) {
       nxWorkspaceRoot ?? workspaceRoot,
       tmpDir
     );
+
+    // Let's print the output of the install process to the console when verbose
+    // is enabled, so it's easier to debug issues with the installation process
+    const stdio: StdioOptions = isVerbose
+      ? ['ignore', 'inherit', 'inherit']
+      : 'ignore';
+
     if (pmc.preInstall) {
       // ensure package.json and repo in tmp folder is set to a proper package manager state
       execSync(pmc.preInstall, {
         cwd: tmpDir,
-        stdio: ['ignore', 'ignore', 'ignore'],
+        stdio,
         windowsHide: false,
       });
       // if it's berry ensure we set the node_linker to node-modules
       if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
         execSync('yarn config set nodeLinker node-modules', {
           cwd: tmpDir,
-          stdio: ['ignore', 'ignore', 'ignore'],
+          stdio,
           windowsHide: false,
         });
       }
@@ -1870,7 +1879,7 @@ export function nxCliPath(nxWorkspaceRoot?: string) {
 
     execSync(pmc.install, {
       cwd: tmpDir,
-      stdio: ['ignore', 'ignore', 'ignore'],
+      stdio,
       windowsHide: false,
     });
 
@@ -1883,7 +1892,7 @@ export function nxCliPath(nxWorkspaceRoot?: string) {
     console.error(
       `Failed to install the ${version} version of the migration script. Using the current version.`
     );
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    if (isVerbose) {
       console.error(e);
     }
     return null;

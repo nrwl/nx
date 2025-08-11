@@ -1,6 +1,6 @@
 import { createBrowserRouter, createHashRouter } from 'react-router-dom';
 import { getRoutesForEnvironment } from './routes';
-import { getEnvironmentConfig } from '@nx/graph/legacy/shared';
+import { getEnvironmentConfig } from '@nx/graph-shared';
 
 let router;
 

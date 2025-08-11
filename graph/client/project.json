@@ -42,6 +42,9 @@
       },
       "defaultConfiguration": "release"
     },
+    "typecheck": {
+      "dependsOn": ["^typecheck", "build-native"]
+    },
     "serve-base": {
       "configurations": {
         "dev": {},

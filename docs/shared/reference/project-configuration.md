@@ -65,8 +65,16 @@ The project details view also shows where each setting is defined so that you kn
 
 ## Project Level Configuration Files
 
-If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles, and the only functional difference is that tasks that use executors must be defined in a `project.json`. Nx merges the two
-files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
+If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles. Nx merges the two files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
+
+### When to Use package.json vs project.json
+
+Both `package.json` and `project.json` can be used to configure Nx targets, and both support the same configuration options including executors:
+
+- **package.json**: Use the `"nx"` property to define targets with executors, options, and other Nx-specific configuration
+- **project.json**: A dedicated Nx configuration file that keeps your `package.json` focused on package metadata
+
+The choice between `package.json` and `project.json` is primarily a matter of preference. The `package.json` is standard for JavaScript projects, so you may prefer to use that over the Nx-specific `project.json` file.
 
 The following configuration creates `build` and `test` targets for Nx.
 
@@ -77,8 +85,15 @@ The following configuration creates `build` and `test` targets for Nx.
 {
   "name": "mylib",
   "scripts": {
-    "test": "jest",
-    "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
+    "test": "jest"
+  },
+  "nx": {
+    // you could also do this in "scripts", but this "targets" configuration also supports Nx executors
+    "targets": {
+      "build": {
+        "command": "tsc -p tsconfig.lib.json"
+      }
+    }
   }
 }
 ```
@@ -741,6 +756,32 @@ An implicit dependency could also be a glob pattern:
 
 {% /tab %}
 {% /tabs %}
+
+### Release
+
+The `release` property allows project-level overrides for the [nx release](/features/manage-releases) command. This is particularly useful for configuring Docker image publishing.
+
+#### Docker Configuration (Experimental)
+
+{% callout type="warning" title="Experimental Feature" %}
+Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /callout %}
+
+Projects with Docker images can override the global Docker configuration:
+
+```jsonc {% fileName="project.json" %}
+{
+  "name": "api",
+  "release": {
+    "docker": {
+      // Override the repository name for this specific project
+      "repositoryName": "acme/api"
+    }
+  }
+}
+```
+
+The `repositoryName` specified here will override any global or group-level Docker repository configuration when publishing this project's Docker image.
 
 ### Metadata
 

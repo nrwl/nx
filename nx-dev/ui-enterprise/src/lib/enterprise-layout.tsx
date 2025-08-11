@@ -1,4 +1,4 @@
-import { Footer, Header } from '@nx/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
 import { PropsWithChildren, ReactElement } from 'react';
 
 export function EnterpriseLayout({

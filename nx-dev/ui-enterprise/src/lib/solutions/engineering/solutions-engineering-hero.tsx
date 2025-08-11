@@ -1,16 +1,13 @@
 import { ComponentProps, ReactElement, useState } from 'react';
-import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import {
-  ChevronRightIcon,
-  EnvelopeIcon,
-  PlayIcon,
-} from '@heroicons/react/24/outline';
+import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { EnvelopeIcon, PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import { UkgIcon } from '@nx/nx-dev/ui-icons';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { UkgIcon } from '@nx/nx-dev-ui-icons';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { motion } from 'framer-motion';
+import { WebinarSection } from '../../webinar-section';
 
 function PlayButton({
   className,
@@ -84,24 +81,7 @@ export function SolutionsEngineeringHero(): ReactElement {
     <section className="relative overflow-hidden">
       <div className="mx-auto max-w-7xl lg:flex">
         <div className="mx-auto max-w-3xl px-6 py-24 lg:mx-0 lg:shrink-0 lg:px-8">
-          <p>
-            <a
-              href="https://bit.ly/4jQLCqp"
-              title="See live event in details"
-              className="group/event-link inline-flex space-x-6"
-            >
-              <span className="rounded-full bg-blue-600/10 px-3 py-1 text-sm/6 font-semibold text-blue-600 ring-1 ring-inset ring-blue-600/10 dark:bg-cyan-600/10 dark:text-cyan-600 dark:ring-cyan-600/10">
-                Live event
-              </span>
-              <span className="inline-flex items-center space-x-2 text-sm/6 font-medium">
-                <span>Webinar + live Q&A on May 28th</span>
-                <ChevronRightIcon
-                  aria-hidden="true"
-                  className="size-5 transform transition-all group-hover/event-link:translate-x-1"
-                />
-              </span>
-            </a>
-          </p>
+          <WebinarSection />
           <SectionHeading
             id="get-speed-and-scale"
             as="h1"

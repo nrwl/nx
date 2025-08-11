@@ -11,34 +11,22 @@ import { readNxJson } from '../src/config/nx-json';
 import { logger } from '../src/utils/logger';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 
+// The post install is not critical, to avoid any chance that it may hang
+// we will kill this process after 30 seconds.
+const postinstallTimeout = setTimeout(() => {
+  logger.verbose('Nx post-install timed out.');
+  process.exit(0);
+}, 30_000);
+
 (async () => {
   const start = new Date();
   try {
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
       assertSupportedPlatform();
-      setupWorkspaceContext(workspaceRoot);
-      if (daemonClient.enabled()) {
-        try {
-          await daemonClient.stop();
-        } catch (e) {}
-      }
-      const tasks: Array<Promise<any>> = [
-        buildProjectGraphAndSourceMapsWithoutDaemon(),
-      ];
-      if (isNxCloudUsed(readNxJson())) {
-        tasks.push(verifyOrUpdateNxCloudClient(getCloudOptions()));
-      }
 
-      process.env.NX_DAEMON = 'false';
-      await Promise.all(
-        tasks.map((promise) => {
-          return promise.catch((e) => {
-            if (process.env.NX_VERBOSE_LOGGING === 'true') {
-              console.warn(e);
-            }
-          });
-        })
-      );
+      if (isNxCloudUsed(readNxJson())) {
+        await verifyOrUpdateNxCloudClient(getCloudOptions());
+      }
     }
   } catch (e) {
     logger.verbose(e);
@@ -48,6 +36,7 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
       `Nx postinstall steps took ${end.getTime() - start.getTime()}ms`
     );
 
+    clearTimeout(postinstallTimeout);
     process.exit(0);
   }
 })();

@@ -81,6 +81,10 @@ export interface RollupWithNxPluginOptions {
    */
   tsConfig: string;
   /**
+   * Use rollup-plugin-typescript2 instead of @rollup/plugin-typescript.
+   */
+  useLegacyTypescriptPlugin?: boolean;
+  /**
    * Whether to generate a package.json file in the output path. It's not supported when the workspace is
    * set up with TypeScript Project References along with the package managers' Workspaces feature. Otherwise,
    * it defaults to `true`.

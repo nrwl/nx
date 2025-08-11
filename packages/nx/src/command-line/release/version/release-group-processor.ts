@@ -1,6 +1,7 @@
 import * as semver from 'semver';
 import {
   ManifestRootToUpdate,
+  NxReleaseDockerConfiguration,
   NxReleaseVersionConfiguration,
 } from '../../../config/nx-json';
 import {
@@ -12,10 +13,12 @@ import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
 } from '../config/config';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getLatestGitTagForPattern } from '../utils/git';
 import { resolveSemverSpecifierFromPrompt } from '../utils/resolve-semver-specifier';
 import type { VersionData, VersionDataEntry } from '../utils/shared';
+import { shouldSkipVersionActions } from '../utils/shared';
 import { validReleaseVersionPrefixes } from '../version';
 import { deriveSpecifierFromConventionalCommits } from './derive-specifier-from-conventional-commits';
 import { deriveSpecifierFromVersionPlan } from './deriver-specifier-from-version-plans';
@@ -27,6 +30,7 @@ import {
   resolveVersionActionsForProject,
   SemverBumpType,
   VersionActions,
+  NOOP_VERSION_ACTIONS,
 } from './version-actions';
 
 /**
@@ -44,6 +48,9 @@ export interface FinalConfigForProject {
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   // Consistently expanded to the object form for easier processing in VersionActions
   manifestRootsToUpdate: Array<Exclude<ManifestRootToUpdate, string>>;
+  dockerOptions: NxReleaseDockerConfiguration & {
+    groupPreVersionCommand?: string;
+  };
 }
 
 interface GroupNode {
@@ -65,6 +72,8 @@ export const BUMP_TYPE_REASON_TEXT = {
     ', because a dependency project belonging to another release group was bumped, ',
   OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY:
     ', because of a dependency-only bump to another project in the same fixed release group, ',
+  NOOP_VERSION_ACTIONS:
+    ', because this project uses docker and has been configured to skip VersionActions, ',
 } as const;
 
 interface ReleaseGroupProcessorOptions {
@@ -338,7 +347,15 @@ export class ReleaseGroupProcessor {
             {
               projectName: projectGraphNode.name,
             },
-            releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen
+            {
+              checkAllBranchesWhen:
+                releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen,
+              preid: this.options.preid,
+              releaseTagPatternRequireSemver:
+                releaseGroupNode.group.releaseTagPatternRequireSemver,
+              releaseTagPatternStrictPreid:
+                releaseGroupNode.group.releaseTagPatternStrictPreid,
+            }
           );
           this.cachedLatestMatchingGitTag.set(
             projectName,
@@ -366,6 +383,7 @@ export class ReleaseGroupProcessor {
         this.versionData.set(projectName, {
           currentVersion: this.getCurrentCachedVersionForProject(projectName),
           newVersion: null,
+          dockerVersion: null,
           dependentProjects: this.getOriginalDependentProjects(projectName),
         });
       }
@@ -481,7 +499,21 @@ export class ReleaseGroupProcessor {
               afterAllProjectsVersioned
             );
           }
-          this.projectsToVersionActions.set(project, versionActions);
+          let versionActionsToUse = versionActions;
+          // Check if this project should skip version actions based on docker configuration
+          const shouldSkip = shouldSkipVersionActions(
+            finalConfigForProject.dockerOptions,
+            project
+          );
+
+          if (shouldSkip) {
+            versionActionsToUse = new NOOP_VERSION_ACTIONS(
+              releaseGroup,
+              projectGraphNode,
+              finalConfigForProject
+            ) as VersionActions;
+          }
+          this.projectsToVersionActions.set(project, versionActionsToUse);
         });
       }
     }
@@ -728,6 +760,64 @@ export class ReleaseGroupProcessor {
     };
   }
 
+  async processDockerProjects(
+    dockerVersionScheme?: string,
+    dockerVersion?: string
+  ) {
+    const dockerProjects = new Map<string, FinalConfigForProject>();
+    for (const project of this.versionData.keys()) {
+      const finalConfigForProject = this.finalConfigsByProject.get(project);
+      if (Object.keys(finalConfigForProject.dockerOptions).length === 0) {
+        continue;
+      }
+      dockerProjects.set(project, finalConfigForProject);
+    }
+    // If no docker projects to process, exit early to avoid unnecessary loading of docker handling
+    if (dockerProjects.size === 0) {
+      return;
+    }
+    let handleDockerVersion: (
+      workspaceRoot: string,
+      projectGraphNode: ProjectGraphProjectNode,
+      finalConfigForProject: FinalConfigForProject,
+      dockerVersionScheme?: string,
+      dockerVersion?: string
+    ) => Promise<{ newVersion: string; logs: string[] }>;
+    try {
+      const {
+        handleDockerVersion: _handleDockerVersion,
+        // nx-ignore-next-line
+      } = require(// @ts-ignore
+      '@nx/docker/release/version-utils');
+      handleDockerVersion = _handleDockerVersion;
+    } catch (e) {
+      console.error(
+        'Could not find `@nx/docker`. Please run `nx add @nx/docker` before attempting to release Docker images.'
+      );
+      throw e;
+    }
+    for (const [project, finalConfigForProject] of dockerProjects.entries()) {
+      const projectNode = this.projectGraph.nodes[project];
+      const { newVersion, logs } = await handleDockerVersion(
+        workspaceRoot,
+        projectNode,
+        finalConfigForProject,
+        dockerVersionScheme,
+        dockerVersion
+      );
+
+      logs.forEach((log) =>
+        this.getProjectLoggerForProject(project).buffer(log)
+      );
+      const newVersionData = {
+        ...this.versionData.get(project),
+        dockerVersion: newVersion,
+      };
+      this.versionData.set(project, newVersionData);
+    }
+    this.flushAllProjectLoggers();
+  }
+
   private async processGroup(releaseGroupName: string): Promise<void> {
     const groupNode = this.groupGraph.get(releaseGroupName)!;
     const bumped = await this.bumpVersions(groupNode.group);
@@ -849,6 +939,7 @@ export class ReleaseGroupProcessor {
           this.versionData.set(project, {
             currentVersion: this.getCurrentCachedVersionForProject(project),
             newVersion: null,
+            dockerVersion: null,
             dependentProjects: this.getOriginalDependentProjects(project),
           });
           if (project === firstProject) {
@@ -1071,6 +1162,15 @@ export class ReleaseGroupProcessor {
       }
       return `${log} within release group "${releaseGroup.name}"`;
     };
+    const versionActions = this.getVersionActionsForProject(projectName);
+    if (versionActions instanceof NOOP_VERSION_ACTIONS) {
+      return {
+        newVersionInput: 'none',
+        newVersionInputReason: 'NOOP_VERSION_ACTIONS',
+        newVersionInputReasonData: {},
+      };
+    }
+
     if (cachedFinalConfigForProject.specifierSource === 'prompt') {
       let specifier: SemverBumpType | SemverVersion;
       if (releaseGroup.projectsRelationship === 'independent') {
@@ -1166,6 +1266,9 @@ export class ReleaseGroupProcessor {
     const projectVersionConfig = projectGraphNode.data.release?.version as
       | NxReleaseVersionConfiguration
       | undefined;
+    const projectDockerConfig = projectGraphNode.data.release?.docker as
+      | NxReleaseDockerConfiguration
+      | undefined;
 
     /**
      * specifierSource
@@ -1197,14 +1300,31 @@ Valid values are: ${validReleaseVersionPrefixes
       );
     }
 
+    // Merge docker options configured in project with release group config
+    // Project level configuration should take preference
+    const dockerOptions = {
+      ...(releaseGroup.docker ?? {}),
+      ...(projectDockerConfig ?? {}),
+    };
+
     /**
      * currentVersionResolver, defaults to disk
      */
-    const currentVersionResolver =
+    let currentVersionResolver =
       projectVersionConfig?.currentVersionResolver ??
       releaseGroupVersionConfig?.currentVersionResolver ??
       'disk';
-    if (
+
+    // Check if this project should skip version actions based on docker configuration
+    const shouldSkip = shouldSkipVersionActions(
+      dockerOptions,
+      projectGraphNode.name
+    );
+
+    if (shouldSkip) {
+      // If the project skips version actions, it doesn't need to resolve a current version
+      currentVersionResolver = 'none';
+    } else if (
       specifierSource === 'conventional-commits' &&
       currentVersionResolver !== 'git-tag'
     ) {
@@ -1277,6 +1397,7 @@ Valid values are: ${validReleaseVersionPrefixes
       preserveLocalDependencyProtocols,
       versionActionsOptions,
       manifestRootsToUpdate,
+      dockerOptions,
     };
   }
 
@@ -1504,7 +1625,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     if (releaseGroup.projectsRelationship === 'fixed') {
       // For fixed groups, we only need to check one project
-      const project = releaseGroupFilteredProjects[0];
+      const project = releaseGroupFilteredProjects.values().next().value;
       const dependencies = this.projectGraph.dependencies[project] || [];
       const hasDependencyInChangedGroup = dependencies.some(
         (dep) =>

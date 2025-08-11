@@ -57,7 +57,6 @@ describe('Convert Nx Executor', () => {
     // ASSERT
     expect(convertedRunResult).toMatchInlineSnapshot(`
       {
-        "error": undefined,
         "info": {
           "builderName": "nx:test",
           "description": "Testing only builder.",
@@ -66,16 +65,10 @@ describe('Convert Nx Executor', () => {
           },
         },
         "success": true,
-        "target": {
-          "configuration": undefined,
-          "project": undefined,
-          "target": undefined,
-        },
       }
     `);
     expect(realRunResult).toMatchInlineSnapshot(`
       {
-        "error": undefined,
         "info": {
           "builderName": "ng:test",
           "description": "Testing only builder.",
@@ -84,11 +77,6 @@ describe('Convert Nx Executor', () => {
           },
         },
         "success": true,
-        "target": {
-          "configuration": undefined,
-          "project": undefined,
-          "target": undefined,
-        },
       }
     `);
     expect(convertedRunResult.success).toEqual(realRunResult.success);

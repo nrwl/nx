@@ -497,3 +497,12 @@ export function waitUntil(
     }, opts.timeout);
   });
 }
+
+export function isDockerAvailable() {
+  try {
+    const dockerVersionInfo = runCommand(`docker info -f json`);
+    return !dockerVersionInfo.includes('Cannot connect to the Docker daemon');
+  } catch {
+    return false;
+  }
+}

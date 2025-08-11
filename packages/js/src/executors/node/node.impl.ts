@@ -22,6 +22,7 @@ import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+import { detectModuleFormat } from './lib/detect-module-format';
 
 interface ActiveTask {
   id: string;
@@ -37,8 +38,6 @@ function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
   let pendingPromise: Promise<T> | null = null;
 
   return () => {
-    clearTimeout(timeoutId);
-
     if (!pendingPromise) {
       pendingPromise = new Promise<T>((resolve, reject) => {
         timeoutId = setTimeout(() => {
@@ -50,6 +49,9 @@ function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
             .catch((error) => {
               pendingPromise = null;
               reject(error);
+            })
+            .finally(() => {
+              clearTimeout(timeoutId);
             });
         }, wait);
       });
@@ -109,6 +111,17 @@ export async function* nodeExecutor(
     buildTargetExecutor
   );
 
+  // Detect module format for the project
+  const moduleFormat = detectModuleFormat({
+    projectRoot: project.data.root,
+    workspaceRoot: context.root,
+    tsConfig:
+      buildOptions.tsConfig ||
+      join(context.root, project.data.root, 'tsconfig.json'),
+    main: buildOptions.main || fileToRun,
+    buildOptions,
+  });
+
   let additionalExitHandler: null | (() => void) = null;
   let currentTask: ActiveTask = null;
   const tasks: ActiveTask[] = [];
@@ -163,8 +176,13 @@ export async function* nodeExecutor(
 
           // Run the program
           task.promise = new Promise<void>((resolve, reject) => {
+            const loaderFile =
+              moduleFormat === 'esm'
+                ? 'node-with-esm-loader'
+                : 'node-with-require-overrides';
+
             task.childProcess = fork(
-              joinPathFragments(__dirname, 'node-with-require-overrides'),
+              joinPathFragments(__dirname, loaderFile),
               options.args ?? [],
               {
                 execArgv: getExecArgv(options),
@@ -197,7 +215,7 @@ export async function* nodeExecutor(
                 if (code !== 0) {
                   error(new Error(`Process exited with code ${code}`));
                 } else {
-                  done();
+                  resolve(done());
                 }
               }
               resolve();
@@ -226,8 +244,12 @@ export async function* nodeExecutor(
     };
 
     const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
-      additionalExitHandler?.();
-      await currentTask?.stop(signal);
+      if (typeof additionalExitHandler === 'function') {
+        additionalExitHandler();
+      }
+      if (typeof currentTask?.stop === 'function') {
+        await currentTask.stop(signal);
+      }
       for (const task of tasks) {
         await task.stop(signal);
       }

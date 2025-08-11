@@ -24,17 +24,36 @@ export default async function gradleExecutor(
     args.push(`--tests`, options.testClassName);
   }
 
-  getExcludeTasks(context.projectGraph, [
-    {
-      project: context.projectName,
-      target: context.targetName,
-      excludeDependsOn: options.excludeDependsOn,
-    },
-  ]).forEach((task) => {
-    if (task) {
-      args.push('--exclude-task', task);
+  // Pass any additional options not defined in the schema as gradle arguments
+  const knownOptions = new Set([
+    'taskName',
+    'testClassName',
+    'args',
+    'excludeDependsOn',
+    '__unparsed__',
+  ]);
+  Object.entries(options).forEach(([key, value]) => {
+    if (!knownOptions.has(key) && value !== undefined && value !== false) {
+      if (value === true) {
+        // Boolean flags like --continuous
+        args.push(`--${key}`);
+      } else {
+        // Flags with values like --max-workers=4
+        args.push(`--${key}=${value}`);
+      }
     }
   });
+
+  if (options.excludeDependsOn) {
+    getExcludeTasks(
+      new Set([`${context.projectName}:${context.targetName}`]),
+      context.projectGraph.nodes
+    ).forEach((task) => {
+      if (task) {
+        args.push('--exclude-task', task);
+      }
+    });
+  }
 
   try {
     const { success } = await runCommandsImpl(
@@ -42,7 +61,7 @@ export default async function gradleExecutor(
         command: `${gradlewPath} ${options.taskName}`,
         cwd: dirname(gradlewPath),
         args: args,
-        __unparsed__: [],
+        __unparsed__: options.__unparsed__ || [],
       },
       context
     );

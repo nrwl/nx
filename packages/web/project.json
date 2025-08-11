@@ -4,9 +4,11 @@
   "sourceRoot": "packages/web",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {},
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/web",
@@ -47,10 +49,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/web/README.md"],
-      "command": "node ./scripts/copy-readme.js web"
     }
   }
 }

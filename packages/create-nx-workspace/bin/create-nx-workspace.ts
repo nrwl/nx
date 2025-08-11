@@ -243,6 +243,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     nxVersion
   ) as yargs.Argv<Arguments>;
 
+let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
     title: `Creating your v${nxVersion} workspace.`,
@@ -250,7 +251,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 
   const workspaceInfo = await createWorkspace<Arguments>(
     parsedArgs.preset,
-    parsedArgs
+    parsedArgs,
+    rawArgs
   );
 
   await recordStat({
@@ -261,6 +263,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
+      rawArgs.nxCloud,
+      workspaceInfo.pushedToVcs,
     ],
   });
 
@@ -268,13 +272,13 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     process.stdout.write(workspaceInfo.nxCloudInfo);
   }
 
-  if (isKnownPreset(parsedArgs.preset)) {
-    printSocialInformation();
-  } else {
-    output.log({
-      title: `Successfully applied preset: ${parsedArgs.preset}`,
-    });
-  }
+  // if (isKnownPreset(parsedArgs.preset)) {
+  //   printSocialInformation();
+  // } else {
+  //   output.log({
+  //     title: `Successfully applied preset: ${parsedArgs.preset}`,
+  //   });
+  // }
 }
 
 /**
@@ -286,6 +290,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
+  rawArgs = { ...argv };
   output.log({
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
@@ -346,13 +351,32 @@ function invariant(
   }
 }
 
+export function validateWorkspaceName(name: string): void {
+  const pattern = /^[a-zA-Z]/;
+  if (!pattern.test(name)) {
+    output.error({
+      title: 'Invalid workspace name',
+      bodyLines: [
+        `The workspace name "${name}" is invalid.`,
+        `Workspace names must start with a letter.`,
+        `Examples of valid names: myapp, MyApp, my-app, my_app`,
+      ],
+    });
+    process.exit(1);
+  }
+}
+
 async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   const folderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
-  if (folderName) return folderName;
+
+  if (folderName) {
+    validateWorkspaceName(folderName);
+    return folderName;
+  }
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
@@ -367,6 +391,8 @@ async function determineFolder(
     title: 'Invalid folder name',
     bodyLines: [`Folder name cannot be empty`],
   });
+
+  validateWorkspaceName(reply.folderName);
 
   invariant(!existsSync(reply.folderName), {
     title: 'That folder is already taken',
@@ -1496,7 +1522,7 @@ async function determineReactRouter(
       choices: [
         {
           name: 'Yes',
-          hint: 'I want to use React Router',
+          hint: 'I want to use React Router. (Vite will be selected as the bundler)',
         },
         {
           name: 'No',

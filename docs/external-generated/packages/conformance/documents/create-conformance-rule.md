@@ -1,6 +1,6 @@
 ---
 title: Create a Conformance Rule
-description: Learn how to create custom conformance rules for Nx Powerpack to enforce standards and best practices across your Nx workspace.
+description: Learn how to create custom conformance rules for Nx Powerpack and Nx Enterprise to enforce standards and best practices across your Nx workspace.
 ---
 
 # Create a Conformance Rule
@@ -17,7 +17,6 @@ To write your own conformance rule, run the `@nx/conformance:create-rule` genera
 ✔ What is the name of the rule? · local-conformance-rule-example
 ✔ Which directory do you want to create the rule directory in? · packages/my-plugin/local-conformance-rule
 ✔ What category does this rule belong to? · security
-✔ What reporter do you want to use for this rule? · project-reporter
 ✔ What is the description of the rule? · an example of a conformance rule
 CREATE packages/my-plugin/local-conformance-rule/local-conformance-rule-example/index.ts
 CREATE packages/my-plugin/local-conformance-rule/local-conformance-rule-example/schema.json
@@ -26,15 +25,14 @@ CREATE packages/my-plugin/local-conformance-rule/local-conformance-rule-example/
 The generated rule definition file should look like this:
 
 ```ts {% fileName="packages/my-plugin/local-conformance-rule/index.ts" %}
-import { createConformanceRule, ProjectViolation } from '@nx/conformance';
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
 
 export default createConformanceRule({
   name: 'local-conformance-rule-example',
   category: 'security',
   description: 'an example of a conformance rule',
-  reporter: 'project-reporter',
   implementation: async (context) => {
-    const violations: ProjectViolation[] = [];
+    const violations: ConformanceViolation[] = [];
 
     return {
       severity: 'low',
@@ -64,28 +62,27 @@ Note that the severity of the error is defined by the rule author and can be adj
 
 ## Conformance Rule Examples
 
-There are three types of reporters that a rule can use.
+Rules should report on the most specific thing that is in violation of the rule. They can report on one or more of the following things within a workspace:
 
-- `project-reporter` - The rule evaluates an entire project at a time.
-- `project-files-reporter` - The rule evaluates a single project file at a time.
-- `non-project-files-reporter` - The rule evaluates files that don't belong to any project.
+- file - The rule reports on a particular file being in violation of the rule.
+- project - The rule reports on a particular project being in violation of the rule, because no one file within it would be applicable to flag up.
+- the workspace itself - Sometimes there is no specific file or project that is most applicable to flag up, so the rule can report on the workspace itself.
 
 {% tabs %}
-{% tab label="project-reporter" %}
+{% tab label="project violation" %}
 
-The `@nx/conformance:ensure-owners` rule provides us an example of how to write a `project-reporter` rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
+The `@nx/conformance:ensure-owners` rule provides us an example of how to write a rule that reports on a project being in violation of the rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
 
 ```ts
 import { ProjectGraphProjectNode } from '@nx/devkit';
-import { createConformanceRule, ProjectViolation } from '@nx/conformance';
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
 
 export default createConformanceRule({
   name: 'ensure-owners',
   category: 'consistency',
   description: 'Ensure that all projects have owners defined via Nx Owners.',
-  reporter: 'project-reporter',
   implementation: async (context) => {
-    const violations: ProjectViolation[] = [];
+    const violations: ConformanceViolation[] = [];
 
     for (const node of Object.values(
       context.projectGraph.nodes
@@ -110,12 +107,12 @@ export default createConformanceRule({
 ```
 
 {% /tab %}
-{% tab label="project-files-reporter" %}
+{% tab label="file violation" %}
 
 This rule uses TypeScript AST processing to ensure that `index.ts` files use a client-side style of export syntax and `server.ts` files use a server-side style of export syntax.
 
 ```ts
-import { createConformanceRule, ProjectFilesViolation } from '@nx/conformance';
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -131,9 +128,8 @@ export default createConformanceRule({
   name: 'server-client-public-api',
   category: 'consistency',
   description: 'Ensure server-only and client-only public APIs are not mixed',
-  reporter: 'project-files-reporter',
   implementation: async ({ projectGraph }) => {
-    const violations: ProjectFilesViolation[] = [];
+    const violations: ConformanceViolation[] = [];
 
     for (const nodeId in projectGraph.nodes) {
       const node = projectGraph.nodes[nodeId];
@@ -171,7 +167,7 @@ export function processEntryPoint(
   project: string,
   style: 'server' | 'client'
 ) {
-  const violations: ProjectFilesViolation[] = [];
+  const violations: ConformanceViolation[] = [];
 
   const sf = createSourceFile(
     entryPoint,
@@ -246,42 +242,30 @@ function isModuleSpecifierViolated(
 ```
 
 {% /tab %}
-{% tab label="non-project-files-reporter" %}
+{% tab label="workspace violation" %}
 
-This rule checks the root `package.json` file and ensures that if the `tmp` package is included as a dependency, it has a minimum version of 0.2.3.
+This rule checks to see if there is a root README.md file in the workspace, and if there is not, it reports on the workspace itself.
 
 ```ts
-import { readJsonFile, workspaceRoot } from '@nx/devkit';
-import {
-  createConformanceRule,
-  NonProjectFilesViolation,
-} from '@nx/conformance';
+import { workspaceRoot } from '@nx/devkit';
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
 import { join } from 'node:path';
-import { satisfies } from 'semver';
+import { existsSync } from 'node:fs';
 
 export default createConformanceRule<object>({
-  name: 'package-tmp-0.2.3',
+  name: 'readme-file',
   category: 'maintainability',
-  description: 'The tmp dependency should be a minimum version of 0.2.3',
-  reporter: 'non-project-files-reporter',
+  description: 'The workspace should have a root README.md file',
   implementation: async () => {
-    const violations: NonProjectFilesViolation[] = [];
-    const applyViolationIfApplicable = (version: string | undefined) => {
-      if (version && !satisfies(version, '>=0.2.3')) {
-        violations.push({
-          message: 'The "tmp" package must be version "0.2.3" or higher',
-          file: 'package.json',
-        });
-      }
-    };
+    const violations: ConformanceViolation[] = [];
 
-    const workspaceRootPackageJson = await readJsonFile(
-      join(workspaceRoot, 'package.json')
-    );
-    applyViolationIfApplicable(workspaceRootPackageJson.dependencies?.['tmp']);
-    applyViolationIfApplicable(
-      workspaceRootPackageJson.devDependencies?.['tmp']
-    );
+    const readmePath = join(workspaceRoot, 'README.md');
+    if (!existsSync(readmePath)) {
+      violations.push({
+        message: 'The workspace should have a root README.md file',
+        workspaceViolation: true,
+      });
+    }
 
     return {
       severity: 'low',

@@ -7,10 +7,19 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../js"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../eslint"
+    },
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

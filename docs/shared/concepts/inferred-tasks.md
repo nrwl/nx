@@ -88,4 +88,4 @@ When `useInferencePlugins` is `false`:
 
 If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/recipes/running-tasks/convert-to-inferred).
 
-Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)).
+Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/technologies/typescript/recipes/enable-tsc-batch-mode)).

@@ -1,4 +1,3 @@
-import { Serializable } from 'child_process';
 import { RunningTask } from './running-task';
 
 export class NoopChildProcess implements RunningTask {
@@ -14,7 +13,11 @@ export class NoopChildProcess implements RunningTask {
     return;
   }
 
-  onExit(cb: (code: number) => void): void {
-    cb(this.results.code);
+  onExit(cb: (code: number, terminalOutput: string) => void): void {
+    cb(this.results.code, this.results.terminalOutput);
+  }
+
+  onOutput(cb: (terminalOutput: string) => void): void {
+    cb(this.results.terminalOutput);
   }
 }

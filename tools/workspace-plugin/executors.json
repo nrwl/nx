@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "legacy-post-build": {
+      "implementation": "./src/executors/legacy-post-build/executor",
+      "schema": "./src/executors/legacy-post-build/schema.json",
+      "description": "Legacy post-build executor that combines asset copying and package.json field updates"
+    }
+  }
+}

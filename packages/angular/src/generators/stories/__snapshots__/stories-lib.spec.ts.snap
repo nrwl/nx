@@ -3,14 +3,14 @@
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { Standalone } from './standalone';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 const meta: Meta<Standalone> = {
   component: Standalone,
   title: 'Standalone',
 };
 export default meta;
+
 type Story = StoryObj<Standalone>;
 
 export const Primary: Story = {
@@ -19,9 +19,8 @@ export const Primary: Story = {
 
 export const Heading: Story = {
   args: {},
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/standalone works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/standalone/gi)).toBeTruthy();
   },
 };
 "
@@ -30,14 +29,14 @@ export const Heading: Story = {
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 2`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { SecondaryStandalone } from './secondary-standalone';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 const meta: Meta<SecondaryStandalone> = {
   component: SecondaryStandalone,
   title: 'SecondaryStandalone',
 };
 export default meta;
+
 type Story = StoryObj<SecondaryStandalone>;
 
 export const Primary: Story = {
@@ -46,9 +45,8 @@ export const Primary: Story = {
 
 export const Heading: Story = {
   args: {},
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/secondary-standalone works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/secondary-standalone/gi)).toBeTruthy();
   },
 };
 "
@@ -57,14 +55,14 @@ export const Heading: Story = {
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButton } from './test-button';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 const meta: Meta<TestButton> = {
   component: TestButton,
   title: 'TestButton',
 };
 export default meta;
+
 type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
@@ -83,9 +81,8 @@ export const Heading: Story = {
     age: 0,
     isOn: false,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/test-button works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/test-button/gi)).toBeTruthy();
   },
 };
 "
@@ -94,14 +91,14 @@ export const Heading: Story = {
 exports[`angularStories generator: libraries Stories for non-empty Angular library should ignore paths 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButton } from './test-button';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 const meta: Meta<TestButton> = {
   component: TestButton,
   title: 'TestButton',
 };
 export default meta;
+
 type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
@@ -120,9 +117,8 @@ export const Heading: Story = {
     age: 0,
     isOn: false,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/test-button works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/test-button/gi)).toBeTruthy();
   },
 };
 "

@@ -1,5 +1,6 @@
+import type { JSX } from 'react';
 import { HeartIcon } from '@heroicons/react/24/solid';
-import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
+import { ThemeSwitcher } from '@nx/nx-dev-ui-theme';
 import Link from 'next/link';
 import { DiscordIcon } from './discord-icon';
 import { VersionPicker } from './version-picker';
@@ -11,7 +12,7 @@ const navigation = {
   ],
   nxCloud: [
     { name: 'App', href: 'https://cloud.nx.app' },
-    { name: 'Docs', href: '/ci/intro/ci-with-nx' },
+    { name: 'Docs', href: '/ci/features' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
@@ -114,6 +115,23 @@ const navigation = {
       ),
     },
     {
+      name: 'LinkedIn',
+      label: 'Nx on LinkedIn',
+      href: 'https://www.linkedin.com/company/nxdevtools',
+      icon: (props: any) => (
+        <svg
+          fill="currentColor"
+          role="img"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {/*<title>LinkedIn</title>*/}
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+        </svg>
+      ),
+    },
+    {
       name: 'Newsletter',
       label: 'The Newsletter',
       href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
@@ -139,7 +157,11 @@ const navigation = {
 
 export function Footer({
   className = '',
-}: { className?: string } = {}): JSX.Element {
+  disableThemeSwitcher = false,
+}: {
+  className?: string;
+  disableThemeSwitcher?: boolean;
+} = {}): JSX.Element {
   return (
     <footer
       className={`bg-white dark:bg-slate-950 ${className}`}
@@ -162,14 +184,14 @@ export function Footer({
               <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
             </svg>
             <p className="text-sm">Smart Repos · Fast Builds</p>
-            <div className="flex space-x-6">
+            <div className="flex flex-wrap space-x-6">
               {navigation.social.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   title={item.label}
                   prefetch={false}
-                  className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                  className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                 >
                   <span className="sr-only">{item.name}</span>
                   <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -185,7 +207,7 @@ export function Footer({
                     title={item.name}
                     target="_blank"
                     rel="noreferer"
-                    className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-slate-500 no-underline no-underline hover:text-slate-600 dark:hover:text-slate-400"
                   >
                     {item.name}
                   </a>
@@ -195,16 +217,18 @@ export function Footer({
                     href={item.href}
                     title={item.name}
                     prefetch={false}
-                    className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                   >
                     {item.name}
                   </Link>
                 )
               )}
             </div>
-            <div className="flex items-center text-sm">
-              Theme <ThemeSwitcher />
-            </div>
+            {disableThemeSwitcher ? null : (
+              <div className="flex items-center text-sm">
+                Theme <ThemeSwitcher />
+              </div>
+            )}
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
@@ -212,16 +236,16 @@ export function Footer({
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Resources
                 </h3>
-                <ul role="list" className="mt-4 space-y-4">
+                <ul role="list" className="mt-4 space-y-4 p-0">
                   {navigation.resources.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.name} className="list-none">
                       {item.href.startsWith('http') ? (
                         <a
                           href={item.href}
                           target="_blank"
                           title={item.name}
                           rel="noreferer"
-                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                         >
                           {item.name}
                         </a>
@@ -230,7 +254,7 @@ export function Footer({
                           href={item.href}
                           prefetch={false}
                           title={item.name}
-                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                         >
                           {item.name}
                         </Link>
@@ -243,14 +267,14 @@ export function Footer({
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Solutions
                 </h3>
-                <ul role="list" className="mt-4 space-y-4">
+                <ul role="list" className="mt-4 space-y-4 p-0">
                   {navigation.solutions.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.name} className="list-none">
                       <Link
                         href={item.href}
                         prefetch={false}
                         title={item.name}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -264,16 +288,16 @@ export function Footer({
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Nx Cloud
                 </h3>
-                <ul role="list" className="mt-4 space-y-4">
+                <ul role="list" className="mt-4 space-y-4 p-0">
                   {navigation.nxCloud.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.name} className="list-none">
                       {item.href.startsWith('http') ? (
                         <a
                           href={item.href}
                           title={item.name}
                           target="_blank"
                           rel="noreferer"
-                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                         >
                           {item.name}
                         </a>
@@ -282,7 +306,7 @@ export function Footer({
                           href={item.href}
                           prefetch={false}
                           title={item.name}
-                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                          className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                         >
                           {item.name}
                         </Link>
@@ -295,14 +319,14 @@ export function Footer({
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Company
                 </h3>
-                <ul role="list" className="mt-4 space-y-4">
+                <ul role="list" className="mt-4 space-y-4 p-0">
                   {navigation.company.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.name} className="list-none">
                       <Link
                         href={item.href}
                         prefetch={false}
                         title={item.name}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -314,21 +338,27 @@ export function Footer({
           </div>
         </div>
         <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
-          <p className="text-sm text-slate-400 xl:text-center">
-            &copy; 2025 made with{' '}
-            <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
-            <Link href="/company" prefetch={false} title="Company">
+          <div className="flex items-center gap-1 text-sm text-slate-400 xl:justify-center">
+            <span>&copy; 2025 made with</span>
+            <HeartIcon className="inline h-4 w-4" />
+            <span>by</span>
+            <Link
+              href="/company"
+              prefetch={false}
+              title="Company"
+              className="inline-flex items-center text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
+            >
               <svg
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
-                className="-mt-1 ml-0.5 inline h-auto w-6"
+                className="h-5 w-5"
               >
                 <path d="m12 14.1-3.1 5-5.2-8.5v8.9H0v-15h3.7l5.2 8.9v-4l3 4.7zm.6-5.7V4.5H8.9v3.9h3.7zm5.6 4.1a2 2 0 0 0-2 1.3 2 2 0 0 1 2.4-.7c.4.2 1 .4 1.3.3a2.1 2.1 0 0 0-1.7-.9zm3.4 1c-.4 0-.8-.2-1.1-.6l-.2-.3a2.1 2.1 0 0 0-.5-.6 2 2 0 0 0-1.2-.3 2.5 2.5 0 0 0-2.3 1.5 2.3 2.3 0 0 1 4 .4.8.8 0 0 0 .9.3c.5 0 .4.4 1.2.5v-.1c0-.4-.3-.5-.8-.7zm2 1.3a.7.7 0 0 0 .4-.6c0-3-2.4-5.5-5.4-5.5a5.4 5.4 0 0 0-4.5 2.4l-1.5-2.4H8.9l3.5 5.4L9 19.5h3.6L14 17l1.6 2.4h3.5l-3.1-5a.7.7 0 0 1 0-.3 2.7 2.7 0 0 1 2.6-2.7c1.5 0 1.7.9 2 1.3.7.8 2 .5 2 1.5a.7.7 0 0 0 1 .6zm.4.2c-.2.3-.6.3-.8.6-.1.3.1.4.1.4s.4.2.6-.3V15z" />
               </svg>
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </footer>

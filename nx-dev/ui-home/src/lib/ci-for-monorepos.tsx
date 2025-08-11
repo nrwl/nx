@@ -5,13 +5,13 @@ import {
   TransitionChild,
 } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/24/outline';
-import { AnimateValue, Marquee } from '@nx/nx-dev/ui-animations';
+import { AnimateValue, Marquee } from '@nx/nx-dev-ui-animations';
 import {
   ButtonLink,
   SectionHeading,
   Strong,
   TextLink,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import {
   AzureDevOpsIcon,
   BitbucketIcon,
@@ -19,8 +19,8 @@ import {
   GitlabIcon,
   JenkinsIcon,
   TravisCiIcon,
-} from '@nx/nx-dev/ui-icons';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-icons';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -333,7 +333,7 @@ export function ProjectsCreatedEveryMonth(): JSX.Element {
         </div>
         <div className="mt-8 text-center">
           <ButtonLink
-            href="https://cloud.nx.app/create-nx-workspace?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos_connect_now"
+            href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
             title="Get started with Nx Cloud"
             variant="primary"
             size="large"
@@ -413,7 +413,7 @@ export function IntegratesToYouCurrentCiProvider(): JSX.Element {
           </p>
           <div className="mt-4 flex items-center">
             <Link
-              href="/ci/intro/connect-to-nx-cloud?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/ci/recipes/set-up?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add Nx Cloud to your CI workflow"
               prefetch={false}
               className="group font-semibold leading-6 text-slate-950 dark:text-white"

@@ -1,11 +1,15 @@
-import { ProjectGraphProjectNode } from '../../config/project-graph';
-import { ProjectGraphBuilder } from '../project-graph-builder';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { ProjectGraphProjectNode } from '../../config/project-graph';
+import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { readJsonFile } from '../../utils/fileutils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { CreateDependenciesContext } from '../plugins';
+import type { PackageJson } from '../../utils/package-json';
+import type { CreateDependenciesContext } from '../plugins';
+import type { ProjectGraphBuilder } from '../project-graph-builder';
 
 export async function normalizeProjectNodes(
-  { projects }: CreateDependenciesContext,
+  { projects, workspaceRoot }: CreateDependenciesContext,
   builder: ProjectGraphBuilder
 ) {
   // Sorting projects by name to make sure that the order of projects in the graph is deterministic.
@@ -43,12 +47,12 @@ export async function normalizeProjectNodes(
     p.targets ??= {};
 
     // TODO: remove in v16
-    const projectType =
-      p.projectType === 'application'
-        ? key.endsWith('-e2e') || key === 'e2e'
-          ? 'e2e'
-          : 'app'
-        : 'lib';
+    const projectType = getProjectType(
+      key,
+      p.projectType,
+      workspaceRoot,
+      p.root
+    );
     const tags = p.tags || [];
 
     toAdd.push({
@@ -119,4 +123,45 @@ export function normalizeImplicitDependencies(
   // This is what allows using a negative implicit dep to remove a dependency
   // detected by createDependencies.
   return deps.concat(alwaysIgnoredDeps.map((x) => '!' + x)) as string[];
+}
+
+function getProjectType(
+  projectName: string,
+  projectType: 'library' | 'application' | undefined,
+  workspaceRoot: string,
+  projectRoot: string
+): 'lib' | 'app' | 'e2e' {
+  if (projectType) {
+    if (projectType === 'library') {
+      return 'lib';
+    }
+    if (projectName.endsWith('-e2e') || projectName === 'e2e') {
+      return 'e2e';
+    }
+    return 'app';
+  }
+
+  if (existsSync(join(workspaceRoot, projectRoot, 'tsconfig.lib.json'))) {
+    return 'lib';
+  }
+
+  if (existsSync(join(workspaceRoot, projectRoot, 'tsconfig.app.json'))) {
+    return 'app';
+  }
+
+  // If it doesn't have any common library entry points, assume it is an application
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  try {
+    const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+    if (
+      !packageJson.exports &&
+      !packageJson.main &&
+      !packageJson.module &&
+      !packageJson.bin
+    ) {
+      return 'app';
+    }
+  } catch {}
+
+  return 'lib';
 }

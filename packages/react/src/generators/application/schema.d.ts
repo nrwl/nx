@@ -33,6 +33,7 @@ export interface Schema {
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'none';
   useProjectJson?: boolean;
+  port?: number;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {

@@ -4,7 +4,7 @@ import {
   ServerStackIcon,
 } from '@heroicons/react/24/outline';
 import { ReactElement } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 const features = [
@@ -74,7 +74,7 @@ export function CostEfficientCompute(): ReactElement {
           variant="title"
           id="cost-efficient-compute-without-sacrificing-speed-title"
         >
-          Cost-Efficient Compute – Without Sacrificing Speed
+          Cost-Efficient Compute — Without Sacrificing Speed
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           Reduce infrastructure costs without compromising performance.

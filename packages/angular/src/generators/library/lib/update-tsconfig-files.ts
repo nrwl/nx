@@ -18,15 +18,20 @@ export function updateTsConfigFiles(
   extractTsConfigBase(tree);
   updateProjectConfig(tree, options);
   updateProjectIvyConfig(tree, options);
-  addTsConfigPath(tree, options.importPath, [
-    joinPathFragments(options.projectRoot, './src', 'index.ts'),
-  ]);
+
+  // Only add tsconfig path mapping if skipTsConfig is not true
+  if (!options.skipTsConfig) {
+    addTsConfigPath(tree, options.importPath, [
+      joinPathFragments(options.projectRoot, './src', 'index.ts'),
+    ]);
+  }
 
   const compilerOptions: Record<string, any> = {
     skipLibCheck: true,
     experimentalDecorators: true,
     importHelpers: true,
     target: 'es2022',
+    moduleResolution: 'bundler',
     ...(options.strict
       ? {
           strict: true,
@@ -46,11 +51,11 @@ export function updateTsConfigFiles(
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';
   } else {
-    compilerOptions.moduleResolution = 'bundler';
     compilerOptions.module = 'es2022';
   }
 
-  updateJson(tree, `${options.projectRoot}/tsconfig.json`, (json) => {
+  const tsconfigPath = joinPathFragments(options.projectRoot, 'tsconfig.json');
+  updateJson(tree, tsconfigPath, (json) => {
     json.compilerOptions = {
       ...json.compilerOptions,
       ...compilerOptions,
@@ -73,6 +78,26 @@ export function updateTsConfigFiles(
 
     return json;
   });
+
+  if (options.unitTestRunner === 'jest') {
+    const tsconfigSpecPath = joinPathFragments(
+      options.projectRoot,
+      'tsconfig.spec.json'
+    );
+    updateJson(tree, tsconfigSpecPath, (json) => {
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        module: 'commonjs',
+        moduleResolution: 'node10',
+      };
+      json.compilerOptions = getNeededCompilerOptionOverrides(
+        tree,
+        json.compilerOptions,
+        tsconfigPath
+      );
+      return json;
+    });
+  }
 }
 
 function updateProjectConfig(

@@ -8,7 +8,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -143,19 +143,19 @@ describe('nx release multiple release branches', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.0.7",
-      "scripts": {
+      "exports": {
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.0.7",
-      "scripts": {
+      "exports": {
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.0.7",
-      "scripts": {
+      "exports": {
 
 
       NX   Committing changes with git
@@ -189,22 +189,22 @@ describe('nx release multiple release branches', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.7",
       +   "version": "0.1.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.7",
-      +   "version": "0.1.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.7",
-      +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
 
       }
       +
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.7",
+      +   "version": "0.1.0",
+      "exports": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.7",
+      +   "version": "0.1.0",
+      "exports": {
 
 
       NX   Committing changes with git
@@ -238,19 +238,19 @@ describe('nx release multiple release branches', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.7",
       +   "version": "0.0.8",
-      "scripts": {
+      "exports": {
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.7",
       +   "version": "0.0.8",
-      "scripts": {
+      "exports": {
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.7",
       +   "version": "0.0.8",
-      "scripts": {
+      "exports": {
 
 
       NX   Committing changes with git
@@ -328,22 +328,22 @@ describe('nx release multiple release branches', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "0.1.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
 
       }
       +
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "exports": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "exports": {
 
 
       NX   Committing changes with git
@@ -377,13 +377,13 @@ describe('nx release multiple release branches', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "1.0.0",
-      "scripts": {
+      "exports": {
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "1.0.0",
-      "scripts": {
+      "exports": {
 
       }
       +
@@ -392,7 +392,7 @@ describe('nx release multiple release branches', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "1.0.0",
-      "scripts": {
+      "exports": {
 
 
       NX   Committing changes with git

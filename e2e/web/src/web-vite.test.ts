@@ -10,7 +10,7 @@ import {
   runCLIAsync,
   runE2ETests,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Web Components Applications with bundler set as vite', () => {
   beforeEach(() => newProject());

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode, type ReactElement } from 'react';
 import cx from 'classnames';
 import {
   ChevronRightIcon,
@@ -10,14 +10,21 @@ import {
   HandRaisedIcon,
   InformationCircleIcon,
   AcademicCapIcon,
+  MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 
-type CalloutType = 'note' | 'warning' | 'check' | 'caution' | 'deepdive';
+type CalloutType =
+  | 'announcement'
+  | 'caution'
+  | 'check'
+  | 'deepdive'
+  | 'note'
+  | 'warning';
 
 const typeMap: Record<
   CalloutType,
   {
-    icon: JSX.Element;
+    icon: ReactElement;
     backgroundColor: string;
     borderColor: string;
     titleColor: string;
@@ -35,6 +42,18 @@ const typeMap: Record<
     borderColor: 'border-slate-200 dark:border-slate-700',
     titleColor: 'text-slate-600 dark:text-slate-300',
     textColor: 'text-slate-700 dark:text-slate-400',
+  },
+  announcement: {
+    icon: (
+      <MegaphoneIcon
+        className="h-5 w-5 text-blue-500 dark:text-blue-400"
+        aria-hidden="true"
+      />
+    ),
+    backgroundColor: 'bg-blue-50 dark:bg-blue-900/30',
+    borderColor: 'border-blue-200 dark:border-blue-800',
+    titleColor: 'text-blue-600 dark:text-blue-400',
+    textColor: 'text-blue-700 dark:text-blue-600',
   },
   warning: {
     icon: (
@@ -80,17 +99,19 @@ const typeMap: Record<
   },
 };
 
+export type CalloutProps = {
+  title: string;
+  type: CalloutType;
+  children: ReactNode;
+  expanded?: boolean;
+};
+
 export function Callout({
   title,
   type,
   children,
   expanded = false,
-}: {
-  title: string;
-  type: CalloutType;
-  children: ReactNode;
-  expanded?: boolean;
-}) {
+}: CalloutProps): ReactElement {
   const [isOpen, setIsOpen] = useState(type !== 'deepdive' || expanded);
   const ui = typeMap[type] || typeMap.note;
   const isCollapsible = type === 'deepdive';

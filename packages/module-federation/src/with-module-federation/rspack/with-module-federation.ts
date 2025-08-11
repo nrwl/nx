@@ -3,6 +3,7 @@ import type { Configuration } from '@rspack/core';
 import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -42,9 +43,10 @@ export async function withModuleFederation(
 
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: isDevServer
-        ? config.optimization?.runtimeChunk ?? undefined
-        : false,
+      runtimeChunk:
+        isDevServer && !options.exposes
+          ? config.optimization?.runtimeChunk ?? undefined
+          : false,
     };
 
     if (
@@ -57,7 +59,7 @@ export async function withModuleFederation(
 
     config.plugins.push(
       new ModuleFederationPlugin({
-        name: options.name.replace(/-/g, '_'),
+        name: normalizeProjectName(options.name),
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,

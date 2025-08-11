@@ -1,11 +1,41 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "../../dist/out-tsc",
-    "declaration": true,
-    "types": ["node"]
+    "outDir": "../../dist/packages/expo",
+    "types": ["node"],
+    "noEmit": false,
+    "tsBuildInfoFile": "../../dist/packages/expo/tsconfig.tsbuildinfo"
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json"],
+  "references": [
+    {
+      "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../web/tsconfig.lib.json"
+    },
+    {
+      "path": "../rollup/tsconfig.lib.json"
+    },
+    {
+      "path": "../react/tsconfig.lib.json"
+    },
+    {
+      "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../jest/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../detox/tsconfig.lib.json"
+    }
+  ]
 }

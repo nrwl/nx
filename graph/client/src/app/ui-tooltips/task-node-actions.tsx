@@ -1,6 +1,16 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { TaskNodeTooltipProps } from '@nx/graph/legacy/tooltips';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+
+interface TaskNodeTooltipProps {
+  id: string;
+  executor?: string;
+  runTaskCallback?: () => void;
+  description?: string;
+  inputs?: Record<string, string[]>;
+  openConfigCallback?: () => void;
+  renderMode?: 'nx-console' | 'nx-docs' | 'nx-cloud';
+  children?: ReactNode | ReactNode[];
+}
 
 export function TaskNodeActions(props: TaskNodeTooltipProps) {
   const [isOpen, setIsOpen] = useState(false);

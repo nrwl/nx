@@ -316,6 +316,7 @@ describe('lib', () => {
           experimentalDecorators: true,
           importHelpers: true,
           module: 'preserve',
+          moduleResolution: 'bundler',
           skipLibCheck: true,
           noFallthroughCasesInSwitch: true,
           noPropertyAccessFromIndexSignature: true,
@@ -699,9 +700,7 @@ describe('lib', () => {
                     "prefix": "lib",
                     "style": "kebab-case"
                   }
-                ],
-                "@angular-eslint/component-class-suffix": "off",
-                "@angular-eslint/directive-class-suffix": "off"
+                ]
               }
             },
             {
@@ -1249,9 +1248,7 @@ describe('lib', () => {
                               prefix: "lib",
                               style: "kebab-case"
                           }
-                      ],
-                      "@angular-eslint/component-class-suffix": "off",
-                      "@angular-eslint/directive-class-suffix": "off"
+                      ]
                   }
               },
               {
@@ -1291,7 +1288,6 @@ describe('lib', () => {
                   "*.ts",
                 ],
                 "rules": {
-                  "@angular-eslint/component-class-suffix": "off",
                   "@angular-eslint/component-selector": [
                     "error",
                     {
@@ -1300,7 +1296,6 @@ describe('lib', () => {
                       "type": "element",
                     },
                   ],
-                  "@angular-eslint/directive-class-suffix": "off",
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
@@ -1353,7 +1348,6 @@ describe('lib', () => {
                   "*.ts",
                 ],
                 "rules": {
-                  "@angular-eslint/component-class-suffix": "off",
                   "@angular-eslint/component-selector": [
                     "error",
                     {
@@ -1362,7 +1356,6 @@ describe('lib', () => {
                       "type": "element",
                     },
                   ],
-                  "@angular-eslint/directive-class-suffix": "off",
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
@@ -1528,11 +1521,10 @@ describe('lib', () => {
       expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { Component } from '@angular/core';
-        import { CommonModule } from '@angular/common';
 
         @Component({
           selector: 'lib-my-lib',
-          imports: [CommonModule],
+          imports: [],
           templateUrl: './my-lib.component.html',
           styleUrl: './my-lib.component.css'
         })
@@ -1940,11 +1932,10 @@ describe('lib', () => {
       expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { Component } from '@angular/core';
-        import { CommonModule } from '@angular/common';
 
         @Component({
           selector: 'lib-my-lib',
-          imports: [CommonModule],
+          imports: [],
           templateUrl: './my-lib.component.html',
           styleUrl: './my-lib.component.css'
         })
@@ -2028,6 +2019,51 @@ describe('lib', () => {
         export class MyLibModule {}
         "
       `);
+    });
+  });
+
+  describe('--skipTsConfig', () => {
+    it('should not update root tsconfig.base.json when skipTsConfig=true', async () => {
+      // ARRANGE
+      const originalTsConfig = readJson(tree, 'tsconfig.base.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        skipTsConfig: true,
+      });
+
+      // ASSERT
+      const updatedTsConfig = readJson(tree, 'tsconfig.base.json');
+      expect(updatedTsConfig.compilerOptions.paths).toEqual(
+        originalTsConfig.compilerOptions.paths
+      );
+      expect(
+        updatedTsConfig.compilerOptions.paths['@proj/my-lib']
+      ).toBeUndefined();
+    });
+
+    it('should update root tsconfig.base.json when skipTsConfig=false (default)', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        skipTsConfig: false,
+      });
+
+      // ASSERT
+      const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'my-lib/src/index.ts',
+      ]);
+    });
+
+    it('should update root tsconfig.base.json when skipTsConfig is not specified (default behavior)', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'my-lib/src/index.ts',
+      ]);
     });
   });
 });

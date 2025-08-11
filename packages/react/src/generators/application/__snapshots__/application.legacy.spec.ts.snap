@@ -1,5 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`react app generator (legacy) --style tailwind should not generate any styles files 1`] = `
+"import NxWelcome from './nx-welcome';
+
+export function App() {
+  return (
+    <div>
+      <NxWelcome title="my-app" />
+    </div>
+  );
+}
+
+export default App;
+"
+`;
+
 exports[`react app generator (legacy) should setup vite 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';

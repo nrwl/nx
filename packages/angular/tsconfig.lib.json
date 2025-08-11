@@ -1,11 +1,11 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "moduleResolution": "node16",
-    "module": "node16",
-    "outDir": "../../dist/out-tsc",
-    "declaration": true,
-    "types": ["node"]
+    "module": "commonjs",
+    "outDir": "../../dist/packages/angular",
+    "types": ["node"],
+    "esModuleInterop": true,
+    "tsBuildInfoFile": "../../dist/packages/angular/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",
@@ -15,9 +15,39 @@
     "jest.config.ts",
     "test-setup.ts",
     "index.ts",
-    "src/runtime/**/*",
-    "mf/**/*",
-    "testing/**/*"
+    "mf/**/*"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json"],
+  "references": [
+    {
+      "path": "../workspace/tsconfig.lib.json"
+    },
+    {
+      "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../web/tsconfig.lib.json"
+    },
+    {
+      "path": "../rspack/tsconfig.lib.json"
+    },
+    {
+      "path": "../module-federation/tsconfig.lib.json"
+    },
+    {
+      "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../cypress/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx/tsconfig.lib.json"
+    }
+  ]
 }

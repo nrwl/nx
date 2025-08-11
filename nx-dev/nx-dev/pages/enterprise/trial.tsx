@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
-import { TrialNxEnterprise } from '@nx/nx-dev/ui-enterprise';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
+import { TrialNxEnterprise } from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
 
 export function EnterpriseTrial(): ReactElement {

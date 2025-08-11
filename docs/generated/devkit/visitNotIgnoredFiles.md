@@ -6,11 +6,11 @@ Utility to act on all files in a tree that are not ignored by git.
 
 #### Parameters
 
-| Name      | Type                                  |
-| :-------- | :------------------------------------ |
-| `tree`    | [`Tree`](../../devkit/documents/Tree) |
-| `dirPath` | `string`                              |
-| `visitor` | (`path`: `string`) => `void`          |
+| Name      | Type                                                |
+| :-------- | :-------------------------------------------------- |
+| `tree`    | [`Tree`](/reference/core-api/devkit/documents/Tree) |
+| `dirPath` | `string`                                            |
+| `visitor` | (`path`: `string`) => `void`                        |
 
 #### Returns
 

@@ -10,3 +10,5 @@ export * from './get-env-info';
 export * from './log-utils';
 export * from './test-utils';
 export * from './process-utils';
+export * from './strip-indents';
+export * from './port-utils';

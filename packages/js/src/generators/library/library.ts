@@ -7,6 +7,7 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
@@ -51,6 +52,7 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   isUsingTypeScriptPlugin,
+  shouldConfigureTsSolutionSetup,
 } from '../../utils/typescript/ts-solution-setup';
 import {
   esbuildVersion,
@@ -90,17 +92,26 @@ export async function libraryGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
   tasks.push(
     await jsInitGenerator(tree, {
       ...schema,
       skipFormat: true,
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
+      addTsPlugin,
       // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
       formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })
   );
   const options = await normalizeOptions(tree, schema);
+
+  if (schema.simpleName !== undefined && schema.simpleName !== false) {
+    // TODO(v22): Remove simpleName as user should be using name.
+    logger.warn(
+      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
+    );
+  }
 
   createFiles(tree, options);
 
@@ -576,7 +587,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
     );
   }
 
-  if (options.bundler === 'swc' || options.bundler === 'rollup') {
+  if (options.includeBabelRc) {
+    addBabelRc(tree, options);
+  } else if (options.bundler === 'swc' || options.bundler === 'rollup') {
     addSwcConfig(
       tree,
       options.projectRoot,
@@ -584,8 +597,6 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         ? 'commonjs'
         : 'es6'
     );
-  } else if (options.includeBabelRc) {
-    addBabelRc(tree, options);
   }
 
   if (options.unitTestRunner === 'none') {

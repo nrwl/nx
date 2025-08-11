@@ -13,10 +13,10 @@ import {
   ShopifyIcon,
   StorybookIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
-import { Marquee } from '@nx/nx-dev/ui-animations';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { Marquee } from '@nx/nx-dev-ui-animations';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import Link from 'next/link';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 

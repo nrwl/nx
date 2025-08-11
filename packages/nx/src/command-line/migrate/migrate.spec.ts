@@ -30,9 +30,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      await expect(
-        migrator.migrate('mypackage', 'myversion')
-      ).rejects.toThrowError(/cannot fetch/);
+      await expect(migrator.migrate('mypackage', 'myversion')).rejects.toThrow(
+        /cannot fetch/
+      );
     });
 
     it('should return a patch to the new version', async () => {
@@ -1659,7 +1659,7 @@ describe('Migration', () => {
           packageAndVersion: '8.12.0',
           from: '@myscope/a@',
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         `Incorrect 'from' section. Use --from="package@version"`
       );
       await expect(() =>
@@ -1667,12 +1667,12 @@ describe('Migration', () => {
           packageAndVersion: '8.12.0',
           from: '@myscope/a',
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         `Incorrect 'from' section. Use --from="package@version"`
       );
       await expect(() =>
         parseMigrationsOptions({ packageAndVersion: '8.12.0', from: 'myscope' })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         `Incorrect 'from' section. Use --from="package@version"`
       );
     });
@@ -1683,22 +1683,16 @@ describe('Migration', () => {
           packageAndVersion: '8.12.0',
           to: '@myscope/a@',
         })
-      ).rejects.toThrowError(
-        `Incorrect 'to' section. Use --to="package@version"`
-      );
+      ).rejects.toThrow(`Incorrect 'to' section. Use --to="package@version"`);
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           to: '@myscope/a',
         })
-      ).rejects.toThrowError(
-        `Incorrect 'to' section. Use --to="package@version"`
-      );
+      ).rejects.toThrow(`Incorrect 'to' section. Use --to="package@version"`);
       await expect(() =>
         parseMigrationsOptions({ packageAndVersion: '8.12.0', to: 'myscope' })
-      ).rejects.toThrowError(
-        `Incorrect 'to' section. Use --to="package@version"`
-      );
+      ).rejects.toThrow(`Incorrect 'to' section. Use --to="package@version"`);
     });
 
     it('should handle backslashes in package names', async () => {

@@ -2,18 +2,28 @@ import type { Tree } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 export function transformCjsConfigFile(tree: Tree, configPath: string) {
+  const configContents = tree.read(configPath, 'utf-8');
+  const usesJsExtensions = detectJsExtensions(configContents);
+
   ['@nx', '@nrwl'].forEach((scope: '@nx' | '@nrwl') => {
     transformComposePlugins(tree, configPath, scope);
     transformWithNx(tree, configPath, scope);
     transformWithWeb(tree, configPath, scope);
     transformWithReact(tree, configPath, scope);
     transformModuleFederationConfig(tree, configPath, scope);
-    transformWithModuleFederation(tree, configPath, scope);
-    transformWithModuleFederationSSR(tree, configPath, scope);
+    transformWithModuleFederation(tree, configPath, scope, usesJsExtensions);
+    transformWithModuleFederationSSR(tree, configPath, scope, usesJsExtensions);
   });
 
   // Add useLegacyHtmlPlugin: true to withWeb() calls
   transformWithWebCalls(tree, configPath);
+}
+
+function detectJsExtensions(configContents: string): boolean {
+  // Check if any require calls use .js extensions
+  const requireWithJsExtensionRegex =
+    /require\s*\(\s*['"]@nx\/[^'"]*\.js['"]\s*\)/;
+  return requireWithJsExtensionRegex.test(configContents);
 }
 
 function transformWithWebCalls(tree: Tree, configPath: string) {
@@ -286,12 +296,15 @@ function transformModuleFederationConfig(
 function transformWithModuleFederation(
   tree: Tree,
   configPath: string,
-  scope: '@nx' | '@nrwl'
+  scope: '@nx' | '@nrwl',
+  usesJsExtensions: boolean
 ) {
   const configContents = tree.read(configPath, 'utf-8');
   const ast = tsquery.ast(configContents);
 
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederation]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/module-federation/webpack]`;
+  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederation]) > CallExpression:has(Identifier[name=require]) StringLiteral[value="${scope}/module-federation/webpack${
+    usesJsExtensions ? '.js' : ''
+  }"]`;
   const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
@@ -310,7 +323,10 @@ function transformWithModuleFederation(
     endIndex++;
   }
 
-  const newContents = `const { withModuleFederation } = require('@nx/module-federation/rspack');
+  const rspackImport = usesJsExtensions
+    ? '@nx/module-federation/rspack.js'
+    : '@nx/module-federation/rspack';
+  const newContents = `const { withModuleFederation } = require('${rspackImport}');
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
@@ -319,12 +335,15 @@ function transformWithModuleFederation(
 function transformWithModuleFederationSSR(
   tree: Tree,
   configPath: string,
-  scope: '@nx' | '@nrwl'
+  scope: '@nx' | '@nrwl',
+  usesJsExtensions: boolean
 ) {
   const configContents = tree.read(configPath, 'utf-8');
   const ast = tsquery.ast(configContents);
 
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/module-federation/webpack]`;
+  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) > CallExpression:has(Identifier[name=require]) StringLiteral[value="${scope}/module-federation/webpack${
+    usesJsExtensions ? '.js' : ''
+  }"]`;
   const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
@@ -343,7 +362,10 @@ function transformWithModuleFederationSSR(
     endIndex++;
   }
 
-  const newContents = `const { withModuleFederationForSSR } = require('@nx/module-federation/rspack');
+  const rspackImport = usesJsExtensions
+    ? '@nx/module-federation/rspack.js'
+    : '@nx/module-federation/rspack';
+  const newContents = `const { withModuleFederationForSSR } = require('${rspackImport}');
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);

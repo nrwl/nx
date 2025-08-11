@@ -1,6 +1,6 @@
-import { BlogAuthors } from '@nx/nx-dev/ui-blog';
+import { BlogAuthors } from '@nx/nx-dev-ui-blog';
 import Link from 'next/link';
-import type { WebinarDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import type { WebinarDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 
 export interface WebinarListItemProps {
   webinar: WebinarDataEntry;
@@ -22,10 +22,7 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
         )
       : webinar.authors.map((a) => a.name)
   ).join(', ');
-  const link =
-    (webinar.status === 'Past - Ungated'
-      ? webinar.youtubeUrl
-      : webinar.registrationUrl) || '';
+  const link = webinar.registrationUrl || '';
   return (
     <div
       key={webinar.slug}

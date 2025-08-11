@@ -366,12 +366,11 @@ export class App {}
 exports[`app --minimal should skip "nx-welcome.ts" file and references for standalone apps with routing 2`] = `
 "import { TestBed } from '@angular/core/testing';
 import { App } from './app';
-import { RouterModule } from '@angular/router';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App, RouterModule.forRoot([])],
+      imports: [App],
     }).compileComponents();
   });
 
@@ -488,12 +487,11 @@ exports[`app --standalone should generate a standalone app correctly with routin
 "import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';
-import { RouterModule } from '@angular/router';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App, NxWelcome, RouterModule.forRoot([])],
+      imports: [App, NxWelcome],
     }).compileComponents();
   });
 
@@ -599,9 +597,6 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "./tsconfig.editor.json",
-    },
     {
       "path": "./tsconfig.app.json",
     },
@@ -749,12 +744,11 @@ exports[`app angular compat support should generate components with the "compone
 "import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterModule } from '@angular/router';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, NxWelcomeComponent, RouterModule.forRoot([])],
+      imports: [AppComponent, NxWelcomeComponent],
     }).compileComponents();
   });
 
@@ -1163,9 +1157,6 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.editor.json",
-    },
-    {
       "path": "./tsconfig.app.json",
     },
     {
@@ -1202,12 +1193,11 @@ exports[`app template generation mode should respect the "type" configured in th
 "import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterModule } from '@angular/router';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, NxWelcomeComponent, RouterModule.forRoot([])],
+      imports: [AppComponent, NxWelcomeComponent],
     }).compileComponents();
   });
 

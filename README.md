@@ -21,7 +21,7 @@
 
 # Smart Repos · Fast Builds
 
-Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.
+An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
 
 Create a new Nx workspace with
 
@@ -35,7 +35,7 @@ npx create-nx-workspace
 npx nx init
 ```
 
-to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro#try-nx-yourself).
+to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro).
 
 ## Learn about CI with Nx Cloud
 
@@ -82,17 +82,17 @@ help you get started.
 | ![James Henry](https://avatars.githubusercontent.com/u/900523?s=160&v=4) | ![Jon Cammisuli](https://avatars2.githubusercontent.com/u/4332460?s=160) | ![Isaac Mann](https://avatars1.githubusercontent.com/u/861504?s=160) | ![Juri Strumpflohner](https://avatars1.githubusercontent.com/u/542458?s=160) |
 | [JamesHenry](https://github.com/JamesHenry)                              | [cammisuli](https://github.com/cammisuli)                                | [isaacplmann](https://github.com/isaacplmann)                        | [juristr](https://github.com/juristr)                                        |
 
-| Philip Fulcher                                                            | Caleb Ukle                                                            | Katerina Skroumpelou                                                            | Colum Ferry                                                            |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| ![Philip Fulcher](https://avatars1.githubusercontent.com/u/1536471?s=160) | ![Caleb Ukle](https://avatars.githubusercontent.com/u/23272162?s=160) | ![Katerina Skroumpelou](https://avatars0.githubusercontent.com/u/6603745?s=160) | ![Colum Ferry](https://avatars.githubusercontent.com/u/12140467?s=160) |
-| [philipjfulcher](https://github.com/philipjfulcher)                       | [barbados-clemens](https://github.com/barbados-clemens)               | [mandarini](https://github.com/mandarini)                                       | [Coly010](https://github.com/Coly010)                                  |
+| Philip Fulcher                                                            | Caleb Ukle                                                            | Colum Ferry                                                            | Emily Xiong                                                            |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| ![Philip Fulcher](https://avatars1.githubusercontent.com/u/1536471?s=160) | ![Caleb Ukle](https://avatars.githubusercontent.com/u/23272162?s=160) | ![Colum Ferry](https://avatars.githubusercontent.com/u/12140467?s=160) | ![Emily Xiong](https://avatars.githubusercontent.com/u/16211801?s=160) |
+| [philipjfulcher](https://github.com/philipjfulcher)                       | [barbados-clemens](https://github.com/barbados-clemens)               | [Coly010](https://github.com/Coly010)                                  | [xiongemi](https://github.com/xiongemi)                                |
 
-| Emily Xiong                                                            | Miroslav Jonaš                                                          | Leosvel Pérez Espinosa                                                            | Zachary DeRose                                                           |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| ![Emily Xiong](https://avatars.githubusercontent.com/u/16211801?s=160) | ![Miroslav Jonaš](https://avatars.githubusercontent.com/u/881612?s=160) | ![Leosvel Pérez Espinosa](https://avatars.githubusercontent.com/u/12051310?s=160) | ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=160) |
-| [xiongemi](https://github.com/xiongemi)                                | [meeroslav](https://github.com/meeroslav)                               | [leosvelperez](https://github.com/leosvelperez)                                   | [ZackDeRose](https://github.com/ZackDeRose)                              |
+| Miroslav Jonaš                                                          | Leosvel Pérez Espinosa                                                            | Zachary DeRose                                                           | Craigory Coppola                                                           |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| ![Miroslav Jonaš](https://avatars.githubusercontent.com/u/881612?s=160) | ![Leosvel Pérez Espinosa](https://avatars.githubusercontent.com/u/12051310?s=160) | ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=160) | ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=160) |
+| [meeroslav](https://github.com/meeroslav)                               | [leosvelperez](https://github.com/leosvelperez)                                   | [ZackDeRose](https://github.com/ZackDeRose)                              | [AgentEnder](https://github.com/AgentEnder)                                |
 
-| Craigory Coppola                                                           | Chau Tran                                                            | Nicholas Cunningham                                                          | Max Kless                                                            |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=160) | ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=160) | ![Nicholas Cunningham](https://avatars.githubusercontent.com/u/338948?s=160) | ![Max Kless](https://avatars.githubusercontent.com/u/34165455?s=160) |
-| [AgentEnder](https://github.com/AgentEnder)                                | [nartc](https://github.com/nartc)                                    | [ndcunningham](https://github.com/ndcunningham)                              | [MaxKless](https://github.com/MaxKless)                              |
+| Chau Tran                                                            | Nicholas Cunningham                                                          | Max Kless                                                            |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=160) | ![Nicholas Cunningham](https://avatars.githubusercontent.com/u/338948?s=160) | ![Max Kless](https://avatars.githubusercontent.com/u/34165455?s=160) |
+| [nartc](https://github.com/nartc)                                    | [ndcunningham](https://github.com/ndcunningham)                              | [MaxKless](https://github.com/MaxKless)                              |

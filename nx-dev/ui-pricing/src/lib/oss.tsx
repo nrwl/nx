@@ -1,4 +1,4 @@
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 
 export function Oss(): ReactElement {

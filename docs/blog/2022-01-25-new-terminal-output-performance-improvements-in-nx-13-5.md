@@ -55,7 +55,7 @@ Thanks [Jason](https://twitter.com/FrozenPandaz) for working on this feature!
 ### React Native now supports Environment Variables
 
 Whenever you set up React Native support within an Nx workspace, it should now automatically come with the [react-native-config](https://github.com/luggit/react-native-config) package installed. That allows you to have a `.env` file in the React Native app folder which can then be loaded from within your React Native application.  
-You can find all the details on the [Nx docs](/recipes/react/react-native).
+You can find all the details on the [Nx docs](/technologies/react/recipes/react-native).
 
 Thanks [Emily Xiong](https://twitter.com/xiongemily) for implementing this!
 

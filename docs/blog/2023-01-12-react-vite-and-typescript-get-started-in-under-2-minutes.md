@@ -200,7 +200,7 @@ This might look weird initially, but basically, we run the `e2e` target (see `e2
 
 By default, these tests run in headless mode, but you can pass `--watch` to run it interactively with the Cypress test runner such that the tests get re-executed whenever we change our source.
 
-> _Want Cypress Component testing? There's an Nx generator that can help set that up. Check out the docs:_ [_/nx-api/react/generators/cypress-component-configuration_](/nx-api/react/generators/cypress-component-configuration)
+> _Want Cypress Component testing? There's an Nx generator that can help set that up. Check out the docs:_ [_/nx-api/react/generators/cypress-component-configuration_](/technologies/react/api/generators/cypress-component-configuration)
 
 ## Linting
 
@@ -509,7 +509,7 @@ If you're currently on a [CRA](https://create-react-app.dev/) setup, you can eas
 {% youtube src="https://youtu.be/zvYb7XCLQzU" /%}
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 Read more on the Nx docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)

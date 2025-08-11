@@ -4,9 +4,14 @@
   "sourceRoot": "packages/rollup",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/rollup/README.md"],
+      "command": "node ./scripts/copy-readme.js rollup"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/rollup",
@@ -42,10 +47,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/rollup/README.md"],
-      "command": "node ./scripts/copy-readme.js rollup"
     }
   }
 }

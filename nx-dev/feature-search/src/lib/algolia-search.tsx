@@ -1,8 +1,9 @@
 import * as docsearchReact from '@docsearch/react';
-import {
-  InternalDocSearchHit,
-  StoredDocSearchHit,
-} from '@docsearch/react/dist/esm/types';
+// Note: InternalDocSearchHit and StoredDocSearchHit are not exported by @docsearch/react
+// import type {
+//   InternalDocSearchHit,
+//   StoredDocSearchHit,
+// } from '@docsearch/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -19,7 +20,7 @@ function Hit({
   hit,
   children,
 }: {
-  hit: InternalDocSearchHit | StoredDocSearchHit;
+  hit: any; // TODO: Import proper types when @docsearch/react exports them
   children: ReactNode;
 }): JSX.Element {
   return (

@@ -1,10 +1,21 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "declaration": true,
-    "types": []
+    "outDir": "../../dist/packages/webpack",
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/webpack/tsconfig.tsbuildinfo"
   },
-  "include": ["**/*.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  "include": ["**/*.ts", "**/*.json"],
+  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "references": [
+    {
+      "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ]
 }

@@ -7,6 +7,7 @@
     "title": "Application generator for React + rspack",
     "type": "object",
     "description": "React + Rspack application generator.",
+    "x-deprecated": "This generator will be removed in Nx 22. Please use the equivalent generator for your application type instead.",
     "examples": [
       {
         "command": "nx g app myorg/myapp",
@@ -23,7 +24,7 @@
       "name": {
         "description": "The name of the application.",
         "type": "string",
-        "pattern": "^[a-zA-Z].*$"
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
       },
       "framework": {
         "type": "string",
@@ -47,10 +48,6 @@
             {
               "value": "scss",
               "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
-            },
-            {
-              "value": "styl",
-              "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
             },
             {
               "value": "less",
@@ -90,6 +87,7 @@
   "aliases": ["app"],
   "x-type": "application",
   "description": "React application generator.",
+  "x-deprecated": "This generator will be removed in Nx 22. Please use the equivalent generator for your application type instead.",
   "implementation": "/packages/rspack/src/generators/application/application.ts",
   "hidden": false,
   "path": "/packages/rspack/src/generators/application/schema.json",

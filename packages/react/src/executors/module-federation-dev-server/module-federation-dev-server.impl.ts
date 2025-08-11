@@ -1,16 +1,17 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { ModuleFederationDevServerOptions } from './schema';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
+import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
-import { getBuildOptions, normalizeOptions, startRemotes } from './lib';
+import { normalizeOptions, startRemotes } from './lib';
+import { ModuleFederationDevServerOptions } from './schema';
 
 export default async function* moduleFederationDevServer(
   schema: ModuleFederationDevServerOptions,
@@ -32,11 +33,10 @@ export default async function* moduleFederationDevServer(
     : devServerExecutor(options, context);
 
   const p = context.projectsConfigurations.projects[context.projectName];
-  const buildOptions = getBuildOptions(options.buildTarget, context);
 
   let pathToManifestFile = join(
     context.root,
-    p.sourceRoot,
+    getProjectSourceRoot(p),
     'assets/module-federation.manifest.json'
   );
   if (options.pathToManifestFile) {

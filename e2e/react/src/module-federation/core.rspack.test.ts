@@ -2,6 +2,7 @@ import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  getAvailablePort,
   killPorts,
   killProcessAndPorts,
   newProject,
@@ -11,7 +12,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
 describe('React Rspack Module Federation', () => {
@@ -33,9 +34,10 @@ describe('React Rspack Module Federation', () => {
         const remote1 = uniq('remote1');
         const remote2 = uniq('remote2');
         const remote3 = uniq('remote3');
+        const shellPort = await getAvailablePort();
 
         runCLI(
-          `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
+          `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --devServerPort=${shellPort} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
         );
 
         checkFilesExist(

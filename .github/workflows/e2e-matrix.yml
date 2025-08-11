@@ -25,7 +25,8 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          - windows-latest
+          # - windows-latest Windows fails to build gradle wrapper which always runs when we build nx.
+          ## https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
         node_version:
           - 20
           - 22
@@ -36,9 +37,9 @@ jobs:
             node_version: 22
           # - os: macos-latest
           #   node_version: 23
-          - os: windows-latest
-            node_version: 22
-          # - os: windows-latest
+          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
+            # node_version: 22
+          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 23
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
@@ -52,7 +53,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - name: Set node
@@ -61,13 +62,17 @@ jobs:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
-      - name: Cache node_modules
-        id: cache-modules
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "path=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          lookup-only: true
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Ensure Python setuptools Installed on Macos
         if: ${{ matrix.os == 'macos-latest' }}
@@ -75,8 +80,9 @@ jobs:
         run: brew install python-setuptools
 
       - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -132,7 +138,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 70     # <- cap each job to 70 minutes
+    timeout-minutes: 200     # <- cap each job to 200 minutes
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
@@ -151,7 +157,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
@@ -178,7 +184,9 @@ jobs:
           bun-version: latest
 
       - name: Install packages
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -220,32 +228,109 @@ jobs:
       - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          # Check if applesimutils is already installed
+          # Ensure Xcode command line tools are installed and configured
+          xcode-select --print-path || sudo xcode-select --reset
+          sudo xcode-select -s /Applications/Xcode.app
+          
+          # Install or update applesimutils with error handling
           if ! brew list applesimutils &>/dev/null; then
+            echo "Installing applesimutils..."
             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
+              echo "Failed to install applesimutils, retrying with update..."
+              brew update
+              HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
+            }
           else
-            echo "applesimutils is already installed, skipping installation"
+            echo "Updating applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade applesimutils || true
           fi
+          
+          # Verify applesimutils installation
+          applesimutils --version || (echo "applesimutils installation failed" && exit 1)
+          
+          # Configure environment for M-series Mac
+          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+          echo "PLATFORM_NAME=iOS Simulator" >> $GITHUB_ENV
+          
+          # Set additional environment variables for better debugging
+          echo "DETOX_DISABLE_TELEMETRY=1" >> $GITHUB_ENV
+          echo "DETOX_LOG_LEVEL=trace" >> $GITHUB_ENV
+          
+          # Verify Xcode installation
+          xcodebuild -version
+          
         timeout-minutes: 10
+        continue-on-error: false
 
       - name: Reset iOS Simulators
         if: ${{ matrix.os == 'macos-latest' }}
+        id: reset-simulators
         run: |
-          xcrun simctl shutdown all && xcrun simctl erase all
+          echo "Resetting iOS Simulators..."
+          
+          # Kill simulator processes
+          sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+          killall "Simulator" 2>/dev/null || true
+          killall "iOS Simulator" 2>/dev/null || true
+          
+          # Wait for processes to terminate
+          sleep 3
+          
+          # Shutdown and erase all simulators (ignore failures)
+          xcrun simctl shutdown all 2>/dev/null || true
+          sleep 5
+          xcrun simctl erase all 2>/dev/null || true
+          
+          # If erase failed, try the nuclear option
+          if xcrun simctl list devices | grep -q "Booted" 2>/dev/null; then
+            echo "Standard reset failed, using nuclear option..."
+            rm -rf ~/Library/Developer/CoreSimulator/Devices/* 2>/dev/null || true
+            launchctl remove com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+            sleep 3
+          fi
+          
+          # Clean up additional directories
+          rm -rf ~/Library/Developer/CoreSimulator/Caches/* 2>/dev/null || true
+          rm -rf ~/Library/Logs/CoreSimulator/* 2>/dev/null || true
+          rm -rf ~/Library/Developer/Xcode/DerivedData/* 2>/dev/null || true
+          
+          echo "Simulator reset completed"
+        timeout-minutes: 5
+        continue-on-error: true
+
+      - name: Verify Simulator Reset
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
+        run: |
+          # Verify CoreSimulator service restarted
+          pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
+          
+          # Verify simulator runtime paths exist and are writable
+          test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
+          touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
+          rm ~/Library/Developer/CoreSimulator/Devices/test
         timeout-minutes: 5
 
+      - name: Diagnose Simulator Reset Failure
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'failure' }}
+        run: |
+          echo "Simulator reset failed. Collecting diagnostic information..."
+          xcrun simctl list
+          echo "Checking simulator logs..."
+          ls -la ~/Library/Logs/CoreSimulator/ || echo "No simulator logs found"
+
       - name: Configure git metadata (needed for lerna smoke tests)
+        if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         run: |
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
       - name: Set starting timestamp
+        if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         id: before-e2e
         shell: bash
         run: |
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
-
 
       - name: Run e2e tests with pnpm (Linux/Windows)
         id: e2e-run-pnpm
@@ -270,7 +355,7 @@ jobs:
   
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
-        if: ${{ matrix.os == 'macos-latest' }}
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
         run: |
           # Run the tests
           if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
@@ -328,16 +413,23 @@ jobs:
           sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
 
   process-result:
-    if: ${{ always() && github.repository_owner == 'nrwl' }}
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     needs: e2e
     timeout-minutes: 10
     outputs:
-      message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
-      proj-duration: ${{ steps.process-json.outputs.SLACK_PROJ_DURATION }}
-      pm-duration: ${{ steps.process-json.outputs.SLACK_PM_DURATION }}
-      codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
+      message: ${{ steps.process-json.outputs.slack_message }}
+      proj_duration: ${{ steps.process-json.outputs.slack_proj_duration }}
+      pm_duration: ${{ steps.process-json.outputs.slack_pm_duration }}
+      codeowners: ${{ steps.process-json.outputs.codeowners }}
+      has_golden_failures: ${{ steps.process-json.outputs.has_golden_failures }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
       - name: Prepare dir for output
         run: mkdir -p outputs
 
@@ -349,145 +441,16 @@ jobs:
       - name: Join and stringify matrix configs
         id: combine-json
         run: |
-          combined=$((jq -s . outputs/*/matrix.json) | jq tostring)
+          combined=$(jq -sc . outputs/*/matrix.json)
           echo "combined=$combined" >> $GITHUB_OUTPUT
 
-      - name: Make slack outputs
+      - name: Process results with TypeScript script
         id: process-json
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          script: |
-            const combined = JSON.parse(${{ steps.combine-json.outputs.combined }});
-            const failedProjects = combined.filter(c => c.status === 'failure').sort((a, b) => a.project.localeCompare(b.project));
-
-            // codeowners
-            const codeowners = new Set();
-            failedProjects.forEach(c => {
-              codeowners.add(c.codeowners);
-            });
-            core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
-
-            function trimSpace(res) {
-              return res.split('\n').map((l) => l.trim()).join('\n');
-            }
-
-            // failed message
-            let lastProject;
-            let result = `
-              \`\`\`
-              | Failed project                 | PM   | OS    | Node |
-              |--------------------------------|------|-------|------|`;
-            failedProjects.forEach(matrix => {
-              const project = matrix.project !== lastProject ? matrix.project : '...';
-              result += `\n| ${project.padEnd(30)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} | v${matrix.node_version}  |`
-              lastProject = matrix.project;
-            });
-            result += `\`\`\``;
-            core.setOutput('SLACK_MESSAGE', trimSpace(result));
-            console.log(trimSpace(result));
-
-            function humanizeDuration(num) {
-              let res = '';
-              const hours = Math.floor(num / 3600);
-              if (hours) {
-                res += `${hours}h `;
-              }
-              const mins = Math.floor((num % 3600) / 60);
-              if (mins) {
-                res += `${mins}m `;
-              }
-              const sec = num % 60;
-              if (sec) {
-                res += `${sec}s`
-              }
-              return res;
-            }
-
-            // duration message
-            const timeReport = {};
-            const pmReport = {
-              npm: 0,
-              yarn: 0,
-              pnpm: 0
-            };
-            const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native'];
-            combined.forEach((matrix) => {
-              if (matrix.os_name === 'Linux' && matrix.node_version === 20) {
-                pmReport[matrix.package_manager] += matrix.duration;
-              }
-              if (matrix.os_name === 'Linux' || macosProjects.includes(matrix.project)) {
-                if (timeReport[matrix.project]) {
-                  if (matrix.duration > timeReport[matrix.project].max) {
-                    timeReport[matrix.project].max = matrix.duration;
-                    timeReport[
-                      matrix.project
-                    ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
-                  }
-                  if (matrix.duration < timeReport[matrix.project].min) {
-                    timeReport[matrix.project].min = matrix.duration;
-                    timeReport[
-                      matrix.project
-                    ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
-                  }
-                } else {
-                  timeReport[matrix.project] = {
-                    min: matrix.duration,
-                    max: matrix.duration,
-                    minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                    maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                  };
-                }
-              }
-            });
-
-            // project time report
-            let resultPkg = `
-                \`\`\`
-                | Project                        | Time                      |
-                |--------------------------------|---------------------------|`;
-            function mapProjectTime(proj, section) {
-              let res = '';
-              res += `${humanizeDuration(timeReport[proj][section])}`;
-              res += ` (${timeReport[proj][section + 'Env']})`
-              return res;
-            }
-            function durationIcon(proj, section) {
-              if (timeReport[proj][section] < 12 * 60) {
-                return `${section} ✅`;
-              }
-              if (timeReport[proj][section] < 15 * 60) {
-                return `${section} ❗`;
-              }
-              return `${section} ❌`;
-            }
-            Object.keys(timeReport).forEach(proj => {
-              resultPkg += `\n| ${proj.padEnd(30)} |                           |`;
-              resultPkg += `\n| ${durationIcon(proj, 'min').padStart(29)} | ${mapProjectTime(proj, 'min').padEnd(25)} |`;
-              resultPkg += `\n| ${durationIcon(proj, 'max').padStart(29)} | ${mapProjectTime(proj, 'max').padEnd(25)} |`;
-            });
-            resultPkg += `\`\`\``;
-            core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
-
-            // Print project duration report inline to allow reviewing on manual runs (when no slack message will be sent)
-            console.log(trimSpace(resultPkg));
-
-            let resultPm = `
-                \`\`\`
-                | PM   | Total time  |
-                |------|-------------|`;
-            Object.keys(pmReport).forEach(pm => {
-              resultPm += `\n| ${pm.padEnd(4)} | ${humanizeDuration(pmReport[pm]).padEnd(11)} |`
-            });
-            resultPm += `\`\`\``;
-            core.setOutput('SLACK_PM_DURATION', trimSpace(resultPm));
-
-            // Print package manager duration report inline to allow reviewing on manual runs (when no slack message will be sent)
-            console.log(trimSpace(resultPm));
+        run: |
+          echo '${{ steps.combine-json.outputs.combined }}' | npx tsx .github/workflows/nightly/process-result.ts
 
   report-failure:
-    if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ always() && needs.process-result.outputs.has_golden_failures == 'true' && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: process-result
     runs-on: ubuntu-latest
     name: Report failure
@@ -497,16 +460,16 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
-          message_format: '{emoji} Workflow has {status_message} ${{ needs.process-result.outputs.message }}'
-          notification_title: '{workflow}'
+          message_format: '${{ needs.process-result.outputs.message }}'
+          notification_title: 'Golden Test Failure'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
           mention_groups: ${{ needs.process-result.outputs.codeowners }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-success:
-    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-    needs: e2e
+    if: ${{ always() && needs.process-result.outputs.has_golden_failures == 'false' && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
     runs-on: ubuntu-latest
     name: Report status
     timeout-minutes: 10
@@ -514,9 +477,9 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
         with:
-          status: ${{ needs.e2e.result }}
-          message_format: '{emoji} Workflow has {status_message}'
-          notification_title: '{workflow}'
+          status: 'success'
+          message_format: '${{ needs.process-result.outputs.message }}'
+          notification_title: '✅ Golden Tests: All Passed!'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
@@ -532,8 +495,8 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'skipped'
-          message_format: '${{ needs.process-result.outputs.pm-duration }}'
-          notification_title: 'Total duration per package manager (ubuntu only)'
+          message_format: '${{ needs.process-result.outputs.pm_duration }}'
+          notification_title: '⌛ Total duration per package manager (ubuntu only)'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -542,13 +505,13 @@ jobs:
     needs: process-result
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    name: Report duration per package manager
+    name: Report duration per project
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'skipped'
-          message_format: '${{ needs.process-result.outputs.proj-duration }}'
-          notification_title: 'E2E Project duration stats'
+          message_format: '${{ needs.process-result.outputs.proj_duration }}'
+          notification_title: '⌛ E2E Project duration stats'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

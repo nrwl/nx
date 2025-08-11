@@ -11,8 +11,14 @@ function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
 }
 
-function readFile(f: string) {
-  return readFileSync(f).toString().replace(/\s/g, '');
+function readFile(
+  f: string,
+  { preserveWhitespace }: { preserveWhitespace: boolean } = {
+    preserveWhitespace: false,
+  }
+) {
+  const fileContents = readFileSync(f).toString();
+  return preserveWhitespace ? fileContents : fileContents.replace(/\s/g, '');
 }
 
 describe('Run Commands', () => {
@@ -20,6 +26,18 @@ describe('Run Commands', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('should handle empty commands array', async () => {
+    const result = await runCommands(
+      {
+        commands: [],
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result.success).toEqual(true);
+    expect(result.terminalOutput).toEqual('');
   });
 
   it('should interpolate provided --args', async () => {
@@ -209,6 +227,21 @@ describe('Run Commands', () => {
       expect(readFile(f)).toEqual(expected);
     }
   );
+
+  it('should interpolate {args} to contain all provided args', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: `echo {args} >> ${f}`,
+        __unparsed__: [`--publish 8080:80`, `--expose 80`],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f, { preserveWhitespace: true }).trim()).toEqual(
+      `--publish 8080:80 --expose 80`
+    );
+  });
 
   it('should run commands serially', async () => {
     const f = fileSync().name;

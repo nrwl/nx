@@ -24,7 +24,7 @@ export interface JestExecutorOptions {
   silent?: boolean;
   testNamePattern?: string;
   testPathIgnorePatterns?: string[];
-  testPathPattern?: string[];
+  testPathPatterns?: string[];
   colors?: boolean;
   reporters?: string[];
   verbose?: boolean;

@@ -1,0 +1,8 @@
+---
+import { type ProjectDetailsProps, ProjectDetails as Default } from '@nx/nx-dev-ui-markdoc/src/lib/tags/project-details.component';
+type Props = ProjectDetailsProps;
+---
+
+<Default client:visible {...Astro.props} isAstro={true}>
+  <slot />
+</Default>

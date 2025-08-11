@@ -1,6 +1,7 @@
-import type {
-  ModuleFederationConfig,
-  NxModuleFederationConfigOverride,
+import {
+  normalizeProjectName,
+  type ModuleFederationConfig,
+  type NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
@@ -27,9 +28,10 @@ export async function withModuleFederation(
       },
       optimization: {
         ...(config.optimization ?? {}),
-        runtimeChunk: isDevServer
-          ? config.optimization?.runtimeChunk ?? undefined
-          : false,
+        runtimeChunk:
+          isDevServer && !options.exposes
+            ? config.optimization?.runtimeChunk ?? undefined
+            : false,
       },
       resolve: {
         ...(config.resolve ?? {}),
@@ -45,7 +47,7 @@ export async function withModuleFederation(
       plugins: [
         ...(config.plugins ?? []),
         new ModuleFederationPlugin({
-          name: options.name.replace(/-/g, '_'),
+          name: normalizeProjectName(options.name),
           filename: 'remoteEntry.mjs',
           exposes: options.exposes,
           remotes: mappedRemotes,

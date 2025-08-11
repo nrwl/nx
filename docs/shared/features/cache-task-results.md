@@ -68,12 +68,10 @@ By default, Nx caches task results locally. The biggest benefit of caching comes
 To enable remote caching, connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 Learn more about [remote caching with Nx Cloud](/ci/features/remote-cache).
-
-You can also **self-host your remote cache** with one of the official Nx packages or build your own remote caching server implementation. [Learn more here.](/recipes/running-tasks/self-hosted-caching)
 
 ## Fine-tune Caching with Inputs and Outputs
 
@@ -178,4 +176,4 @@ Caching is hard. If you run into issues, check out the following resources:
 - [Debug cache misses](/troubleshooting/troubleshoot-cache-misses)
 - [Turn off or skip the cache](/recipes/running-tasks/skipping-cache)
 - [Change the cache location](/recipes/running-tasks/change-cache-location)
-- [Clear the local or remote cache](/nx-api/nx/documents/reset)
+- [Clear the local or remote cache](/reference/core-api/nx/documents/reset)

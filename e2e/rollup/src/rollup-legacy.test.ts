@@ -11,7 +11,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('Rollup Plugin', () => {
@@ -41,13 +41,13 @@ describe('Rollup Plugin', () => {
     );
     rmDist();
     runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
-    checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
     expect(readJson(`dist/libs/${myPkg}/package.json`).exports).toEqual({
       '.': {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
-        types: './index.esm.d.ts',
+        types: './index.d.ts',
       },
       './package.json': './package.json',
     });
@@ -106,7 +106,7 @@ describe('Rollup Plugin', () => {
 
     checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
-    checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
     checkFilesExist(`dist/libs/${myPkg}/foo.esm.js`);
     checkFilesExist(`dist/libs/${myPkg}/foo.cjs.js`);
     checkFilesExist(`dist/libs/${myPkg}/bar.esm.js`);
@@ -117,19 +117,19 @@ describe('Rollup Plugin', () => {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
-        types: './index.esm.d.ts',
+        types: './index.d.ts',
       },
       './bar': {
         module: './bar.esm.js',
         import: './bar.cjs.mjs',
         default: './bar.cjs.js',
-        types: './bar.esm.d.ts',
+        types: './bar.d.ts',
       },
       './foo': {
         module: './foo.esm.js',
         import: './foo.cjs.mjs',
         default: './foo.cjs.js',
-        types: './foo.esm.d.ts',
+        types: './foo.d.ts',
       },
     });
   });

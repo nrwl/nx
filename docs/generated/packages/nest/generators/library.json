@@ -132,7 +132,8 @@
       "simpleName": {
         "description": "Don't include the directory in the name of the module of the library.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-deprecated": "Use the --name option to provide the exact name instead. This option will be removed in Nx 22."
       },
       "useProjectJson": {
         "type": "boolean",

@@ -153,6 +153,7 @@ export class ForkedProcessTaskRunner {
       !disablePseudoTerminal &&
       (this.tuiEnabled || (streamOutput && !shouldPrefix))
     ) {
+      // Use pseudo-terminal for interactive tasks that can support user input
       return this.forkProcessWithPseudoTerminal(task, {
         temporaryOutputPath,
         streamOutput,
@@ -160,6 +161,9 @@ export class ForkedProcessTaskRunner {
         env,
       });
     } else {
+      // Use non-interactive process with piped output
+      // Tradeoff: These tasks cannot support interactivity but can still provide
+      // progressive output to the TUI if it's enabled
       return this.forkProcessWithPrefixAndNotTTY(task, {
         temporaryOutputPath,
         streamOutput,

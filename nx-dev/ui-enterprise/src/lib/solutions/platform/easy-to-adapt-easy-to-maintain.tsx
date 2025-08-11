@@ -5,7 +5,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { ReactElement } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 const features = [
@@ -30,7 +30,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/intro/ci-with-nx"
+            href="/ci/recipes/set-up"
             title="Get started with your existing CI provider"
             prefetch={false}
             className="text-sm/6 font-semibold"

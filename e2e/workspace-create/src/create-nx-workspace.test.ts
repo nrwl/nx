@@ -12,7 +12,7 @@ import {
   runCommand,
   runCreateWorkspace,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readFileSync } from 'fs';
 import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
@@ -20,6 +20,15 @@ describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject());
+
+  it('should reject workspace names starting with numbers', () => {
+    expect(() => {
+      runCreateWorkspace('4invalidname', {
+        preset: 'apps',
+        packageManager,
+      });
+    }).toThrow();
+  });
 
   it('should create a workspace with a single angular app at the root without routing', () => {
     const wsName = uniq('angular');

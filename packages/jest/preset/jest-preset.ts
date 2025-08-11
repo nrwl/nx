@@ -1,12 +1,12 @@
 import type { Config } from 'jest';
 export const nxPreset: Config = {
   // This is one of the patterns that jest finds by default https://jestjs.io/docs/configuration#testmatch-arraystring
-  testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
+  testMatch: ['**/?(*.)+(spec|test).?([mc])[jt]s?(x)'],
   resolver: '@nx/jest/plugins/resolver',
-  moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
+  moduleFileExtensions: ['ts', 'js', 'mts', 'mjs', 'cts', 'cjs', 'html'],
   coverageReporters: ['html'],
   transform: {
-    '^.+\\.(ts|js|html)$': [
+    '^.+\\.(ts|js|mts|mjs|cts|cjs|html)$': [
       'ts-jest',
       { tsconfig: '<rootDir>/tsconfig.spec.json' },
     ],

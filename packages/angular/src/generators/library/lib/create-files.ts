@@ -6,6 +6,7 @@ import {
   offsetFromRoot,
 } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { parse } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import type { AngularProjectConfiguration } from '../../../utils/types';
@@ -84,7 +85,12 @@ export function createFiles(
   }
 
   if (!options.libraryOptions.routing) {
-    tree.delete(joinPathFragments(project.sourceRoot, `lib/lib.routes.ts`));
+    tree.delete(
+      joinPathFragments(
+        getProjectSourceRoot(project, tree),
+        `lib/lib.routes.ts`
+      )
+    );
   }
 
   if (

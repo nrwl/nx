@@ -6,7 +6,8 @@ export async function getViteE2EWebServerInfo(
   projectName: string,
   configFilePath: string,
   isPluginBeingAdded: boolean,
-  e2ePortOverride?: number
+  e2ePortOverride?: number,
+  e2eCIPortOverride?: number
 ) {
   const nxJson = readNxJson(tree);
   let e2ePort = e2ePortOverride ?? 4200;
@@ -35,7 +36,7 @@ export async function getViteE2EWebServerInfo(
       defaultServeTargetName: 'dev',
       defaultServeStaticTargetName: 'preview',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
-      defaultE2ECiBaseUrl: 'http://localhost:4300',
+      defaultE2ECiBaseUrl: `http://localhost:${e2eCIPortOverride ?? 4300}`,
       defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded
@@ -47,7 +48,8 @@ export async function getReactRouterE2EWebServerInfo(
   projectName: string,
   configFilePath: string,
   isPluginBeingAdded: boolean,
-  e2ePortOverride?: number
+  e2ePortOverride?: number,
+  e2eCIPortOverride?: number
 ) {
   const e2ePort = e2ePortOverride ?? parseInt(process.env.PORT) ?? 4200;
 
@@ -64,7 +66,7 @@ export async function getReactRouterE2EWebServerInfo(
       defaultServeTargetName: 'dev',
       defaultServeStaticTargetName: 'dev',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
-      defaultE2ECiBaseUrl: 'http://localhost:4200',
+      defaultE2ECiBaseUrl: `http://localhost:${e2eCIPortOverride ?? 4200}`,
       defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded

@@ -1,19 +1,19 @@
-import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
-import { MenuItem } from '@nx/nx-dev/models-menu';
+import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 import {
   Breadcrumbs,
   DocumentationHeader,
   Footer,
   PluginType,
   SidebarContainer,
-} from '@nx/nx-dev/ui-common';
-import { PluginDirectory } from '@nx/nx-dev/ui-community';
+} from '@nx/nx-dev-ui-common';
+import { PluginDirectory } from '@nx/nx-dev-ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
-import { nxPackagesApi } from '../lib/packages.api';
-import { ScrollableContent } from '@nx/ui-scrollable-content';
+import { nxNewPackagesApi } from '../lib/new-packages.api';
+import { ScrollableContent } from '@nx/nx-dev-ui-scrollable-content';
 
 declare const fetch: any;
 let qualityIndicators = require('./quality-indicators.json');
@@ -35,7 +35,9 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
   );
   const pluginList = await res.json();
 
-  const officialPluginList = (nxPackagesApi.getRootPackageIndex() ?? []).filter(
+  const officialPluginList = (
+    nxNewPackagesApi.getRootPackageIndex() ?? []
+  ).filter(
     (m) =>
       m.name !== 'add-nx-to-monorepo' &&
       m.name !== 'cra-to-nx' &&

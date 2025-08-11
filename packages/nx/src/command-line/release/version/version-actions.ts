@@ -454,3 +454,65 @@ It is also possible that the project is being processed because of a dependency 
     dependenciesToUpdate: Record<string, string>
   ): Promise<string[]>;
 }
+
+export class NOOP_VERSION_ACTIONS extends VersionActions {
+  validManifestFilenames = null;
+
+  readCurrentVersionFromRegistry(
+    tree: Tree,
+    currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata']
+  ): Promise<{
+    currentVersion: string | null;
+    logText: string;
+  } | null> {
+    return Promise.resolve(null);
+  }
+
+  readCurrentVersionFromSourceManifest(
+    tree: Tree
+  ): Promise<{ currentVersion: string; manifestPath: string } | null> {
+    return Promise.resolve(null);
+  }
+
+  readCurrentVersionOfDependency(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    dependencyProjectName: string
+  ): Promise<{
+    currentVersion: string | null;
+    dependencyCollection: string | null;
+  }> {
+    return Promise.resolve({
+      currentVersion: null,
+      dependencyCollection: null,
+    });
+  }
+
+  async calculateNewVersion(
+    currentVersion: string | null,
+    newVersionInput: string,
+    newVersionInputReason: string,
+    newVersionInputReasonData: Record<string, unknown>,
+    preid: string
+  ): Promise<{
+    newVersion: string;
+    logText: string;
+  }> {
+    return Promise.resolve({
+      newVersion: '0.0.0',
+      logText: 'Skipped default versioning as no-op.',
+    });
+  }
+
+  updateProjectDependencies(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    dependenciesToUpdate: Record<string, string>
+  ): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+
+  updateProjectVersion(tree: Tree, newVersion: string): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+}

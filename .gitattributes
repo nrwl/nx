@@ -3,7 +3,8 @@
 #
 # Linux start script should use lf
 /gradlew        text eol=lf
-
 # These are Windows script files and should use crlf
 *.bat           text eol=crlf
-
+# Exclude files from Graphite reviews
+docs/generated/* linguist-generated=true
+*.gif,*.mp4,*.webp,*.avif,*.png,*.jpeg,*.jpg,*.tiff filter=lfs diff=lfs merge=lfs -text

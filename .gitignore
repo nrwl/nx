@@ -2,7 +2,6 @@ node_modules
 /.idea
 /.fleet
 /.vscode
-/.cursor
 dist
 /build
 /coverage
@@ -35,6 +34,7 @@ CHANGELOG.md
 # Next.js
 .next
 out
+
 
 # Angular Cache
 .angular
@@ -73,7 +73,39 @@ storybook-static
 .gradle
 .kotlin
 
+.claude/settings.local.json
+
 .cursor/rules/nx-rules.mdc
+.cursor/mcp.json
 .github/instructions/nx.instructions.md
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+
+# Added by Claude Task Master
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.specstory/**
+.cursorindexingignore
+# OS specific
+# Task files
+tasks.json
+tasks/
+
+# Upstream docs local configuration (machine-specific)
+.upstreamdocs.local.json
+
+astro-docs/.netlify

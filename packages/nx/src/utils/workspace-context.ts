@@ -24,9 +24,10 @@ export function setupWorkspaceContext(workspaceRoot: string) {
 
 export async function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
-  projectRootMap: Record<string, string>
+  projectRootMap: Record<string, string>,
+  useDaemonProcess: boolean = true
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
+  if (!useDaemonProcess || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.getWorkspaceFiles(projectRootMap);
   }
@@ -54,7 +55,7 @@ export async function globWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
+  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.glob(globs, exclude);
   } else {

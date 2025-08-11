@@ -556,7 +556,8 @@ function getEntryPoint(file: string, projectRoot: string): string {
     );
     if (ngPackageContent) {
       // https://github.com/ng-packagr/ng-packagr/blob/23c718d04eea85e015b4c261310b7bd0c39e5311/src/ng-package.schema.json#L54
-      const entryFile = parseJson(ngPackageContent)?.lib?.entryFile;
+      const entryFile =
+        parseJson(ngPackageContent)?.lib?.entryFile ?? 'src/public_api.ts';
       return joinPathFragments(parent, entryFile);
     }
     parent = joinPathFragments(parent, '../');

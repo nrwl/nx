@@ -7,6 +7,9 @@
   "include": [],
   "references": [
     {
+      "path": "../utils"
+    },
+    {
       "path": "./tsconfig.spec.json"
     }
   ]

@@ -1,189 +1,21 @@
 {
-  "/ci/intro": {
-    "id": "intro",
-    "name": "Intro",
-    "description": "Learn about basic Nx Cloud knowledge.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "ci-with-nx",
-        "name": "CI with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/ci-with-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/ci-with-nx",
-        "tags": []
-      },
-      {
-        "id": "why-nx-cloud",
-        "name": "Why Nx Cloud?",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/why-nx-cloud",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/why-nx-cloud",
-        "tags": []
-      },
-      {
-        "id": "connect-to-nx-cloud",
-        "name": "Connect to Nx Cloud",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/connect-to-cloud",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/connect-to-nx-cloud",
-        "tags": []
-      },
-      {
-        "id": "tutorials",
-        "name": "Tutorials",
-        "description": "Tutorials setting up CI with Nx",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "circle",
-            "name": "Circle CI with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/tutorial/circle",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/intro/tutorials/circle",
-            "tags": []
-          },
-          {
-            "id": "github-actions",
-            "name": "GitHub Actions with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/tutorial/github-actions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/intro/tutorials/github-actions",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/ci/intro/tutorials",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/ci/intro",
-    "tags": []
-  },
-  "/ci/intro/ci-with-nx": {
-    "id": "ci-with-nx",
-    "name": "CI with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/ci-with-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/ci-with-nx",
-    "tags": []
-  },
-  "/ci/intro/why-nx-cloud": {
-    "id": "why-nx-cloud",
-    "name": "Why Nx Cloud?",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/why-nx-cloud",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/why-nx-cloud",
-    "tags": []
-  },
-  "/ci/intro/connect-to-nx-cloud": {
-    "id": "connect-to-nx-cloud",
-    "name": "Connect to Nx Cloud",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/connect-to-cloud",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/connect-to-nx-cloud",
-    "tags": []
-  },
-  "/ci/intro/tutorials": {
-    "id": "tutorials",
-    "name": "Tutorials",
-    "description": "Tutorials setting up CI with Nx",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "circle",
-        "name": "Circle CI with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/tutorial/circle",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/tutorials/circle",
-        "tags": []
-      },
-      {
-        "id": "github-actions",
-        "name": "GitHub Actions with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/tutorial/github-actions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/tutorials/github-actions",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/ci/intro/tutorials",
-    "tags": []
-  },
-  "/ci/intro/tutorials/circle": {
-    "id": "circle",
-    "name": "Circle CI with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/tutorial/circle",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/tutorials/circle",
-    "tags": []
-  },
-  "/ci/intro/tutorials/github-actions": {
-    "id": "github-actions",
-    "name": "GitHub Actions with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/tutorial/github-actions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/tutorials/github-actions",
-    "tags": []
-  },
   "/ci/features": {
     "id": "features",
     "name": "Features",
-    "description": "Features of Nx and Nx Cloud that improve CI",
+    "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
       {
-        "id": "affected",
-        "name": "Run Only Tasks Affected by a PR",
-        "description": "This allows to only run tasks on projects that got changed in a given PR.",
+        "id": "self-healing-ci",
+        "name": "AI-Powered Self-Healing CI",
+        "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
         "mediaImage": "",
-        "file": "shared/using-nx/affected",
+        "file": "shared/features/self-healing-ci",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/features/affected",
-        "tags": ["run-tasks"]
+        "path": "/ci/features/self-healing-ci",
+        "tags": []
       },
       {
         "id": "remote-cache",
@@ -205,6 +37,28 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/features/distribute-task-execution",
+        "tags": []
+      },
+      {
+        "id": "affected",
+        "name": "Run Only Tasks Affected by a PR",
+        "description": "This allows to only run tasks on projects that got changed in a given PR.",
+        "mediaImage": "",
+        "file": "shared/using-nx/affected",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/affected",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "dynamic-agents",
+        "name": "Dynamically Allocate Agents",
+        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+        "mediaImage": "",
+        "file": "nx-cloud/features/dynamic-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/dynamic-agents",
         "tags": []
       },
       {
@@ -230,20 +84,9 @@
         "tags": []
       },
       {
-        "id": "dynamic-agents",
-        "name": "Dynamically Allocate Agents",
-        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-        "mediaImage": "",
-        "file": "nx-cloud/features/dynamic-agents",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/dynamic-agents",
-        "tags": []
-      },
-      {
         "id": "explain-with-ai",
         "name": "Explain With AI",
-        "description": "",
+        "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
         "mediaImage": "",
         "file": "nx-cloud/features/explain-with-ai",
         "itemList": [],
@@ -254,7 +97,7 @@
       {
         "id": "github-integration",
         "name": "GitHub Integration",
-        "description": "",
+        "description": "Learn how to setup the GitHub integration for Nx Cloud.",
         "mediaImage": "",
         "file": "nx-cloud/features/github-integration",
         "itemList": [],
@@ -267,16 +110,16 @@
     "path": "/ci/features",
     "tags": []
   },
-  "/ci/features/affected": {
-    "id": "affected",
-    "name": "Run Only Tasks Affected by a PR",
-    "description": "This allows to only run tasks on projects that got changed in a given PR.",
+  "/ci/features/self-healing-ci": {
+    "id": "self-healing-ci",
+    "name": "AI-Powered Self-Healing CI",
+    "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
     "mediaImage": "",
-    "file": "shared/using-nx/affected",
+    "file": "shared/features/self-healing-ci",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/features/affected",
-    "tags": ["run-tasks"]
+    "path": "/ci/features/self-healing-ci",
+    "tags": []
   },
   "/ci/features/remote-cache": {
     "id": "remote-cache",
@@ -298,6 +141,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/distribute-task-execution",
+    "tags": []
+  },
+  "/ci/features/affected": {
+    "id": "affected",
+    "name": "Run Only Tasks Affected by a PR",
+    "description": "This allows to only run tasks on projects that got changed in a given PR.",
+    "mediaImage": "",
+    "file": "shared/using-nx/affected",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/affected",
+    "tags": ["run-tasks"]
+  },
+  "/ci/features/dynamic-agents": {
+    "id": "dynamic-agents",
+    "name": "Dynamically Allocate Agents",
+    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+    "mediaImage": "",
+    "file": "nx-cloud/features/dynamic-agents",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/dynamic-agents",
     "tags": []
   },
   "/ci/features/split-e2e-tasks": {
@@ -322,21 +187,10 @@
     "path": "/ci/features/flaky-tasks",
     "tags": []
   },
-  "/ci/features/dynamic-agents": {
-    "id": "dynamic-agents",
-    "name": "Dynamically Allocate Agents",
-    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-    "mediaImage": "",
-    "file": "nx-cloud/features/dynamic-agents",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/dynamic-agents",
-    "tags": []
-  },
   "/ci/features/explain-with-ai": {
     "id": "explain-with-ai",
     "name": "Explain With AI",
-    "description": "",
+    "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
     "mediaImage": "",
     "file": "nx-cloud/features/explain-with-ai",
     "itemList": [],
@@ -347,7 +201,7 @@
   "/ci/features/github-integration": {
     "id": "github-integration",
     "name": "GitHub Integration",
-    "description": "",
+    "description": "Learn how to setup the GitHub integration for Nx Cloud.",
     "mediaImage": "",
     "file": "nx-cloud/features/github-integration",
     "itemList": [],
@@ -404,6 +258,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/concepts/cache-security",
+        "tags": []
+      },
+      {
+        "id": "heartbeat",
+        "name": "Heartbeat",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/heartbeat",
         "tags": []
       },
       {
@@ -466,6 +331,17 @@
     "path": "/ci/concepts/cache-security",
     "tags": []
   },
+  "/ci/concepts/heartbeat": {
+    "id": "heartbeat",
+    "name": "Heartbeat",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/heartbeat",
+    "tags": []
+  },
   "/ci/concepts/nx-cloud-ai": {
     "id": "nx-cloud-ai",
     "name": "Nx Cloud AI",
@@ -479,15 +355,15 @@
   },
   "/ci/recipes": {
     "id": "recipes",
-    "name": "Recipes",
-    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "name": "Guides",
+    "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
       {
         "id": "set-up",
         "name": "Set Up CI",
-        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
         "mediaImage": "",
         "file": "",
         "itemList": [
@@ -560,7 +436,7 @@
         ],
         "isExternal": false,
         "path": "/ci/recipes/set-up",
-        "tags": ["distribute-task-execution"]
+        "tags": ["distribute-task-execution", "self-heeded-ci"]
       },
       {
         "id": "security",
@@ -881,6 +757,39 @@
             "isExternal": false,
             "path": "/ci/recipes/enterprise/conformance",
             "tags": []
+          },
+          {
+            "id": "polygraph",
+            "name": "Polygraph",
+            "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/polygraph",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/polygraph",
+            "tags": ["polygraph"]
+          },
+          {
+            "id": "metadata-only-workspace",
+            "name": "Metadata Only Workspaces",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/metadata-only-workspace",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/metadata-only-workspace",
+            "tags": ["polygraph"]
+          },
+          {
+            "id": "custom-workflows",
+            "name": "Custom Workflows",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/custom-workflows",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/custom-workflows",
+            "tags": ["polygraph"]
           }
         ],
         "isExternal": false,
@@ -890,7 +799,7 @@
       {
         "id": "other",
         "name": "Other",
-        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
         "mediaImage": "",
         "file": "",
         "itemList": [
@@ -940,7 +849,7 @@
   "/ci/recipes/set-up": {
     "id": "set-up",
     "name": "Set Up CI",
-    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
@@ -1013,7 +922,7 @@
     ],
     "isExternal": false,
     "path": "/ci/recipes/set-up",
-    "tags": ["distribute-task-execution"]
+    "tags": ["distribute-task-execution", "self-heeded-ci"]
   },
   "/ci/recipes/set-up/monorepo-ci-azure": {
     "id": "monorepo-ci-azure",
@@ -1554,6 +1463,39 @@
         "isExternal": false,
         "path": "/ci/recipes/enterprise/conformance",
         "tags": []
+      },
+      {
+        "id": "polygraph",
+        "name": "Polygraph",
+        "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/polygraph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/polygraph",
+        "tags": ["polygraph"]
+      },
+      {
+        "id": "metadata-only-workspace",
+        "name": "Metadata Only Workspaces",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/metadata-only-workspace",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/metadata-only-workspace",
+        "tags": ["polygraph"]
+      },
+      {
+        "id": "custom-workflows",
+        "name": "Custom Workflows",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/custom-workflows",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/custom-workflows",
+        "tags": ["polygraph"]
       }
     ],
     "isExternal": false,
@@ -1782,10 +1724,43 @@
     "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
     "tags": ["conformance"]
   },
+  "/ci/recipes/enterprise/polygraph": {
+    "id": "polygraph",
+    "name": "Polygraph",
+    "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/polygraph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/polygraph",
+    "tags": ["polygraph"]
+  },
+  "/ci/recipes/enterprise/metadata-only-workspace": {
+    "id": "metadata-only-workspace",
+    "name": "Metadata Only Workspaces",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/metadata-only-workspace",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/metadata-only-workspace",
+    "tags": ["polygraph"]
+  },
+  "/ci/recipes/enterprise/custom-workflows": {
+    "id": "custom-workflows",
+    "name": "Custom Workflows",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/custom-workflows",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/custom-workflows",
+    "tags": ["polygraph"]
+  },
   "/ci/recipes/other": {
     "id": "other",
     "name": "Other",
-    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
     "mediaImage": "",
     "file": "",
     "itemList": [
@@ -1923,6 +1898,17 @@
         "tags": []
       },
       {
+        "id": "custom-images",
+        "name": "Custom Images",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/custom-images",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/custom-images",
+        "tags": []
+      },
+      {
         "id": "env-vars",
         "name": "Environment Variables",
         "description": "",
@@ -1931,6 +1917,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/reference/env-vars",
+        "tags": []
+      },
+      {
+        "id": "credits-pricing",
+        "name": "Credit Pricing",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/nx-cloud-credits-pricing",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/credits-pricing",
         "tags": []
       },
       {
@@ -2004,6 +2001,17 @@
     "path": "/ci/reference/custom-steps",
     "tags": []
   },
+  "/ci/reference/custom-images": {
+    "id": "custom-images",
+    "name": "Custom Images",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/custom-images",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/custom-images",
+    "tags": []
+  },
   "/ci/reference/env-vars": {
     "id": "env-vars",
     "name": "Environment Variables",
@@ -2013,6 +2021,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/env-vars",
+    "tags": []
+  },
+  "/ci/reference/credits-pricing": {
+    "id": "credits-pricing",
+    "name": "Credit Pricing",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/nx-cloud-credits-pricing",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/credits-pricing",
     "tags": []
   },
   "/ci/reference/release-notes": {

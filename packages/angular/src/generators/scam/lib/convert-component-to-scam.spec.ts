@@ -48,6 +48,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'example',
         standalone: false,
+        imports: [],
         templateUrl: './example.html',
         styleUrl: './example.css'
       })
@@ -161,6 +162,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'example',
         standalone: false,
+        imports: [],
         templateUrl: './example.random.html',
         styleUrl: './example.random.css'
       })

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { BlogAuthors } from './authors';
 import Image from 'next/image';
 

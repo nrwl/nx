@@ -20,7 +20,7 @@ import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-op
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { isBuildableLibrary } from './utils';
+import { getNonBuildableLibs } from './utils';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -28,8 +28,10 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 const extensionAlias = {
-  '.js': ['.ts', '.js'],
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
   '.mjs': ['.mts', '.mjs'],
+  '.cjs': ['.cts', '.cjs'],
+  '.jsx': ['.tsx', '.jsx'],
 };
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
@@ -96,9 +98,30 @@ function applyNxIndependentConfig(
 
   config.output = {
     ...config.output,
-    libraryTarget:
-      (config as Configuration).output?.libraryTarget ??
-      (options.target === 'node' ? 'commonjs' : undefined),
+    libraryTarget: (() => {
+      const existingOutputConfig = config.output as Configuration['output'];
+      const existingLibraryTarget = existingOutputConfig?.libraryTarget;
+      const existingLibraryType =
+        typeof existingOutputConfig?.library === 'object' &&
+        'type' in existingOutputConfig?.library
+          ? existingOutputConfig?.library?.type
+          : undefined;
+
+      // If user is using modern library.type, don't set the deprecated libraryTarget
+      if (existingLibraryType !== undefined) {
+        return undefined;
+      }
+
+      // If user has set libraryTarget explicitly, use it
+      if (existingLibraryTarget !== undefined) {
+        return existingLibraryTarget;
+      }
+
+      // Set defaults based on target when user hasn't configured anything
+      if (options.target === 'node') return 'commonjs';
+      if (options.target === 'async-node') return 'commonjs-module';
+      return undefined;
+    })(),
     path:
       config.output?.path ??
       (options.outputPath
@@ -355,32 +378,12 @@ function applyNxDependentConfig(
     const graph = options.projectGraph;
     const projectName = options.projectName;
 
-    const deps = graph?.dependencies?.[projectName] ?? [];
-
     // Collect non-buildable TS project references so that they are bundled
     // in the final output. This is needed for projects that are not buildable
-    // but are referenced by buildable projects. This is needed for the new TS
-    // solution setup.
+    // but are referenced by buildable projects.
+
     const nonBuildableWorkspaceLibs = isUsingTsSolution
-      ? deps
-          .filter((dep) => {
-            const node = graph.nodes?.[dep.target];
-            if (!node || node.type !== 'lib') return false;
-
-            const hasBuildTarget = 'build' in (node.data?.targets ?? {});
-
-            if (hasBuildTarget) {
-              return false;
-            }
-
-            // If there is no build target we check the package exports to see if they reference
-            // source files
-            return !isBuildableLibrary(node);
-          })
-          .map(
-            (dep) => graph.nodes?.[dep.target]?.data?.metadata?.js?.packageName
-          )
-          .filter((name): name is string => !!name)
+      ? getNonBuildableLibs(graph, projectName)
       : [];
 
     externals.push(
