@@ -1,6 +1,7 @@
 import {
   detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
   ExecutorContext,
   readJsonFile,
 } from '@nx/devkit';
@@ -33,6 +34,19 @@ export default async function runExecutor(
   context: ExecutorContext
 ) {
   const pm = detectPackageManager();
+
+  let isNpmInstalled = false;
+  try {
+    // If npm is installed, we should get a version string, otherwise an error will be thrown.
+    isNpmInstalled =
+      getPackageManagerVersion('npm', process.cwd(), true) !== '';
+  } catch (e) {
+    // Allow missing npm only when using bun (https://github.com/nrwl/nx/pull/32252#discussion_r2262481795)
+    if (pm !== 'bun') {
+      throw e;
+    }
+  }
+
   /**
    * We need to check both the env var and the option because the executor may have been triggered
    * indirectly via dependsOn, in which case the env var will be set, but the option will not.
@@ -178,7 +192,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
 
       if (versions.includes(currentVersion)) {
         try {
-          if (!isDryRun) {
+          if (!isDryRun && isNpmInstalled) {
             execSync(npmDistTagAddCommandSegments.join(' '), {
               env: processEnv(true),
               cwd: context.root,
@@ -188,11 +202,15 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             console.log(
               `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
             );
-          } else {
+          } else if (isDryRun) {
             console.log(
               `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
                 'orange'
               )('[dry-run]')} was set.\n`
+            );
+          } else {
+            console.log(
+              `Since no npm installation can be detected, we skip the 'npm dist-tag add' command.\n`
             );
           }
           return {
