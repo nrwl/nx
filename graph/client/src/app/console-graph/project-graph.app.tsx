@@ -37,8 +37,6 @@ export function ProjectGraphApp({
   }, [graphClient]);
 
   useEffect(() => {
-    console.log('graph client', graphClient);
-    console.log('projectGraph', projectGraph);
     if (!graphClient || !projectGraph) return;
 
     send({
