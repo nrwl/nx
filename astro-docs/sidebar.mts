@@ -37,7 +37,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         items: [
           ...getPluginItems('angular'),
           // TODO: angular rspack and rsbuild are special cases
-          // {
+          //
           //   label: 'Angular Rspack',
           //   link: '/technologies/angular/angular-rspack/',
           //   items: getPluginItems('angular-rspack', 'angular'),
