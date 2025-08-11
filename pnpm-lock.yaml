@@ -46,8 +46,8 @@ importers:
         specifier: ^0.1.52
         version: 0.1.73
       '@nx/graph':
-        specifier: 0.5.8
-        version: 0.5.8(@floating-ui/dom@1.7.2)(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(@tailwindcss/forms@0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(@tailwindcss/typography@0.5.13(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(react-copy-to-clipboard@5.1.0(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)
+        specifier: 0.5.9
+        version: 0.5.9(@floating-ui/dom@1.7.2)(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(@tailwindcss/forms@0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(@tailwindcss/typography@0.5.13(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(react-copy-to-clipboard@5.1.0(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)
       '@react-spring/three':
         specifier: ^9.7.3
         version: 9.7.5(@react-three/fiber@8.18.0(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1)
@@ -8533,8 +8533,8 @@ packages:
   '@nx/gradle@21.4.0-beta.6':
     resolution: {integrity: sha512-SH+MbLaOndgZlnyu9clRjbvB/IY7VlsiQ3jI0ox7yZsshvsyNJ6dwKGCANSdpuyzUl4Q/nBr0DI+50T0euZACQ==}
 
-  '@nx/graph@0.5.8':
-    resolution: {integrity: sha512-IGHVJ6w1Oa6z1+8zq0LlFtAfWDICKqfVvpg+9X5Qelq1YKaghXvgyqQB6FF+rVBAVgTeC6JEjsIlue1L9mfdSg==}
+  '@nx/graph@0.5.9':
+    resolution: {integrity: sha512-kACMFUN3ejsJ2DSVdkYODsJtCNAOX5v9UTIfvBCcqCY7O1cr468f9JYrKEwxmtTVtce+bBLr/+T4D3mmXSKKfQ==}
     peerDependencies:
       '@floating-ui/dom': 1.6.13
       '@floating-ui/react': 0.27.2
@@ -31563,7 +31563,7 @@ snapshots:
       - '@swc/core'
       - debug
 
-  '@nx/graph@0.5.8(@floating-ui/dom@1.7.2)(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(@tailwindcss/forms@0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(@tailwindcss/typography@0.5.13(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(react-copy-to-clipboard@5.1.0(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)':
+  '@nx/graph@0.5.9(@floating-ui/dom@1.7.2)(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(@tailwindcss/forms@0.5.10(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(@tailwindcss/typography@0.5.13(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(react-copy-to-clipboard@5.1.0(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)':
     dependencies:
       '@floating-ui/dom': 1.7.2
       '@nx/devkit': 21.4.0-beta.6(nx@21.4.0-beta.6(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
