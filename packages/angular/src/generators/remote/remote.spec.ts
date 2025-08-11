@@ -542,11 +542,10 @@ describe('MF Remote App Generator', () => {
       expect(tree.read('test/src/app/remote-entry/entry.component.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { Component } from '@angular/core';
-        import { CommonModule } from '@angular/common';
         import { NxWelcomeComponent } from './nx-welcome.component';
 
         @Component({
-          imports: [CommonModule, NxWelcomeComponent],
+          imports: [NxWelcomeComponent],
           selector: 'app-test-entry',
           template: \`<app-nx-welcome></app-nx-welcome>\`
         })
