@@ -67,7 +67,7 @@
       "build": {
         "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/README.md__tpl__ packages/angular-rspack-compiler/README.md",
         "outputs": [
-          "{projectRoot}/README.md}"
+          "{projectRoot}/README.md"
         ]
       },
       "test": {
