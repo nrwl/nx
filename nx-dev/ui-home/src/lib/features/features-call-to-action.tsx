@@ -19,21 +19,21 @@ export function FeaturesCallToAction(): ReactElement {
         to Green—the critical window from commit to merge-ready PR—relies on
         having intelligent tooling and seamless automation.
       </p>
-      <div className="mt-12 grid grid-cols-2 justify-stretch rounded-lg bg-slate-800 ring-4 ring-slate-950/50 sm:grid-cols-4 sm:divide-x sm:divide-solid sm:divide-slate-950">
+      <div className="mt-12 grid grid-cols-2 justify-stretch divide-slate-300 rounded-lg bg-slate-100 ring-4 ring-slate-300/50 sm:grid-cols-4 sm:divide-x sm:divide-solid dark:divide-slate-950 dark:bg-slate-800 dark:ring-slate-950/50">
         <FeaturedStat
           stat="50%"
           description="reduction in Time to Green"
-          className="border-b border-r border-slate-950 sm:border-0"
+          className="border-b border-r border-slate-300 sm:border-0 dark:border-slate-950"
         />
         <FeaturedStat
           stat="70%"
           description="faster CI"
-          className="border-b border-slate-950 sm:border-0"
+          className="border-b border-slate-300 sm:border-0 dark:border-slate-950"
         />
         <FeaturedStat
           stat="90%"
           description="fewer flaky test failures"
-          className="border-r border-slate-950"
+          className="border-r border-slate-300 dark:border-slate-950"
         />
         <FeaturedStat stat="40%" description="fewer CI failures" className="" />
       </div>
