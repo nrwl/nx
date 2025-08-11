@@ -263,11 +263,10 @@ export function getPackageManagerCommand(
  */
 export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
-  cwd = process.cwd(),
-  forceExecPackageManager = false
+  cwd = process.cwd()
 ): string {
   let version: string;
-  if (existsSync(join(cwd, 'package.json')) && !forceExecPackageManager) {
+  if (existsSync(join(cwd, 'package.json'))) {
     const packageManagerEntry = readJsonFile<PackageJson>(
       join(cwd, 'package.json')
     )?.packageManager;
@@ -276,7 +275,7 @@ export function getPackageManagerVersion(
       packageManagerEntry
     );
   }
-  if (!version || forceExecPackageManager) {
+  if (!version) {
     try {
       version = execSync(`${packageManager} --version`, {
         cwd,

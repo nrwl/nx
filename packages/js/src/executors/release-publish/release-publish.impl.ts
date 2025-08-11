@@ -39,11 +39,20 @@ export default async function runExecutor(
   try {
     // If npm is installed, we should get a version string, otherwise an error will be thrown.
     isNpmInstalled =
-      getPackageManagerVersion('npm', process.cwd(), true) !== '';
+      execSync('npm --version', {
+        cwd: process.cwd(),
+        encoding: 'utf-8',
+        windowsHide: true,
+      }).trim() !== '';
   } catch (e) {
     // Allow missing npm only when using bun (https://github.com/nrwl/nx/pull/32252#discussion_r2262481795)
     if (pm !== 'bun') {
-      throw e;
+      console.error(
+        `npm was not found in the current environment. This is only supported when using \`bun\` as a package manager, but your detected package manager is "${pm}"`
+      );
+      return {
+        success: false,
+      };
     }
   }
 
@@ -185,40 +194,37 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         };
       }
 
-      // If only one version of a package exists in the registry, versions will be a string instead of an array.
-      const versions = Array.isArray(resultJson.versions)
-        ? resultJson.versions
-        : [resultJson.versions];
+      if (isNpmInstalled) {
+        // If only one version of a package exists in the registry, versions will be a string instead of an array.
+        const versions = Array.isArray(resultJson.versions)
+          ? resultJson.versions
+          : [resultJson.versions];
 
-      if (versions.includes(currentVersion)) {
-        try {
-          if (!isDryRun && isNpmInstalled) {
-            execSync(npmDistTagAddCommandSegments.join(' '), {
-              env: processEnv(true),
-              cwd: context.root,
-              stdio: 'ignore',
-              windowsHide: false,
-            });
-            console.log(
-              `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
-            );
-          } else if (isDryRun) {
-            console.log(
-              `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
-                'orange'
-              )('[dry-run]')} was set.\n`
-            );
-          } else {
-            console.log(
-              `Since no npm installation can be detected, we skip the 'npm dist-tag add' command.\n`
-            );
-          }
-          return {
-            success: true,
-          };
-        } catch (err) {
+        if (versions.includes(currentVersion)) {
           try {
-            const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+            if (!isDryRun) {
+              execSync(npmDistTagAddCommandSegments.join(' '), {
+                env: processEnv(true),
+                cwd: context.root,
+                stdio: 'ignore',
+                windowsHide: false,
+              });
+              console.log(
+                `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
+              );
+            } else {
+              console.log(
+                `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
+                  'orange'
+                )('[dry-run]')} was set.\n`
+              );
+            }
+            return {
+              success: true,
+            };
+          } catch (err) {
+            try {
+              const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
             // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
             if (
@@ -247,22 +253,23 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
                 console.error(stdoutData.error.message);
               }
 
-              if (context.isVerbose) {
-                console.error('npm dist-tag add stdout:');
-                console.error(JSON.stringify(stdoutData, null, 2));
+                if (context.isVerbose) {
+                  console.error('npm dist-tag add stdout:');
+                  console.error(JSON.stringify(stdoutData, null, 2));
+                }
+                return {
+                  success: false,
+                };
               }
+            } catch (err) {
+              console.error(
+                'Something unexpected went wrong when processing the npm dist-tag add output\n',
+                err
+              );
               return {
                 success: false,
               };
             }
-          } catch (err) {
-            console.error(
-              'Something unexpected went wrong when processing the npm dist-tag add output\n',
-              err
-            );
-            return {
-              success: false,
-            };
           }
         }
       }
