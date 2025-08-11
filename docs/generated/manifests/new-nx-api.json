@@ -2593,6 +2593,16 @@
     "executors": {},
     "generators": {},
     "migrations": {
+      "/technologies/module-federation/api/migrations/21.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/21.4.0-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-package-updates",
+        "version": "21.4.0-beta.8",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/technologies/module-federation/api/migrations/21.4.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/module-federation/api/migrations/21.3.0-package-updates": {
         "description": "",
         "file": "generated/packages/module-federation/migrations/21.3.0-package-updates.json",
@@ -3978,6 +3988,16 @@
       }
     },
     "migrations": {
+      "/technologies/react/api/migrations/21.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/21.4.0-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-package-updates",
+        "version": "21.4.0-beta.8",
+        "originalFilePath": "/packages/react",
+        "path": "/technologies/react/api/migrations/21.4.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/react/api/migrations/update-21-0-0-update-babel-loose": {
         "description": "Replaces `classProperties.loose` option with `loose`.",
         "file": "generated/packages/react/migrations/update-21-0-0-update-babel-loose.json",
@@ -4791,6 +4811,16 @@
       }
     },
     "migrations": {
+      "/technologies/build-tools/rspack/api/migrations/21.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.4.0-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-package-updates",
+        "version": "21.4.0-beta.8",
+        "originalFilePath": "/packages/rspack",
+        "path": "/technologies/build-tools/rspack/api/migrations/21.4.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/build-tools/rspack/api/migrations/21.3.0-package-updates": {
         "description": "",
         "file": "generated/packages/rspack/migrations/21.3.0-package-updates.json",
