@@ -271,6 +271,8 @@ export function PluginLoader(options: any = {}): Loader {
           join(import.meta.dirname, 'plugin.loader.ts'),
           join(import.meta.dirname, 'utils', 'plugin-schema-parser.ts'),
           join(import.meta.dirname, 'utils', 'get-schema-example-content.ts'),
+          join(import.meta.dirname, 'utils', 'plugin-mappings.ts'),
+          join(import.meta.dirname, '..', '..', 'sidebar.mts'),
         ];
         watchAndCall(watcher, pathsToWatch, generate);
       }

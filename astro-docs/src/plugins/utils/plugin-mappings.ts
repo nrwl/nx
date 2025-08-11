@@ -2,6 +2,7 @@ import type { StarlightUserConfig } from '@astrojs/starlight/types';
 import { workspaceRoot } from '@nx/devkit';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
+import frontMatter from 'front-matter';
 
 /**
  * Map of plugins names to their technology grouping
@@ -176,17 +177,50 @@ function hasValidConfig(
     return true;
   }
 
-  // migrations are also generator configurations
-  if (
-    !content.generators ||
-    typeof content.generators !== 'object' ||
-    Object.keys(content.generators).length === 0
-  ) {
-    // have file, but no generators configured
-    return false;
+  // migrations can be generators or packageJsonUpdates
+  const hasGenerators =
+    content.generators &&
+    typeof content.generators === 'object' &&
+    Object.keys(content.generators).length > 0;
+
+  const hasPackageJsonUpdates =
+    content.packageJsonUpdates &&
+    typeof content.packageJsonUpdates === 'object' &&
+    Object.keys(content.packageJsonUpdates).length > 0;
+
+  return hasGenerators || hasPackageJsonUpdates;
+}
+
+/**
+ * Extract label from frontmatter with fallback priority:
+ * 1. sidebar.label
+ * 2. title
+ * 3. filename (fallback)
+ */
+function extractLabelFromFile(filePath: string, fileName: string): string {
+  try {
+    const fileContent = readFileSync(filePath, 'utf-8');
+    const parsed = frontMatter<{
+      title?: string;
+      sidebar?: { label?: string };
+    }>(fileContent);
+
+    // Priority 1: sidebar.label
+    if (parsed.attributes?.sidebar?.label) {
+      return parsed.attributes.sidebar.label;
+    }
+
+    // Priority 2: title
+    if (parsed.attributes?.title) {
+      return parsed.attributes.title;
+    }
+  } catch (error) {
+    // If parsing fails, fall back to filename
+    console.warn(`Failed to parse frontmatter for ${filePath}:`, error);
   }
 
-  return true;
+  // Priority 3: filename (fallback)
+  return fileName;
 }
 
 function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
@@ -245,9 +279,12 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
             ? `technologies/${baseUrl}/${relativePath}/${fileSlug}`
             : `technologies/${baseUrl}/${fileSlug}`;
 
+          // Extract label from frontmatter with fallback priority
+          const label = extractLabelFromFile(fullPath, fileName);
+
           items.push({
-            label: fileName,
-            slug: fullSlug,
+            label: label,
+            slug: fullSlug.toLowerCase(),
           });
         }
       }
