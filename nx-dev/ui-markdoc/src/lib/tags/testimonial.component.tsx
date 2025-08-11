@@ -32,7 +32,7 @@ export function Testimonial({
   image,
 }: TestimonialProps) {
   return (
-    <figure className="not-prose">
+    <figure className="not-content not-prose">
       <blockquote className="relative pt-6">
         <svg
           className="absolute start-0 top-0 size-24 -translate-x-8 -translate-y-4 transform text-slate-200 dark:text-slate-800"

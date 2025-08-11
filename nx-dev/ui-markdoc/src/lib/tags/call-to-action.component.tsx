@@ -75,7 +75,7 @@ export function CallToAction({
         iconClasses.width,
         colorClasses.container,
         colorClasses.hoverText,
-        'not-prose group relative mx-auto my-12 flex w-full items-center gap-3 overflow-hidden rounded-lg shadow-md transition'
+        'not-content not-prose group relative mx-auto my-12 flex w-full items-center gap-3 overflow-hidden rounded-lg shadow-md transition'
       )}
     >
       <div
@@ -99,7 +99,7 @@ export function CallToAction({
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="block text-sm font-medium opacity-80"
+              className="block text-sm font-medium text-white no-underline opacity-80"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
               {description || ''}

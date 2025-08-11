@@ -3,6 +3,16 @@ import { type ProjectDetailsProps, ProjectDetails as Default } from '@nx/nx-dev-
 type Props = ProjectDetailsProps;
 ---
 
-<Default client:visible {...Astro.props} isAstro={true}>
-  <slot />
-</Default>
+<div class="pdv">
+  <Default client:visible {...Astro.props} isAstro={true}>
+    <slot />
+  </Default>
+</div>
+
+
+<style>
+ .pdv :global(ul) {
+    list-style: none;
+    padding: 0;
+ }
+</style>
