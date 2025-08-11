@@ -124,7 +124,7 @@ export function YouTube(props: YouTubeProps): JSX.Element {
               {
                 'rounded-lg shadow-lg': !props.disableRoundedCorners,
               },
-              'border-2 border-slate-200 hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700'
+              'aspect-video border-2 border-slate-200 hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700'
             )}
           />
         </a>
@@ -135,7 +135,7 @@ export function YouTube(props: YouTubeProps): JSX.Element {
           width={props.width || '100%'}
           allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           loading="lazy"
-          className={cx({
+          className={cx('aspect-video', {
             'rounded-lg shadow-lg': !props.disableRoundedCorners,
           })}
         />
