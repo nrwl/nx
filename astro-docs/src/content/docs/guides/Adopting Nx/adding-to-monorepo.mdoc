@@ -22,7 +22,7 @@ an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and
 add an `nx.json` for configuring caching and task pipelines.
 
-{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" /%}
 
 ## Installing Nx
 
@@ -48,7 +48,8 @@ when possible. Let's go through an example where the `@nx/next/plugin` and `@nx/
 workspace with the
 following `package.json`.
 
-```diff {% fileName="package.json" %}
+```diff
+// package.json
 {
   "name": "my-workspace",
   ...
@@ -82,7 +83,8 @@ You may have noticed that `@nx/next` provides `dev` and `start` tasks in additio
 were created by the `@nx/next/plugin` plugin from your existing Next.js configuration. You can see the configuration for
 the Nx Plugins in `nx.json`:
 
-```json {% fileName="nx.json" %}
+```json
+// nx.json
 {
   "plugins": [
     {
@@ -113,7 +115,7 @@ details in a browser window.
 nx show project my-workspace --web
 ```
 
-{% project-details title="Project Details View" %}
+{% project_details title="Project Details View" %}
 
 ```json
 {
@@ -245,7 +247,7 @@ nx show project my-workspace --web
 }
 ```
 
-{% /project-details %}
+{% /project_details %}
 
 The project detail view lists all available tasks, the configuration values for those tasks and where those
 configuration values are being set.
@@ -261,7 +263,8 @@ The `nx exec` command allows you to keep using `npm test` or `npm run test` (or 
 you're accustomed to. But still get the benefits of making those operations cacheable. Configuring the `test` script
 from the example above to run with Nx would look something like this:
 
-```json {% fileName="package.json" %}
+```json
+// package.json
 {
   "name": "my-workspace",
   ...
@@ -310,7 +313,7 @@ pnpm run -r test
 
 This allows for incrementally adopting Nx in your existing workspace.
 
-## Fast CI ⚡ {% highlightColor="green" %}
+## Fast CI ⚡
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -319,8 +322,7 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Connect to Nx Cloud {% highlightColor="green" %}
-
+### Connect to Nx Cloud 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
 Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
@@ -351,7 +353,7 @@ git pull
 
 You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow {% highlightColor="green" %}
+### Create a CI Workflow 
 
 Use the following command to generate a CI workflow file.
 
@@ -363,7 +365,8 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+```yml {% meta="{11-15,22-23}" %}
+// .github/workflows/ci.yml" 
 name: CI
 # ...
 jobs:
@@ -390,7 +393,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request {% highlightColor="green" %}
+### Open a Pull Request
 
 Commit the changes and open a new PR on GitHub.
 
@@ -418,18 +421,14 @@ For more information about how Nx can improve your CI pipeline, check out one of
 
 ## Learn More
 
-{% cards %}
+{% cardgrid %}
 
-{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="
-/features/cache-task-results" /%}
+{% linkcard title="Cache Task Results" description="Learn more about how caching works" href="/features/cache-task-results" /%}
 
-{% card title="Task Pipeline Configuration" description="Learn more about how to setup task dependencies" type="
-documentation" url="/concepts/task-pipeline-configuration" /%}
+{% linkcard title="Task Pipeline Configuration" description="Learn more about how to setup task dependencies" href="/concepts/task-pipeline-configuration" /%}
 
-{% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation"
-url="/reference/nxignore" /%}
+{% linkcard title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" href="/reference/nxignore" /%}
 
-{% card title="Migrating from Turborepo to Nx" description="Read about Migrating from Turborepo to Nx" url="
-/recipes/adopting-nx/from-turborepo" /%}
+{% linkcard title="Migrating from Turborepo to Nx" description="Read about Migrating from Turborepo to Nx" href="/recipes/adopting-nx/from-turborepo" /%}
 
-{% /cards %}
+{% /cardgrid %}

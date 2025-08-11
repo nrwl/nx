@@ -3,12 +3,11 @@ title: Adding Nx to your Existing Project
 description: Learn how to integrate Nx into an existing non-monorepo project to leverage caching capabilities, speed up CI, and improve your development workflow.
 ---
 
-# Adding Nx to your Existing Project
-
 Nx can be added to any type of project, not just monorepos. A large benefit of Nx is its caching feature for package
 scripts. Each project usually has a set of scripts in the `package.json`:
 
-```json {% fileName="package.json" %}
+```json
+// package.json
 {
   ...
   "scripts": {
@@ -51,7 +50,8 @@ when possible. Let's go through an example where the `@nx/next/plugin` and `@nx/
 workspace with the
 following `package.json`.
 
-```diff {% fileName="package.json" %}
+```diff
+// package.json
 {
   "name": "my-workspace",
   ...
@@ -85,7 +85,8 @@ You may have noticed that `@nx/next` provides `dev` and `start` tasks in additio
 were created by the `@nx/next/plugin` plugin from your existing Next.js configuration. You can see the configuration for
 the Nx Plugins in `nx.json`:
 
-```json {% fileName="nx.json" %}
+```json 
+// nx.json
 {
   "plugins": [
     {
@@ -116,7 +117,7 @@ details in a browser window.
 nx show project my-workspace --web
 ```
 
-{% project-details title="Project Details View" %}
+{% project_details title="Project Details View" %}
 
 ```json
 {
@@ -248,7 +249,7 @@ nx show project my-workspace --web
 }
 ```
 
-{% /project-details %}
+{% /project_details %}
 
 The project detail view lists all available tasks, the configuration values for those tasks and where those
 configuration values are being set.
@@ -264,7 +265,8 @@ The `nx exec` command allows you to keep using `npm test` or `npm run test` (or 
 you're accustomed to. But still get the benefits of making those operations cacheable. Configuring the `test` script
 from the example above to run with Nx would look something like this:
 
-```json {% fileName="package.json" %}
+```json
+// package.json
 {
   "name": "my-workspace",
   ...
@@ -293,7 +295,7 @@ Now if you run `npm run test` or `nx test` twice, the results will be retrieved 
 this example are as cautious as possible, so you can significantly improve the value of the cache
 by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each task.
 
-## Fast CI ⚡ {% highlightColor="green" %}
+## Fast CI ⚡ 
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -302,7 +304,7 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Connect to Nx Cloud {% highlightColor="green" %}
+### Connect to Nx Cloud
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
@@ -334,7 +336,7 @@ git pull
 
 You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow {% highlightColor="green" %}
+### Create a CI Workflow 
 
 Use the following command to generate a CI workflow file.
 
@@ -346,7 +348,8 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+```yml {% meta="{10-14,21-22}" %}
+// .github/workflows/ci.yml
 name: CI
 # ...
 jobs:
@@ -373,7 +376,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request {% highlightColor="green" %}
+### Open a Pull Request
 
 Commit the changes and open a new PR on GitHub.
 
@@ -401,15 +404,12 @@ For more information about how Nx can improve your CI pipeline, check out one of
 
 ## Learn More
 
-{% cards %}
+{% cardgrid %}
 
-{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom
-inputs" type="documentation" url="/recipes/running-tasks/configure-inputs" /%}
+{% linkcard title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" href="/recipes/running-tasks/configure-inputs" /%}
 
-{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="
-/features/cache-task-results" /%}
+{% linkcard title="Cache Task Results" description="Learn more about how caching works" href="/features/cache-task-results" /%}
 
-{% card title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing
-monorepo" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
+{% linkcard title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing monorepo" href="/recipes/adopting-nx/adding-to-monorepo" /%}
 
-{% /cards %}
+{% /cardgrid %}
