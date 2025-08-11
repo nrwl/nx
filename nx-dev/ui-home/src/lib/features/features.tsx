@@ -3,6 +3,7 @@ import { ReactElement } from 'react';
 import { FeaturesWhileCoding } from './features-while-coding';
 import { FeaturesWhileRunningCI } from './features-while-running-ci';
 import { FeaturesWhileScalingYourOrganization } from './features-while-scaling-your-organization';
+import { FeaturesCallToAction } from './features-call-to-action';
 
 export function Features(): ReactElement {
   return (
@@ -29,6 +30,9 @@ export function Features(): ReactElement {
       </div>
       <div className="mt-12 lg:mt-12">
         <FeaturesWhileScalingYourOrganization />
+      </div>
+      <div className="mt-24 lg:mt-24">
+        <FeaturesCallToAction />
       </div>
     </section>
   );
