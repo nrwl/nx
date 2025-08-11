@@ -5,6 +5,9 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
+    ...(process.env.NODE_ENV !== 'production' && {
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+    }),
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -16,6 +19,7 @@ module.exports = {
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: true,
+      sourceMaps: true,
     })
   ],
 };
@@ -28,6 +32,13 @@ module.exports = composePlugins(
     target: 'node',
   }),
   (config) => {
+    config.output = {
+      ...config.output,
+      ...(process.env.NODE_ENV !== 'production' && {
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+      }),
+    };
+    config.devtool = 'source-map';
     // Update the webpack config as needed here.
     // e.g. `config.plugins.push(new MyPlugin())`
     return config;
