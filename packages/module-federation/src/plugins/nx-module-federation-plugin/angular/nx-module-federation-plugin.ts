@@ -23,6 +23,11 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     // This is required to ensure Module Federation will build the project correctly
     compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk = false;
+    if (compiler.options.optimization.splitChunks) {
+      compiler.options.optimization.splitChunks.cacheGroups ??= {};
+      compiler.options.optimization.splitChunks.cacheGroups.default = false;
+      compiler.options.optimization.splitChunks.cacheGroups.common = false
+    }
     compiler.options.output.publicPath = !compiler.options.output.publicPath
       ? 'auto'
       : compiler.options.output.publicPath;
