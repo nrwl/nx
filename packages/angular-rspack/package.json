@@ -105,7 +105,7 @@
     "projectType": "library",
     "release": {
       "version": {
-        "preserveLocalDependencyProtocols": true,
+        "preserveLocalDependencyProtocols": false,
         "manifestRootsToUpdate": [
           "packages/{projectName}"
         ]
