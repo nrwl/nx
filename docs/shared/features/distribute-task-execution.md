@@ -42,7 +42,7 @@ npx nx g ci-workflow
 
 The key line in your CI config is the `start-ci-run` command:
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[13] %}
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[14] %}
 name: CI
 ...
 
