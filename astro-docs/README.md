@@ -47,7 +47,7 @@ astro-docs/
 ├── public/              # Static assets (fonts, images, robots.txt)
 ├── astro.config.mjs     # Astro configuration
 ├── markdoc.config.mjs   # Markdoc tags configuration
-├── sidebar.mjs          # Sidebar structure definition
+├── sidebar.mts          # Sidebar structure definition
 └── package.json
 ```
 
