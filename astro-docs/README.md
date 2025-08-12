@@ -10,7 +10,7 @@ This documentation site leverages Astro's static site generation capabilities wi
 
 ### Core Technologies
 
-- [**Astro**](<(https://docs.astro.build)>) - Static site generator with island architecture
+- [**Astro**](https://docs.astro.build) - Static site generator with island architecture
 - [**Starlight**](https://starlight.astro.build) - Documentation theme with built-in navigation, search, and i18n
 - **React** - For implementing UI components
 - **Netlify** - Deployment and hosting
