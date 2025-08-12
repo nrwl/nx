@@ -90,23 +90,18 @@ export default defineMarkdocConfig({
       attributes: {
         cols: {
           type: 'Number',
-          required: true,
         },
         smCols: {
           type: 'Number',
-          required: true,
         },
         mdCols: {
           type: 'Number',
-          required: true,
         },
         lgCols: {
           type: 'Number',
-          required: true,
         },
         moreLink: {
           type: 'String',
-          required: false,
         },
       },
     },

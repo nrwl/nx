@@ -16,11 +16,9 @@ How much benefit you gain from this is different for each repository, but there 
 
 If we look at these two trivial examples, you can see that the repository with more projects gains more value from the affected command.
 
-\{% cards smCols="2" mdCols="2" lgCols="2" %}
+{% cards smCols=2 mdCols=2 lgCols=2 %}
 
-\{% graph title="One Project" height="200px" %}
-
-```json
+{% graph title="One Project" height="200px" %}
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -43,13 +41,10 @@ If we look at these two trivial examples, you can see that the repository with m
   "groupByFolder": false,
   "exclude": []
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
-\{% graph title="Four Projects" height="200px" %}
-
-```json
+{% graph title="Four Projects" height="200px" %}
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -94,11 +89,9 @@ If we look at these two trivial examples, you can see that the repository with m
   "groupByFolder": false,
   "exclude": []
 }
-```
+{% /graph %}
 
-\{% /graph %}
-
-\{% /cards %}
+{% /cards %}
 
 In the one project example, every PR will affect the entire repository. In the four project example, modifying one project only affects 25% of the repository. For the one project repository `nx affected -t build` is identical to `nx run-many -t build`, whereas for the four project repository, `nx affected -t build` cuts out the 75% of wasted work.
 
@@ -108,11 +101,9 @@ With this principle in mind, you can add more applications to the repository to 
 
 Consider the following example repo structures.
 
-\{% cards mdCols="3" lgCols="3" %}
+{% cards mdCols=3 lgCols=3 %}
 
-\{% graph title="Stacked" height="200px" %}
-
-```json
+{% graph title="Stacked" height="200px" %}
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -149,13 +140,9 @@ Consider the following example repo structures.
   "groupByFolder": false,
   "exclude": []
 }
-```
+{% /graph %}
 
-\{% /graph %}
-
-\{% graph title="Grouped" height="200px" %}
-
-```json
+{% graph title="Grouped" height="200px" %}
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -192,13 +179,10 @@ Consider the following example repo structures.
   "groupByFolder": false,
   "exclude": []
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
-\{% graph title="Flat" height="200px" %}
-
-```json
+{% graph title="Flat" height="200px" %}
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -235,11 +219,9 @@ Consider the following example repo structures.
   "groupByFolder": false,
   "exclude": []
 }
-```
+{% /graph %}
 
-\{% /graph %}
-
-\{% /cards %}
+{% /cards %}
 
 If we assume that each project has an independent 50% chance of being modified on a given PR, we can calculate the expected average number of affected projects. Intuitively, the flat structure should have less affected projects than the stacked structure and the grouped structure should fall somewhere in between. That is, in fact, the case.
 
@@ -253,7 +235,7 @@ If we don't use the `nx affected` command in CI, no matter how our repo is struc
 
 Note that the 50% chance of any project being modified is an arbitrary number. If we had picked a lower chance of being modified all the expected values would decrease as well. Every repository is different, but this illustrates that a flatter structure will help speed up your CI pipeline.
 
-{% aside title="The Math Behind the Expected Number of Affected Projects" type="note" %}
+{% callout title="The Math Behind the Expected Number of Affected Projects" type="deepdive" %}
 
 **Definitions:**
 
@@ -292,7 +274,7 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 **Expected Number of Affected Projects:**  
 ℙa(1) + ℙa(2) + ℙa(3) = 0.5 + 0.5 + 0.5 = 1.5
 
-{% /aside %}
+{% /callout %}
 
 ## Reduce Wasted Time with Remote Caching
 
@@ -306,11 +288,8 @@ The first time CI runs for a particular PR, affected is doing most of the work t
 
 Take a look at the example below. The projects are setup in the suboptimal stacked arrangement from before. On the first CI run, `project3` was modified, so every project is affected. Then the developer realizes that `project2` should be changed as well and pushes a new commit. For the second CI run, every project is still affected when compared against the `main` branch, but `project3` hasn't changed between the first CI run and the second, so the cache from the first CI run can be used instead of re-running that task. `project2` tasks need to be re-run since it was modified and `project1` tasks need to be re-run since it depends on a project that was modified.
 
-\{% cards smCols="2" mdCols="2" lgCols="2" %}
-
-\{% graph title="First CI Run" height="200px" %}
-
-```json
+{% cards smCols=2 mdCols=2 lgCols=2 %}
+{% graph title="First CI Run" height="200px" %}
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -347,13 +326,9 @@ Take a look at the example below. The projects are setup in the suboptimal stack
   "groupByFolder": false,
   "exclude": []
 }
-```
+{% /graph %}
 
-\{% /graph %}
-
-\{% graph title="Second CI Run (project2 Changed)" height="200px" %}
-
-```json
+{% graph title="Second CI Run (project2 Changed)" height="200px" %}
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -390,11 +365,9 @@ Take a look at the example below. The projects are setup in the suboptimal stack
   "groupByFolder": false,
   "exclude": []
 }
-```
+{% /graph %}
 
-\{% /graph %}
-
-\{% /cards %}
+{% /cards %}
 
 ### Caching Provides More Value When There are More Projects and a Flatter Structure
 
