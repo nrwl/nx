@@ -233,18 +233,21 @@ const VALID_AUTHORS_FOR_LATEST = [
     console.log(
       'Resetting angular-rspack package.json versions to previous versions'
     );
+    const angularRspackPackageJson = JSON.parse(
+      readFileSync(
+        join(workspaceRoot, 'packages/angular-rspack/package.json'),
+        'utf-8'
+      )
+    );
+    angularRspackPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
+    angularRspackPackageJson.dependencies['@nx/angular-rspack-compiler'] =
+      'workspace:*';
+    angularRspackPackageJson.version = angularRspackPrevVersion;
     writeFileSync(
       join(workspaceRoot, 'packages/angular-rspack/package.json'),
-      JSON.stringify({
-        ...JSON.parse(
-          readFileSync(
-            join(workspaceRoot, 'packages/angular-rspack/package.json'),
-            'utf-8'
-          )
-        ),
-        version: angularRspackPrevVersion,
-      })
+      JSON.stringify(angularRspackPackageJson)
     );
+
     writeFileSync(
       join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
       JSON.stringify({
@@ -260,6 +263,7 @@ const VALID_AUTHORS_FOR_LATEST = [
         version: angularRspackCompilerPrevVersion,
       })
     );
+
     execSync(
       `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
       {
