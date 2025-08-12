@@ -741,8 +741,8 @@
           "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
         },
         "push":{
-            "type":"boolean",
-            "description": "Whether or not to automatically push the changes made by this command. This defaults to false"
+          "type":"boolean",
+          "description": "Whether or not to automatically push the changes made by this command. This defaults to false"
         },
         "pushArgs": {
           "type": ["string", "array"],
