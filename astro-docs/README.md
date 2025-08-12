@@ -96,8 +96,8 @@ The site includes custom Markdoc tags for rich content.
 
 #### Layout & Organization
 
-- `{% callout %}` - Highlighted information boxes
-- `{% cards %}`, `{% card %}` - Card layouts
+- `{% aside %}` - Highlighted information boxes
+- `{% cardgrid %}`, `{% card|linkcard %}` - Card layouts
 
 #### Interactive Components
 
