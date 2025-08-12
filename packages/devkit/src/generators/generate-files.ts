@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'fs';
+import { readdirSync, readFileSync, statSync, realpathSync } from 'fs';
 import * as path from 'path';
 import { isBinaryPath } from '../utils/binary-extensions';
 
@@ -21,6 +21,14 @@ export interface GenerateFilesOptions {
    * Specify what should be done when a file is generated but already exists on the system
    */
   overwriteStrategy?: OverwriteStrategy;
+}
+
+function normalizeSourcePath(srcFolder: string): string {
+  try {
+    return realpathSync(srcFolder);
+  } catch (error) {
+    return srcFolder;
+  }
 }
 
 /**
@@ -60,16 +68,23 @@ export function generateFiles(
 
   const ejs: typeof import('ejs') = require('ejs');
 
-  const files = allFilesInDir(srcFolder);
+  // Normalize source folder to handle DOS 8.3 paths on Windows
+  const normalizedSrcFolder = normalizeSourcePath(srcFolder);
+
+  const files = allFilesInDir(normalizedSrcFolder);
   if (files.length === 0) {
     throw new Error(
-      `generateFiles: No files found in "${srcFolder}". Are you sure you specified the correct path?`
+      `generateFiles: No files found in "${srcFolder}"${
+        normalizedSrcFolder !== srcFolder
+          ? ` (normalized to "${normalizedSrcFolder}")`
+          : ''
+      }. Are you sure you specified the correct path?`
     );
   } else {
     files.forEach((filePath) => {
       let newContent: Buffer | string;
       const computedPath = computePath(
-        srcFolder,
+        normalizedSrcFolder,
         target,
         filePath,
         substitutions
