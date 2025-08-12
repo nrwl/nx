@@ -22,40 +22,34 @@ import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { detectModuleFormat } from './lib/detect-module-format';
+
+const TERMINAL_RESET = '\x1b[0m';
 
 interface ActiveTask {
   id: string;
   killed: boolean;
-  promise: Promise<void>;
+  promise: Promise<{ success: boolean }>;
   childProcess: null | ChildProcess;
   start: () => Promise<void>;
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
 
 function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
-  let timeoutId: NodeJS.Timeout;
+  let timeoutId: NodeJS.Timeout | null = null;
   let pendingPromise: Promise<T> | null = null;
 
   return () => {
-    if (!pendingPromise) {
-      pendingPromise = new Promise<T>((resolve, reject) => {
-        timeoutId = setTimeout(() => {
-          fn()
-            .then((result) => {
-              pendingPromise = null;
-              resolve(result);
-            })
-            .catch((error) => {
-              pendingPromise = null;
-              reject(error);
-            })
-            .finally(() => {
-              clearTimeout(timeoutId);
-            });
-        }, wait);
-      });
+    if (timeoutId) {
+      return pendingPromise;
     }
+
+    pendingPromise = new Promise<T>((resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        fn().then(resolve, reject);
+        timeoutId = null;
+        pendingPromise = null;
+      }, wait);
+    });
 
     return pendingPromise;
   };
@@ -111,17 +105,6 @@ export async function* nodeExecutor(
     buildTargetExecutor
   );
 
-  // Detect module format for the project
-  const moduleFormat = detectModuleFormat({
-    projectRoot: project.data.root,
-    workspaceRoot: context.root,
-    tsConfig:
-      buildOptions.tsConfig ||
-      join(context.root, project.data.root, 'tsconfig.json'),
-    main: buildOptions.main || fileToRun,
-    buildOptions,
-  });
-
   let additionalExitHandler: null | (() => void) = null;
   let currentTask: ActiveTask = null;
   const tasks: ActiveTask[] = [];
@@ -146,17 +129,30 @@ export async function* nodeExecutor(
     );
 
     const addToQueue = async (
-      childProcess: null | ChildProcess,
-      buildResult: Promise<{ success: boolean }>
+      createBuildProcess: (() => ChildProcess) | ActiveTask['promise']
     ) => {
       const task: ActiveTask = {
         id: randomUUID(),
         killed: false,
-        childProcess,
+        childProcess: null,
         promise: null,
         start: async () => {
+          if (typeof createBuildProcess === 'function') {
+            // Create and execute the build process.
+            task.promise = new Promise(async (resolve) => {
+              task.childProcess = createBuildProcess();
+              task.childProcess.once('exit', (code) => {
+                if (code === 0) resolve({ success: true });
+                // If process is killed due to current task being killed, then resolve with success.
+                else resolve({ success: !!currentTask?.killed });
+              });
+            });
+          } else {
+            task.promise = createBuildProcess;
+          }
+
           // Wait for build to finish.
-          const result = await buildResult;
+          const result = await task.promise;
 
           if (result && !result.success) {
             // If in watch-mode, don't throw or else the process exits.
@@ -175,18 +171,13 @@ export async function* nodeExecutor(
           if (task.killed) return;
 
           // Run the program
-          task.promise = new Promise<void>((resolve, reject) => {
-            const loaderFile =
-              moduleFormat === 'esm'
-                ? 'node-with-esm-loader'
-                : 'node-with-require-overrides';
-
+          task.promise = new Promise((resolve, reject) => {
             task.childProcess = fork(
-              joinPathFragments(__dirname, loaderFile),
+              joinPathFragments(__dirname, 'node-with-require-overrides'),
               options.args ?? [],
               {
                 execArgv: getExecArgv(options),
-                stdio: [0, 1, 'pipe', 'ipc'],
+                stdio: [0, 'pipe', 'pipe', 'ipc'],
                 env: {
                   ...process.env,
                   NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
@@ -195,6 +186,16 @@ export async function* nodeExecutor(
               }
             );
 
+            // Handle stdout with careful buffering
+            const handleStdOut = (data) => {
+              if (options.watch && task.killed) return;
+
+              // Just pipe the data directly
+              process.stdout.write(data);
+            };
+            task.childProcess.stdout.on('data', handleStdOut);
+
+            // Handle stderr similarly
             const handleStdErr = (data) => {
               // Don't log out error if task is killed and new one has started.
               // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
@@ -204,8 +205,10 @@ export async function* nodeExecutor(
               }
             };
             task.childProcess.stderr.on('data', handleStdErr);
+
             task.childProcess.once('exit', (code) => {
-              task.childProcess.off('data', handleStdErr);
+              task.childProcess.stdout.removeListener('data', handleStdOut);
+              task.childProcess.stderr.removeListener('data', handleStdErr);
               if (options.watch && !task.killed) {
                 logger.info(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
@@ -215,10 +218,10 @@ export async function* nodeExecutor(
                 if (code !== 0) {
                   error(new Error(`Process exited with code ${code}`));
                 } else {
-                  resolve(done());
+                  done();
                 }
               }
-              resolve();
+              resolve({ success: true });
             });
 
             next({ success: true, options: buildOptions });
@@ -230,6 +233,13 @@ export async function* nodeExecutor(
           // NOTE: `childProcess` may not have been set yet if the task did not have a chance to start.
           // e.g. multiple file change events in a short time (like git checkout).
           if (task.childProcess) {
+            // Pause streams before killing
+            if (task.childProcess.stdout) task.childProcess.stdout.pause();
+            if (task.childProcess.stderr) task.childProcess.stderr.pause();
+
+            // Reset terminal state
+            process.stdout.write(TERMINAL_RESET);
+
             await killTree(task.childProcess.pid, signal);
           }
           try {
@@ -237,6 +247,12 @@ export async function* nodeExecutor(
           } catch {
             // Doesn't matter if task fails, we just need to wait until it finishes.
           }
+
+          // Small delay to ensure terminal processing is complete
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          // Reset terminal state again
+          process.stdout.write(TERMINAL_RESET);
         },
       };
 
@@ -244,12 +260,8 @@ export async function* nodeExecutor(
     };
 
     const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
-      if (typeof additionalExitHandler === 'function') {
-        additionalExitHandler();
-      }
-      if (typeof currentTask?.stop === 'function') {
-        await currentTask.stop(signal);
-      }
+      additionalExitHandler?.();
+      await currentTask?.stop(signal);
       for (const task of tasks) {
         await task.stop(signal);
       }
@@ -276,9 +288,8 @@ export async function* nodeExecutor(
       // If a all dependencies need to be rebuild on changes, then register with watcher
       // and run through CLI, otherwise only the current project will rebuild.
       const runBuild = async () => {
-        let childProcess: ChildProcess = null;
-        const whenReady = new Promise<{ success: boolean }>(async (resolve) => {
-          childProcess = fork(
+        await addToQueue(() =>
+          fork(
             require.resolve('nx'),
             [
               'run',
@@ -290,16 +301,11 @@ export async function* nodeExecutor(
               cwd: context.root,
               stdio: 'inherit',
             }
-          );
-          childProcess.once('exit', (code) => {
-            if (code === 0) resolve({ success: true });
-            // If process is killed due to current task being killed, then resolve with success.
-            else resolve({ success: !!currentTask?.killed });
-          });
-        });
-        await addToQueue(childProcess, whenReady);
+          )
+        );
         await debouncedProcessQueue();
       };
+
       if (isDaemonEnabled()) {
         additionalExitHandler = await daemonClient.registerFileWatcher(
           {
@@ -340,7 +346,7 @@ export async function* nodeExecutor(
       );
       while (true) {
         const event = await output.next();
-        await addToQueue(null, Promise.resolve(event.value));
+        await addToQueue(Promise.resolve(event.value));
         await debouncedProcessQueue();
         if (event.done || !options.watch) {
           break;
@@ -417,7 +423,7 @@ function getFileToRun(
   // If using run-commands or another custom executor, then user should set
   // outputFileName, but we can try the default value that we use.
   if (!buildOptions?.outputPath && !buildOptions?.outputFileName) {
-    // If we are using crystal for infering the target, we can use the output path from the target.
+    // If we are using crystal for inferring the target, we can use the output path from the target.
     // Since the output path has a token for the project name, we need to interpolate it.
     // {workspaceRoot}/dist/{projectRoot} -> dist/my-app
     const outputPath = project.data.targets[buildOptions.target]?.outputs?.[0];
