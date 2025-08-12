@@ -40,7 +40,7 @@ function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
   let pendingPromise: Promise<T> | null = null;
 
   return () => {
-    if (timeoutId) {
+    if (timeoutId && pendingPromise) {
       return pendingPromise;
     }
     if (!pendingPromise) {
