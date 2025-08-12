@@ -30,7 +30,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       {
         label: 'TypeScript',
         collapsed: true,
-        items: getPluginItems('js', 'typescript'),
+        items: getPluginItems('js'),
       },
       {
         label: 'Angular',

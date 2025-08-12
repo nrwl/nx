@@ -114,10 +114,13 @@ export function getPluginItems(
   }
   const items: SidebarItem[] = [];
 
+  // JS plugin is refed as typescript, so for now we remap it, but might be others we need to do this for
+  // down the road
+  const remappedPluginName = plugin === 'js' ? 'typescript' : plugin;
   // NOTE: some docs are at the top level of a category, so the route needs to reflect that
   const baseUrl = technologyCategory
-    ? `/technologies/${technologyCategory}/${plugin}`
-    : `/technologies/${plugin}`;
+    ? `/technologies/${technologyCategory}/${remappedPluginName}`
+    : `/technologies/${remappedPluginName}`;
 
   if (hasValidConfig(pluginPath, 'generators')) {
     items.push({
@@ -166,15 +169,11 @@ function hasValidConfig(
   const content = JSON.parse(readFileSync(configPath, 'utf-8'));
 
   if (type === 'executors') {
-    if (
-      !content.executors ||
-      typeof content.executors !== 'object' ||
-      Object.keys(content.executors).length === 0
-    ) {
-      // have file, but no generators configured
-      return false;
-    }
-    return true;
+    return (
+      content.executors &&
+      typeof content.executors === 'object' &&
+      Object.keys(content.executors).length > 0
+    );
   }
 
   // migrations can be generators or packageJsonUpdates
@@ -231,7 +230,11 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
   }
 
   try {
+    // eg. "/technologies/build-tools/esbuild/introduction.mdoc" -> "build-tools/esbuild/introdumentation.mdoc"
     const baseUrl = pluginContentDir.split(`/technologies/`).pop();
+
+    // Get all plugin names to check against subdirectories
+    const allPluginNames = Object.keys(pluginToTechnology);
 
     // Recursive function to process directories and build nested structure
     function processDirectory(
@@ -252,6 +255,11 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
         const fullPath = join(dirPath, file.name);
 
         if (file.isDirectory()) {
+          // Skip this directory if it's the name of another plugin
+          if (allPluginNames.includes(file.name)) {
+            continue;
+          }
+
           // Process subdirectory recursively
           const newRelativePath = relativePath
             ? `${relativePath}/${file.name}`
