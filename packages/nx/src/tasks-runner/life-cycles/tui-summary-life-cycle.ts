@@ -169,14 +169,16 @@ export function getTuiTerminalSummaryLifeCycle({
       )}`;
 
       const taskOverridesLines = [];
-      if (Object.keys(overrides).length > 0) {
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
           `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
-        Object.entries(overrides)
-          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
-          .filter(([flag]) => flag !== 'nxReleaseVersionData')
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -208,14 +210,16 @@ export function getTuiTerminalSummaryLifeCycle({
       }
 
       const taskOverridesLines: string[] = [];
-      if (Object.keys(overrides).length > 0) {
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
           `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
-        Object.entries(overrides)
-          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
-          .filter(([flag]) => flag !== 'nxReleaseVersionData')
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -314,14 +318,16 @@ export function getTuiTerminalSummaryLifeCycle({
         tasks
       )}`;
       const taskOverridesRows = [];
-      if (Object.keys(overrides).length > 0) {
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
-        Object.entries(overrides)
-          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
-          .filter(([flag]) => flag !== 'nxReleaseVersionData')
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -350,14 +356,16 @@ export function getTuiTerminalSummaryLifeCycle({
         cancelled ? 'Cancelled while running' : 'Ran'
       } ${formatTargetsAndProjects(projectNames, targets, tasks)}`;
       const taskOverridesRows: string[] = [];
-      if (Object.keys(overrides).length > 0) {
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
-        Object.entries(overrides)
-          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
-          .filter(([flag]) => flag !== 'nxReleaseVersionData')
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )

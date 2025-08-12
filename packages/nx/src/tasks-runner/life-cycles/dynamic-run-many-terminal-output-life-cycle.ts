@@ -272,14 +272,16 @@ export async function createRunManyDynamicOutputRenderer({
         tasks
       )}`;
       const taskOverridesRows = [];
-      if (Object.keys(overrides).length > 0) {
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${EXTENDED_LEFT_PAD}${output.dim.cyan('With additional flags:')}`
         );
-        Object.entries(overrides)
-          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
-          .filter(([flag]) => flag !== 'nxReleaseVersionData')
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -339,14 +341,15 @@ export async function createRunManyDynamicOutputRenderer({
         tasks
       )}`;
       const taskOverridesRows = [];
-      if (Object.keys(overrides).length > 0) {
+      const filteredOverrides = Object.entries(overrides).filter(
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
-        Object.entries(overrides)
-          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
-          .filter(([flag]) => flag !== 'nxReleaseVersionData')
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -375,14 +378,16 @@ export async function createRunManyDynamicOutputRenderer({
         tasks
       )}`;
       const taskOverridesRows = [];
-      if (Object.keys(overrides).length > 0) {
+      const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        ([flag]) => flag !== 'nxReleaseVersionData'
+      );
+      if (filteredOverrides.length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
-        Object.entries(overrides)
-          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
-          .filter(([flag]) => flag !== 'nxReleaseVersionData')
+        filteredOverrides
           .map(([flag, value]) =>
             output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
