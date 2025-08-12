@@ -1,0 +1,149 @@
+{
+  "name": "@nx/angular-rspack",
+  "version": "0.0.1",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Rspack Plugin and Loaders for building Angular.",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/angular-rspack"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "Rspack"
+  ],
+  "scripts": {},
+  "type": "commonjs",
+  "main": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "typings": "./dist/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib/index.d.ts",
+      "default": "./dist/lib/index.js"
+    },
+    "./loaders/angular-partial-transform-loader": {
+      "types": "./dist/lib/plugins/loaders/angular-partial-transform.loader.d.ts",
+      "default": "./dist/lib/plugins/loaders/angular-partial-transform.loader.js"
+    },
+    "./loaders/angular-loader": {
+      "types": "./dist/lib/plugins/loaders/angular-transform.loader.d.ts",
+      "default": "./dist/lib/plugins/loaders/angular-transform.loader.js"
+    },
+    "./loaders/platform-server-exports-loader": {
+      "types": "./dist/lib/plugins/loaders/platform-server-exports.loader.d.ts",
+      "default": "./dist/lib/plugins/loaders/platform-server-exports.loader.js"
+    }
+  },
+  "dependencies": {
+    "@ampproject/remapping": "2.3.0",
+    "@babel/core": "7.26.10",
+    "@discoveryjs/json-ext": "0.6.3",
+    "@nx/angular-rspack-compiler": "workspace:*",
+    "@nx/devkit": "workspace:*",
+    "ansi-colors": "4.1.3",
+    "autoprefixer": "10.4.21",
+    "deepmerge": "^4.3.1",
+    "css-loader": "^7.1.2",
+    "jsonc-parser": "^3.3.1",
+    "less-loader": "^12.2.0",
+    "license-webpack-plugin": "^4.0.2",
+    "loader-utils": "3.3.1",
+    "open": "10.1.0",
+    "ora": "5.4.1",
+    "parse5-html-rewriting-stream": "7.0.0",
+    "piscina": "5.0.0",
+    "postcss": "8.5.3",
+    "postcss-loader": "8.1.1",
+    "resolve-url-loader": "^5.0.0",
+    "sass": "1.89.2",
+    "sass-embedded": "^1.79.3",
+    "sass-loader": "^16.0.2",
+    "source-map-loader": "^5.0.0",
+    "tslib": "^2.3.0",
+    "webpack-merge": "^6.0.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "jsonc-eslint-parser": "^2.4.0"
+  },
+  "peerDependencies": {
+    "@angular/build": ">=19.0.0 <21.0.0",
+    "@angular/localize": ">=19.0.0 <21.0.0",
+    "@angular/platform-server": ">=19.0.0 <21.0.0",
+    "zone.js": ">=0.14.0 <0.16.0",
+    "@angular/ssr": ">=19.0.0 <21.0.0",
+    "@rspack/core": ">=1.3.5 <2.0.0",
+    "tailwindcss": "^2.0.0 || ^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    },
+    "@angular/localize": {
+      "optional": true
+    },
+    "@angular/platform-server": {
+      "optional": true
+    },
+    "zone.js": {
+      "optional": true
+    }
+  },
+  "nx": {
+    "name": "angular-rspack",
+    "sourceRoot": "packages/angular-rspack/src",
+    "projectType": "library",
+    "release": {
+      "version": {
+        "preserveLocalDependencyProtocols": true,
+        "manifestRootsToUpdate": [
+          "packages/{projectName}"
+        ]
+      }
+    },
+    "targets": {
+      "build": {
+        "command": "node ./scripts/copy-readme.js angular-rspack packages/angular-rspack/README.md__tpl__ packages/angular-rspack/README.md",
+        "outputs": [
+          "{projectRoot}/README.md"
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          "build",
+          "^build-native",
+          "angular-rspack-compiler:build"
+        ],
+        "inputs": [
+          "default",
+          "^production",
+          "{projectRoot}/vitest.config.mts"
+        ],
+        "options": {
+          "args": [
+            "--passWithNoTests"
+          ]
+        }
+      },
+      "nx-release-publish": {
+        "executor": "@nx/js:release-publish",
+        "options": {
+          "packageRoot": "packages/angular-rspack"
+        },
+        "dependsOn": [
+          "^nx-release-publish"
+        ]
+      }
+    }
+  }
+}

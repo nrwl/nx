@@ -3,6 +3,7 @@ node_modules
 /.fleet
 /.vscode
 dist
+out-tsc
 /build
 /coverage
 ./test
@@ -109,3 +110,11 @@ tasks/
 .upstreamdocs.local.json
 
 astro-docs/.netlify
+
+# Angular Rspack Specific Options
+packages/angular-rspack/coverage
+packages/angular-rspack-compiler/coverage
+
+# Angular Rspack Packages use a template to generate the correct README
+packages/angular-rspack/README.md
+packages/angular-rspack-compiler/README.md

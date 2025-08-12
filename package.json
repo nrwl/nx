@@ -43,8 +43,11 @@
     "@angular/compiler": "~20.1.0",
     "@angular/compiler-cli": "~20.1.0",
     "@angular/core": "~20.1.0",
+    "@angular/localize": "~20.1.0",
     "@angular/platform-browser": "~20.1.0",
+    "@angular/platform-server": "~20.1.0",
     "@angular/router": "~20.1.0",
+    "@angular/ssr": "~20.1.0",
     "@babel/core": "^7.23.2",
     "@babel/helper-create-regexp-features-plugin": "^7.22.9",
     "@babel/plugin-transform-runtime": "^7.23.2",
@@ -328,7 +331,8 @@
     "xstate": "4.34.0",
     "yaml": "^2.6.0",
     "yargs": "17.6.2",
-    "yargs-parser": "21.1.1"
+    "yargs-parser": "21.1.1",
+    "zone.js": "~0.15.1"
   },
   "author": "Victor Savkin",
   "license": "MIT",
