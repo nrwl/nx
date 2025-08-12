@@ -60,6 +60,13 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
           'webpack:watch-deps',
           'webpack-watch-deps',
         ],
+        serveStaticTargetName: [
+          'serve-static',
+          'webpack:serve-static',
+          'serve-static:webpack',
+          'webpack-serve-static',
+          'serve-static-webpack',
+        ],
       },
       schema.updatePackageScripts
     );
