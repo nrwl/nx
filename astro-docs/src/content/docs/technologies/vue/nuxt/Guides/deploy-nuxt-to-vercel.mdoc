@@ -87,7 +87,7 @@ export default defineNuxtConfig({
 npx nx build my-app --prod
 ```
 
-![New Vercel Project](/shared/guides/nuxt-deploy-vercel-1.png)
+![New Vercel Project](/src/assets/guides/nuxt/nuxt-deploy-vercel-1.png)
 
 ### Existing Vercel project
 
@@ -95,7 +95,7 @@ If you have an existing project on Vercel then the exact same guidance applies a
 
 When everything is updated appropriately, for our `my-app` example we would see the following in our "General" settings UI:
 
-![Existing Vercel Project](/shared/guides/nuxt-deploy-vercel-2.png)
+![Existing Vercel Project](/src/assets/guides/nuxt/nuxt-deploy-vercel-2.png)
 
 ## Skipping build if the application is not affected
 
@@ -103,7 +103,7 @@ One of the core features of Nx is to run code quality checks and builds only for
 
 To build only what's affected, use the `npx nx-ignore <app-name>` command under `Project Settings > Git` on Vercel.
 
-![Ignore build step](/shared/guides/nuxt-deploy-vercel-3.png)
+![Ignore build step](/src/assets/guides/nuxt/nuxt-deploy-vercel-3.png)
 
 The `nx-ignore` command uses Nx to detect whether the current commit affects the specified app, and will skip the build if it is not affected.
 
