@@ -23,9 +23,10 @@ describe('release-publish executor', () => {
   let context: ExecutorContext;
   let options: PublishExecutorSchema;
   const mockExecSync = execSync as jest.MockedFunction<typeof execSync>;
-  const mockParseRegistryOptions = npmConfigModule.parseRegistryOptions as jest.MockedFunction<
-    typeof npmConfigModule.parseRegistryOptions
-  >;
+  const mockParseRegistryOptions =
+    npmConfigModule.parseRegistryOptions as jest.MockedFunction<
+      typeof npmConfigModule.parseRegistryOptions
+    >;
   const mockReadJsonFile = readJsonFile as jest.MockedFunction<
     typeof readJsonFile
   >;
