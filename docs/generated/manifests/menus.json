@@ -6926,6 +6926,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Improving your Time to Green (TTG)",
+            "path": "/ci/recipes/improving-ttg",
+            "id": "improving-ttg",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Set Up CI",
             "path": "/ci/recipes/set-up",
             "id": "set-up",
