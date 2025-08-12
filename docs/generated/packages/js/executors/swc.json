@@ -77,7 +77,7 @@
                 },
                 "includeIgnoredFiles": {
                   "type": "boolean",
-                  "description": "Include files that are ignored by .gitignore and .nxignore for this specific asset pattern.",
+                  "description": "Include files that are ignored by .gitignore and .nxignore for this specific asset pattern. WARNING: Ignored files are not automatically considered when calculating the task hash. To ensure Nx tracks these files for caching, add them to your target's inputs using 'dependentTasksOutputs' or 'runtime' configuration.",
                   "default": false
                 }
               },
@@ -143,7 +143,7 @@
       },
       "includeIgnoredAssetFiles": {
         "type": "boolean",
-        "description": "Include files that are ignored by .gitignore and .nxignore when copying assets.",
+        "description": "Include files that are ignored by .gitignore and .nxignore when copying assets. WARNING: Ignored files are not automatically considered when calculating the task hash. To ensure Nx tracks these files for caching, add them to your target's inputs using 'dependentTasksOutputs' or 'runtime' configuration.",
         "default": false
       }
     },
@@ -173,7 +173,7 @@
               },
               "includeIgnoredFiles": {
                 "type": "boolean",
-                "description": "Include files that are ignored by .gitignore and .nxignore for this specific asset pattern.",
+                "description": "Include files that are ignored by .gitignore and .nxignore for this specific asset pattern. WARNING: Ignored files are not automatically considered when calculating the task hash. To ensure Nx tracks these files for caching, add them to your target's inputs using 'dependentTasksOutputs' or 'runtime' configuration.",
                 "default": false
               }
             },
