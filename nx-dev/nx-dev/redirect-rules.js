@@ -332,7 +332,7 @@ const cliUrls = {
   '/cli/migrate': '/nx/migrate',
   '/cli/report': '/nx/report',
   '/cli/list': '/nx/list',
-  '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
+  '/cli/connect-to-nx-cloud': '/ci/features',
   '/cli/reset': '/nx/reset',
 };
 /**
@@ -507,6 +507,7 @@ const nxCloudUrls = {
   '/powerpack/special-offer': 'https://forms.gle/mWjQo6Vrv5Kt6WYh9',
   '/ci/intro/why-nx-cloud': '/ci/features',
   '/ci/intro/ci-with-nx': '/ci/recipes/set-up',
+  '/ci/intro/connect-to-nx-cloud': '/ci/recipes/set-up',
 };
 
 /**
