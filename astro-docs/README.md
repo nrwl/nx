@@ -57,11 +57,10 @@ astro-docs/
 
 The site uses custom content loaders to dynamically generate documentation:
 
-- **CliLoader** (`cli.loader.ts`) - Generates CLI command documentation
-- **PluginLoader** (`plugin.loader.ts`) - Generates plugin documentation (generators, executors, migrations)
-- **DevkitLoader** (`devkit.loader.ts`) - Generates Devkit API documentation
-- **CnwLoader** (`cnw.loader.ts`) - Generates create-nx-workspace documentation
-- **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars)
+- **PluginLoader** (`plugin.loader.ts`) - Generates official plugin documentation (generators, executors, migrations)
+- **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
+- **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
+
 
 ### Starlight Plugins
 
