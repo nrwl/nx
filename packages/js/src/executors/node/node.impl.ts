@@ -42,6 +42,7 @@ function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
   return () => {
     if (timeoutId) {
       return pendingPromise;
+    }
     if (!pendingPromise) {
       pendingPromise = new Promise<T>((resolve, reject) => {
         timeoutId = setTimeout(() => {
