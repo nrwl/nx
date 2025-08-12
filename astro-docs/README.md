@@ -62,10 +62,6 @@ The site uses custom content loaders to dynamically generate documentation:
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
 
 
-### Starlight Plugins
-
-- **sectionSidebarPlugin** - Manages section-based sidebar organization
-- **autoPluginSidebarPlugin** - Auto-generates plugin documentation sidebar
 
 ## Content Management
 
