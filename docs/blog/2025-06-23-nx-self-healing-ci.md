@@ -30,6 +30,8 @@ But what if we could bring this to the next level? **What if your CI could fix i
 
 **Nx Cloud Self-Healing CI** makes this a reality.
 
+{% call-to-action size="lg" title="Join our webinar on August 26th" url="https://bit.ly/4mDoDjE" icon="nxcloud" description="Learn how Nx’s AI-powered self-healing CI can reduce your development bottlenecks and free you from hours of manual PR oversight." /%}
+
 {% toc /%}
 
 ## Here's what happens now
