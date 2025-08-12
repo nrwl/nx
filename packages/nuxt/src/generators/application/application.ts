@@ -27,6 +27,7 @@ import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { execSync } from 'node:child_process';
+import { join } from 'node:path';
 import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
@@ -110,29 +111,24 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, './files/base'),
-    options.appProjectRoot,
-    {
-      ...options,
-      offsetFromRoot: projectOffsetFromRoot,
-      relativePathToRootTsConfig: getRelativePathToRootTsConfig(
-        tree,
-        options.appProjectRoot
-      ),
-      title: options.projectName,
-      dot: '.',
-      tmpl: '',
-      style: options.style,
-      projectRoot: options.appProjectRoot,
-      hasVitest: options.unitTestRunner === 'vitest',
-    }
-  );
+  generateFiles(tree, join(__dirname, './files/base'), options.appProjectRoot, {
+    ...options,
+    offsetFromRoot: projectOffsetFromRoot,
+    relativePathToRootTsConfig: getRelativePathToRootTsConfig(
+      tree,
+      options.appProjectRoot
+    ),
+    title: options.projectName,
+    dot: '.',
+    tmpl: '',
+    style: options.style,
+    projectRoot: options.appProjectRoot,
+    hasVitest: options.unitTestRunner === 'vitest',
+  });
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
+    join(__dirname, './files/nx-welcome', onBoardingStatus),
     options.appProjectRoot,
     {
       ...options,

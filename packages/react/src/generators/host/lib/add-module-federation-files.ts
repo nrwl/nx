@@ -13,6 +13,7 @@ import {
   getDefaultTemplateVariables,
 } from '../../application/lib/create-application-files';
 import { NormalizedSchema } from '../schema';
+import { join } from 'path';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -80,7 +81,7 @@ export function addModuleFederationFiles(
 
   generateFiles(
     host,
-    joinPathFragments(
+    join(
       __dirname,
       `../files/${
         options.js
@@ -104,7 +105,7 @@ export function addModuleFederationFiles(
   // New entry file is created here.
   generateFiles(
     host,
-    joinPathFragments(__dirname, `../files/${pathToModuleFederationFiles}`),
+    join(__dirname, `../files/${pathToModuleFederationFiles}`),
     options.appProjectRoot,
     templateVariables
   );
