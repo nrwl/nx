@@ -100,6 +100,9 @@ import {
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
+  NX_VERBOSE_LOGGING: 'true',
+  NX_PERF_LOGGING: 'true',
+  NX_NATIVE_LOGGING: 'nx=debug',
 };
 
 export type UnregisterCallback = () => void;
@@ -423,7 +426,7 @@ export class DaemonClient {
       type: RECORD_TASK_RUNS,
       taskRuns,
     };
-    return this.sendMessageToDaemon(message);
+    return this.sendToDaemonViaQueue(message);
   }
 
   getSyncGeneratorChanges(

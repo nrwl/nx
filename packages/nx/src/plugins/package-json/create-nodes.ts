@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { toProjectName } from '../../config/to-project-name';
 import { readJsonFile, readYamlFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
@@ -38,10 +38,11 @@ export const createNodesV2: CreateNodesV2 = [
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
 
     const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
-    const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
-      context.workspaceRoot,
-      readJson
-    );
+    const isInPackageJsonWorkspaces =
+      process.env.NX_INFER_ALL_PACKAGE_JSONS === 'true' &&
+      !configFiles.includes('package.json')
+        ? () => true
+        : buildPackageJsonWorkspacesMatcher(context.workspaceRoot, readJson);
     const isNextToProjectJson = (packageJsonPath: string) => {
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
@@ -214,7 +215,12 @@ export function buildProjectConfigurationFromPackageJson(
     root: projectRoot,
     name,
     ...packageJson.nx,
-    targets: readTargetsFromPackageJson(packageJson, nxJson),
+    targets: readTargetsFromPackageJson(
+      packageJson,
+      nxJson,
+      projectRoot,
+      workspaceRoot
+    ),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(
       packageJson,

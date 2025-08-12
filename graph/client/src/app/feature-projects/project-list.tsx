@@ -1,40 +1,34 @@
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
-  DocumentMagnifyingGlassIcon,
   EyeIcon,
   FlagIcon,
   MapPinIcon,
+  ViewfinderCircleIcon,
 } from '@heroicons/react/24/outline';
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nx/devkit';
-/* eslint-enable @nx/enforce-module-boundaries */
+import type {
+  ProjectUINode,
+  CompositeProjectUINode,
+  ProjectGraphHandleEventResult,
+} from '@nx/graph/projects';
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
-  allProjectsSelector,
-  compositeContextSelector,
-  compositeGraphEnabledSelector,
-  compositeNodesSelector,
   getTracingInfo,
-  selectedProjectNamesSelector,
   workspaceLayoutSelector,
+  compositeGraphEnabledSelector,
 } from './machines/selectors';
-import { getProjectsByType, parseParentDirectoriesFromFilePath } from '../util';
+import {
+  getProjectUINodesByType,
+  groupProjectUINodesByDirectory,
+  SidebarProjectUINode,
+  SidebarCompositeUINode,
+} from '../util';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
-import { Link, useNavigate, useNavigation } from 'react-router-dom';
-import { useRouteConstructor } from '@nx/graph/legacy/shared';
-import { CompositeNode } from '../interfaces';
-import { useMemo } from 'react';
-
-interface SidebarProject {
-  projectGraphNode: ProjectGraphProjectNode;
-  isSelected: boolean;
-}
-
-type DirectoryProjectRecord = Record<string, SidebarProject[]>;
+import { Link, useNavigate } from 'react-router-dom';
+import { useRouteConstructor } from '@nx/graph-shared';
+import { useCompositeNodeSelectionContext } from '@nx/graph/dialogs';
 
 interface TracingInfo {
   start: string;
@@ -42,42 +36,11 @@ interface TracingInfo {
   algorithm: TracingAlgorithmType;
 }
 
-function groupProjectsByDirectory(
-  projects: ProjectGraphProjectNode[],
-  selectedProjects: string[],
-  workspaceLayout: { appsDir: string; libsDir: string }
-): DirectoryProjectRecord {
-  let groups = {};
-
-  projects.forEach((project) => {
-    const workspaceRoot =
-      project.type === 'app' || project.type === 'e2e'
-        ? workspaceLayout.appsDir
-        : workspaceLayout.libsDir;
-    const directories = parseParentDirectoriesFromFilePath(
-      (project.data as any).root,
-      workspaceRoot
-    );
-
-    const directory = directories.join('/');
-
-    if (!groups.hasOwnProperty(directory)) {
-      groups[directory] = [];
-    }
-    groups[directory].push({
-      projectGraphNode: project,
-      isSelected: selectedProjects.includes(project.name),
-    });
-  });
-
-  return groups;
-}
-
 function ProjectListItem({
   project,
   tracingInfo,
 }: {
-  project: SidebarProject;
+  project: SidebarProjectUINode;
   tracingInfo: TracingInfo;
 }) {
   const projectGraphService = getProjectGraphService();
@@ -94,9 +57,16 @@ function ProjectListItem({
 
   function toggleProject(projectName: string, currentlySelected: boolean) {
     if (currentlySelected) {
-      projectGraphService.send({ type: 'deselectProject', projectName });
+      projectGraphService.send({
+        type: 'excludeNode',
+        nodeIds: [project.projectUINode.id],
+      });
     } else {
-      projectGraphService.send({ type: 'selectProject', projectName });
+      projectGraphService.send({
+        type: 'includeNode',
+        nodeIds: [project.projectUINode.id],
+        variant: 'legacy',
+      });
     }
     navigate(routeConstructor('/projects', true));
   }
@@ -105,26 +75,25 @@ function ProjectListItem({
     <li className="relative block cursor-default select-none py-1 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
       <div className="flex items-center">
         <Link
-          data-cy={`focus-button-${project.projectGraphNode.name}`}
+          data-cy={`focus-button-${project.projectUINode.name}`}
           className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
           title="Focus on this library"
           to={routeConstructor(
-            `/projects/${encodeURIComponent(project.projectGraphNode.name)}`,
+            `/projects/${encodeURIComponent(project.projectUINode.name)}`,
             true
           )}
         >
-          <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+          <ViewfinderCircleIcon className="h-5 w-5" />
         </Link>
 
         <ExperimentalFeature>
           <span className="relative z-0 inline-flex rounded-md shadow-sm">
-            {/*Once these button are not experimental anymore, button the DocumentSearchIcon button in this span as well. */}
             <button
               type="button"
               title="Start Trace"
-              onClick={() => startTrace(project.projectGraphNode.name)}
+              onClick={() => startTrace(project.projectUINode.name)}
               className={`${
-                tracingInfo.start === project.projectGraphNode.name
+                tracingInfo.start === project.projectUINode.name
                   ? 'ring-blue-500 dark:ring-sky-500'
                   : 'ring-slate-200 dark:ring-slate-600'
               } flex items-center rounded-l-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
@@ -135,9 +104,9 @@ function ProjectListItem({
             <button
               type="button"
               title="End Trace"
-              onClick={() => endTrace(project.projectGraphNode.name)}
+              onClick={() => endTrace(project.projectUINode.name)}
               className={`${
-                tracingInfo.end === project.projectGraphNode.name
+                tracingInfo.end === project.projectUINode.name
                   ? 'ring-blue-500 dark:ring-sky-500'
                   : 'ring-slate-200 dark:ring-slate-600'
               } flex items-center rounded-r-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
@@ -149,14 +118,14 @@ function ProjectListItem({
 
         <label
           className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
-          data-project={project.projectGraphNode.name}
-          title={project.projectGraphNode.name}
+          data-project={project.projectUINode.name}
+          title={project.projectUINode.name}
           data-active={project.isSelected.toString()}
           onClick={() =>
-            toggleProject(project.projectGraphNode.name, project.isSelected)
+            toggleProject(project.projectUINode.name, project.isSelected)
           }
         >
-          {project.projectGraphNode.name}
+          {project.projectUINode.name}
         </label>
       </div>
 
@@ -165,10 +134,10 @@ function ProjectListItem({
           title="This library is visible"
           className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500"
           onClick={() =>
-            toggleProject(project.projectGraphNode.name, project.isSelected)
+            toggleProject(project.projectUINode.name, project.isSelected)
           }
         >
-          <EyeIcon className="h-5 w-5"></EyeIcon>
+          <EyeIcon className="h-5 w-5" />
         </span>
       ) : null}
     </li>
@@ -181,24 +150,27 @@ function SubProjectList({
   tracingInfo,
 }: {
   headerText: string;
-  projects: SidebarProject[];
+  projects: SidebarProjectUINode[];
   tracingInfo: TracingInfo;
 }) {
   const projectGraphService = getProjectGraphService();
 
   let sortedProjects = [...projects];
   sortedProjects.sort((a, b) => {
-    return a.projectGraphNode.name.localeCompare(b.projectGraphNode.name);
+    return a.projectUINode.name.localeCompare(b.projectUINode.name);
   });
 
   function toggleAllProjects(currentlySelected: boolean) {
-    const projectNames = projects.map(
-      (project) => project.projectGraphNode.name
-    );
+    const projectIds = projects.map((project) => project.projectUINode.id);
+
     if (currentlySelected) {
-      projectGraphService.send({ type: 'deselectProjects', projectNames });
+      projectGraphService.send({ type: 'excludeNode', nodeIds: projectIds });
     } else {
-      projectGraphService.send({ type: 'selectProjects', projectNames });
+      projectGraphService.send({
+        type: 'includeNode',
+        nodeIds: projectIds,
+        variant: 'legacy',
+      });
     }
   }
 
@@ -222,7 +194,7 @@ function SubProjectList({
             data-cy={`toggle-folder-visibility-button-${headerText}`}
             onClick={() => toggleAllProjects(allProjectsSelected)}
           >
-            <EyeIcon className="h-5 w-5"></EyeIcon>
+            <EyeIcon className="h-5 w-5" />
           </span>
         </div>
       ) : null}
@@ -230,10 +202,10 @@ function SubProjectList({
         {sortedProjects.map((project) => {
           return (
             <ProjectListItem
-              key={project.projectGraphNode.name}
+              key={project.projectUINode.name}
               project={project}
               tracingInfo={tracingInfo}
-            ></ProjectListItem>
+            />
           );
         })}
       </ul>
@@ -243,67 +215,64 @@ function SubProjectList({
 
 function CompositeNodeListItem({
   compositeNode,
+  compositeNodes,
 }: {
-  compositeNode: CompositeNode;
+  compositeNode: SidebarCompositeUINode;
+  compositeNodes: SidebarCompositeUINode[];
 }) {
   const projectGraphService = getProjectGraphService();
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
+  const { handleCompositeNodeExpand } = useCompositeNodeSelectionContext();
 
-  const label = compositeNode.parent
-    ? `${compositeNode.parent}/${compositeNode.label}`
-    : compositeNode.label;
+  const parentName = compositeNode.compositeUINode.name;
+
+  const label = parentName
+    ? `${parentName}/${compositeNode.compositeUINode.name}`
+    : compositeNode.compositeUINode.name;
 
   function toggleProject() {
-    if (compositeNode.state !== 'hidden') {
+    if (compositeNode.isSelected) {
       projectGraphService.send({
-        type: 'deselectProject',
-        projectName: compositeNode.id,
+        type: 'excludeNode',
+        nodeIds: [compositeNode.compositeUINode.id],
       });
     } else {
       projectGraphService.send({
-        type: 'selectProject',
-        projectName: compositeNode.id,
+        type: 'includeNode',
+        nodeIds: [compositeNode.compositeUINode.id],
+        variant: 'legacy',
       });
     }
     navigate(routeConstructor('/projects', true));
   }
 
   function toggleExpansion() {
-    if (compositeNode.state === 'expanded') {
+    const isExpanded =
+      compositeNode.compositeUINode.metadata.lastSelectedNodeIds !== undefined;
+
+    if (isExpanded) {
       projectGraphService.send({
         type: 'collapseCompositeNode',
-        id: compositeNode.id,
+        compositeNodeId: compositeNode.compositeUINode.id,
       });
     } else {
-      projectGraphService.send({
-        type: 'expandCompositeNode',
-        id: compositeNode.id,
-      });
+      handleCompositeNodeExpand(compositeNode.compositeUINode.metadata);
     }
   }
+
+  const isExpanded =
+    compositeNode.compositeUINode.metadata.lastSelectedNodeIds !== undefined;
 
   return (
     <li className="relative block cursor-default select-none py-1 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
       <div className="flex items-center">
-        <Link
-          to={routeConstructor(
-            { pathname: `/projects`, search: `?composite=${compositeNode.id}` },
-            true
-          )}
-          className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
-          title="Focus on this node"
-          data-cy={`focus-button-${compositeNode.id}`}
-        >
-          <DocumentMagnifyingGlassIcon className="h-5 w-5" />
-        </Link>
-
         <button
           className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
           onClick={toggleExpansion}
-          title={compositeNode.state === 'expanded' ? 'Collapse' : 'Expand'}
+          title={isExpanded ? 'Collapse' : 'Expand'}
         >
-          {compositeNode.state === 'expanded' ? (
+          {isExpanded ? (
             <ArrowsPointingInIcon className="h-5 w-5" />
           ) : (
             <ArrowsPointingOutIcon className="h-5 w-5" />
@@ -312,16 +281,16 @@ function CompositeNodeListItem({
 
         <label
           className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
-          data-project={compositeNode.id}
+          data-project={compositeNode.compositeUINode.id}
           title={label}
-          data-active={compositeNode.state !== 'hidden'}
+          data-active={compositeNode.isSelected}
           onClick={toggleProject}
         >
           {label}
         </label>
       </div>
 
-      {compositeNode.state !== 'hidden' ? (
+      {compositeNode.isSelected ? (
         <span
           title="This node is visible"
           className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500"
@@ -337,7 +306,7 @@ function CompositeNodeListItem({
 function CompositeNodeList({
   compositeNodes,
 }: {
-  compositeNodes: CompositeNode[];
+  compositeNodes: SidebarCompositeUINode[];
 }) {
   if (compositeNodes.length === 0) {
     return <p>No composite nodes</p>;
@@ -346,44 +315,91 @@ function CompositeNodeList({
   return (
     <ul className="-ml-3 mt-2">
       {compositeNodes.map((node) => {
-        return <CompositeNodeListItem key={node.id} compositeNode={node} />;
+        return (
+          <CompositeNodeListItem
+            key={node.compositeUINode.id}
+            compositeNode={node}
+            compositeNodes={compositeNodes}
+          />
+        );
       })}
     </ul>
   );
 }
 
-export function ProjectList() {
+export function ProjectList({
+  handleEventResult,
+}: {
+  handleEventResult: ProjectGraphHandleEventResult;
+}) {
+  // Keep tracing info from selector as specified
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
-
-  const projects = useProjectGraphSelector(allProjectsSelector);
   const workspaceLayout = useProjectGraphSelector(workspaceLayoutSelector);
-  const selectedProjects = useProjectGraphSelector(
-    selectedProjectNamesSelector
-  );
   const compositeGraphEnabled = useProjectGraphSelector(
     compositeGraphEnabledSelector
   );
-  const compositeContext = useProjectGraphSelector(compositeContextSelector);
-  const compositeNodes = useProjectGraphSelector(compositeNodesSelector);
 
-  const appProjects = getProjectsByType('app', projects);
-  const libProjects = getProjectsByType('lib', projects);
-  const e2eProjects = getProjectsByType('e2e', projects);
+  // Extract projects and composites from handleEventResult
+  const allProjectUINodes = handleEventResult.nodes.filter(
+    (node): node is ProjectUINode => node.type === 'project'
+  );
 
-  const appDirectoryGroups = groupProjectsByDirectory(
+  const allCompositeUINodes = handleEventResult.nodes.filter(
+    (node): node is CompositeProjectUINode => node.type === 'composite-project'
+  );
+
+  // Get rendered projects for selection state
+  const renderedProjectNames = handleEventResult.projects.map((p) => p.name);
+  const renderedCompositeNames = handleEventResult.composites.map(
+    (c) => c.name
+  );
+  const selectedProjects = [...renderedProjectNames, ...renderedCompositeNames];
+
+  // Use new utility functions
+  const appProjects = getProjectUINodesByType('app', allProjectUINodes);
+  const libProjects = getProjectUINodesByType('lib', allProjectUINodes);
+  const e2eProjects = getProjectUINodesByType('e2e', allProjectUINodes);
+
+  const appDirectoryGroups = groupProjectUINodesByDirectory(
     appProjects,
     selectedProjects,
     workspaceLayout
   );
-  const libDirectoryGroups = groupProjectsByDirectory(
+  const libDirectoryGroups = groupProjectUINodesByDirectory(
     libProjects,
     selectedProjects,
     workspaceLayout
   );
-  const e2eDirectoryGroups = groupProjectsByDirectory(
+  const e2eDirectoryGroups = groupProjectUINodesByDirectory(
     e2eProjects,
     selectedProjects,
     workspaceLayout
+  );
+
+  // Filter composite nodes to only show rendered ones
+  const renderedCompositeUINodes = allCompositeUINodes.filter(
+    (node) => node.rendered
+  );
+
+  // Further filter to ensure parent composite nodes are also rendered
+  const visibleCompositeUINodes = renderedCompositeUINodes.filter((node) => {
+    // If no parent, it's a top-level node - always visible
+    if (!node.parentId) {
+      return true;
+    }
+
+    // If has parent, ensure parent is also in the rendered list
+    return renderedCompositeUINodes.some(
+      (parent) => parent.id === node.parentId
+    );
+  });
+
+  // Convert filtered composite nodes to sidebar format
+  const compositeNodes: SidebarCompositeUINode[] = visibleCompositeUINodes.map(
+    (node) => ({
+      compositeUINode: node,
+      isSelected: selectedProjects.includes(node.name),
+    })
   );
 
   const sortedAppDirectories = Object.keys(appDirectoryGroups).sort();
@@ -392,7 +408,7 @@ export function ProjectList() {
 
   return (
     <div id="project-lists" className="mt-8 border-t border-slate-400/10 px-4">
-      {compositeGraphEnabled && !compositeContext ? (
+      {compositeGraphEnabled ? (
         <>
           <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
             composite nodes
@@ -412,7 +428,7 @@ export function ProjectList() {
             headerText={directoryName}
             projects={appDirectoryGroups[directoryName]}
             tracingInfo={tracingInfo}
-          ></SubProjectList>
+          />
         );
       })}
 
@@ -427,7 +443,7 @@ export function ProjectList() {
             headerText={directoryName}
             projects={e2eDirectoryGroups[directoryName]}
             tracingInfo={tracingInfo}
-          ></SubProjectList>
+          />
         );
       })}
 
@@ -442,7 +458,7 @@ export function ProjectList() {
             headerText={directoryName}
             projects={libDirectoryGroups[directoryName]}
             tracingInfo={tracingInfo}
-          ></SubProjectList>
+          />
         );
       })}
     </div>

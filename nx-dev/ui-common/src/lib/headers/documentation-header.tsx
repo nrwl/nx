@@ -1,12 +1,18 @@
 'use client';
-import { Fragment, ReactElement } from 'react';
-import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import {
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useState,
+  useEffect,
+} from 'react';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -59,26 +65,36 @@ export function DocumentationHeader({
   toggleNav: (value: boolean) => void;
 }): ReactElement {
   const router = useRouter();
-  let routerPath = router.asPath;
-  const isCI: boolean = routerPath.startsWith('/ci');
-  const isAPI: boolean = routerPath.startsWith('/nx-api');
-  const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
-  const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
-  const isChangelog: boolean = routerPath.startsWith('/changelog');
-  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
+
+  const isCI: boolean = isClient && currentPath.startsWith('/ci');
+  const isExtendingNx: boolean =
+    isClient && currentPath.startsWith('/extending-nx');
+  const isPlugins: boolean =
+    isClient && currentPath.startsWith('/plugin-registry');
+  const isChangelog: boolean = isClient && currentPath.startsWith('/changelog');
+  const isAiChat: boolean = isClient && currentPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isCI &&
-    !isAPI &&
-    !isExtendingNx &&
-    !isPlugins &&
-    !isChangelog &&
-    !isAiChat;
+    !isCI && !isExtendingNx && !isPlugins && !isChangelog && !isAiChat;
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    if (isClient) {
+      router.push('/brands');
+    }
+  };
 
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
       name: 'CI',
-      href: '/ci/intro/ci-with-nx',
+      href: '/ci/features',
       current: isCI,
     },
     {
@@ -90,11 +106,6 @@ export function DocumentationHeader({
       name: 'Plugins',
       href: '/plugin-registry',
       current: isPlugins,
-    },
-    {
-      name: 'API',
-      href: '/nx-api',
-      current: isAPI,
     },
     {
       name: 'Changelog',
@@ -167,6 +178,23 @@ export function DocumentationHeader({
       ),
     },
     {
+      name: 'LinkedIn',
+      label: 'Nx on LinkedIn',
+      href: 'https://www.linkedin.com/company/nxdevtools',
+      icon: (props: any) => (
+        <svg
+          fill="currentColor"
+          role="img"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {/*<title>LinkedIn</title>*/}
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+        </svg>
+      ),
+    },
+    {
       name: 'GitHub',
       label: 'Nx is open source, check the code on GitHub',
       href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
@@ -217,8 +245,11 @@ export function DocumentationHeader({
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
@@ -240,7 +271,7 @@ export function DocumentationHeader({
         <div className="hidden flex-shrink-0 xl:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
+            className="hidden items-center justify-center space-x-2 text-sm lg:flex"
           >
             <h2 className="sr-only">Main navigation</h2>
             <Link
@@ -293,6 +324,14 @@ export function DocumentationHeader({
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
+              href="/ai"
+              title="AI"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              AI
+            </Link>
+            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -300,23 +339,7 @@ export function DocumentationHeader({
             >
               Nx Cloud
             </Link>
-            <Link
-              href="/pricing"
-              title="Pricing"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Pricing
-            </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <Link
-              href="/powerpack"
-              title="Nx Powerpack"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Powerpack
-            </Link>
             <Link
               href="/enterprise"
               title="Nx Enterprise"
@@ -335,12 +358,11 @@ export function DocumentationHeader({
           >
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
-              title="Try Nx Cloud for free"
+              title="Get started"
               variant="primary"
               size="small"
             >
-              <NxCloudAnimatedIcon className="size-4" aria-hidden="true" />
-              <span>Try Nx Cloud for free</span>
+              Get started
             </ButtonLink>
           </nav>
         </div>

@@ -18,6 +18,6 @@ module.exports = {
   remotes: [<% if (federationType === 'static') { remotes.forEach(function(remote) { %>'<%= remote.remoteName %>',<% }); } %>]<% } %><% if(type === 'remote') { %>
   exposes: {<% if(standalone) { %>
     './Routes': '<%= projectRoot %>/src/app/remote-entry/entry.routes.ts',<% } else { %>
-    './Module': '<%= projectRoot %>/src/app/remote-entry/entry.module.ts',<% } %>
+    './Module': '<%= projectRoot %>/src/app/remote-entry/<%= entryModuleFileName %>.ts',<% } %>
   },<% } %>
 };

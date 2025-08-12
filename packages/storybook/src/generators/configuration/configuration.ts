@@ -31,7 +31,7 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import { Linter } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   pleaseUpgrade,
@@ -44,7 +44,6 @@ import {
   tsLibVersion,
   tsNodeVersion,
 } from '../../utils/versions';
-import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -61,11 +60,11 @@ export async function configurationGeneratorInternal(
   rawSchema: StorybookConfigureSchema
 ) {
   const storybookMajor = storybookMajorVersion();
-  if (storybookMajor > 0 && storybookMajor === 6) {
+  if (storybookMajor > 0 && storybookMajor === 7) {
     throw new Error(pleaseUpgrade());
-  } else if (storybookMajor === 7) {
+  } else if (storybookMajor === 8) {
     logger.warn(
-      `Support for Storybook 7 is deprecated. Please upgrade to Storybook 8. See https://nx.dev/nx-api/storybook/generators/migrate-8 for more details.`
+      `Support for Storybook 8 is deprecated. Please upgrade to Storybook 9. See https://nx.dev/nx-api/storybook/generators/migrate-9 for more details.`
     );
   }
 
@@ -204,13 +203,6 @@ export async function configurationGeneratorInternal(
     devDeps['tslib'] = tsLibVersion;
   }
 
-  if (schema.interactionTests) {
-    devDeps = {
-      ...devDeps,
-      ...interactionTestsDependencies(),
-    };
-  }
-
   if (schema.configureStaticServe) {
     devDeps['@nx/web'] = nxVersion;
   }
@@ -250,7 +242,7 @@ function normalizeSchema(
 
   const defaults = {
     interactionTests: true,
-    linter: Linter.EsLint,
+    linter: 'eslint' as LinterType,
     js: false,
     tsConfiguration: true,
     addPlugin,

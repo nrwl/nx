@@ -2,7 +2,6 @@ import { Tree, updateJson, writeJson } from '@nx/devkit';
 import { ProjectGraph, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import hostGenerator from './host';
-import { Linter } from '@nx/eslint';
 
 jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
@@ -112,7 +111,7 @@ describe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -132,7 +131,7 @@ describe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -150,7 +149,7 @@ describe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: true,
@@ -175,7 +174,7 @@ describe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -200,7 +199,7 @@ describe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         skipFormat: true,
@@ -217,7 +216,7 @@ describe('hostGenerator', () => {
         directory: 'test',
         ssr: true,
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -226,7 +225,6 @@ describe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
       expect(tree.exists('test/rspack.config.prod.js')).toBeTruthy();
-      expect(tree.exists('test/rspack.server.config.js')).toBeTruthy();
       expect(tree.exists('test/rspack.config.js')).toBeTruthy();
       expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
       expect(
@@ -251,9 +249,6 @@ describe('hostGenerator', () => {
       });
 
       expect(
-        tree.read('test/rspack.server.config.js', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
         tree.read('test/module-federation.server.config.js', 'utf-8')
       ).toMatchSnapshot();
     });
@@ -263,7 +258,7 @@ describe('hostGenerator', () => {
         directory: 'test',
         ssr: true,
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: true,
@@ -272,7 +267,6 @@ describe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
       expect(tree.exists('test/rspack.config.prod.ts')).toBeTruthy();
-      expect(tree.exists('test/rspack.server.config.ts')).toBeTruthy();
       expect(tree.exists('test/rspack.config.ts')).toBeTruthy();
       expect(tree.exists('test/module-federation.config.ts')).toBeTruthy();
       expect(
@@ -297,9 +291,6 @@ describe('hostGenerator', () => {
       });
 
       expect(
-        tree.read('test/rspack.server.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
         tree.read('test/module-federation.server.config.ts', 'utf-8')
       ).toMatchSnapshot();
     });
@@ -311,7 +302,7 @@ describe('hostGenerator', () => {
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
         e2eTestRunner: 'none',
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: 'none',
         typescriptConfiguration: false,
@@ -333,7 +324,7 @@ describe('hostGenerator', () => {
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
         e2eTestRunner: 'none',
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: 'none',
         typescriptConfiguration: true,
@@ -358,13 +349,13 @@ describe('hostGenerator', () => {
           remotes: [remote],
           dynamic: true,
           e2eTestRunner: 'none',
-          linter: Linter.None,
+          linter: 'none',
           style: 'css',
           unitTestRunner: 'none',
           typescriptConfiguration: false,
           bundler: 'rspack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${remote}.`);
     });
 
     it('should generate create files with dynamic host', async () => {
@@ -376,7 +367,7 @@ describe('hostGenerator', () => {
         remotes: [remote],
         dynamic: true,
         e2eTestRunner: 'none',
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: 'none',
         typescriptConfiguration: false,
@@ -456,7 +447,7 @@ describe('hostGenerator', () => {
         addPlugin: true,
         remotes: ['remote1', 'remote2', 'remote3'],
         e2eTestRunner: 'none',
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: 'none',
         typescriptConfiguration: false,

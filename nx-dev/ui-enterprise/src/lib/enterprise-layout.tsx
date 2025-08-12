@@ -1,4 +1,4 @@
-import { Footer, Header } from '@nx/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
 import { PropsWithChildren, ReactElement } from 'react';
 
 export function EnterpriseLayout({
@@ -7,7 +7,7 @@ export function EnterpriseLayout({
   return (
     <div className="w-full dark:bg-slate-950">
       <Header />
-      <main>{children}</main>
+      <main data-document="main">{children}</main>
       <Footer />
     </div>
   );

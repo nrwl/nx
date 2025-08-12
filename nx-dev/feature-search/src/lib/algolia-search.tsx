@@ -1,14 +1,17 @@
-import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
-import {
-  InternalDocSearchHit,
-  StoredDocSearchHit,
-} from '@docsearch/react/dist/esm/types';
+import * as docsearchReact from '@docsearch/react';
+// Note: InternalDocSearchHit and StoredDocSearchHit are not exported by @docsearch/react
+// import type {
+//   InternalDocSearchHit,
+//   StoredDocSearchHit,
+// } from '@docsearch/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+const { DocSearchModal, useDocSearchKeyboardEvents } = docsearchReact;
 
 const ACTION_KEY_DEFAULT = ['Ctrl ', 'Control'];
 const ACTION_KEY_APPLE = ['⌘', 'Command'];
@@ -17,7 +20,7 @@ function Hit({
   hit,
   children,
 }: {
-  hit: InternalDocSearchHit | StoredDocSearchHit;
+  hit: any; // TODO: Import proper types when @docsearch/react exports them
   children: ReactNode;
 }): JSX.Element {
   return (

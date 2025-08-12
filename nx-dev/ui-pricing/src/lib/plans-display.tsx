@@ -2,9 +2,9 @@
 import { ReactElement } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function PlansDisplay(): ReactElement {
   return (
@@ -86,6 +86,27 @@ export function PlansDisplay(): ReactElement {
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
+                    <Link
+                      href="/ai"
+                      target="_blank"
+                      title="Check our AI integrations and how to use them"
+                      onClick={() =>
+                        sendCustomEvent(
+                          'learn-ai-integrations-click',
+                          'plans-table',
+                          'pricing-plans'
+                        )
+                      }
+                      className="font-medium underline decoration-dotted"
+                    >
+                      AI integrations
+                    </Link>
+                  </li>
+                  <li className="flex items-center justify-start gap-x-2 py-2.5">
+                    <CheckCircleIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    />
                     <span>
                       Remote caching with{' '}
                       <Link
@@ -105,7 +126,7 @@ export function PlansDisplay(): ReactElement {
                       </Link>
                     </span>
                   </li>
-                  <li className="flex items-start justify-start gap-x-2 py-2.5">
+                  <li className="flex items-center justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -178,34 +199,34 @@ export function PlansDisplay(): ReactElement {
                 <li className="py-2.5">
                   <span className="font-medium">Included for free</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>5 active contributors¹</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>50,000 monthly credits</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>10 concurrent CI connections</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <Link
-                    href="/nx-cloud#ai-for-your-ci"
+                    href="/ai"
                     target="_blank"
                     title="Check our AI integrations and how to use them"
                     onClick={() =>
@@ -220,7 +241,7 @@ export function PlansDisplay(): ReactElement {
                     AI integrations
                   </Link>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -230,21 +251,21 @@ export function PlansDisplay(): ReactElement {
                 <li className="py-2.5">
                   <span className="font-medium">Add-ons</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>$19 per active contributor¹ / month</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>$5.50 per 10,000 credits</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -297,21 +318,21 @@ export function PlansDisplay(): ReactElement {
                 <li className="py-2.5">
                   <span className="font-medium">Includes</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>Volume discounts on credits available</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>White glove onboarding</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -335,7 +356,7 @@ export function PlansDisplay(): ReactElement {
                     : a suite of premium extensions for the Nx CLI
                   </span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -344,7 +365,7 @@ export function PlansDisplay(): ReactElement {
                     Work hand-in-hand with the Nx team for continual improvement
                   </span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -354,14 +375,14 @@ export function PlansDisplay(): ReactElement {
                     self-contained, on-prem
                   </span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>SSO / SAML Login</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"

@@ -8,7 +8,6 @@ import {
   updateJson,
 } from '@nx/devkit';
 
-import { Linter } from '../utils/linter';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintProjectGenerator } from './lint-project';
 
@@ -52,7 +51,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -80,7 +79,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -108,7 +107,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -137,7 +136,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -167,7 +166,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -195,7 +194,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -223,7 +222,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -252,7 +251,7 @@ describe('@nx/eslint:lint-project', () => {
 
       await lintProjectGenerator(tree, {
         ...defaultOptions,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         skipFormat: true,
@@ -277,7 +276,7 @@ describe('@nx/eslint:lint-project', () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'test-lib',
       setParserOptionsProject: false,
       skipFormat: true,
@@ -309,7 +308,7 @@ describe('@nx/eslint:lint-project', () => {
                       {
                           enforceBuildableLibDependency: true,
                           allow: [
-                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$"
                           ],
                           depConstraints: [
                               {
@@ -348,7 +347,7 @@ describe('@nx/eslint:lint-project', () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'test-lib',
       setParserOptionsProject: false,
       skipFormat: true,
@@ -380,7 +379,7 @@ describe('@nx/eslint:lint-project', () => {
                       {
                           enforceBuildableLibDependency: true,
                           allow: [
-                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$"
                           ],
                           depConstraints: [
                               {
@@ -417,7 +416,7 @@ describe('@nx/eslint:lint-project', () => {
   it('should generate a eslint config (legacy)', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -449,7 +448,7 @@ describe('@nx/eslint:lint-project', () => {
   it('should generate a project config with lintFilePatterns if provided', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'test-lib',
       eslintFilePatterns: ['libs/test-lib/src/**/*.ts'],
       setParserOptionsProject: false,
@@ -466,7 +465,7 @@ describe('@nx/eslint:lint-project', () => {
   it('should generate a eslint config for buildable library', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'buildable-lib',
       setParserOptionsProject: false,
     });
@@ -496,7 +495,9 @@ describe('@nx/eslint:lint-project', () => {
               "@nx/dependency-checks": [
                 "error",
                 {
-                  "ignoredFiles": ["{projectRoot}/eslint.config.{js,cjs,mjs}"]
+                  "ignoredFiles": [
+                    "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
+                  ]
                 }
               ]
             }
@@ -513,7 +514,7 @@ describe('@nx/eslint:lint-project', () => {
   it('should generate a project config for buildable lib with lintFilePatterns if provided', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'buildable-lib',
       setParserOptionsProject: false,
       eslintFilePatterns: ['libs/test-lib/src/**/*.ts'],
@@ -532,7 +533,7 @@ describe('@nx/eslint:lint-project', () => {
 
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -570,7 +571,7 @@ describe('@nx/eslint:lint-project', () => {
 
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'buildable-lib',
       setParserOptionsProject: false,
     });
@@ -593,7 +594,7 @@ describe('@nx/eslint:lint-project', () => {
 
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'buildable-lib',
       setParserOptionsProject: false,
     });
@@ -606,7 +607,7 @@ describe('@nx/eslint:lint-project', () => {
   it('should extend root config', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       eslintFilePatterns: ['libs/test-lib/**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
@@ -619,7 +620,7 @@ describe('@nx/eslint:lint-project', () => {
   it('should not extend root config if rootProject is set', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       eslintFilePatterns: ['libs/test-lib/**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
@@ -633,7 +634,7 @@ describe('@nx/eslint:lint-project', () => {
   it('should generate the global eslint config', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'test-lib',
     });
 
@@ -695,13 +696,13 @@ describe('@nx/eslint:lint-project', () => {
 
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'explicit-lib',
       addExplicitTargets: true,
     });
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'inferred-lib',
       addExplicitTargets: false,
     });

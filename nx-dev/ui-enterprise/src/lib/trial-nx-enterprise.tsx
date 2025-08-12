@@ -1,4 +1,4 @@
-import { ButtonLink, HubspotForm, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, HubspotForm, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 import {
   CapitalOneIcon,
@@ -6,9 +6,9 @@ import {
   CaterpillarIcon,
   RoyalBankOfCanadaIcon,
   ShopifyIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function TrialNxEnterprise(): ReactElement {
   return (

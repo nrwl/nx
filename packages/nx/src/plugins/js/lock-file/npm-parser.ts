@@ -11,9 +11,11 @@ import {
   DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 /**
  * NPM
@@ -60,6 +62,7 @@ let keyMap = new Map<string, ProjectGraphExternalNode>();
 let currentLockFileHash: string;
 
 let parsedLockFile: NpmLockFile;
+
 function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
   if (lockFileHash === currentLockFileHash) {
     return parsedLockFile;
@@ -395,8 +398,14 @@ export function stringifyNpmLockfile(
 ): string {
   const rootLockFile = JSON.parse(rootLockFileContent) as NpmLockFile;
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
+  const workspaceModulesFromGraph = getWorkspacePackagesFromGraph(graph);
 
   const mappedPackages = mapSnapshots(rootLockFile, graph);
+  const workspaceModules = mapWorkspaceModules(
+    packageJson,
+    rootLockFile,
+    workspaceModulesFromGraph
+  );
 
   const output: NpmLockFile = {
     name: packageJson.name || rootLockFile.name,
@@ -407,13 +416,50 @@ export function stringifyNpmLockfile(
     output.requires = rootLockFile.requires;
   }
   if (lockfileVersion > 1) {
-    output.packages = mapV3Snapshots(mappedPackages, packageJson);
+    const packages = mapV3Snapshots(mappedPackages, packageJson);
+    output.packages = { ...packages, ...workspaceModules };
   }
   if (lockfileVersion < 3) {
-    output.dependencies = mapV1Snapshots(mappedPackages);
+    const dependencies = mapV1Snapshots(mappedPackages);
+    output.dependencies = { ...dependencies, ...workspaceModules };
   }
 
   return JSON.stringify(output, null, 2);
+}
+
+function mapWorkspaceModules(
+  packageJson: NormalizedPackageJson,
+  rootLockFile: NpmLockFile,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
+) {
+  const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
+  for (const [pkgName, pkgVersion] of Object.entries(
+    packageJson.dependencies ?? {}
+  )) {
+    if (workspaceModules.has(pkgName)) {
+      let workspaceModuleDefinition: NpmDependencyV3 & NpmDependencyV1;
+      for (const [depName, depSnapshot] of Object.entries(
+        rootLockFile.packages || rootLockFile.dependencies
+      )) {
+        if (depSnapshot.name === pkgName) {
+          workspaceModuleDefinition = depSnapshot;
+          break;
+        }
+      }
+
+      output[`node_modules/${pkgName}`] = {
+        version: `file:./workspace_modules/${pkgName}`,
+        resolved: `workspace_modules/${pkgName}`,
+        link: true,
+      };
+      output[`workspace_modules/${pkgName}`] = {
+        name: pkgName,
+        version: `0.0.1`,
+        dependencies: workspaceModuleDefinition.dependencies,
+      };
+    }
+  }
+  return output;
 }
 
 function mapV3Snapshots(
@@ -421,13 +467,27 @@ function mapV3Snapshots(
   packageJson: NormalizedPackageJson
 ): Record<string, NpmDependencyV3> {
   const output: Record<string, NpmDependencyV3> = {};
-  output[''] = packageJson;
+  const mappedPackageJson = mapPackageJsonWithWorkspaceModules(packageJson);
+  output[''] = mappedPackageJson;
 
   mappedPackages.forEach((p) => {
     output[p.path] = p.valueV3;
   });
 
   return output;
+}
+
+function mapPackageJsonWithWorkspaceModules(
+  packageJson: NormalizedPackageJson
+) {
+  for (const [pkgName, pkgVersion] of Object.entries(
+    packageJson.dependencies ?? {}
+  )) {
+    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
+      packageJson.dependencies[pkgName] = `workspace_modules/${pkgName}`;
+    }
+  }
+  return packageJson;
 }
 
 function mapV1Snapshots(

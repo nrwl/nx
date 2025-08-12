@@ -90,48 +90,57 @@ function __napi_rs_initialize_modules(__napiInstance) {
   __napiInstance.exports['__napi_register__get_transformable_outputs_5']?.()
   __napiInstance.exports['__napi_register__hash_array_6']?.()
   __napiInstance.exports['__napi_register__hash_file_7']?.()
-  __napiInstance.exports['__napi_register__IS_WASM_8']?.()
-  __napiInstance.exports['__napi_register__get_binary_target_9']?.()
-  __napiInstance.exports['__napi_register__ImportResult_struct_10']?.()
-  __napiInstance.exports['__napi_register__find_imports_11']?.()
-  __napiInstance.exports['__napi_register__transfer_project_graph_12']?.()
-  __napiInstance.exports['__napi_register__ExternalNode_struct_13']?.()
-  __napiInstance.exports['__napi_register__Target_struct_14']?.()
-  __napiInstance.exports['__napi_register__Project_struct_15']?.()
-  __napiInstance.exports['__napi_register__ProjectGraph_struct_16']?.()
-  __napiInstance.exports['__napi_register__HashPlanner_struct_17']?.()
-  __napiInstance.exports['__napi_register__HashPlanner_impl_21']?.()
-  __napiInstance.exports['__napi_register__HashDetails_struct_22']?.()
-  __napiInstance.exports['__napi_register__HasherOptions_struct_23']?.()
-  __napiInstance.exports['__napi_register__TaskHasher_struct_24']?.()
-  __napiInstance.exports['__napi_register__TaskHasher_impl_27']?.()
-  __napiInstance.exports['__napi_register__Task_struct_28']?.()
-  __napiInstance.exports['__napi_register__TaskTarget_struct_29']?.()
-  __napiInstance.exports['__napi_register__TaskGraph_struct_30']?.()
-  __napiInstance.exports['__napi_register__FileData_struct_31']?.()
-  __napiInstance.exports['__napi_register__InputsInput_struct_32']?.()
-  __napiInstance.exports['__napi_register__FileSetInput_struct_33']?.()
-  __napiInstance.exports['__napi_register__RuntimeInput_struct_34']?.()
-  __napiInstance.exports['__napi_register__EnvironmentInput_struct_35']?.()
-  __napiInstance.exports['__napi_register__ExternalDependenciesInput_struct_36']?.()
-  __napiInstance.exports['__napi_register__DepsOutputsInput_struct_37']?.()
-  __napiInstance.exports['__napi_register__NxJson_struct_38']?.()
-  __napiInstance.exports['__napi_register__FileLock_struct_39']?.()
-  __napiInstance.exports['__napi_register__FileLock_impl_41']?.()
-  __napiInstance.exports['__napi_register__WorkspaceContext_struct_42']?.()
-  __napiInstance.exports['__napi_register__WorkspaceContext_impl_51']?.()
-  __napiInstance.exports['__napi_register__WorkspaceErrors_52']?.()
-  __napiInstance.exports['__napi_register__NxWorkspaceFiles_struct_53']?.()
-  __napiInstance.exports['__napi_register__NxWorkspaceFilesExternals_struct_54']?.()
-  __napiInstance.exports['__napi_register__UpdatedWorkspaceFiles_struct_55']?.()
-  __napiInstance.exports['__napi_register__FileMap_struct_56']?.()
-  __napiInstance.exports['__napi_register____test_only_transfer_file_map_57']?.()
+  __napiInstance.exports['__napi_register__can_install_nx_console_8']?.()
+  __napiInstance.exports['__napi_register__install_nx_console_9']?.()
+  __napiInstance.exports['__napi_register__NxConsolePreferences_struct_10']?.()
+  __napiInstance.exports['__napi_register__NxConsolePreferences_impl_14']?.()
+  __napiInstance.exports['__napi_register__log_debug_15']?.()
+  __napiInstance.exports['__napi_register__log_error_16']?.()
+  __napiInstance.exports['__napi_register__IS_WASM_17']?.()
+  __napiInstance.exports['__napi_register__get_binary_target_18']?.()
+  __napiInstance.exports['__napi_register__ImportResult_struct_19']?.()
+  __napiInstance.exports['__napi_register__find_imports_20']?.()
+  __napiInstance.exports['__napi_register__transfer_project_graph_21']?.()
+  __napiInstance.exports['__napi_register__ExternalNode_struct_22']?.()
+  __napiInstance.exports['__napi_register__Target_struct_23']?.()
+  __napiInstance.exports['__napi_register__Project_struct_24']?.()
+  __napiInstance.exports['__napi_register__ProjectGraph_struct_25']?.()
+  __napiInstance.exports['__napi_register__HashPlanner_struct_26']?.()
+  __napiInstance.exports['__napi_register__HashPlanner_impl_30']?.()
+  __napiInstance.exports['__napi_register__HashDetails_struct_31']?.()
+  __napiInstance.exports['__napi_register__HasherOptions_struct_32']?.()
+  __napiInstance.exports['__napi_register__TaskHasher_struct_33']?.()
+  __napiInstance.exports['__napi_register__TaskHasher_impl_36']?.()
+  __napiInstance.exports['__napi_register__Task_struct_37']?.()
+  __napiInstance.exports['__napi_register__TaskTarget_struct_38']?.()
+  __napiInstance.exports['__napi_register__TaskResult_struct_39']?.()
+  __napiInstance.exports['__napi_register__TaskGraph_struct_40']?.()
+  __napiInstance.exports['__napi_register__FileData_struct_41']?.()
+  __napiInstance.exports['__napi_register__InputsInput_struct_42']?.()
+  __napiInstance.exports['__napi_register__FileSetInput_struct_43']?.()
+  __napiInstance.exports['__napi_register__RuntimeInput_struct_44']?.()
+  __napiInstance.exports['__napi_register__EnvironmentInput_struct_45']?.()
+  __napiInstance.exports['__napi_register__ExternalDependenciesInput_struct_46']?.()
+  __napiInstance.exports['__napi_register__DepsOutputsInput_struct_47']?.()
+  __napiInstance.exports['__napi_register__NxJson_struct_48']?.()
+  __napiInstance.exports['__napi_register__FileLock_struct_49']?.()
+  __napiInstance.exports['__napi_register__FileLock_impl_51']?.()
+  __napiInstance.exports['__napi_register__WorkspaceContext_struct_52']?.()
+  __napiInstance.exports['__napi_register__WorkspaceContext_impl_63']?.()
+  __napiInstance.exports['__napi_register__WorkspaceErrors_64']?.()
+  __napiInstance.exports['__napi_register__NxWorkspaceFiles_struct_65']?.()
+  __napiInstance.exports['__napi_register__NxWorkspaceFilesExternals_struct_66']?.()
+  __napiInstance.exports['__napi_register__UpdatedWorkspaceFiles_struct_67']?.()
+  __napiInstance.exports['__napi_register__FileMap_struct_68']?.()
+  __napiInstance.exports['__napi_register____test_only_transfer_file_map_69']?.()
 }
 module.exports.FileLock = __napiModule.exports.FileLock
 module.exports.HashPlanner = __napiModule.exports.HashPlanner
 module.exports.ImportResult = __napiModule.exports.ImportResult
+module.exports.NxConsolePreferences = __napiModule.exports.NxConsolePreferences
 module.exports.TaskHasher = __napiModule.exports.TaskHasher
 module.exports.WorkspaceContext = __napiModule.exports.WorkspaceContext
+module.exports.canInstallNxConsole = __napiModule.exports.canInstallNxConsole
 module.exports.copy = __napiModule.exports.copy
 module.exports.expandOutputs = __napiModule.exports.expandOutputs
 module.exports.findImports = __napiModule.exports.findImports
@@ -140,7 +149,10 @@ module.exports.getFilesForOutputs = __napiModule.exports.getFilesForOutputs
 module.exports.getTransformableOutputs = __napiModule.exports.getTransformableOutputs
 module.exports.hashArray = __napiModule.exports.hashArray
 module.exports.hashFile = __napiModule.exports.hashFile
+module.exports.installNxConsole = __napiModule.exports.installNxConsole
 module.exports.IS_WASM = __napiModule.exports.IS_WASM
+module.exports.logDebug = __napiModule.exports.logDebug
+module.exports.logError = __napiModule.exports.logError
 module.exports.remove = __napiModule.exports.remove
 module.exports.testOnlyTransferFileMap = __napiModule.exports.testOnlyTransferFileMap
 module.exports.transferProjectGraph = __napiModule.exports.transferProjectGraph

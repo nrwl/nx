@@ -3,6 +3,8 @@ title: Overview of the Nx Remix Plugin
 description: The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries within an Nx workspace.
 ---
 
+# @nx/remix
+
 The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries
 within an Nx workspace. It provides:
 
@@ -24,9 +26,6 @@ Make sure to install the `@nx/remix` version that matches the version of `nx` in
 {% /callout %}
 
 In any Nx workspace, you can install `@nx/remix` by running the following command:
-
-{% tabs %}
-{% tab label="Nx 18+" %}
 
 ```shell {% skipRescope=true %}
 nx add @nx/remix
@@ -67,18 +66,6 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 The `buildTargetName`, `devTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `dev`, `start` and `typecheck`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/remix` package with your package manager.
-
-```shell
-npm add -D @nx/remix
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the Remix Plugin
 

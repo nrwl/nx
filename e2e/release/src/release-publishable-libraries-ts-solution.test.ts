@@ -5,7 +5,7 @@ import {
   runCommandAsync,
   tmpProjPath,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { emptydirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
 
@@ -52,7 +52,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
 
   beforeAll(async () => {
     newProject({
-      packages: ['@nx/js', '@nx/react', '@nx/vue'],
+      packages: ['@nx/js', '@nx/react', '@nx/vue', '@nx/react-native'],
       preset: 'ts',
     });
 
@@ -69,7 +69,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
 
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
-  }, 60000);
+  }, 100000);
 
   beforeEach(() => {
     try {
@@ -89,10 +89,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
-      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Using the provided version specifier "0.0.2".
-      @proj/{project-name} ✍️  New version 0.0.2 written to packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from manifest: packages/{project-name}/package.json
+      @proj/{project-name} ❓ Applied explicit semver value "0.0.2", from the given specifier, to get new version 0.0.2
+      @proj/{project-name} ✍️  New version 0.0.2 written to manifest: packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.2",
@@ -144,10 +143,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
-      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Using the provided version specifier "0.0.3".
-      @proj/{project-name} ✍️  New version 0.0.3 written to packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from manifest: packages/{project-name}/package.json
+      @proj/{project-name} ❓ Applied explicit semver value "0.0.3", from the given specifier, to get new version 0.0.3
+      @proj/{project-name} ✍️  New version 0.0.3 written to manifest: packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.3",
@@ -170,8 +168,8 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       📦  @proj/{project-name}@0.0.3
       === Tarball Contents ===
       XXB README.md
+      XXB dist/index.d.ts
       XXB dist/index.esm.css
-      XXB dist/index.esm.d.ts
       XXB dist/index.esm.js
       XXX.XXX kb dist/README.md
       XXB dist/src/index.d.ts
@@ -204,10 +202,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
-      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Using the provided version specifier "0.0.4".
-      @proj/{project-name} ✍️  New version 0.0.4 written to packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from manifest: packages/{project-name}/package.json
+      @proj/{project-name} ❓ Applied explicit semver value "0.0.4", from the given specifier, to get new version 0.0.4
+      @proj/{project-name} ✍️  New version 0.0.4 written to manifest: packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",
@@ -240,6 +237,65 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       filename:      proj-{project-name}-0.0.4.tgz
       package size: XXXB
       unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files: X
+      Published to ${e2eRegistryUrl} with tag "latest"
+      NX   Successfully ran target nx-release-publish for project @proj/{project-name}
+    `);
+  });
+
+  it('should be able to release publishable react native library', async () => {
+    const reactNativeLib = uniq('my-pkg-');
+    runCLI(
+      `generate @nx/react-native:lib packages/${reactNativeLib} --publishable --importPath=@proj/${reactNativeLib} --no-interactive`
+    );
+    runCLI('sync');
+
+    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`);
+    expect(releaseOutput).toMatchInlineSnapshot(`
+      NX   Executing pre-version command
+      NX   Running release version for project: @proj/{project-name}
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from manifest: packages/{project-name}/package.json
+      @proj/{project-name} ❓ Applied explicit semver value "0.0.6", from the given specifier, to get new version 0.0.6
+      @proj/{project-name} ✍️  New version 0.0.6 written to manifest: packages/{project-name}/package.json
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.1",
+      +   "version": "0.0.6",
+      "main": "./dist/index.cjs.js",
+      NX   Updating PM lock file
+      NX   Staging changed files with git
+      NX   Generating an entry in CHANGELOG.md for v0.0.6
+      + ## 0.0.6 (YYYY-MM-DD)
+      +
+      + This was a version bump only, there were no code changes.
+      +
+      ## 0.0.4 (YYYY-MM-DD)
+      This was a version bump only, there were no code changes.
+      NX   Staging changed files with git
+      NX   Committing changes with git
+      NX   Tagging commit with git
+      NX   Running target nx-release-publish for project @proj/{project-name}:
+      - @proj/{project-name}
+      > nx run @proj/{project-name}:nx-release-publish
+      📦  @proj/{project-name}@0.0.6
+      === Tarball Contents ===
+      XXB README.md
+      XXB dist/index.cjs.js
+      XXB dist/index.d.ts
+      XXB dist/index.esm.js
+      XXX.XXX kb dist/README.md
+      XXB dist/src/index.d.ts
+      XXB dist/src/index.d.ts.map
+      XXB dist/src/lib/{project-name}.d.ts
+      XXB dist/src/lib/{project-name}.d.ts.map
+      XXXB package.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       0.0.6
+      filename:      proj-{project-name}-0.0.6.tgz
+      package size:  XXX.XXX kb
+      unpacked size: XXX.XXX kb
       shasum:        {SHASUM}
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files: X

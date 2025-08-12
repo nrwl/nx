@@ -1,0 +1,19 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                                                        "
+" NX    Completed Test Tasks                                                                             Cache   Duration"
+"                                                                                                                        "
+"  ✖    task2                                                                                                -        ..."
+"> ✔    task1                                                                                                -        ..."
+"  ✔    task3                                                                                                -        ..."
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"  ← 1/1 →   View logs and run details at https://nx.app/runs/KnGk4A47qk                                 quit: q  help: ?"

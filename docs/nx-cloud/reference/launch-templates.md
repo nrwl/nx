@@ -59,7 +59,7 @@ The following resource classes are available:
 - `docker_linux_arm64/extra_large`
 - `windows/medium`
 
-See their detailed description and pricing at [nx.dev/pricing](/pricing#plan-detail?sutm_source=nx.dev&utm_medium=launch-templates).
+See their detailed description and pricing in the [credits pricing reference](/ci/reference/credits-pricing?utm_source=nx.dev&utm_medium=launch-templates).
 
 ### `launch-templates.<template-name>.image`
 
@@ -95,7 +95,7 @@ Nx Cloud provides the following images:
 
 > Note: Windows-based images can only run on Windows-based [resource classes](#launch-templatestemplate-nameresourceclass).
 
-Enterprise accounts can use custom images.
+Enterprise accounts [can use custom images](/ci/reference/custom-images).
 
 ### `launch-templates.<template-name>.env`
 
@@ -418,7 +418,7 @@ To do this, run the `nx-cloud validate` command, with the path to the launch tem
 nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
-## Pass Environment Variables to Agents
+## Pass Environment Variables
 
 If you need to send environment variables to agents, you can use the [--with-env-vars](/ci/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
 
@@ -555,7 +555,7 @@ Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack)
 Currently, corepack [only supports yarn or pnpm](https://nodejs.org/api/corepack.html#supported-package-managers) as package managers. If you need to use a specific npm version, you will need to create a custom launch template and install the specific npm version, i.e. `npm install -g npm@<version>`
 {%/callout %}
 
-## Installing Packages on Nx Agents
+## Installing Packages
 
 You can use `apt` to install popular linux packages. This is helpful in streamlining setting up various toolchains needed for your workspace.
 
@@ -575,6 +575,66 @@ launch-templates:
 {% callout type="note" title="Installing without apt" %}
 If you're trying to install a package that isn't available on `apt`, check that packages install steps for Debian base linux. Usually there are a handful of installation scripts that can be used [similar to `nvm`](#custom-node-version)
 {% /callout %}
+
+## AWS CLI
+
+First, define the environment variables on your main agent, where you call [`nx-cloud start-ci-run`](/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun). Pass the same environment variables to your agents via the [`--with-env-vars` flag](/ci/reference/nx-cloud-cli#withenvvars-nx-agents-only).
+
+Minimally the `AWS_REGION` (or `AWS_DEFAULT_REGION`), `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` environment variables are required.
+
+{% callout type="check" title="OIDC Provider" %}
+If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html), e.g. the [AWS GitHub Action recommended setup](https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#using-this-action), then the environment variables are automatically configured for you after authentication to AWS. Since the credentials created for with OIDC provider flow are temporary, you'll need to pass the `AWS_SESSION_TOKEN` environment variable to your agents.
+
+{% /callout %}
+
+{% tabs %}
+{% tab label="Pre-Built Step" %}
+
+Using the pre-built step simplifies and provides debugging checks to make sure the AWS CLI is properly authenticated to AWS before continuing. The step is recommended for most use cases.
+
+```yaml {% fileName="./nx/workflows/agents.yaml"  highlightLines=["6-8"]%}
+launch-templates:
+  my-linux-medium-js:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.11-v9'
+    init-steps:
+      - name: Install AWS CLI
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-aws-cli/main.yaml'
+        # no additional inputs required, as all configuration is via environment variables via --with-env-vars
+```
+
+{% /tab %}
+{% tab label="Manual Installation" %}
+
+Manual installation follows [installing the AWS CLI using the official directions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). In order to decompress the installation archive, you'll need to install the `unzip` package in your step.
+Manual installation is helpful if a custom installation setup is required.
+It is helpful to run `aws sts get-caller-identity` command to make sure you're properly authenticated to AWS before proceeding
+
+```yaml {% fileName="./nx/workflows/agents.yaml" highlightLines=["6-20"] %}
+launch-templates:
+  my-linux-medium-js:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.11-v9'
+    init-steps:
+      # step assumes you've passed all required AWS_* environment variables from the main agent via --with-env-vars
+      - name: Install AWS CLI
+        script: |
+          # unzip is required to unzip the AWS CLI installer
+          sudo apt install gh unzip -y
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          # run installer, default location is already in the PATH
+          # if installing in a custom location, 
+          # then update the $PATH like `PATH=$PATH:[extra-path-items] >> $NX_CLOUD_ENV`
+          sudo ./aws/install
+          # print AWS CLI version to verify command is avaiable
+          aws --version
+          # verify credentials to AWS is working
+          aws sts get-caller-identity
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Dynamic Changesets
 

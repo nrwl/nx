@@ -1,12 +1,13 @@
 import {
   cleanupProject,
+  getAvailablePort,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
 describe('Federate Module', () => {
@@ -23,8 +24,10 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
+    const shellPort = await getAvailablePort();
+
     runCLI(
-      `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
+      `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --devServerPort=${shellPort} --no-interactive --skipFormat`
     );
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
@@ -103,7 +106,7 @@ describe('Federate Module', () => {
 
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch --verbose`,
+        `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(
@@ -122,8 +125,10 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
+    const shellPort = await getAvailablePort();
+
     runCLI(
-      `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
+      `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --devServerPort=${shellPort} --no-interactive --skipFormat`
     );
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
@@ -195,7 +200,7 @@ describe('Federate Module', () => {
 
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch --verbose`,
+        `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(

@@ -19,34 +19,41 @@ jobs:
   preinstall:
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       matrix:
         os:
           - ubuntu-latest
           - macos-latest
+          # - windows-latest Windows fails to build gradle wrapper which always runs when we build nx.
+          ## https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
         node_version:
-          - 18
           - 20
           - 22
           # - 23
         exclude:
-          # run just node v20 on macos
-          - os: macos-latest
-            node_version: 18
+          # run just node v20 on macos and windows
           - os: macos-latest
             node_version: 22
           # - os: macos-latest
+          #   node_version: 23
+          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
+            # node_version: 22
+          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 23
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - name: Set node
@@ -55,13 +62,17 @@ jobs:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
-      - name: Cache node_modules
-        id: cache-modules
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "path=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          lookup-only: true
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Ensure Python setuptools Installed on Macos
         if: ${{ matrix.os == 'macos-latest' }}
@@ -69,8 +80,9 @@ jobs:
         run: brew install python-setuptools
 
       - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -99,300 +111,45 @@ jobs:
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
 
+  prepare-matrix:
+    name: Prepare matrix combinations
+    if: ${{ github.repository_owner == 'nrwl' }}
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.process-json.outputs.MATRIX }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Process matrix data
+        id: process-json
+        run:
+          echo "MATRIX=$(npx tsx .github/workflows/nightly/process-matrix.ts | jq -c .)" >> $GITHUB_OUTPUT
+
   e2e:
     if: ${{ github.repository_owner == 'nrwl' }}
-    needs: preinstall
+    needs:
+      - preinstall
+      - prepare-matrix
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 200     # <- cap each job to 200 minutes
     strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-        node_version:
-          - 18
-          - 20
-          - 22
-          # - 23
-        package_manager:
-          - npm
-          - yarn
-          - pnpm
-        project:
-          - e2e-angular
-          - e2e-cypress
-          - e2e-detox
-          - e2e-esbuild
-          - e2e-eslint
-          - e2e-expo
-          - e2e-gradle
-          - e2e-jest
-          - e2e-js
-          - e2e-lerna-smoke-tests
-          - e2e-next
-          - e2e-node
-          - e2e-nuxt
-          - e2e-nx-init
-          - e2e-nx
-          - e2e-playwright
-          - e2e-plugin
-          - e2e-react
-          - e2e-react-native
-          - e2e-release
-          - e2e-remix
-          - e2e-rollup
-          - e2e-storybook
-          - e2e-vite
-          - e2e-vue
-          - e2e-web
-          - e2e-webpack
-          - e2e-workspace-create
-        include:
-          # os short names
-          - os: ubuntu-latest
-            os_name: 'Linux'
-          - os: macos-latest
-            os_name: 'MacOS'
-          # test timeouts
-          - os: ubuntu-latest
-            os_timeout: 60
-          - os: macos-latest
-            os_timeout: 90
-          # codeowner groups
-          - project: e2e-angular
-            codeowners: 'S04SS457V38'
-          - project: e2e-cypress
-            codeowners: 'S04T16BTJJY'
-          - project: e2e-detox
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-esbuild
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-expo
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-gradle
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-jest
-            codeowners: 'S04T16BTJJY'
-          - project: e2e-js
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-lerna-smoke-tests
-            codeowners: 'S04TNCVEETS'
-          - project: e2e-eslint
-            codeowners: 'S04SYJGKSCT'
-          - project: e2e-next
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-node
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-nx-init
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-nx
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-plugin
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-release
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-react
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-react-native
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-web
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-rollup
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-storybook
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-playwright
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-remix
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-vite
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-vue
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-nuxt
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-webpack
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-workspace-create
-            codeowners: 'S04SYHYKGNP'
-        exclude:
-          # exclude react-native tests from ubuntu
-          - os: ubuntu-latest
-            project: e2e-react-native
-          - os: ubuntu-latest
-            project: e2e-detox
-          - os: ubuntu-latest
-            project: e2e-expo
-          # exclude non-CNW/Lerna tests from non-LTS node versions
-          - node_version: 18
-            project: e2e-angular
-          - node_version: 18
-            project: e2e-cypress
-          - node_version: 18
-            project: e2e-detox
-          - node_version: 18
-            project: e2e-esbuild
-          - node_version: 18
-            project: e2e-expo
-          - node_version: 18
-            project: e2e-gradle
-          - node_version: 18
-            project: e2e-jest
-          - node_version: 18
-            project: e2e-js
-          - node_version: 18
-            project: e2e-eslint
-          - node_version: 18
-            project: e2e-next
-          - node_version: 18
-            project: e2e-node
-          - node_version: 18
-            project: e2e-nuxt
-          - node_version: 18
-            project: e2e-nx-init
-          - node_version: 18
-            project: e2e-nx
-          - node_version: 18
-            project: e2e-plugin
-          - node_version: 18
-            project: e2e-playwright
-          - node_version: 18
-            project: e2e-react
-          - node_version: 18
-            project: e2e-react-native
-          - node_version: 18
-            project: e2e-web
-          - node_version: 18
-            project: e2e-remix
-          - node_version: 18
-            project: e2e-rollup
-          - node_version: 18
-            project: e2e-storybook
-          - node_version: 18
-            project: e2e-vite
-          - node_version: 18
-            project: e2e-vue
-          - node_version: 18
-            project: e2e-webpack
-          - node_version: 22
-            project: e2e-angular
-          - node_version: 22
-            project: e2e-cypress
-          - node_version: 22
-            project: e2e-detox
-          - node_version: 22
-            project: e2e-esbuild
-          - node_version: 22
-            project: e2e-expo
-          - node_version: 22
-            project: e2e-gradle
-          - node_version: 22
-            project: e2e-jest
-          - node_version: 22
-            project: e2e-js
-          - node_version: 22
-            project: e2e-eslint
-          - node_version: 22
-            project: e2e-next
-          - node_version: 22
-            project: e2e-node
-          - node_version: 22
-            project: e2e-nuxt
-          - node_version: 22
-            project: e2e-nx-init
-          - node_version: 22
-            project: e2e-nx
-          - node_version: 22
-            project: e2e-plugin
-          - node_version: 22
-            project: e2e-playwright
-          - node_version: 22
-            project: e2e-react
-          - node_version: 22
-            project: e2e-react-native
-          - node_version: 22
-            project: e2e-web
-          - node_version: 22
-            project: e2e-remix
-          - node_version: 22
-            project: e2e-rollup
-          - node_version: 22
-            project: e2e-storybook
-          - node_version: 22
-            project: e2e-vite
-          - node_version: 22
-            project: e2e-vue
-          - node_version: 22
-            project: e2e-webpack
-          # - node_version: 23
-          #   project: e2e-angular
-          # - node_version: 23
-          #   project: e2e-cypress
-          # - node_version: 23
-          #   project: e2e-detox
-          # - node_version: 23
-          #   project: e2e-esbuild
-          # - node_version: 23
-          #   project: e2e-expo
-          # - node_version: 23
-          #   project: e2e-gradle
-          # - node_version: 23
-          #   project: e2e-jest
-          # - node_version: 23
-          #   project: e2e-js
-          # - node_version: 23
-          #   project: e2e-eslint
-          # - node_version: 23
-          #   project: e2e-next
-          # - node_version: 23
-          #   project: e2e-node
-          # - node_version: 23
-          #   project: e2e-nuxt
-          # - node_version: 23
-          #   project: e2e-nx-init
-          # - node_version: 23
-          #   project: e2e-nx
-          # - node_version: 23
-          #   project: e2e-plugin
-          # - node_version: 23
-          #   project: e2e-playwright
-          # - node_version: 23
-          #   project: e2e-react
-          # - node_version: 23
-          #   project: e2e-react-native
-          # - node_version: 23
-          #   project: e2e-web
-          # - node_version: 23
-          #   project: e2e-remix
-          # - node_version: 23
-          #   project: e2e-rollup
-          # - node_version: 23
-          #   project: e2e-storybook
-          # - node_version: 23
-          #   project: e2e-vite
-          # - node_version: 23
-          #   project: e2e-vue
-          # - node_version: 23
-          #   project: e2e-webpack
-          # run just npm v20 on macos
-          - os: macos-latest
-            package_manager: yarn
-          - os: macos-latest
-            package_manager: pnpm
-          - os: macos-latest
-            node_version: 18
-          - os: macos-latest
-            node_version: 22
-          # - os: macos-latest
-          #   node_version: 23
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
 
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
 
       - name: Prepare dir for output
         run: mkdir -p outputs
@@ -400,7 +157,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
@@ -409,15 +166,27 @@ jobs:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
-      - name: Cache node_modules
-        id: cache-modules
-        uses: actions/cache@v4
+      - name: Install Rust
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: |
+          curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustup toolchain install 1.70.0
+
+      - name: Load Cargo Env
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+  
+      - name: Install bun
+        if: ${{ matrix.os != 'windows-latest' }}
+        uses: oven-sh/setup-bun@v1
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
+          bun-version: latest
 
       - name: Install packages
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -456,44 +225,159 @@ jobs:
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
 
-      - name: Install applesimutils, reset ios simulators
+      - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-          xcrun simctl shutdown all && xcrun simctl erase all
+          # Ensure Xcode command line tools are installed and configured
+          xcode-select --print-path || sudo xcode-select --reset
+          sudo xcode-select -s /Applications/Xcode.app
+          
+          # Install or update applesimutils with error handling
+          if ! brew list applesimutils &>/dev/null; then
+            echo "Installing applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
+              echo "Failed to install applesimutils, retrying with update..."
+              brew update
+              HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
+            }
+          else
+            echo "Updating applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade applesimutils || true
+          fi
+          
+          # Verify applesimutils installation
+          applesimutils --version || (echo "applesimutils installation failed" && exit 1)
+          
+          # Configure environment for M-series Mac
+          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+          echo "PLATFORM_NAME=iOS Simulator" >> $GITHUB_ENV
+          
+          # Set additional environment variables for better debugging
+          echo "DETOX_DISABLE_TELEMETRY=1" >> $GITHUB_ENV
+          echo "DETOX_LOG_LEVEL=trace" >> $GITHUB_ENV
+          
+          # Verify Xcode installation
+          xcodebuild -version
+          
+        timeout-minutes: 10
+        continue-on-error: false
+
+      - name: Reset iOS Simulators
+        if: ${{ matrix.os == 'macos-latest' }}
+        id: reset-simulators
+        run: |
+          echo "Resetting iOS Simulators..."
+          
+          # Kill simulator processes
+          sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+          killall "Simulator" 2>/dev/null || true
+          killall "iOS Simulator" 2>/dev/null || true
+          
+          # Wait for processes to terminate
+          sleep 3
+          
+          # Shutdown and erase all simulators (ignore failures)
+          xcrun simctl shutdown all 2>/dev/null || true
+          sleep 5
+          xcrun simctl erase all 2>/dev/null || true
+          
+          # If erase failed, try the nuclear option
+          if xcrun simctl list devices | grep -q "Booted" 2>/dev/null; then
+            echo "Standard reset failed, using nuclear option..."
+            rm -rf ~/Library/Developer/CoreSimulator/Devices/* 2>/dev/null || true
+            launchctl remove com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+            sleep 3
+          fi
+          
+          # Clean up additional directories
+          rm -rf ~/Library/Developer/CoreSimulator/Caches/* 2>/dev/null || true
+          rm -rf ~/Library/Logs/CoreSimulator/* 2>/dev/null || true
+          rm -rf ~/Library/Developer/Xcode/DerivedData/* 2>/dev/null || true
+          
+          echo "Simulator reset completed"
+        timeout-minutes: 5
+        continue-on-error: true
+
+      - name: Verify Simulator Reset
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
+        run: |
+          # Verify CoreSimulator service restarted
+          pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
+          
+          # Verify simulator runtime paths exist and are writable
+          test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
+          touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
+          rm ~/Library/Developer/CoreSimulator/Devices/test
+        timeout-minutes: 5
+
+      - name: Diagnose Simulator Reset Failure
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'failure' }}
+        run: |
+          echo "Simulator reset failed. Collecting diagnostic information..."
+          xcrun simctl list
+          echo "Checking simulator logs..."
+          ls -la ~/Library/Logs/CoreSimulator/ || echo "No simulator logs found"
 
       - name: Configure git metadata (needed for lerna smoke tests)
+        if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         run: |
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
       - name: Set starting timestamp
+        if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         id: before-e2e
+        shell: bash
         run: |
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
 
-      - name: Run e2e tests
-        id: e2e-run
-        run: pnpm nx run-many -t e2e-local -p ${{ matrix.project }}
+      - name: Run e2e tests with pnpm (Linux/Windows)
+        id: e2e-run-pnpm
+        if: ${{ matrix.os != 'macos-latest' }}
+        run: pnpm nx run ${{ matrix.project }}:e2e-local
+        shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
-          GIT_AUTHOR_EMAIL: test@test.com
-          GIT_AUTHOR_NAME: Test
-          GIT_COMMITTER_EMAIL: test@test.com
-          GIT_COMMITTER_NAME: Test
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+          NX_DAEMON: 'true'
+          NX_PERF_LOGGING: 'false'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NX_CLOUD_NO_TIMEOUTS: 'true'
+          NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
-          NX_CACHE_DIRECTORY: 'tmp'
-          NX_E2E_SKIP_CLEANUP: 'true'
-          NX_E2E_RUN_E2E: 'true'
-          NX_E2E_VERBOSE_LOGGING: 'true'
+          CI: true
+  
+      - name: Run e2e tests with npm (macOS)
+        id: e2e-run-npm
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
+        run: |
+          # Run the tests
+          if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local
+          else
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local
+          fi
+        
+        env:
+          NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
           NX_PERF_LOGGING: 'false'
-          NX_DAEMON: 'true'
-          NX_SKIP_LOG_GROUPING: 'true'
+          NX_CI_EXECUTION_ENV: 'macos'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NX_E2E_SKIP_CLEANUP: 'true'
+          NODE_OPTIONS: --max_old_space_size=8192
+          SELECTED_PM: 'npm'
+          npm_config_registry: http://localhost:4872
+          YARN_REGISTRY: http://localhost:4872
+          DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
+          CI: true
 
       - name: Save matrix config in file
         if: ${{ always() }}
@@ -503,9 +387,13 @@ jobs:
           before=${{ steps.before-e2e.outputs.timestamp }}
           now=$(date +%s)
           delta=$(($now - $before))
+          
+          # Determine the outcome based on which step ran
+          outcome="${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}"
+          
           matrix=$((
             echo '${{ toJSON(matrix) }}'
-          ) | jq --argjson delta $delta -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
+          ) | jq --argjson delta $delta -c '. + { "status": "'"$outcome"'", "duration": $delta }')
           echo "$matrix" > 'outputs/matrix.json'
 
       - name: Upload matrix config
@@ -521,17 +409,27 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
         uses: mxschmitt/action-tmate@v3.8
         timeout-minutes: 15
+        with:
+          sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
 
   process-result:
-    if: ${{ always() && github.repository_owner == 'nrwl' }}
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     needs: e2e
+    timeout-minutes: 10
     outputs:
-      message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
-      proj-duration: ${{ steps.process-json.outputs.SLACK_PROJ_DURATION }}
-      pm-duration: ${{ steps.process-json.outputs.SLACK_PM_DURATION }}
-      codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
+      message: ${{ steps.process-json.outputs.slack_message }}
+      proj_duration: ${{ steps.process-json.outputs.slack_proj_duration }}
+      pm_duration: ${{ steps.process-json.outputs.slack_pm_duration }}
+      codeowners: ${{ steps.process-json.outputs.codeowners }}
+      has_golden_failures: ${{ steps.process-json.outputs.has_golden_failures }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
       - name: Prepare dir for output
         run: mkdir -p outputs
 
@@ -543,171 +441,45 @@ jobs:
       - name: Join and stringify matrix configs
         id: combine-json
         run: |
-          combined=$((jq -s . outputs/*/matrix.json) | jq tostring)
+          combined=$(jq -sc . outputs/*/matrix.json)
           echo "combined=$combined" >> $GITHUB_OUTPUT
 
-      - name: Make slack outputs
+      - name: Process results with TypeScript script
         id: process-json
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          script: |
-            const combined = JSON.parse(${{ steps.combine-json.outputs.combined }});
-            const failedProjects = combined.filter(c => c.status === 'failure').sort((a, b) => a.project.localeCompare(b.project));
-
-            // codeowners
-            const codeowners = new Set();
-            failedProjects.forEach(c => {
-              codeowners.add(c.codeowners);
-            });
-            core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
-
-            function trimSpace(res) {
-              return res.split('\n').map((l) => l.trim()).join('\n');
-            }
-
-            // failed message
-            let lastProject;
-            let result = `
-              \`\`\`
-              | Failed project                 | PM   | OS    | Node |
-              |--------------------------------|------|-------|------|`;
-            failedProjects.forEach(matrix => {
-              const project = matrix.project !== lastProject ? matrix.project : '...';
-              result += `\n| ${project.padEnd(30)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} | v${matrix.node_version}  |`
-              lastProject = matrix.project;
-            });
-            result += `\`\`\``;
-            core.setOutput('SLACK_MESSAGE', trimSpace(result));
-
-            function humanizeDuration(num) {
-              let res = '';
-              const hours = Math.floor(num / 3600);
-              if (hours) {
-                res += `${hours}h `;
-              }
-              const mins = Math.floor((num % 3600) / 60);
-              if (mins) {
-                res += `${mins}m `;
-              }
-              const sec = num % 60;
-              if (sec) {
-                res += `${sec}s`
-              }
-              return res;
-            }
-
-            // duration message
-            const timeReport = {};
-            const pmReport = {
-              npm: 0,
-              yarn: 0,
-              pnpm: 0
-            };
-            const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native'];
-            combined.forEach((matrix) => {
-              if (matrix.os_name === 'Linux' && matrix.node_version === 18) {
-                pmReport[matrix.package_manager] += matrix.duration;
-              }
-              if (matrix.os_name === 'Linux' || macosProjects.includes(matrix.project)) {
-                if (timeReport[matrix.project]) {
-                  if (matrix.duration > timeReport[matrix.project].max) {
-                    timeReport[matrix.project].max = matrix.duration;
-                    timeReport[
-                      matrix.project
-                    ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
-                  }
-                  if (matrix.duration < timeReport[matrix.project].min) {
-                    timeReport[matrix.project].min = matrix.duration;
-                    timeReport[
-                      matrix.project
-                    ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
-                  }
-                } else {
-                  timeReport[matrix.project] = {
-                    min: matrix.duration,
-                    max: matrix.duration,
-                    minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                    maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                  };
-                }
-              }
-            });
-
-            // project time report
-            let resultPkg = `
-                \`\`\`
-                | Project                        | Time                      |
-                |--------------------------------|---------------------------|`;
-            function mapProjectTime(proj, section) {
-              let res = '';
-              res += `${humanizeDuration(timeReport[proj][section])}`;
-              res += ` (${timeReport[proj][section + 'Env']})`
-              return res;
-            }
-            function durationIcon(proj, section) {
-              if (timeReport[proj][section] < 12 * 60) {
-                return `${section} ✅`;
-              }
-              if (timeReport[proj][section] < 15 * 60) {
-                return `${section} ❗`;
-              }
-              return `${section} ❌`;
-            }
-            Object.keys(timeReport).forEach(proj => {
-              resultPkg += `\n| ${proj.padEnd(30)} |                           |`;
-              resultPkg += `\n| ${durationIcon(proj, 'min').padStart(29)} | ${mapProjectTime(proj, 'min').padEnd(25)} |`;
-              resultPkg += `\n| ${durationIcon(proj, 'max').padStart(29)} | ${mapProjectTime(proj, 'max').padEnd(25)} |`;
-            });
-            resultPkg += `\`\`\``;
-            core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
-
-            // Print project duration report inline to allow reviewing on manual runs (when no slack message will be sent)
-            console.log(trimSpace(resultPkg));
-
-            let resultPm = `
-                \`\`\`
-                | PM   | Total time  |
-                |------|-------------|`;
-            Object.keys(pmReport).forEach(pm => {
-              resultPm += `\n| ${pm.padEnd(4)} | ${humanizeDuration(pmReport[pm]).padEnd(11)} |`
-            });
-            resultPm += `\`\`\``;
-            core.setOutput('SLACK_PM_DURATION', trimSpace(resultPm));
-
-            // Print package manager duration report inline to allow reviewing on manual runs (when no slack message will be sent)
-            console.log(trimSpace(resultPm));
+        run: |
+          echo '${{ steps.combine-json.outputs.combined }}' | npx tsx .github/workflows/nightly/process-result.ts
 
   report-failure:
-    if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ always() && needs.process-result.outputs.has_golden_failures == 'true' && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: process-result
     runs-on: ubuntu-latest
     name: Report failure
+    timeout-minutes: 10
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
-          message_format: '{emoji} Workflow has {status_message} ${{ needs.process-result.outputs.message }}'
-          notification_title: '{workflow}'
+          message_format: '${{ needs.process-result.outputs.message }}'
+          notification_title: 'Golden Test Failure'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
           mention_groups: ${{ needs.process-result.outputs.codeowners }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-success:
-    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-    needs: e2e
+    if: ${{ always() && needs.process-result.outputs.has_golden_failures == 'false' && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
     runs-on: ubuntu-latest
     name: Report status
+    timeout-minutes: 10
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
         with:
-          status: ${{ needs.e2e.result }}
-          message_format: '{emoji} Workflow has {status_message}'
-          notification_title: '{workflow}'
+          status: 'success'
+          message_format: '${{ needs.process-result.outputs.message }}'
+          notification_title: '✅ Golden Tests: All Passed!'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
@@ -716,14 +488,15 @@ jobs:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: process-result
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     name: Report duration per package manager
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'skipped'
-          message_format: '${{ needs.process-result.outputs.pm-duration }}'
-          notification_title: 'Total duration per package manager (ubuntu only)'
+          message_format: '${{ needs.process-result.outputs.pm_duration }}'
+          notification_title: '⌛ Total duration per package manager (ubuntu only)'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -731,13 +504,14 @@ jobs:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: process-result
     runs-on: ubuntu-latest
-    name: Report duration per package manager
+    timeout-minutes: 10
+    name: Report duration per project
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'skipped'
-          message_format: '${{ needs.process-result.outputs.proj-duration }}'
-          notification_title: 'E2E Project duration stats'
+          message_format: '${{ needs.process-result.outputs.proj_duration }}'
+          notification_title: '⌛ E2E Project duration stats'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

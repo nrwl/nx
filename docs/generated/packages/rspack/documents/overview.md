@@ -3,6 +3,8 @@ title: Overview of the Nx Rspack Plugin
 description: The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
 ---
 
+# @nx/rspack
+
 The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
 
 ## Setting Up @nx/rspack
@@ -14,9 +16,6 @@ Make sure to install the `@nx/rspack` version that matches the version of `nx` i
 {% /callout %}
 
 In any Nx workspace, you can install `@nx/rspack` by running the following command:
-
-{% tabs %}
-{% tab label="Nx 18+" %}
 
 ```shell {% skipRescope=true %}
 nx add @nx/rspack
@@ -61,23 +60,11 @@ The `@nx/rspack/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Rspack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
 
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/rspack` package with your package manager.
-
-```shell
-npm add -D @nx/rspack
-```
-
-{% /tab %}
-{% /tabs %}
-
 ## Using @nx/rspack
 
 ### Generate a new project using Rspack
 
-You can generate a [React](/nx-api/react) application that uses Rspack. The [`@nx/react:app`](/nx-api/react/generators/application) generator accepts the `bundler` option, where you can pass `rspack`. This will generate a new application configured to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
+You can generate a [React](/technologies/react/introduction) application that uses Rspack. The [`@nx/react:app`](/technologies/react/api/generators/application) generator accepts the `bundler` option, where you can pass `rspack`. This will generate a new application configured to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
 
 To generate a React application using Rspack, run the following:
 
@@ -89,4 +76,4 @@ nx g @nx/react:app my-app --bundler=rspack
 
 You can use the `@nx/rspack:configuration` generator to change your React to use Rspack. This generator will modify your project's configuration to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
 
-You can read more about this generator on the [`@nx/rspack:configuration`](/nx-api/rspack/generators/configuration) generator page.
+You can read more about this generator on the [`@nx/rspack:configuration`](/technologies/build-tools/rspack/api/generators/configuration) generator page.

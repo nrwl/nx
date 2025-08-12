@@ -2,7 +2,7 @@
 title: 'Setup React and Tailwind — The Easy Way'
 slug: 'setup-react-and-tailwind-the-easy-way'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-02-09/TK4Kdj-cc890gQkgUtKNyA.png'
+cover_image: '/blog/images/2023-02-09/TK4Kdj-cc890gQkgUtKNyA.avif'
 tags: [nx, tutorial]
 description: Learn how to quickly set up React with Tailwind CSS using Nx's code generators, including migration from Create React App and automated configuration tools.
 ---

@@ -16,7 +16,7 @@ export function getPublishedVersion(): string {
   process.env.PUBLISHED_VERSION =
     process.env.PUBLISHED_VERSION ||
     // read version of built nx package
-    readJsonFile(join(workspaceRoot, `./build/packages/nx/package.json`))
+    readJsonFile(join(workspaceRoot, `./dist/packages/nx/package.json`))
       .version ||
     // fallback to latest if built nx package is missing
     'latest';
@@ -135,6 +135,12 @@ export const packageManagerLockFile = {
 };
 
 export function ensureCypressInstallation() {
+  // Skip Cypress installation on CI where it's pre-installed in agents.yaml
+  if (isCI) {
+    e2eConsoleLogger('Running on CI - Cypress pre-installed via agents.yaml');
+    return;
+  }
+
   let cypressVerified = true;
   try {
     const r = execSync('npx cypress verify', {
@@ -160,23 +166,58 @@ export function ensureCypressInstallation() {
 }
 
 export function ensurePlaywrightBrowsersInstallation() {
+  // Skip browser installation on CI where browsers are pre-installed in agents.yaml
+  if (isCI) {
+    e2eConsoleLogger(
+      'Running on CI - Playwright browsers pre-installed via agents.yaml'
+    );
+    return;
+  }
+
+  // Lightweight check: try to get Playwright browser path
+  try {
+    const browserPath = execSync('npx playwright install --dry-run', {
+      stdio: 'pipe',
+      encoding: 'utf-8',
+      cwd: tmpProjPath(),
+    });
+
+    // If browsers are up to date, skip installation
+    if (browserPath.includes('browser binaries are up to date')) {
+      e2eConsoleLogger('Playwright browsers already installed locally');
+      return;
+    }
+  } catch {
+    // If dry-run fails, browsers likely need installation
+  }
+
+  // Only install browsers for local development
   const playwrightInstallArgs =
     process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
-  execSync(`npx playwright install ${playwrightInstallArgs}`, {
-    stdio: isVerbose() ? 'inherit' : 'pipe',
-    encoding: 'utf-8',
-    cwd: tmpProjPath(),
-  });
-  e2eConsoleLogger(
-    `Playwright browsers ${execSync('npx playwright --version')
-      .toString()
-      .trim()} installed.`
-  );
+
+  e2eConsoleLogger('Installing Playwright browsers for local development...');
+
+  try {
+    execSync(`npx playwright install ${playwrightInstallArgs}`, {
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      encoding: 'utf-8',
+      cwd: tmpProjPath(),
+    });
+
+    e2eConsoleLogger(
+      `Playwright browsers ${execSync('npx playwright --version')
+        .toString()
+        .trim()} installed.`
+    );
+  } catch (error) {
+    e2eConsoleLogger('Failed to install Playwright browsers:', error);
+    throw error;
+  }
 }
 
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
-    Object.entries(process.env).filter(([key, value]) => {
+    Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
       }
@@ -193,6 +234,13 @@ export function getStrippedEnvironmentVariables() {
       }
 
       if (key === 'JEST_WORKER_ID') {
+        return false;
+      }
+
+      // Remove NODE_PATH to prevent module resolution conflicts with original workspace.
+      // NODE_PATH is inherited from Jest (which runs from the original workspace) and contains
+      // pnpm paths that cause require.resolve() to find workspace packages instead of e2e test versions.
+      if (key === 'NODE_PATH') {
         return false;
       }
 

@@ -1,4 +1,3 @@
-import { relative } from 'path';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -6,6 +5,8 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  logger,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -15,33 +16,36 @@ import {
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { relative } from 'path';
 
-import { nxVersion } from '../../utils/versions';
-import { maybeJs } from '../../utils/maybe-js';
-import componentGenerator from '../component/component';
-import initGenerator from '../init/init';
-import { Schema } from './schema';
-import { updateJestConfigContent } from '../../utils/jest-utils';
-import { normalizeOptions } from './lib/normalize-options';
-import { addRollupBuildTarget } from './lib/add-rollup-build-target';
-import { addLinting } from './lib/add-linting';
-import { updateAppRoutes } from './lib/update-app-routes';
-import { createFiles } from './lib/create-files';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { installCommonDependencies } from './lib/install-common-dependencies';
-import { setDefaults } from './lib/set-defaults';
-import {
-  addProjectToTsSolutionWorkspace,
-  updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { determineEntryFields } from './lib/determine-entry-fields';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/src/generators/library/utils/add-release-config';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { updateJestConfigContent } from '../../utils/jest-utils';
+import { maybeJs } from '../../utils/maybe-js';
+import { nxVersion } from '../../utils/versions';
+import componentGenerator from '../component/component';
+import initGenerator from '../init/init';
+import { addLinting } from './lib/add-linting';
+import { addRollupBuildTarget } from './lib/add-rollup-build-target';
+import { createFiles } from './lib/create-files';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { installCommonDependencies } from './lib/install-common-dependencies';
+import { normalizeOptions } from './lib/normalize-options';
+import { setDefaults } from './lib/set-defaults';
+import { updateAppRoutes } from './lib/update-app-routes';
+import { Schema } from './schema';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -54,19 +58,33 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
+    addTsPlugin,
     skipFormat: true,
   });
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
 
-  if (options.publishable === true && !schema.importPath) {
+  if (
+    options.publishable === true &&
+    !options.isUsingTsSolutionConfig &&
+    !schema.importPath
+  ) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
+
+  if (schema.simpleName !== undefined && schema.simpleName !== false) {
+    // TODO(v22): Remove simpleName as user should be using name.
+    logger.warn(
+      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
+    );
+  }
+
   if (!options.component) {
     options.style = 'none';
   }
@@ -242,6 +260,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       export: true,
       routing: options.routing,
       js: options.js,
+      name: options.name,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       globalCss: options.globalCss,
@@ -249,7 +268,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(componentTask);
   }
 
-  if (options.publishable || options.buildable) {
+  if (options.publishable) {
     const projectConfiguration = readProjectConfiguration(host, options.name);
     if (options.isUsingTsSolutionConfig) {
       await addReleaseConfigForTsSolution(
@@ -258,7 +277,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         projectConfiguration
       );
     } else {
+      const nxJson = readNxJson(host);
       await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
         host,
         options.name,
         projectConfiguration

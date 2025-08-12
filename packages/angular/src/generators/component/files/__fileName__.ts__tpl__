@@ -1,12 +1,11 @@
-import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%>Component<% if(!!viewEncapsulation) { %>, ViewEncapsulation<% }%> } from '@angular/core';<% if(standalone) {%>
-import { CommonModule } from '@angular/common';<% } %>
+import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%>Component<% if(!!viewEncapsulation) { %>, ViewEncapsulation<% }%> } from '@angular/core';
 
 @Component({<% if(!skipSelector) {%>
   selector: '<%= selector %>',<%}%><% if (setStandalone) { %>
-  standalone: <%= standalone %>,<% } %><% if(standalone) { %>
-  imports: [CommonModule],<%}%><% if(inlineTemplate) { %>
+  standalone: <%= standalone %>,<% } %>
+  imports: [],<% if(inlineTemplate) { %>
   template: `<p><%= name %> works!</p>`<% } else { %>
-  templateUrl: './<%= fileName %>.html'<% } if(inlineStyle) { %>,
+  templateUrl: './<%= fileName %><%= ngext %>.html'<% } if(inlineStyle) { %>,
   styles: `<% if(displayBlock){ %>
     :host {
       display: block;

@@ -1,9 +1,11 @@
 import { dirname, extname, join, resolve } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import type { ResolverOptions } from 'jest-resolve';
+import { getVersion } from 'jest';
 
 let compilerSetup;
 let ts;
+const jestMajorVersion = Number(getVersion().split('.')[0]);
 
 function getCompilerSetup(rootDir: string) {
   const tsConfigPath =
@@ -37,10 +39,17 @@ module.exports = function (path: string, options: ResolverOptions) {
     try {
       // Try to use the defaultResolver with default options
       return options.defaultResolver(path, options);
-    } catch {
+    } catch (e) {
+      if (jestMajorVersion >= 30) {
+        // The default resolver already handles what we had a workaround for in
+        // previous versions. Let the error bubble up.
+        throw e;
+      }
+
       // Try to use the defaultResolver with a packageFilter
       return options.defaultResolver(path, {
         ...options,
+        // @ts-expect-error packageFilter and pathFilter where available in Jest 29
         packageFilter: (pkg) => ({
           ...pkg,
           main: pkg.main || pkg.es2015 || pkg.module,

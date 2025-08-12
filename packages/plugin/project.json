@@ -4,9 +4,14 @@
   "sourceRoot": "packages/plugin/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "command": "node ./scripts/copy-readme.js plugin",
+      "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/plugin",
@@ -41,13 +46,6 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/plugin"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js plugin"
       }
     }
   }

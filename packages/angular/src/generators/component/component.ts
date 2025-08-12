@@ -32,11 +32,12 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       viewEncapsulation: options.viewEncapsulation,
       displayBlock: options.displayBlock,
       selector: options.selector,
-      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      // Angular v19 or higher defaults to true, while lower versions default to false
       setStandalone:
         (angularMajorVersion >= 19 && !options.standalone) ||
         (angularMajorVersion < 19 && options.standalone),
       angularMajorVersion,
+      ngext: options.ngHtml ? '.ng' : '',
       tpl: '',
     }
   );
@@ -69,11 +70,20 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   }
 
   if (!options.skipImport && !options.standalone) {
-    const modulePath = findModuleFromOptions(
-      tree,
-      options,
-      options.projectRoot
-    );
+    let modulePath: string;
+    try {
+      modulePath = findModuleFromOptions(tree, options, options.projectRoot);
+    } catch (e) {
+      modulePath = findModuleFromOptions(
+        tree,
+        {
+          ...options,
+          moduleExt: '-module.ts',
+          routingModuleExt: '-routing-module.ts',
+        },
+        options.projectRoot
+      );
+    }
     addToNgModule(
       tree,
       options.directory,

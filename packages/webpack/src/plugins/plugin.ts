@@ -217,6 +217,7 @@ async function createWebpackTargets(
   };
 
   targets[options.serveTargetName] = {
+    continuous: true,
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -237,6 +238,7 @@ async function createWebpackTargets(
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -257,6 +259,7 @@ async function createWebpackTargets(
   };
 
   targets[options.serveStaticTargetName] = {
+    continuous: true,
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {
@@ -264,6 +267,12 @@ async function createWebpackTargets(
       spa: true,
     },
   };
+
+  // for `convert-to-inferred` we need to leave the port undefined or the options will not match
+  if (webpackConfig.devServer?.port && webpackConfig.devServer?.port !== 4200) {
+    targets[options.serveStaticTargetName].options.port =
+      webpackConfig.devServer.port;
+  }
 
   if (isTsSolutionSetup) {
     targets[options.buildTargetName].syncGenerators = [

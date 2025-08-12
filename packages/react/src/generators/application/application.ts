@@ -12,6 +12,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
@@ -63,11 +64,16 @@ export async function applicationGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const tasks = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    schema.addPlugin,
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
     formatter: schema.formatter,
     platform: 'web',
   });
@@ -75,33 +81,34 @@ export async function applicationGeneratorInternal(
 
   const options = await normalizeOptions(tree, schema);
 
-  options.useReactRouter = options.routing
-    ? options.useReactRouter ??
-      (await promptWhenInteractive<{
-        response: 'Yes' | 'No';
-      }>(
-        {
-          name: 'response',
-          message:
-            'Would you like to use react-router for server-side rendering?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              message:
-                'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
-            },
-            {
-              name: 'No',
-              message:
-                'I do not want to use react-router for server-side rendering',
-            },
-          ],
-          initial: 0,
-        },
-        { response: 'No' }
-      ).then((r) => r.response === 'Yes'))
-    : false;
+  options.useReactRouter =
+    options.routing && options.bundler === 'vite'
+      ? options.useReactRouter ??
+        (await promptWhenInteractive<{
+          response: 'Yes' | 'No';
+        }>(
+          {
+            name: 'response',
+            message:
+              'Would you like to use react-router for server-side rendering?',
+            type: 'autocomplete',
+            choices: [
+              {
+                name: 'Yes',
+                message:
+                  'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
+              },
+              {
+                name: 'No',
+                message:
+                  'I do not want to use react-router for server-side rendering',
+              },
+            ],
+            initial: 0,
+          },
+          { response: 'No' }
+        ).then((r) => r.response === 'Yes'))
+      : false;
 
   showPossibleWarnings(tree, options);
 
@@ -234,7 +241,8 @@ export async function applicationGeneratorInternal(
     },
     options.linter === 'eslint'
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
-      : undefined
+      : undefined,
+    options.useReactRouter ? 'app' : 'src'
   );
 
   sortPackageJsonFields(tree, options.appProjectRoot);

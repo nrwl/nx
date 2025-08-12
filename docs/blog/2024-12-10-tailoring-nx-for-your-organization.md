@@ -47,7 +47,7 @@ Once installed, run the following generator that ships with the `@nx/plugin` pac
 nx g plugin packages/nx-plugin --importPath=@org/nx-plugin
 ```
 
-Also, make sure to check out our [extensive instructions in our docs for building plugins](/extending-nx/intro/getting-started), or you can jump right to the API for [@nx/plugin](/nx-api/plugin).
+Also, make sure to check out our [extensive instructions in our docs for building plugins](/extending-nx/intro/getting-started), or you can jump right to the API for [@nx/plugin](/reference/core-api/plugin).
 
 ## Setting up custom generators
 
@@ -100,7 +100,7 @@ export async function libraryGenerator(
     directory,
     importPath,
     tags: [`type:${options.type}`, `scope:${shared}`],
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -137,7 +137,7 @@ To support consistency across your org, you can publish this plugin so that all 
 nx release --first-release
 ```
 
-If you want to test your package by publishing locally, your project will also be set up with a [Verdaccio configuration](/nx-api/js/executors/verdaccio) that allows you to run a local registry for testing your new plugin locally:
+If you want to test your package by publishing locally, your project will also be set up with a [Verdaccio configuration](/technologies/typescript/api/executors/verdaccio) that allows you to run a local registry for testing your new plugin locally:
 
 ```bash
 nx local-registry
@@ -171,7 +171,7 @@ Your plugin can provide _anything an existing Nx plugin provides._ This includes
 
 - [Generators](/extending-nx/recipes/local-generators)
 - [Task inference](/extending-nx/tutorials/tooling-plugin)
-- [Custom eslint rules](/nx-api/eslint/generators/workspace-rule#nxeslintworkspacerule)
+- [Custom eslint rules](/technologies/eslint/api/generators/workspace-rule#nxeslintworkspacerule)
 - [Migrations](/extending-nx/recipes/migration-generators)
 - Shared tool configs
 - CI pipeline starters

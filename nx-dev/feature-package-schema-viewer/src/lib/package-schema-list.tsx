@@ -2,9 +2,9 @@ import {
   MigrationMetadata,
   PackageMetadata,
   ProcessedPackageMetadata,
-} from '@nx/nx-dev/models-package';
-import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+} from '@nx/nx-dev-models-package';
+import { Breadcrumbs, Footer } from '@nx/nx-dev-ui-common';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import React, { ReactNode } from 'react';
@@ -79,7 +79,7 @@ export function PackageSchemaList({
               url: vm.seo.imageUrl,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -108,10 +108,14 @@ export function PackageSchemaList({
               available from this package.
             </p>
 
-            <Heading2 title={'Guides'} />
-            <DocumentList documents={vm.package.documents} />
+            {vm.package.documents?.length ? (
+              <>
+                <Heading2 title={'Guides'} />
+                <DocumentList documents={vm.package.documents} />
+                <div className="h-12">{/* SPACER */}</div>
+              </>
+            ) : null}
 
-            <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Executors'} />
             <SchemaList files={vm.package.executors} type={'executor'} />
 

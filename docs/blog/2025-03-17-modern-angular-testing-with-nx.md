@@ -3,7 +3,7 @@ title: 'Modern Angular Testing with Nx'
 slug: modern-angular-testing-with-nx
 authors: ['Jack Hsu']
 tags: ['angular', 'nx']
-cover_image: /blog/images/2025-03-17/modern-angular-testing.png
+cover_image: /blog/images/2025-03-17/modern-angular-testing.avif
 description: 'Learn how Nx enhances Angular testing by integrating modern tools like Playwright and Vitest, improving test speed, reliability, and CI scalability.'
 ---
 
@@ -106,10 +106,10 @@ If you view the `my-app-e2e` project (`npx nx show project my-app-e2e`), you wil
 When run on a single machine, `e2e-ci` will be slower because it starts multiple Playwright processes, which is why we only allow it to run through distribution. To [enable distribution](/ci/features/split-e2e-tasks#enable-automated-e2e-task-splitting), you must connect your workspace to [Nx Cloud](/nx-cloud). This is easily done with the `connect` command.
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-Follow the onboarding steps and you should be connected within five minutes. For more information, check out our [GitHub Actions Tutorial](/ci/intro/tutorials/github-actions) or our [guides](/ci/recipes/set-up) for all supported CI providers (GitHub, GitLab, Azure, etc.).
+Follow the onboarding steps and you should be connected within five minutes. For more information, check out our [setup guides](/ci/recipes/set-up) for all supported CI providers (GitHub, GitLab, Azure, etc.).
 
 Now, let's take a look at a concrete example to get an idea of how much time-saving you can unlock with Nx Atomizer. I created [this repo](https://github.com/jaysoo/angular-testing-demo) that contains a simple Angular application and a UI package. It also has 40 Playwright test files.
 

@@ -1,7 +1,10 @@
 ---
 title: Overview of the Nx Angular Plugin
 description: The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace.
+keywords: [angular]
 ---
+
+# @nx/angular
 
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
 within an Nx workspace. It also enables using Angular Devkit builders and schematics in Nx workspaces.
@@ -25,7 +28,7 @@ Among other things, it provides:
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
 You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
-more [here](/recipes/angular/migration/angular).
+more [here](technologies/angular/migration/angular).
 {% /callout %}
 
 ## Setting Up @nx/angular
@@ -38,26 +41,11 @@ Make sure to install the `@nx/angular` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/angular` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/angular
 ```
 
 This will install the correct version of `@nx/angular`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/angular` package with your package manager.
-
-```shell
-npm add -D @nx/angular
-```
-
-{% /tab %}
-{% /tabs %}
 
 {% callout type="note" title="Angular Tutorial" %}
 For a full tutorial experience, follow the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
@@ -128,6 +116,6 @@ nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 ## More Documentation
 
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
-- [Migrating from the Angular CLI](/recipes/angular/migration/angular)
-- [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
-- [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)
+- [Migrating from the Angular CLI](technologies/angular/migration/angular)
+- [Setup Module Federation with Angular and Nx](/technologies/module-federation/concepts/faster-builds-with-module-federation)
+- [Using Tailwind CSS with Angular projects](/technologies/angular/recipes/using-tailwind-css-with-angular-projects)

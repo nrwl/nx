@@ -3,7 +3,7 @@ title: Announcing your Monorepo World Speakers Part 2
 slug: announcing-your-monorepo-world-speakers-pt-2
 authors: ['Mike Hartington']
 tags: [monorepo-world]
-cover_image: /blog/images/2024-09-16/mw-blog-post.avif
+cover_image: '/blog/images/2024-09-16/mw-blog-post.avif'
 description: Meet the next group of Monorepo World speakers, including experts from Aspect Build Systems, Trunk.io, and more, discussing Python monorepos, Bazel, and large-scale merge queues.
 ---
 

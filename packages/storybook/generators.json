@@ -15,28 +15,21 @@
       "description": "Add Storybook configuration to a UI library or an application.",
       "hidden": false
     },
-    "cypress-project": {
-      "factory": "./src/generators/cypress-project/cypress-project",
-      "schema": "./src/generators/cypress-project/schema.json",
-      "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
-      "x-deprecated": "Deprecated: Use 'interactionTests' instead when running '@nx/storybook:configuration'. This generator will be removed in v21.",
-      "hidden": false
-    },
     "convert-to-inferred": {
       "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
       "schema": "./src/generators/convert-to-inferred/schema.json",
       "description": "Convert existing Storybook project(s) using `@nx/storybook:*` executors to use `@nx/storybook/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
     },
-    "migrate-7": {
-      "factory": "./src/generators/migrate-7/migrate-7",
-      "schema": "./src/generators/migrate-7/schema.json",
-      "description": "Migrate to Storybook version 7.",
-      "hidden": false
-    },
     "migrate-8": {
       "factory": "./src/generators/migrate-8/migrate-8",
       "schema": "./src/generators/migrate-8/schema.json",
       "description": "Migrate to Storybook version 8.",
+      "hidden": false
+    },
+    "migrate-9": {
+      "factory": "./src/generators/migrate-9/migrate-9",
+      "schema": "./src/generators/migrate-9/schema.json",
+      "description": "Migrate to Storybook version 9.",
       "hidden": false
     }
   }

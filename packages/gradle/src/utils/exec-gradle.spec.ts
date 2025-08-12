@@ -1,8 +1,8 @@
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { findGraldewFile } from './exec-gradle';
+import { findGradlewFile } from './exec-gradle';
 
 describe('exec gradle', () => {
-  describe('findGraldewFile', () => {
+  describe('findGradlewFile', () => {
     let tempFs: TempFs;
     let cwd: string;
 
@@ -27,14 +27,14 @@ describe('exec gradle', () => {
         'nested/nested/proj/src/test/java/test/aTest.java': ``,
         'nested/nested/proj/src/test/java/test/bTest.java': ``,
       });
-      let gradlewFile = findGraldewFile('proj/build.gradle', tempFs.tempDir);
+      let gradlewFile = findGradlewFile('proj/build.gradle', tempFs.tempDir);
       expect(gradlewFile).toEqual('gradlew');
-      gradlewFile = findGraldewFile(
+      gradlewFile = findGradlewFile(
         'nested/nested/proj/build.gradle',
         tempFs.tempDir
       );
       expect(gradlewFile).toEqual('gradlew');
-      gradlewFile = findGraldewFile(
+      gradlewFile = findGradlewFile(
         'nested/nested/proj/settings.gradle',
         tempFs.tempDir
       );
@@ -54,16 +54,16 @@ describe('exec gradle', () => {
         'nested/nested/proj/src/test/java/test/bTest.java': ``,
       });
 
-      let gradlewFile = findGraldewFile('proj/build.gradle', tempFs.tempDir);
+      let gradlewFile = findGradlewFile('proj/build.gradle', tempFs.tempDir);
       expect(gradlewFile).toEqual('proj/gradlew');
-      gradlewFile = findGraldewFile('proj/settings.gradle', tempFs.tempDir);
+      gradlewFile = findGradlewFile('proj/settings.gradle', tempFs.tempDir);
       expect(gradlewFile).toEqual('proj/gradlew');
-      gradlewFile = findGraldewFile(
+      gradlewFile = findGradlewFile(
         'nested/nested/proj/build.gradle',
         tempFs.tempDir
       );
       expect(gradlewFile).toEqual('nested/nested/proj/gradlew');
-      gradlewFile = findGraldewFile(
+      gradlewFile = findGradlewFile(
         'nested/nested/proj/settings.gradle',
         tempFs.tempDir
       );
@@ -80,7 +80,7 @@ describe('exec gradle', () => {
         'nested/nested/proj/src/test/java/test/bTest.java': ``,
       });
       expect(() =>
-        findGraldewFile('proj/build.gradle', tempFs.tempDir)
+        findGradlewFile('proj/build.gradle', tempFs.tempDir)
       ).toThrow();
     });
   });

@@ -4,6 +4,10 @@ import {
 } from '@nx/cypress/plugins/cypress-preset';
 import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
+  createExecutorContext,
+  getProjectConfigByPath,
+} from '@nx/cypress/src/utils/ct-helpers';
+import {
   ExecutorContext,
   joinPathFragments,
   logger,
@@ -14,11 +18,8 @@ import {
   Target,
   workspaceRoot,
 } from '@nx/devkit';
-import {
-  createExecutorContext,
-  getProjectConfigByPath,
-} from '@nx/cypress/src/utils/ct-helpers';
 
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -237,11 +238,13 @@ function buildTargetWebpack(
 
   if (
     buildableProjectConfig.targets[parsed.target].executor !==
-    '@nx/webpack:webpack'
+      '@nx/webpack:webpack' &&
+    buildableProjectConfig.targets[parsed.target].executor !==
+      '@nx/rspack:rspack'
   ) {
     throw new InvalidExecutorError(
-      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' executor. ` +
-        `Please make sure to use '@nx/webpack:webpack' executor in that target to use Cypress Component Testing.`
+      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' or '@nx/rspack:rspack' executor. ` +
+        `Please make sure to use '@nx/webpack:webpack' or '@nx/rspack:rspack' executor in that target to use Cypress Component Testing.`
     );
   }
 
@@ -267,7 +270,7 @@ function buildTargetWebpack(
     withSchemaDefaults(parsed, context),
     workspaceRoot,
     buildableProjectConfig.root!,
-    buildableProjectConfig.sourceRoot!
+    getProjectSourceRoot(buildableProjectConfig)
   );
 
   let customWebpack: any;
@@ -283,7 +286,7 @@ function buildTargetWebpack(
 
   return async () => {
     customWebpack = await customWebpack;
-    // TODO(v21): Component testing need to be agnostic of the underlying executor. With Crystal, we're not using `@nx/webpack:webpack` by default.
+    // TODO(v22): Component testing need to be agnostic of the underlying executor. With Crystal, we're not using `@nx/webpack:webpack` by default.
     // We need to decouple CT from the build target of the app, we just care about bundler config (e.g. webpack.config.js).
     // The generated setup should support both Webpack and Vite as documented here: https://docs.cypress.io/guides/component-testing/react/overview
     // Related issue: https://github.com/nrwl/nx/issues/21546
@@ -299,7 +302,7 @@ function buildTargetWebpack(
           extractLicenses: false,
           root: workspaceRoot,
           projectRoot: ctProjectConfig.root,
-          sourceRoot: ctProjectConfig.sourceRoot,
+          sourceRoot: getProjectSourceRoot(ctProjectConfig),
         },
         context,
       }

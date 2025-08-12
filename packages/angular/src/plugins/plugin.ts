@@ -54,8 +54,14 @@ const knownExecutors = {
     '@angular-devkit/build-angular:ng-packagr',
     '@angular/build:ng-packagr',
   ]),
-  devServer: new Set(['@angular-devkit/build-angular:dev-server']),
-  extractI18n: new Set(['@angular-devkit/build-angular:extract-i18n']),
+  devServer: new Set([
+    '@angular-devkit/build-angular:dev-server',
+    '@angular/build:dev-server',
+  ]),
+  extractI18n: new Set([
+    '@angular-devkit/build-angular:extract-i18n',
+    '@angular/build:extract-i18n',
+  ]),
   prerender: new Set([
     '@angular-devkit/build-angular:prerender',
     '@nguniversal/builders:prerender',
@@ -65,7 +71,10 @@ const knownExecutors = {
     '@angular-devkit/build-angular:ssr-dev-server',
     '@nguniversal/builders:ssr-dev-server',
   ]),
-  test: new Set(['@angular-devkit/build-angular:karma']),
+  test: new Set([
+    '@angular-devkit/build-angular:karma',
+    '@angular/build:karma',
+  ]),
 };
 
 const pmc = getPackageManagerCommand();
@@ -199,6 +208,7 @@ async function buildAngularProjects(
         appShellTargets.push({ target: nxTargetName, project: projectName });
       } else if (knownExecutors.build.has(angularTarget.builder)) {
         await updateBuildTarget(
+          projectName,
           nxTargetName,
           targets[nxTargetName],
           angularTarget,
@@ -208,6 +218,7 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.devServer.has(angularTarget.builder)) {
+        targets[nxTargetName].continuous = true;
         targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.extractI18n.has(angularTarget.builder)) {
         targets[nxTargetName].metadata.help.example.options = {
@@ -233,6 +244,7 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.serveSsr.has(angularTarget.builder)) {
+        targets[nxTargetName].continuous = true;
         targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.prerender.has(angularTarget.builder)) {
         prerenderTargets.push({ target: nxTargetName, project: projectName });
@@ -347,6 +359,7 @@ function updateAppShellTarget(
 }
 
 async function updateBuildTarget(
+  projectName: string,
   targetName: string,
   target: TargetConfiguration,
   angularTarget: AngularTargetConfiguration,
@@ -357,21 +370,7 @@ async function updateBuildTarget(
 ): Promise<void> {
   target.dependsOn = [`^${targetName}`];
 
-  if (angularTarget.options?.outputPath) {
-    const fullOutputPath = join(
-      context.workspaceRoot,
-      angularWorkspaceRoot,
-      angularTarget.options.outputPath
-    );
-    target.outputs = [
-      getOutput(
-        fullOutputPath,
-        context.workspaceRoot,
-        angularWorkspaceRoot,
-        projectRoot
-      ),
-    ];
-  } else if (
+  if (
     angularTarget.builder === '@angular-devkit/build-angular:ng-packagr' ||
     angularTarget.builder === '@angular/build:ng-packagr'
   ) {
@@ -384,6 +383,20 @@ async function updateBuildTarget(
     if (outputs.length) {
       target.outputs = outputs;
     }
+  } else {
+    const fullOutputPath = join(
+      context.workspaceRoot,
+      angularWorkspaceRoot,
+      angularTarget.options?.outputPath ?? posix.join('dist', projectName)
+    );
+    target.outputs = [
+      getOutput(
+        fullOutputPath,
+        context.workspaceRoot,
+        angularWorkspaceRoot,
+        projectRoot
+      ),
+    ];
   }
 
   if (target.outputs?.length) {
@@ -508,7 +521,7 @@ async function getNgPackagrOutputs(
   let ngPackageJsonPath = join(
     context.workspaceRoot,
     angularWorkspaceRoot,
-    target.options.project
+    target.options?.project ?? join(projectRoot, 'ng-package.json')
   );
 
   const readConfig = async (configPath: string) => {

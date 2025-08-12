@@ -1,11 +1,9 @@
 import {
-  Tree,
-  names,
-  generateFiles,
-  getPackageManagerCommand,
   formatFiles,
-  detectPackageManager,
+  generateFiles,
+  names,
   readNxJson,
+  Tree,
 } from '@nx/devkit';
 import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
@@ -16,25 +14,47 @@ function getCiCommands(ci: Schema['ci']): Command[] {
     case 'circleci': {
       return [
         {
-          comment: `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+          comments: [
+            `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
+            `# Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.`,
+          ],
         },
         {
           command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t build`,
         },
+        getNxCloudFixCiCommand(),
       ];
     }
     default: {
       return [
         {
-          comment: `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+          comments: [
+            `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
+            `# Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests`,
+          ],
+          command: `./nx affected -t build`,
         },
-        { command: `./nx affected -t build` },
+        getNxCloudFixCiCommand(),
       ];
     }
   }
 }
 
-export type Command = { command: string } | { comment: string } | string;
+function getNxCloudFixCiCommand(): Command {
+  return {
+    comments: [
+      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
+    ],
+    command: `./nx fix-ci`,
+    alwaysRun: true,
+  };
+}
+
+export type Command = {
+  command?: string;
+  comments?: string[];
+  alwaysRun?: boolean;
+};
 
 export interface Schema {
   name: string;
@@ -55,8 +75,6 @@ interface Substitutes {
   mainBranch: string;
   workflowName: string;
   workflowFileName: string;
-  packageManager: string;
-  packageManagerPrefix: string;
   commands: Command[];
   nxCloudHost: string;
   connectedToCloud: boolean;
@@ -66,9 +84,6 @@ function getTemplateData(tree: Tree, options: Schema): Substitutes {
   const { name: workflowName, fileName: workflowFileName } = names(
     options.name
   );
-  const packageManager = detectPackageManager();
-  const { exec: packageManagerPrefix } =
-    getPackageManagerCommand(packageManager);
 
   let nxCloudHost: string = 'nx.app';
   try {
@@ -85,8 +100,6 @@ function getTemplateData(tree: Tree, options: Schema): Substitutes {
   return {
     workflowName,
     workflowFileName,
-    packageManager,
-    packageManagerPrefix,
     commands,
     mainBranch,
     nxCloudHost,

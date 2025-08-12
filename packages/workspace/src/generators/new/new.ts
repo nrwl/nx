@@ -28,21 +28,21 @@ interface Schema {
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
   linter?: Linter | LinterType;
-  bundler?: 'vite' | 'webpack';
+  bundler?: string;
   standaloneApi?: boolean;
   routing?: boolean;
   useReactRouter?: boolean;
-  packageManager?: PackageManager;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
-  e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
+  packageManager?: string;
+  unitTestRunner?: string;
+  e2eTestRunner?: string;
   ssr?: boolean;
-  serverRouting?: boolean;
   prefix?: string;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
-  formatter?: 'none' | 'prettier';
+  formatter?: string;
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -64,7 +64,9 @@ export async function newGenerator(tree: Tree, opts: Schema) {
 
   return async () => {
     if (!options.skipInstall) {
-      const pmc = getPackageManagerCommand(options.packageManager);
+      const pmc = getPackageManagerCommand(
+        options.packageManager as PackageManager
+      );
       if (pmc.preInstall) {
         execSync(pmc.preInstall, {
           cwd: joinPathFragments(tree.root, options.directory),
@@ -77,7 +79,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
         tree,
         false,
         options.directory,
-        options.packageManager
+        options.packageManager as PackageManager
       );
     }
     // TODO: move all of these into create-nx-workspace

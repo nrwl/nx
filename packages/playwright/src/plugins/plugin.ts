@@ -44,7 +44,13 @@ type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 function readTargetsCache(
   cachePath: string
 ): Record<string, PlaywrightTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -159,12 +165,12 @@ async function buildPlaywrightTargets(
 
   const testOutput = getTestOutput(playwrightConfig);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
+  const webserverCommandTasks = getWebserverCommandTasks(playwrightConfig);
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
       cwd: '{projectRoot}',
     },
-    parallelism: false,
     metadata: {
       technologies: ['playwright'],
       description: 'Runs Playwright Tests',
@@ -178,6 +184,12 @@ async function buildPlaywrightTargets(
       },
     },
   };
+
+  if (webserverCommandTasks.length) {
+    baseTargetConfig.dependsOn = getDependsOn(webserverCommandTasks);
+  } else {
+    baseTargetConfig.parallelism = false;
+  }
 
   targets[options.targetName] = {
     ...baseTargetConfig,
@@ -227,60 +239,77 @@ async function buildPlaywrightTargets(
 
     const dependsOn: TargetConfiguration['dependsOn'] = [];
 
-    await forEachTestFile(
-      (testFile) => {
-        const outputSubfolder = relative(projectRoot, testFile)
-          .replace(/[\/\\]/g, '-')
-          .replace(/\./g, '-');
-        const relativeSpecFilePath = normalizePath(
-          relative(projectRoot, testFile)
+    const testFiles = await getAllTestFiles({
+      context,
+      path: testDir,
+      config: playwrightConfig,
+    });
+
+    for (const testFile of testFiles) {
+      const outputSubfolder = relative(projectRoot, testFile)
+        .replace(/[\/\\]/g, '-')
+        .replace(/\./g, '-');
+      const relativeSpecFilePath = normalizePath(
+        relative(projectRoot, testFile)
+      );
+
+      if (relativeSpecFilePath.includes('../')) {
+        throw new Error(
+          '@nx/playwright/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+            `\n\n${JSON.stringify(
+              {
+                projectRoot,
+                testFile,
+                testFiles,
+                context,
+                config: playwrightConfig,
+              },
+              null,
+              2
+            )}`
         );
-        const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
-        ciTargetGroup.push(targetName);
-        targets[targetName] = {
-          ...ciBaseTargetConfig,
-          options: {
-            ...ciBaseTargetConfig.options,
-            env: getOutputEnvVars(reporterOutputs, outputSubfolder),
-          },
-          outputs: getTargetOutputs(
-            testOutput,
-            reporterOutputs,
-            context.workspaceRoot,
-            projectRoot,
-            outputSubfolder
-          ),
-          command: `${
-            baseTargetConfig.command
-          } ${relativeSpecFilePath} --output=${join(
-            testOutput,
-            outputSubfolder
-          )}`,
-          metadata: {
-            technologies: ['playwright'],
-            description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
-            help: {
-              command: `${pmc.exec} playwright test --help`,
-              example: {
-                options: {
-                  workers: 1,
-                },
+      }
+
+      const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
+      ciTargetGroup.push(targetName);
+      targets[targetName] = {
+        ...ciBaseTargetConfig,
+        options: {
+          ...ciBaseTargetConfig.options,
+          env: getOutputEnvVars(reporterOutputs, outputSubfolder),
+        },
+        outputs: getTargetOutputs(
+          testOutput,
+          reporterOutputs,
+          context.workspaceRoot,
+          projectRoot,
+          outputSubfolder
+        ),
+        command: `${
+          baseTargetConfig.command
+        } ${relativeSpecFilePath} --output=${join(
+          testOutput,
+          outputSubfolder
+        )}`,
+        metadata: {
+          technologies: ['playwright'],
+          description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
+          help: {
+            command: `${pmc.exec} playwright test --help`,
+            example: {
+              options: {
+                workers: 1,
               },
             },
           },
-        };
-        dependsOn.push({
-          target: targetName,
-          projects: 'self',
-          params: 'forward',
-        });
-      },
-      {
-        context,
-        path: testDir,
-        config: playwrightConfig,
-      }
-    );
+        },
+      };
+      dependsOn.push({
+        target: targetName,
+        projects: 'self',
+        params: 'forward',
+      });
+    }
 
     targets[options.ciTargetName] ??= {};
 
@@ -290,7 +319,6 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
       dependsOn,
-      parallelism: false,
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
@@ -305,20 +333,22 @@ async function buildPlaywrightTargets(
         },
       },
     };
+
+    if (!webserverCommandTasks.length) {
+      targets[options.ciTargetName].parallelism = false;
+    }
+
     ciTargetGroup.push(options.ciTargetName);
   }
 
   return { targets, metadata };
 }
 
-async function forEachTestFile(
-  cb: (path: string) => void,
-  opts: {
-    context: CreateNodesContext;
-    path: string;
-    config: PlaywrightTestConfig;
-  }
-) {
+async function getAllTestFiles(opts: {
+  context: CreateNodesContext;
+  path: string;
+  config: PlaywrightTestConfig;
+}) {
   const files = await getFilesInDirectoryUsingContext(
     opts.context.workspaceRoot,
     opts.path
@@ -327,11 +357,7 @@ async function forEachTestFile(
   const ignoredMatcher = opts.config.testIgnore
     ? createMatcher(opts.config.testIgnore)
     : () => false;
-  for (const file of files) {
-    if (matcher(file) && !ignoredMatcher(file)) {
-      cb(file);
-    }
-  }
+  return files.filter((file) => matcher(file) && !ignoredMatcher(file));
 }
 
 function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
@@ -438,6 +464,74 @@ function addSubfolderToOutput(output: string, subfolder?: string): string {
   return join(output, subfolder);
 }
 
+function getWebserverCommandTasks(
+  playwrightConfig: PlaywrightTestConfig
+): Array<{ project: string; target: string }> {
+  if (!playwrightConfig.webServer) {
+    return [];
+  }
+
+  const tasks: Array<{ project: string; target: string }> = [];
+
+  const webServer = Array.isArray(playwrightConfig.webServer)
+    ? playwrightConfig.webServer
+    : [playwrightConfig.webServer];
+
+  for (const server of webServer) {
+    if (!server.reuseExistingServer) {
+      continue;
+    }
+
+    const task = parseTaskFromCommand(server.command);
+    if (task) {
+      tasks.push(task);
+    }
+  }
+
+  return tasks;
+}
+
+function parseTaskFromCommand(command: string): {
+  project: string;
+  target: string;
+} | null {
+  const nxRunRegex =
+    /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
+  const infixRegex = /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
+
+  const nxRunMatch = command.match(nxRunRegex);
+  if (nxRunMatch) {
+    const [project, target] = nxRunMatch[1].split(':');
+    return { project, target };
+  }
+
+  const infixMatch = command.match(infixRegex);
+  if (infixMatch) {
+    const [target, project] = infixMatch[1].split(' ');
+    return { project, target };
+  }
+
+  return null;
+}
+
+function getDependsOn(
+  tasks: Array<{ project: string; target: string }>
+): TargetConfiguration['dependsOn'] {
+  const projectsPerTask = new Map<string, string[]>();
+
+  for (const { project, target } of tasks) {
+    if (!projectsPerTask.has(target)) {
+      projectsPerTask.set(target, []);
+    }
+    projectsPerTask.get(target).push(project);
+  }
+
+  return Array.from(projectsPerTask.entries()).map(([target, projects]) => ({
+    projects,
+    target,
+  }));
+}
+
 function normalizeOutput(
   path: string,
   workspaceRoot: string,
@@ -454,7 +548,6 @@ function normalizeOutput(
       relative(workspaceRoot, fullPath)
     );
   }
-
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 

@@ -1,13 +1,13 @@
 use std::fs::{create_dir_all, read_to_string, write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
+use tracing::{debug, trace};
 
 use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
 use regex::Regex;
 use rusqlite::params;
 use sysinfo::Disks;
-use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
@@ -18,7 +18,7 @@ use crate::native::utils::Normalize;
 #[derive(Default, Clone, Debug)]
 pub struct CachedResult {
     pub code: i16,
-    pub terminal_output: String,
+    pub terminal_output: Option<String>,
     pub outputs_path: String,
     pub size: Option<i64>,
 }
@@ -117,7 +117,7 @@ impl NxCache {
 
                     Ok(CachedResult {
                         code,
-                        terminal_output,
+                        terminal_output: Some(terminal_output),
                         outputs_path: task_dir.to_normalized_string(),
                         size: Some(size),
                     })
@@ -136,6 +136,7 @@ impl NxCache {
         outputs: Vec<String>,
         code: i16,
     ) -> anyhow::Result<()> {
+        let start = Instant::now();
         trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
 
@@ -143,30 +144,47 @@ impl NxCache {
         //
         trace!("Removing task directory: {:?}", &task_dir);
         remove_items(&[&task_dir])?;
+        trace!("Successfully removed task directory: {:?}", &task_dir);
+
         // Create the task directory again
         trace!("Creating task directory: {:?}", &task_dir);
         create_dir_all(&task_dir)?;
+        trace!("Successfully created task directory: {:?}", &task_dir);
 
         // Write the terminal outputs into a file
         let task_outputs_path = self.get_task_outputs_path_internal(&hash);
         trace!("Writing terminal outputs to: {:?}", &task_outputs_path);
         let mut total_size: i64 = terminal_output.len() as i64;
         write(task_outputs_path, terminal_output)?;
+        trace!("Successfully wrote terminal outputs ({} bytes)", total_size);
 
         // Expand the outputs
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
+        trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
         // Copy the outputs to the cache
+        let mut copied_files = 0;
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                total_size += _copy(p, cached_outputs_dir)?;
+                let copied_size = _copy(p, cached_outputs_dir)?;
+                total_size += copied_size;
+                copied_files += 1;
+                trace!(
+                    "Successfully copied {} ({} bytes)",
+                    expanded_output, copied_size
+                );
             }
         }
+        trace!(
+            "Successfully copied {} files, total cache size: {} bytes",
+            copied_files, total_size
+        );
 
-        self.record_to_cache(hash, code, total_size)?;
+        self.record_to_cache(hash.clone(), code, total_size)?;
+        debug!("PUT {} {:?}", &hash, start.elapsed());
         Ok(())
     }
 
@@ -179,10 +197,9 @@ impl NxCache {
     ) -> anyhow::Result<()> {
         trace!(
             "applying remote cache results: {:?} ({})",
-            &hash,
-            &result.outputs_path
+            &hash, &result.outputs_path
         );
-        let terminal_output = result.terminal_output.clone();
+        let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
@@ -298,12 +315,28 @@ impl NxCache {
 
         trace!(
             "Copying Files from Cache {:?} -> {:?}",
-            &outputs_path,
-            &self.workspace_root
+            &outputs_path, &self.workspace_root
         );
-        let sz = _copy(outputs_path, &self.workspace_root)?;
+        let sz = _copy(outputs_path, &self.workspace_root);
 
-        Ok(sz)
+        match sz {
+            Err(e) => {
+                let kind = underlying_io_error_kind(&e);
+                match kind {
+                    Some(std::io::ErrorKind::NotFound) => {
+                        trace!("No artifacts to copy: {:?}", e);
+                        Ok(0)
+                    }
+                    _ => {
+                        return Err(anyhow::anyhow!("Error copying files from cache: {:?}", e));
+                    }
+                }
+            }
+            Ok(sz) => {
+                trace!("Copied {} bytes from cache", sz);
+                Ok(sz)
+            }
+        }
     }
 
     #[napi]
@@ -406,4 +439,14 @@ where
             }
         }
     }
+}
+
+// From: https://docs.rs/anyhow/latest/anyhow/struct.Error.html#example-1
+fn underlying_io_error_kind(error: &anyhow::Error) -> Option<std::io::ErrorKind> {
+    for cause in error.chain() {
+        if let Some(io_error) = cause.downcast_ref::<std::io::Error>() {
+            return Some(io_error.kind());
+        }
+    }
+    None
 }

@@ -2,7 +2,7 @@
 title: 'Lerna is dead — Long Live Lerna'
 slug: 'lerna-is-dead-long-live-lerna'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-05-11/gtsrJ-tMDZf9bvDLVSjQ.png'
+cover_image: '/blog/images/2022-05-11/gtsrJ-tMDZf9bvDLVSjQ.avif'
 tags: [nx]
 description: Nrwl takes over Lerna.js stewardship, promising continued maintenance, critical updates, and future Nx integration while supporting the existing community.
 ---

@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   runCommandAsync,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Remix E2E Tests', () => {
   describe('--integrated (npm)', () => {
@@ -34,8 +34,11 @@ describe('Remix E2E Tests', () => {
     }, 120000);
   });
   describe('--integrated (yarn)', () => {
-    beforeAll(() => {
-      newProject({ packages: ['@nx/remix', '@nx/react'] });
+    beforeAll(async () => {
+      newProject({
+        packages: ['@nx/remix', '@nx/react'],
+        packageManager: 'yarn',
+      });
     });
 
     afterAll(() => {
@@ -174,7 +177,7 @@ describe('Remix E2E Tests', () => {
         ).not.toThrow();
       }, 120000);
 
-      xit('should pass un-escaped dollar signs in resource routes with skipChecks flag', async () => {
+      it('should pass un-escaped dollar signs in resource routes with skipChecks flag', async () => {
         await runCommandAsync(
           `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --path="apps/${plugin}/app/routes/my.route.$someWeirdUseCase.ts" --force`
         );

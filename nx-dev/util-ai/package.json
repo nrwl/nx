@@ -1,13 +1,13 @@
 {
-  "name": "@nx/nx-dev/util-ai",
-  "private": true,
+  "name": "@nx/nx-dev-util-ai",
   "version": "0.0.1",
+  "type": "commonjs",
+  "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.26.0",
     "tslib": "^2.3.0",
     "openai": "~4.3.1"
   },
-  "type": "commonjs",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts"
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
 }

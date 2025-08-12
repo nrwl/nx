@@ -22,7 +22,7 @@ If you are using a custom tasks runner to customize your cache, you have the fol
 
 Use [Nx Cloud](/nx-cloud) for your remote cache. This is the safest, lowest-maintenance, most recommended option.
 
-If you cannot use Nx Cloud, consider an [Nx Powerpack](/powerpack) plugin for caching: [Amazon S3](/nx-api/powerpack-s3-cache), [Google Cloud](/nx-api/powerpack-gcs-cache), [Azure](/nx-api/powerpack-azure-cache) or a [shared network drive](/nx-api/powerpack-shared-fs-cache). If there is no Powerpack plugin that supports the service where you want to store the remote cache, [file an issue](https://github.com/nrwl/nx/issues/new).
+If you cannot use Nx Cloud, consider an [Nx Powerpack](/powerpack) plugin for caching: [Amazon S3](/reference/core-api/s3-cache), [Google Cloud](/reference/core-api/gcs-cache), [Azure](/reference/core-api/azure-cache) or a [shared network drive](/reference/core-api/shared-fs-cache). If there is no Powerpack plugin that supports the service where you want to store the remote cache, [file an issue](https://github.com/nrwl/nx/issues/new).
 
 **To learn more about migrating from custom task runners, [please refer to this detailed guide](/deprecated/custom-tasks-runner).**
 
@@ -33,5 +33,5 @@ The `NX_REJECT_UNKNOWN_LOCAL_CACHE` environment variable does not work with the 
 If you are using `NX_REJECT_UNKNOWN_LOCAL_CACHE` to share your local cache on a network drive, you have a few options moving forward:
 
 1. Use [Nx Cloud](/nx-cloud) for your remote cache. This is the safest, lowest-maintenance, most recommended option
-2. Use the [Nx Powerpack Shared Fs Cache](/nx-api/powerpack-shared-fs-cache) which recognizes artifacts from other machines
-3. Use another [Nx Powerpack](/powerpack) plugin for caching on a cloud provider: [Amazon S3](/nx-api/powerpack-s3-cache), [Google Cloud](/nx-api/powerpack-gcs-cache), or [Azure](/nx-api/powerpack-azure-cache)
+2. Use the [Nx Powerpack Shared Fs Cache](/reference/core-api/shared-fs-cache) which recognizes artifacts from other machines
+3. Use another [Nx Powerpack](/powerpack) plugin for caching on a cloud provider: [Amazon S3](/reference/core-api/s3-cache), [Google Cloud](/reference/core-api/gcs-cache), or [Azure](/reference/core-api/azure-cache)

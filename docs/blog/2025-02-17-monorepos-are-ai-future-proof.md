@@ -8,6 +8,21 @@ cover_image: /blog/images/articles/monorepos-are-ai-future-proof-bg.jpg
 youtubeUrl: https://youtu.be/RNilYmJJzdk
 ---
 
+{% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
+
+- **Nx Just Made Your LLM Way Smarter**
+- [Making Cursor Smarter with an MCP Server For Nx Monorepos](/blog/nx-made-cursor-smarter)
+- [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
+- [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
+- [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration)
+- [Enhancing Nx Generators with AI: Predictability Meets Intelligence](/blog/nx-generators-ai-integration)
+- [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
+- [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci)
+- [Analyze Your Nx Cloud Runs With Your AI Assistant](/blog/nx-cloud-analyze-via-nx-mcp)
+- [Automatically Fix your CI Failures with JetBrains AI Assistant](/blog/jetbrains-ci-autofix)
+
+{% /callout %}
+
 Everyone is constantly pushing to be more productive: delivering more features, reducing overhead, and keeping up with increasing demands. Companies want to move faster, and engineering teams work toward the same goal, looking for ways to streamline development and ship more with fewer resources. LLMs offer a promising way to boost efficiency, whether by assisting individual developers or improving workflows across a team.
 
 However, the quality of an LLM's response depends entirely on the data and context it has access to. Ask an LLM (in this case, GitHub Copilot with GPT-4o) about the structure of an NPM workspace monorepo, and you probably won't be satisfied with the result:
@@ -128,7 +143,7 @@ And this is just the beginning. While Nx already understands your local monorepo
 
 ## Try It Out Yourself
 
-If you want to test this out, [create a new Nx workspace](/getting-started/intro#try-nx-yourself) and make sure you have [Nx Console](/getting-started/editor-setup) installed or updated to the latest version.
+If you want to test this out, [create a new Nx workspace](/getting-started/start-new-project) and make sure you have [Nx Console](/getting-started/editor-setup) installed or updated to the latest version.
 
 > If you already have an existing NPM/Yarn/PNPM workspace, you can add Nx with `nx init`. Check out [our free course](/courses/pnpm-nx-next) to learn more.
 

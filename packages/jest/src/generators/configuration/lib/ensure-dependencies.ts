@@ -24,6 +24,8 @@ export function ensureDependencies(
     // jest will throw an error if it's not installed
     // even if not using it in overriding transformers
     'ts-jest': tsJestVersion,
+    // peer dependency of ts-jest
+    'jest-util': jestVersion,
   };
 
   if (options.testEnvironment !== 'none') {
@@ -44,5 +46,11 @@ export function ensureDependencies(
     devDeps['@swc/jest'] = swcJestVersion;
   }
 
-  return addDependenciesToPackageJson(tree, dependencies, devDeps);
+  return addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDeps,
+    undefined,
+    options.keepExistingVersions
+  );
 }

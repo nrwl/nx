@@ -23,10 +23,10 @@ Manually splitting large e2e test projects can be complex and require ongoing ma
 To use **automated e2e task splitting**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
 
 ### Step 2: Add the Appropriate Plugin
 
@@ -54,6 +54,13 @@ nx add @nx/jest
 ```
 
 {% /tab %}
+{% tab label="Gradle" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/gradle
+```
+
+{% /tab %}
 {% /tabs %}
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
@@ -72,9 +79,10 @@ If you upgraded Nx from an older version, ensure that [inferred tasks](/concepts
 
 If you are already using the `@nx/cypress`, `@nx/playwright`, or `@nx/jest` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
-- [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
-- [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
-- [Configure Jest Task Splitting](/nx-api/jest#splitting-e2e-tests)
+- [Configure Cypress Task Splitting](/technologies/test-tools/cypress/introduction#nxcypress-configuration)
+- [Configure Playwright Task Splitting](/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
+- [Configure Jest Task Splitting](/technologies/test-tools/jest/introduction#splitting-e2e-tests)
+- [Configure Gradle Testing Task Splitting](/technologies/java/introduction#splitting-tests)
 
 ## Verify Automated Task Splitting Works
 
@@ -427,6 +435,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         with:

@@ -3,6 +3,8 @@ title: Overview of the Nx Vue Plugin
 description: The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.
 ---
 
+# @nx/vue
+
 The Nx plugin for [Vue](https://vuejs.org/).
 
 ## Setting Up @nx/vue
@@ -19,26 +21,11 @@ Make sure to install the `@nx/vue` version that matches the version of `nx` in y
 
 In any Nx workspace, you can install `@nx/vue` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/vue
 ```
 
 This will install the correct version of `@nx/vue`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/vue` package with your package manager.
-
-```shell {% skipRescope=true %}
-npm add -D @nx/vue
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/vue Plugin
 

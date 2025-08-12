@@ -5,17 +5,20 @@
   "projectType": "library",
   "targets": {
     "build-ng": {
-      "dependsOn": ["build-base"],
+      "dependsOn": ["build-base", "typecheck", "legacy-post-build"],
       "executor": "@nx/angular:package",
       "options": {
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
       },
-      "outputs": ["{workspaceRoot}/build/packages/angular"]
+      "outputs": ["{workspaceRoot}/dist/packages/angular"]
     },
-    "build-base": {
-      "executor": "@nx/js:tsc",
+
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "addPackageJsonFields": false,
         "assets": [
           {
             "input": "packages/angular",
@@ -58,13 +61,15 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/angular"],
-      "dependsOn": ["build-ng", "build-base", "^build"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js angular",
-        "parallel": false
-      }
+      "dependsOn": [
+        "^build",
+        "build-ng",
+        "legacy-post-build",
+        "typecheck",
+        "build-base"
+      ],
+      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
+      "command": "node ./scripts/copy-readme.js angular"
     }
   },
   "implicitDependencies": []

@@ -10,7 +10,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import {
   ASYNC_GENERATOR_EXECUTOR_CONTENTS,
   NX_PLUGIN_V2_CONTENTS,
@@ -46,6 +46,9 @@ describe('Nx Plugin (TS solution)', () => {
 
     expect(runCLI(`lint @proj/${plugin}`)).toContain(
       `Successfully ran target lint for project @proj/${plugin}`
+    );
+    expect(runCLI(`typecheck @proj/${plugin}`)).toContain(
+      `Successfully ran target typecheck for project @proj/${plugin}`
     );
     expect(runCLI(`build @proj/${plugin}`)).toContain(
       `Successfully ran target build for project @proj/${plugin}`

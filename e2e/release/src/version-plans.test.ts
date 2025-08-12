@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nx/devkit';
+import { NxJsonConfiguration, readJsonFile, workspaceRoot } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ensureDir, readdirSync, writeFile } from 'fs-extra';
 import { join } from 'path';
 
@@ -101,9 +101,7 @@ describe('nx release version plans', () => {
           },
         },
         version: {
-          generatorOptions: {
-            specifierSource: 'version-plans',
-          },
+          specifierSource: 'version-plans',
         },
         changelog: {
           projectChangelogs: true,
@@ -145,21 +143,29 @@ Here is another line in the message.
       silenceError: true,
     });
 
-    expect(result).toContain(
-      `${pkg1} 📄 Resolved the specifier as "minor" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/version-plan-\\d+\\.md, to get new version 0\\.1\\.0`
+      )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(result).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
-    expect(result).toContain(
-      `${pkg3} 📄 Resolved the specifier as "patch" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg3} ❓ Applied semver relative bump "patch", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.0\\.1`
+      )
     );
-    expect(result).toContain(
-      `${pkg4} 📄 Resolved the specifier as "preminor" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.1\\.0-0`
+      )
     );
-    expect(result).toContain(
-      `${pkg5} 📄 Resolved the specifier as "prerelease" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg5} ❓ Applied semver relative bump "prerelease", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.0\\.1-0`
+      )
     );
 
     // replace the date with a placeholder to make the snapshot deterministic
@@ -283,21 +289,29 @@ Update packages in both groups with a mix #2
       silenceError: true,
     });
 
-    expect(result2).toContain(
-      `${pkg1} 📄 Resolved the specifier as "minor" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.2\\.0`
+      )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(result2).toContain(
-      `${pkg2} ✍️  New version 0.2.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.2.0 written to manifest: ${pkg2}/package.json`
     );
-    expect(result2).toContain(
-      `${pkg3} 📄 Resolved the specifier as "patch" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg3} ❓ Applied semver relative bump "patch", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.0\\.2`
+      )
     );
-    expect(result2).toContain(
-      `${pkg4} 📄 Resolved the specifier as "preminor" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.2\\.0-0`
+      )
     );
-    expect(result2).toContain(
-      `${pkg5} 📄 Resolved the specifier as "patch" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg5} ❓ Applied semver relative bump "patch", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.0\\.1`
+      )
     );
 
     // replace the date with a placeholder to make the snapshot deterministic
@@ -407,9 +421,7 @@ Update packages in both groups with a mix #2
           },
         },
         version: {
-          generatorOptions: {
-            specifierSource: 'version-plans',
-          },
+          specifierSource: 'version-plans',
         },
         changelog: {
           projectChangelogs: true,
@@ -447,7 +459,11 @@ Update the independent packages with a patch, preminor, and prerelease.
     expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBe(true);
     expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBe(true);
 
-    packageInstall('yargs', null, 'latest', 'dev');
+    // Reference the same version of yargs as nx uses to avoid compatibility issues
+    const nxPackageJson = readJsonFile(
+      join(workspaceRoot, 'packages/nx/package.json')
+    );
+    packageInstall('yargs', null, nxPackageJson.dependencies.yargs, 'dev');
 
     await writeFile(
       tmpProjPath('release.js'),
@@ -516,21 +532,29 @@ const yargs = require('yargs');
       failOnError: false,
     });
 
-    expect(result).toContain(
-      `${pkg1} 📄 Resolved the specifier as "minor" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-fixed\\.md, to get new version 0\\.1\\.0`
+      )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(result).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
-    expect(result).toContain(
-      `${pkg3} 📄 Resolved the specifier as "patch" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg3} ❓ Applied semver relative bump "patch", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.0\\.1`
+      )
     );
-    expect(result).toContain(
-      `${pkg4} 📄 Resolved the specifier as "preminor" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.1\\.0-0`
+      )
     );
-    expect(result).toContain(
-      `${pkg5} 📄 Resolved the specifier as "prerelease" using version plans.`
+    expect(result).toMatch(
+      new RegExp(
+        `${pkg5} ❓ Applied semver relative bump "prerelease", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.0\\.1-0`
+      )
     );
 
     // replace the date with a placeholder to make the snapshot deterministic
@@ -651,21 +675,29 @@ Update packages in both groups with a mix #2
       silenceError: true,
     });
 
-    expect(result2).toContain(
-      `${pkg1} 📄 Resolved the specifier as "minor" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.2\\.0`
+      )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(result2).toContain(
-      `${pkg2} ✍️  New version 0.2.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.2.0 written to manifest: ${pkg2}/package.json`
     );
-    expect(result2).toContain(
-      `${pkg3} 📄 Resolved the specifier as "patch" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg3} ❓ Applied semver relative bump "patch", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.0\\.2`
+      )
     );
-    expect(result2).toContain(
-      `${pkg4} 📄 Resolved the specifier as "preminor" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.2\\.0-0`
+      )
     );
-    expect(result2).toContain(
-      `${pkg5} 📄 Resolved the specifier as "patch" using version plans.`
+    expect(result2).toMatch(
+      new RegExp(
+        `${pkg5} ❓ Applied semver relative bump "patch", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.0\\.1`
+      )
     );
 
     // replace the date with a placeholder to make the snapshot deterministic
@@ -789,12 +821,14 @@ Update packages in both groups with a mix #2
       silenceError: true,
     });
 
-    expect(versionResult).toContain(
-      `${pkg1} 📄 Resolved the specifier as "minor" using version plans.`
+    expect(versionResult).toMatch(
+      new RegExp(
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/version-plan-\\d+\\.md, to get new version 0\\.1\\.0`
+      )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(versionResult).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
 
     const changelogResult = runCLI('release changelog 0.1.0 --verbose', {
@@ -845,9 +879,7 @@ Update packages in both groups with a mix #2
           },
         },
         version: {
-          generatorOptions: {
-            specifierSource: 'version-plans',
-          },
+          specifierSource: 'version-plans',
         },
         changelog: {
           projectChangelogs: true,
@@ -895,20 +927,30 @@ Update packages in both groups with a mix #2
     expect(versionResult).toContain(
       'Skipping version plan discovery as a specifier was provided'
     );
-    expect(versionResult).toContain(
-      `${pkg1} 📄 Using the provided version specifier "major".`
+    expect(versionResult).toMatch(
+      new RegExp(
+        `${pkg1} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+      )
     );
-    expect(versionResult).toContain(
-      `${pkg2} 📄 Using the provided version specifier "major".`
+    expect(versionResult).toMatch(
+      new RegExp(
+        `${pkg2} ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing ${pkg1}`
+      )
     );
-    expect(versionResult).toContain(
-      `${pkg3} 📄 Using the provided version specifier "major".`
+    expect(versionResult).toMatch(
+      new RegExp(
+        `${pkg3} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+      )
     );
-    expect(versionResult).toContain(
-      `${pkg4} 📄 Using the provided version specifier "major".`
+    expect(versionResult).toMatch(
+      new RegExp(
+        `${pkg4} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+      )
     );
-    expect(versionResult).toContain(
-      `${pkg5} 📄 Using the provided version specifier "major".`
+    expect(versionResult).toMatch(
+      new RegExp(
+        `${pkg5} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+      )
     );
 
     expect(versionResult).toContain(

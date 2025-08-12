@@ -9,7 +9,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -24,6 +23,7 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -42,6 +42,11 @@ export async function applicationGeneratorInternal(
   _options: Schema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    _options.addPlugin,
+    _options.useTsSolution
+  );
   tasks.push(
     await jsInitGenerator(tree, {
       ..._options,
@@ -49,7 +54,7 @@ export async function applicationGeneratorInternal(
         ? 'tsconfig.json'
         : 'tsconfig.base.json',
       skipFormat: true,
-      addTsPlugin: _options.useTsSolution,
+      addTsPlugin,
       formatter: _options.formatter,
       platform: 'web',
     })
@@ -123,7 +128,7 @@ export async function applicationGeneratorInternal(
       {
         name: options.projectName,
         projectRoot: options.appProjectRoot,
-        linter: options.linter ?? Linter.EsLint,
+        linter: options.linter ?? 'eslint',
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
         setParserOptionsProject: options.setParserOptionsProject,

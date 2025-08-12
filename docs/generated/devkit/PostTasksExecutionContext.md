@@ -4,8 +4,9 @@
 
 #### Type declaration
 
-| Name                  | Type                                                                |
-| :-------------------- | :------------------------------------------------------------------ |
-| `nxJsonConfiguration` | [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration) |
-| `taskResults`         | [`TaskResults`](../../devkit/documents/TaskResults)                 |
-| `workspaceRoot`       | `string`                                                            |
+| Name                  | Type                                                                              |
+| :-------------------- | :-------------------------------------------------------------------------------- |
+| `argv`                | `string`[]                                                                        |
+| `nxJsonConfiguration` | [`NxJsonConfiguration`](/reference/core-api/devkit/documents/NxJsonConfiguration) |
+| `taskResults`         | [`TaskResults`](/reference/core-api/devkit/documents/TaskResults)                 |
+| `workspaceRoot`       | `string`                                                                          |

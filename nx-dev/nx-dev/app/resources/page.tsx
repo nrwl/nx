@@ -1,12 +1,12 @@
 import React from 'react';
-import { DefaultLayout, SectionHeading } from '@nx/nx-dev/ui-common';
+import { DefaultLayout, SectionHeading } from '@nx/nx-dev-ui-common';
 import {
   learnItems,
   eventItems,
   companyItems,
   MenuItem,
-} from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { Metadata } from 'next';
 
 interface ResourceCardProps {
@@ -111,7 +111,7 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],

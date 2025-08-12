@@ -1,17 +1,20 @@
-import { BlogAuthors } from '@nx/nx-dev/ui-blog';
+import { BlogAuthors } from '@nx/nx-dev-ui-blog';
 import Link from 'next/link';
-import type { WebinarDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import type { WebinarDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 
 export interface WebinarListItemProps {
   webinar: WebinarDataEntry;
   episode: number;
 }
 export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
-  const formattedDate = new Date(webinar.date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  });
+  const formattedDate = new Date(webinar.eventDate || '').toLocaleDateString(
+    'en-US',
+    {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }
+  );
   const authorsList = (
     webinar.authors.length > 1
       ? webinar.authors.map((a, i) =>
@@ -19,10 +22,7 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
         )
       : webinar.authors.map((a) => a.name)
   ).join(', ');
-  const link =
-    (webinar.status === 'Past - Ungated'
-      ? webinar.youtubeUrl
-      : webinar.registrationUrl) || '';
+  const link = webinar.registrationUrl || '';
   return (
     <div
       key={webinar.slug}

@@ -2,7 +2,7 @@
 title: 'New Terminal Output & Performance Improvements in Nx 13.5'
 slug: 'new-terminal-output-performance-improvements-in-nx-13-5'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-01-25/PIUl1QGk7mOpSFdEwFQ8OA.png'
+cover_image: '/blog/images/2022-01-25/PIUl1QGk7mOpSFdEwFQ8OA.avif'
 tags: [nx]
 description: Nx 13.5 brings a new dynamic terminal output, 2.3x faster operations, Chrome DevTools profiling support, and improved project graph visualization.
 ---
@@ -55,7 +55,7 @@ Thanks [Jason](https://twitter.com/FrozenPandaz) for working on this feature!
 ### React Native now supports Environment Variables
 
 Whenever you set up React Native support within an Nx workspace, it should now automatically come with the [react-native-config](https://github.com/luggit/react-native-config) package installed. That allows you to have a `.env` file in the React Native app folder which can then be loaded from within your React Native application.  
-You can find all the details on the [Nx docs](/recipes/react/react-native).
+You can find all the details on the [Nx docs](/technologies/react/recipes/react-native).
 
 Thanks [Emily Xiong](https://twitter.com/xiongemily) for implementing this!
 

@@ -110,7 +110,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -166,7 +166,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -443,7 +443,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/apps/my-app/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -482,7 +482,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/libs/my-lib/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -518,43 +518,45 @@ describe('@nx/eslint/plugin', () => {
       `);
     });
 
-    it('should not create nodes for nested projects without a root level eslint config when all files are ignored (.eslintignore)', async () => {
-      createFiles({
-        'apps/my-app/.eslintrc.json': `{}`,
-        'apps/my-app/.eslintignore': `**/*`,
-        'apps/my-app/project.json': `{}`,
-        'apps/my-app/index.ts': `console.log('hello world')`,
-        'libs/my-lib/.eslintrc.json': `{}`,
-        'libs/my-lib/.eslintignore': `**/*`,
-        'libs/my-lib/project.json': `{}`,
-        'libs/my-lib/index.ts': `console.log('hello world')`,
-      });
-      expect(
-        await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
-      ).toMatchInlineSnapshot(`
-        {
-          "projects": {},
-        }
-      `);
-    });
+    // This is intentionally disabled, since we should always create a node for project that contains eslint config
+    // it('should not create nodes for nested projects without a root level eslint config when all files are ignored (.eslintignore)', async () => {
+    //   createFiles({
+    //     'apps/my-app/.eslintrc.json': `{}`,
+    //     'apps/my-app/.eslintignore': `**/*`,
+    //     'apps/my-app/project.json': `{}`,
+    //     'apps/my-app/index.ts': `console.log('hello world')`,
+    //     'libs/my-lib/.eslintrc.json': `{}`,
+    //     'libs/my-lib/.eslintignore': `**/*`,
+    //     'libs/my-lib/project.json': `{}`,
+    //     'libs/my-lib/index.ts': `console.log('hello world')`,
+    //   });
+    //   expect(
+    //     await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
+    //   ).toMatchInlineSnapshot(`
+    //     {
+    //       "projects": {},
+    //     }
+    //   `);
+    // });
 
-    it('should not create nodes for nested projects without a root level eslint config when all files are ignored (ignorePatterns in .eslintrc.json)', async () => {
-      createFiles({
-        'apps/my-app/.eslintrc.json': `{ "ignorePatterns": ["**/*"] }`,
-        'apps/my-app/project.json': `{}`,
-        'apps/my-app/index.ts': `console.log('hello world')`,
-        'libs/my-lib/.eslintrc.json': `{ "ignorePatterns": ["**/*"] }`,
-        'libs/my-lib/project.json': `{}`,
-        'libs/my-lib/index.ts': `console.log('hello world')`,
-      });
-      expect(
-        await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
-      ).toMatchInlineSnapshot(`
-        {
-          "projects": {},
-        }
-      `);
-    });
+    // This is intentionally disabled, since we should always create a node for project that contains eslint config
+    // it('should not create nodes for nested projects without a root level eslint config when all files are ignored (ignorePatterns in .eslintrc.json)', async () => {
+    //   createFiles({
+    //     'apps/my-app/.eslintrc.json': `{ "ignorePatterns": ["**/*"] }`,
+    //     'apps/my-app/project.json': `{}`,
+    //     'apps/my-app/index.ts': `console.log('hello world')`,
+    //     'libs/my-lib/.eslintrc.json': `{ "ignorePatterns": ["**/*"] }`,
+    //     'libs/my-lib/project.json': `{}`,
+    //     'libs/my-lib/index.ts': `console.log('hello world')`,
+    //   });
+    //   expect(
+    //     await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
+    //   ).toMatchInlineSnapshot(`
+    //     {
+    //       "projects": {},
+    //     }
+    //   `);
+    // });
   });
 
   describe('root eslint config and nested eslint configs', () => {
@@ -584,7 +586,7 @@ describe('@nx/eslint/plugin', () => {
                     "default",
                     "^default",
                     "{workspaceRoot}/.eslintrc.json",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/apps/my-app/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -624,7 +626,7 @@ describe('@nx/eslint/plugin', () => {
                     "default",
                     "^default",
                     "{workspaceRoot}/.eslintrc.json",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/libs/my-lib/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -721,7 +723,6 @@ describe('@nx/eslint/plugin', () => {
     it('should handle multiple levels of nesting and ignored files correctly', async () => {
       createFiles({
         '.eslintrc.json': '{ "root": true, "ignorePatterns": ["**/*"] }',
-        'apps/myapp/.eslintrc.json': '{ "extends": "../../.eslintrc.json" }', // no lintable files, don't create task
         'apps/myapp/project.json': '{}',
         'apps/myapp/index.ts': 'console.log("hello world")',
         'apps/myapp/nested/mylib/.eslintrc.json': JSON.stringify({
@@ -745,7 +746,7 @@ describe('@nx/eslint/plugin', () => {
                     "default",
                     "^default",
                     "{workspaceRoot}/.eslintrc.json",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/apps/myapp/nested/mylib/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -801,7 +802,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -858,7 +859,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [

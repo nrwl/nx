@@ -1,5 +1,6 @@
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -12,6 +13,7 @@ export async function withModuleFederationForSSR(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
+  const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(options, {
@@ -23,13 +25,15 @@ export async function withModuleFederationForSSR(
     config.output.uniqueName = options.name;
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: false,
+      runtimeChunk: isDevServer
+        ? config.optimization?.runtimeChunk ?? undefined
+        : false,
     };
 
     config.plugins.push(
       new (require('@module-federation/enhanced').ModuleFederationPlugin)(
         {
-          name: options.name.replace(/-/g, '_'),
+          name: normalizeProjectName(options.name),
           filename: 'remoteEntry.js',
           exposes: options.exposes,
           remotes: mappedRemotes,
@@ -45,8 +49,8 @@ export async function withModuleFederationForSSR(
            */
           ...(configOverride ? configOverride : {}),
           experiments: {
-            federationRuntime: 'hoisted',
-            // We should allow users to override federationRuntime
+            asyncStartup: true,
+            // We should allow users to override experiments
             ...(configOverride?.experiments ?? {}),
           },
           runtimePlugins:

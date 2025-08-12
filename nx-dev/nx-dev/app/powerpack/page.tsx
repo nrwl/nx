@@ -1,11 +1,11 @@
-import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   CallToAction,
   Faq,
   GetStarted,
   Hero,
   PowerpackFeatures,
-} from '@nx/nx-dev/ui-powerpack';
+} from '@nx/nx-dev-ui-powerpack';
 
 import type { Metadata } from 'next';
 import { type ReactElement } from 'react';
@@ -51,7 +51,7 @@ export default function NxPowerPackPage(): ReactElement {
     <DefaultLayout headerCTAConfig={headerCTAConfig}>
       <Hero />
 
-      <div className="mt-32 scroll-mt-32 lg:mt-56" id="features">
+      <div className="mt-16 scroll-mt-16" id="features">
         <PowerpackFeatures />
       </div>
 

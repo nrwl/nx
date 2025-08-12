@@ -1,6 +1,5 @@
 import * as createSpinner from 'ora';
 import { bold } from 'chalk';
-import { execSync } from 'child_process';
 
 import {
   getPackageManagerCommand,
@@ -17,8 +16,14 @@ import {
   isProjectsWithNoNameError,
 } from '../../project-graph/error-types';
 import { getGeneratorInformation } from '../generate/generator-utils';
+import { join } from 'path';
+import { existsSync } from 'fs';
+import { readNxJson } from '../../config/configuration';
+import { nxVersion } from '../../utils/versions';
+import { runNxSync } from '../../utils/child-process';
+import { writeJsonFile } from '../../utils/fileutils';
 
-export function runPackageManagerInstallPlugins(
+export function installPluginPackages(
   repoRoot: string,
   pmc: PackageManagerCommands = getPackageManagerCommand(),
   plugins: string[]
@@ -26,8 +31,19 @@ export function runPackageManagerInstallPlugins(
   if (plugins.length === 0) {
     return;
   }
-  addDepsToPackageJson(repoRoot, plugins);
-  runInstall(repoRoot, pmc);
+  if (existsSync(join(repoRoot, 'package.json'))) {
+    addDepsToPackageJson(repoRoot, plugins);
+    runInstall(repoRoot, pmc);
+  } else {
+    const nxJson = readNxJson(repoRoot);
+    nxJson.installation.plugins ??= {};
+    for (const plugin of plugins) {
+      nxJson.installation.plugins[plugin] = nxVersion;
+    }
+    writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
+    // Invoking nx wrapper to install plugins.
+    runNxSync('--version', { stdio: 'ignore' });
+  }
 }
 
 /**
@@ -39,13 +55,15 @@ export function runPackageManagerInstallPlugins(
  * @param verbose whether to run in verbose mode
  * @returns void
  */
-export async function installPlugin(
+export async function runPluginInitGenerator(
   plugin: string,
   repoRoot: string = workspaceRoot,
   updatePackageScripts: boolean = false,
   verbose: boolean = false,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ): Promise<void> {
+  let command = `g ${plugin}:init ${verbose ? '--verbose' : ''}`;
+
   try {
     const { schema } = getGeneratorInformation(
       plugin,
@@ -54,28 +72,27 @@ export async function installPlugin(
       {}
     );
 
-    let command = `${pmc.exec} nx g ${plugin}:init ${
-      verbose ? '--verbose' : ''
-    }`;
-
     if (!!schema.properties['keepExistingVersions']) {
       command += ` --keepExistingVersions`;
     }
     if (updatePackageScripts && !!schema.properties['updatePackageScripts']) {
       command += ` --updatePackageScripts`;
     }
-    execSync(command, {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-      windowsHide: false,
-    });
   } catch {
     // init generator does not exist, so this function should noop
-    output.log({
-      title: `No "init" generator found in ${plugin}. Skipping initialization.`,
-    });
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      output.log({
+        title: `No "init" generator found in ${plugin}. Skipping initialization.`,
+      });
+    }
     return;
   }
+  runNxSync(command, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+    windowsHide: false,
+    packageManagerCommand: pmc,
+  });
 }
 
 /**
@@ -83,7 +100,7 @@ export async function installPlugin(
  * Get the implementation of the plugin's init generator and run it
  * @returns a list of succeeded plugins and a map of failed plugins to errors
  */
-export async function installPlugins(
+export async function runPluginInitGenerators(
   plugins: string[],
   updatePackageScripts: boolean,
   pmc: PackageManagerCommands,
@@ -108,7 +125,13 @@ export async function installPlugins(
   for (const plugin of plugins) {
     try {
       spinner.start('Installing plugin ' + plugin);
-      await installPlugin(plugin, repoRoot, updatePackageScripts, verbose, pmc);
+      await runPluginInitGenerator(
+        plugin,
+        repoRoot,
+        updatePackageScripts,
+        verbose,
+        pmc
+      );
       succeededPlugins.push(plugin);
       spinner.succeed('Installed plugin ' + plugin);
     } catch (e) {
@@ -145,7 +168,7 @@ export async function configurePlugins(
   }
 
   output.log({ title: '🔨 Configuring plugins' });
-  let { succeededPlugins, failedPlugins } = await installPlugins(
+  let { succeededPlugins, failedPlugins } = await runPluginInitGenerators(
     plugins,
     updatePackageScripts,
     pmc,

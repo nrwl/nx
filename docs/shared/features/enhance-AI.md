@@ -5,96 +5,187 @@ description: 'Learn how Nx enhances your AI assistant by providing rich workspac
 
 # Enhance Your LLM
 
-Nx's LLM enhancement feature makes your AI assistant significantly smarter by providing it with rich metadata about your workspace structure, project relationships, and architectural decisions. While LLMs are powerful tools for boosting development productivity, their effectiveness depends entirely on the context they have access to. Nx bridges this gap by:
+{% youtube src="https://youtu.be/dRQq_B1HSLA" title="We Just Shipped the Monorepo MCP for Copilot" /%}
 
-- Providing **architectural awareness** about your workspace structure and project relationships
-- Feeding information about **project ownership and team responsibilities**
-- Sharing knowledge about **available tasks** and their configuration
-- Including details about **technology stacks** and project types
-- Supplying **Nx documentation** context for better assistance
+Monorepos **provide an ideal foundation for AI-powered development**, enabling cross-project reasoning and code generation. However, without proper context, **LLMs struggle to understand your workspace architecture**, seeing only individual files rather than the complete picture.
 
-{% side-by-side %}
-{% youtube src="https://youtu.be/RNilYmJJzdk?si=et_6zWMMxJPa7lp2" title="We Just Made Your LLM Way Smarter!" /%}
+Nx's transforms your AI assistant by providing rich workspace metadata that enables it to:
 
-{% youtube src="https://www.youtube.com/watch?v=V2W94Sq_v6A" title="We Just Released the MCP Server for Monorepos" /%}
-{% /side-by-side %}
+- Understand your **workspace architecture** and project relationships
+- Identify **project owners** and team responsibilities
+- Access **Nx documentation** for accurate guidance
+- Leverage **code generators** for consistent scaffolding
+- Connect to your **CI pipeline** to help fix failures
 
-## How It Works
+The goal is to transform your AI assistant from a generic code helper into an architecturally-aware collaborator that understands your specific workspace structure and can make intelligent, context-aware decisions.
 
-![Nx Console LLM Enhancement](/shared/images/nx-enhance-llm-illustration.avif)
+## How Nx MCP Enhances Your LLM
 
-Nx maintains comprehensive metadata about your workspace to power features like [caching](/features/cache-task-results) and [distributed task execution](/ci/features/distribute-task-execution). Nx Console, as an editor extension, hooks into this rich metadata, post-processes it, and feeds it directly to your LLM. This enables your LLM to:
+The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) is an open standard that enables AI models to interact with your development environment through a standardized interface. Nx implements an MCP server via the [Nx Console](/getting-started/editor-setup) that exposes workspace metadata to compatible AI assistants like GitHub Copilot, Claude, and others.
 
-- Understand the complete workspace structure, including applications and libraries
-- Know how different projects are connected and their dependency relationships
-- Recognize project technology stacks and available tasks
-- Access information about project ownership and team responsibilities
-- Utilize Nx documentation to provide more accurate assistance
+With the Nx MCP server, your AI assistant gains a "map" of your entire system being able to go from just reasoning at the file level to seeing the more high level picture. This allows the LLM to move between different abstraction levels - from high-level architecture down to specific implementation details:
 
-This enhanced context allows your LLM to move beyond simple file-level operations to understand your workspace at an architectural level, making it a more effective development partner.
+![Different abstraction levels](/blog/images/articles/nx-ai-abstraction-levels.avif)
 
-{% callout type="note" title="Current Support" %}
-LLM enhancement is available for VS Code with GitHub Copilot, Cursor, and other LLM clients through the MCP server. Support for additional editors and LLM providers continues to expand.
-{% /callout %}
+These are some of the available tools which the Nx MCP server exposes:
 
-## Setting Up LLM Enhancements
+- **`nx_workspace`**: Provides a comprehensive view of your Nx configuration and project graph
+- **`nx_project_details`**: Returns detailed configuration for specific projects
+- **`nx_docs`**: Retrieves relevant documentation based on queries
+- **`nx_generators`**: Lists available code generators in your workspace
+- **`nx_generator_schema`**: Provides detailed schema information for generators
+- **`nx_visualize_graph`**: Opens interactive project or task graph visualizations
+- **`nx_cloud_cipe_details`**: Returns information about CI pipelines from Nx Cloud
+- **`nx_cloud_fix_cipe_failure`**: Provides detailed information about CI failures to help fix issues
 
-### VS Code with GitHub Copilot
+## Setting Up Nx MCP
 
-To enable LLM enhancement in VS Code:
+The Nx MCP server is part of Nx Console and can be easily configured in supported editors:
 
-1. Install or update [Nx Console](/getting-started/editor-setup) in VS Code
-2. Ensure you have GitHub Copilot installed and configured
-3. Start using Copilot in your Nx workspace by typing `@nx` at the beginning of your prompt - this will automatically provide the enhanced context
+### VS Code / Cursor Setup
 
-![Example of @nx chat participant in VSCode](/shared/images/nx-chat-participant.avif)
+1. Install [Nx Console](/getting-started/editor-setup) from the marketplace
+2. You'll receive a notification to "Improve Copilot/AI agent with Nx-specific context"
+3. Click "Yes" to automatically configure the MCP server
 
-### Cursor
+If you miss the notification, run the `nx.configureMcpServer` command from the command palette (`Ctrl/Cmd + Shift + P`).
 
-To enable LLM enhancements in Cursor:
+![VS Code showing the Nx MCP installation prompt](/blog/images/articles/copilot-mcp-install.avif)
 
-1. Install or update [Nx Console](/getting-started/editor-setup) and make sure you're on the latest version of Cursor (0.46 and up)
-2. When starting Cursor, you will see a notification prompting you to add the Nx enhancement to Cursor Agents. Accept the notification. Alternatively, you can execute the `nx.configureMcpServer` command. ![Screenshot of the Nx AI notification](/shared/images/cursor-ai-notification.avif)
-3. Make sure the MCP server is enabled under `Cursor` -> `Settings` -> `Cursor Settings` -> `MCP` ![Screenshot of the Cursor MCP settings page](/shared/images/cursor-mcp-settings.avif)
-4. You have now successfully configured an [MCP server](https://modelcontextprotocol.io/introduction) that provides the enhanced context to Cursor's AI features ![Example of Cursor Agent using Nx tools](/shared/images/cursor-mcp-example.avif)
+### Other MCP-Compatible Clients
 
-### Other LLM Clients
+For other MCP-compatible clients (that do not have Nx Console available) like Claude Desktop you can use the Nx MCP by configuring it manually as follows:
 
-Other LLM clients like Claude Desktop can use the MCP server as well:
+```json {% fileName="mcp.json" %}
+{
+  "servers": {
+    "nx-mcp": {
+      "command": "npx",
+      "args": ["nx-mcp@latest"]
+    }
+  }
+}
+```
 
-1. Run `npx nx-mcp /path/to/workspace` to start the MCP server for your workspace
-2. The MCP server will provide the necessary context to your LLM client when interacting with your Nx workspace
+For Claude Code:
 
-## Key Benefits
+```shell
+claude mcp add nx-mcp npx nx-mcp@latest
+```
 
-- **Architectural Understanding** - Your LLM gains deep insight into your workspace structure, identifying applications, libraries, and their relationships. It understands project categorization through tags and can make informed suggestions about feature implementation.
+## Powerful Use Cases
 
-- **Team and Ownership Awareness** - Access to project ownership information allows the LLM to identify relevant team members for collaboration and provide guidance on who to consult for specific components.
+### Understanding Your Workspace Architecture
 
-- **Task and Generator Knowledge** - Enhanced context about workspace tasks and generators enables the LLM to suggest appropriate commands, help set up new projects, and provide guidance on available tasks and their configuration.
+{% youtube src="https://youtu.be/RNilYmJJzdk" title="Nx Just Made Your LLM Way Smarter" /%}
 
-Here are some example queries:
+Ask your AI assistant about your workspace structure and get detailed, accurate responses about projects, their types, and relationships:
 
-Ask your LLM about your workspace structure and get detailed, accurate responses:
+```
+What is the structure of this workspace?
+How are the projects organized?
+```
+
+With Nx MCP, your AI assistant can:
+
+- Identify applications and libraries in your workspace
+- Understand project categorization through tags
+- Recognize technology types (feature, UI, data-access)
+- Determine project ownership and team responsibilities
 
 ![Example of LLM understanding project structure](/blog/images/articles/nx-ai-example-project-data.avif)
 
-Get informed suggestions about where to implement new functionality based on existing code:
+You can also get informed suggestions about where to implement new functionality:
+
+```
+Where should I implement a feature for adding products to cart?
+```
 
 ![Example of LLM providing implementation guidance](/blog/images/articles/nx-ai-example-data-access-feature.avif)
 
-Identify relevant team members and ownership information:
+Learn more about workspace architecture understanding in our blog post [Nx Just Made Your LLM Way Smarter](/blog/nx-just-made-your-llm-smarter).
 
-![Example of LLM providing ownership information](/blog/images/articles/nx-ai-example-ownership.avif)
+### Instant CI Failure Resolution
 
-Get assistance with creating new projects using Nx generators:
+{% youtube src="https://youtu.be/fPqPh4h8RJg" title="Connect Your Editor, CI and LLMs" /%}
 
-![Example of LLM helping with code generation](/blog/images/articles/nx-ai-example-generate-code.avif)
+When a CI build fails, Nx Console can notify you directly in your editor:
 
-## Learn More
+![Nx Console shows the notification of the CI failure](/blog/images/articles/ci-notification.avif)
 
-For a deeper dive into how Nx's monorepo approach enhances AI capabilities and makes your workspace future-proof, read our blog post [Nx Just Made Your LLM Way Smarter](/blog/nx-just-made-your-llm-smarter). The post explores:
+Your AI assistant can then:
 
-- How monorepos break down barriers for both teams and LLMs
-- Why Nx's metadata is a goldmine for enhancing AI capabilities
-- How this positions your workspace for future AI advancements
+1. Access detailed information from Nx Cloud about the failed build
+2. Analyze your git history to understand what changed in your PR
+3. Understand the error context and affected files
+4. Help implement the fix right in your editor
+
+This integration dramatically improves the development velocity because you get immediately notified when an error occurs, you don't even have to leave your editor to understand what broke, and the LLM can help you implement or suggest a possible fix.
+
+Learn more about CI integration in our blog post [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration).
+
+### Smart Code Generation with AI-Enhanced Generators
+
+{% youtube src="https://youtu.be/PXNjedYhZDs" title="Enhancing Nx Generators with AI" /%}
+
+Nx generators provide predictable code scaffolding, while AI adds intelligence and contextual understanding. Instead of having the AI generate everything from scratch, you get the best of both worlds:
+
+```
+Create a new React library into the packages/orders/feat-cancel-orders folder
+and call the library with the same name of the folder structure. Afterwards,
+also connect it to the main shop application.
+```
+
+Your AI assistant will:
+
+1. Identify the appropriate generator and its parameters
+2. Open the Nx Console Generate UI with preset values
+3. Let you review and customize the options
+4. Execute the generator and help integrate the new code with your existing projects
+
+![LLM invoking the Nx generate UI](/blog/images/articles/llm-nx-generate-ui.avif)
+
+This approach ensures consistent code that follows your organization's best practices while still being tailored to your specific needs. Learn more about AI-enhanced generators in our blog post [Enhancing Nx Generators with AI](/blog/nx-generators-ai-integration).
+
+### Documentation-Aware Configuration
+
+{% youtube src="https://youtu.be/V2W94Sq_v6A?si=aBA-eppEw0fHrh5O&t=388" title="Making Cursor Smarter with an MCP Server" /%}
+
+Get accurate guidance on Nx configuration without worrying about hallucinations or outdated information:
+
+```
+Can you configure Nx release for the packages of this workspace?
+Update nx.json with the necessary configuration using conventional commits
+as the versioning strategy.
+```
+
+The AI assistant will:
+
+1. Query the Nx docs for the latest information on release configuration
+2. Understand your workspace structure to identify packages
+3. Generate the correct configuration based on your specific needs
+4. Apply the changes to your nx.json file
+
+Learn more about documentation-aware configuration in our blog post [Making Cursor Smarter with an MCP Server For Nx Monorepos](/blog/nx-made-cursor-smarter).
+
+### Cross-Project Dependency Analysis
+
+{% youtube src="https://youtu.be/dRQq_B1HSLA?si=lhHsjRvwgijC1IL8&t=186" title="Nx MCP Now Available for VS Code Copilot" /%}
+
+Understand the impact of changes across your monorepo with questions like:
+
+```
+If I change the public API of feat-product-detail, which other projects
+might be affected by that change?
+```
+
+Your AI assistant can:
+
+- Analyze the project graph to identify direct and indirect dependencies
+- Visualize affected projects using the `nx_visualize_graph` tool
+- Suggest strategies for refactoring that minimize impact
+- Identify which teams would need to be consulted for major changes
+
+This architectural awareness is particularly powerful in larger monorepos where understanding project relationships is crucial for making informed development decisions.
+
+Learn more about dependency analysis in our blog post [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot).

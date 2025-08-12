@@ -20,12 +20,19 @@ import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-op
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getNonBuildableLibs } from './utils';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
   /could not find any license/i,
 ];
 
+const extensionAlias = {
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
+  '.mjs': ['.mts', '.mjs'],
+  '.cjs': ['.cts', '.cjs'],
+  '.jsx': ['.tsx', '.jsx'],
+};
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
@@ -91,9 +98,30 @@ function applyNxIndependentConfig(
 
   config.output = {
     ...config.output,
-    libraryTarget:
-      (config as Configuration).output?.libraryTarget ??
-      (options.target === 'node' ? 'commonjs' : undefined),
+    libraryTarget: (() => {
+      const existingOutputConfig = config.output as Configuration['output'];
+      const existingLibraryTarget = existingOutputConfig?.libraryTarget;
+      const existingLibraryType =
+        typeof existingOutputConfig?.library === 'object' &&
+        'type' in existingOutputConfig?.library
+          ? existingOutputConfig?.library?.type
+          : undefined;
+
+      // If user is using modern library.type, don't set the deprecated libraryTarget
+      if (existingLibraryType !== undefined) {
+        return undefined;
+      }
+
+      // If user has set libraryTarget explicitly, use it
+      if (existingLibraryTarget !== undefined) {
+        return existingLibraryTarget;
+      }
+
+      // Set defaults based on target when user hasn't configured anything
+      if (options.target === 'node') return 'commonjs';
+      if (options.target === 'async-node') return 'commonjs-module';
+      return undefined;
+    })(),
     path:
       config.output?.path ??
       (options.outputPath
@@ -239,8 +267,13 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
   }
 
-  // New TS Solution already has a typecheck target
-  if (!options?.skipTypeChecking && !isUsingTsSolution) {
+  // New TS Solution already has a typecheck target but allow it to run during serve
+  if (
+    (!options?.skipTypeChecking && !isUsingTsSolution) ||
+    (isUsingTsSolution &&
+      options?.skipTypeChecking === false &&
+      process.env['WEBPACK_SERVE'])
+  ) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
@@ -341,7 +374,21 @@ function applyNxDependentConfig(
   const externals = [];
   if (options.target === 'node' && options.externalDependencies === 'all') {
     const modulesDir = `${options.root}/node_modules`;
-    externals.push(nodeExternals({ modulesDir }));
+
+    const graph = options.projectGraph;
+    const projectName = options.projectName;
+
+    // Collect non-buildable TS project references so that they are bundled
+    // in the final output. This is needed for projects that are not buildable
+    // but are referenced by buildable projects.
+
+    const nonBuildableWorkspaceLibs = isUsingTsSolution
+      ? getNonBuildableLibs(graph, projectName)
+      : [];
+
+    externals.push(
+      nodeExternals({ modulesDir, allowlist: nonBuildableWorkspaceLibs })
+    );
   } else if (Array.isArray(options.externalDependencies)) {
     externals.push(function (ctx, callback: Function) {
       if (options.externalDependencies.includes(ctx.request)) {
@@ -356,6 +403,10 @@ function applyNxDependentConfig(
   config.resolve = {
     ...config.resolve,
     extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    extensionAlias: {
+      ...(config.resolve?.extensionAlias ?? {}),
+      ...extensionAlias,
+    },
     alias: {
       ...(config.resolve?.alias ?? {}),
       ...(options.fileReplacements?.reduce(

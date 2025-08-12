@@ -523,11 +523,9 @@ describe('app', () => {
        * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
        **/
       const nextConfig = {
-        nx: {
-          // Set this to true if you would like to use SVGR
-          // See: https://github.com/gregberge/svgr
-          svgr: false,
-        },
+        // Use this to set Nx-specific options
+        // See: https://nx.dev/recipes/next/next-config-setup
+        nx: {},
       };
 
       const plugins = [
@@ -563,48 +561,6 @@ describe('app', () => {
         e2eTestRunner: 'none',
       });
       expect(tree.exists(`${name}-e2e`)).toBeFalsy();
-    });
-  });
-
-  describe('--e2e-test-runner cypress', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'cypress',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
-    });
-  });
-
-  describe('--e2e-test-runner playwright', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'playwright',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
     });
   });
 
@@ -1125,6 +1081,74 @@ describe('app', () => {
       expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
+
+  describe('--unit-test-runner jest', () => {
+    it('should use next/jest.js for Jest configuration', async () => {
+      const name = 'myapp';
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'jest',
+      });
+
+      const jestConfig = tree.read(`${name}/jest.config.ts`, 'utf-8');
+      expect(jestConfig).toMatchInlineSnapshot(`
+        "import type { Config } from 'jest';
+        import nextJest from 'next/jest.js';
+
+        const createJestConfig = nextJest({
+          dir: './',
+        });
+
+        const config: Config = {
+          displayName: 'myapp',
+          preset: '../jest.preset.js',
+          transform: {
+            '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../coverage/myapp',
+          testEnvironment: 'jsdom',
+        };
+
+        export default createJestConfig(config);
+        "
+      `);
+    });
+
+    it('should generate JS jest config when --js is used', async () => {
+      const name = 'myapp';
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'jest',
+        js: true,
+      });
+
+      const jestConfig = tree.read(`${name}/jest.config.js`, 'utf-8');
+      expect(jestConfig).toMatchInlineSnapshot(`
+        "const nextJest = require('next/jest.js');
+
+        const createJestConfig = nextJest({
+          dir: './',
+        });
+
+        const config = {
+          displayName: 'myapp',
+          preset: '../jest.preset.js',
+          transform: {
+            '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../coverage/myapp',
+          testEnvironment: 'jsdom',
+        };
+
+        module.exports = createJestConfig(config);
+        "
+      `);
+    });
+  });
 });
 
 describe('app (legacy)', () => {
@@ -1164,6 +1188,92 @@ describe('app (legacy)', () => {
     const projectConfiguration = readProjectConfiguration(tree, name);
     expect(projectConfiguration.targets.build).toBeDefined();
     expect(projectConfiguration.targets.serve).toBeDefined();
+  });
+
+  describe('--unit-test-runner jest', () => {
+    it('should use next/jest.js for Jest configuration', async () => {
+      const name = 'myapp';
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'jest',
+      });
+
+      const jestConfig = tree.read(`${name}/jest.config.ts`, 'utf-8');
+      expect(jestConfig).toMatchInlineSnapshot(`
+        "import type { Config } from 'jest';
+        import nextJest from 'next/jest.js';
+
+        const createJestConfig = nextJest({
+          dir: './',
+        });
+
+        const config: Config = {
+          displayName: 'myapp',
+          preset: '../jest.preset.js',
+          transform: {
+            '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../coverage/myapp',
+          testEnvironment: 'jsdom',
+        };
+
+        export default createJestConfig(config);
+        "
+      `);
+    });
+
+    it('should generate JS jest config when --js is used', async () => {
+      const name = 'myapp2';
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'jest',
+        js: true,
+      });
+
+      const jestConfig = tree.read(`${name}/jest.config.js`, 'utf-8');
+      expect(jestConfig).toMatchInlineSnapshot(`
+        "const nextJest = require('next/jest.js');
+
+        const createJestConfig = nextJest({
+          dir: './',
+        });
+
+        const config = {
+          displayName: 'myapp2',
+          preset: '../jest.preset.js',
+          transform: {
+            '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../coverage/myapp2',
+          testEnvironment: 'jsdom',
+        };
+
+        module.exports = createJestConfig(config);
+        "
+      `);
+    });
+
+    it('should configure tsconfig.spec.json to reference tsconfig.json as runtime config', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'jest',
+      });
+
+      const tsConfigSpec = readJson(tree, `${name}/tsconfig.spec.json`);
+
+      // Verify that the runtime tsconfig is properly referenced (tsconfig.json for Next.js apps)
+      expect(tree.exists(`${name}/tsconfig.json`)).toBe(true);
+      expect(tree.exists(`${name}/tsconfig.app.json`)).toBe(false);
+
+      // Verify the jest config and spec config are properly set up
+      expect(tsConfigSpec.compilerOptions.jsx).toBe('react');
+    });
   });
 });
 

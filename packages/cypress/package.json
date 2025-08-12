@@ -21,7 +21,7 @@
     "Front-end",
     "Testing"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -36,15 +36,20 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/eslint": "file:../eslint",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "detect-port": "^1.5.1",
+    "semver": "^7.6.3",
+    "tree-kill": "1.2.2",
     "tslib": "^2.3.0"
   },
+  "devDependencies": {
+    "nx": "workspace:*"
+  },
   "peerDependencies": {
-    "cypress": ">= 3 < 14"
+    "cypress": ">= 3 < 15"
   },
   "peerDependenciesMeta": {
     "cypress": {

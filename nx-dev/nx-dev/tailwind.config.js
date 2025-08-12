@@ -10,10 +10,11 @@ const {
 // nx-ignore-next-line
 const { workspaceRoot } = require('@nx/devkit');
 // nx-ignore-next-line
-const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
+// const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
 
-if (!createGlobPatternsForDependencies(__dirname).length)
-  throw Error('GRAPH ISSUE: No dependency found when many are expected.');
+// TODO: look into why createGlobPatternsForDependencies fails in TS solution
+// if (!createGlobPatternsForDependencies(__dirname).length)
+//   throw Error('GRAPH ISSUE: No dependency found when many are expected.');
 
 const FlipAnimation = plugin(function ({ addUtilities }) {
   addUtilities({
@@ -52,7 +53,11 @@ module.exports = {
   darkMode: 'class',
   content: [
     path.join(__dirname, '{pages,app}/**/*.{js,ts,jsx,tsx}'),
-    ...createGlobPatternsForDependencies(__dirname),
+    // ...createGlobPatternsForDependencies(__dirname), TODO: look into why this fails
+    // Essential nx-dev UI packages
+    '../ui-*/src/**/*.{js,ts,jsx,tsx}',
+    '../feature-doc-viewer/src/**/*.{js,ts,jsx,tsx}',
+    '../feature-feedback/src/**/*.{js,ts,jsx,tsx}',
     // Resolve the classes used in @nx/graph components
     // TODO: make a decision on whether this is really the best approach, or if precompiling and deduplicating the classes would be better
     path.join(
@@ -95,6 +100,9 @@ module.exports = {
             },
             'blockquote p:last-of-type::after': {
               content: '',
+            },
+            s: {
+              '@apply text-gray-500': {},
             },
           },
         },

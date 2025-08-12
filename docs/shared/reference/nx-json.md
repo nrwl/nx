@@ -44,10 +44,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
   },
   "release": {
     "version": {
-      "generatorOptions": {
-        "currentVersionResolver": "git-tag",
-        "specifierSource": "conventional-commits"
-      }
+      "conventionalCommits": true
     },
     "changelog": {
       "git": {
@@ -68,7 +65,11 @@ The following is an expanded example showing all options. Your `nx.json` will li
       "buildable": true
     }
   },
-  "extends": "nx/presets/npm.json"
+  "extends": "nx/presets/npm.json",
+  "tui": {
+    "enabled": true,
+    "autoExit": true
+  }
 }
 ```
 
@@ -140,7 +141,7 @@ Target defaults provide ways to set common options for a particular target in yo
 - `` `${executor}` ``
 - `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
 
-Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/*` would match all of the targets created by a task atomizer plugin.
+Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/**` would match all of the targets created by a task atomizer plugin.
 
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
@@ -393,33 +394,55 @@ The default `"releaseTagPattern"` for independent releases at the project level 
 }
 ```
 
+#### Tag Pattern Syntax
+
+The `releaseTagPattern` supports interpolated values:
+
+- `{version}` - The version currently being released
+- `{projectName}` - The name of the project being released
+- `{releaseGroupname}` - The name of the release group being released (if applicable)
+- Example patterns:
+
+- `{projectName}@{version}` - Results in: my-lib@1.0.0
+- `{releaseGroupName}/{projectName}/{version}` - Results in: my-group/my-lib/1.0.0
+
 ### Version
 
 The `version` property configures the versioning phase of the release process. It is used to determine the next version of your projects, and update any projects that depend on them to use the new version.
 
-Behind the scenes, the `version` logic is powered by an Nx generator. Out of the box Nx wires up the most widely applicable generator implementation for you, which is `@nx/js:release-version` provided by the `@nx/js` plugin.
+{% callout type="note" title="Breaking Changes in Nx v21" %}
+In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
 
-It is therefore a common requirement to be able to tweak the options given to that generator. This can be done by configuring the `release.version.generatorOptions` property in `nx.json`:
+During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
+{% /callout %}
+
+Behind the scenes, ecosystem-specific `version` logic is powered by a `VersionActions` implementation. Out of the box Nx wires up the most widely applicable `VersionActions` implementation for you, which is `@nx/js/src/release/version-actions` provided by the `@nx/js` plugin.
+
+Core version options are therefore directly at the top level of the `version` property (as of Nx v21), while ecosystem-specific options are available through `versionActionsOptions`:
 
 ```jsonc {% fileName="nx.json" %}
 {
   "release": {
     "version": {
-      "generatorOptions": {
-        // Here we are configuring the generator to use git tags as the
-        // source of truth for a project's current version
-        "currentVersionResolver": "git-tag",
-        // Here we are configuring the generator to use conventional
-        // commits as the source of truth for how to determine the
-        // relevant version bump for the next version
-        "specifierSource": "conventional-commits"
+      // Core options
+      "conventionalCommits": true,
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      // Ecosystem-specific options
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
       }
     }
   }
 }
 ```
 
-For a full reference of the available options for the `@nx/js:release-version` generator, see the [release version generator reference](/nx-api/js/generators/release-version).
+Some important changes in Nx 21:
+
+- The `release.version.generatorOptions` object has been removed, with its properties moved to the top level of `release.version`
+- `packageRoot` has been replaced by the more flexible `manifestRootsToUpdate` array
+- Ecosystem-specific options like `skipLockFileUpdate` are now under `versionActionsOptions`
+- `preserveLocalDependencyProtocols` (also now at the top level) now defaults to `true` (previously `false` when it was a generatorOption)
+- `tui` object has been added to control the new [Terminal UI](/recipes/running-tasks/terminal-ui)
 
 ### Changelog
 
@@ -515,6 +538,106 @@ The `git` property configures the automated git operations that take place as pa
 }
 ```
 
+### Docker (Experimental)
+
+{% callout type="warning" title="Experimental Feature" %}
+Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /callout %}
+
+The `docker` property configures Docker image versioning and publishing when using `nx release`. This enables calendar-based versioning schemes and automated Docker registry publishing as part of your release workflow.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    // Simple configuration - enables Docker with defaults
+    "docker": true
+  }
+}
+```
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "docker": {
+      // Run this command before versioning Docker images
+      "preVersionCommand": "npx nx run-many -t docker:build",
+
+      // Define versioning schemes for different environments
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+        "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+        "staging": "{currentDate|YYMM.DD}-staging",
+        "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}"
+      },
+
+      // Skip Docker versioning for these projects to prevent versioning with other tools like NPM
+      "skipVersionActions": ["api"],
+
+      // Default Docker repository name (can be overridden per project)
+      "repositoryName": "myorg",
+
+      // Docker registry URL
+      "registryUrl": "docker.io"
+    }
+  }
+}
+```
+
+Read more about it in the [Release Docker Images guide](/recipes/nx-release/release-docker-images).
+
+#### Version Scheme Syntax
+
+Docker version schemes support calendar-based patterns using the following placeholders:
+
+- `{projectName}` - The name of the project being released
+- `{currentDate}` - Current date in ISO format (e.g., 2025-01-30T14:30:00Z)
+- `{currentDate|FORMAT}` - Current date with custom format using these tokens:
+  - `YYYY` - 4-digit year (e.g., 2025)
+  - `YY` - 2-digit year (e.g., 25)
+  - `MM` - 2-digit month (01-12)
+  - `DD` - 2-digit day (01-31)
+  - `HH` - 2-digit hour in 24-hour format (00-23)
+  - `mm` - 2-digit minutes (00-59)
+  - `ss` - 2-digit seconds (00-59)
+- `{shortCommitSha}` - First 7 characters of the current commit SHA
+- `{commitSha}` - Full commit SHA
+- `{env.VAR_NAME}` - The value of the environment variable VAR_NAME
+
+Example patterns:
+
+- `{currentDate|YYMM.DD}.{shortCommitSha}` - Results in: 2501.30.a1b2c3d
+- `{projectName}-{currentDate|YYYY.MM.DD}` - Results in: api-2025.01.30
+- `{currentDate|YY.MM.DD.HHmm}-{commitSha}` - Results in: 25.01.30.1430-abcdef1234567890
+- `{env.BUILD_NUMBER}-{projectName}` - Results in: 123-api (when BUILD_NUMBER=123)
+- `{env.STAGE}-{currentDate|YYMM.DD}` - Results in: production-2501.30 (when STAGE=production)
+
+#### Group-Level Docker Configuration
+
+You can configure [Docker release](/recipes/nx-release/release-docker-images) settings at the release group level:
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "groups": {
+      "backend": {
+        "projects": ["api"],
+        "projectsRelationship": "independent",
+        "docker": {
+          "skipVersionActions": true
+          // Run a script before tagging Docker version
+          "groupPreVersionCommand": "echo Preparing backend release",
+        },
+        "changelog": {
+          "projectChangelogs": true
+        }
+      }
+    }
+  }
+}
+```
+
+This allows you to have other releases such as [NPM](/recipes/nx-release/release-npm-packages) or [Rust crates](/recipes/nx-release/publish-rust-crates) in the same workspace.
+
 ## Sync
 
 These are global configuration options for the [`nx sync`](/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
@@ -571,3 +694,50 @@ There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.js
 ```
 
 For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).
+
+## Max Cache Size
+
+The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
+
+You can also override this value using the `NX_MAX_CACHE_SIZE` environment variable, which accepts the same units and takes precedence over the `maxCacheSize` option in `nx.json`.
+
+This behavior can be opted out by setting `maxCacheSize` to `0`.
+
+Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB). For example, any of the following would be valid values:
+
+| Value    | Description                                                      |
+| -------- | ---------------------------------------------------------------- |
+| `819200` | 819200 bytes (800 KB)                                            |
+| `100MB`  | 100 megabytes (100 \* 1024 \* 1024 bytes)                        |
+| `1GB`    | 1 gigabyte (1024 \* 1024 \* 1024 bytes)                          |
+| `0`      | No limit on the local cache size (disables the cache size limit) |
+
+```json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "0" // No limit on the local cache size
+}
+```
+
+```json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "10GB" // Set the maximum cache size to 10 gigabytes
+}
+```
+
+Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.
+
+## TUI
+
+The `tui` property in `nx.json` configures the [Terminal UI](/recipes/running-tasks/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
+
+```json {% fileName="nx.json" %}
+{
+  "tui": {
+    // Enable the Nx TUI
+    "enabled": true,
+    // Automatically exit the TUI when completed
+    // Use a number to specify the seconds to keep the TUI open for after completion
+    "autoExit": true
+  }
+}
+```

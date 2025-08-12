@@ -1,5 +1,6 @@
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -16,6 +17,7 @@ export async function withModuleFederation(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
+  const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
@@ -27,7 +29,10 @@ export async function withModuleFederation(
     config.output.scriptType = 'text/javascript';
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: false,
+      runtimeChunk:
+        isDevServer && !options.exposes
+          ? config.optimization?.runtimeChunk ?? undefined
+          : false,
     };
 
     if (
@@ -40,7 +45,7 @@ export async function withModuleFederation(
 
     config.plugins.push(
       new ModuleFederationPlugin({
-        name: options.name.replace(/-/g, '_'),
+        name: normalizeProjectName(options.name),
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,

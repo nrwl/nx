@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
 [
@@ -34,18 +34,26 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
                 "tty": false,
               },
               "outputs": [
-                "{workspaceRoot}/my-app/.next",
+                "{workspaceRoot}/my-app/.next/!(cache)/**/*",
                 "{workspaceRoot}/my-app/.next/!(cache)",
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
               ],
             },
             "my-serve": {
               "command": "next dev",
+              "continuous": true,
               "options": {
                 "cwd": "my-app",
               },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "my-serve-static": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "my-build",
               ],
@@ -55,6 +63,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
             },
             "my-start": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "my-build",
               ],
@@ -64,6 +73,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
             },
             "watch-deps": {
               "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],
@@ -105,8 +115,11 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
                 "tty": false,
               },
               "outputs": [
-                "{projectRoot}/.next",
+                "{projectRoot}/.next/!(cache)/**/*",
                 "{projectRoot}/.next/!(cache)",
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
               ],
             },
             "build-deps": {
@@ -116,12 +129,17 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
             },
             "dev": {
               "command": "next dev",
+              "continuous": true,
               "options": {
                 "cwd": ".",
               },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "serve-static": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -131,6 +149,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
             },
             "start": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -140,6 +159,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
             },
             "watch-deps": {
               "command": "npx nx watch --projects next --includeDependentProjects -- npx nx build-deps next",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],

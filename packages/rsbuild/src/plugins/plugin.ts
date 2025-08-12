@@ -187,6 +187,7 @@ async function createRsbuildTargets(
   };
 
   targets[options.devTargetName] = {
+    continuous: true,
     command: `rsbuild dev`,
     options: {
       cwd: projectRoot,
@@ -195,6 +196,7 @@ async function createRsbuildTargets(
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `rsbuild preview`,
     dependsOn: [`${options.buildTargetName}`, `^${options.buildTargetName}`],
     options: {

@@ -1,0 +1,19 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                                                        "
+" NX    Running Run One Mode...                                                                          Cache   Duration"
+" │                                                                                                                      "
+" │·    Waiting for task...                                                                                              "
+" │·    Waiting for task...                                                                                              "
+" └                                                                                                                      "
+"> ·    task1                                                                                              ...        ..."
+"                                                                                                                        "
+"  ·    task2                                                                                              ...        ..."
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"  ← 1/1 →                           quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

@@ -3,6 +3,8 @@ title: Node.js Plugin for Nx
 description: Learn how to use the @nx/node plugin to create and manage Node.js applications and libraries in your Nx workspace, including setup, building, and testing.
 ---
 
+# @nx/node
+
 The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:
 
 ## Setting Up @nx/node
@@ -15,26 +17,11 @@ Make sure to install the `@nx/node` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/node` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/node
 ```
 
 This will install the correct version of `@nx/node`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/node` package with your package manager.
-
-```shell
-npm add -D @nx/node
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/node Plugin
 
@@ -102,11 +89,36 @@ nx g @nx/node:application apps/my-new-app \
 
 ### Debugging
 
-Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` target in the project.json. Or by running the serve command with `--port <number>`.
+#### VSCode Integration
 
-For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
+When generating Node applications, Nx automatically creates a VSCode debugging configuration for seamless development experience:
+
+- **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
+- **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
+- **Source map support**: Webpack configurations include `devtoolModuleFilenameTemplate` for accurate source mapping.
+- **Multi-format support**: Supports debugging `.js`, `.mjs`, and `.cjs` output files.
+
+To debug your Node application in VSCode:
+
+1. Open your workspace in VSCode.
+2. Set breakpoints in your TypeScript source files.
+3. Go to the Debug panel `(Ctrl+Shift+D)`.
+4. Select "Debug `{your-app-name}` with Nx" from the dropdown.
+5. Click the play button or press `F5`.
+
+The debugger will automatically:
+
+- Start your application with `nx serve`.
+- Attach to the Node.js debugger on the allocated port.
+- Map compiled JavaScript back to your TypeScript source files.
+
+#### Manual Debugging
+
+For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the project.json, or by running the serve command with `--port <number>`.
+
+For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
 ## More Documentation
 
-- [Using Cypress](/nx-api/cypress)
-- [Using Jest](/nx-api/jest)
+- [Using Cypress](/technologies/test-tools/cypress/introduction)
+- [Using Jest](/technologies/test-tools/jest/introduction)

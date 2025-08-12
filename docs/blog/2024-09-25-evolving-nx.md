@@ -3,15 +3,15 @@ title: Evolving Nx
 slug: evolving-nx
 authors: [Jeff Cross]
 tags: [nx, release]
-cover_image: /blog/images/evolving-nx/thumbnail.png
+cover_image: /blog/images/evolving-nx/thumbnail.avif
 description: Nx's journey from a side project to a tool for millions, including Nx Cloud and Nx Powerpack developments.
 ---
 
-_Update from Jeff Cross, October 17, 2024_
+{% callout type="info" title="Update - March 31st, 2025" %}
 
-In my original version of this post, I said that Powerpack is completely new functionality. I mistakenly thought that all custom remote cache solutions were using private/unsupported APIs, but I've since learned that we've had docs and some APIs that helped people build their own remote caches. I'm sorry for the error, and have updated the text to indicate that Powerpack is mostly new functionality. We've also updated the [Powerpack page](/powerpack) to make it more explicit how some teams can get free Powerpack licenses.
+Self-hosted caching is now free for everyone. Read more [in our blog post](/blog/custom-runners-and-self-hosted-caching) and in our documentation about [remote caching options with Nx](/remote-cache).
 
----
+{% /callout %}
 
 Over the years, Nx has grown from a small 20% side project of our consulting business into a tool that empowers millions of developers worldwide and helps Fortune 500 companies ship high-quality software faster. In the last two years, we successfully transformed our consulting business into a product company, where our team can fully focus on evolving Nx and building Nx Cloud to extend Nx's capabilities beyond local development.
 
@@ -24,11 +24,13 @@ When we have new ideas to make Nx better, we've always had two options: it could
 
 ## Introducing Nx Powerpack
 
-**[Nx Powerpack](/powerpack)** — our newest product designed to elevate the Nx CLI experience for enterprise environments. Powerpack offers advanced features like self-hosted remote cache storage, code ownership for monorepos, and workspace conformance, seamlessly integrating into sealed systems with strict security requirements. It's also designed for ease of implementation, helping enterprises bypass lengthy procurement processes and quickly access the tools they need.
+**[Nx Powerpack](/powerpack)** — our newest product designed to elevate the Nx CLI experience for enterprise environments. Powerpack offers advanced features like ~~self-hosted remote cache storage,~~ code ownership for monorepos, and workspace conformance, seamlessly integrating into sealed systems with strict security requirements. It's also designed for ease of implementation, helping enterprises bypass lengthy procurement processes and quickly access the tools they need.
 
 > If you want to get into the technical details, we wrote a separate blog post diving deeper into the technical details: [Introducing Nx Powerpack](/blog/introducing-nx-powerpack).
 
-Powerpack is mostly new functionality. However, this change coincides with some Nx improvements that will eventually interfere with users who were relying on our original filesystem-based implementation of local caching. We've completely rewritten Nx's local caching to be faster and more secure, partly by using a local database instead of checking the filesystem for artifact metadata. With this rewrite, any custom remote caches that rely on metadata reflected in the filesystem will not work as of Nx 21. This is why we decided to build an API into Powerpack to be able to connect Nx's cache to different clouds and data sources. Now with Powerpack, teams can use an officially-supported implementation of remote caching, without needing to use Nx Cloud.
+Powerpack is mostly new functionality. ~~However, this change coincides with some Nx improvements that will eventually interfere with users who were relying on our original filesystem-based implementation of local caching. We've completely rewritten Nx's local caching to be faster and more secure, partly by using a local database instead of checking the filesystem for artifact metadata. With this rewrite, any custom remote caches that rely on metadata reflected in the filesystem will not work as of Nx 21. This is why we decided to build an API into Powerpack to be able to connect Nx's cache to different clouds and data sources. Now with Powerpack, teams can use an officially-supported implementation of remote caching, without needing to use Nx Cloud.~~
+
+_Edit: Self-hosted caching with Nx is now completely free for everyone. Read more in [our latest announcement.](/blog/custom-runners-and-self-hosted-caching)_
 
 There's a Steve Jobs quote that I think rings true with all of us at Nx:
 
@@ -42,7 +44,10 @@ Like many open source projects, one of the bigger challenges to sustainability i
 
 ### What about my open-source repo ?
 
-Open source projects can continue to use Nx Cloud for **free** the same way they always have, and they can continue to use Nx with all its features. If you are an open-source maintainer and you want to use Powerpack, you will get a **free license**. Just reach out to us at [powerpack-support@nrwl.io](mailto:powerpack-support@nrwl.io).
+Open Source projects can:
+
+- Get all Powerpack features as well as fully managed remote caching (and more) via the free Nx Cloud OSS plan. [Learn more here](/nx-enterprise/powerpack/licenses-and-trials#powerpack-for-oss-projects).
+- Get self-hosted remote caches via the according Nx plugins. [Learn more in the docs](/recipes/running-tasks/self-hosted-caching).
 
 ## How to Get Nx Powerpack
 

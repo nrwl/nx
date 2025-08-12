@@ -1,4 +1,9 @@
-import { names, readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  names,
+  readProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
 import {
   findNodes,
   getImport,
@@ -8,6 +13,7 @@ import {
   replaceChange,
 } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
@@ -74,17 +80,6 @@ function _angularImportsFromNode(
 
 /**
  * Check if the Component, Directive or Pipe is standalone
- * @param sourceFile TS Source File containing the token to check
- * @param decoratorName The type of decorator to check (Component, Directive, Pipe)
- *
- * @deprecated Use the function signature with a Tree. This signature will be removed in v21.
- */
-export function isStandalone(
-  sourceFile: ts.SourceFile,
-  decoratorName: DecoratorName
-): boolean;
-/**
- * Check if the Component, Directive or Pipe is standalone
  * @param tree The file system tree
  * @param sourceFile TS Source File containing the token to check
  * @param decoratorName The type of decorator to check (Component, Directive, Pipe)
@@ -93,23 +88,7 @@ export function isStandalone(
   tree: Tree,
   sourceFile: ts.SourceFile,
   decoratorName: DecoratorName
-): boolean;
-export function isStandalone(
-  treeOrSourceFile: Tree | ts.SourceFile,
-  sourceFileOrDecoratorName: ts.SourceFile | DecoratorName,
-  decoratorName?: DecoratorName
 ): boolean {
-  let tree: Tree;
-  let sourceFile: ts.SourceFile;
-  if (decoratorName === undefined) {
-    sourceFile = treeOrSourceFile as ts.SourceFile;
-    decoratorName = sourceFileOrDecoratorName as DecoratorName;
-  } else {
-    tree = treeOrSourceFile as Tree;
-    sourceFile = sourceFileOrDecoratorName as ts.SourceFile;
-    decoratorName = decoratorName as DecoratorName;
-  }
-
   const decoratorMetadata = getDecoratorMetadata(
     sourceFile,
     decoratorName,
@@ -729,11 +708,19 @@ function getListOfRoutes(
 
 export function isNgStandaloneApp(tree: Tree, projectName: string) {
   const project = readProjectConfiguration(tree, projectName);
-  const mainFile =
+  let mainFile =
     project.targets?.build?.options?.main ??
     project.targets?.build?.options?.browser;
+  let hasMainFile = false;
+  if (mainFile) {
+    hasMainFile = true;
+  } else {
+    const sourceRoot = getProjectSourceRoot(project, tree);
+    mainFile = joinPathFragments(sourceRoot, 'main.ts');
+    hasMainFile = tree.exists(mainFile);
+  }
 
-  if (project.projectType !== 'application' || !mainFile) {
+  if (project.projectType !== 'application' || !hasMainFile) {
     return false;
   }
 
@@ -947,10 +934,15 @@ export function readBootstrapInfo(
   }
   const config = readProjectConfiguration(host, app);
 
-  let mainPath;
+  let mainPath: string;
   try {
     mainPath =
-      config.targets.build.options.main ?? config.targets.build.options.browser;
+      config.targets.build.options?.main ??
+      config.targets.build.options?.browser;
+    if (!mainPath) {
+      const sourceRoot = getProjectSourceRoot(config, host);
+      mainPath = joinPathFragments(sourceRoot, 'main.ts');
+    }
   } catch (e) {
     throw new Error('Main file cannot be located');
   }

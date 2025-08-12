@@ -1,18 +1,13 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { ReleaseType, valid } from 'semver';
+import { prerelease, ReleaseType } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
-import {
-  NxReleaseChangelogConfiguration,
-  NxReleaseConfiguration,
-  readNxJson,
-} from '../../config/nx-json';
+import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import {
   FileData,
   ProjectFileMap,
-  ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { FsTree, Tree } from '../../generators/tree';
@@ -22,16 +17,16 @@ import {
 } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { interpolate } from '../../tasks-runner/utils';
+import { handleErrors } from '../../utils/handle-errors';
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/handle-errors';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChangelogOptions } from './command-object';
 import {
   NxReleaseConfig,
+  ResolvedCreateRemoteReleaseProvider,
   createNxReleaseConfig,
-  defaultCreateReleaseProvider,
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
@@ -39,6 +34,7 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import {
   GroupVersionPlan,
   ProjectsVersionPlan,
@@ -58,11 +54,11 @@ import {
   parseCommits,
   parseGitCommit,
 } from './utils/git';
-import { createOrUpdateGithubRelease, getGitHubRepoData } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
 import { printAndFlushChanges } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
+import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client';
 import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
@@ -71,7 +67,9 @@ import {
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  shouldPreferDockerVersionForReleaseGroup,
   handleDuplicateGitTags,
+  isPrerelease,
   noDiffInChangelogMessage,
 } from './utils/shared';
 
@@ -79,11 +77,13 @@ export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
     releaseVersion: ReleaseVersion;
     contents: string;
+    postGitTask: PostGitTask | null;
   };
   projectChangelogs?: {
     [projectName: string]: {
       releaseVersion: ReleaseVersion;
       contents: string;
+      postGitTask: PostGitTask | null;
     };
   };
 }
@@ -101,7 +101,7 @@ export interface ChangelogChange {
   revertedHashes?: string[];
 }
 
-type PostGitTask = (latestCommit: string) => Promise<void>;
+export type PostGitTask = (latestCommit: string) => Promise<void>;
 
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
   handleErrors(args.verbose, () => createAPI({})(args));
@@ -129,7 +129,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -240,6 +246,21 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
 
     /**
+     * Extract the preid from the workspace version and the project versions
+     */
+    const workspacePreid: string | undefined = workspaceChangelogVersion
+      ? extractPreid(workspaceChangelogVersion)
+      : undefined;
+
+    const projectsPreid: { [projectName: string]: string | undefined } =
+      Object.fromEntries(
+        Object.entries(projectsVersionData).map(([projectName, v]) => [
+          projectName,
+          v.newVersion ? extractPreid(v.newVersion) : undefined,
+        ])
+      );
+
+    /**
      * Protect the user against attempting to create a new commit when recreating an old release changelog,
      * this seems like it would always be unintentional.
      */
@@ -275,7 +296,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const postGitTasks: PostGitTask[] = [];
 
     let workspaceChangelogChanges: ChangelogChange[] = [];
-    // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+    // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
     let workspaceChangelogCommits: GitCommit[] = [];
 
     // If there are multiple release groups, we'll just skip the workspace changelog anyway.
@@ -339,7 +360,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           await getLatestGitTagForPattern(
             nxReleaseConfig.releaseTagPattern,
             {},
-            nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen
+            {
+              checkAllBranchesWhen:
+                nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+              preid:
+                workspacePreid ??
+                projectsPreid?.[Object.keys(projectsPreid)[0]],
+              releaseTagPatternRequireSemver:
+                nxReleaseConfig.releaseTagPatternRequireSemver,
+              releaseTagPatternStrictPreid:
+                nxReleaseConfig.releaseTagPatternStrictPreid,
+            }
           )
         )?.tag;
       if (!workspaceChangelogFromRef) {
@@ -389,37 +420,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const workspaceChangelog = await generateChangelogForWorkspace({
       tree,
       args,
-      projectGraph,
       nxReleaseConfig,
       workspaceChangelogVersion,
       changes: workspaceChangelogChanges,
-      // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
-      commits: filterHiddenCommits(
-        workspaceChangelogCommits,
-        nxReleaseConfig.conventionalCommits
-      ),
     });
 
-    if (
-      workspaceChangelog &&
-      shouldCreateGitHubRelease(
-        nxReleaseConfig.changelog.workspaceChangelog,
-        args.createRelease
-      )
-    ) {
-      postGitTasks.push(async (latestCommit) => {
-        output.logSingleLine(`Creating GitHub Release`);
-
-        await createOrUpdateGithubRelease(
-          nxReleaseConfig.changelog.workspaceChangelog
-            ? nxReleaseConfig.changelog.workspaceChangelog.createRelease
-            : defaultCreateReleaseProvider,
-          workspaceChangelog.releaseVersion,
-          workspaceChangelog.contents,
-          latestCommit,
-          { dryRun: args.dryRun }
-        );
-      });
+    // Add the post git task (e.g. create a remote release) for the workspace changelog, if applicable
+    if (workspaceChangelog && workspaceChangelog.postGitTask) {
+      postGitTasks.push(workspaceChangelog.postGitTask);
     }
 
     /**
@@ -449,7 +457,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           .map((dep) => {
             return {
               dependencyName: dep.source,
-              newVersion: projectsVersionData[dep.source].newVersion,
+              newVersion: projectsVersionData[dep.source]?.newVersion ?? null,
             };
           })
           .filter((b) => b.newVersion !== null);
@@ -500,7 +508,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
           let changes: ChangelogChange[] | null = null;
-          // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+          // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
           let commits: GitCommit[];
 
           if (releaseGroup.resolvedVersionPlans) {
@@ -546,24 +554,32 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
-                  releaseGroup.releaseTagPatternCheckAllBranchesWhen
+                  {
+                    checkAllBranchesWhen:
+                      releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    preid: projectsPreid[project.name],
+                    releaseTagPatternRequireSemver:
+                      releaseGroup.releaseTagPatternRequireSemver,
+                    releaseTagPatternStrictPreid:
+                      releaseGroup.releaseTagPatternStrictPreid,
+                  }
                 )
               )?.tag;
 
             if (!fromRef && useAutomaticFromRef) {
               const firstCommit = await getFirstGitCommit();
-              const allCommits = await getCommits(firstCommit, toSHA);
-              const commitsForProject = allCommits.filter((c) =>
-                c.affectedFiles.find((f) => f.startsWith(project.data.root))
-              );
+              commits = await filterProjectCommits({
+                fromSHA: firstCommit,
+                toSHA,
+                projectPath: project.data.root,
+              });
 
-              fromRef = commitsForProject[0]?.shortHash;
+              fromRef = commits[0]?.shortHash;
               if (args.verbose) {
                 console.log(
                   `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
                 );
               }
-              commits = commitsForProject;
             }
 
             if (!fromRef && !commits) {
@@ -573,7 +589,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             }
 
             if (!commits) {
-              commits = await getCommits(fromRef, toSHA);
+              commits = await filterProjectCommits({
+                fromSHA: fromRef,
+                toSHA,
+                projectPath: project.data.root,
+              });
             }
 
             const { fileMap } = await createFileMapUsingProjectGraph(
@@ -617,36 +637,21 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             projectToAdditionalDependencyBumps,
           });
 
-          for (const [projectName, projectChangelog] of Object.entries(
-            projectChangelogs
-          )) {
-            if (
-              projectChangelogs &&
-              shouldCreateGitHubRelease(
-                releaseGroup.changelog,
-                args.createRelease
-              )
-            ) {
-              postGitTasks.push(async (latestCommit) => {
-                output.logSingleLine(`Creating GitHub Release`);
-
-                await createOrUpdateGithubRelease(
-                  releaseGroup.changelog
-                    ? releaseGroup.changelog.createRelease
-                    : defaultCreateReleaseProvider,
-                  projectChangelog.releaseVersion,
-                  projectChangelog.contents,
-                  latestCommit,
-                  { dryRun: args.dryRun }
-                );
-              });
+          if (projectChangelogs) {
+            for (const [projectName, projectChangelog] of Object.entries(
+              projectChangelogs
+            )) {
+              // Add the post git task (e.g. create a remote release) for the project changelog, if applicable
+              if (projectChangelog.postGitTask) {
+                postGitTasks.push(projectChangelog.postGitTask);
+              }
+              allProjectChangelogs[projectName] = projectChangelog;
             }
-            allProjectChangelogs[projectName] = projectChangelog;
           }
         }
       } else {
         let changes: ChangelogChange[] = [];
-        // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+        // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
         let commits: GitCommit[] = [];
         if (releaseGroup.resolvedVersionPlans) {
           changes = (releaseGroup.resolvedVersionPlans as GroupVersionPlan[])
@@ -699,7 +704,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               await getLatestGitTagForPattern(
                 releaseGroup.releaseTagPattern,
                 {},
-                releaseGroup.releaseTagPatternCheckAllBranchesWhen
+                {
+                  checkAllBranchesWhen:
+                    releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                  preid:
+                    workspacePreid ??
+                    projectsPreid?.[Object.keys(projectsPreid)[0]],
+                  releaseTagPatternRequireSemver:
+                    releaseGroup.releaseTagPatternRequireSemver,
+                  releaseTagPatternStrictPreid:
+                    releaseGroup.releaseTagPatternStrictPreid,
+                }
               )
             )?.tag;
           if (!fromRef) {
@@ -762,31 +777,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           projectToAdditionalDependencyBumps,
         });
 
-        for (const [projectName, projectChangelog] of Object.entries(
-          projectChangelogs
-        )) {
-          if (
-            projectChangelogs &&
-            shouldCreateGitHubRelease(
-              releaseGroup.changelog,
-              args.createRelease
-            )
-          ) {
-            postGitTasks.push(async (latestCommit) => {
-              output.logSingleLine(`Creating GitHub Release`);
-
-              await createOrUpdateGithubRelease(
-                releaseGroup.changelog
-                  ? releaseGroup.changelog.createRelease
-                  : defaultCreateReleaseProvider,
-                projectChangelog.releaseVersion,
-                projectChangelog.contents,
-                latestCommit,
-                { dryRun: args.dryRun }
-              );
-            });
+        if (projectChangelogs) {
+          for (const [projectName, projectChangelog] of Object.entries(
+            projectChangelogs
+          )) {
+            // Add the post git task (e.g. create a remote release) for the project changelog, if applicable
+            if (projectChangelog.postGitTask) {
+              postGitTasks.push(projectChangelog.postGitTask);
+            }
+            allProjectChangelogs[projectName] = projectChangelog;
           }
-          allProjectChangelogs[projectName] = projectChangelog;
         }
       }
     }
@@ -823,18 +823,6 @@ function resolveChangelogVersions(
     );
   }
 
-  /**
-   * TODO: revaluate this assumption holistically in a dedicated PR when we add support for calver
-   * (e.g. the Release class also uses semver utils to check if prerelease).
-   *
-   * Right now, the given version must be valid semver in order to proceed
-   */
-  if (args.version && !valid(args.version)) {
-    throw new Error(
-      `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`
-    );
-  }
-
   const versionData: VersionData = releaseGroups.reduce(
     (versionData, releaseGroup) => {
       const releaseGroupProjectNames = Array.from(
@@ -843,6 +831,7 @@ function resolveChangelogVersions(
       for (const projectName of releaseGroupProjectNames) {
         if (!args.versionData) {
           versionData[projectName] = {
+            dockerVersion: args.version,
             newVersion: args.version,
             currentVersion: '', // not relevant within changelog/commit generation
             dependentProjects: [], // not relevant within changelog/commit generation
@@ -868,6 +857,20 @@ function resolveChangelogVersions(
     workspaceChangelogVersion: args.version,
     projectsVersionData: versionData,
   };
+}
+
+// Can be overridden to something more specific as we resolve the remote release client within nested logic
+let remoteReleaseProviderName: undefined | string;
+
+// If already set, and not the same as the remote release client, append
+function applyRemoteReleaseProviderName(newRemoteReleaseProviderName: string) {
+  if (remoteReleaseProviderName) {
+    if (remoteReleaseProviderName !== newRemoteReleaseProviderName) {
+      remoteReleaseProviderName = `${remoteReleaseProviderName}/${newRemoteReleaseProviderName}`;
+    }
+  } else {
+    remoteReleaseProviderName = newRemoteReleaseProviderName;
+  }
 }
 
 async function applyChangesAndExit(
@@ -899,22 +902,25 @@ async function applyChangesAndExit(
     });
 
     if (!postGitTasks.length) {
-      // no GitHub releases to create so we can just exit
+      // No post git tasks (e.g. remote release creation) to perform so we can just exit
       return;
     }
 
     if (isCI()) {
       output.warn({
-        title: `Skipped GitHub release creation because no changes were detected for any changelog files.`,
+        title: `Skipped ${
+          remoteReleaseProviderName ?? 'remote'
+        } release creation because no changes were detected for any changelog files.`,
       });
       return;
     }
 
-    // prompt the user to see if they want to create a GitHub release anyway
-    // we know that the user has configured GitHub releases because we have postGitTasks
-    const shouldCreateGitHubReleaseAnyway = await promptForGitHubRelease();
-
-    if (!shouldCreateGitHubReleaseAnyway) {
+    /**
+     * Prompt the user to see if they want to create a remote release anyway.
+     * We know that the user has configured remote releases because we have postGitTasks.
+     */
+    const shouldCreateRemoteReleaseAnyway = await promptForRemoteRelease();
+    if (!shouldCreateRemoteReleaseAnyway) {
       return;
     }
 
@@ -994,11 +1000,15 @@ async function applyChangesAndExit(
   }
 
   if (args.gitPush ?? nxReleaseConfig.changelog.git.push) {
-    output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+    output.logSingleLine(
+      `Pushing to git remote "${args.gitRemote ?? 'origin'}"`
+    );
     await gitPush({
       gitRemote: args.gitRemote,
       dryRun: args.dryRun,
       verbose: args.verbose,
+      additionalArgs:
+        args.gitPushArgs || nxReleaseConfig.changelog.git.pushArgs,
     });
   }
 
@@ -1013,20 +1023,16 @@ async function applyChangesAndExit(
 async function generateChangelogForWorkspace({
   tree,
   args,
-  projectGraph,
   nxReleaseConfig,
   workspaceChangelogVersion,
   changes,
-  commits,
 }: {
   tree: Tree;
   args: ChangelogOptions;
-  projectGraph: ProjectGraph;
   nxReleaseConfig: NxReleaseConfig;
   workspaceChangelogVersion: (string | null) | undefined;
   changes: ChangelogChange[];
-  commits: GitCommit[];
-}): Promise<NxReleaseChangelogResult['workspaceChangelog']> {
+}): Promise<NxReleaseChangelogResult['workspaceChangelog'] | undefined> {
   const config = nxReleaseConfig.changelog.workspaceChangelog;
   // The entire feature is disabled at the workspace level, exit early
   if (config === false) {
@@ -1101,17 +1107,23 @@ async function generateChangelogForWorkspace({
     });
   }
 
-  const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
+  const remoteReleaseClient = await createRemoteReleaseClient(
+    config.createRelease as unknown as
+      | false
+      | ResolvedCreateRemoteReleaseProvider,
+    gitRemote
+  );
+  applyRemoteReleaseProviderName(remoteReleaseClient.remoteReleaseProviderName);
 
   const changelogRenderer = new ChangelogRendererClass({
     changes,
     changelogEntryVersion: releaseVersion.rawVersion,
     project: null,
     isVersionPlans: false,
-    repoData: githubRepoData,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
     conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
+    remoteReleaseClient,
   });
   let contents = await changelogRenderer.render();
 
@@ -1163,9 +1175,15 @@ async function generateChangelogForWorkspace({
     printAndFlushChanges(tree, !!dryRun, 3, false, noDiffInChangelogMessage);
   }
 
+  const postGitTask: PostGitTask | null =
+    args.createRelease !== false && config.createRelease
+      ? remoteReleaseClient.createPostGitTask(releaseVersion, contents, dryRun)
+      : null;
+
   return {
     releaseVersion,
     contents,
+    postGitTask,
   };
 }
 
@@ -1187,7 +1205,7 @@ async function generateChangelogForProjects({
   projects: ProjectGraphProjectNode[];
   nxReleaseConfig: NxReleaseConfig;
   projectToAdditionalDependencyBumps: Map<string, DependencyBump[]>;
-}): Promise<NxReleaseChangelogResult['projectChangelogs']> {
+}): Promise<NxReleaseChangelogResult['projectChangelogs'] | undefined> {
   const config = releaseGroup.changelog;
   // The entire feature is disabled at the release group level, exit early
   if (config === false) {
@@ -1201,6 +1219,15 @@ async function generateChangelogForProjects({
   const gitRemote = args.gitRemote;
 
   const ChangelogRendererClass = resolveChangelogRenderer(config.renderer);
+
+  // Maximum of one remote release client per release group
+  const remoteReleaseClient = await createRemoteReleaseClient(
+    config.createRelease as unknown as
+      | false
+      | ResolvedCreateRemoteReleaseProvider,
+    gitRemote
+  );
+  applyRemoteReleaseProviderName(remoteReleaseClient.remoteReleaseProviderName);
 
   const projectChangelogs: NxReleaseChangelogResult['projectChangelogs'] = {};
 
@@ -1220,13 +1247,19 @@ async function generateChangelogForProjects({
      */
     if (
       !projectsVersionData[project.name] ||
-      projectsVersionData[project.name].newVersion === null
+      (projectsVersionData[project.name].newVersion === null &&
+        !projectsVersionData[project.name].dockerVersion)
     ) {
       continue;
     }
 
+    const preferDockerVersion =
+      shouldPreferDockerVersionForReleaseGroup(releaseGroup);
     const releaseVersion = new ReleaseVersion({
-      version: projectsVersionData[project.name].newVersion,
+      version:
+        preferDockerVersion && projectsVersionData[project.name].dockerVersion
+          ? projectsVersionData[project.name].dockerVersion
+          : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTagPattern,
       projectName: project.name,
     });
@@ -1240,13 +1273,10 @@ async function generateChangelogForProjects({
       });
     }
 
-    const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
-
     const changelogRenderer = new ChangelogRendererClass({
       changes,
       changelogEntryVersion: releaseVersion.rawVersion,
       project: project.name,
-      repoData: githubRepoData,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
           ? interpolate(config.entryWhenNoChanges, {
@@ -1261,6 +1291,7 @@ async function generateChangelogForProjects({
         ? null
         : nxReleaseConfig.conventionalCommits,
       dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
+      remoteReleaseClient,
     });
     let contents = await changelogRenderer.render();
 
@@ -1319,9 +1350,19 @@ async function generateChangelogForProjects({
       );
     }
 
+    const postGitTask: PostGitTask | null =
+      args.createRelease !== false && config.createRelease
+        ? remoteReleaseClient.createPostGitTask(
+            releaseVersion,
+            contents,
+            dryRun
+          )
+        : null;
+
     projectChangelogs[project.name] = {
       releaseVersion,
       contents,
+      postGitTask,
     };
   }
 
@@ -1352,6 +1393,21 @@ async function getCommits(
   return parseCommits(rawCommits);
 }
 
+async function filterProjectCommits({
+  fromSHA,
+  toSHA,
+  projectPath,
+}: {
+  fromSHA: string;
+  toSHA: string;
+  projectPath: string;
+}) {
+  const allCommits = await getCommits(fromSHA, toSHA);
+  return allCommits.filter((c) =>
+    c.affectedFiles.find((f) => f.startsWith(projectPath))
+  );
+}
+
 function filterHiddenChanges(
   changes: ChangelogChange[],
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
@@ -1368,53 +1424,21 @@ function filterHiddenChanges(
   });
 }
 
-// TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
-function filterHiddenCommits(
-  commits: GitCommit[],
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
-): GitCommit[] {
-  if (!commits) {
-    return [];
-  }
-  return commits.filter((commit) => {
-    const type = commit.type;
-
-    const typeConfig = conventionalCommitsConfig.types[type];
-    if (!typeConfig) {
-      // don't include commits with unknown types
-      return false;
-    }
-    return !typeConfig.changelog.hidden;
-  });
-}
-
-export function shouldCreateGitHubRelease(
-  changelogConfig:
-    | NxReleaseConfig['changelog']['workspaceChangelog']
-    | NxReleaseConfig['changelog']['projectChangelogs']
-    | NxReleaseConfig['groups'][number]['changelog'],
-  createReleaseArg: ChangelogOptions['createRelease'] | undefined = undefined
-): boolean {
-  if (createReleaseArg !== undefined) {
-    return createReleaseArg === 'github';
-  }
-  if (changelogConfig === false) {
-    return false;
-  }
-  return changelogConfig.createRelease !== false;
-}
-
-async function promptForGitHubRelease(): Promise<boolean> {
+async function promptForRemoteRelease(): Promise<boolean> {
   try {
     const result = await prompt<{ confirmation: boolean }>([
       {
         name: 'confirmation',
-        message: 'Do you want to create a GitHub release anyway?',
+        message: `Do you want to create a ${
+          remoteReleaseProviderName ?? 'remote'
+        } release anyway?`,
         type: 'confirm',
       },
     ]);
     return result.confirmation;
-  } catch (e) {
+  } catch {
+    // Ensure the cursor is always restored
+    process.stdout.write('\u001b[?25h');
     // Handle the case where the user exits the prompt with ctrl+c
     return false;
   }
@@ -1470,4 +1494,23 @@ function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
     default:
       throw new Error(`Invalid semver bump type: ${bump}`);
   }
+}
+
+function extractPreid(version: string): string | undefined {
+  if (!isPrerelease(version)) {
+    return undefined;
+  }
+
+  const preid = prerelease(version)?.[0];
+  if (typeof preid === 'string') {
+    if (preid.trim() === '') {
+      return undefined;
+    }
+
+    return preid;
+  }
+  if (typeof preid === 'number') {
+    return preid.toString();
+  }
+  return undefined;
 }

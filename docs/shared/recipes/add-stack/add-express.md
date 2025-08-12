@@ -91,6 +91,6 @@ Now when you serve your API, you'll see the content from the library being displ
 
 ## More Documentation
 
-- [@nx/express](/nx-api/express)
-- [@nx/js](/nx-api/js)
+- [@nx/express](/technologies/node/express/introduction)
+- [@nx/js](/technologies/typescript/introduction)
 - [Express](https://expressjs.com/)

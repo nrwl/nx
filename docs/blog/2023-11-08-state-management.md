@@ -2,7 +2,7 @@
 title: State Management Nx React Native/Expo Apps with TanStack Query and Redux
 slug: 'state-management-nx-react-native-expo-apps-with-tanstack-query-and-redux'
 authors: [Emily Xiong]
-cover_image: '/blog/images/2023-11-08/featured_img.webp'
+cover_image: '/blog/images/2023-11-08/featured_img.avif'
 tags: [nx, React Native]
 description: Implementing state management in Nx React Native/Expo apps with TanStack Query and Redux, covering setup, dev tools, and unit testing.
 ---
@@ -706,8 +706,8 @@ Here is a simple app that uses TanStack Query and Redux for state management. Th
 Nx is a powerful monorepo tool. Together with Nx and these 2 state management tools, it will be very easy to scale up any app.
 
 - TanStack Query site: [https://tanstack.com/query/latest](https://tanstack.com/query/latest)
-- Official @nx/expo plugin: [/nx-api/expo](/nx-api/expo)
-- Official @nx/react-native plugin: [/nx-api/react-native](/nx-api/react-native)
+- Official @nx/expo plugin: [/technologies/react/expo/introduction](/technologies/react/expo/introduction)
+- Official @nx/react-native plugin: [/technologies/react/react-native/introduction](/technologies/react/react-native/introduction)
 
 ---
 

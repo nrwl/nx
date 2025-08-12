@@ -1,43 +1,6 @@
 {
   "generators": {},
   "packageJsonUpdates": {
-    "17.1.0": {
-      "version": "17.1.0-beta.4",
-      "x-prompt": "Do you want to update to TypeScript v5.2?",
-      "requires": {
-        "typescript": ">=5.1.0 <5.2.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~5.2.2"
-        }
-      }
-    },
-    "17.3.0": {
-      "version": "17.3.0-beta.10",
-      "x-prompt": "Do you want to update to TypeScript v5.3?",
-      "requires": {
-        "typescript": ">=5.2.0 <5.3.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~5.3.2"
-        }
-      }
-    },
-    "18.2.0": {
-      "version": "18.2.0-beta.0",
-      "x-prompt": "Do you want to update to TypeScript v5.4?",
-      "requires": {
-        "typescript": ">=5.3.0 <5.4.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~5.4.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.5.1": {
       "version": "19.5.0-beta.1",
       "x-prompt": "Do you want to update to TypeScript v5.5?",
@@ -73,6 +36,19 @@
       "packages": {
         "typescript": {
           "version": "~5.7.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.2.0": {
+      "version": "21.2.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.8?",
+      "requires": {
+        "typescript": ">=5.7.0 <5.8.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.8.2",
           "alwaysAddToPackageJson": false
         }
       }

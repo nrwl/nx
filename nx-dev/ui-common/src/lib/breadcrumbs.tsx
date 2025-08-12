@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@heroicons/react/24/solid';
-import { ProcessedDocument } from '@nx/nx-dev/models-document';
+import { ProcessedDocument } from '@nx/nx-dev-models-document';
 import classNames from 'classnames';
 
 interface Crumb {
@@ -13,6 +13,7 @@ const sectionNames: Record<string, string> = {
   ci: 'CI',
   'extending-nx': 'Extending Nx',
   'nx-api': 'Nx API',
+  api: 'API',
 };
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

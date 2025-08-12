@@ -5,6 +5,7 @@ import type { Styles } from '../utils/types';
 export interface Schema {
   directory: string;
   name?: string;
+  bundler?: 'webpack' | 'rspack';
   host?: string;
   port?: number;
   setParserOptionsProject?: boolean;
@@ -19,7 +20,6 @@ export interface Schema {
   e2eTestRunner?: E2eTestRunner;
   backendProject?: string;
   strict?: boolean;
-  standaloneConfig?: boolean;
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
   viewEncapsulation?: 'Emulated' | 'Native' | 'None';

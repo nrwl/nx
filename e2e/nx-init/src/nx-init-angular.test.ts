@@ -9,7 +9,7 @@ import {
   runCLI,
   runCommand,
   runNgNew,
-} from '../../utils';
+} from '@nx/e2e-utils';
 
 describe('nx init (Angular CLI - legacy)', () => {
   let project: string;
@@ -85,7 +85,7 @@ describe('nx init (Angular CLI - legacy)', () => {
     expect(coldBuildOutput).toContain(
       `Successfully ran target build for project ${project}`
     );
-    checkFilesExist(`dist/apps/${project}/browser/main.js`);
+    checkFilesExist(`dist/${project}/browser/main.js`);
 
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);

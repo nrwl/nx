@@ -13,6 +13,7 @@ import {
   getLatestLernaVersion,
   getPublishedVersion,
   getSelectedPackageManager,
+  getStrippedEnvironmentVariables,
   isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
@@ -21,7 +22,7 @@ import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -39,6 +40,7 @@ let projName: string;
 const nxPackages = [
   `@nx/angular`,
   `@nx/cypress`,
+  `@nx/docker`,
   `@nx/eslint-plugin`,
   `@nx/express`,
   `@nx/esbuild`,
@@ -129,7 +131,7 @@ export function newProject({
         packageInstallEnd.name
       );
       // stop the daemon
-      execSync(`${getPackageManagerCommand().runNx} reset`, {
+      execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
@@ -151,12 +153,18 @@ export function newProject({
     } else if (packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
-      execSync(getPackageManagerCommand().install, {
-        cwd: projectDirectory,
-        stdio: 'pipe',
-        env: { CI: 'true', ...process.env },
-        encoding: 'utf-8',
-      });
+      try {
+        execSync(getPackageManagerCommand().install, {
+          cwd: projectDirectory,
+          stdio: 'pipe',
+          env: { CI: 'true', ...process.env },
+          encoding: 'utf-8',
+        });
+      } catch (e) {
+        console.log('newProject() - reinstall pnpm dependencies failed');
+        console.error('Full error:', e);
+        throw e;
+      }
     }
 
     const newProjectEnd = performance.mark('new-project:end');
@@ -341,51 +349,6 @@ export function runCreateWorkspace(
     command += ` --prefix=${prefix}`;
   }
 
-  if (packageManager === 'bun') {
-    /**
-     * `bunx` does not seem to work well at all with custom registries, I tried many combinations of flags and config files.
-     *
-     * The only viable workaround currently seems to be to write a package.json and a bunfig.toml in the e2e directory,
-     * install create-nx-workspace using `bun install` (which _does_ seem to respect the registry settings), and _then_
-     * run `bunx create-nx-workspace` (but without the version number added with @{version}).
-     */
-    writeFileSync(
-      join(cwd, 'bunfig.toml'),
-      // Also set up a dedicated cache directory to hopefully avoid conflicts with the global cache
-      `
-[install]
-cache = ".bun-cache"
-registry = "${registry}"
-`.trim()
-    );
-    writeFileSync(
-      join(cwd, 'package.json'),
-      `
-{
-  "private": true,
-  "name": "only-here-to-make-bunx-happy"
-}
-    `
-    );
-    const output = execSync('bun install create-nx-workspace', {
-      cwd,
-      stdio: 'pipe',
-      env: {
-        CI: 'true',
-        ...process.env,
-      },
-      encoding: 'utf-8',
-    });
-    const publishedVersion = getPublishedVersion();
-    // Ensure that it installed the version published for the e2e tests
-    if (!output.includes(publishedVersion)) {
-      console.error(output);
-      throw new Error(
-        `bunx create-nx-workspace did not install the version published for the e2e tests: ${publishedVersion}, in ${cwd}`
-      );
-    }
-  }
-
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
@@ -393,7 +356,7 @@ registry = "${registry}"
       env: {
         CI: 'true',
         NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',
-        ...process.env,
+        ...getStrippedEnvironmentVariables(),
       },
       encoding: 'utf-8',
     });
@@ -406,32 +369,10 @@ registry = "${registry}"
       });
     }
 
-    if (packageManager === 'bun') {
-      // We also have to add an explicit bunfig.toml in the workspace itself as bun does not seem to use the setting applied by the local registry logic
-      // (via `npm set config registry`), unlike all other package managers.
-      updateFile(
-        'bunfig.toml',
-        `
-[install]
-registry = { url = "${registry}", token = "secretVerdaccioToken" }
-`.trim()
-      );
-    }
-
     return create;
   } catch (e) {
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
-  } finally {
-    // Clean up files related to bun workarounds
-    if (packageManager === 'bun') {
-      removeSync(join(cwd, 'bunfig.toml'));
-      removeSync(join(cwd, 'package.json'));
-      removeSync(join(cwd, '.bun-cache'));
-      removeSync(join(cwd, 'node_modules'));
-      removeSync(join(cwd, 'bun.lock'));
-      removeSync(join(cwd, 'bun.lockb'));
-    }
   }
 }
 
@@ -506,7 +447,7 @@ export function packageInstall(
   try {
     const install = execSync(command, {
       cwd,
-      stdio: isVerbose() ? 'inherit' : 'ignore',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       env: process.env,
       encoding: 'utf-8',
     });

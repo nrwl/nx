@@ -12,9 +12,10 @@
           "name": "Getting Started",
           "id": "getting-started",
           "description": "Get started with basic information, concepts and tutorials.",
+          "file": "shared/getting-started/quick-start",
           "itemList": [
             {
-              "name": "Intro to Nx",
+              "name": "Introduction",
               "id": "intro",
               "file": "shared/getting-started/intro"
             },
@@ -24,16 +25,29 @@
               "file": "shared/getting-started/installation"
             },
             {
-              "name": "Why Nx?",
-              "id": "why-nx",
-              "file": "shared/getting-started/why-nx"
+              "name": "Start a new project",
+              "id": "start-new-project",
+              "file": "shared/getting-started/start-new-project"
             },
             {
-              "name": "Editor Setup",
-              "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+              "name": "Add to existing project",
+              "id": "adding-to-existing",
+              "tags": ["init"],
+              "file": "shared/getting-started/start-with-existing-project"
+            },
+            {
+              "name": "Editor Integration",
+              "description": "Learn about Nx Console, an extension for VS Code and WebStorm. (formerly Editor Setup)",
               "id": "editor-setup",
               "tags": ["editor-setup"],
               "file": "shared/getting-started/editor-setup"
+            },
+            {
+              "name": "AI Integration",
+              "description": "Learn about how to integrate Nx with your favorite AI assistant.",
+              "id": "ai-integration",
+              "tags": ["ai-integration"],
+              "file": "shared/getting-started/ai-setup"
             },
             {
               "name": "Tutorials",
@@ -131,13 +145,14 @@
             {
               "name": "CI Features",
               "id": "ci-features",
-              "description": "Features of Nx and Nx Cloud that improve CI",
+              "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
               "itemList": [
                 {
-                  "name": "Run Only Tasks Affected by a PR",
-                  "id": "affected",
+                  "name": "AI-Powered Self-Healing CI",
+                  "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
+                  "id": "self-healing-ci",
                   "file": "",
-                  "path": "/ci/features/affected",
+                  "path": "/ci/features/self-healing-ci",
                   "isExternal": true
                 },
                 {
@@ -154,6 +169,13 @@
                   "id": "distribute-task-execution",
                   "file": "",
                   "path": "/ci/features/distribute-task-execution",
+                  "isExternal": true
+                },
+                {
+                  "name": "Run Only Tasks Affected by a PR",
+                  "id": "affected",
+                  "file": "",
+                  "path": "/ci/features/affected",
                   "isExternal": true
                 },
                 {
@@ -182,7 +204,411 @@
           ]
         },
         {
-          "name": "Concepts",
+          "name": "Core Guides",
+          "id": "recipes",
+          "description": "In depth recipes for common tasks",
+          "itemList": [
+            {
+              "name": "Installation",
+              "id": "installation",
+              "description": "Installing Nx",
+              "itemList": [
+                {
+                  "name": "Install Nx in a Non-Javascript Repo",
+                  "id": "install-non-javascript",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/install-non-javascript"
+                },
+                {
+                  "name": "Update Your Global Nx Installation",
+                  "id": "update-global-installation",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/update-global-installation"
+                }
+              ]
+            },
+            {
+              "name": "Tasks & Caching",
+              "id": "running-tasks",
+              "description": "A series of recipes that show how to run tasks efficiently with Nx",
+              "itemList": [
+                {
+                  "name": "Configure Inputs for Task Caching",
+                  "id": "configure-inputs",
+                  "tags": ["run-tasks", "cache-task-results"],
+                  "file": "shared/recipes/running-tasks/configure-inputs"
+                },
+                {
+                  "name": "Configure Outputs for Task Caching",
+                  "id": "configure-outputs",
+                  "tags": ["run-tasks", "cache-task-results"],
+                  "file": "shared/recipes/running-tasks/configure-outputs"
+                },
+                {
+                  "name": "Define a Task Pipeline",
+                  "id": "defining-task-pipeline",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/defining-task-pipeline"
+                },
+                {
+                  "name": "Use the Terminal UI",
+                  "id": "terminal-ui",
+                  "tags": ["run-tasks", "terminal-ui"],
+                  "file": "shared/recipes/running-tasks/terminal-ui"
+                },
+                {
+                  "name": "Run Custom Commands",
+                  "id": "run-commands-executor",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/running-custom-commands"
+                },
+                {
+                  "name": "Pass Args to Commands",
+                  "id": "pass-args-to-commands",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/pass-args-to-commands"
+                },
+                {
+                  "name": "Run Tasks in Parallel",
+                  "id": "run-tasks-in-parallel",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/run-tasks-in-parallel"
+                },
+                {
+                  "name": "Run Root-Level NPM Scripts with Nx",
+                  "id": "root-level-scripts",
+                  "tags": ["run-tasks", "exec"],
+                  "file": "shared/recipes/running-tasks/root-level-scripts"
+                },
+                {
+                  "name": "Workspace Watching",
+                  "id": "workspace-watching",
+                  "tags": ["run-tasks", "workspace-watching"],
+                  "file": "shared/recipes/running-tasks/workspace-watching"
+                },
+                {
+                  "name": "Reduce Repetitive Configuration",
+                  "id": "reduce-repetitive-configuration",
+                  "tags": [],
+                  "file": "shared/recipes/running-tasks/reduce-repetitive-configuration"
+                },
+                {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
+                  "name": "Skip Task Caching",
+                  "id": "skipping-cache",
+                  "file": "shared/recipes/running-tasks/skipping-cache"
+                },
+                {
+                  "name": "Migrate to Inferred Tasks (Project Crystal)",
+                  "id": "convert-to-inferred",
+                  "tags": ["inferred-tasks", "automate-updating-dependencies"],
+                  "file": "shared/recipes/running-tasks/convert-to-inferred"
+                },
+                {
+                  "name": "Remote Cache",
+                  "description": "Different options of hosting remote cache",
+                  "id": "self-hosted-caching",
+                  "tags": ["self-hosted-caching"],
+                  "file": "shared/recipes/running-tasks/self-hosted-caching"
+                }
+              ]
+            },
+            {
+              "name": "Adopting Nx",
+              "id": "adopting-nx",
+              "description": "Adopting Nx incrementally, on existing project or from scratch.",
+              "itemList": [
+                {
+                  "name": "NPM/Yarn/PNPM workspaces",
+                  "id": "adding-to-monorepo",
+                  "tags": ["init"],
+                  "file": "shared/migration/adding-to-monorepo"
+                },
+                {
+                  "name": "Migrate From Turborepo",
+                  "id": "from-turborepo",
+                  "file": "shared/migration/from-turborepo"
+                },
+                {
+                  "name": "Add to any Project",
+                  "id": "adding-to-existing-project",
+                  "tags": ["init"],
+                  "file": "shared/migration/adding-to-existing-project"
+                },
+                {
+                  "name": "Import an Existing Project into an Nx Workspace",
+                  "id": "import-project",
+                  "tags": ["import"],
+                  "file": "shared/migration/import-project"
+                },
+                {
+                  "name": "Preserving Git Histories",
+                  "id": "preserving-git-histories",
+                  "file": "shared/migration/preserving-git-histories"
+                },
+                {
+                  "name": "Manual migration",
+                  "id": "manual",
+                  "file": "shared/migration/manual"
+                }
+              ]
+            },
+            {
+              "name": "Nx Release",
+              "id": "nx-release",
+              "description": "Recipes for releasing with Nx release.",
+              "itemList": [
+                {
+                  "name": "Release TypeScript/JavaScript Packages to NPM",
+                  "id": "release-npm-packages",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-typescript-packages-to-npm"
+                },
+                {
+                  "name": "Release Docker Images",
+                  "id": "release-docker-images",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-docker-images"
+                },
+                {
+                  "name": "Release Rust Crates",
+                  "id": "publish-rust-crates",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-rust-crates"
+                },
+                {
+                  "name": "Release Projects Independently",
+                  "id": "release-projects-independently",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-projects-independently"
+                },
+                {
+                  "name": "Updating Version References in Manifest Files (e.g. package.json)",
+                  "id": "updating-version-references",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/updating-version-references"
+                },
+                {
+                  "name": "Automatically Version with Conventional Commits",
+                  "id": "automatically-version-with-conventional-commits",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
+                },
+                {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
+                },
+                {
+                  "name": "File Based Versioning (Version Plans)",
+                  "id": "file-based-versioning-version-plans",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/file-based-versioning-version-plans"
+                },
+                {
+                  "name": "Configure Custom Registries",
+                  "id": "configure-custom-registries",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-custom-registries"
+                },
+                {
+                  "name": "Publish in CI/CD",
+                  "id": "publish-in-ci-cd",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-in-ci-cd"
+                },
+                {
+                  "name": "Automate GitHub Releases",
+                  "id": "automate-github-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-github-releases"
+                },
+                {
+                  "name": "Automate GitLab Releases",
+                  "id": "automate-gitlab-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-gitlab-releases"
+                },
+                {
+                  "name": "Update Your Local Registry Setup to use Nx Release",
+                  "id": "update-local-registry-setup",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/update-local-registry-setup"
+                },
+                {
+                  "name": "Configure Changelog Format",
+                  "id": "configure-changelog-format",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-changelog-format"
+                },
+                {
+                  "name": "Build Before Versioning",
+                  "id": "build-before-versioning",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/build-before-versioning"
+                },
+                {
+                  "name": "Configuring Version Prefix for Dependency Versions",
+                  "id": "configuration-version-prefix",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configuration-version-prefix"
+                }
+              ]
+            },
+            {
+              "name": "Nx Console",
+              "id": "nx-console",
+              "description": "Checkout all the recipes related to Nx Console.",
+              "itemList": [
+                {
+                  "name": "Telemetry",
+                  "id": "console-telemetry",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-telemetry"
+                },
+                {
+                  "name": "Project Details View",
+                  "id": "console-project-details",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-project-details"
+                },
+                {
+                  "name": "Generate Command",
+                  "id": "console-generate-command",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-generate-command"
+                },
+                {
+                  "name": "Run Command",
+                  "id": "console-run-command",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-run-command"
+                },
+                {
+                  "name": "Nx Cloud Integration",
+                  "id": "console-nx-cloud",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-nx-cloud"
+                },
+                {
+                  "name": "Migrate UI",
+                  "id": "console-migrate-ui",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-migrate-ui"
+                },
+                {
+                  "name": "Troubleshooting",
+                  "id": "console-troubleshooting",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-troubleshooting"
+                }
+              ]
+            },
+            {
+              "name": "Enforce Module Boundaries",
+              "id": "enforce-module-boundaries",
+              "description": "Configuring the enforce module boundaries rule",
+              "itemList": [
+                {
+                  "name": "Ban Dependencies with Certain Tags",
+                  "id": "ban-dependencies-with-tags",
+                  "tags": ["enforce-module-boundaries"],
+                  "file": "shared/recipes/ban-dependencies-with-tags"
+                },
+                {
+                  "name": "Tag in Multiple Dimensions",
+                  "id": "tag-multiple-dimensions",
+                  "tags": ["enforce-module-boundaries"],
+                  "file": "shared/recipes/tag-multiple-dimensions"
+                },
+                {
+                  "name": "Ban External Imports",
+                  "id": "ban-external-imports",
+                  "tags": ["enforce-module-boundaries"],
+                  "file": "shared/recipes/ban-external-imports"
+                },
+                {
+                  "name": "Tags Allow List",
+                  "id": "tags-allow-list",
+                  "tags": ["enforce-module-boundaries"],
+                  "file": "shared/recipes/tags-allow-list"
+                }
+              ]
+            },
+            {
+              "name": "Tips and tricks",
+              "id": "tips-n-tricks",
+              "description": "Various tips and tricks for using Nx.",
+              "itemList": [
+                {
+                  "name": "Convert from a Standalone Repository to a Monorepo",
+                  "id": "standalone-to-monorepo",
+                  "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo"
+                },
+                {
+                  "name": "Keep Nx Versions in Sync",
+                  "id": "keep-nx-versions-in-sync",
+                  "tags": ["automate-updating-dependencies", "add"],
+                  "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync"
+                },
+                {
+                  "name": "Define Environment Variables",
+                  "id": "define-environment-variables",
+                  "tags": ["environment-variables"],
+                  "file": "shared/guides/define-environment-variables"
+                },
+                {
+                  "name": "Configuring Browser Support",
+                  "id": "browser-support",
+                  "file": "shared/guides/browser-support"
+                },
+                {
+                  "name": "Include Assets in Build",
+                  "id": "include-assets-in-build",
+                  "tags": [],
+                  "file": "shared/recipes/include-assets-in-build"
+                },
+                {
+                  "name": "Include All package.json Files as Projects",
+                  "id": "include-all-packagejson",
+                  "tags": [],
+                  "file": "shared/recipes/include-all-packagejson"
+                },
+                {
+                  "name": "Identify Dependencies Between Folders",
+                  "id": "identify-dependencies-between-folders",
+                  "tags": [],
+                  "file": "shared/recipes/identify-dependencies-between-folders"
+                },
+                {
+                  "name": "Disable Graph Links Created from Analyzing Source Files",
+                  "id": "analyze-source-files",
+                  "tags": ["explore-graph"],
+                  "file": "shared/recipes/analyze-source-files"
+                },
+                {
+                  "name": "Altering Migration Process",
+                  "id": "advanced-update",
+                  "tags": ["automate-updating-dependencies"],
+                  "file": "shared/recipes/advanced-update"
+                },
+                {
+                  "name": "Using Yarn PnP",
+                  "id": "yarn-pnp",
+                  "tags": ["yarn", "Plug and Play"],
+                  "file": "shared/recipes/yarn-pnp"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Core Concepts",
           "id": "concepts",
           "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
           "itemList": [
@@ -263,41 +689,6 @@
               "file": "shared/concepts/buildable-and-publishable-libraries"
             },
             {
-              "name": "Module Federation",
-              "id": "module-federation",
-              "description": "Understand more about Module Federation with NX",
-              "itemList": [
-                {
-                  "name": "Module Federation and Nx",
-                  "id": "module-federation-and-nx",
-                  "tags": ["module-federation", "angular", "react"],
-                  "file": "shared/concepts/module-federation/module-federation-and-nx"
-                },
-                {
-                  "name": "Nx Module Federation Technical Overview",
-                  "id": "nx-module-federation-technical-overview",
-                  "tags": ["module-federation", "angular", "react"],
-                  "file": "shared/concepts/module-federation/nx-module-federation-technical-overview"
-                },
-                {
-                  "name": "Faster Builds with Module Federation",
-                  "id": "faster-builds-with-module-federation",
-                  "tags": ["module-federation", "angular", "react"],
-                  "file": "shared/concepts/module-federation/faster-builds"
-                },
-                {
-                  "name": "Micro Frontend Architecture",
-                  "id": "micro-frontend-architecture",
-                  "file": "shared/concepts/module-federation/micro-frontend-architecture"
-                },
-                {
-                  "name": "Manage Library Versions with Module Federation",
-                  "id": "manage-library-versions-with-module-federation",
-                  "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation"
-                }
-              ]
-            },
-            {
               "name": "Organizational Decisions",
               "id": "decisions",
               "description": "Topics that need to be considered when structuring your repository",
@@ -345,387 +736,66 @@
           ]
         },
         {
-          "name": "Recipes",
-          "id": "recipes",
-          "description": "In depth recipes for common tasks",
+          "name": "Technologies",
+          "id": "technologies",
+          "description": "Guides and API references for all supported technologies.",
           "itemList": [
             {
-              "name": "Installation",
-              "id": "installation",
-              "description": "Installing Nx",
+              "name": "TypeScript",
+              "id": "typescript",
               "itemList": [
                 {
-                  "name": "Install Nx in a Non-Javascript Repo",
-                  "id": "install-non-javascript",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/install-non-javascript"
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/js/js-plugin"
                 },
                 {
-                  "name": "Update Your Global Nx Installation",
-                  "id": "update-global-installation",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/update-global-installation"
-                }
-              ]
-            },
-            {
-              "name": "Tasks & Caching",
-              "id": "running-tasks",
-              "description": "A series of recipes that show how to run tasks efficiently with Nx",
-              "itemList": [
-                {
-                  "name": "Configure Inputs for Task Caching",
-                  "id": "configure-inputs",
-                  "tags": ["run-tasks", "cache-task-results"],
-                  "file": "shared/recipes/running-tasks/configure-inputs"
+                  "name": "Guides",
+                  "id": "recipes",
+                  "itemList": [
+                    {
+                      "name": "Switch to Workspaces and TS Project References",
+                      "id": "switch-to-workspaces-project-references",
+                      "tags": ["project-linking"],
+                      "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references"
+                    },
+                    {
+                      "name": "Enable Typescript Batch Mode",
+                      "id": "enable-tsc-batch-mode",
+                      "file": "shared/recipes/enable-tsc-batch-mode"
+                    },
+                    {
+                      "name": "Define Secondary Entrypoints for Typescript Packages",
+                      "id": "define-secondary-entrypoints",
+                      "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints"
+                    },
+                    {
+                      "name": "Compile Typescript Packages to Multiple Formats",
+                      "id": "compile-multiple-formats",
+                      "file": "shared/recipes/tips-n-tricks/compile-multiple-formats"
+                    },
+                    {
+                      "name": "Use JavaScript instead TypeScript",
+                      "id": "js-and-ts",
+                      "file": "shared/guides/js-and-ts"
+                    }
+                  ]
                 },
                 {
-                  "name": "Configure Outputs for Task Caching",
-                  "id": "configure-outputs",
-                  "tags": ["run-tasks", "cache-task-results"],
-                  "file": "shared/recipes/running-tasks/configure-outputs"
-                },
-                {
-                  "name": "Define a Task Pipeline",
-                  "id": "defining-task-pipeline",
-                  "tags": ["run-tasks"],
-                  "file": "shared/recipes/running-tasks/defining-task-pipeline"
-                },
-                {
-                  "name": "Run Custom Commands",
-                  "id": "run-commands-executor",
-                  "tags": ["run-tasks"],
-                  "file": "shared/recipes/running-tasks/running-custom-commands"
-                },
-                {
-                  "name": "Pass Args to Commands",
-                  "id": "pass-args-to-commands",
-                  "tags": ["run-tasks"],
-                  "file": "shared/recipes/running-tasks/pass-args-to-commands"
-                },
-                {
-                  "name": "Run Tasks in Parallel",
-                  "id": "run-tasks-in-parallel",
-                  "tags": ["run-tasks"],
-                  "file": "shared/recipes/running-tasks/run-tasks-in-parallel"
-                },
-                {
-                  "name": "Run Root-Level NPM Scripts with Nx",
-                  "id": "root-level-scripts",
-                  "tags": ["run-tasks", "exec"],
-                  "file": "shared/recipes/running-tasks/root-level-scripts"
-                },
-                {
-                  "name": "Workspace Watching",
-                  "id": "workspace-watching",
-                  "tags": ["run-tasks", "workspace-watching"],
-                  "file": "shared/recipes/running-tasks/workspace-watching"
-                },
-                {
-                  "name": "Reduce Repetitive Configuration",
-                  "id": "reduce-repetitive-configuration",
-                  "tags": [],
-                  "file": "shared/recipes/running-tasks/reduce-repetitive-configuration"
-                },
-                {
-                  "name": "Change Cache Location",
-                  "id": "change-cache-location",
-                  "file": "shared/recipes/running-tasks/change-cache-location"
-                },
-                {
-                  "name": "Skip Task Caching",
-                  "id": "skipping-cache",
-                  "file": "shared/recipes/running-tasks/skipping-cache"
-                },
-                {
-                  "name": "Migrate to Inferred Tasks (Project Crystal)",
-                  "id": "convert-to-inferred",
-                  "tags": ["inferred-tasks", "automate-updating-dependencies"],
-                  "file": "shared/recipes/running-tasks/convert-to-inferred"
-                }
-              ]
-            },
-            {
-              "name": "Adopting Nx",
-              "id": "adopting-nx",
-              "description": "Adopting Nx incrementally, on existing project or from scratch.",
-              "itemList": [
-                {
-                  "name": "NPM/Yarn/PNPM workspaces",
-                  "id": "adding-to-monorepo",
-                  "tags": ["init"],
-                  "file": "shared/migration/adding-to-monorepo"
-                },
-                {
-                  "name": "Migrate From Turborepo",
-                  "id": "from-turborepo",
-                  "file": "shared/migration/from-turborepo"
-                },
-                {
-                  "name": "Add to any Project",
-                  "id": "adding-to-existing-project",
-                  "tags": ["init"],
-                  "file": "shared/migration/adding-to-existing-project"
-                },
-                {
-                  "name": "Import an Existing Project into an Nx Workspace",
-                  "id": "import-project",
-                  "tags": ["import"],
-                  "file": "shared/migration/import-project"
-                },
-                {
-                  "name": "Preserving Git Histories",
-                  "id": "preserving-git-histories",
-                  "file": "shared/migration/preserving-git-histories"
-                },
-                {
-                  "name": "Manual migration",
-                  "id": "manual",
-                  "file": "shared/migration/manual"
-                }
-              ]
-            },
-            {
-              "name": "Nx Release",
-              "id": "nx-release",
-              "description": "Recipes for releasing with Nx release.",
-              "itemList": [
-                {
-                  "name": "Get Started with Nx Release",
-                  "id": "get-started-with-nx-release",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
-                },
-                {
-                  "name": "Release Projects Independently",
-                  "id": "release-projects-independently",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/release-projects-independently"
-                },
-                {
-                  "name": "Updating Version References in Manifest Files (e.g. package.json)",
-                  "id": "updating-version-references",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/updating-version-references"
-                },
-                {
-                  "name": "Automatically Version with Conventional Commits",
-                  "id": "automatically-version-with-conventional-commits",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
-                },
-                {
-                  "name": "Customize Conventional Commit Types",
-                  "id": "customize-conventional-commit-types",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
-                },
-                {
-                  "name": "File Based Versioning (Version Plans)",
-                  "id": "file-based-versioning-version-plans",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/file-based-versioning-version-plans"
-                },
-                {
-                  "name": "Configure Custom Registries",
-                  "id": "configure-custom-registries",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/configure-custom-registries"
-                },
-                {
-                  "name": "Publish in CI/CD",
-                  "id": "publish-in-ci-cd",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-in-ci-cd"
-                },
-                {
-                  "name": "Automate GitHub Releases",
-                  "id": "automate-github-releases",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/automate-github-releases"
-                },
-                {
-                  "name": "Publish Rust Crates",
-                  "id": "publish-rust-crates",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-rust-crates"
-                },
-                {
-                  "name": "Update Your Local Registry Setup to use Nx Release",
-                  "id": "update-local-registry-setup",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/update-local-registry-setup"
-                },
-                {
-                  "name": "Configure Changelog Format",
-                  "id": "configure-changelog-format",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/configure-changelog-format"
-                },
-                {
-                  "name": "Build Before Versioning",
-                  "id": "build-before-versioning",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/build-before-versioning"
-                },
-                {
-                  "name": "Configuring Version Prefix for Dependency Versions",
-                  "id": "configuration-version-prefix",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/configuration-version-prefix"
-                }
-              ]
-            },
-            {
-              "name": "Module Federation",
-              "id": "module-federation",
-              "description": "Advanced guides to utilize Module Federation with Nx.",
-              "itemList": [
-                {
-                  "id": "create-a-host",
-                  "name": "How to create a Module Federation Host Application",
-                  "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
-                  "file": "shared/recipes/module-federation/creating-a-host"
-                },
-                {
-                  "id": "create-a-remote",
-                  "name": "How to create a Module Federation Remote Application",
-                  "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
-                  "file": "shared/recipes/module-federation/creating-a-remote"
-                },
-                {
-                  "id": "federate-a-module",
-                  "name": "How to Federate a Module",
-                  "description": "A guide on how to federate a module in your Nx workspace",
-                  "file": "shared/recipes/module-federation/federate-a-module"
-                }
-              ]
-            },
-            {
-              "name": "Nx Console",
-              "id": "nx-console",
-              "description": "Checkout all the recipes related to Nx Console.",
-              "itemList": [
-                {
-                  "name": "Telemetry",
-                  "id": "console-telemetry",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-telemetry"
-                },
-                {
-                  "name": "Project Details View",
-                  "id": "console-project-details",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-project-details"
-                },
-                {
-                  "name": "Generate Command",
-                  "id": "console-generate-command",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-generate-command"
-                },
-                {
-                  "name": "Run Command",
-                  "id": "console-run-command",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-run-command"
-                },
-                {
-                  "name": "Nx Cloud Integration",
-                  "id": "console-nx-cloud",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-nx-cloud"
-                },
-                {
-                  "name": "Troubleshooting",
-                  "id": "console-troubleshooting",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-troubleshooting"
-                }
-              ]
-            },
-            {
-              "name": "React",
-              "id": "react",
-              "description": "Advanced guides to adopt Nx in React.",
-              "itemList": [
-                {
-                  "name": "React Native with Nx",
-                  "id": "react-native",
-                  "file": "shared/guides/react-native"
-                },
-                {
-                  "name": "Remix with Nx",
-                  "id": "remix",
-                  "file": "shared/guides/remix"
-                },
-                {
-                  "name": "React Router with Nx",
-                  "id": "react-router",
-                  "file": "shared/guides/react-router"
-                },
-                {
-                  "name": "Use Environment Variables in React",
-                  "id": "use-environment-variables-in-react",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/use-environment-variables-in-react"
-                },
-                {
-                  "name": "Using Tailwind CSS in React",
-                  "id": "using-tailwind-css-in-react",
-                  "file": "shared/guides/using-tailwind-css-in-react"
-                },
-                {
-                  "name": "Adding Images, Fonts, and Files",
-                  "id": "adding-assets-react",
-                  "file": "shared/guides/adding-assets"
-                },
-                {
-                  "name": "Setup Module Federation with SSR for React",
-                  "id": "module-federation-with-ssr",
-                  "tags": ["module-federation", "react"],
-                  "file": "shared/recipes/module-federation-with-ssr"
-                },
-                {
-                  "name": "Deploying Next.js applications to Vercel",
-                  "id": "deploy-nextjs-to-vercel",
-                  "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
-                },
-                {
-                  "name": "React Compiler with Nx",
-                  "id": "react-compiler",
-                  "file": "shared/guides/react-compiler"
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/js/js-plugin"
                 }
               ]
             },
             {
               "name": "Angular",
               "id": "angular",
-              "description": "Advanced guides to adopt Nx in Angular.",
               "itemList": [
                 {
-                  "name": "Angular Rspack",
-                  "id": "rspack",
-                  "itemList": [
-                    {
-                      "name": "Introduction",
-                      "id": "introduction",
-                      "tags": ["introduction"],
-                      "file": "shared/guides/angular-rspack/introduction"
-                    },
-                    {
-                      "name": "Migrate from Angular Webpack",
-                      "id": "migrate-from-webpack",
-                      "tags": ["migrate-from-webpack"],
-                      "file": "shared/guides/angular-rspack/migrate-from-webpack"
-                    },
-                    {
-                      "name": "Handling Configurations",
-                      "id": "handling-configurations",
-                      "tags": ["handling-configurations", "configurations"],
-                      "file": "shared/guides/angular-rspack/handling-configurations"
-                    }
-                  ]
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/angular/angular-plugin"
                 },
                 {
                   "name": "Migration",
@@ -745,383 +815,980 @@
                   ]
                 },
                 {
-                  "name": "Use Environment Variables in Angular",
-                  "id": "use-environment-variables-in-angular",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/use-environment-variables-in-angular"
+                  "name": "Guides",
+                  "id": "recipes",
+                  "itemList": [
+                    {
+                      "name": "Use Environment Variables in Angular",
+                      "id": "use-environment-variables-in-angular",
+                      "tags": ["environment-variables"],
+                      "file": "shared/guides/use-environment-variables-in-angular"
+                    },
+                    {
+                      "name": "Using Tailwind CSS with Angular projects",
+                      "id": "using-tailwind-css-with-angular-projects",
+                      "file": "shared/guides/using-tailwind-css-with-angular-projects"
+                    },
+                    {
+                      "name": "Setup Module Federation with SSR for Angular",
+                      "id": "module-federation-with-ssr",
+                      "tags": ["module-federation", "angular"],
+                      "file": "shared/recipes/module-federation-with-ssr"
+                    },
+                    {
+                      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                      "id": "dynamic-module-federation-with-angular",
+                      "tags": ["module-federation", "angular"],
+                      "file": "shared/recipes/module-federation/dynamic-mfe-angular"
+                    },
+                    {
+                      "name": "Setup incremental builds for Angular applications",
+                      "id": "setup-incremental-builds-angular",
+                      "file": "shared/guides/setup-incremental-builds-angular"
+                    },
+                    {
+                      "name": "Nx and the Angular CLI",
+                      "id": "nx-and-angular",
+                      "file": "shared/guides/nx-and-angular-cli"
+                    },
+                    {
+                      "name": "Nx Devkit and Angular Devkit",
+                      "id": "nx-devkit-angular-devkit",
+                      "tags": ["create-your-own-plugin"],
+                      "file": "shared/guides/nx-devkit-angular-devkit"
+                    },
+                    {
+                      "name": "Angular and Nx Version Matrix",
+                      "id": "angular-nx-version-matrix",
+                      "file": "shared/packages/angular/angular-nx-version-matrix"
+                    }
+                  ]
                 },
                 {
-                  "name": "Using Tailwind CSS with Angular projects",
-                  "id": "using-tailwind-css-with-angular-projects",
-                  "file": "shared/guides/using-tailwind-css-with-angular-projects"
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/angular/angular-plugin"
                 },
                 {
-                  "name": "Setup Module Federation with SSR for Angular",
-                  "id": "module-federation-with-ssr",
-                  "tags": ["module-federation", "angular"],
-                  "file": "shared/recipes/module-federation-with-ssr"
+                  "name": "Angular Rspack",
+                  "id": "angular-rspack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/guides/angular-rspack/introduction"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "name": "Getting Started with Angular and Rspack",
+                          "id": "getting-started",
+                          "tags": [
+                            "getting-started",
+                            "angular",
+                            "rspack",
+                            "setup"
+                          ],
+                          "file": "shared/guides/angular-rspack/getting-started"
+                        },
+                        {
+                          "name": "Migrate from Angular Webpack",
+                          "id": "migrate-from-webpack",
+                          "tags": ["migrate-from-webpack"],
+                          "file": "shared/guides/angular-rspack/migrate-from-webpack"
+                        },
+                        {
+                          "name": "Handling Configurations",
+                          "id": "handling-configurations",
+                          "tags": ["handling-configurations", "configurations"],
+                          "file": "shared/guides/angular-rspack/handling-configurations"
+                        },
+                        {
+                          "name": "Internationalization (i18n)",
+                          "id": "internationalization",
+                          "tags": ["internationalization", "i18n"],
+                          "file": "shared/guides/angular-rspack/internationalization"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "itemList": [
+                        {
+                          "name": "Create Config",
+                          "id": "create-config",
+                          "tags": ["create-config"],
+                          "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config"
+                        },
+                        {
+                          "name": "Create Server",
+                          "id": "create-server",
+                          "tags": ["create-server"],
+                          "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server"
+                        }
+                      ]
+                    }
+                  ]
                 },
                 {
-                  "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-                  "id": "dynamic-module-federation-with-angular",
-                  "tags": ["module-federation", "angular"],
-                  "file": "shared/recipes/module-federation/dynamic-mfe-angular"
-                },
-                {
-                  "name": "Setup incremental builds for Angular applications",
-                  "id": "setup-incremental-builds-angular",
-                  "file": "shared/guides/setup-incremental-builds-angular"
+                  "name": "Angular Rsbuild",
+                  "id": "angular-rsbuild",
+                  "itemList": [
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "itemList": [
+                        {
+                          "name": "Create Config",
+                          "id": "create-config",
+                          "tags": ["create-config"],
+                          "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config"
+                        },
+                        {
+                          "name": "Create Server",
+                          "id": "create-server",
+                          "tags": ["create-server"],
+                          "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             },
             {
-              "name": "Node",
+              "name": "React",
+              "id": "react",
+              "itemList": [
+                {
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/react/react-plugin"
+                },
+                {
+                  "name": "Guides",
+                  "id": "recipes",
+                  "itemList": [
+                    {
+                      "name": "React Native with Nx",
+                      "id": "react-native",
+                      "file": "shared/guides/react-native"
+                    },
+                    {
+                      "name": "Remix with Nx",
+                      "id": "remix",
+                      "file": "shared/guides/remix"
+                    },
+                    {
+                      "name": "React Router with Nx",
+                      "id": "react-router",
+                      "file": "shared/guides/react-router"
+                    },
+                    {
+                      "name": "Use Environment Variables in React",
+                      "id": "use-environment-variables-in-react",
+                      "tags": ["environment-variables"],
+                      "file": "shared/guides/use-environment-variables-in-react"
+                    },
+                    {
+                      "name": "Using Tailwind CSS in React",
+                      "id": "using-tailwind-css-in-react",
+                      "file": "shared/guides/using-tailwind-css-in-react"
+                    },
+                    {
+                      "name": "Adding Images, Fonts, and Files",
+                      "id": "adding-assets-react",
+                      "file": "shared/guides/adding-assets"
+                    },
+                    {
+                      "name": "Setup Module Federation with SSR for React",
+                      "id": "module-federation-with-ssr",
+                      "tags": ["module-federation", "react"],
+                      "file": "shared/recipes/module-federation-with-ssr"
+                    },
+                    {
+                      "name": "Deploying Next.js applications to Vercel",
+                      "id": "deploy-nextjs-to-vercel",
+                      "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
+                    },
+                    {
+                      "name": "React Compiler with Nx",
+                      "id": "react-compiler",
+                      "file": "shared/guides/react-compiler"
+                    }
+                  ]
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/react/react-plugin"
+                },
+                {
+                  "name": "Next",
+                  "id": "next",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/next/plugin-overview"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "next-config-setup",
+                          "name": "How to configure Next.js plugins",
+                          "description": "How to configure Next.js plugins",
+                          "file": "shared/packages/next/next-config-setup"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/next/plugin-overview"
+                    }
+                  ]
+                },
+                {
+                  "name": "Remix",
+                  "id": "remix",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/remix/remix-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/remix/remix-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "React Native",
+                  "id": "react-native",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/react-native/react-native-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/react-native/react-native-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Expo",
+                  "id": "expo",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/expo/expo-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/expo/expo-plugin"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Vue",
+              "id": "vue",
+              "itemList": [
+                {
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/vue/vue-plugin"
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/vue/vue-plugin"
+                },
+                {
+                  "name": "Nuxt",
+                  "id": "nuxt",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/nuxt/nuxt-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "deploy-nuxt-to-vercel",
+                          "name": "Deploying Nuxt applications to Vercel",
+                          "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+                          "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/nuxt/nuxt-plugin"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Node.js",
               "id": "node",
-              "description": "Set of Node related recipes.",
               "itemList": [
                 {
-                  "name": "Deploying a Node App to Fly.io",
-                  "id": "node-server-fly-io",
-                  "tags": ["deployment", "node"],
-                  "file": "shared/recipes/deployment/node-server-fly-io"
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/node/node-plugin"
                 },
                 {
-                  "name": "Add and Deploy Netlify Edge Functions with Node",
-                  "id": "node-serverless-functions-netlify",
-                  "tags": ["deployment", "node"],
-                  "file": "shared/recipes/deployment/node-serverless-functions-netlify"
+                  "name": "Guides",
+                  "id": "recipes",
+                  "itemList": [
+                    {
+                      "name": "Deploying a Node App to Fly.io",
+                      "id": "node-server-fly-io",
+                      "tags": ["deployment", "node"],
+                      "file": "shared/recipes/deployment/node-server-fly-io"
+                    },
+                    {
+                      "name": "Add and Deploy Netlify Edge Functions with Node",
+                      "id": "node-serverless-functions-netlify",
+                      "tags": ["deployment", "node"],
+                      "file": "shared/recipes/deployment/node-serverless-functions-netlify"
+                    },
+                    {
+                      "name": "Deploying AWS lambda in Node.js (deprecated)",
+                      "id": "node-aws-lambda",
+                      "tags": ["deployment", "node"],
+                      "file": "shared/recipes/deployment/node-aws-lambda"
+                    },
+                    {
+                      "name": "Set Up Application Proxies",
+                      "id": "application-proxies",
+                      "tags": ["node"],
+                      "file": "shared/recipes/node/application-proxies"
+                    },
+                    {
+                      "name": "Wait for Tasks to Finish",
+                      "id": "wait-for-tasks",
+                      "tags": [],
+                      "file": "shared/recipes/node/wait-for-tasks"
+                    }
+                  ]
                 },
                 {
-                  "name": "Deploying AWS lambda in Node.js (deprecated)",
-                  "id": "node-aws-lambda",
-                  "tags": ["deployment", "node"],
-                  "file": "shared/recipes/deployment/node-aws-lambda"
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/node/node-plugin"
                 },
                 {
-                  "name": "Set Up Application Proxies",
-                  "id": "application-proxies",
-                  "tags": ["node"],
-                  "file": "shared/recipes/node/application-proxies"
+                  "name": "Express",
+                  "id": "express",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/express/express-plugin"
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/express/express-plugin"
+                    }
+                  ]
                 },
                 {
-                  "name": "Wait for Tasks to Finish",
-                  "id": "wait-for-tasks",
-                  "tags": [],
-                  "file": "shared/recipes/node/wait-for-tasks"
+                  "name": "Nest",
+                  "id": "nest",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/nest/nest-plugin"
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/nest/nest-plugin"
+                    }
+                  ]
                 }
               ]
             },
             {
-              "name": "Storybook",
-              "id": "storybook",
-              "description": "Storybook strategies and setups.",
+              "name": "Java",
+              "id": "java",
               "itemList": [
                 {
-                  "name": "Set up Storybook for React Projects",
-                  "id": "overview-react",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
-                  "file": "shared/recipes/storybook/plugin-react"
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/gradle/gradle-plugin"
                 },
                 {
-                  "name": "Set up Storybook for Angular Projects",
-                  "id": "overview-angular",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
-                  "file": "shared/recipes/storybook/plugin-angular"
-                },
-                {
-                  "name": "Set up Storybook for Vue Projects",
-                  "id": "overview-vue",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
-                  "file": "shared/recipes/storybook/plugin-vue"
-                },
-                {
-                  "name": "Configuring Storybook on Nx",
-                  "id": "configuring-storybook",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how Storybook is configured on your Nx workspace.",
-                  "file": "shared/recipes/storybook/configuring-storybook"
-                },
-                {
-                  "name": "One main Storybook instance for all projects",
-                  "id": "one-storybook-for-all",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
-                  "file": "shared/recipes/storybook/one-storybook-for-all"
-                },
-                {
-                  "name": "One Storybook instance per scope",
-                  "id": "one-storybook-per-scope",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
-                  "file": "shared/recipes/storybook/one-storybook-per-scope"
-                },
-                {
-                  "name": "One main Storybook instance using Storybook Composition",
-                  "id": "one-storybook-with-composition",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
-                  "file": "shared/recipes/storybook/one-storybook-with-composition"
-                },
-                {
-                  "name": "How to configure Webpack and Vite for Storybook",
-                  "id": "custom-builder-configs",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
-                  "file": "shared/recipes/storybook/custom-builder-configs"
-                },
-                {
-                  "name": "Setting up Storybook Interaction Tests with Nx",
-                  "id": "storybook-interaction-tests",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
-                  "file": "shared/recipes/storybook/interaction-tests"
-                },
-                {
-                  "name": "Upgrading Storybook using the Storybook CLI",
-                  "id": "upgrading-storybook",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
-                  "file": "shared/recipes/storybook/upgrading-storybook"
-                },
-                {
-                  "name": "Setting up Storybook Composition with Nx",
-                  "id": "storybook-composition-setup",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
-                  "file": "shared/recipes/storybook/storybook-composition-setup"
-                },
-                {
-                  "name": "Angular: Set up Compodoc for Storybook on Nx",
-                  "id": "angular-storybook-compodoc",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
-                  "file": "shared/recipes/storybook/angular-storybook-compodoc"
-                },
-                {
-                  "name": "Angular: Configuring styles and preprocessor options",
-                  "id": "angular-configuring-styles",
-                  "tags": ["storybook"],
-                  "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
-                  "file": "shared/recipes/storybook/angular-configuring-styles"
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/gradle/gradle-plugin"
                 }
               ]
             },
             {
-              "name": "Cypress",
-              "id": "cypress",
-              "description": "Cypress related recipes",
+              "name": "Module Federation",
+              "id": "module-federation",
+              "description": "Advanced guides to utilize Module Federation with Nx.",
               "itemList": [
                 {
-                  "id": "cypress-component-testing",
-                  "name": "Component Testing",
-                  "description": "Component Testing",
-                  "file": "shared/packages/cypress/cypress-component-testing"
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/module-federation/nx-module-federation-plugin"
                 },
                 {
-                  "id": "cypress-setup-node-events",
-                  "name": "Using setupNodeEvents with Cypress preset",
-                  "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
-                  "file": "shared/packages/cypress/cypress-setup-node-events"
+                  "name": "Concepts",
+                  "id": "concepts",
+                  "description": "Understand more about Module Federation with NX",
+                  "itemList": [
+                    {
+                      "name": "Module Federation and Nx",
+                      "id": "module-federation-and-nx",
+                      "tags": ["module-federation", "angular", "react"],
+                      "file": "shared/concepts/module-federation/module-federation-and-nx"
+                    },
+                    {
+                      "name": "Nx Module Federation Technical Overview",
+                      "id": "nx-module-federation-technical-overview",
+                      "tags": ["module-federation", "angular", "react"],
+                      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview"
+                    },
+                    {
+                      "name": "Faster Builds with Module Federation",
+                      "id": "faster-builds-with-module-federation",
+                      "tags": ["module-federation", "angular", "react"],
+                      "file": "shared/concepts/module-federation/faster-builds"
+                    },
+                    {
+                      "name": "Micro Frontend Architecture",
+                      "id": "micro-frontend-architecture",
+                      "file": "shared/concepts/module-federation/micro-frontend-architecture"
+                    },
+                    {
+                      "name": "Manage Library Versions with Module Federation",
+                      "id": "manage-library-versions-with-module-federation",
+                      "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation"
+                    }
+                  ]
                 },
                 {
-                  "id": "cypress-v11-migration",
-                  "name": "Cypress v11 Migration Guide",
-                  "description": "Cypress v11 Migration Guide",
-                  "file": "shared/packages/cypress/cypress-v11-migration"
+                  "name": "Guides",
+                  "id": "recipes",
+                  "itemList": [
+                    {
+                      "id": "create-a-host",
+                      "name": "How to create a Module Federation Host Application",
+                      "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+                      "file": "shared/recipes/module-federation/creating-a-host"
+                    },
+                    {
+                      "id": "create-a-remote",
+                      "name": "How to create a Module Federation Remote Application",
+                      "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+                      "file": "shared/recipes/module-federation/creating-a-remote"
+                    },
+                    {
+                      "id": "federate-a-module",
+                      "name": "How to Federate a Module",
+                      "description": "A guide on how to federate a module in your Nx workspace",
+                      "file": "shared/recipes/module-federation/federate-a-module"
+                    },
+                    {
+                      "name": "NxModuleFederationPlugin",
+                      "id": "nx-module-federation-plugin",
+                      "file": "shared/packages/module-federation/nx-module-federation-plugin"
+                    },
+                    {
+                      "name": "NxModuleFederationDevServerPlugin",
+                      "id": "nx-module-federation-dev-server-plugin",
+                      "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/module-federation/nx-module-federation-plugin"
                 }
               ]
             },
             {
-              "name": "Next",
-              "id": "next",
-              "description": "Next related recipes",
+              "name": "ESLint",
+              "id": "eslint",
+              "description": "Guides and API references for ESLint in Nx.",
               "itemList": [
                 {
-                  "id": "next-config-setup",
-                  "name": "How to configure Next.js plugins",
-                  "description": "How to configure Next.js plugins",
-                  "file": "shared/packages/next/next-config-setup"
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/eslint/eslint"
+                },
+                {
+                  "name": "Guides",
+                  "id": "recipes",
+                  "itemList": [
+                    {
+                      "name": "Configuring ESLint with Typescript",
+                      "id": "eslint",
+                      "file": "shared/eslint"
+                    },
+                    {
+                      "name": "Switching to ESLint's flat config format",
+                      "id": "flat-config",
+                      "tags": ["eslint", "flat config"],
+                      "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint"
+                    }
+                  ]
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "itemList": []
+                },
+                {
+                  "name": "ESLint Plugin",
+                  "id": "eslint-plugin",
+                  "itemList": [
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "enforce-module-boundaries",
+                          "name": "The enforce-module-boundaries rule",
+                          "file": "shared/packages/eslint/enforce-module-boundaries"
+                        },
+                        {
+                          "id": "dependency-checks",
+                          "name": "The dependency-checks rule",
+                          "file": "shared/packages/eslint/dependency-checks"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/eslint/eslint-plugin"
+                    }
+                  ]
                 }
               ]
             },
             {
-              "name": "Nuxt",
-              "id": "nuxt",
-              "description": "Nuxt related recipes",
+              "name": "Build Tools",
+              "id": "build-tools",
               "itemList": [
                 {
-                  "id": "deploy-nuxt-to-vercel",
-                  "name": "Deploying Nuxt applications to Vercel",
-                  "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
-                  "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
+                  "name": "Webpack",
+                  "id": "webpack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/webpack/plugin-overview"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "webpack-config-setup",
+                          "name": "How to configure Webpack in your Nx workspace",
+                          "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+                          "file": "shared/packages/webpack/webpack-config-setup"
+                        },
+                        {
+                          "id": "webpack-plugins",
+                          "name": "Webpack plugins",
+                          "description": "Webpack plugins",
+                          "file": "shared/packages/webpack/webpack-plugins"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/webpack/plugin-overview"
+                    }
+                  ]
+                },
+                {
+                  "name": "Vite",
+                  "id": "vite",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/vite/vite-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "configure-vite",
+                          "name": "Configure Vite on your Nx workspace",
+                          "description": "Configure Vite on your Nx workspace",
+                          "file": "shared/packages/vite/configure-vite"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/vite/vite-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Rollup",
+                  "id": "rollup",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api"
+                    }
+                  ]
+                },
+                {
+                  "name": "ESBuild",
+                  "id": "esbuild",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/esbuild/esbuild-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/esbuild/esbuild-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Rspack",
+                  "id": "rspack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/rspack/rspack-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/rspack/rspack-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Rsbuild",
+                  "id": "rsbuild",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api"
+                    }
+                  ]
                 }
               ]
             },
             {
-              "name": "Vite",
-              "id": "vite",
-              "description": "Vite related recipes",
+              "name": "Test Tools",
+              "id": "test-tools",
               "itemList": [
                 {
-                  "id": "configure-vite",
-                  "name": "Configure Vite on your Nx workspace",
-                  "description": "Configure Vite on your Nx workspace",
-                  "file": "shared/packages/vite/configure-vite"
-                }
-              ]
-            },
-            {
-              "name": "Webpack",
-              "id": "webpack",
-              "description": "Webpack related recipes",
-              "itemList": [
-                {
-                  "id": "webpack-config-setup",
-                  "name": "How to configure Webpack in your Nx workspace",
-                  "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
-                  "file": "shared/packages/webpack/webpack-config-setup"
+                  "name": "Cypress",
+                  "id": "cypress",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/cypress/cypress-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "cypress-component-testing",
+                          "name": "Component Testing",
+                          "description": "Component Testing",
+                          "file": "shared/packages/cypress/cypress-component-testing"
+                        },
+                        {
+                          "id": "cypress-setup-node-events",
+                          "name": "Using setupNodeEvents with Cypress preset",
+                          "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+                          "file": "shared/packages/cypress/cypress-setup-node-events"
+                        },
+                        {
+                          "id": "cypress-v11-migration",
+                          "name": "Cypress v11 Migration Guide",
+                          "description": "Cypress v11 Migration Guide",
+                          "file": "shared/packages/cypress/cypress-v11-migration"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/cypress/cypress-plugin"
+                    }
+                  ]
                 },
                 {
-                  "id": "webpack-plugins",
-                  "name": "Webpack plugins",
-                  "description": "Webpack plugins",
-                  "file": "shared/packages/webpack/webpack-plugins"
-                }
-              ]
-            },
-            {
-              "name": "Enforce Module Boundaries",
-              "id": "enforce-module-boundaries",
-              "description": "Configuring the enforce module boundaries rule",
-              "itemList": [
-                {
-                  "name": "Ban Dependencies with Certain Tags",
-                  "id": "ban-dependencies-with-tags",
-                  "tags": ["enforce-module-boundaries"],
-                  "file": "shared/recipes/ban-dependencies-with-tags"
+                  "name": "Jest",
+                  "id": "jest",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/jest/jest-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/jest/jest-plugin"
+                    }
+                  ]
                 },
                 {
-                  "name": "Tag in Multiple Dimensions",
-                  "id": "tag-multiple-dimensions",
-                  "tags": ["enforce-module-boundaries"],
-                  "file": "shared/recipes/tag-multiple-dimensions"
+                  "name": "Playwright",
+                  "id": "playwright",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/playwright/playwright-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/playwright/playwright-plugin"
+                    }
+                  ]
                 },
                 {
-                  "name": "Ban External Imports",
-                  "id": "ban-external-imports",
-                  "tags": ["enforce-module-boundaries"],
-                  "file": "shared/recipes/ban-external-imports"
+                  "name": "Storybook",
+                  "id": "storybook",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/storybook/plugin-overview"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "best-practices",
+                          "name": "Storybook best practices for making the most out of Nx",
+                          "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+                          "file": "shared/packages/storybook/best-practices"
+                        },
+                        {
+                          "id": "storybook-9-setup",
+                          "name": "Storybook 9",
+                          "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+                          "file": "shared/packages/storybook/storybook-9-setup"
+                        },
+                        {
+                          "name": "Set up Storybook for React Projects",
+                          "id": "overview-react",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+                          "file": "shared/recipes/storybook/plugin-react"
+                        },
+                        {
+                          "name": "Set up Storybook for Angular Projects",
+                          "id": "overview-angular",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+                          "file": "shared/recipes/storybook/plugin-angular"
+                        },
+                        {
+                          "name": "Set up Storybook for Vue Projects",
+                          "id": "overview-vue",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+                          "file": "shared/recipes/storybook/plugin-vue"
+                        },
+                        {
+                          "name": "Configuring Storybook on Nx",
+                          "id": "configuring-storybook",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how Storybook is configured on your Nx workspace.",
+                          "file": "shared/recipes/storybook/configuring-storybook"
+                        },
+                        {
+                          "name": "One main Storybook instance for all projects",
+                          "id": "one-storybook-for-all",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
+                          "file": "shared/recipes/storybook/one-storybook-for-all"
+                        },
+                        {
+                          "name": "One Storybook instance per scope",
+                          "id": "one-storybook-per-scope",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
+                          "file": "shared/recipes/storybook/one-storybook-per-scope"
+                        },
+                        {
+                          "name": "One main Storybook instance using Storybook Composition",
+                          "id": "one-storybook-with-composition",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
+                          "file": "shared/recipes/storybook/one-storybook-with-composition"
+                        },
+                        {
+                          "name": "How to configure Webpack and Vite for Storybook",
+                          "id": "custom-builder-configs",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+                          "file": "shared/recipes/storybook/custom-builder-configs"
+                        },
+                        {
+                          "name": "Setting up Storybook Interaction Tests with Nx",
+                          "id": "storybook-interaction-tests",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+                          "file": "shared/recipes/storybook/interaction-tests"
+                        },
+                        {
+                          "name": "Upgrading Storybook using the Storybook CLI",
+                          "id": "upgrading-storybook",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+                          "file": "shared/recipes/storybook/upgrading-storybook"
+                        },
+                        {
+                          "name": "Setting up Storybook Composition with Nx",
+                          "id": "storybook-composition-setup",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+                          "file": "shared/recipes/storybook/storybook-composition-setup"
+                        },
+                        {
+                          "name": "Angular: Set up Compodoc for Storybook on Nx",
+                          "id": "angular-storybook-compodoc",
+                          "tags": ["storybook"],
+                          "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+                          "file": "shared/recipes/storybook/angular-storybook-compodoc"
+                        },
+                        {
+                          "name": "Angular: Configuring styles and preprocessor options",
+                          "id": "angular-configuring-styles",
+                          "tags": ["storybook"],
+                          "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+                          "file": "shared/recipes/storybook/angular-configuring-styles"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/storybook/plugin-overview"
+                    }
+                  ]
                 },
                 {
-                  "name": "Tags Allow List",
-                  "id": "tags-allow-list",
-                  "tags": ["enforce-module-boundaries"],
-                  "file": "shared/recipes/tags-allow-list"
-                }
-              ]
-            },
-            {
-              "name": "Tips and tricks",
-              "id": "tips-n-tricks",
-              "description": "Various tips and tricks for using Nx.",
-              "itemList": [
-                {
-                  "name": "Convert from a Standalone Repository to a Monorepo",
-                  "id": "standalone-to-monorepo",
-                  "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo"
-                },
-                {
-                  "name": "Configuring ESLint with Typescript",
-                  "id": "eslint",
-                  "file": "shared/eslint"
-                },
-                {
-                  "name": "Switch to Workspaces and TS Project References",
-                  "id": "switch-to-workspaces-project-references",
-                  "tags": ["project-linking"],
-                  "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references"
-                },
-                {
-                  "name": "Enable Typescript Batch Mode",
-                  "id": "enable-tsc-batch-mode",
-                  "file": "shared/recipes/enable-tsc-batch-mode"
-                },
-                {
-                  "name": "Define Secondary Entrypoints for Typescript Packages",
-                  "id": "define-secondary-entrypoints",
-                  "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints"
-                },
-                {
-                  "name": "Compile Typescript Packages to Multiple Formats",
-                  "id": "compile-multiple-formats",
-                  "file": "shared/recipes/tips-n-tricks/compile-multiple-formats"
-                },
-                {
-                  "name": "Keep Nx Versions in Sync",
-                  "id": "keep-nx-versions-in-sync",
-                  "tags": ["automate-updating-dependencies", "add"],
-                  "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync"
-                },
-                {
-                  "name": "Define Environment Variables",
-                  "id": "define-environment-variables",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/define-environment-variables"
-                },
-                {
-                  "name": "Configuring Browser Support",
-                  "id": "browser-support",
-                  "file": "shared/guides/browser-support"
-                },
-                {
-                  "name": "Include Assets in Build",
-                  "id": "include-assets-in-build",
-                  "tags": [],
-                  "file": "shared/recipes/include-assets-in-build"
-                },
-                {
-                  "name": "Include All package.json Files as Projects",
-                  "id": "include-all-packagejson",
-                  "tags": [],
-                  "file": "shared/recipes/include-all-packagejson"
-                },
-                {
-                  "name": "Identify Dependencies Between Folders",
-                  "id": "identify-dependencies-between-folders",
-                  "tags": [],
-                  "file": "shared/recipes/identify-dependencies-between-folders"
-                },
-                {
-                  "name": "Disable Graph Links Created from Analyzing Source Files",
-                  "id": "analyze-source-files",
-                  "tags": ["explore-graph"],
-                  "file": "shared/recipes/analyze-source-files"
-                },
-                {
-                  "name": "Use JavaScript instead TypeScript",
-                  "id": "js-and-ts",
-                  "file": "shared/guides/js-and-ts"
-                },
-                {
-                  "name": "Altering Migration Process",
-                  "id": "advanced-update",
-                  "tags": ["automate-updating-dependencies"],
-                  "file": "shared/recipes/advanced-update"
-                },
-                {
-                  "name": "Using Yarn PnP",
-                  "id": "yarn-pnp",
-                  "tags": ["yarn", "Plug and Play"],
-                  "file": "shared/recipes/yarn-pnp"
-                },
-                {
-                  "name": "Switching to ESLint's flat config format",
-                  "id": "flat-config",
-                  "tags": ["eslint", "flat config"],
-                  "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint"
+                  "name": "Detox",
+                  "id": "detox",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/detox/detox-plugin"
+                    },
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/detox/detox-plugin"
+                    }
+                  ]
                 }
               ]
             }
@@ -1146,8 +1813,8 @@
               "itemList": [
                 {
                   "name": "Free Licenses & Trials",
-                  "id": "free-licenses-and-trials",
-                  "file": "shared/features/powerpack/free-licenses-and-trials"
+                  "id": "licenses-and-trials",
+                  "file": "shared/features/powerpack/licenses-and-trials"
                 },
                 {
                   "name": "Run Language-Agnostic Conformance Rules",
@@ -1162,13 +1829,6 @@
                   "id": "owners",
                   "tags": ["owners"],
                   "file": "shared/features/powerpack/owners"
-                },
-                {
-                  "name": "Self-Host the Remote Cache",
-                  "description": "Host the remote cache without using Nx Cloud",
-                  "id": "custom-caching",
-                  "tags": ["custom-caching"],
-                  "file": "shared/features/powerpack/custom-caching"
                 }
               ]
             }
@@ -1355,6 +2015,120 @@
               "id": "releases",
               "tags": [],
               "file": "shared/reference/releases"
+            },
+            {
+              "name": "API",
+              "id": "core-api",
+              "description": "API references for Nx Workspace",
+              "itemList": [
+                {
+                  "name": "nx",
+                  "id": "nx",
+                  "description": "Nx package"
+                },
+                {
+                  "name": "workspace",
+                  "id": "workspace",
+                  "description": "Workspace package."
+                },
+                {
+                  "name": "owners",
+                  "id": "owners",
+                  "description": "powerpack-owners package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "file": "shared/packages/owners/owners-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "conformance",
+                  "id": "conformance",
+                  "description": "powerpack-conformance package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "file": "shared/packages/conformance/conformance-plugin"
+                    },
+                    {
+                      "name": "Create a Conformance Rule",
+                      "id": "create-conformance-rule",
+                      "file": "shared/packages/conformance/create-conformance-rule"
+                    }
+                  ]
+                },
+                {
+                  "name": "azure-cache",
+                  "id": "azure-cache",
+                  "description": "powerpack-azure-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "file": "shared/packages/azure-cache/azure-cache-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "gcs-cache",
+                  "id": "gcs-cache",
+                  "description": "powerpack-gcs-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "file": "shared/packages/gcs-cache/gcs-cache-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "s3-cache",
+                  "id": "s3-cache",
+                  "description": "powerpack-s3-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "file": "shared/packages/s3-cache/s3-cache-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "shared-fs-cache",
+                  "id": "shared-fs-cache",
+                  "description": "powerpack-shared-fs-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "devkit",
+                  "id": "devkit",
+                  "description": "Devkit package."
+                },
+                {
+                  "name": "plugin",
+                  "id": "plugin",
+                  "description": "Plugin package."
+                },
+                {
+                  "name": "web",
+                  "id": "web",
+                  "description": "Web package."
+                },
+                {
+                  "name": "create-nx-workspace",
+                  "id": "create-nx-workspace",
+                  "description": "create-nx-workspace package."
+                }
+              ]
             }
           ]
         },
@@ -1503,7 +2277,7 @@
               "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/ci/intro/ci-with-nx",
+              "path": "/ci/features",
               "isExternal": true
             },
             {
@@ -1600,7 +2374,7 @@
           ]
         },
         {
-          "name": "Recipes",
+          "name": "Guides",
           "id": "recipes",
           "description": "Focused instructions to complete a specific task",
           "itemList": [
@@ -1685,6 +2459,48 @@
               "id": "publish-plugin",
               "tags": ["create-your-own-plugin"],
               "file": "shared/recipes/plugins/publish-plugin"
+            },
+            {
+              "name": "Hook into the Task Running Lifecycle",
+              "id": "task-running-lifecycle",
+              "tags": ["running-tasks"],
+              "file": "shared/recipes/plugins/task-running-lifecycle"
+            }
+          ]
+        },
+        {
+          "name": "API",
+          "id": "api",
+          "description": "API references for extending Nx",
+          "itemList": [
+            {
+              "name": "Devkit",
+              "id": "nx-devkit",
+              "description": "Core utilities for building Nx plugins",
+              "itemList": [
+                {
+                  "name": "Overview",
+                  "id": "overview",
+                  "file": "generated/devkit/README"
+                },
+                {
+                  "name": "Ng CLI Adapter",
+                  "id": "ngcli-adapter",
+                  "file": "generated/devkit/ngcli_adapter/README"
+                }
+              ]
+            },
+            {
+              "name": "Nx Plugin",
+              "id": "plugin",
+              "description": "Plugin package.",
+              "itemList": [
+                {
+                  "id": "overview",
+                  "name": "Overview",
+                  "file": "shared/packages/plugin/plugin"
+                }
+              ]
             }
           ]
         }
@@ -1696,55 +2512,15 @@
       "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
       "itemList": [
         {
-          "name": "Intro",
-          "id": "intro",
-          "description": "Learn about basic Nx Cloud knowledge.",
-          "itemList": [
-            {
-              "name": "CI with Nx",
-              "id": "ci-with-nx",
-              "file": "nx-cloud/intro/ci-with-nx"
-            },
-            {
-              "name": "Why Nx Cloud?",
-              "id": "why-nx-cloud",
-              "file": "nx-cloud/intro/why-nx-cloud"
-            },
-            {
-              "name": "Connect to Nx Cloud",
-              "id": "connect-to-nx-cloud",
-              "file": "nx-cloud/intro/connect-to-cloud"
-            },
-            {
-              "name": "Tutorials",
-              "id": "tutorials",
-              "description": "Tutorials setting up CI with Nx",
-              "itemList": [
-                {
-                  "name": "Circle CI with Nx",
-                  "id": "circle",
-                  "file": "nx-cloud/tutorial/circle"
-                },
-                {
-                  "name": "GitHub Actions with Nx",
-                  "id": "github-actions",
-                  "file": "nx-cloud/tutorial/github-actions"
-                }
-              ]
-            }
-          ]
-        },
-        {
           "name": "Features",
           "id": "features",
-          "description": "Features of Nx and Nx Cloud that improve CI",
+          "description": "Features of Nx and Nx Cloud that improve CI. Get started by connecting to Nx Cloud by running `nx connect`.",
           "itemList": [
             {
-              "name": "Run Only Tasks Affected by a PR",
-              "description": "This allows to only run tasks on projects that got changed in a given PR.",
-              "tags": ["run-tasks"],
-              "id": "affected",
-              "file": "shared/using-nx/affected"
+              "name": "AI-Powered Self-Healing CI",
+              "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
+              "id": "self-healing-ci",
+              "file": "shared/features/self-healing-ci"
             },
             {
               "name": "Use Remote Caching (Nx Replay)",
@@ -1760,6 +2536,19 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
+              "name": "Run Only Tasks Affected by a PR",
+              "description": "This allows to only run tasks on projects that got changed in a given PR.",
+              "tags": ["run-tasks"],
+              "id": "affected",
+              "file": "shared/using-nx/affected"
+            },
+            {
+              "name": "Dynamically Allocate Agents",
+              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+              "id": "dynamic-agents",
+              "file": "nx-cloud/features/dynamic-agents"
+            },
+            {
               "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
               "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
@@ -1772,19 +2561,15 @@
               "file": "nx-cloud/features/flaky-tasks"
             },
             {
-              "name": "Dynamically Allocate Agents",
-              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-              "id": "dynamic-agents",
-              "file": "nx-cloud/features/dynamic-agents"
-            },
-            {
               "name": "Explain With AI",
               "id": "explain-with-ai",
+              "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
               "file": "nx-cloud/features/explain-with-ai"
             },
             {
               "name": "GitHub Integration",
               "id": "github-integration",
+              "description": "Learn how to setup the GitHub integration for Nx Cloud.",
               "file": "nx-cloud/features/github-integration"
             }
           ]
@@ -1818,6 +2603,11 @@
               "file": "nx-cloud/concepts/cache-security"
             },
             {
+              "name": "Heartbeat",
+              "id": "heartbeat",
+              "file": "nx-cloud/concepts/heartbeat-and-manual-shutdown-handling"
+            },
+            {
               "name": "Nx Cloud AI",
               "id": "nx-cloud-ai",
               "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
@@ -1826,15 +2616,15 @@
           ]
         },
         {
-          "name": "Recipes",
+          "name": "Guides",
           "id": "recipes",
-          "description": "Learn how to set up Nx Cloud for your workspace.",
+          "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
           "itemList": [
             {
               "name": "Set Up CI",
               "id": "set-up",
-              "description": "Learn how to set up Nx Cloud for your workspace.",
-              "tags": ["distribute-task-execution"],
+              "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
+              "tags": ["distribute-task-execution", "self-heeded-ci"],
               "itemList": [
                 {
                   "name": "Setting up Azure Pipelines",
@@ -2026,13 +2816,32 @@
                       "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
                     }
                   ]
+                },
+                {
+                  "name": "Polygraph",
+                  "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+                  "id": "polygraph",
+                  "tags": ["polygraph"],
+                  "file": "nx-cloud/enterprise/polygraph"
+                },
+                {
+                  "name": "Metadata Only Workspaces",
+                  "id": "metadata-only-workspace",
+                  "tags": ["polygraph"],
+                  "file": "nx-cloud/enterprise/metadata-only-workspace"
+                },
+                {
+                  "name": "Custom Workflows",
+                  "id": "custom-workflows",
+                  "tags": ["polygraph"],
+                  "file": "nx-cloud/enterprise/custom-workflows"
                 }
               ]
             },
             {
               "name": "Other",
               "id": "other",
-              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
               "itemList": [
                 {
                   "name": "Record Non-Nx Commands",
@@ -2085,9 +2894,19 @@
               "file": "nx-cloud/reference/custom-steps"
             },
             {
+              "name": "Custom Images",
+              "id": "custom-images",
+              "file": "nx-cloud/reference/custom-images"
+            },
+            {
               "name": "Environment Variables",
               "id": "env-vars",
               "file": "nx-cloud/reference/env-vars"
+            },
+            {
+              "name": "Credit Pricing",
+              "id": "credits-pricing",
+              "file": "nx-cloud/reference/nx-cloud-credits-pricing"
             },
             {
               "name": "Release Notes",
@@ -2171,7 +2990,7 @@
             },
             {
               "name": "affected",
-              "tags": ["run-tasks"],
+              "tags": ["run-tasks", "affected"],
               "id": "affected",
               "file": "generated/cli/affected"
             },
@@ -2274,6 +3093,12 @@
               "file": "generated/cli/add"
             },
             {
+              "name": "mcp",
+              "id": "mcp",
+              "tags": ["mcp"],
+              "file": "generated/cli/mcp"
+            },
+            {
               "name": "login",
               "id": "login",
               "tags": ["login"],
@@ -2284,6 +3109,24 @@
               "id": "logout",
               "tags": ["login"],
               "file": "generated/cli/logout"
+            },
+            {
+              "name": "fix-ci",
+              "id": "fix-ci",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/fix-ci"
+            },
+            {
+              "name": "record",
+              "id": "record",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/record"
+            },
+            {
+              "name": "start-ci-run",
+              "id": "start-ci-run",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/start-ci-run"
             }
           ]
         },
@@ -2569,10 +3412,10 @@
               "file": "shared/packages/storybook/best-practices"
             },
             {
-              "id": "storybook-7-setup",
-              "name": "Storybook 7",
-              "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-              "file": "shared/packages/storybook/storybook-7-setup"
+              "id": "storybook-9-setup",
+              "name": "Storybook 9",
+              "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+              "file": "shared/packages/storybook/storybook-9-setup"
             }
           ]
         },
@@ -2732,86 +3575,86 @@
           ]
         },
         {
-          "name": "powerpack-owners",
-          "id": "powerpack-owners",
+          "name": "owners",
+          "id": "owners",
           "description": "powerpack-owners package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-owners",
-              "file": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+              "path": "/nx-api/owners",
+              "file": "shared/packages/owners/owners-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-conformance",
-          "id": "powerpack-conformance",
+          "name": "conformance",
+          "id": "conformance",
           "description": "powerpack-conformance package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-conformance",
-              "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+              "path": "/nx-api/conformance",
+              "file": "shared/packages/conformance/conformance-plugin"
             },
             {
               "name": "Create a Conformance Rule",
               "id": "create-conformance-rule",
-              "path": "/nx-api/powerpack-conformance",
-              "file": "shared/packages/powerpack-conformance/create-conformance-rule"
+              "path": "/nx-api/conformance",
+              "file": "shared/packages/conformance/create-conformance-rule"
             }
           ]
         },
         {
-          "name": "powerpack-azure-cache",
-          "id": "powerpack-azure-cache",
+          "name": "azure-cache",
+          "id": "azure-cache",
           "description": "powerpack-azure-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-azure-cache",
-              "file": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+              "path": "/nx-api/azure-cache",
+              "file": "shared/packages/azure-cache/azure-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-gcs-cache",
-          "id": "powerpack-gcs-cache",
+          "name": "gcs-cache",
+          "id": "gcs-cache",
           "description": "powerpack-gcs-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-gcs-cache",
-              "file": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+              "path": "/nx-api/gcs-cache",
+              "file": "shared/packages/gcs-cache/gcs-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-s3-cache",
-          "id": "powerpack-s3-cache",
+          "name": "s3-cache",
+          "id": "s3-cache",
           "description": "powerpack-s3-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-s3-cache",
-              "file": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+              "path": "/nx-api/s3-cache",
+              "file": "shared/packages/s3-cache/s3-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-shared-fs-cache",
-          "id": "powerpack-shared-fs-cache",
+          "name": "shared-fs-cache",
+          "id": "shared-fs-cache",
           "description": "powerpack-shared-fs-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-shared-fs-cache",
-              "file": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+              "path": "/nx-api/shared-fs-cache",
+              "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
             }
           ]
         },
@@ -2825,6 +3668,25 @@
               "name": "Overview",
               "path": "/nx-api/gradle",
               "file": "shared/packages/gradle/gradle-plugin"
+            }
+          ]
+        },
+        {
+          "name": "Module Federation",
+          "id": "module-federation",
+          "description": "Module Federation package.",
+          "itemList": [
+            {
+              "name": "NxModuleFederationPlugin",
+              "id": "nx-module-federation-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-plugin"
+            },
+            {
+              "name": "NxModuleFederationDevServerPlugin",
+              "id": "nx-module-federation-dev-server-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
             }
           ]
         }

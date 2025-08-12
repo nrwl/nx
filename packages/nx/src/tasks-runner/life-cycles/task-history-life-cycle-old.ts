@@ -1,16 +1,18 @@
-import { serializeTarget } from '../../utils/serialize-target';
 import { Task } from '../../config/task-graph';
-import { output } from '../../utils/output';
 import {
   getHistoryForHashes,
   TaskRun,
-  writeTaskRunsToHistory as writeTaskRunsToHistory,
+  writeTaskRunsToHistory,
 } from '../../utils/legacy-task-history';
+import { output } from '../../utils/output';
+import { serializeTarget } from '../../utils/serialize-target';
+import { isTuiEnabled } from '../is-tui-enabled';
 import { LifeCycle, TaskResult } from '../life-cycle';
 
 export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};
   private taskRuns: TaskRun[] = [];
+  private flakyTasks: string[];
 
   startTasks(tasks: Task[]): void {
     for (let task of tasks) {
@@ -37,7 +39,7 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   async endCommand() {
     await writeTaskRunsToHistory(this.taskRuns);
     const history = await getHistoryForHashes(this.taskRuns.map((t) => t.hash));
-    const flakyTasks: string[] = [];
+    this.flakyTasks = [];
 
     // check if any hash has different exit codes => flaky
     for (let hash in history) {
@@ -45,7 +47,7 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
         history[hash].length > 1 &&
         history[hash].some((run) => run.code !== history[hash][0].code)
       ) {
-        flakyTasks.push(
+        this.flakyTasks.push(
           serializeTarget(
             history[hash][0].project,
             history[hash][0].target,
@@ -54,14 +56,22 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
         );
       }
     }
-    if (flakyTasks.length > 0) {
+    // Do not directly print output when using the TUI
+    if (isTuiEnabled()) {
+      return;
+    }
+    this.printFlakyTasksMessage();
+  }
+
+  printFlakyTasksMessage() {
+    if (this.flakyTasks?.length > 0) {
       output.warn({
         title: `Nx detected ${
-          flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'
+          this.flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'
         }`,
         bodyLines: [
           ,
-          ...flakyTasks.map((t) => `  ${t}`),
+          ...this.flakyTasks.map((t) => `  ${t}`),
           '',
           `Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks`,
         ],

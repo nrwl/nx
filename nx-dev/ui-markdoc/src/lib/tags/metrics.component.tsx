@@ -3,7 +3,7 @@
 import { MetricsCTA } from './metrics-cta';
 import { Metric } from './metrics.schema';
 
-interface MetricsProps {
+export interface MetricsProps {
   metrics: Metric[];
   variant?: 'horizontal' | 'vertical';
 }
@@ -14,7 +14,7 @@ export function Metrics({
 }: MetricsProps): JSX.Element {
   if (variant === 'horizontal') {
     return (
-      <div className="mx-auto w-full max-w-none">
+      <div className="not-content mx-auto w-full max-w-none">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {metrics.map((metric, index) => (
             <div
@@ -35,7 +35,7 @@ export function Metrics({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="not-content space-y-8">
       {metrics.map((metric, index) => (
         <div key={index} className="flex flex-col space-y-2">
           <div className="text-4xl font-bold text-slate-700 dark:text-slate-200">

@@ -6,6 +6,7 @@ import {
 import { Preset } from '../utils/presets';
 import {
   angularCliVersion,
+  angularRspackVersion,
   nxVersion,
   typescriptVersion,
 } from '../../utils/versions';
@@ -98,11 +99,11 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         ? `--e2eTestRunner=${opts.e2eTestRunner}`
         : null,
       opts.ssr ? `--ssr` : null,
-      opts.serverRouting ? `--server-routing` : null,
       opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,
       opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,
+      opts.useProjectJson ? `--useProjectJson` : null,
     ].filter((e) => !!e);
   }
 }
@@ -127,6 +128,9 @@ function getPresetDependencies({
         dev: {
           '@angular-devkit/core': angularCliVersion,
           '@nx/angular': nxVersion,
+          '@nx/rspack': bundler === 'rspack' ? nxVersion : undefined,
+          '@nx/angular-rspack':
+            bundler === 'rspack' ? angularRspackVersion : undefined,
           typescript: typescriptVersion,
         },
       };

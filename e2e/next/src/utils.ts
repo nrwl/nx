@@ -6,7 +6,7 @@ import {
   runCLI,
   runCLIAsync,
   runE2ETests,
-} from '../../utils';
+} from '@nx/e2e-utils';
 
 export async function checkApp(
   appName: string,

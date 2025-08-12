@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -155,7 +155,7 @@ describe('Nx Running Tests', () => {
       expect(success).toContain('0');
       expect(success).toContain('1');
 
-      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
+      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrow();
     });
 
     it('should run npm scripts', async () => {
@@ -452,6 +452,33 @@ describe('Nx Running Tests', () => {
         `nx run ${myapp}:build`
       );
     }, 10000);
+
+    it('should default to "run" target when only project is specified and it has a run target', () => {
+      const myapp = uniq('app');
+      runCLI(`generate @nx/web:app apps/${myapp}`);
+
+      // Add a "run" target to the project
+      updateJson(`apps/${myapp}/project.json`, (c) => {
+        c.targets['run'] = {
+          command: 'echo Running the app',
+        };
+        return c;
+      });
+
+      // Running with just the project name should default to the "run" target
+      const output = runCLI(`run ${myapp}`);
+      expect(output).toContain('Running the app');
+      expect(output).toContain(`nx run ${myapp}:run`);
+    });
+
+    it('should still require target when project does not have a run target', () => {
+      const myapp = uniq('app');
+      runCLI(`generate @nx/web:app apps/${myapp}`);
+
+      // Project has no "run" target, so it should fail
+      const result = runCLI(`run ${myapp}`, { silenceError: true });
+      expect(result).toContain('Both project and target have to be specified');
+    });
 
     describe('target defaults + executor specifications', () => {
       it('should be able to run targets with unspecified executor given an appropriate targetDefaults entry', () => {

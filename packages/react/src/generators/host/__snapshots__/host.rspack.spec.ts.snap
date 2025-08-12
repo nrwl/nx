@@ -1,30 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`hostGenerator bundler=rspack should generate host files and configs for SSR 1`] = `
-"const { composePlugins, withNx, withReact } = require('@nx/rspack');
-const { withModuleFederationForSSR } = require('@nx/module-federation/rspack');
-
-const baseConfig = require('./module-federation.config');
-
-const defaultConfig = {
-  ...baseConfig,
-};
-
-// Nx plugins for rspack to build config object from Nx options and context.
-/**
- * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
- * The DTS Plugin can be enabled by setting dts: true
- * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
- */
-module.exports = composePlugins(
-  withNx(),
-  withReact({ ssr: true }),
-  withModuleFederationForSSR(defaultConfig, { dts: false })
-);
-"
-`;
-
-exports[`hostGenerator bundler=rspack should generate host files and configs for SSR 2`] = `
 "// @ts-check
 
 /**
@@ -33,6 +9,12 @@ exports[`hostGenerator bundler=rspack should generate host files and configs for
 const moduleFederationConfig = {
   name: 'test',
   remotes: [],
+  shared: (libraryName, libraryConfig) => {
+    return {
+      ...libraryConfig,
+      eager: true,
+    };
+  },
 };
 
 /**
@@ -43,35 +25,17 @@ module.exports = moduleFederationConfig;
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
-"import { composePlugins, withNx, withReact } from '@nx/rspack';
-import { withModuleFederationForSSR } from '@nx/module-federation/rspack';
-
-import baseConfig from './module-federation.config';
-
-const defaultConfig = {
-  ...baseConfig,
-};
-
-// Nx plugins for rspack to build config object from Nx options and context.
-/**
- * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
- * The DTS Plugin can be enabled by setting dts: true
- * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
- */
-export default composePlugins(
-  withNx(),
-  withReact({ ssr: true }),
-  withModuleFederationForSSR(defaultConfig, { dts: false })
-);
-"
-`;
-
-exports[`hostGenerator bundler=rspack should generate host files and configs for SSR when --typescriptConfiguration=true 2`] = `
 "import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
   remotes: [],
+  shared: (libraryName, libraryConfig) => {
+    return {
+      ...libraryConfig,
+      eager: true,
+    };
+  },
 };
 
 /**
@@ -82,26 +46,49 @@ export default config;
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=false 1`] = `
-"const { composePlugins, withNx, withReact } = require('@nx/rspack');
-const { withModuleFederation } = require('@nx/module-federation/rspack');
+"const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const {
+  NxModuleFederationPlugin,
+  NxModuleFederationDevServerPlugin,
+} = require('@nx/module-federation/rspack');
+const { join } = require('path');
 
-const baseConfig = require('./module-federation.config');
+const config = require('./module-federation.config');
 
-const config = {
-  ...baseConfig,
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/test'),
+    publicPath: 'auto',
+  },
+  devServer: {
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: './tsconfig.app.json',
+      main: './src/main.ts',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config }),
+  ],
 };
-
-// Nx plugins for rspack to build config object from Nx options and context.
-/**
- * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
- * The DTS Plugin can be enabled by setting dts: true
- * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
- */
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(config, { dts: false })
-);
 "
 `;
 
@@ -129,23 +116,46 @@ module.exports = {
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=true 1`] = `
-"import {composePlugins, withNx, withReact} from '@nx/rspack';
-import { withModuleFederation } from '@nx/module-federation/rspack';
-import { ModuleFederationConfig } from '@nx/module-federation';
+"import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
+import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack.js';
+import { join } from 'path';
 
-import baseConfig from './module-federation.config';
+import config from './module-federation.config';
 
-const config: ModuleFederationConfig = {
-  ...baseConfig,
+export default {
+  output: {
+    path: join(__dirname, '../dist/test'),
+    publicPath: 'auto'
+  },
+  devServer: {
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: './tsconfig.app.json',
+      main: './src/main.ts',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ["./src/favicon.ico","./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config }),
+  ],
 };
-
-// Nx plugins for rspack to build config object from Nx options and context.
-/**
- * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
- * The DTS Plugin can be enabled by setting dts: true
- * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
- */
-export default composePlugins(withNx(), withReact(), withModuleFederation(config, { dts: false }));
 "
 `;
 

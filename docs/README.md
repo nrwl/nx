@@ -88,7 +88,7 @@ The documentation website [nx.dev](https://nx.dev) is using custom Markdown synt
 Callouts are available to get the attention of the reader on some specific type of information.
 
 ```markdown
-{% callout type="caution|check|note|warning" title="string" %}
+{% callout type="announcement|caution|check|note|warning" title="string" %}
 Your content goes here.
 {% /callout %}
 ```
@@ -297,6 +297,14 @@ Have a more decent button-like widget that you can place below sections of a tut
 
 ```markdown
 {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
+```
+
+#### Course video embed
+
+This is for embedding a video just like with the Youtube component, but in addition to have a link to a Nx Course (nx.dev/courses) video to improve the discoverability of these courses.
+
+```markdown
+{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
 ```
 
 #### Project Details View

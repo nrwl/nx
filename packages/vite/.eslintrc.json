@@ -1,10 +1,18 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "minimatch",
+            "message": "Please use `picomatch` instead."
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
@@ -30,13 +38,16 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "typescript",
               "vite",
+              "@swc/helpers",
               // we only check if the package is installed
               "eslint",
               // we ensure it is installed and only use it when eslint is installed
-              "@nx/eslint"
+              "@nx/eslint",
+              "ajv"
             ]
           }
         ]

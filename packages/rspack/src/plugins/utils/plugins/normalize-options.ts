@@ -1,16 +1,17 @@
-import { basename, dirname, join, parse, relative, resolve } from 'path';
-import { statSync } from 'fs';
 import {
   normalizePath,
   parseTargetString,
   readCachedProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { statSync } from 'fs';
+import { basename, dirname, join, parse, relative, resolve } from 'path';
 import {
   AssetGlobPattern,
   FileReplacement,
-  NxAppRspackPluginOptions,
   NormalizedNxAppRspackPluginOptions,
+  NxAppRspackPluginOptions,
 } from '../models';
 
 export function normalizeOptions(
@@ -74,12 +75,43 @@ export function normalizeOptions(
     );
   }
 
-  const sourceRoot = projectNode.data.sourceRoot ?? projectNode.data.root;
+  const sourceRoot = getProjectSourceRoot(projectNode.data);
 
   if (!combinedPluginAndMaybeExecutorOptions.main) {
     throw new Error(
       `Missing "main" option for the entry file. Set this option in your Nx rspack plugin.`
     );
+  }
+
+  // Normalize typeCheck and skipTypeChecking options
+  let normalizedTypeCheck: boolean;
+  let normalizedSkipTypeChecking: boolean;
+
+  if (
+    combinedPluginAndMaybeExecutorOptions.typeCheck !== undefined &&
+    combinedPluginAndMaybeExecutorOptions.skipTypeChecking !== undefined
+  ) {
+    // Both options are provided - use typeCheck as the source of truth
+    normalizedTypeCheck = combinedPluginAndMaybeExecutorOptions.typeCheck;
+    normalizedSkipTypeChecking =
+      !combinedPluginAndMaybeExecutorOptions.typeCheck;
+  } else if (combinedPluginAndMaybeExecutorOptions.typeCheck !== undefined) {
+    // Only typeCheck is provided
+    normalizedTypeCheck = combinedPluginAndMaybeExecutorOptions.typeCheck;
+    normalizedSkipTypeChecking =
+      !combinedPluginAndMaybeExecutorOptions.typeCheck;
+  } else if (
+    combinedPluginAndMaybeExecutorOptions.skipTypeChecking !== undefined
+  ) {
+    // Only skipTypeChecking is provided
+    normalizedSkipTypeChecking =
+      combinedPluginAndMaybeExecutorOptions.skipTypeChecking;
+    normalizedTypeCheck =
+      !combinedPluginAndMaybeExecutorOptions.skipTypeChecking;
+  } else {
+    // Neither option is provided - use defaults
+    normalizedTypeCheck = true;
+    normalizedSkipTypeChecking = false;
   }
 
   return {
@@ -106,6 +138,8 @@ export function normalizeOptions(
     ),
     generateIndexHtml:
       combinedPluginAndMaybeExecutorOptions.generateIndexHtml ?? true,
+    useLegacyHtmlPlugin:
+      combinedPluginAndMaybeExecutorOptions.useLegacyHtmlPlugin ?? false,
     main: combinedPluginAndMaybeExecutorOptions.main,
     namedChunks: combinedPluginAndMaybeExecutorOptions.namedChunks ?? !isProd,
     optimization: combinedPluginAndMaybeExecutorOptions.optimization ?? isProd,
@@ -121,8 +155,10 @@ export function normalizeOptions(
     root: workspaceRoot,
     runtimeChunk: combinedPluginAndMaybeExecutorOptions.runtimeChunk ?? true,
     sassImplementation:
-      combinedPluginAndMaybeExecutorOptions.sassImplementation ?? 'sass',
+      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
+      'sass-embedded',
     scripts: combinedPluginAndMaybeExecutorOptions.scripts ?? [],
+    skipTypeChecking: normalizedSkipTypeChecking,
     sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,
     sourceRoot,
     styles: combinedPluginAndMaybeExecutorOptions.styles ?? [],
@@ -130,6 +166,7 @@ export function normalizeOptions(
       combinedPluginAndMaybeExecutorOptions.subresourceIntegrity ?? false,
     target: combinedPluginAndMaybeExecutorOptions.target ?? 'web',
     targetName,
+    typeCheck: normalizedTypeCheck,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
   };
 }

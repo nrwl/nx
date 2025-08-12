@@ -8,9 +8,10 @@ import {
   readJson,
   runCLI,
   runCommand,
+  uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { basename } from 'node:path';
 
 describe('Graph - TS solution setup', () => {
@@ -154,6 +155,30 @@ describe('Graph - TS solution setup', () => {
         },
       },
     });
+    // wildcard exports with trailing values
+    createPackage('pkg15', {
+      sourceFilePaths: ['src/features/some-file.ts'],
+      packageJsonEntryFields: {
+        exports: {
+          './features/*.js': {
+            types: './dist/src/features/*.d.ts',
+            default: './dist/src/features/*.js',
+          },
+        },
+      },
+    });
+    // wildcard exports with no leading or trailing values
+    createPackage('pkg16', {
+      sourceFilePaths: ['src/features/subpath/extra-nested/index.ts'],
+      packageJsonEntryFields: {
+        exports: {
+          './*': {
+            types: './dist/src/features/*/index.d.ts',
+            default: './dist/src/features/*/index.js',
+          },
+        },
+      },
+    });
     // project outside of the package manager workspaces
     createPackage('lib1', { root: 'libs/lib1' });
 
@@ -173,6 +198,8 @@ describe('Graph - TS solution setup', () => {
         json.dependencies['@proj/pkg10'] = 'workspace:*';
         json.dependencies['@proj/pkg11'] = 'workspace:*';
         json.dependencies['@proj/pkg13'] = 'workspace:*';
+        json.dependencies['@proj/pkg15'] = 'workspace:*';
+        json.dependencies['@proj/pkg16'] = 'workspace:*';
         return json;
       });
     }
@@ -207,6 +234,8 @@ describe('Graph - TS solution setup', () => {
         { path: '../pkg12' },
         { path: '../pkg13' },
         { path: '../pkg14' },
+        { path: '../pkg15' },
+        { path: '../pkg16' },
       ];
       return json;
     });
@@ -226,13 +255,15 @@ describe('Graph - TS solution setup', () => {
       import { util1 } from '@proj/pkg11/utils/util1';
       import { pkg12 } from '@proj/pkg12/feature1';
       import { pkg13 } from '@proj/pkg14';
+      import { some_file } from '@proj/pkg15/features/some-file.js';
+      import { pkg16 } from '@proj/pkg16/subpath/extra-nested';
       // this is an invalid import that doesn't match any TS path alias and
       // it's not included in the package manager workspaces, it should not
       // be picked up as a dependency
       import { lib1 } from '@proj/lib1';
 
       // use the correct imports, leave out the invalid ones so it's easier to remove them later
-      export const pkgParent = pkg2 + pkg4 + pkg5 + pkg6 + pkg7 + pkg8 + pkg9 + pkg10 + util1 + pkg13;
+      export const pkgParent = pkg2 + pkg4 + pkg5 + pkg6 + pkg7 + pkg8 + pkg9 + pkg10 + util1 + pkg13 + some_file + pkg16;
     `
     );
 
@@ -253,6 +284,8 @@ describe('Graph - TS solution setup', () => {
       '@proj/pkg10',
       '@proj/pkg11',
       '@proj/pkg13',
+      '@proj/pkg15',
+      '@proj/pkg16',
     ]);
 
     // assert build fails due to the invalid imports
@@ -287,6 +320,155 @@ describe('Graph - TS solution setup', () => {
     );
   });
 
+  it('should detect dependencies correctly when using Node.js subpath imports', () => {
+    const pmc = getPackageManagerCommand();
+
+    const pkg1 = uniq('pkg1');
+    createPackage(pkg1, {
+      sourceFilePaths: [
+        'src/file1.ts',
+        'src/nested/file2.ts',
+        'src/file3.ts',
+        'src/file4.ts',
+      ],
+      packageJsonEntryFields: {
+        imports: {
+          '#*': './src/*.ts',
+          '#file2': './src/nested/file2.ts',
+          '#file3': {
+            types: './src/file3.ts',
+            default: './src/file3.ts',
+          },
+          '#file4': 'external-package',
+        },
+      },
+    });
+    const pkg2 = uniq('pkg2');
+    createPackage(pkg2, {
+      sourceFilePaths: [
+        'src/file1.ts',
+        'src/nested/file2.ts',
+        'src/file3.ts',
+        'src/file4.ts',
+      ],
+      packageJsonEntryFields: {
+        imports: {
+          '#*': './src/*.ts',
+          '#file2': './src/nested/file2.ts',
+          '#file3': {
+            types: './src/file3.ts',
+            default: './src/file3.ts',
+          },
+          '#file4': 'external-package',
+        },
+      },
+    });
+
+    // create a fake external package
+    createFile(
+      'temp-external-package/package.json',
+      JSON.stringify(
+        {
+          name: 'external-package',
+          version: '1.0.0',
+          exports: {
+            '.': {
+              types: './index.d.ts',
+              default: './index.js',
+            },
+            './package.json': './package.json',
+          },
+        },
+        null,
+        2
+      )
+    );
+    createFile(
+      'temp-external-package/index.js',
+      `export const externalPackage = 'external-package';`
+    );
+    createFile(
+      'temp-external-package/index.d.ts',
+      `export const externalPackage: string;`
+    );
+    // create a tarball of the external package
+    runCommand('cd temp-external-package && npm pack');
+    // add the external package as a dependency
+    updateJson('package.json', (json) => {
+      json.dependencies ??= {};
+      json.dependencies['external-package'] =
+        'file:./temp-external-package/external-package-1.0.0.tgz';
+      return json;
+    });
+    // install dependencies to update the lock file
+    runCommand(pmc.install);
+
+    createFile(
+      `packages/${pkg1}/src/main.ts`,
+      `
+      import { file1 } from '#file1';
+      import { file2 } from '#file2';
+      import { file3 } from '#file3';
+      import { externalPackage } from '#file4';
+
+      export const main = file1 + file2 + file3 + externalPackage;
+      `
+    );
+    createFile(
+      `packages/${pkg2}/src/main.ts`,
+      `
+      import { file1 } from '#file1';
+      import { file2 } from '#file2';
+      import { file3 } from '#file3';
+      import { externalPackage } from '#file4';
+
+      export const main = file1 + file2 + file3 + externalPackage;
+      `
+    );
+
+    // force the graph to be generated
+    runCLI(`reset`);
+    runCLI(`report`);
+    const graph = readJson('.nx/workspace-data/project-graph.json');
+    // only `external-package` is detected as a dependency, the rest of the
+    // imports point to internal files of each project
+    expect(
+      graph.dependencies[`@proj/${pkg1}`].map((d) => d.target)
+    ).toStrictEqual(['npm:external-package']);
+    expect(
+      graph.dependencies[`@proj/${pkg2}`].map((d) => d.target)
+    ).toStrictEqual(['npm:external-package']);
+
+    // assert build succeeds, tsc outputs nothing when successful
+    expect(runCommand(`${pmc.exec} tsc -b packages/${pkg1}`)).toBe('');
+    checkFilesExist(
+      `packages/${pkg1}/dist/src/file1.js`,
+      `packages/${pkg1}/dist/src/file1.d.ts`,
+      `packages/${pkg1}/dist/src/nested/file2.js`,
+      `packages/${pkg1}/dist/src/nested/file2.d.ts`,
+      `packages/${pkg1}/dist/src/file3.js`,
+      `packages/${pkg1}/dist/src/file3.d.ts`,
+      `packages/${pkg1}/dist/src/file4.js`,
+      `packages/${pkg1}/dist/src/file4.d.ts`,
+      `packages/${pkg1}/dist/src/main.js`,
+      `packages/${pkg1}/dist/src/main.d.ts`
+    );
+    // assert build succeeds, tsc outputs nothing when successful
+    expect(runCommand(`${pmc.exec} tsc -b packages/${pkg2}`)).toBe('');
+    checkFilesExist(
+      `packages/${pkg2}/dist/src/file1.js`,
+      `packages/${pkg2}/dist/src/file1.d.ts`,
+      `packages/${pkg2}/dist/src/nested/file2.js`,
+      `packages/${pkg2}/dist/src/nested/file2.d.ts`,
+      `packages/${pkg2}/dist/src/file3.js`,
+      `packages/${pkg2}/dist/src/file3.d.ts`,
+      `packages/${pkg2}/dist/src/file4.js`,
+      `packages/${pkg2}/dist/src/file4.d.ts`,
+      `packages/${pkg2}/dist/src/main.js`,
+      `packages/${pkg2}/dist/src/main.d.ts`
+    );
+  });
+
   function createPackage(
     name: string,
     options?: {
@@ -296,6 +478,7 @@ describe('Graph - TS solution setup', () => {
         main?: string;
         types?: string;
         exports?: string | Record<string, any>;
+        imports?: Record<string, any>;
       };
     }
   ): void {
@@ -331,7 +514,7 @@ describe('Graph - TS solution setup', () => {
 
     const sourceFilePaths = options?.sourceFilePaths ?? ['src/index.ts'];
     for (const sourceFilePath of sourceFilePaths) {
-      const fileName = basename(sourceFilePath, '.ts');
+      const fileName = basename(sourceFilePath, '.ts').replace(/-/g, '_');
       createFile(
         `${root}/${sourceFilePath}`,
         `export const ${

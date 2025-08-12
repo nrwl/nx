@@ -33,6 +33,72 @@ import {
   typesReactVersion,
 } from '../../../utils/versions';
 
+export function getDefaultTemplateVariables(
+  host: Tree,
+  options: NormalizedSchema
+) {
+  const hasStyleFile = ['scss', 'css', 'less'].includes(options.style);
+  const appTests = getAppTests(options);
+  return {
+    ...options.names,
+    ...options,
+    typesNodeVersion,
+    typesReactDomVersion,
+    reactRouterVersion,
+    typesReactVersion,
+    reactDomVersion,
+    reactVersion,
+    reactRouterIsBotVersion,
+    js: !!options.js, // Ensure this is defined in template
+    tmpl: '',
+    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    appTests,
+    inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
+    style: options.style === 'tailwind' ? 'css' : options.style,
+    hasStyleFile,
+    isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
+    port: options.port ?? 4200,
+  };
+}
+
+export function createNxRspackPluginOptions(
+  options: NormalizedSchema,
+  rootOffset: string,
+  tsx: boolean = true
+): WithNxOptions & WithReactOptions {
+  return {
+    target: 'web',
+    outputPath: options.isUsingTsSolutionConfig
+      ? 'dist'
+      : joinPathFragments(
+          rootOffset,
+          'dist',
+          options.appProjectRoot != '.'
+            ? options.appProjectRoot
+            : options.projectName
+        ),
+    index: './src/index.html',
+    baseHref: '/',
+    main: maybeJs(
+      {
+        js: options.js,
+        useJsx: true,
+      },
+      `./src/main.${tsx ? 'tsx' : 'ts'}`
+    ),
+    tsConfig: './tsconfig.app.json',
+    assets: ['./src/favicon.ico', './src/assets'],
+    styles:
+      options.styledModule || !options.hasStyles
+        ? []
+        : [
+            `./src/styles.${
+              options.style !== 'tailwind' ? options.style : 'css'
+            }`,
+          ],
+  };
+}
+
 export async function createApplicationFiles(
   host: Tree,
   options: NormalizedSchema
@@ -51,7 +117,6 @@ export async function createApplicationFiles(
   } else {
     styleSolutionSpecificAppFiles = '../files/style-css-module';
   }
-  const hasStyleFile = ['scss', 'css', 'less'].includes(options.style);
 
   const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     host,
@@ -66,26 +131,7 @@ export async function createApplicationFiles(
     host,
     options.appProjectRoot
   );
-  const appTests = getAppTests(options);
-  const templateVariables = {
-    ...options.names,
-    ...options,
-    typesNodeVersion,
-    typesReactDomVersion,
-    reactRouterVersion,
-    typesReactVersion,
-    reactDomVersion,
-    reactVersion,
-    reactRouterIsBotVersion,
-    js: !!options.js, // Ensure this is defined in template
-    tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-    appTests,
-    inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
-    style: options.style === 'tailwind' ? 'css' : options.style,
-    hasStyleFile,
-    isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
-  };
+  const templateVariables = getDefaultTemplateVariables(host, options);
 
   if (options.bundler === 'vite' && !options.useReactRouter) {
     generateFiles(
@@ -263,43 +309,6 @@ function createNxWebpackPluginOptions(
       {
         js: options.js,
         useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
-      },
-      `./src/main.tsx`
-    ),
-    tsConfig: './tsconfig.app.json',
-    assets: ['./src/favicon.ico', './src/assets'],
-    styles:
-      options.styledModule || !options.hasStyles
-        ? []
-        : [
-            `./src/styles.${
-              options.style !== 'tailwind' ? options.style : 'css'
-            }`,
-          ],
-  };
-}
-
-function createNxRspackPluginOptions(
-  options: NormalizedSchema,
-  rootOffset: string
-): WithNxOptions & WithReactOptions {
-  return {
-    target: 'web',
-    outputPath: options.isUsingTsSolutionConfig
-      ? 'dist'
-      : joinPathFragments(
-          rootOffset,
-          'dist',
-          options.appProjectRoot != '.'
-            ? options.appProjectRoot
-            : options.projectName
-        ),
-    index: './src/index.html',
-    baseHref: '/',
-    main: maybeJs(
-      {
-        js: options.js,
-        useJsx: true,
       },
       `./src/main.tsx`
     ),

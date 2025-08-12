@@ -22,6 +22,7 @@ import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+import { detectModuleFormat } from './lib/detect-module-format';
 
 const TERMINAL_RESET = '\x1b[0m';
 
@@ -41,15 +42,24 @@ function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
   return () => {
     if (timeoutId) {
       return pendingPromise;
+    if (!pendingPromise) {
+      pendingPromise = new Promise<T>((resolve, reject) => {
+        timeoutId = setTimeout(() => {
+          fn()
+            .then((result) => {
+              pendingPromise = null;
+              resolve(result);
+            })
+            .catch((error) => {
+              pendingPromise = null;
+              reject(error);
+            })
+            .finally(() => {
+              clearTimeout(timeoutId);
+            });
+        }, wait);
+      });
     }
-
-    pendingPromise = new Promise<T>((resolve, reject) => {
-      timeoutId = setTimeout(() => {
-        fn().then(resolve, reject);
-        timeoutId = null;
-        pendingPromise = null;
-      }, wait);
-    });
 
     return pendingPromise;
   };
@@ -104,6 +114,17 @@ export async function* nodeExecutor(
     buildOptions,
     buildTargetExecutor
   );
+
+  // Detect module format for the project
+  const moduleFormat = detectModuleFormat({
+    projectRoot: project.data.root,
+    workspaceRoot: context.root,
+    tsConfig:
+      buildOptions.tsConfig ||
+      join(context.root, project.data.root, 'tsconfig.json'),
+    main: buildOptions.main || fileToRun,
+    buildOptions,
+  });
 
   let additionalExitHandler: null | (() => void) = null;
   let currentTask: ActiveTask = null;
@@ -171,9 +192,13 @@ export async function* nodeExecutor(
           if (task.killed) return;
 
           // Run the program
-          task.promise = new Promise((resolve, reject) => {
+          task.promise = new Promise<void>((resolve, reject) => {
+            const loaderFile =
+              moduleFormat === 'esm'
+                ? 'node-with-esm-loader'
+                : 'node-with-require-overrides';
             task.childProcess = fork(
-              joinPathFragments(__dirname, 'node-with-require-overrides'),
+              joinPathFragments(__dirname, loaderFile),
               options.args ?? [],
               {
                 execArgv: getExecArgv(options),
@@ -218,7 +243,7 @@ export async function* nodeExecutor(
                 if (code !== 0) {
                   error(new Error(`Process exited with code ${code}`));
                 } else {
-                  done();
+                  resolve(done());
                 }
               }
               resolve({ success: true });
@@ -260,8 +285,12 @@ export async function* nodeExecutor(
     };
 
     const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
-      additionalExitHandler?.();
-      await currentTask?.stop(signal);
+      if (typeof additionalExitHandler === 'function') {
+        additionalExitHandler();
+      }
+      if (typeof currentTask?.stop === 'function') {
+        await currentTask.stop(signal);
+      }
       for (const task of tasks) {
         await task.stop(signal);
       }

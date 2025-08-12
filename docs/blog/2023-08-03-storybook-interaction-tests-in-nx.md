@@ -2,7 +2,7 @@
 title: 'Storybook Interaction Tests in Nx'
 slug: 'storybook-interaction-tests-in-nx'
 authors: ['Katerina Skroumpelou']
-cover_image: '/blog/images/2023-08-03/NfJA7VBZvDwyyZHmV8qsiw.png'
+cover_image: '/blog/images/2023-08-03/NfJA7VBZvDwyyZHmV8qsiw.avif'
 tags: [nx]
 description: Nx 16.6 introduces Storybook interaction tests, offering automated UI testing, Jest and Playwright integration, and a streamlined workflow.
 ---
@@ -25,7 +25,7 @@ You write a story to set up the component's initial state, simulate user behavio
 
 ## Setting Up Storybook Interaction Tests on Nx
 
-You can read our detailed guide on how to set up Storybook interaction tests on Nx, here: [/recipes/storybook/storybook-interaction-tests](/recipes/storybook/storybook-interaction-tests).
+You can read our detailed guide on how to set up Storybook interaction tests on Nx, here: [/technologies/test-tools/storybook/recipes/storybook-interaction-tests](technologies/test-tools/storybook/recipes/storybook-interaction-tests).
 
 ## Writing Interaction Tests in Storybook
 
@@ -63,7 +63,7 @@ Moreover, since Storybook isolates each component, you can ensure that the tests
 ## Useful Links
 
 - [https://storybook.js.org/docs/react/writing-tests/interaction-testing](https://storybook.js.org/docs/react/writing-tests/interaction-testing)
-- [/recipes/storybook/storybook-interaction-tests](/recipes/storybook/storybook-interaction-tests)
+- [/technologies/test-tools/storybook/recipes/storybook-interaction-tests](technologies/test-tools/storybook/recipes/storybook-interaction-tests)
 
 ## Learn more
 

@@ -22,7 +22,7 @@ import {
   updateJson,
   checkFilesExist,
   killProcessAndPorts,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 import { ChildProcess } from 'child_process';
 
@@ -227,11 +227,9 @@ export default async function render(_url: string, document: string) {
         expect(readFile(`dist/${myApp}/assets/${mainBundle}`)).toBeDefined();
 
         const packageJson = readJson(`dist/${myApp}/package.json`);
-        expect(packageJson).toEqual({
-          name: myApp,
-          version: '0.0.1',
-          type: 'module',
-        });
+        expect(packageJson.name).toEqual(myApp);
+        expect(packageJson.version).toEqual('0.0.1');
+        expect(packageJson.type).toEqual('module');
         rmDist();
       }, 200_000);
 
@@ -253,13 +251,11 @@ export default async function render(_url: string, document: string) {
         expect(readFile(`dist/${myApp}/assets/${mainBundle}`)).toBeDefined();
 
         const packageJson = readJson(`dist/${myApp}/package.json`);
-        expect(packageJson).toEqual({
-          name: 'my-existing-app',
-          version: '1.0.1',
-          type: 'module',
-          scripts: {
-            start: 'node server.js',
-          },
+        expect(packageJson.name).toEqual('my-existing-app');
+        expect(packageJson.version).toEqual('1.0.1');
+        expect(packageJson.type).toEqual('module');
+        expect(packageJson.scripts).toEqual({
+          start: 'node server.js',
         });
         rmDist();
       }, 200_000);

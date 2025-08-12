@@ -18,7 +18,7 @@
       "name": {
         "description": "The name of the application.",
         "type": "string",
-        "pattern": "^[a-zA-Z][^:]*$",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
         "x-priority": "important"
       },
       "style": {
@@ -127,12 +127,6 @@
         "description": "Create an application with stricter type checking and build optimization options.",
         "default": true
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "port": {
         "type": "number",
         "description": "The port at which the remote application should be served."
@@ -168,7 +162,7 @@
       "bundler": {
         "description": "Bundler to use to build the application.",
         "type": "string",
-        "enum": ["esbuild", "webpack"],
+        "enum": ["esbuild", "rspack", "webpack"],
         "default": "esbuild",
         "x-prompt": "Which bundler do you want to use to build the application?",
         "x-priority": "important"
@@ -180,7 +174,7 @@
         "default": false
       },
       "serverRouting": {
-        "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "description": "Creates a server application using the Server Routing and App Engine APIs for application using the `application` builder (Developer Preview). _Note: this is only supported in Angular versions 19.x.x_. From Angular 20 onwards, SSR will always enable server routing when using the `application` builder.",
         "type": "boolean"
       }
     },

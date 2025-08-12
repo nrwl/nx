@@ -1,10 +1,10 @@
-import { ProjectDetailsHeader } from '@nx/graph-internal/project-details';
+import { ProjectDetailsHeader } from '@nx/graph-internal-project-details';
 import {
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
 import {
   isRouteErrorResponse,
   useParams,

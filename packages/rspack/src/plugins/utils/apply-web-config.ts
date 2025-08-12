@@ -1,24 +1,26 @@
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
-  type RspackPluginInstance,
   type Configuration,
+  type RspackPluginInstance,
   type RuleSetRule,
-  LightningCssMinimizerRspackPlugin,
-  DefinePlugin,
-  HtmlRspackPlugin,
   CssExtractRspackPlugin,
+  DefinePlugin,
   EnvironmentPlugin,
+  HtmlRspackPlugin,
+  LightningCssMinimizerRspackPlugin,
   RspackOptionsNormalized,
 } from '@rspack/core';
-import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import { join, resolve } from 'path';
+import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
 import { getOutputHashFormat } from './hash-format';
-import { normalizeExtraEntryPoints } from './normalize-entry';
+import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import {
   getCommonLoadersForCssModules,
   getCommonLoadersForGlobalCss,
   getCommonLoadersForGlobalStyle,
 } from './loaders/stylesheet-loaders';
 import { NormalizedNxAppRspackPluginOptions } from './models';
+import { normalizeExtraEntryPoints } from './normalize-entry';
 
 export function applyWebConfig(
   options: NormalizedNxAppRspackPluginOptions,
@@ -42,7 +44,9 @@ export function applyWebConfig(
     ? join(options.root, options.index)
     : join(
         options.root,
-        options.projectGraph.nodes[options.projectName].data.sourceRoot,
+        getProjectSourceRoot(
+          options.projectGraph.nodes[options.projectName].data
+        ),
         'index.html'
       );
   options.styles ??= [];
@@ -66,23 +70,39 @@ export function applyWebConfig(
     plugins.push(...instantiateScriptPlugins(options));
   }
   if (options.index && options.generateIndexHtml) {
-    plugins.push(
-      new HtmlRspackPlugin({
-        template: options.index,
-        sri: options.subresourceIntegrity ? 'sha256' : undefined,
-        ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
-        ...(config.output?.scriptType === 'module'
-          ? { scriptLoading: 'module' }
-          : {}),
-      })
-    );
+    if (options.useLegacyHtmlPlugin) {
+      plugins.push(
+        new WriteIndexHtmlPlugin({
+          indexPath: options.index,
+          outputPath: 'index.html',
+          baseHref:
+            typeof options.baseHref === 'string' ? options.baseHref : undefined,
+          sri: options.subresourceIntegrity,
+          scripts: options.scripts,
+          styles: options.styles,
+          crossOrigin:
+            config.output?.scriptType === 'module' ? 'anonymous' : undefined,
+        })
+      );
+    } else {
+      plugins.push(
+        new HtmlRspackPlugin({
+          template: options.index,
+          sri: options.subresourceIntegrity ? 'sha256' : undefined,
+          ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
+          ...(config.output?.scriptType === 'module'
+            ? { scriptLoading: 'module' }
+            : {}),
+        })
+      );
+    }
   }
 
   const minimizer: RspackPluginInstance[] = [];
   if (isProd && stylesOptimization) {
     minimizer.push(
       new LightningCssMinimizerRspackPlugin({
-        test: /\.(?:css|scss|sass|less|styl)$/,
+        test: /\.(?:css|scss|sass|less)$/,
       })
     );
   }
@@ -143,14 +163,14 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             api: 'modern-compiler',
             sassOptions: {
               fiber: false,
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -168,24 +188,6 @@ export function applyWebConfig(
             lessOptions: {
               paths: includePaths,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.module\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForCssModules(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -209,15 +211,15 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -237,25 +239,6 @@ export function applyWebConfig(
               javascriptEnabled: true,
               ...lessPathOptions,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalCss(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -279,15 +262,15 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -312,30 +295,11 @@ export function applyWebConfig(
         },
       ],
     },
-    {
-      test: /\.styl$/,
-      include: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalStyle(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
-            },
-          },
-        },
-      ],
-    },
   ];
 
   const rules: RuleSetRule[] = [
     {
-      test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+      test: /\.css$|\.scss$|\.sass$|\.less$/,
       oneOf: [...cssModuleRules, ...globalCssRules, ...globalStyleRules],
     },
   ];

@@ -2,6 +2,7 @@ import { prompt } from 'enquirer';
 import { RELEASE_TYPES, valid } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { NxReleaseConfig } from '../config/config';
+import { SemverBumpType } from '../version/version-actions';
 import { getGitDiff, parseCommits } from './git';
 import { determineSemverChange } from './semver';
 import { getCommitsRelevantToProjects } from './shared';
@@ -25,7 +26,7 @@ export async function resolveSemverSpecifierFromConventionalCommits(
 export async function resolveSemverSpecifierFromPrompt(
   selectionMessage: string,
   customVersionMessage: string
-): Promise<string> {
+): Promise<SemverBumpType | string> {
   try {
     const reply = await prompt<{ specifier: string }>([
       {
@@ -42,7 +43,7 @@ export async function resolveSemverSpecifierFromPrompt(
       },
     ]);
     if (reply.specifier !== 'custom') {
-      return reply.specifier;
+      return reply.specifier as SemverBumpType;
     } else {
       const reply = await prompt<{ specifier: string }>([
         {
@@ -60,7 +61,8 @@ export async function resolveSemverSpecifierFromPrompt(
       return reply.specifier;
     }
   } catch {
-    // TODO: log the error to the user?
+    // Ensure the cursor is always restored before exiting
+    process.stdout.write('\u001b[?25h');
     // We need to catch the error from enquirer prompt, otherwise yargs will print its help
     process.exit(1);
   }

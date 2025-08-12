@@ -7,8 +7,10 @@ import {
   useLayoutEffect,
   useState,
 } from 'react';
-import { ProjectDetails as ProjectDetailsUi } from '@nx/graph-internal/ui-project-details';
-import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
+import {
+  ProjectDetails as ProjectDetailsUi,
+  ExpandedTargetsProvider,
+} from '@nx/graph-internal-ui-project-details';
 import { twMerge } from 'tailwind-merge';
 
 export function Loading() {
@@ -24,20 +26,45 @@ export function Loading() {
   );
 }
 
+function getInitialPropsForAstro(children: ReactElement) {
+  if (!children || !children.hasOwnProperty('props') || !children.props.value)
+    return null;
+  try {
+    return parseAstroHtmlWrappedJson(children.props.value.toString() as any);
+  } catch {
+    return null;
+  }
+}
+
+function parseAstroHtmlWrappedJson(htmlString: string) {
+  const cleanedString = htmlString
+    .trim()
+    .replace(/^<\w>|<\/\w>$/g, '')
+    .trim()
+    .replace(/&quot;/g, '"');
+  return JSON.parse(cleanedString);
+}
+
+export type ProjectDetailsProps = {
+  height: string;
+  title: string;
+  jsonFile?: string;
+  expandedTargets?: string[];
+  children: ReactElement;
+  isAstro?: boolean;
+};
+
 export function ProjectDetails({
   height,
   title,
   jsonFile,
   expandedTargets = [],
   children,
-}: {
-  height: string;
-  title: string;
-  jsonFile?: string;
-  expandedTargets?: string[];
-  children: ReactElement;
-}): JSX.Element {
-  const [parsedProps, setParsedProps] = useState<any>();
+  isAstro = false,
+}: ProjectDetailsProps): JSX.Element {
+  const [parsedProps, setParsedProps] = useState<any>(
+    isAstro ? getInitialPropsForAstro(children) : null
+  );
   const elementRef = createRef<HTMLDivElement>();
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
@@ -78,7 +105,7 @@ export function ProjectDetails({
   if (!jsonFile && !parsedProps) {
     if (!children || !children.hasOwnProperty('props')) {
       return (
-        <div className="no-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
+        <div className="not-content no-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">
             No JSON provided for graph, use JSON code fence to embed data for
             the graph.
@@ -91,19 +118,16 @@ export function ProjectDetails({
       setParsedProps(JSON.parse(children?.props.children as any));
     } catch {
       return (
-        <div className="not-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
+        <div className="not-content not-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">Could not parse JSON for graph:</p>
           <pre className="p-4 text-sm">{children?.props.children as any}</pre>
         </div>
       );
     }
   }
-  if (!parsedProps) {
-    return <Loading />;
-  }
 
-  return (
-    <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+  return parsedProps ? (
+    <div className="not-content w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       {title && (
         <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
           {title}
@@ -111,7 +135,10 @@ export function ProjectDetails({
       )}
       <div
         id="project-details-container"
-        className={twMerge('not-prose', height && 'overflow-y-auto')}
+        className={twMerge(
+          'not-content not-prose',
+          height && 'overflow-y-auto'
+        )}
         style={{ height }}
         ref={elementRef}
       >
@@ -126,5 +153,7 @@ export function ProjectDetails({
         </div>
       </div>
     </div>
+  ) : (
+    <Loading />
   );
 }

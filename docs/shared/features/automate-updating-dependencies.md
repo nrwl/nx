@@ -1,7 +1,7 @@
 ---
 title: Automate Updating Dependencies
 description: Learn how to use Nx migrate to automatically update package dependencies, configuration files, and source code to match new package versions.
-keywords: [update]
+keywords: [update, migrate]
 ---
 
 # Automate Updating Dependencies
@@ -23,11 +23,15 @@ To update your workspace, run:
 npx nx migrate latest
 ```
 
+{% callout type="note" title="Visual migration tool from Nx Console" %}
+Want a more visual and guided way to migrate? Check out the [Migrate UI](/recipes/nx-console/console-migrate-ui) that comes with the [Nx Console extension](/getting-started/editor-setup).
+{% /callout %}
+
 ## How Does It Work?
 
-Nx knows where its configuration files are located and ensures they match the expected format. This automated update process, commonly referred to as "migration," becomes even **more powerful when you leverage [Nx plugins](/nx-api)**. Each plugin can provide migrations for its area of competency.
+Nx knows where its configuration files are located and ensures they match the expected format. This automated update process, commonly referred to as "migration," becomes even **more powerful when you leverage [Nx plugins](/plugin-registry)**. Each plugin can provide migrations for its area of competency.
 
-For example, the [Nx React plugin](/nx-api/react) knows where to look for React and Nx specific configuration files and knows how to apply certain changes when updating to a given version of React.
+For example, the [Nx React plugin](/technologies/react/introduction) knows where to look for React and Nx specific configuration files and knows how to apply certain changes when updating to a given version of React.
 
 In the example below, the React plugin defines a migration script (`./src/migrations/.../add-babel-core`) that runs when upgrading to Nx `16.7.0-beta.2` (or higher).
 

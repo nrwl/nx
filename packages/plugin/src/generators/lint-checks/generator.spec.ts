@@ -11,7 +11,6 @@ import {
 } from '@nx/devkit';
 
 import type { Linter as ESLint } from 'eslint';
-import { Linter } from '@nx/eslint';
 
 import generator from './generator';
 import pluginGenerator from '../plugin/plugin';
@@ -29,7 +28,7 @@ describe('lint-checks generator', () => {
       directory: 'plugin',
       importPath: '@acme/plugin',
       compiler: 'tsc',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       skipLintChecks: true, // we manually call it s.t. we can update config files first
@@ -160,7 +159,7 @@ describe('lint-checks generator', () => {
               "error",
               {
                 "ignoredFiles": [
-                  "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                  "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}",
                 ],
               },
             ],

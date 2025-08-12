@@ -12,7 +12,7 @@ import {
   runCommand,
   runCreateWorkspace,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readFileSync } from 'fs';
 import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
@@ -20,6 +20,15 @@ describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject());
+
+  it('should reject workspace names starting with numbers', () => {
+    expect(() => {
+      runCreateWorkspace('4invalidname', {
+        preset: 'apps',
+        packageManager,
+      });
+    }).toThrow();
+  });
 
   it('should create a workspace with a single angular app at the root without routing', () => {
     const wsName = uniq('angular');
@@ -38,7 +47,7 @@ describe('create-nx-workspace', () => {
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
-    checkFilesExist('src/app/app.module.ts');
+    checkFilesExist('src/app/app-module.ts');
     checkFilesDoNotExist('src/app/app.routes.ts');
     expectCodeIsFormatted();
   });
@@ -61,7 +70,7 @@ describe('create-nx-workspace', () => {
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('src/app/app.routes.ts');
-    checkFilesDoNotExist('src/app/app.module.ts');
+    checkFilesDoNotExist('src/app/app-module.ts');
     expectCodeIsFormatted();
   });
 

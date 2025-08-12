@@ -1,14 +1,23 @@
-import { readFileSync, mkdirSync, writeFileSync } from 'fs';
+import { execSync } from 'child_process';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { ProjectGraph } from '../../config/project-graph';
-import { workspaceDataDirectory } from '../../utils/cache-directory';
-import { combineGlobPatterns } from '../../utils/globs';
+import { hashArray } from '../../hasher/file-hasher';
 import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodes,
+  createNodesFromFiles,
+  CreateNodesV2,
 } from '../../project-graph/plugins';
+import { RawProjectGraphDependency } from '../../project-graph/project-graph-builder';
+import { workspaceDataDirectory } from '../../utils/cache-directory';
+import { combineGlobPatterns } from '../../utils/globs';
+import { detectPackageManager } from '../../utils/package-manager';
+import { nxVersion } from '../../utils/versions';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { readBunLockFile } from './lock-file/bun-parser';
 import {
   getLockFileDependencies,
   getLockFileName,
@@ -18,12 +27,6 @@ import {
 } from './lock-file/lock-file';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { jsPluginConfig } from './utils/config';
-import { RawProjectGraphDependency } from '../../project-graph/project-graph-builder';
-import { hashArray } from '../../hasher/file-hasher';
-import { detectPackageManager } from '../../utils/package-manager';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { nxVersion } from '../../utils/versions';
-import { execSync } from 'child_process';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 
@@ -33,6 +36,13 @@ interface ParsedLockFile {
 }
 
 let parsedLockFile: ParsedLockFile = {};
+
+export const createNodesV2: CreateNodesV2 = [
+  combineGlobPatterns(LOCKFILES),
+  (files, _, context) => {
+    return createNodesFromFiles(createNodes[1], files, _, context);
+  },
+];
 
 export const createNodes: CreateNodes = [
   // Look for all lockfiles
@@ -53,11 +63,8 @@ export const createNodes: CreateNodes = [
     const lockFilePath = join(workspaceRoot, lockFile);
     const lockFileContents =
       packageManager !== 'bun'
-        ? readFileSync(lockFilePath).toString()
-        : execSync(`bun ${lockFilePath}`, {
-            maxBuffer: 1024 * 1024 * 10,
-            windowsHide: false,
-          }).toString();
+        ? readFileSync(lockFilePath, 'utf-8')
+        : readBunLockFile(lockFilePath);
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
@@ -99,11 +106,8 @@ export const createDependencies: CreateDependencies = (
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
     const lockFileContents =
       packageManager !== 'bun'
-        ? readFileSync(lockFilePath).toString()
-        : execSync(`bun ${lockFilePath}`, {
-            maxBuffer: 1024 * 1024 * 10,
-            windowsHide: false,
-          }).toString();
+        ? readFileSync(lockFilePath, 'utf-8')
+        : readBunLockFile(lockFilePath);
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {

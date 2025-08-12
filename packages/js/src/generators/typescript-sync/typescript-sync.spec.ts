@@ -95,16 +95,6 @@ describe('syncGenerator()', () => {
     addProject('b', ['a']);
   });
 
-  it('should error if the @nx/js/typescript plugin is not configured in nx.json', async () => {
-    const nxJson = readJson(tree, 'nx.json');
-    nxJson.plugins = nxJson.plugins.filter((p) => p !== '@nx/js/typescript');
-    writeJson(tree, 'nx.json', nxJson);
-
-    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[SyncError: The "@nx/js/typescript" plugin is not registered]`
-    );
-  });
-
   it('should error if there is no root tsconfig.json', async () => {
     tree.delete('tsconfig.json');
 
@@ -201,6 +191,42 @@ describe('syncGenerator()', () => {
         .listChanges()
         .map((c) => [c.path, c.type, c.content.toString('utf-8')])
     ).toStrictEqual(changesBeforeSyncing);
+  });
+
+  it('should return an out of sync message and details when there are missing and stale references', async () => {
+    writeJson(tree, 'tsconfig.json', {
+      compilerOptions: { composite: true },
+      references: [
+        { path: './packages/c' }, // non-existing reference
+      ],
+    });
+    writeJson(tree, 'packages/b/tsconfig.json', {
+      compilerOptions: { composite: true },
+      references: [
+        { path: './some/thing' },
+        { path: './another/one' },
+        { path: '../c' }, // non-existing reference
+      ],
+    });
+    writeJson(tree, `packages/b/tsconfig.lib.json`, {
+      compilerOptions: { composite: true },
+    });
+
+    const result = await syncGenerator(tree);
+
+    expect((result as any).outOfSyncMessage).toBe(
+      'Some TypeScript configuration files are missing project references to the projects they depend on or contain stale project references.'
+    );
+    expect((result as any).outOfSyncDetails).toStrictEqual([
+      'tsconfig.json:',
+      '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+      '  - Stale references: packages/c/tsconfig.json',
+      'packages/b/tsconfig.lib.json:',
+      '  - Missing references: packages/a/tsconfig.json',
+      'packages/b/tsconfig.json:',
+      '  - Missing references: packages/a/tsconfig.json',
+      '  - Stale references: packages/c/tsconfig.json',
+    ]);
   });
 
   describe('root tsconfig.json', () => {

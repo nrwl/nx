@@ -4,9 +4,14 @@
   "sourceRoot": "packages/react",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "command": "node ./scripts/copy-readme.js react",
+      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/react",
@@ -51,13 +56,6 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/react"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js react"
       }
     }
   }

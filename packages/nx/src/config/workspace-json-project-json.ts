@@ -1,6 +1,8 @@
 import type { PackageJson } from '../utils/package-json';
 import type {
+  LegacyNxReleaseVersionConfiguration,
   NxJsonConfiguration,
+  NxReleaseDockerConfiguration,
   NxReleaseVersionConfiguration,
 } from './nx-json';
 
@@ -107,10 +109,24 @@ export interface ProjectConfiguration {
    * Project specific configuration for `nx release`
    */
   release?: {
-    version?: Pick<
-      NxReleaseVersionConfiguration,
-      'generator' | 'generatorOptions'
-    >;
+    version?:
+      | Pick<
+          LegacyNxReleaseVersionConfiguration,
+          'generator' | 'generatorOptions'
+        >
+      | Pick<
+          // Expose a subset of version config options at the project level
+          NxReleaseVersionConfiguration,
+          | 'versionActions'
+          | 'versionActionsOptions'
+          | 'manifestRootsToUpdate'
+          | 'currentVersionResolver'
+          | 'currentVersionResolverMetadata'
+          | 'fallbackCurrentVersionResolver'
+          | 'versionPrefix'
+          | 'preserveLocalDependencyProtocols'
+        >;
+    docker?: NxReleaseDockerConfiguration | true;
   };
 
   /**
@@ -257,6 +273,11 @@ export interface TargetConfiguration<T = any> {
    * Default is true
    */
   parallelism?: boolean;
+
+  /**
+   * Whether this target runs continuously
+   */
+  continuous?: boolean;
 
   /**
    * List of generators to run before the target to ensure the workspace

@@ -8,9 +8,13 @@ import {
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
-export function Personas({ children }: { children: ReactNode }): JSX.Element {
+export type PersonasProps = { children: ReactNode };
+
+export function Personas({ children }: PersonasProps): JSX.Element {
   return (
-    <div className="my-8 grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
+    <div className="not-content my-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+      {children}
+    </div>
   );
 }
 
@@ -183,21 +187,23 @@ const typeMap: Record<
   },
 };
 
+export type PersonaProps = {
+  title: string;
+  type: PersonaType;
+  url: string;
+  children: ReactNode;
+};
+
 export function Persona({
   title,
   type,
   url,
   children,
-}: {
-  title: string;
-  type: PersonaType;
-  url: string;
-  children: ReactNode;
-}): JSX.Element {
+}: PersonaProps): JSX.Element {
   const ui = typeMap[type];
 
   return (
-    <section className="relative flex overflow-hidden rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-50/40 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800">
+    <section className="not-content relative flex overflow-hidden rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-50/40 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800">
       <div className="flex-shrink-0">{ui.image}</div>
       <div className="ml-4">
         {title && <h5 className="mt-0 text-base font-medium">{title}</h5>}

@@ -1,5 +1,5 @@
 'use client';
-import { sendPageViewEvent } from '@nx/nx-dev/feature-analytics';
+import { sendPageViewEvent } from '@nx/nx-dev-feature-analytics';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -14,5 +14,5 @@ export default function AppRouterAnalytics({ gaMeasurementId }) {
     }
   }, [pathName, gaMeasurementId, lastPath]);
 
-  return <></>;
+  return null;
 }

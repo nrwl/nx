@@ -50,6 +50,10 @@ function addFiles(
   writeJson(tree, packageJsonPath, {
     name: options.importPath,
     version: '0.0.0',
+    exports: {
+      '.': './index.js',
+      './package.json': './package.json',
+    },
     scripts: {
       test: 'node index.js',
     },

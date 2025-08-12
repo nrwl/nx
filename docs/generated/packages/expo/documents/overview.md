@@ -3,6 +3,8 @@ title: Expo Plugin for Nx
 description: Learn how to use the @nx/expo plugin to manage Expo applications and libraries within an Nx workspace, including setup, configuration, and task inference.
 ---
 
+# @nx/expo
+
 Expo is an open-source framework for apps that run natively on Android, iOS, and the web. Expo brings together the best of mobile and the web and enables many important features for building and scaling an app.
 
 Expo is a set of tools built on top of React Native. The Nx Plugin for Expo contains generators for managing Expo applications and libraries within an Nx workspace.
@@ -23,26 +25,11 @@ Make sure to install the `@nx/expo` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/expo` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/expo
 ```
 
 This will install the correct version of `@nx/expo`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/expo` package with your package manager.
-
-```shell
-npm add -D @nx/expo
-```
-
-{% /tab %}
-{% /tabs %}
 
 ### How @nx/expo Infers Tasks
 
@@ -358,5 +345,5 @@ Below table is a map between expo commands and Nx commands:
 
 ## More Documentation
 
-- [Using Detox](/nx-api/detox)
-- [Using Jest](/nx-api/jest)
+- [Using Detox](/technologies/test-tools/detox/introduction)
+- [Using Jest](/technologies/test-tools/jest/introduction)

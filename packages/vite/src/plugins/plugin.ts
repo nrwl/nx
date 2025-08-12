@@ -25,7 +25,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
@@ -119,7 +119,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
 
           const tsConfigFiles =
             siblingFiles.filter((p) =>
-              minimatch(p, 'tsconfig*{.json,.*.json}')
+              picomatch('tsconfig*{.json,.*.json}')(p)
             ) ?? [];
 
           const hasReactRouterConfig = siblingFiles.some((configFile) => {
@@ -192,7 +192,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     }
 
     const tsConfigFiles =
-      siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ??
+      siblingFiles.filter((p) => picomatch('tsconfig*{.json,.*.json}')(p)) ??
       [];
 
     const hasReactRouterConfig = siblingFiles.some((configFile) => {
@@ -331,25 +331,36 @@ async function buildViteTargets(
       ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
         tsConfigFiles.includes(t)
       ) ?? tsConfigFiles[0];
+
+    // Check if the project uses Vue plugin
+    const hasVuePlugin = viteBuildConfig.plugins?.some(
+      (p) => p.name === 'vite:vue'
+    );
+    const typeCheckCommand = hasVuePlugin ? 'vue-tsc' : 'tsc';
+
     targets[options.typecheckTargetName] = {
       cache: true,
       inputs: [
         ...('production' in namedInputs
           ? ['production', '^production']
           : ['default', '^default']),
-        { externalDependencies: ['typescript'] },
+        {
+          externalDependencies: hasVuePlugin
+            ? ['vue-tsc', 'typescript']
+            : ['typescript'],
+        },
       ],
       command: isUsingTsSolutionSetup
-        ? `tsc --build --emitDeclarationOnly`
-        : `tsc --noEmit -p ${tsConfigToUse}`,
+        ? `${typeCheckCommand} --build --emitDeclarationOnly`
+        : `${typeCheckCommand} --noEmit -p ${tsConfigToUse}`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
         description: `Runs type-checking for the project.`,
-        technologies: ['typescript'],
+        technologies: hasVuePlugin ? ['typescript', 'vue'] : ['typescript'],
         help: {
           command: isUsingTsSolutionSetup
-            ? `${pmc.exec} tsc --build --help`
-            : `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
+            ? `${pmc.exec} ${typeCheckCommand} --build --help`
+            : `${pmc.exec} ${typeCheckCommand} -p ${tsConfigToUse} --help`,
           example: isUsingTsSolutionSetup
             ? { args: ['--force'] }
             : { options: { noEmit: true } },
@@ -430,6 +441,7 @@ async function buildTarget(
 
 function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `vite`,
     options: {
       cwd: joinPathFragments(projectRoot),
@@ -457,6 +469,7 @@ function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
 
 function previewTarget(projectRoot: string, buildTargetName) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `vite preview`,
     dependsOn: [buildTargetName],
     options: {
@@ -521,6 +534,7 @@ function serveStaticTarget(
   isUsingTsSolutionSetup: boolean
 ) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,

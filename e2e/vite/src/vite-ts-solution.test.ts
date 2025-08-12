@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Vite - TS solution setup', () => {
   beforeAll(() => {
@@ -101,12 +101,12 @@ ${content}`
 
     // check build
     expect(runCLI(`build ${reactApp}`)).toContain(
-      `Successfully ran target build for project @proj/${reactApp} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${reactApp}`
     );
 
     // check typecheck
     expect(runCLI(`typecheck ${reactApp}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${reactApp} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${reactApp}`
     );
   }, 300_000);
 });

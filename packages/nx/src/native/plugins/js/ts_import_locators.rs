@@ -715,8 +715,8 @@ mod find_imports {
     use super::*;
     use crate::native::glob::build_glob_set;
     use crate::native::walker::nx_walker;
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
     use std::env;
     use std::path::PathBuf;
     use swc_common::comments::NoopComments;

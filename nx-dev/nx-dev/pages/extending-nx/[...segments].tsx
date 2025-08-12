@@ -1,8 +1,8 @@
-import { getBasicPluginsSection } from '@nx/nx-dev/data-access-menu';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
-import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+import { getBasicPluginsSection } from '@nx/nx-dev-data-access-menu';
+import { DocViewer } from '@nx/nx-dev-feature-doc-viewer';
+import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev-models-document';
+import { Menu, MenuItem } from '@nx/nx-dev-models-menu';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
@@ -11,7 +11,7 @@ import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPluginsApi } from '../../lib/plugins.api';
 import { tagsApi } from '../../lib/tags.api';
 import { fetchGithubStarCount } from '../../lib/githubStars.api';
-import { ScrollableContent } from '@nx/ui-scrollable-content';
+import { ScrollableContent } from '@nx/nx-dev-ui-scrollable-content';
 
 export default function Pages({
   document,

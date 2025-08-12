@@ -1,15 +1,15 @@
 import Link from 'next/link';
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import Image from 'next/image';
 import { BlogAuthors } from './authors';
 import { ChevronLeftIcon, ListBulletIcon } from '@heroicons/react/24/outline';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { EpisodePlayer } from './episode-player';
-import { YouTube } from '@nx/nx-dev/ui-common';
+import { YouTube } from '@nx/nx-dev-ui-common';
 import { FeaturedBlogs } from './featured-blogs';
 import { MoreBlogs } from './more-blogs';
 import { ALL_TOPICS, type Topic } from './topics';
-import { Metrics } from '@nx/nx-dev/ui-markdoc';
+import { Metrics } from '@nx/nx-dev-ui-markdoc';
 
 export interface BlogDetailsProps {
   post: BlogPostDataEntry;
@@ -100,7 +100,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
       </div>
 
       {/* Main grid layout */}
-      <div className="mx-auto max-w-7xl px-4 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 lg:px-8" data-content-area>
         <div className="relative isolate grid grid-cols-1 gap-8 xl:grid-cols-[200px_minmax(0,1fr)_200px]">
           <div className="hidden min-h-full xl:block">
             {post.metrics && (

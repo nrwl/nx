@@ -4,11 +4,11 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
-import { Framework, frameworkIcons } from '@nx/graph/legacy/icons';
-import * as nxDevIcons from '@nx/nx-dev/ui-icons';
+import { type Framework, frameworkIcons } from '@nx/graph-ui-icons';
+import * as nxDevIcons from '@nx/nx-dev-ui-icons';
 import * as heroIcons from '@heroicons/react/24/outline';
 
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { ReactNode } from 'react';
 import Link from 'next/link';
 
@@ -53,6 +53,15 @@ const lgColsClasses: Record<number, string> = {
   8: 'lg:grid-cols-8',
 };
 
+export type CardsProps = {
+  cols: number;
+  smCols: number;
+  mdCols: number;
+  lgCols: number;
+  children: ReactNode;
+  moreLink?: string;
+};
+
 export function Cards({
   cols = 2,
   smCols = cols,
@@ -60,19 +69,12 @@ export function Cards({
   lgCols = mdCols,
   children,
   moreLink,
-}: {
-  cols: number;
-  smCols: number;
-  mdCols: number;
-  lgCols: number;
-  children: ReactNode;
-  moreLink?: string;
-}): JSX.Element {
+}: CardsProps): JSX.Element {
   // <div className="mt-8 grid grid-cols-2 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4">
   return (
     <div
       className={cx(
-        'mt-8 grid gap-4',
+        'not-content mt-8 grid gap-4',
         colsClasses[cols] || '',
         smColsClasses[smCols] || '',
         mdColsClasses[mdCols] || '',
@@ -108,19 +110,21 @@ function callIfFunction(fn: any, props: { [key: string]: string } = {}) {
   return fn;
 }
 
+export type LinkCardProps = {
+  title: string;
+  type: string;
+  icon: string; // Can be either a component name or a direct image URL
+  url: string;
+  appearance?: 'default' | 'small';
+};
+
 export function LinkCard({
   title,
   type,
   icon,
   url,
   appearance = 'default',
-}: {
-  title: string;
-  type: string;
-  icon: string; // Can be either a component name or a direct image URL
-  url: string;
-  appearance?: 'default' | 'small';
-}): JSX.Element {
+}: LinkCardProps): JSX.Element {
   return (
     <Link
       key={title}
@@ -132,7 +136,7 @@ export function LinkCard({
       {icon && (
         <div
           className={cx(
-            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
+            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg text-black dark:text-white',
             {
               'h-12 w-12': appearance === 'small',
             }
@@ -175,17 +179,19 @@ export function LinkCard({
   );
 }
 
+export type CardProps = {
+  title: string;
+  description: string;
+  type: 'documentation' | 'external' | 'video';
+  url: string;
+};
+
 export function Card({
   description,
   title,
   type = 'documentation',
   url,
-}: {
-  title: string;
-  description: string;
-  type: 'documentation' | 'external' | 'video';
-  url: string;
-}): JSX.Element {
+}: CardProps): JSX.Element {
   const iconMap = {
     documentation: <DocumentIcon className="mr-3 h-5 w-5 shrink-0" />,
     external: <ArrowTopRightOnSquareIcon className="mr-3 h-5 w-5 shrink-0" />,
@@ -202,7 +208,7 @@ export function Card({
       key={title}
       href={url}
       title={title}
-      className="group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      className="not-content group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
       prefetch={false}
     >
       {!!hasYoutubeId && (
@@ -215,13 +221,15 @@ export function Card({
         </div>
       )}
       <div className="relative flex flex-col p-3 pr-8">
-        <span className="flex items-center font-semibold underline">
+        <h3 className="m-0 flex items-center text-base font-bold text-slate-900 dark:text-white">
           <span className="absolute inset-0" aria-hidden="true"></span>
           {!hasYoutubeId ? iconMap[type] : null}
           {title}
-        </span>
+        </h3>
         {description ? (
-          <p className="mt-1.5 w-full text-sm no-underline">{description}</p>
+          <p className="mt-2 w-full text-sm font-normal text-slate-600 no-underline dark:text-slate-300">
+            {description}
+          </p>
         ) : null}
 
         {/*HOVER ICON*/}

@@ -188,6 +188,54 @@ describe('determineProjectNameAndRootOptions', () => {
     }
   });
 
+  it('should support a directory outside of the cwd', async () => {
+    // simulate running in a subdirectory
+    const originalInitCwd = process.env.INIT_CWD;
+    process.env.INIT_CWD = join(workspaceRoot, 'some/path');
+
+    const result = await determineProjectNameAndRootOptions(tree, {
+      directory: '../../libs/lib-name',
+      projectType: 'library',
+    });
+
+    expect(result).toEqual({
+      projectName: 'lib-name',
+      names: {
+        projectSimpleName: 'lib-name',
+        projectFileName: 'lib-name',
+      },
+      importPath: '@proj/lib-name',
+      projectRoot: 'libs/lib-name',
+    });
+
+    // restore original cwd
+    if (originalInitCwd === undefined) {
+      delete process.env.INIT_CWD;
+    } else {
+      process.env.INIT_CWD = originalInitCwd;
+    }
+  });
+
+  it('should throw when the resolved directory is outside of the workspace root', async () => {
+    // simulate running in a subdirectory
+    const originalInitCwd = process.env.INIT_CWD;
+    process.env.INIT_CWD = join(workspaceRoot, 'some/path');
+
+    await expect(
+      determineProjectNameAndRootOptions(tree, {
+        directory: '../../../libs/lib-name',
+        projectType: 'library',
+      })
+    ).rejects.toThrow(/is outside of the workspace root/);
+
+    // restore original cwd
+    if (originalInitCwd === undefined) {
+      delete process.env.INIT_CWD;
+    } else {
+      process.env.INIT_CWD = originalInitCwd;
+    }
+  });
+
   it('should return the project name and directory as provided for root projects', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.name = 'lib-name';
@@ -212,10 +260,19 @@ describe('determineProjectNameAndRootOptions', () => {
     });
   });
 
-  it('should throw when an invalid directory is provided', async () => {
+  it('should throw when a name is not provided for a root project', async () => {
     await expect(
       determineProjectNameAndRootOptions(tree, {
-        directory: '!scope/lib-name',
+        directory: '.',
+        projectType: 'library',
+      })
+    ).rejects.toThrow(/you must also specify the name option/);
+  });
+
+  it('should throw when a directory is provided where the derived name is invalid', async () => {
+    await expect(
+      determineProjectNameAndRootOptions(tree, {
+        directory: '@scope/lib-name/invalid-extra-segment',
         projectType: 'library',
       })
     ).rejects.toThrow(/directory should match/);
@@ -229,23 +286,6 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
       })
     ).rejects.toThrow(/name should match/);
-  });
-
-  it('should handle providing a path including "@" with multiple segments as the project name', async () => {
-    const result = await determineProjectNameAndRootOptions(tree, {
-      directory: 'shared/@scope/lib-name/testing',
-      projectType: 'library',
-    });
-
-    expect(result).toEqual({
-      projectName: '@scope/lib-name/testing',
-      names: {
-        projectSimpleName: 'testing',
-        projectFileName: 'lib-name-testing',
-      },
-      importPath: '@scope/lib-name/testing',
-      projectRoot: 'shared/@scope/lib-name/testing',
-    });
   });
 
   it('should handle providing a path including multiple "@" as the project name', async () => {

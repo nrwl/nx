@@ -4,12 +4,14 @@
   "sourceRoot": "packages/module-federation",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/module-federation/README.md"],
+      "command": "node ./scripts/copy-readme.js module-federation"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "outputPath": "build/packages/module-federation",
-        "tsConfig": "packages/module-federation/tsconfig.lib.json",
-        "main": "packages/module-federation/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/module-federation",
@@ -44,12 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
-    },
-    "build": {
-      "command": "node ./scripts/copy-readme.js module-federation",
-      "outputs": ["{workspaceRoot}/build/packages/module-federation"]
+      }
     }
   }
 }

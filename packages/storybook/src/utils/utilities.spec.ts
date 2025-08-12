@@ -16,7 +16,7 @@ describe('testing utilities', () => {
       appTree.write(
         `test-ui-lib/src/lib/button/button.component.stories.ts`,
         `
-      import { Story, Meta } from '@storybook/react';
+      import { Story, Meta } from '@storybook/react-webpack5';
       import { Button } from './button';
 
       export default {
@@ -34,7 +34,7 @@ describe('testing utilities', () => {
       appTree.write(
         `test-ui-lib/src/lib/button/button.other.stories.ts`,
         `
-        import type { Meta } from '@storybook/react';
+        import type { Meta } from '@storybook/react-webpack5';
         import { Button } from './button';
 
         const Story: Meta<typeof Button> = {
@@ -62,7 +62,7 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.test.stories.ts`,
         `
         import { Button } from './button';
-        import * as Storybook from '@storybook/react';
+        import * as Storybook from '@storybook/react-webpack5';
 
         // test test
       `
@@ -80,7 +80,7 @@ describe('testing utilities', () => {
       appTree.write(
         `test-ui-lib/src/lib/button/button.component.new-syntax.ts`,
         `
-       import { ComponentStory } from '@storybook/react';
+       import { ComponentStory } from '@storybook/react-webpack5';
 
         // test test
       `

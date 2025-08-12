@@ -1,4 +1,4 @@
 {
   "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*", "**/.next"]
+  "ignorePatterns": ["!**/*", "**/.next", "public", "node_modules"]
 }

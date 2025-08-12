@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -10,6 +10,10 @@
           {
             "name": "chalk",
             "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          },
+          {
+            "name": "minimatch",
+            "message": "Please use `picomatch` instead."
           }
         ]
       }
@@ -38,6 +42,7 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "typescript",
               "@swc/core", // Installed to workspace and only used in swc() plugin

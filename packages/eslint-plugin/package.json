@@ -26,7 +26,7 @@
   "homepage": "https://nx.dev",
   "peerDependencies": {
     "@typescript-eslint/parser": "^6.13.2 || ^7.0.0 || ^8.0.0",
-    "eslint-config-prettier": "^9.0.0"
+    "eslint-config-prettier": "^10.0.0"
   },
   "peerDependenciesMeta": {
     "eslint-config-prettier": {
@@ -34,8 +34,9 @@
     }
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "@typescript-eslint/type-utils": "^8.0.0",
     "@typescript-eslint/utils": "^8.0.0",
     "chalk": "^4.1.0",

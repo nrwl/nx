@@ -1,7 +1,6 @@
 import { readJson, Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
-import { Linter } from '../../utils/lint';
 import {
   angularCliVersion,
   nxVersion,
@@ -20,7 +19,7 @@ const defaultOptions: Omit<
 > = {
   preset: Preset.Apps,
   skipInstall: false,
-  linter: Linter.EsLint,
+  linter: 'eslint',
   defaultBase: 'main',
 };
 

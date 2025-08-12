@@ -1,5 +1,5 @@
 import { GitRepository } from '../../../utils/git-utils';
-import * as createSpinner from 'ora';
+const createSpinner = require('ora');
 
 export async function mergeRemoteSource(
   destinationGitClient: GitRepository,

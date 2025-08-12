@@ -1,7 +1,5 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import * as ora from 'ora';
-import * as yargsParser from 'yargs-parser';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -19,9 +17,10 @@ import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
 import { gte } from 'semver';
 import {
-  installPlugin,
+  runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
+import * as ora from 'ora';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -126,7 +125,7 @@ async function initializePlugin(
   spinner.start();
 
   try {
-    await installPlugin(
+    await runPluginInitGenerator(
       pkgName,
       workspaceRoot,
       updatePackageScripts,

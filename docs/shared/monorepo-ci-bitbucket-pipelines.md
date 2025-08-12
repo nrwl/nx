@@ -7,6 +7,8 @@ description: Learn how to set up Bitbucket Pipelines for your Nx workspace to ru
 
 Below is an example of a Bitbucket Pipelines, building and testing only what is affected.
 
+> Need a starting point? Generate a new workflow file with `nx g ci-workflow --ci=bitbucket-pipelines`
+
 ```yaml {% fileName="bitbucket-pipelines.yml" %}
 image: node:20
 
@@ -19,27 +21,41 @@ pipelines:
       - step:
           name: 'Build and test affected apps on Pull Requests'
           script:
-            # This line enables distribution
-            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-            - npm ci
+            - export NX_BRANCH=$BITBUCKET_PR_ID
 
-            - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build e2e-ci --base=origin/main
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
+            - npx nx affected --base=origin/main -t lint test build
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+
+          after-script:
+            - npx nx fix-ci
 
   branches:
     main:
       - step:
-          name: "Build and test affected apps on 'main' branch changes"
+          name: 'Build and test affected apps on "main" branch changes'
           script:
             - export NX_BRANCH=$BITBUCKET_BRANCH
-            # This line enables distribution
-            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-            - npm ci
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build e2e-ci --base=HEAD~1
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - npx nx-cloud record -- echo Hello World
+            - npx nx affected -t lint test build --base=HEAD~1
 ```
 
 The `pull-requests` and `main` jobs implement the CI workflow.

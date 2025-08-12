@@ -3,6 +3,8 @@ title: Overview of the Nx Playwright Plugin
 description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright. This page also explains how to configure Playwright on your Nx workspace.
 ---
 
+# @nx/playwright
+
 Playwright is a modern web test runner. With included features such as:
 
 - Cross browser support, including mobile browsers
@@ -20,9 +22,6 @@ Make sure to install the `@nx/playwright` version that matches the version of `n
 {% /callout %}
 
 In any Nx workspace, you can install `@nx/playwright` by running the following command:
-
-{% tabs %}
-{% tab label="Nx 18+" %}
 
 ```shell {% skipRescope=true %}
 nx add @nx/playwright
@@ -71,18 +70,6 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
 
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/playwright` package with your package manager.
-
-```shell {% skipRescope=true %}
-npm add -D @nx/playwright
-```
-
-{% /tab %}
-{% /tabs %}
-
 ## E2E Testing
 
 By default, when creating a new frontend application, Nx will prompt for which e2e test runner to use. Select `playwright` or pass in the arg `--e2eTestRunner=playwright`
@@ -111,15 +98,15 @@ Run `nx e2e <your-app-name>` to execute e2e tests with Playwright
 
 {% callout type="note" title="Selecting Specific Specs" %}
 
-You can use the `--grep/-g` flag to glob for test files.
-You can use the `--grepInvert/-gv` flag to glob for files to _not_ run.
+You can use the `--grep/-g` flag to filter tests using regular expressions.
+You can use the `--grepInvert/-gv` flag to filter out tests that match the regular expression.
 
 ```bash
-# run the tests in the feat-a/ directory
-nx e2e frontend-e2e --grep="**feat-a/**"
+# run tests that match the regular expression
+nx e2e frontend-e2e --grep="feat-a"
 
-# run everything except feat-a/ directory
-nx e2e frontend-e2e --grepInvert=**feat-a/**
+# run tests that don't match the regular expression
+nx e2e frontend-e2e --grepInvert="feat-a"
 ```
 
 {% /callout %}

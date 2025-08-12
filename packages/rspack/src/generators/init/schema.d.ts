@@ -1,4 +1,4 @@
-export type Framework = 'none' | 'react' | 'web' | 'nest';
+export type Framework = 'none' | 'react' | 'web' | 'nest' | 'angular';
 
 export interface InitGeneratorSchema {
   addPlugin?: boolean;
@@ -6,6 +6,6 @@ export interface InitGeneratorSchema {
   framework?: Framework;
   keepExistingVersions?: boolean;
   rootProject?: boolean;
-  style?: 'none' | 'css' | 'scss' | 'less' | 'styl';
+  style?: 'none' | 'css' | 'scss' | 'less';
   updatePackageScripts?: boolean;
 }

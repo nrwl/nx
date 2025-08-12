@@ -1,8 +1,8 @@
 use napi::bindgen_prelude::*;
-use std::{
-    fs::{self, OpenOptions},
-    path::Path,
-};
+use std::fs;
+#[cfg(not(target_arch = "wasm32"))]
+use std::{fs::OpenOptions, path::Path};
+#[cfg(not(target_arch = "wasm32"))]
 use tracing::trace;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -53,7 +53,7 @@ impl FileLock {
         }
 
         Ok(Self {
-            file: file,
+            file,
             locked: file_lock.is_err(),
             lock_file_path,
         })
@@ -122,8 +122,8 @@ impl FileLock {
 mod test {
     use super::*;
 
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     #[test]
     fn test_new_lock() {

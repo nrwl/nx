@@ -5,14 +5,17 @@ import {
   CreditPricing,
   PlansDisplay,
   TrialCallout,
-} from '@nx/nx-dev/ui-pricing';
+} from '@nx/nx-dev-ui-pricing';
 import {
   CallToAction,
   DefaultLayout,
   Testimonials,
   TrustedBy,
-} from '@nx/nx-dev/ui-common';
-import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
+} from '@nx/nx-dev-ui-common';
+import { gotoAppButton } from '../../lib/header-cta.configs';
+
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
@@ -31,7 +34,7 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],
@@ -40,7 +43,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PricingPage() {
+export default async function PricingPage() {
   return (
     <DefaultLayout headerCTAConfig={[gotoAppButton]}>
       <PlansDisplay />

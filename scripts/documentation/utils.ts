@@ -1,4 +1,4 @@
-import { MenuItem } from '@nx/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 import { outputFileSync } from 'fs-extra';
 import {
   bold,
@@ -131,19 +131,30 @@ export async function formatWithPrettier(filePath: string, content: string) {
   return format(content, options);
 }
 
+export function wrapLinks(content: string): string {
+  const urlRegex = /(https?:\/\/)[^\s]+[a-zA-Z][a-zA-Z]/g;
+  const links = content.match(urlRegex) || [];
+  for (const link of links) {
+    const wrappedLink = `[${link}](${link.replace('https://nx.dev', '')})`;
+    content = content.replace(link, wrappedLink);
+  }
+  return content;
+}
+
 export function formatDescription(
   description: string,
   deprecated: boolean | string
 ) {
+  const updatedDescription = wrapLinks(description);
   if (!deprecated) {
-    return description;
+    return updatedDescription;
   }
   if (!description) {
     return `${bold('Deprecated:')} ${deprecated}`;
   }
   return deprecated === true
-    ? `${bold('Deprecated:')} ${description}`
-    : mdLines(`${bold('Deprecated:')} ${deprecated}`, description);
+    ? `${bold('Deprecated:')} ${updatedDescription}`
+    : mdLines(`${bold('Deprecated:')} ${deprecated}`, updatedDescription);
 }
 
 export function getCommands(command: any) {

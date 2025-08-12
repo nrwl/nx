@@ -80,6 +80,9 @@ describe('TargetProjectLocator', () => {
             '@proj/proj1234-child/*': ['libs/proj1234-child/*'],
             '#hash-path': ['libs/hash-project/src/index.ts'],
             'parent-path/*': ['libs/parent-path/*'],
+            '@proj/feature-*': ['libs/features/*'],
+            '@proj/*/utils': ['libs/scope/*/utils'],
+            '@proj/*-util': ['libs/utils/*'],
           },
         },
       };
@@ -227,6 +230,27 @@ describe('TargetProjectLocator', () => {
             },
           },
         },
+        users: {
+          name: 'users',
+          type: 'lib',
+          data: {
+            root: 'libs/features/users',
+          },
+        },
+        admin: {
+          name: 'admin',
+          type: 'lib',
+          data: {
+            root: 'libs/scope/admin',
+          },
+        },
+        'file-system': {
+          name: 'file-system',
+          type: 'lib',
+          data: {
+            root: 'libs/utils/file-system',
+          },
+        },
       };
       npmProjects = {
         'npm:@ng/core': {
@@ -343,6 +367,36 @@ describe('TargetProjectLocator', () => {
       expect(res5).toEqual('rootProj');
     });
 
+    it('should be able to resolve a module by using relative paths within a nested project', () => {
+      // Test resolving "./" import from child-project (nested 1 level under parent-project)
+      const res1 = targetProjectLocator.findProjectFromImport(
+        './index.ts',
+        'libs/parent-path/child-path/src/index.ts'
+      );
+      expect(res1).toEqual('child-project');
+
+      // Test resolving "../" import from child-project back to parent-project
+      const res2 = targetProjectLocator.findProjectFromImport(
+        '../index.ts',
+        'libs/parent-path/child-path/index.ts'
+      );
+      expect(res2).toEqual('parent-project');
+
+      // Test resolving "./" import within the same nested project
+      const res3 = targetProjectLocator.findProjectFromImport(
+        './utils.ts',
+        'libs/parent-path/child-path/index.ts'
+      );
+      expect(res3).toEqual('child-project');
+
+      // Test resolving "./" import within the same nested project
+      const res4 = targetProjectLocator.findProjectFromImport(
+        './',
+        'libs/parent-path/child-path/module.ts'
+      );
+      expect(res4).toEqual('child-project');
+    });
+
     it('should be able to resolve a module by using tsConfig paths', () => {
       const proj2 = targetProjectLocator.findProjectFromImport(
         '@proj/my-second-proj',
@@ -413,19 +467,33 @@ describe('TargetProjectLocator', () => {
     });
 
     it('should be able to resolve wildcard paths', () => {
-      const parentProject = targetProjectLocator.findProjectFromImport(
-        'parent-path',
-        'libs/proj1/index.ts'
-      );
-
-      expect(parentProject).toEqual('parent-project');
-
+      // 'parent-path/*': ['libs/parent-path/*'] => 'libs/parent-path/child-path'
       const childProject = targetProjectLocator.findProjectFromImport(
         'parent-path/child-path',
         'libs/proj1/index.ts'
       );
-
       expect(childProject).toEqual('child-project');
+
+      // '@proj/feature-*': ['libs/features/*'] => 'libs/features/users'
+      const usersProject = targetProjectLocator.findProjectFromImport(
+        '@proj/feature-users',
+        'libs/proj1/index.ts'
+      );
+      expect(usersProject).toEqual('users');
+
+      // '@proj/*/utils': ['libs/scope/*/utils'] => 'libs/scope/admin/utils'
+      const adminProject = targetProjectLocator.findProjectFromImport(
+        '@proj/admin/utils',
+        'libs/proj1/index.ts'
+      );
+      expect(adminProject).toEqual('admin');
+
+      // '@proj/*-util': ['libs/utils/*'] => 'libs/utils/file-system'
+      const fileSystemProject = targetProjectLocator.findProjectFromImport(
+        '@proj/file-system-util',
+        'libs/proj1/index.ts'
+      );
+      expect(fileSystemProject).toEqual('file-system');
     });
 
     it('should be able to resolve paths that start with a #', () => {
@@ -1091,6 +1159,10 @@ describe('TargetProjectLocator', () => {
       ${{ '.': 'dist/index.js' }}                                  | ${'@org/pkg1'}
       ${{ './subpath': './dist/subpath.js' }}                      | ${'@org/pkg1/subpath'}
       ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath'}
+      ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath/extra-path'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath/extra-path'}
+      ${{ './features/*.js': './dist/features/*.js' }}             | ${'@org/pkg1/features/some-file.js'}
       ${{ import: './dist/index.js', default: './dist/index.js' }} | ${'@org/pkg1'}
     `(
       'should find "$importPath" as "pkg1" project when exports="$exports"',
@@ -1130,6 +1202,10 @@ describe('TargetProjectLocator', () => {
       ${{ '.': 'dist/index.js' }}                                  | ${'@org/pkg1'}
       ${{ './subpath': './dist/subpath.js' }}                      | ${'@org/pkg1/subpath'}
       ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath'}
+      ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath/extra-path'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath/extra-path'}
+      ${{ './features/*.js': './dist/features/*.js' }}             | ${'@org/pkg1/features/some-file.js'}
       ${{ import: './dist/index.js', default: './dist/index.js' }} | ${'@org/pkg1'}
     `(
       'should not find "$importPath" as "pkg1" project when exports="$exports" and isInPackageManagerWorkspaces is false',
@@ -1168,8 +1244,8 @@ describe('TargetProjectLocator', () => {
       ${undefined}                                                 | ${'@org/pkg1'}
       ${{}}                                                        | ${'@org/pkg1'}
       ${{ '.': 'dist/index.js' }}                                  | ${'@org/pkg1/subpath'}
+      ${{ './subpath/*': 'dist/subpath/*.js' }}                    | ${'@org/pkg1/foo'}
       ${{ './subpath': './dist/subpath.js' }}                      | ${'@org/pkg1/subpath/extra-path'}
-      ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath/extra-path'}
       ${{ './feature': null }}                                     | ${'@org/pkg1/feature'}
       ${{ import: './dist/index.js', default: './dist/index.js' }} | ${'@org/pkg1/subpath'}
     `(

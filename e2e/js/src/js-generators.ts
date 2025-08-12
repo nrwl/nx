@@ -2,16 +2,19 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
+  getPackageManagerCommand,
   newProject,
   readFile,
   readJson,
   rmDist,
   runCLI,
   runCLIAsync,
+  runCommand,
   uniq,
   updateFile,
   updateJson,
-} from '../../utils';
+} from '@nx/e2e-utils';
 
 describe('js e2e', () => {
   let scope: string;
@@ -54,8 +57,9 @@ describe('js e2e', () => {
     // Lint
     const result = runCLI(`lint ${dirName}-${libName}`);
 
-    expect(result).toContain(`Linting "${dirName}-${libName}"...`);
-    expect(result).toContain('All files pass linting');
+    expect(result).toContain(
+      `Successfully ran target lint for project ${dirName}-${libName}`
+    );
 
     // Test
     const testResult = await runCLIAsync(`test ${dirName}-${libName}`);
@@ -119,7 +123,10 @@ describe('js e2e', () => {
     updateJson('nx.json', (json) => {
       json.targetDefaults.build = {
         ...json.targetDefaults.build,
-        dependsOn: [...json.targetDefaults.build.dependsOn, '^my-custom-build'],
+        dependsOn: [
+          ...(json.targetDefaults.build?.dependsOn || []),
+          '^my-custom-build',
+        ],
       };
       return json;
     });
@@ -187,4 +194,23 @@ describe('js e2e', () => {
       'Test Suites: 1 passed, 1 total'
     );
   }, 500_000);
+
+  it('should not update dependencies if they already exist', () => {
+    const lib = uniq('@my-org/mylib');
+    const currentJestVersion = '28.0.0';
+    const pm = detectPackageManager();
+    // set jest version
+    updateJson('package.json', (json) => {
+      json.devDependencies['jest'] = currentJestVersion;
+      return json;
+    });
+
+    runCommand(getPackageManagerCommand({ packageManager: pm }).install);
+
+    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --unitTestRunner=jest`);
+
+    const jestVersionAfterInstall =
+      readJson('package.json').devDependencies['jest'];
+    expect(jestVersionAfterInstall).toEqual(currentJestVersion);
+  });
 });

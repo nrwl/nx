@@ -11,7 +11,10 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { JestPluginOptions } from '../../plugins/plugin';
-import { getPresetExt } from '../../utils/config/config-file';
+import {
+  findRootJestPreset,
+  getPresetExt,
+} from '../../utils/config/config-file';
 import { jestInitGenerator } from '../init/init';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
@@ -71,6 +74,7 @@ function normalizeOptions(
   return {
     ...schemaDefaults,
     ...options,
+    keepExistingVersions: options.keepExistingVersions ?? true,
     rootProject: project.root === '.' || project.root === '',
     isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
@@ -86,6 +90,11 @@ export async function configurationGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(tree, schema);
 
+  // we'll only add the vscode recommended extension if the jest preset does
+  // not exist, which most likely means this is a first run, in the cases it's
+  // not a first run, we'll skip adding it but it's not a critical thing to do
+  const shouldAddVsCodeRecommendations = findRootJestPreset(tree) === null;
+
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
@@ -100,7 +109,10 @@ export async function configurationGeneratorInternal(
   checkForTestTarget(tree, options);
   createFiles(tree, options, presetExt);
   updateTsConfig(tree, options);
-  updateVsCodeRecommendedExtensions(tree);
+
+  if (shouldAddVsCodeRecommendations) {
+    updateVsCodeRecommendedExtensions(tree);
+  }
 
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) => {

@@ -5,9 +5,11 @@ import {
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
-import { Linter } from '@nx/eslint';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  shouldConfigureTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   tree: Tree,
@@ -39,14 +41,19 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const isUsingTsSolutionsConfig = isUsingTsSolutionSetup(tree);
+  // this helper is called before the jsLibraryGenerator is called, so, if the
+  // TS solution setup is not configured, we additionally check if the TS
+  // solution setup will be configured by the jsLibraryGenerator
+  const isUsingTsSolutionsConfig =
+    isUsingTsSolutionSetup(tree) ||
+    shouldConfigureTsSolutionSetup(tree, addPlugin);
   const normalized: NormalizedOptions = {
     ...options,
     strict: options.strict ?? true,
     controller: options.controller ?? false,
     fileName,
     global: options.global ?? false,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     parsedTags,
     prefix: getNpmScope(tree), // we could also allow customizing this
     projectName:

@@ -20,7 +20,6 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
-import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
 import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
@@ -34,6 +33,7 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -49,11 +49,16 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    true, // nuxt always adds plugins
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -112,6 +117,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     {
       ...options,
       offsetFromRoot: projectOffsetFromRoot,
+      relativePathToRootTsConfig: getRelativePathToRootTsConfig(
+        tree,
+        options.appProjectRoot
+      ),
       title: options.projectName,
       dot: '.',
       tmpl: '',
@@ -167,7 +176,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     await addLinting(tree, {
       projectName: options.projectName,
       projectRoot: options.appProjectRoot,
-      linter: options.linter ?? Linter.EsLint,
+      linter: options.linter ?? 'eslint',
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
     })

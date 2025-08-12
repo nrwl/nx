@@ -222,6 +222,34 @@ describe('vitest generator', () => {
       ).toMatchSnapshot();
     });
 
+    it('should generate src/test-setup.ts using @angular/platform-browser-dynamic/testing when Angular version is lower than 20', async () => {
+      const { tree, runGenerator } = setUpAngularWorkspace();
+      tree;
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies['@angular/core'] = '~19.2.0';
+        return json;
+      });
+
+      await runGenerator();
+
+      expect(tree.read('apps/my-test-angular-app/src/test-setup.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import '@analogjs/vitest-angular/setup-zone';
+
+        import {
+          BrowserDynamicTestingModule,
+          platformBrowserDynamicTesting,
+        } from '@angular/platform-browser-dynamic/testing';
+        import { getTestBed } from '@angular/core/testing';
+
+        getTestBed().initTestEnvironment(
+          BrowserDynamicTestingModule,
+          platformBrowserDynamicTesting()
+        );
+        "
+      `);
+    });
+
     it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
       const tsConfig = readJson(
         appTree,
@@ -246,6 +274,24 @@ describe('vitest generator', () => {
   });
 
   describe('TS solution setup', () => {
+    const addProject = (name: string) => {
+      addProjectConfiguration(appTree, name, {
+        root: `packages/${name}`,
+        sourceRoot: `packages/${name}/src`,
+        targets: {
+          lint: {
+            executor: '@nx/eslint:lint',
+            options: {},
+          },
+        },
+      });
+      writeJson(appTree, `packages/${name}/tsconfig.json`, {
+        files: [],
+        include: [],
+        references: [],
+      });
+    };
+
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'package.json', (json) => {
@@ -261,21 +307,7 @@ describe('vitest generator', () => {
         references: [],
       });
 
-      addProjectConfiguration(appTree, 'pkg1', {
-        root: 'packages/pkg1',
-        sourceRoot: 'packages/pkg1/src',
-        targets: {
-          lint: {
-            executor: '@nx/eslint:lint',
-            options: {},
-          },
-        },
-      });
-      writeJson(appTree, 'packages/pkg1/tsconfig.json', {
-        files: [],
-        include: [],
-        references: [],
-      });
+      addProject('pkg1');
     });
 
     it('should add a tsconfig.spec.json file', async () => {
@@ -325,6 +357,21 @@ describe('vitest generator', () => {
     it(`should setup a task pipeline for the test target to depend on the deps' build target`, async () => {
       await generator(appTree, {
         project: 'pkg1',
+        coverageProvider: 'v8',
+      });
+
+      const nxJson = readNxJson(appTree);
+      expect(nxJson.targetDefaults.test.dependsOn).toStrictEqual(['^build']);
+    });
+
+    it(`should not duplicate the test target dependency on the deps' build target`, async () => {
+      await generator(appTree, {
+        project: 'pkg1',
+        coverageProvider: 'v8',
+      });
+      addProject('pkg2');
+      await generator(appTree, {
+        project: 'pkg2',
         coverageProvider: 'v8',
       });
 

@@ -10,11 +10,12 @@ import {
   updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { isComponent } from '@nx/react/src/utils/ct-utils';
-import { CypressComponentConfigurationGeneratorSchema } from './schema';
-import { nxVersion } from '../../utils/versions';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { componentTestGenerator } from '@nx/react';
+import { isComponent } from '@nx/react/src/utils/ct-utils';
 import { relative } from 'path';
+import { nxVersion } from '../../utils/versions';
+import { CypressComponentConfigurationGeneratorSchema } from './schema';
 
 export function cypressComponentConfiguration(
   tree: Tree,
@@ -91,6 +92,10 @@ async function addFiles(
   const { addMountDefinition, addDefaultCTConfig } = await import(
     '@nx/cypress/src/utils/config'
   );
+  const { getInstalledCypressMajorVersion } = await import(
+    '@nx/cypress/src/utils/versions'
+  );
+  const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
   const ctFile = joinPathFragments(
     projectConfig.root,
@@ -102,9 +107,11 @@ async function addFiles(
   const updatedCommandFile = await addMountDefinition(
     tree.read(ctFile, 'utf-8')
   );
+  const moduleSpecifier =
+    installedCypressMajorVersion >= 14 ? 'cypress/react' : 'cypress/react18';
   tree.write(
     ctFile,
-    `import { mount } from 'cypress/react18';\nimport './styles.ct.css';\n${updatedCommandFile}`
+    `import { mount } from '${moduleSpecifier}';\nimport './styles.ct.css';\n${updatedCommandFile}`
   );
 
   const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
@@ -138,7 +145,8 @@ ${
 
   if (opts.generateTests) {
     const filePaths = [];
-    visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
+    const sourceRoot = getProjectSourceRoot(projectConfig, tree);
+    visitNotIgnoredFiles(tree, sourceRoot, (filePath) => {
       const fromProjectRootPath = relative(projectConfig.root, filePath);
       // we don't generate tests for pages/server-side/appDir components
       if (

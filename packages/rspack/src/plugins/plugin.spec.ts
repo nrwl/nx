@@ -33,7 +33,10 @@ describe('@nx/rspack', () => {
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })
     );
-    tempFs.createFileSync('my-app/rspack.config.ts', `export default {};`);
+    tempFs.createFileSync(
+      'my-app/rspack.config.ts',
+      `export default { devServer: { port: 9000 } };`
+    );
     tempFs.createFileSync('package-lock.json', `{}`);
   });
 
@@ -88,7 +91,7 @@ describe('@nx/rspack', () => {
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS"}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
                     "outputs": [],
@@ -100,37 +103,45 @@ describe('@nx/rspack', () => {
                   },
                   "preview": {
                     "command": "rspack serve",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--node-env=production",
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS"}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
                   },
                   "serve": {
                     "command": "rspack serve",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--node-env=development",
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS"}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
                   },
                   "serve-static": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build",
+                      "port": 9000,
                       "spa": true,
                     },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "continuous": true,
                     "dependsOn": [
                       "build-deps",
                     ],

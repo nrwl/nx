@@ -6,13 +6,20 @@ tags: ['nx']
 cover_image: /blog/images/articles/cursor-nx-mcp-heroimg.jpg
 description: 'Learn how Nx enhances Cursor IDE with a dedicated MCP server, providing AI assistants with rich monorepo metadata for smarter code assistance.'
 youtubeUrl: https://youtu.be/V2W94Sq_v6A
-pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
 
 - [Nx Just Made Your LLM Way Smarter](/blog/nx-just-made-your-llm-smarter)
-- **Making Cursor Smarter**
+- **Making Cursor Smarter with an MCP Server For Nx Monorepos**
+- [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
+- [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
+- [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration)
+- [Enhancing Nx Generators with AI: Predictability Meets Intelligence](/blog/nx-generators-ai-integration)
+- [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
+- [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci)
+- [Analyze Your Nx Cloud Runs With Your AI Assistant](/blog/nx-cloud-analyze-via-nx-mcp)
+- [Automatically Fix your CI Failures with JetBrains AI Assistant](/blog/jetbrains-ci-autofix)
 
 {% /callout %}
 
@@ -124,19 +131,11 @@ If you want to use our MCP integration with other tools that support the protoco
 
 ## Let's see it in action
 
-Here are some example queries, showing how Cursor leverages the different exposed Nx MCP tools to get more information to correctly take action. Jump to the [Youtube video for the full run-through]().
+The [Youtube video]() above showcases the below example queries, showing how Cursor leverages the different exposed Nx MCP tools to get more information to correctly take action.
 
-**Query:** "If I change the public API of feat-product-detail, which other projects might be affected by that change?"
-
-{% video-player src="/documentation/blog/media/nx-mcp-cursor-dependencies.mp4" alt="Asking Cursor about the impact of changing a project's public API" showDescription=true showControls=true autoPlay=false loop=false /%}
-
-**Query:** "Use Nx to generate a new React library for handling past orders."
-
-{% video-player src="/documentation/blog/media/nx-mcp-cursor-generate-project.mp4" alt="Asking Cursor to generate a new React project for listing past orders" showDescription=true showControls=true autoPlay=false loop=false /%}
-
-**Query:** "Can you configure Nx release for the packages of this workspace? Just update nx.json with the necessary configuration. Use conventional commits as the versioning strategy. Also feel free to use the Nx docs to pull more info on how to configure it."
-
-{% video-player src="/documentation/blog/media/nx-mcp-cursor-nx-release.mp4" alt="Asking Cursor to use the docs to configure Nx release for the workspace" showDescription=true showControls=true autoPlay=false loop=false /%}
+- If I change the public API of feat-product-detail, which other projects might be affected by that change?
+- Use Nx to generate a new React library for handling past orders.
+- Can you configure Nx release for the packages of this workspace? Just update nx.json with the necessary configuration. Use conventional commits as the versioning strategy. Also feel free to use the Nx docs to pull more info on how to configure it.
 
 ## Wrapping up
 

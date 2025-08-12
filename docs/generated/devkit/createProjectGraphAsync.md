@@ -1,6 +1,6 @@
 # Function: createProjectGraphAsync
 
-▸ **createProjectGraphAsync**(`opts?`): `Promise`\<[`ProjectGraph`](../../devkit/documents/ProjectGraph)\>
+▸ **createProjectGraphAsync**(`opts?`): `Promise`\<[`ProjectGraph`](/reference/core-api/devkit/documents/ProjectGraph)\>
 
 Computes and returns a ProjectGraph.
 
@@ -28,10 +28,10 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 | Name                      | Type      |
 | :------------------------ | :-------- |
-| `opts`                    | `Object`  |
+| `opts?`                   | `Object`  |
 | `opts.exitOnError`        | `boolean` |
 | `opts.resetDaemonClient?` | `boolean` |
 
 #### Returns
 
-`Promise`\<[`ProjectGraph`](../../devkit/documents/ProjectGraph)\>
+`Promise`\<[`ProjectGraph`](/reference/core-api/devkit/documents/ProjectGraph)\>

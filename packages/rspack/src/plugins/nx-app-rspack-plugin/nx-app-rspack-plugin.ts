@@ -42,6 +42,12 @@ export class NxAppRspackPlugin {
     ) {
       compiler.options.entry = {};
     }
+
+    // Prefer `clean` option from Rspack config over our own.
+    if (typeof compiler.options.output.clean !== 'undefined') {
+      this.options.deleteOutputPath = false;
+    }
+
     applyBaseConfig(this.options, compiler.options, {
       useNormalizedEntry: true,
     });

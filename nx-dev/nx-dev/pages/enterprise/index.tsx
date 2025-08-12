@@ -13,7 +13,7 @@ import {
   Security,
   TestimonialCarousel,
   VmwareTestimonial,
-} from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-enterprise';
 import { ReactElement } from 'react';
 
 export function Enterprise(): ReactElement {
@@ -22,11 +22,11 @@ export function Enterprise(): ReactElement {
   return (
     <>
       <NextSeo
-        title="Solving the Performance Paradox, get speed and scale"
+        title="Develop like an enterprise. Deliver like a startup."
         description="Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Solving the Performance Paradox, get speed and scale',
+          title: 'Develop like an enterprise. Deliver like a startup.',
           description:
             "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
           images: [
@@ -34,7 +34,7 @@ export function Enterprise(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

@@ -10,14 +10,14 @@ Nx provides two types of Webpack plugins:
 1. [_Basic_](#basic-plugins) plugins that work in a
    standard [webpack configuration](https://webpack.js.org/configuration/) file.
 2. [_Nx-enhanced_](#nxenhanced-plugins) plugins that work with
-   the [`@nx/webpack:webpack`](/nx-api/webpack/executors/webpack) executor.
+   the [`@nx/webpack:webpack`](/technologies/build-tools/webpack/api/executors/webpack) executor.
 
 The basic plugins are used in Nx 18 to provide seamless integration with the Webpack CLI. Prior to Nx 18, apps are
 generated with Nx-enhanced plugins and require `@nx/webpack:webpack` executor to be used.
 
 This guide contains information on the plugins provided by Nx. For more information on webpack configuration and the
 difference between basic and Nx-enhanced configuration, refer to
-the [Nx Webpack configuration guide](/recipes/webpack/webpack-config-setup).
+the [Nx Webpack configuration guide](/technologies/build-tools/webpack/recipes/webpack-config-setup).
 
 ## Basic plugins
 
@@ -94,6 +94,10 @@ Set `crossorigin` attribute on the `script` and `link` tags.
 Type: `boolean`
 
 Delete the output path before building.
+
+**`Deprecated`**
+
+Use [`output.clean`](https://webpack.js.org/guides/output-management/#cleaning-up-the-dist-folder) instead.
 
 ##### deployUrl
 
@@ -343,6 +347,8 @@ Type: `boolean`
 
 Enables or disables [React SVGR](https://react-svgr.com/). Default is `true`.
 
+**Deprecated:** Add SVGR support in your Webpack configuration without relying on Nx. This option will be removed in Nx 22. See https://react-svgr.com/docs/webpack/
+
 #### Example
 
 ```js
@@ -362,7 +368,7 @@ module.exports = {
 ## Nx-enhanced plugins
 
 The Nx-enhanced plugins work with `@nx/webpack:webpack` executor and receive the target options and context from the
-executor. These are used prior to Nx 18, and are still used when using [Module Federation](/concepts/module-federation/module-federation-and-nx).
+executor. These are used prior to Nx 18, and are still used when using [Module Federation](/technologies/module-federation/concepts/module-federation-and-nx).
 
 The plugins are used in conjunction with `composePlugins` utility to generate a final Webpack configuration object, once all of the plugins have applied their changes.
 
@@ -540,10 +546,10 @@ module.exports = composePlugins(
 
 The `withModuleFederation` and `withModuleFederationForSSR` plugins add module federation support to the webpack build.
 These plugins use
-[`ModuleFederationPlugin`](https://webpack.js.org/concepts/module-federation/) and provide a simpler API through Nx.
+[`ModuleFederationPlugin`](https://webpack.js.org/technologies/module-federation/concepts/) and provide a simpler API through Nx.
 
 For more information, refer to
-the [Module Federation recipe](/concepts/module-federation/faster-builds-with-module-federation).
+the [Module Federation recipe](/technologies/module-federation/concepts/faster-builds-with-module-federation).
 
 #### Options
 

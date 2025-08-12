@@ -8,7 +8,7 @@ interface TocItem {
   level: number;
 }
 
-interface TableOfContentsProps {
+export interface TableOfContentsProps {
   maxDepth?: number;
 }
 
@@ -18,12 +18,12 @@ export function TableOfContents({
   const [headings, setHeadings] = useState<TocItem[]>([]);
 
   useEffect(() => {
-    // Find the main content wrapper where markdown content is rendered
-    const content = document.querySelector('[data-document="main"]');
+    // Find the content area where markdown content is rendered
+    const content = document.querySelector('[data-content-area]');
     if (!content) return;
 
     // Get all headings h1-h6 within the content
-    const headingElements = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headingElements = content.querySelectorAll('h2, h3, h4, h5, h6');
 
     const items: TocItem[] = Array.from(headingElements)
       .map((heading) => {
@@ -42,7 +42,7 @@ export function TableOfContents({
   }, [maxDepth]);
 
   if (headings.length === 0) {
-    return null;
+    return <></>;
   }
 
   return (
@@ -54,7 +54,7 @@ export function TableOfContents({
         {headings.map((heading) => (
           <li
             key={heading.id}
-            style={{ paddingLeft: `${(heading.level - 1) * 1}rem` }}
+            style={{ paddingLeft: `${(heading.level - 2) * 1}rem` }}
           >
             <a
               href={`#${heading.id}`}

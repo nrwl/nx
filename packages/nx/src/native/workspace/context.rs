@@ -1,19 +1,21 @@
 use std::collections::{HashMap, HashSet};
+use std::mem;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::native::glob::glob_files::glob_files;
 use crate::native::hasher::hash;
 use crate::native::logger::enable_logger;
-use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
+use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
-use crate::native::utils::{path::get_child_files, Normalize, NxCondvar, NxMutex};
+use crate::native::utils::{Normalize, NxCondvar, NxMutex, path::get_child_files};
 use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
-use crate::native::workspace::{config_files, types::NxWorkspaceFiles, workspace_files};
+use crate::native::workspace::{types::NxWorkspaceFiles, workspace_files};
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
 use tracing::{trace, warn};
@@ -51,6 +53,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
     files
 }
 
+#[derive(Default)]
 struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
 impl FilesWorker {
     #[cfg(not(target_arch = "wasm32"))]
@@ -227,7 +230,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
         let file_data = self.all_file_data();
-        let globbed_files = config_files::glob_files(&file_data, globs, exclude)?;
+        let globbed_files = glob_files(&file_data, globs, exclude)?;
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
@@ -246,8 +249,7 @@ impl WorkspaceContext {
         globs
             .into_iter()
             .map(|glob| {
-                let globbed_files =
-                    config_files::glob_files(&file_data, vec![glob], exclude.clone())?;
+                let globbed_files = glob_files(&file_data, vec![glob], exclude.clone())?;
                 Ok(globbed_files.map(|file| file.file.to_owned()).collect())
             })
             .collect()
@@ -262,8 +264,7 @@ impl WorkspaceContext {
         let hashes = glob_groups
             .into_iter()
             .map(|globs| {
-                let globbed_files =
-                    config_files::glob_files(files, globs, None)?.collect::<Vec<_>>();
+                let globbed_files = glob_files(files, globs, None)?.collect::<Vec<_>>();
                 let mut hasher = xxh3::Xxh3::new();
                 for file in globbed_files {
                     hasher.update(file.file.as_bytes());
@@ -283,7 +284,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
         let files = &self.all_file_data();
-        let globbed_files = config_files::glob_files(files, globs, exclude)?.collect::<Vec<_>>();
+        let globbed_files = glob_files(files, globs, exclude)?.collect::<Vec<_>>();
 
         let mut hasher = xxh3::Xxh3::new();
         for file in globbed_files {
@@ -413,5 +414,12 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.files_worker.get_files())
+    }
+}
+
+impl Drop for WorkspaceContext {
+    fn drop(&mut self) {
+        let fw = mem::take(&mut self.files_worker);
+        drop(fw);
     }
 }

@@ -1,5 +1,5 @@
 'use client';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import { ReactElement, useState, useEffect } from 'react';
 import { Dialog, DialogPanel, Transition } from '@headlessui/react';
 import Link from 'next/link';
@@ -85,7 +85,7 @@ export function Hero(): ReactElement {
           <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <DialogPanel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
+              <DialogPanel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-950 bg-slate-950 text-left align-middle shadow-xl transition-all focus:outline-none">
                 <iframe
                   width="812"
                   height="456"

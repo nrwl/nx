@@ -10,11 +10,13 @@ import * as fileUtils from '../utils/fileutils';
 import {
   addPackagePathToWorkspaces,
   detectPackageManager,
+  getPackageManagerCommand,
   getPackageManagerVersion,
   getPackageWorkspaces,
   isWorkspacesEnabled,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
+  parseVersionFromPackageManagerField,
   PackageManager,
 } from './package-manager';
 
@@ -213,7 +215,7 @@ describe('package-manager', () => {
         throw new Error('Command failed');
       });
       jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({});
-      expect(() => getPackageManagerVersion('npm')).toThrowError();
+      expect(() => getPackageManagerVersion('npm')).toThrow();
     });
 
     it('should throw an error if packageManager in package.json does not match detected pacakge manager', () => {
@@ -223,7 +225,7 @@ describe('package-manager', () => {
       jest
         .spyOn(fileUtils, 'readJsonFile')
         .mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
-      expect(() => getPackageManagerVersion('yarn')).toThrowError();
+      expect(() => getPackageManagerVersion('yarn')).toThrow();
     });
   });
 
@@ -519,6 +521,93 @@ describe('package-manager', () => {
           "
         `);
       });
+    });
+  });
+
+  describe('parseVersionFromPackageManagerField', () => {
+    it('should return null for invalid semver', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'bad')).toEqual(null);
+      expect(parseVersionFromPackageManagerField('yarn', '2.1')).toEqual(null);
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha224.16a0797d1710d1fb7ec40ab5c3801b68370a612a9b66ba117ad9924b'
+        )
+      ).toEqual(null);
+    });
+
+    it('should <major>.<minor>.<patch> version', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'yarn@3.2.3')).toEqual(
+        '3.2.3'
+      );
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'yarn@3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa'
+        )
+      ).toEqual('3.2.3');
+    });
+  });
+
+  describe('getPackageManagerCommand', () => {
+    const publishCmdParam: [string, string, string, string] = [
+      'dist/packages/my-pkg',
+      'https://registry.npmjs.org/',
+      '@org:registry',
+      'latest',
+    ];
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should return npm publish command', () => {
+      const commands = getPackageManagerCommand('npm');
+      expect(commands.publish(...publishCmdParam)).toEqual(
+        'npm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest'
+      );
+    });
+
+    it('should return yarn publish command using npm publish', () => {
+      const commands = getPackageManagerCommand('yarn');
+      expect(commands.publish(...publishCmdParam)).toEqual(
+        'npm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest'
+      );
+    });
+
+    it('should return pnpm publish command with scoped registry when provided for pnpm version >= 9.15.7 < 10.0.0 || >= 10.5.0', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+        switch (p) {
+          case 'pnpm --version':
+            return '9.15.7';
+        }
+      });
+      const commands = getPackageManagerCommand('pnpm');
+      expect(commands.publish(...publishCmdParam)).toEqual(
+        'pnpm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+      );
+    });
+
+    it('should return pnpm publish command without use scoped registry for pnpm version < 9.15.7', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+        switch (p) {
+          case 'pnpm --version':
+            return '9.10.1';
+          default:
+            throw new Error('Command failed');
+        }
+      });
+      jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({});
+      const commands = getPackageManagerCommand('pnpm');
+      expect(commands.publish(...publishCmdParam)).toEqual(
+        'pnpm publish "dist/packages/my-pkg" --json --"registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+      );
+    });
+
+    it('should return bun publish command with registry and tag', () => {
+      const commands = getPackageManagerCommand('bun');
+      expect(commands.publish(...publishCmdParam)).toEqual(
+        'bun publish --cwd="dist/packages/my-pkg" --json --registry="https://registry.npmjs.org/" --tag=latest'
+      );
     });
   });
 });

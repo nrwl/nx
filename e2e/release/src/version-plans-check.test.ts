@@ -7,7 +7,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readdirSync, readFileSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 
@@ -88,6 +88,8 @@ describe('nx release version plans check command', () => {
       NX   Version plans are not enabled
 
       Please ensure at least one release group has version plans enabled in your Nx release configuration if you want to use this command.
+
+      Learn more about version plans here: https://nx.dev/recipes/nx-release/file-based-versioning-version-plans
 
 
     `);

@@ -37,7 +37,6 @@ export function getDevServerOptions(
     },
     onListening(server) {
       const isHttps =
-        server.options.https ||
         (server.options.server as { type: string })?.type === 'https';
       logger.info(
         `NX Web Development Server is listening at ${
@@ -73,6 +72,10 @@ export function getDevServerOptions(
     }
   }
 
+  if (serveOptions.proxyConfig) {
+    config.proxy = getProxyConfig(root, serveOptions);
+  }
+
   return config;
 }
 
@@ -81,4 +84,9 @@ function getSslConfig(root: string, options: DevServerExecutorSchema) {
     key: readFileSync(path.resolve(root, options.sslKey), 'utf-8'),
     cert: readFileSync(path.resolve(root, options.sslCert), 'utf-8'),
   };
+}
+
+function getProxyConfig(root: string, options: DevServerExecutorSchema) {
+  const proxyPath = path.resolve(root, options.proxyConfig as string);
+  return require(proxyPath);
 }

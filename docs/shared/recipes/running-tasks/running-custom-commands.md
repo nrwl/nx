@@ -36,7 +36,7 @@ For each project for which you want to enable `make`, add a target in its `proje
 }
 ```
 
-For more information (e.g. how to forward arguments), see the [run-commands api doc](/nx-api/nx/executors/run-commands).
+For more information (e.g. how to forward arguments), see the [run-commands api doc](/reference/core-api/nx/executors/run-commands).
 
 ## 3. Run the command
 

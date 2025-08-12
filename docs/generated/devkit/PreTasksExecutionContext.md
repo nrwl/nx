@@ -4,7 +4,8 @@
 
 #### Type declaration
 
-| Name                  | Type                                                                |
-| :-------------------- | :------------------------------------------------------------------ |
-| `nxJsonConfiguration` | [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration) |
-| `workspaceRoot`       | `string`                                                            |
+| Name                  | Type                                                                              |
+| :-------------------- | :-------------------------------------------------------------------------------- |
+| `argv`                | `string`[]                                                                        |
+| `nxJsonConfiguration` | [`NxJsonConfiguration`](/reference/core-api/devkit/documents/NxJsonConfiguration) |
+| `workspaceRoot`       | `string`                                                                          |

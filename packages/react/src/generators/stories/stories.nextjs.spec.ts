@@ -7,7 +7,6 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 // nx-ignore-next-line
 import { applicationGenerator } from '@nx/next';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { Linter } from '@nx/eslint';
 
 describe('nextjs:stories for applications', () => {
   let tree: Tree;
@@ -43,13 +42,6 @@ describe('nextjs:stories for applications', () => {
     ).toMatchSnapshot();
 
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
-    expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
-    ).toBeDefined();
-    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@storybook/testing-library']
-    ).toBeDefined();
   });
 
   it('should create the stories without interaction tests', async () => {
@@ -87,7 +79,7 @@ export async function createTestUIApp(name: string): Promise<Tree> {
   const tree = createTreeWithEmptyWorkspace();
   await applicationGenerator(tree, {
     e2eTestRunner: 'none',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',

@@ -1,47 +1,46 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`react:stories for applications should create the stories with interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react';
+"import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { NxWelcome } from './nx-welcome';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
-const meta: Meta<typeof NxWelcome> = {
+const meta = {
   component: NxWelcome,
   title: 'NxWelcome',
-};
+} satisfies Meta<typeof NxWelcome>;
 export default meta;
+
 type Story = StoryObj<typeof NxWelcome>;
 
 export const Primary = {
   args: {
     title: '',
   },
-};
+} satisfies Story;
 
-export const Heading: Story = {
+export const Heading = {
   args: {
     title: '',
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to NxWelcome!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/NxWelcome/gi)).toBeTruthy();
   },
-};
+} satisfies Story;
 "
 `;
 
 exports[`react:stories for applications should create the stories with interaction tests 2`] = `
-"import type { Meta, StoryObj } from '@storybook/react';
+"import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { Test } from './another-cmp';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
-const meta: Meta<typeof Test> = {
+const meta = {
   component: Test,
   title: 'Test',
-};
+} satisfies Meta<typeof Test>;
 export default meta;
+
 type Story = StoryObj<typeof Test>;
 
 export const Primary = {
@@ -49,49 +48,50 @@ export const Primary = {
     name: '',
     displayAge: false,
   },
-};
+} satisfies Story;
 
-export const Heading: Story = {
+export const Heading = {
   args: {
     name: '',
     displayAge: false,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
   },
-};
+} satisfies Story;
 "
 `;
 
 exports[`react:stories for applications should create the stories without interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react';
+"import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { NxWelcome } from './nx-welcome';
 
-const meta: Meta<typeof NxWelcome> = {
+const meta = {
   component: NxWelcome,
   title: 'NxWelcome',
-};
+} satisfies Meta<typeof NxWelcome>;
 export default meta;
+
 type Story = StoryObj<typeof NxWelcome>;
 
 export const Primary = {
   args: {
     title: '',
   },
-};
+} satisfies Story;
 "
 `;
 
 exports[`react:stories for applications should create the stories without interaction tests 2`] = `
-"import type { Meta, StoryObj } from '@storybook/react';
+"import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { Test } from './another-cmp';
 
-const meta: Meta<typeof Test> = {
+const meta = {
   component: Test,
   title: 'Test',
-};
+} satisfies Meta<typeof Test>;
 export default meta;
+
 type Story = StoryObj<typeof Test>;
 
 export const Primary = {
@@ -99,11 +99,11 @@ export const Primary = {
     name: '',
     displayAge: false,
   },
-};
+} satisfies Story;
 "
 `;
 
 exports[`react:stories for applications should not update existing stories 1`] = `
-"import { ComponentStory, ComponentMeta } from '@storybook/react';
+"import { ComponentStory, ComponentMeta } from '@storybook/react-webpack5';
 "
 `;

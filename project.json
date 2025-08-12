@@ -7,7 +7,8 @@
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
-        "storage": "build/local-registry/storage"
+        "storage": "dist/local-registry/storage",
+        "clear": false
       }
     },
     "populate-local-registry-storage": {
@@ -16,16 +17,19 @@
         {
           "input": "production",
           "projects": ["tag:npm:public"]
-        }
+        },
+        "{workspaceRoot}/scripts/local-registry",
+        "native"
       ],
       "dependsOn": [
+        "local-registry",
         {
           "target": "build",
           "projects": ["tag:npm:public"]
         }
       ],
       "command": "node ./scripts/local-registry/run-populate-storage.mjs",
-      "outputs": ["{workspaceRoot}/build/local-registry/storage"]
+      "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
     },
     "nx-release": {
       "dependsOn": [
@@ -34,7 +38,11 @@
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release"
+      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
+    },
+    "start-docker-registry": {
+      "continuous": true,
+      "command": "docker run --rm -p 5000:5000 --name local-docker-registry registry:2"
     },
     "documentation": {
       "executor": "nx:run-commands",
@@ -69,6 +77,28 @@
       "outputs": [
         "{workspaceRoot}/docs/external-generated",
         "{workspaceRoot}/docs/generated"
+      ]
+    },
+    "check-format:quick": {
+      "parallelism": false
+    },
+    "lint": {
+      "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "lint-pnpm-lock": {
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "prepush": {
+      "dependsOn": [
+        "nx:format-native",
+        "nx:lint-native",
+        "documentation",
+        "check-commit",
+        "check-format:quick",
+        "check-lock-files"
       ]
     }
   }

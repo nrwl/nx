@@ -2,7 +2,7 @@
 title: 'Using NgRx Standalone APIs with Nx'
 slug: 'using-ngrx-standalone-apis-with-nx'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-02-21/pJHhA04d6jIjOb5vpCDjyw.png'
+cover_image: '/blog/images/2023-02-21/pJHhA04d6jIjOb5vpCDjyw.avif'
 tags: [nx, tutorial]
 description: A practical guide to integrating NgRx Standalone APIs in Angular applications using Nx, with automated setup for state management.
 ---

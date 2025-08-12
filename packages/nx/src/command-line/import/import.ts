@@ -6,7 +6,7 @@ import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
-import * as createSpinner from 'ora';
+const createSpinner = require('ora');
 import { detectPlugins } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -27,7 +27,7 @@ import { mergeRemoteSource } from './utils/merge-remote-source';
 import { minimatch } from 'minimatch';
 import {
   configurePlugins,
-  runPackageManagerInstallPlugins,
+  installPluginPackages,
 } from '../init/configure-plugins';
 import {
   checkCompatibleWithPlugins,
@@ -441,7 +441,7 @@ async function runPluginsInstall(
   let installed = true;
   output.log({ title: 'Installing Plugins' });
   try {
-    runPackageManagerInstallPlugins(workspaceRoot, pmc, plugins);
+    installPluginPackages(workspaceRoot, pmc, plugins);
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;

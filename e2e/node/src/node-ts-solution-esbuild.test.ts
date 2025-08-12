@@ -2,15 +2,15 @@ import { names } from '@nx/devkit';
 import {
   cleanupProject,
   getPackageManagerCommand,
+  getRandomPort,
   getSelectedPackageManager,
   newProject,
-  readFile,
   runCLI,
   runCommand,
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 let originalEnvPort;
 
@@ -27,7 +27,8 @@ describe('Node Esbuild Applications', () => {
     cleanupProject();
   });
 
-  it('it should generate an app that cosumes a non-buildable ts library', () => {
+  // TODO: Re-enable this test once https://github.com/pinojs/pino/issues/2253 is resolved
+  it.skip('it should generate an app that cosumes a non-buildable ts library', () => {
     const nodeapp = uniq('nodeapp');
     const lib = uniq('lib');
     const port = getRandomPort();
@@ -61,6 +62,7 @@ describe('Node Esbuild Applications', () => {
     updateJson('tsconfig.base.json', (json) => {
       json.compilerOptions.moduleResolution = 'node';
       json.compilerOptions.module = 'esnext';
+      delete json.compilerOptions.customConditions;
       return json;
     });
 
@@ -84,7 +86,3 @@ describe('Node Esbuild Applications', () => {
     );
   });
 });
-
-function getRandomPort() {
-  return Math.floor(1000 + Math.random() * 7000);
-}

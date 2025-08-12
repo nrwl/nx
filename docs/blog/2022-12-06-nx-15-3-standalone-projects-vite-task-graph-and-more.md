@@ -2,7 +2,7 @@
 title: 'Nx 15.3 — Standalone Projects, Vite, Task Graph and more!'
 slug: 'nx-15-3-standalone-projects-vite-task-graph-and-more'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-12-06/VXYjjWhOUpNuHFGCoF63OQ.png'
+cover_image: '/blog/images/2022-12-06/VXYjjWhOUpNuHFGCoF63OQ.avif'
 tags: [nx, release]
 description: Nx 15.3 introduces standalone projects, Vite and Vitest tooling, enhanced task graph visualization, and simplified project adoption, now reaching 3M weekly downloads.
 ---
@@ -198,9 +198,9 @@ If you are currently using the NxExt based Vite plugin, or even a Webpack based 
 npx nx g @nrwl/vite:configuration
 ```
 
-This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/nx-api/vite/generators/configuration](/nx-api/vite/generators/configuration)
+This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/technologies/build-tools/vite/generators/configuration](/technologies/build-tools/vite/api/generators/configuration)
 
-You can also find all the details about the new Vite package on our docs: [/nx-api/vite](/nx-api/vite)
+You can also find all the details about the new Vite package in our docs: [/technologies/build-tools/vite/introduction](/technologies/build-tools/vite/introduction)
 
 ## Adopting Nx has never been easier
 
@@ -227,7 +227,7 @@ Check out our docs for all the details on
 - [adding Nx to an existing monorepo](/recipes/adopting-nx/adding-to-monorepo)
 - [adding Nx to any non-monorepo setup](/recipes/adopting-nx/adding-to-existing-project)
 - [migrating your CRA project to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [migrating your Angular CLI app to Nx](/recipes/angular/migration/angular)
+- [migrating your Angular CLI app to Nx](/technologies/angular/migration/angular)
 
 Oh..you're wondering why you would want to add Nx to an existing non-monorepo project? Then keep reading 👇
 
@@ -271,7 +271,7 @@ This process will ask you a few questions about which operations are cacheable. 
 }
 ```
 
-Read more on our docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
+Read more in our docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
 
 ## Root-level Scripts
 
@@ -312,7 +312,7 @@ npx nx docs
 
 As the next steps you might obviously want to add `docs` to the [cacheable operations](/ci/reference/config) and [fine-tune it's cache inputs](/recipes/running-tasks/configure-inputs).
 
-Read more about it on our docs: [/recipes/running-tasks/root-level-scripts](/recipes/running-tasks/root-level-scripts)
+Read more about it in our docs: [/recipes/running-tasks/root-level-scripts](/recipes/running-tasks/root-level-scripts)
 
 ## Simplified Nx run-commands
 
@@ -386,7 +386,7 @@ For simple commands this was a huge overhead, so we simplified it to just this:
 
 Simple, isn't it! Obviously the expanded form is still there and also useful for when you need more options, run multiple commands or features such as argument forwarding.
 
-You can read all about it on our docs: [/recipes/running-tasks/run-commands-executor](/recipes/running-tasks/run-commands-executor)
+You can read all about it in our docs: [/recipes/running-tasks/run-commands-executor](/recipes/running-tasks/run-commands-executor)
 
 ## Coming up
 

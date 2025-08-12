@@ -25,12 +25,13 @@ const packagesToUpdate: PackageSpec[] = [
       '@angular/common',
       '@angular/compiler',
       '@angular/compiler-cli',
+      '@angular/platform-browser',
       '@angular/router',
     ],
   },
   {
     main: '@angular/material',
-    children: ['@angular/cdk'],
+    children: ['@angular/cdk', '@angular/google-maps'],
   },
   'ng-packagr',
 ];

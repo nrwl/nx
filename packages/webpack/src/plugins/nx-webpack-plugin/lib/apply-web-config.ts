@@ -61,7 +61,7 @@ export function applyWebConfig(
         sri: options.subresourceIntegrity,
         outputPath: path.basename(options.index),
         indexPath: path.join(options.root, options.index),
-        baseHref: options.baseHref,
+        baseHref: options.baseHref !== false ? options.baseHref : undefined,
         deployUrl: options.deployUrl,
         scripts: options.scripts,
         styles: options.styles,
@@ -77,7 +77,7 @@ export function applyWebConfig(
   if (stylesOptimization) {
     minimizer.push(
       new CssMinimizerPlugin({
-        test: /\.(?:css|scss|sass|less|styl)$/,
+        test: /\.(?:css|scss|sass|less)$/,
       })
     );
   }
@@ -145,13 +145,13 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sassOptions: {
               fiber: false,
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -169,24 +169,6 @@ export function applyWebConfig(
             lessOptions: {
               paths: includePaths,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.module\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForCssModules(options, includePaths),
-        {
-          loader: path.join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -210,15 +192,15 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -238,25 +220,6 @@ export function applyWebConfig(
               javascriptEnabled: true,
               ...lessPathOptions,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalCss(options, includePaths),
-        {
-          loader: path.join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -280,15 +243,15 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -313,30 +276,11 @@ export function applyWebConfig(
         },
       ],
     },
-    {
-      test: /\.styl$/,
-      include: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalStyle(options, includePaths),
-        {
-          loader: path.join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
-            },
-          },
-        },
-      ],
-    },
   ];
 
   const rules: RuleSetRule[] = [
     {
-      test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+      test: /\.css$|\.scss$|\.sass$|\.less$/,
       oneOf: [...cssModuleRules, ...globalCssRules, ...globalStyleRules],
     },
   ];
@@ -426,6 +370,7 @@ export function applyWebConfig(
           },
         },
       },
+      // TODO(v22): Remove this but provide a migration in `@nx/react` to add @svgr/webpack in userland webpack config
       // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
       {
         test: /\.svg$/,

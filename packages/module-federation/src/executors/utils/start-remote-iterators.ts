@@ -1,7 +1,9 @@
 import { StartRemoteFn, type StartRemoteIteratorsOptions } from './models';
 import {
+  getBuildTargetNameFromMFDevServer,
   getModuleFederationConfig,
   getRemotes,
+  normalizeProjectName,
   parseStaticRemotesConfig,
   parseStaticSsrRemotesConfig,
   startRemoteProxies,
@@ -29,8 +31,12 @@ export async function startRemoteIterators(
   const { projects: workspaceProjects } =
     readProjectsConfigurationFromProjectGraph(context.projectGraph);
   const project = workspaceProjects[context.projectName];
+  const buildTargetName = getBuildTargetNameFromMFDevServer(
+    project,
+    context.projectGraph
+  );
   const moduleFederationConfig = getModuleFederationConfig(
-    project.targets.build.options.tsConfig,
+    project.targets?.[buildTargetName]?.options?.tsConfig,
     context.root,
     project.root,
     pluginName
@@ -60,8 +66,8 @@ export async function startRemoteIterators(
       remotes.devRemotes.map((r) =>
         typeof r === 'string' ? r : r.remoteName
       ) ?? []
-    ).map((r) => r.replace(/-/g, '_')),
-    project.name.replace(/-/g, '_'),
+    ).map((r) => normalizeProjectName(r)),
+    normalizeProjectName(project.name),
   ]);
 
   const staticRemotesConfig = isServer

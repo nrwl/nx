@@ -17,7 +17,7 @@ import { addModuleFederationFiles } from './lib/add-module-federation-files';
 import {
   normalizeRemoteDirectory,
   normalizeRemoteName,
-} from './lib/normalize-remote';
+} from '../../utils/normalize-remote';
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
 import { NormalizedSchema, Schema } from './schema';
@@ -29,15 +29,18 @@ import {
 } from '../../utils/versions';
 import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
+import { normalizeHostName } from './lib/normalize-host-name';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+  const name = await normalizeHostName(host, schema.directory, schema.name);
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, {
       ...schema,
+      name,
       useProjectJson: true,
     })),
     js: schema.js ?? false,
@@ -45,8 +48,8 @@ export async function hostGenerator(
       ? false
       : schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
-    // TODO(colum): remove when MF works with Crystal
-    addPlugin: false,
+    // TODO(colum): remove when Webpack MF works with Crystal
+    addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,
     bundler: schema.bundler ?? 'rspack',
   };
 
@@ -106,17 +109,19 @@ export async function hostGenerator(
   }
 
   addModuleFederationFiles(host, options, remotesWithPorts);
-  updateModuleFederationProject(host, options);
+  updateModuleFederationProject(host, options, true);
   updateModuleFederationE2eProject(host, options);
   updateModuleFederationTsconfig(host, options);
 
   if (options.ssr) {
-    const setupSsrTask = await setupSsrGenerator(host, {
-      project: options.projectName,
-      serverPort: options.devServerPort,
-      skipFormat: true,
-    });
-    tasks.push(setupSsrTask);
+    if (options.bundler !== 'rspack') {
+      const setupSsrTask = await setupSsrGenerator(host, {
+        project: options.projectName,
+        serverPort: options.devServerPort,
+        skipFormat: true,
+      });
+      tasks.push(setupSsrTask);
+    }
 
     const setupSsrForHostTask = await setupSsrForHost(
       host,
@@ -127,14 +132,7 @@ export async function hostGenerator(
     tasks.push(setupSsrForHostTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
-    if (options.bundler === 'rspack') {
-      projectConfig.targets.server.executor = '@nx/rspack:rspack';
-      projectConfig.targets.server.options.rspackConfig = joinPathFragments(
-        projectConfig.root,
-        `rspack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
-      );
-      delete projectConfig.targets.server.options.webpackConfig;
-    } else {
+    if (options.bundler !== 'rspack') {
       projectConfig.targets.server.options.webpackConfig = joinPathFragments(
         projectConfig.root,
         `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`

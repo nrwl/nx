@@ -6,13 +6,15 @@ import {
   normalizePath,
   Tree,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
 import { getComponentPropDefaults } from '../../utils/component-props';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getUiFramework } from '../../utils/framework';
 
 let tsModule: typeof import('typescript');
 
@@ -20,12 +22,18 @@ export interface CreateComponentStoriesFileSchema {
   project: string;
   componentPath: string;
   interactionTests?: boolean;
+  uiFramework?: string;
   skipFormat?: boolean;
 }
 
 export function createComponentStoriesFile(
   host: Tree,
-  { project, componentPath, interactionTests }: CreateComponentStoriesFileSchema
+  {
+    project,
+    componentPath,
+    interactionTests,
+    uiFramework,
+  }: CreateComponentStoriesFileSchema
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -33,7 +41,7 @@ export function createComponentStoriesFile(
   const proj = getProjects(host).get(project);
 
   const componentFilePath = joinPathFragments(
-    proj.sourceRoot ?? proj.root,
+    getProjectSourceRoot(proj, host),
     componentPath
   );
 
@@ -78,6 +86,7 @@ export function createComponentStoriesFile(
           componentDirectory,
           name,
           interactionTests,
+          uiFramework,
           isPlainJs,
           componentNodes.length > 1
         );
@@ -95,6 +104,7 @@ export function createComponentStoriesFile(
       componentDirectory,
       name,
       interactionTests,
+      uiFramework,
       isPlainJs
     );
   }
@@ -107,6 +117,7 @@ export function findPropsAndGenerateFile(
   componentDirectory: string,
   name: string,
   interactionTests: boolean,
+  uiFramework: string,
   isPlainJs: boolean,
   fromNodeArray?: boolean
 ) {
@@ -129,6 +140,7 @@ export function findPropsAndGenerateFile(
       argTypes,
       componentName: (cmpDeclaration as any).name.text,
       interactionTests,
+      uiFramework,
     }
   );
 }
@@ -140,6 +152,7 @@ export async function componentStoryGenerator(
   createComponentStoriesFile(host, {
     ...schema,
     interactionTests: schema.interactionTests ?? true,
+    uiFramework: schema.uiFramework ?? getUiFramework(host, schema.project),
   });
 
   if (!schema.skipFormat) {

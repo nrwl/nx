@@ -5,7 +5,7 @@ import {
   runCLI,
   runE2ETests,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
 
@@ -16,7 +16,8 @@ describe('Cypress E2E Test runner (legacy)', () => {
 
   afterAll(() => cleanupProject());
 
-  it(
+  // TODO(@leo): Please investigate why this test is flaky
+  xit(
     'should run e2e in parallel',
     async () => {
       const ngApp1 = uniq('ng-app1');

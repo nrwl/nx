@@ -1,0 +1,364 @@
+---
+title: Markdoc Tags Test Page
+description: Test page for all custom Markdoc tags
+---
+
+We're not including the following since there are built-in ones in Starlight that we don't have to maintain:
+
+- Tabs
+- Steps
+- Callout
+
+The `side-by-side` will not be migrated over since it's broken, and it's fine to not have content side-by-side in the docs (makes responsiveness easier too)
+
+The following are only for blog posts so we'll exclude:
+
+- Tweet
+- ToC
+
+## 1. Install Nx Console
+
+{% install_nx_console /%}
+
+## 2. YouTube
+
+{% youtube src="https://youtu.be/OQ-Zc5tcxJE" title="Example YouTube Video" width="100%" /%}
+
+## 3. Call to Action
+
+{% call_to_action title="Get Started with Nx" url="/getting-started/intro" description="Learn how to use Nx in your project" icon="nxcloud" variant="gradient" size="lg" /%}
+
+## 4. Cards with Card and Link Card
+
+{% cards cols=3 smCols=1 mdCols=2 lgCols=3 %}
+{% card title="Documentation" description="Learn about Nx concepts" type="documentation" url="/concepts/mental-model" /%}
+{% card title="Tutorial" description="Follow our tutorials" type="video" url="/tutorials" /%}
+{% link_card title="GitHub" type="external" url="https://github.com/nrwl/nx" icon="github" /%}
+{% /cards %}
+
+## 5. GitHub Repository
+
+{% github_repository url="https://github.com/nrwl/nx-examples" title="Nx Examples Repository" /%}
+
+## 6. Stackblitz Button
+
+{% stackblitz_button url="github.com/nrwl/nx-recipes/tree/main/angular-standalone?file=README.md" title="Open in StackBlitz" /%}
+
+## 7. Graph
+
+{% graph height="450px" title="Project View" %}
+{
+  "composite": false,
+  "projects": [
+    {
+      "name": "shared-product-state",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-state",
+        "tags": ["scope:shared", "type:state"]
+      }
+    },
+    {
+      "name": "shared-product-types",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-types",
+        "tags": ["type:types", "scope:shared"]
+      }
+    },
+    {
+      "name": "shared-product-data",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-data",
+        "tags": ["type:data", "scope:shared"]
+      }
+    },
+    {
+      "name": "cart-cart-page",
+      "type": "lib",
+      "data": {
+        "root": "cart/cart-page",
+        "tags": ["scope:cart", "type:feature"]
+      }
+    },
+    {
+      "name": "shared-styles",
+      "type": "lib",
+      "data": {
+        "root": "shared/styles",
+        "tags": ["scope:shared", "type:styles"]
+      }
+    },
+    {
+      "name": "e2e-cart",
+      "type": "e2e",
+      "data": {
+        "root": "e2e/cart",
+        "tags": ["scope:cart", "type:e2e"]
+      }
+    },
+    {
+      "name": "cart",
+      "type": "app",
+      "data": {
+        "root": "cart",
+        "tags": ["type:app", "scope:cart"]
+      }
+    }
+  ],
+  "dependencies": {
+    "shared-product-state": [
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-data",
+        "type": "static"
+      },
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-types",
+        "type": "static"
+      }
+    ],
+    "shared-product-types": [],
+    "shared-product-data": [
+      {
+        "source": "shared-product-data",
+        "target": "shared-product-types",
+        "type": "static"
+      }
+    ],
+    "shared-e2e-utils": [],
+    "cart-cart-page": [
+      {
+        "source": "cart-cart-page",
+        "target": "shared-product-state",
+        "type": "static"
+      }
+    ],
+    "shared-styles": [],
+    "e2e-cart": [
+      { "source": "e2e-cart", "target": "cart", "type": "implicit" }
+    ],
+    "cart": [
+      { "source": "cart", "target": "shared-styles", "type": "implicit" },
+      { "source": "cart", "target": "cart-cart-page", "type": "static" }
+    ]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": [],
+  "enableTooltips": false
+}
+{% /graph %}
+
+{% graph height="450px" title="Composite View (Nx 20+)" %}
+{
+  "composite": true,
+  "projects": [
+    {
+      "name": "shared-product-state",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-state",
+        "tags": ["scope:shared", "type:state"]
+      }
+    },
+    {
+      "name": "shared-product-types",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-types",
+        "tags": ["type:types", "scope:shared"]
+      }
+    },
+    {
+      "name": "shared-product-data",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-data",
+        "tags": ["type:data", "scope:shared"]
+      }
+    },
+    {
+      "name": "cart-cart-page",
+      "type": "lib",
+      "data": {
+        "root": "cart/cart-page",
+        "tags": ["scope:cart", "type:feature"]
+      }
+    },
+    {
+      "name": "shared-styles",
+      "type": "lib",
+      "data": {
+        "root": "shared/styles",
+        "tags": ["scope:shared", "type:styles"]
+      }
+    },
+    {
+      "name": "e2e-cart",
+      "type": "e2e",
+      "data": {
+        "root": "e2e/cart",
+        "tags": ["scope:cart", "type:e2e"]
+      }
+    },
+    {
+      "name": "cart",
+      "type": "app",
+      "data": {
+        "root": "cart/cart",
+        "tags": ["type:app", "scope:cart"]
+      }
+    }
+  ],
+  "dependencies": {
+    "shared-product-state": [
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-data",
+        "type": "static"
+      },
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-types",
+        "type": "static"
+      }
+    ],
+    "shared-product-types": [],
+    "shared-product-data": [
+      {
+        "source": "shared-product-data",
+        "target": "shared-product-types",
+        "type": "static"
+      }
+    ],
+    "shared-e2e-utils": [],
+    "cart-cart-page": [
+      {
+        "source": "cart-cart-page",
+        "target": "shared-product-state",
+        "type": "static"
+      }
+    ],
+    "shared-styles": [],
+    "e2e-cart": [
+      { "source": "e2e-cart", "target": "cart", "type": "implicit" }
+    ],
+    "cart": [
+      { "source": "cart", "target": "shared-styles", "type": "implicit" },
+      { "source": "cart", "target": "cart-cart-page", "type": "static" }
+    ]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": [],
+  "enableTooltips": false
+}
+{% /graph %}
+
+## 8. Iframe
+
+{% iframe src="https://nx.dev" title="Nx Documentation" width="100%" /%}
+
+## 9. Video Player
+
+{% video_player src="/assets/videos/demo.mp4" alt="Demo video" showControls=true autoPlay=false loop=false /%}
+
+## 10. Personas
+
+{% personas %}
+{% persona type="integrated" title="Integrated Monorepo" url="/concepts/integrated-vs-package-based" %}
+This persona represents developers working with integrated monorepos.
+- Single version policy
+- Code sharing
+- Atomic changes
+{% /persona %}
+{% persona type="javascript" title="JavaScript Developer" url="/getting-started/intro" %}
+For JavaScript developers getting started with Nx.
+{% /persona %}
+{% /personas %}
+
+## 11. Project Details
+
+{% project_details title="Project Details View" expandedTargets=["build"] %}
+{
+  "project": {
+    "name": "foo",
+    "data": {
+      "root": " packages/foo",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "dependsOn": ["^build"],
+          "cache": true,
+          "inputs": [
+            "{workspaceRoot}/tsconfig.base.json",
+            "{projectRoot}/tsconfig.lib.json",
+            "{projectRoot}/src/**/*.ts"
+          ],
+          "outputs": ["{workspaceRoot}/packages/foo/dist"],
+          "syncGenerators": ["@nx/js:typescript-sync"],
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "tsc --build tsconfig.lib.json --pretty --verbose"
+          }
+        }
+      }
+    }
+  },
+  "sourceMap": {
+    "targets": ["packages/foo/tsconfig.ts", "@nx/js/typescript"],
+    "targets.build": ["packages/foo/tsconfig.ts", "@nx/js/typescript"]
+  }
+}
+{% /project_details %}
+
+
+
+## 12. Pill
+
+{% pill url="/concepts/mental-model" %}Mental Model{% /pill %}
+
+## 13. Testimonial
+
+{% testimonial name="John Doe" title="Senior Developer at Example Corp" image="https://via.placeholder.com/150" %}
+Nx has transformed how we manage our monorepo. The build times are incredible and the developer experience is unmatched.
+{% /testimonial %}
+
+## 14. Course Video
+
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" /%}
+
+## 15. Video Link
+
+{% video_link link="https://youtu.be/OQ-Zc5tcxJE?t=64" text="Watch the video tutorial" /%}
+
+## 16. Metrics
+
+{% metrics metrics=[{"value": "50%", "label": "Faster builds"}, {"value": "3x", "label": "Improved DX"}, {"value": "90%", "label": "Cache hit rate"}] /%}
+
+## 17. Callout
+
+{% callout type="deepdive" title="Angular Week Series" expanded=true %}
+
+This article is part of the Angular Week series:
+
+- [Modern Angular Testing with Nx](/blog/modern-angular-testing-with-nx)
+- [Angular Architecture Guide To Building Maintainable Applications at Scale](/blog/architecting-angular-applications)
+- [Using Rspack with Angular](/blog/using-rspack-with-angular)
+- **Enterprise Patterns**
+
+{% /callout %}
+

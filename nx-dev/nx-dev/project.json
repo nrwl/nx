@@ -68,7 +68,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx watch --projects=docs -- nx run nx-dev:copy-docs",
+          "nx watch --projects=docs -- nx run-many -t=copy-docs -p nx-dev",
           "nx run nx-dev:serve"
         ],
         "parallel": true

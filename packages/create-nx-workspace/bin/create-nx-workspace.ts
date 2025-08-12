@@ -35,6 +35,7 @@ interface BaseArguments extends CreateWorkspaceOptions {
   linter?: 'none' | 'eslint';
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
+  useProjectJson?: boolean;
 }
 
 interface NoneArguments extends BaseArguments {
@@ -68,9 +69,8 @@ interface AngularArguments extends BaseArguments {
   standaloneApi: boolean;
   unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
-  bundler: 'webpack' | 'esbuild';
+  bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
-  serverRouting: boolean;
   prefix: string;
 }
 
@@ -175,6 +175,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'boolean',
             default: true,
           })
+          .option('useProjectJson', {
+            describe: chalk.dim`Use a 'project.json' file for the Nx configuration instead of a 'package.json' file. This defaults to 'true' when '--no-workspaces' is used. Otherwise, it defaults to 'false'.`,
+            type: 'boolean',
+          })
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
             type: 'string',
@@ -239,6 +243,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     nxVersion
   ) as yargs.Argv<Arguments>;
 
+let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
     title: `Creating your v${nxVersion} workspace.`,
@@ -246,7 +251,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 
   const workspaceInfo = await createWorkspace<Arguments>(
     parsedArgs.preset,
-    parsedArgs
+    parsedArgs,
+    rawArgs
   );
 
   await recordStat({
@@ -257,6 +263,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
+      rawArgs.nxCloud,
+      workspaceInfo.pushedToVcs,
     ],
   });
 
@@ -264,13 +272,13 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     process.stdout.write(workspaceInfo.nxCloudInfo);
   }
 
-  if (isKnownPreset(parsedArgs.preset)) {
-    printSocialInformation();
-  } else {
-    output.log({
-      title: `Successfully applied preset: ${parsedArgs.preset}`,
-    });
-  }
+  // if (isKnownPreset(parsedArgs.preset)) {
+  //   printSocialInformation();
+  // } else {
+  //   output.log({
+  //     title: `Successfully applied preset: ${parsedArgs.preset}`,
+  //   });
+  // }
 }
 
 /**
@@ -282,12 +290,14 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
+  rawArgs = { ...argv };
   output.log({
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
   });
 
   argv.workspaces ??= true;
+  argv.useProjectJson ??= !argv.workspaces;
 
   try {
     argv.name = await determineFolder(argv);
@@ -341,13 +351,32 @@ function invariant(
   }
 }
 
+export function validateWorkspaceName(name: string): void {
+  const pattern = /^[a-zA-Z]/;
+  if (!pattern.test(name)) {
+    output.error({
+      title: 'Invalid workspace name',
+      bodyLines: [
+        `The workspace name "${name}" is invalid.`,
+        `Workspace names must start with a letter.`,
+        `Examples of valid names: myapp, MyApp, my-app, my_app`,
+      ],
+    });
+    process.exit(1);
+  }
+}
+
 async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   const folderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
-  if (folderName) return folderName;
+
+  if (folderName) {
+    validateWorkspaceName(folderName);
+    return folderName;
+  }
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
@@ -362,6 +391,8 @@ async function determineFolder(
     title: 'Invalid folder name',
     bodyLines: [`Folder name cannot be empty`],
   });
+
+  validateWorkspaceName(reply.folderName);
 
   invariant(!existsSync(reply.folderName), {
     title: 'That folder is already taken',
@@ -863,9 +894,8 @@ async function determineAngularOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
+  let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
-  let serverRouting: undefined | boolean = undefined;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
@@ -924,6 +954,10 @@ async function determineAngularOptions(
             message: 'esbuild [ https://esbuild.github.io/ ]',
           },
           {
+            name: 'rspack',
+            message: 'Rspack [ https://rspack.dev/ ]',
+          },
+          {
             name: 'webpack',
             message: 'Webpack [ https://webpack.js.org/ ]',
           },
@@ -969,8 +1003,11 @@ async function determineAngularOptions(
     const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
       {
         name: 'ssr',
-        message:
-          'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
+        message: `Do you want to enable Server-Side Rendering (SSR)${
+          bundler !== 'rspack'
+            ? ' and Static Site Generation (SSG/Prerendering)?'
+            : '?'
+        }`,
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 1,
@@ -978,25 +1015,6 @@ async function determineAngularOptions(
       },
     ]);
     ssr = reply.ssr === 'Yes';
-  }
-
-  if (parsedArgs.serverRouting !== undefined) {
-    serverRouting = parsedArgs.serverRouting;
-  } else if (ssr && bundler === 'esbuild') {
-    const reply = await enquirer.prompt<{ serverRouting: 'Yes' | 'No' }>([
-      {
-        name: 'serverRouting',
-        message:
-          'Would you like to use the Server Routing and App Engine APIs (Developer Preview) for this server application?',
-        type: 'autocomplete',
-        choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 1,
-        skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
-    serverRouting = reply.serverRouting === 'Yes';
-  } else {
-    serverRouting = false;
   }
 
   unitTestRunner = await determineUnitTestRunner(parsedArgs);
@@ -1012,7 +1030,6 @@ async function determineAngularOptions(
     e2eTestRunner,
     bundler,
     ssr,
-    serverRouting,
     prefix,
   };
 }
@@ -1505,7 +1522,7 @@ async function determineReactRouter(
       choices: [
         {
           name: 'Yes',
-          hint: 'I want to use React Router',
+          hint: 'I want to use React Router. (Vite will be selected as the bundler)',
         },
         {
           name: 'No',

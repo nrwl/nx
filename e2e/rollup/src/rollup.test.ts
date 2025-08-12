@@ -9,7 +9,8 @@ import {
   runCommand,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+  updateJson,
+} from '@nx/e2e-utils';
 
 describe('Rollup Plugin', () => {
   beforeAll(() => newProject({ packages: ['@nx/rollup', '@nx/js'] }));
@@ -43,13 +44,13 @@ describe('Rollup Plugin', () => {
     );
     rmDist();
     runCLI(`build ${myPkg}`);
-    checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
     expect(readJson(`dist/libs/${myPkg}/package.json`).exports).toEqual({
       '.': {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
-        types: './index.esm.d.ts',
+        types: './index.d.ts',
       },
       './package.json': './package.json',
     });
@@ -139,7 +140,7 @@ describe('Rollup Plugin', () => {
     checkFilesExist(`dist/libs/${myPkg}/index.esm.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.js.map`);
-    checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
     checkFilesExist(`dist/libs/${myPkg}/foo.esm.js`);
     checkFilesExist(`dist/libs/${myPkg}/foo.esm.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/foo.cjs.js`);
@@ -154,19 +155,19 @@ describe('Rollup Plugin', () => {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
-        types: './index.esm.d.ts',
+        types: './index.d.ts',
       },
       './bar': {
         module: './bar.esm.js',
         import: './bar.cjs.mjs',
         default: './bar.cjs.js',
-        types: './bar.esm.d.ts',
+        types: './bar.d.ts',
       },
       './foo': {
         module: './foo.esm.js',
         import: './foo.cjs.mjs',
         default: './foo.cjs.js',
-        types: './foo.esm.d.ts',
+        types: './foo.d.ts',
       },
     });
   });
@@ -231,5 +232,120 @@ export default config;
     expect(output).toContain('Successfully ran target build for project test');
     checkFilesExist(`libs/test/dist/bundle.js`);
     checkFilesExist(`libs/test/dist/bundle.es.js`);
+  });
+
+  describe('useLegacyTypescriptPlugin', () => {
+    it('should use @rollup/plugin-typescript when useLegacyTypescriptPlugin is false', async () => {
+      const myPkg = uniq('my-pkg');
+      runCLI(
+        `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=rollup --no-interactive`
+      );
+      updateFile(
+        `libs/${myPkg}/src/index.ts`,
+        `export const hello = 'world';\n`
+      );
+
+      // Change TypeScript plugin build target to avoid conflict with Rollup
+      updateJson('nx.json', (nxJson) => {
+        nxJson.plugins.forEach((plugin) => {
+          if (
+            plugin.plugin === '@nx/js/typescript' &&
+            plugin.include?.includes(`libs/${myPkg}/*`)
+          ) {
+            if (plugin.options?.build?.targetName === 'build') {
+              plugin.options.build.targetName = 'tsc:build';
+            }
+          }
+        });
+        return nxJson;
+      });
+
+      // Update rollup config to use useLegacyTypescriptPlugin: false
+      updateFile(
+        `libs/${myPkg}/rollup.config.cjs`,
+        `
+        const { withNx } = require('@nx/rollup/with-nx');
+        module.exports = withNx({
+          outputPath: '../../dist/libs/${myPkg}',
+          main: './src/index.ts',
+          tsConfig: './tsconfig.lib.json',
+          compiler: 'tsc',
+          format: ['cjs', 'esm'],
+          useLegacyTypescriptPlugin: false
+        });
+      `
+      );
+
+      // Build should succeed with the official @rollup/plugin-typescript
+      rmDist();
+      const output = runCLI(`build ${myPkg} --verbose`);
+
+      // Verify build succeeded
+      expect(output).toContain('Successfully ran target build');
+      checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
+      checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
+      checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
+
+      // Verify the output works
+      const result = runCommand(
+        `node -e "console.log(require('./dist/libs/${myPkg}/index.cjs.js').hello)"`
+      );
+      expect(result.trim()).toBe('world');
+    });
+
+    it('should use rollup-plugin-typescript2 when useLegacyTypescriptPlugin is true', async () => {
+      const myPkg = uniq('my-pkg');
+      runCLI(
+        `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=rollup`
+      );
+      updateFile(`libs/${myPkg}/src/index.ts`, `export const foo = 'bar';\n`);
+
+      // Change TypeScript plugin build target to avoid conflict with Rollup
+      updateJson('nx.json', (nxJson) => {
+        nxJson.plugins.forEach((plugin) => {
+          if (
+            plugin.plugin === '@nx/js/typescript' &&
+            plugin.include?.includes(`libs/${myPkg}/*`)
+          ) {
+            if (plugin.options?.build?.targetName === 'build') {
+              plugin.options.build.targetName = 'tsc:build';
+            }
+          }
+        });
+        return nxJson;
+      });
+
+      // Update rollup config to explicitly use useLegacyTypescriptPlugin: true
+      updateFile(
+        `libs/${myPkg}/rollup.config.cjs`,
+        `
+        const { withNx } = require('@nx/rollup/with-nx');
+        module.exports = withNx({
+          outputPath: '../../dist/libs/${myPkg}',
+          main: './src/index.ts',
+          tsConfig: './tsconfig.lib.json',
+          compiler: 'tsc',
+          format: ['cjs', 'esm'],
+          useLegacyTypescriptPlugin: true
+        });
+      `
+      );
+
+      // Build should succeed with rollup-plugin-typescript2
+      rmDist();
+      const output = runCLI(`build ${myPkg} --verbose`);
+
+      // Verify build succeeded
+      expect(output).toContain('Successfully ran target build');
+      checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
+      checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
+      checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
+
+      // Verify the output works
+      const result = runCommand(
+        `node -e "console.log(require('./dist/libs/${myPkg}/index.cjs.js').foo)"`
+      );
+      expect(result.trim()).toBe('bar');
+    });
   });
 });

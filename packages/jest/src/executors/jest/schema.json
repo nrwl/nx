@@ -59,15 +59,10 @@
         "index": 0
       }
     },
-    "tsConfig": {
-      "description": "The name of the Typescript configuration file.",
-      "type": "string",
-      "x-deprecated": "Use the ts-jest configuration options in the jest config file instead."
-    },
     "setupFile": {
       "description": "The name of a setup file used by Jest.",
       "type": "string",
-      "x-deprecated": "Use the setupFilesAfterEnv option in the jest config file. https://jestjs.io/docs/en/configuration#setupfilesafterenv-array"
+      "x-deprecated": "Use the `setupFilesAfterEnv` option in the Jest configuration file instead. See https://jestjs.io/docs/configuration#setupfilesafterenv-array. It will be removed in Nx v22."
     },
     "bail": {
       "alias": "b",
@@ -128,7 +123,7 @@
       "type": "string"
     },
     "passWithNoTests": {
-      "description": "Will not fail if no tests are found (for example while using `--testPathPattern`.) (https://jestjs.io/docs/cli#--passwithnotests)",
+      "description": "Will not fail if no tests are found (for example while using `--testPathPatterns`.) (https://jestjs.io/docs/cli#--passwithnotests)",
       "type": "boolean"
     },
     "randomize": {
@@ -160,8 +155,8 @@
         "type": "string"
       }
     },
-    "testPathPattern": {
-      "description": "An array of regexp pattern strings that is matched against all tests paths before executing the test. (https://jestjs.io/docs/cli#--testpathpatternregex)",
+    "testPathPatterns": {
+      "description": "An array of regexp pattern strings that is matched against all tests paths before executing the test. (https://jestjs.io/docs/cli#--testpathpatternsregex)",
       "type": "array",
       "items": {
         "type": "string"

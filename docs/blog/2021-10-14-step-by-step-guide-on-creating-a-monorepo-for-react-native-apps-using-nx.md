@@ -2,7 +2,7 @@
 title: 'Step by Step Guide on Creating a Monorepo for React Native Apps using Nx'
 slug: 'step-by-step-guide-on-creating-a-monorepo-for-react-native-apps-using-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2021-10-14/92uzyqB8oJ8tZJB9wAdoWQ.png'
+cover_image: '/blog/images/2021-10-14/92uzyqB8oJ8tZJB9wAdoWQ.avif'
 tags: [nx, tutorial]
 description: Learn how to set up a monorepo with Nx to manage React Native mobile and React web apps with shared libraries, demonstrated through a daily horoscope app example.
 ---

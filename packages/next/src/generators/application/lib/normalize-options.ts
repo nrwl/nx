@@ -1,9 +1,8 @@
-import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
+import { joinPathFragments, readNxJson, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -87,12 +86,13 @@ export async function normalizeOptions(
     e2eProjectRoot,
     e2eTestRunner: options.e2eTestRunner || 'playwright',
     fileName,
-    linter: options.linter || Linter.EsLint,
+    linter: options.linter || 'eslint',
     outputPath,
     parsedTags,
     projectName: appProjectName,
     projectSimpleName: projectNames.projectSimpleName,
     style: options.style || 'css',
+    swc: options.swc ?? true,
     styledModule,
     unitTestRunner: options.unitTestRunner || 'jest',
     importPath,

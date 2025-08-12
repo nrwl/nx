@@ -1,6 +1,8 @@
 import {
   cleanupProject,
   fileExists,
+  getAvailablePort,
+  getAvailablePorts,
   killProcessAndPorts,
   newProject,
   readJson,
@@ -10,8 +12,8 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
-import { readPort, runCLI } from './utils';
+} from '@nx/e2e-utils';
+import { runCLI } from './utils';
 
 describe('Dynamic Module Federation', () => {
   beforeAll(() => {
@@ -22,10 +24,10 @@ describe('Dynamic Module Federation', () => {
   it('should load remote dynamic module', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
-    const remotePort = 4205;
+    const [shellPort, remotePort] = await getAvailablePorts(2);
 
     runCLI(
-      `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --dynamic=true --no-interactive --skipFormat`
+      `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=rspack --e2eTestRunner=cypress --dynamic=true --no-interactive --skipFormat`
     );
 
     updateJson(`${remote}/project.json`, (project) => {
@@ -56,7 +58,9 @@ describe('Dynamic Module Federation', () => {
       `${shell}/src/assets/module-federation.manifest.json`
     );
     expect(manifest[remote]).toBeDefined();
-    expect(manifest[remote]).toEqual('http://localhost:4205/mf-manifest.json');
+    expect(manifest[remote]).toEqual(
+      `http://localhost:${remotePort}/mf-manifest.json`
+    );
 
     // update e2e
     updateFile(
@@ -89,18 +93,16 @@ describe('Dynamic Module Federation', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    const shellPort = readPort(shell);
-
     if (runE2ETests()) {
       // Serve Remote since it is dynamic and won't be started with the host
       const remoteProcess = await runCommandUntil(
-        `serve-static ${remote} --no-watch --verbose`,
+        `serve ${remote} --verbose`,
         () => {
           return true;
         }
       );
       const hostE2eResultsSwc = await runCommandUntil(
-        `e2e ${shell}-e2e --no-watch --verbose`,
+        `e2e ${shell}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
       );
 

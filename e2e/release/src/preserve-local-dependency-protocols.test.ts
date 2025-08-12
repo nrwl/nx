@@ -10,7 +10,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -120,12 +120,16 @@ describe('nx release preserve local dependency protocols', () => {
     return { workspacePath: tmpProjPath(), pkg1, pkg2 };
   };
 
-  it('should replace local dependency protocols with the actual version number when version.generatorOptions.preserveLocalDependencyProtocols is not set to true', async () => {
+  it('should replace local dependency protocols with the actual version number when version.preserveLocalDependencyProtocols is set to false', async () => {
     // The package manager currently does not matter for the versioning behavior, it's imperatively controlled by the user
     const { workspacePath } = await initializeProject('pnpm');
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-      nxJson.release = {};
+      nxJson.release = {
+        version: {
+          preserveLocalDependencyProtocols: false,
+        },
+      };
       return nxJson;
     });
 
@@ -133,30 +137,28 @@ describe('nx release preserve local dependency protocols', () => {
     expect(runCLI(`release version minor -d --verbose`, { cwd: workspacePath }))
       .toMatchInlineSnapshot(`
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
+      {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
-      {project-name} ✍️  Applying new version 0.1.0 to 1 package which depends on {project-name}
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "exports": {
       "dependencies": {
       -     "@proj/{project-name}": "workspace:*"
       +     "@proj/{project-name}": "0.1.0"
       }
       }
       +
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "0.1.0",
-      "scripts": {
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -166,17 +168,13 @@ describe('nx release preserve local dependency protocols', () => {
     `);
   });
 
-  it('should preserve local dependency protocols when version.generatorOptions.preserveLocalDependencyProtocols is set to true', async () => {
+  it('should preserve local dependency protocols when version.preserveLocalDependencyProtocols is not set to false', async () => {
     // The package manager currently does not matter for the versioning behavior, it's imperatively controlled by the user
     const { workspacePath } = await initializeProject('pnpm');
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
-        version: {
-          generatorOptions: {
-            preserveLocalDependencyProtocols: true,
-          },
-        },
+        version: {},
       };
       return nxJson;
     });
@@ -185,26 +183,23 @@ describe('nx release preserve local dependency protocols', () => {
     expect(runCLI(`release version minor -d --verbose`, { cwd: workspacePath }))
       .toMatchInlineSnapshot(`
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
-      {project-name} ✍️  Applying new version 0.1.0 to 1 package which depends on {project-name}
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "exports": {
       }
       +
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "0.1.0",
-      "scripts": {
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -224,6 +219,10 @@ describe('nx release preserve local dependency protocols', () => {
         {
           dependencies: {
             @proj/{project-name}: workspace:*,
+          },
+          exports: {
+            .: ./index.js,
+            ./package.json: ./package.json,
           },
           name: @proj/{project-name},
           scripts: {
@@ -293,6 +292,10 @@ describe('nx release preserve local dependency protocols', () => {
         {
           dependencies: {
             @proj/{project-name}: workspace:*,
+          },
+          exports: {
+            .: ./index.js,
+            ./package.json: ./package.json,
           },
           name: @proj/{project-name},
           scripts: {

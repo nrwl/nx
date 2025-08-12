@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import { blogApi } from '../../lib/blog.api';
-import { BlogContainer } from '@nx/nx-dev/ui-blog';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { BlogContainer } from '@nx/nx-dev-ui-blog';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Suspense } from 'react';
 import {
   requestFreeTrial,
   tryNxCloudForFree,
-} from '../../lib/components/headerCtaConfigs';
+} from '../../lib/header-cta.configs';
 
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],

@@ -61,7 +61,7 @@ The project configuration for Nx Release is in two parts - one for the version s
 
 #### Update the Version Step
 
-The version step of Nx Release is responsible for determining the new version of the package. If you have set the `version.generatorOptions.currentVersionResolver` to 'registry', then Nx Release will check the remote registry for the current version of the package.
+The version step of Nx Release is responsible for determining the new version of the package. If you have set the `version.currentVersionResolver` to 'registry', then Nx Release will check the remote registry for the current version of the package.
 
 **Note:** If you do not use the 'registry' current version resolver, then this step is not needed.
 
@@ -76,11 +76,9 @@ To set custom registry options for the current version lookup, add the registry 
   },
   "release": {
     "version": {
-      "generatorOptions": {
-        "currentVersionResolverMetadata": {
-          "registry": "https://my-unique-registry.com/",
-          "tag": "next"
-        }
+      "currentVersionResolverMetadata": {
+        "registry": "https://my-unique-registry.com/",
+        "tag": "next"
       }
     }
   }

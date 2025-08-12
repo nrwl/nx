@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -53,6 +53,7 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "prettier",
               "typescript",
@@ -62,6 +63,7 @@
               "source-map-support",
               "@babel/core",
               "@babel/plugin-proposal-decorators",
+              "@babel/plugin-transform-class-properties",
               "@babel/plugin-transform-runtime",
               "@babel/preset-env",
               "@babel/preset-typescript",

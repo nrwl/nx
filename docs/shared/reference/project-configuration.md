@@ -30,7 +30,8 @@ nx show project myproject --web
         "dev": {
           "executor": "nx:run-commands",
           "options": {
-            "command": "vite dev"
+            "command": "vite dev",
+            "continuous": true
           },
           "metadata": {
             "technologies": ["vite"]
@@ -64,8 +65,16 @@ The project details view also shows where each setting is defined so that you kn
 
 ## Project Level Configuration Files
 
-If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles, and the only functional difference is that tasks that use executors must be defined in a `project.json`. Nx merges the two
-files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
+If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles. Nx merges the two files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
+
+### When to Use package.json vs project.json
+
+Both `package.json` and `project.json` can be used to configure Nx targets, and both support the same configuration options including executors:
+
+- **package.json**: Use the `"nx"` property to define targets with executors, options, and other Nx-specific configuration
+- **project.json**: A dedicated Nx configuration file that keeps your `package.json` focused on package metadata
+
+The choice between `package.json` and `project.json` is primarily a matter of preference. The `package.json` is standard for JavaScript projects, so you may prefer to use that over the Nx-specific `project.json` file.
 
 The following configuration creates `build` and `test` targets for Nx.
 
@@ -76,8 +85,15 @@ The following configuration creates `build` and `test` targets for Nx.
 {
   "name": "mylib",
   "scripts": {
-    "test": "jest",
-    "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
+    "test": "jest"
+  },
+  "nx": {
+    // you could also do this in "scripts", but this "targets" configuration also supports Nx executors
+    "targets": {
+      "build": {
+        "command": "tsc -p tsconfig.lib.json"
+      }
+    }
   }
 }
 ```
@@ -365,10 +381,14 @@ instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
+{% callout type="note" title="Dependencies that do not exit" %}
+If you specify a task in `dependsOn` that never exits, then the dependent task will never start. Label such dependencies as [continuous](#continuous) tasks, which tells Nx to not wait for the process to end before starting the dependent task.
+{% /callout %}
+
 You can also express task dependencies with an object syntax:
 
 {% tabs %}
-{% tab label="Version 16+ (self)" %}
+{% tab label="Dependencies on self" %}
 
 ```json
 {
@@ -386,7 +406,7 @@ You can also express task dependencies with an object syntax:
 ```
 
 {% /tab %}
-{% tab label="Version 16+ (dependencies)" %}
+{% tab label="Dependencies on other projects" %}
 
 ```json
 {
@@ -405,7 +425,7 @@ You can also express task dependencies with an object syntax:
 ```
 
 {% /tab %}
-{% tab label="Version 16+ (specific projects)" %}
+{% tab label="Dependencies on specific projects" %}
 
 ```json
 {
@@ -414,25 +434,6 @@ You can also express task dependencies with an object syntax:
       "dependsOn": [
         {
           "projects": ["my-app"], // Run build on "my-app" first
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "projects": "dependencies", // "dependencies" or "self"
           "target": "build", // target name
           "params": "ignore" // "forward" or "ignore", defaults to "ignore"
         }
@@ -470,9 +471,6 @@ Starting from v19.5.0, wildcards can be used to define dependencies in the `depe
 
 You can write the shorthand configuration above in the object syntax like this:
 
-{% tabs %}
-{% tab label="Version 16+" %}
-
 ```json
 {
   "targets": {
@@ -486,29 +484,7 @@ You can write the shorthand configuration above in the object syntax like this:
 }
 ```
 
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    },
-    "test": {
-      "dependsOn": [{ "projects": "self", "target": "build" }]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
-
 With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
-
-{% tabs %}
-{% tab label="Version 16+" %}
 
 ```json
 {
@@ -533,39 +509,7 @@ With the expanded syntax, you also have a third option available to configure ho
 }
 ```
 
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      // forward params passed to this target to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "forward" }
-      ]
-    },
-    "test": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "ignore" }
-      ]
-    },
-    "lint": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
-
 This also works when defining a relation for the target of the project itself using `"projects": "self"`:
-
-{% tabs %}
-{% tab label="Version 16+" %}
 
 ```json
 {
@@ -578,29 +522,7 @@ This also works when defining a relation for the target of the project itself us
 }
 ```
 
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      // forward params passed to this target to the project target
-      "dependsOn": [
-        { "projects": "self", "target": "pre-build", "params": "forward" }
-      ]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
-
 Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
-
-{% tabs %}
-{% tab label="Version 16+" %}
 
 ```json
 {
@@ -615,11 +537,41 @@ Additionally, when using the expanded object syntax, you can specify individual 
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
+
+### Continuous
+
+In Nx 21+, tasks that never exit (sometimes called long-running processes) can be configured with `"continuous": true` to prevent their dependent tasks from waiting for task completion. For example, the `e2e` task depends on a continuous `serve` task to ensure that the development server is running.
+
+In this example, application's configuration labels the `serve` task as continuous.
+
+```json {% fileName="apps/myapp/project.json" %}
+{
+  "targets": {
+    "serve": {
+      "continuous": true
+    }
+  }
+}
+```
+
+And the E2E project's `e2e` task has a dependency on the `serve` task, which ensures that the server is running when we run the `e2e` task.
+
+```json {% fileName="apps/myapp-e2e/project.json" %}
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        {
+          "projects": "myapp",
+          "target": "serve"
+        }
+      ]
+    }
+  }
+}
+```
 
 ### Sync Generators
 
@@ -804,6 +756,32 @@ An implicit dependency could also be a glob pattern:
 
 {% /tab %}
 {% /tabs %}
+
+### Release
+
+The `release` property allows project-level overrides for the [nx release](/features/manage-releases) command. This is particularly useful for configuring Docker image publishing.
+
+#### Docker Configuration (Experimental)
+
+{% callout type="warning" title="Experimental Feature" %}
+Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /callout %}
+
+Projects with Docker images can override the global Docker configuration:
+
+```jsonc {% fileName="project.json" %}
+{
+  "name": "api",
+  "release": {
+    "docker": {
+      // Override the repository name for this specific project
+      "repositoryName": "acme/api"
+    }
+  }
+}
+```
+
+The `repositoryName` specified here will override any global or group-level Docker repository configuration when publishing this project's Docker image.
 
 ### Metadata
 

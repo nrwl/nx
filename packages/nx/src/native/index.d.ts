@@ -7,10 +7,30 @@ export declare class ExternalObject<T> {
     [K: symbol]: T
   }
 }
+export declare class AppLifeCycle {
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph)
+  startCommand(threadCount?: number | undefined | null): void
+  scheduleTask(task: Task): void
+  startTasks(tasks: Array<Task>, metadata: object): void
+  printTaskTerminalOutput(task: Task, status: string, output: string): void
+  endTasks(taskResults: Array<TaskResult>, metadata: object): void
+  endCommand(): void
+  __init(doneCallback: () => any): void
+  registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
+  registerRunningTaskWithEmptyParser(taskId: string): void
+  appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
+  setTaskStatus(taskId: string, status: TaskStatus): void
+  registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
+  __setCloudMessage(message: string): Promise<void>
+  setEstimatedTaskTimings(timings: Record<string, number>): void
+}
+
 export declare class ChildProcess {
-  kill(): void
+  getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
+  kill(signal?: NodeJS.Signals): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
+  cleanup(): void
 }
 
 export declare class FileLock {
@@ -22,10 +42,21 @@ export declare class FileLock {
   lock(): void
 }
 
+export declare class HashPlanInspector {
+  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>)
+  inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
+}
+
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): JsExternal
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+}
+
+export declare class HttpRemoteCache {
+  constructor()
+  retrieve(hash: string, cacheDirectory: string): Promise<CachedResult | null>
+  store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
 }
 
 export declare class ImportResult {
@@ -48,6 +79,12 @@ export declare class NxCache {
   checkCacheFsInSync(): boolean
 }
 
+export declare class NxConsolePreferences {
+  constructor(homeDir: string)
+  getAutoInstallPreference(): boolean | null
+  setAutoInstallPreference(autoInstall: boolean): void
+}
+
 export declare class NxTaskHistory {
   constructor(db: ExternalObject<NxDbConnection>)
   recordTaskRuns(taskRuns: Array<TaskRun>): void
@@ -55,14 +92,21 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
+export declare class RunningTasksService {
+  constructor(db: ExternalObject<NxDbConnection>)
+  getRunningTasks(ids: Array<string>): Array<string>
+  addRunningTask(taskId: string): void
+  removeRunningTask(taskId: string): void
+}
+
 export declare class RustPseudoTerminal {
   constructor()
-  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null): ChildProcess
+  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null, commandLabel?: string | undefined | null): ChildProcess
   /**
    * This allows us to run a pseudoterminal with a fake node ipc channel
    * this makes it possible to be backwards compatible with the old implementation
    */
-  fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean): ChildProcess
+  fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean, commandLabel?: string | undefined | null): ChildProcess
 }
 
 export declare class TaskDetails {
@@ -111,16 +155,18 @@ export declare class WorkspaceContext {
 
 export interface CachedResult {
   code: number
-  terminalOutput: string
+  terminalOutput?: string
   outputsPath: string
   size?: number
 }
 
-export declare export function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
+export declare export declare function canInstallNxConsole(): boolean
 
-export declare export function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
+export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
-export declare export function copy(src: string, dest: string): number
+export declare export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
+
+export declare export declare function copy(src: string, dest: string): number
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
@@ -137,7 +183,7 @@ export declare const enum EventType {
   create = 'create'
 }
 
-export declare export function expandOutputs(directory: string, entries: Array<string>): Array<string>
+export declare export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
   externalDependencies: Array<string>
@@ -163,21 +209,21 @@ export interface FileSetInput {
   fileset: string
 }
 
-export declare export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
+export declare export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 
-export declare export function getBinaryTarget(): string
+export declare export declare function getBinaryTarget(): string
 
-export declare export function getDefaultMaxCacheSize(cachePath: string): number
+export declare export declare function getDefaultMaxCacheSize(cachePath: string): number
 
 /**
  * Expands the given outputs into a list of existing files.
  * This is used when hashing outputs
  */
-export declare export function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
+export declare export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
 
-export declare export function getTransformableOutputs(outputs: Array<string>): Array<string>
+export declare export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
-export declare export function hashArray(input: Array<string | undefined | null>): string
+export declare export declare function hashArray(input: Array<string | undefined | null>): string
 
 export interface HashDetails {
   value: string
@@ -195,7 +241,7 @@ export interface HasherOptions {
   selectivelyHashTsConfig: boolean
 }
 
-export declare export function hashFile(file: string): string | null
+export declare export declare function hashFile(file: string): string | null
 
 export interface InputsInput {
   input: string
@@ -203,7 +249,14 @@ export interface InputsInput {
   projects?: string | Array<string>
 }
 
+export declare export declare function installNxConsole(): void
+
 export const IS_WASM: boolean
+
+/** Detects if the current process is being run by an AI agent */
+export declare export declare function isAiAgent(): boolean
+
+export declare export declare function logDebug(message: string): void
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
@@ -222,6 +275,8 @@ export interface NxWorkspaceFilesExternals {
   allWorkspaceFiles: ExternalObject<Array<FileData>>
 }
 
+export declare export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
 export interface Project {
   root: string
   namedInputs?: Record<string, Array<JsInputs>>
@@ -235,7 +290,14 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
-export declare export function remove(src: string): void
+export declare export declare function remove(src: string): void
+
+export declare export declare function restoreTerminal(): void
+
+export declare const enum RunMode {
+  RunOne = 0,
+  RunMany = 1
+}
 
 export interface RuntimeInput {
   runtime: string
@@ -255,12 +317,23 @@ export interface Task {
   target: TaskTarget
   outputs: Array<string>
   projectRoot?: string
+  startTime?: number
+  endTime?: number
+  continuous?: boolean
 }
 
 export interface TaskGraph {
   roots: Array<string>
   tasks: Record<string, Task>
   dependencies: Record<string, Array<string>>
+  continuousDependencies: Record<string, Array<string>>
+}
+
+export interface TaskResult {
+  task: Task
+  status: string
+  code: number
+  terminalOutput?: string
 }
 
 export interface TaskRun {
@@ -271,26 +344,48 @@ export interface TaskRun {
   end: number
 }
 
+export declare const enum TaskStatus {
+  Success = 0,
+  Failure = 1,
+  Skipped = 2,
+  LocalCacheKeptExisting = 3,
+  LocalCache = 4,
+  RemoteCache = 5,
+  NotStarted = 6,
+  InProgress = 7,
+  Shared = 8,
+  Stopped = 9
+}
+
 export interface TaskTarget {
   project: string
   target: string
   configuration?: string
 }
 
-export declare export function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+export declare export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
 
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker
  * This wont be needed once the project graph is created in Rust
  */
-export declare export function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
+export declare export declare function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
+
+export interface TuiCliArgs {
+  targets?: string[] | undefined
+  tuiAutoExit?: boolean | number | undefined
+}
+
+export interface TuiConfig {
+  autoExit?: boolean | number | undefined
+}
 
 export interface UpdatedWorkspaceFiles {
   fileMap: FileMap
   externalReferences: NxWorkspaceFilesExternals
 }
 
-export declare export function validateOutputs(outputs: Array<string>): void
+export declare export declare function validateOutputs(outputs: Array<string>): void
 
 export interface WatchEvent {
   path: string

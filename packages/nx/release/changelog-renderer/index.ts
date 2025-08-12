@@ -1,15 +1,8 @@
 import { major } from 'semver';
-import { ChangelogChange } from '../../src/command-line/release/changelog';
-import { NxReleaseConfig } from '../../src/command-line/release/config/config';
+import type { ChangelogChange } from '../../src/command-line/release/changelog';
+import type { NxReleaseConfig } from '../../src/command-line/release/config/config';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
-import {
-  GithubRepoData,
-  formatReferences,
-} from '../../src/command-line/release/utils/github';
-
-// axios types and values don't seem to match
-import _axios = require('axios');
-const axios = _axios as any as (typeof _axios)['default'];
+import type { RemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/remote-release-client';
 
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
@@ -42,7 +35,7 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
    * using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits.
    * Defaults to true.
    */
-  mapAuthorsToGitHubUsernames?: boolean;
+  applyUsernameToAuthors?: boolean;
   /**
    * Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
    * Defaults to true.
@@ -63,13 +56,13 @@ export default class DefaultChangelogRenderer {
   protected changelogRenderOptions: DefaultChangelogRenderOptions;
   protected isVersionPlans: boolean;
   protected dependencyBumps?: DependencyBump[];
-  protected repoData?: GithubRepoData;
   protected conventionalCommitsConfig:
     | NxReleaseConfig['conventionalCommits']
     | null;
   protected relevantChanges: ChangelogChange[];
   protected breakingChanges: string[];
   protected additionalChangesForAuthorsSection: ChangelogChange[];
+  protected remoteReleaseClient: RemoteReleaseClient<unknown>;
 
   /**
    * A ChangelogRenderer class takes in the determined changes and other relevant metadata
@@ -83,8 +76,8 @@ export default class DefaultChangelogRenderer {
    * @param {boolean} config.isVersionPlans Whether or not Nx release version plans are the source of truth for the changelog entry
    * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
    * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the change data
-   * @param {GithubRepoData} config.repoData Resolved data for the current GitHub repository
    * @param {NxReleaseConfig['conventionalCommits'] | null} config.conventionalCommitsConfig The configuration for conventional commits, or null if version plans are being used
+   * @param {RemoteReleaseClient} config.remoteReleaseClient The remote release client to use for formatting references
    */
   constructor(config: {
     changes: ChangelogChange[];
@@ -94,8 +87,8 @@ export default class DefaultChangelogRenderer {
     isVersionPlans: boolean;
     changelogRenderOptions: DefaultChangelogRenderOptions;
     dependencyBumps?: DependencyBump[];
-    repoData?: GithubRepoData;
     conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
+    remoteReleaseClient: RemoteReleaseClient<unknown>;
   }) {
     this.changes = this.filterChanges(config.changes, config.project);
     this.changelogEntryVersion = config.changelogEntryVersion;
@@ -104,8 +97,8 @@ export default class DefaultChangelogRenderer {
     this.isVersionPlans = config.isVersionPlans;
     this.changelogRenderOptions = config.changelogRenderOptions;
     this.dependencyBumps = config.dependencyBumps;
-    this.repoData = config.repoData;
     this.conventionalCommitsConfig = config.conventionalCommitsConfig;
+    this.remoteReleaseClient = config.remoteReleaseClient;
 
     this.relevantChanges = [];
     this.breakingChanges = [];
@@ -241,9 +234,15 @@ export default class DefaultChangelogRenderer {
   }
 
   protected renderVersionTitle(): string {
-    const isMajorVersion =
-      `${major(this.changelogEntryVersion)}.0.0` ===
-      this.changelogEntryVersion.replace(/^v/, '');
+    let isMajorVersion = true;
+    try {
+      isMajorVersion =
+        `${major(this.changelogEntryVersion)}.0.0` ===
+        this.changelogEntryVersion.replace(/^v/, '');
+    } catch {
+      // Do nothing with the error
+      // Prevent non-semver versions from erroring out
+    }
     let maybeDateStr = '';
     if (this.changelogRenderOptions.versionTitleDate) {
       const dateStr = new Date().toISOString().slice(0, 10);
@@ -341,7 +340,10 @@ export default class DefaultChangelogRenderer {
 
   protected async renderAuthors(): Promise<string[]> {
     const markdownLines: string[] = [];
-    const _authors = new Map<string, { email: Set<string>; github?: string }>();
+    const _authors = new Map<
+      string,
+      { email: Set<string>; username?: string }
+    >();
 
     for (const change of [
       ...this.relevantChanges,
@@ -365,34 +367,12 @@ export default class DefaultChangelogRenderer {
     }
 
     if (
-      this.repoData &&
-      this.changelogRenderOptions.mapAuthorsToGitHubUsernames
+      this.remoteReleaseClient.getRemoteRepoData() &&
+      this.changelogRenderOptions.applyUsernameToAuthors &&
+      // TODO: Explore if it is possible to support GitLab username resolution
+      this.remoteReleaseClient.remoteReleaseProviderName === 'GitHub'
     ) {
-      await Promise.all(
-        [..._authors.keys()].map(async (authorName) => {
-          const meta = _authors.get(authorName);
-          for (const email of meta.email) {
-            if (email.endsWith('@users.noreply.github.com')) {
-              const match = email.match(
-                /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
-              );
-              if (match && match[2]) {
-                meta.github = match[2];
-                break;
-              }
-            }
-            const { data } = await axios
-              .get<any, { data?: { user?: { username: string } } }>(
-                `https://ungh.cc/users/find/${email}`
-              )
-              .catch(() => ({ data: { user: null } }));
-            if (data?.user) {
-              meta.github = data.user.username;
-              break;
-            }
-          }
-        })
-      );
+      await this.remoteReleaseClient.applyUsernameToAuthors(_authors);
     }
 
     const authors = [..._authors.entries()].map((e) => ({
@@ -408,8 +388,8 @@ export default class DefaultChangelogRenderer {
         ...authors
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((i) => {
-            const github = i.github ? ` @${i.github}` : '';
-            return `- ${i.name}${github}`;
+            const username = i.username ? ` @${i.username}` : '';
+            return `- ${i.name}${username}`;
           })
       );
     }
@@ -437,8 +417,13 @@ export default class DefaultChangelogRenderer {
         ? `**${change.scope.trim()}:** `
         : '') +
       description;
-    if (this.repoData && this.changelogRenderOptions.commitReferences) {
-      changeLine += formatReferences(change.githubReferences, this.repoData);
+    if (
+      this.remoteReleaseClient.getRemoteRepoData() &&
+      this.changelogRenderOptions.commitReferences
+    ) {
+      changeLine += this.remoteReleaseClient.formatReferences(
+        change.githubReferences
+      );
     }
     if (extraLinesStr) {
       changeLine += '\n\n' + extraLinesStr;

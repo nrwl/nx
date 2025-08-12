@@ -2,7 +2,7 @@
 title: Manage Your Gradle Project using Nx
 slug: 'manage-your-gradle-project-using-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2024-04-19/featured_img.png'
+cover_image: '/blog/images/2024-04-19/featured_img.avif'
 tags: [nx, gradle, how-to]
 description: 'Learn how to manage Gradle projects in Nx workspaces using the new @nx/gradle plugin for better library visualization and multi-tech stack support.'
 ---
@@ -11,7 +11,7 @@ Here's my situation: I have a Gradle workspace with multiple Gradle libraries. H
 
 We are very excited to announce our support for Gradle with our new plugin: `@nx/gradle`.
 
-The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/intro/ci-with-nx).
+The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/recipes/set-up).
 
 > **Update:** Learn how to import your existing Gradle projects into Nx in [our recent blog post](/blog/nx-import).
 

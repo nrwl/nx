@@ -47,9 +47,6 @@ export interface WebpackExecutorOptions {
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
   generatePackageJson?: boolean;
-  // TODO(v21): Remove this option
-  /** @deprecated set webpackConfig and provide an explicit webpack.config.js file (See: https://nx.dev/recipes/webpack/webpack-config-setup) */
-  isolatedConfig?: boolean;
   standardWebpackConfigFunction?: boolean;
   main?: string;
   memoryLimit?: number;

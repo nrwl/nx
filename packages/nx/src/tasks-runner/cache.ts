@@ -17,6 +17,7 @@ import {
   CachedResult as NativeCacheResult,
   IS_WASM,
   getDefaultMaxCacheSize,
+  HttpRemoteCache,
 } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -36,32 +37,7 @@ export type CachedResult = {
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
 // This function is called once during tasks runner initialization. It checks if the db cache is enabled and logs a warning if it is not.
-export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
-  // If the user has explicitly disabled the db cache, we can warn...
-  if (
-    nxJson.useLegacyCache ||
-    process.env.NX_DISABLE_DB === 'true' ||
-    process.env.NX_DB_CACHE === 'false'
-  ) {
-    let readMoreLink = 'https://nx.dev/deprecated/legacy-cache';
-    if (
-      nxJson.tasksRunnerOptions?.default?.runner &&
-      !['nx-cloud', 'nx/tasks-runners/default', '@nrwl/nx-cloud'].includes(
-        nxJson.tasksRunnerOptions.default.runner
-      )
-    ) {
-      readMoreLink += '#tasksrunneroptions';
-    } else if (
-      process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === '0' ||
-      process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === 'false'
-    ) {
-      readMoreLink += '#nxrejectunknownlocalcache';
-    }
-    logger.warn(
-      `Nx is configured to use the legacy cache. This cache will be removed in Nx 21. Read more at ${readMoreLink}.`
-    );
-    return false;
-  }
+export function dbCacheEnabled() {
   // ...but if on wasm and the the db cache isnt supported we shouldn't warn
   if (IS_WASM) {
     return false;
@@ -84,7 +60,7 @@ export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
 // Do not change the order of these arguments as this function is used by nx cloud
 export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
   const nxJson = readNxJson();
-  return dbCacheEnabled(nxJson)
+  return dbCacheEnabled()
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
@@ -100,9 +76,7 @@ export class DbCache {
     cacheDir,
     getDbConnection(),
     undefined,
-    this.nxJson.maxCacheSize !== undefined
-      ? parseMaxCacheSize(this.nxJson.maxCacheSize)
-      : getDefaultMaxCacheSize(cacheDir)
+    resolveMaxCacheSize(this.nxJson)
   );
 
   private remoteCache: RemoteCacheV2 | null;
@@ -131,6 +105,7 @@ export class DbCache {
     if (res) {
       return {
         ...res,
+        terminalOutput: res.terminalOutput ?? '',
         remote: false,
       };
     }
@@ -147,6 +122,7 @@ export class DbCache {
 
         return {
           ...res,
+          terminalOutput: res.terminalOutput ?? '',
           remote: true,
         };
       } else {
@@ -239,6 +215,7 @@ export class DbCache {
         (await this.getSharedCache()) ??
         (await this.getGcsCache()) ??
         (await this.getAzureCache()) ??
+        this.getHttpCache() ??
         null
       );
     }
@@ -266,6 +243,19 @@ export class DbCache {
     const cache = await this.resolveRemoteCache('@nx/azure-cache');
     if (cache) return cache;
     return this.resolveRemoteCache('@nx/powerpack-azure-cache');
+  }
+
+  private getHttpCache(): RemoteCacheV2 | null {
+    if (process.env.NX_SELF_HOSTED_REMOTE_CACHE_SERVER) {
+      if (IS_WASM) {
+        logger.warn(
+          'The HTTP remote cache is not yet supported in the wasm build of Nx.'
+        );
+        return null;
+      }
+      return new HttpRemoteCache();
+    }
+    return null;
   }
 
   private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {
@@ -603,6 +593,20 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
   };
   return _try();
+}
+
+/**
+ * Resolves the max cache size from environment variable or nx.json configuration
+ * and converts it to a number of bytes.
+ *
+ * @param nxJson The nx.json configuration object
+ * @returns The resolved max cache size in bytes
+ */
+export function resolveMaxCacheSize(nxJson: NxJsonConfiguration): number {
+  const rawMaxCacheSize = process.env.NX_MAX_CACHE_SIZE ?? nxJson.maxCacheSize;
+  return rawMaxCacheSize !== undefined
+    ? parseMaxCacheSize(rawMaxCacheSize)
+    : getDefaultMaxCacheSize(cacheDir);
 }
 
 /**

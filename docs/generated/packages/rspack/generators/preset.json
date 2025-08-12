@@ -24,7 +24,6 @@
       },
       "less": { "type": "boolean", "description": "Use less for styling." },
       "sass": { "type": "boolean", "description": "Use sass for styling." },
-      "stylus": { "type": "boolean", "description": "Use stylus for styling." },
       "unitTestRunner": {
         "type": "string",
         "description": "The unit test runner to use.",

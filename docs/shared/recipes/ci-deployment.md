@@ -13,10 +13,6 @@ Additionally, we should generate pruned lock file according to the generated `pa
 
 Nx offers two varieties of Webpack plugin which can be used to generate `package.json`.
 
-{% tabs %}
-
-{% tab label="Nx 18+" %}
-
 ## Basic Plugin Configuration
 
 `@nx/webpack/plugin` plugin is compatible with a conventional webpack configuration setup which offers a smooth integration with the Webpack CLI.
@@ -42,7 +38,7 @@ Where `build`, `serve`, `serve-static` and `preview` in conjunction with your `w
 
 ### NxAppWebpackPlugin
 
-The [`NxAppWebpackPlugin`](/recipes/webpack/webpack-plugins#nxappwebpackplugin) plugin takes a `main` entry file and produces a bundle in the output directory as defined in `output.path`. You can also pass the `index` option if it is a web app, which will handle outputting scripts and stylesheets in the output file.
+The [`NxAppWebpackPlugin`](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin) plugin takes a `main` entry file and produces a bundle in the output directory as defined in `output.path`. You can also pass the `index` option if it is a web app, which will handle outputting scripts and stylesheets in the output file.
 
 To generate a `package.json` we would declare it in the plugin options.
 
@@ -70,23 +66,6 @@ module.exports = {
 };
 ```
 
-{% /tab %}
-
-{% tab label="Nx < 18" %}
-
-## Supported executors
-
-The `@nx/webpack:webpack` executor supports the `generatePackageJson` flag which generates both `package.json` as well as the lock file.
-
-Some executors automatically generate output `package.json` and the lock file generation is supported using the `generateLockfile` flag:
-
-- `@nx/js:swc`
-- `@nx/js:tsc`
-- `@nx/next:build`
-
-{% /tab %}
-{% /tabs %}
-
 ## Programmatic usage
 
 If you are using a custom setup that does not support the creation of a `package.json` or a lock file, you can still use Nx to generate them via The `createPackageJson` and `createLockFile` functions which are exported from `@nx/js`:
@@ -113,7 +92,7 @@ const { writeFileSync } = require('fs');
 
 async function main() {
   const outputDir = 'dist'; // You can replace this with the output directory you want to use
-  // Detect the package manager you are using (npm, yarn, pnpm)
+  // Detect the package manager you are using (npm, yarn, pnpm, bun)
   const pm = detectPackageManager();
   let projectGraph = readCachedProjectGraph();
   if (!projectGraph) {
@@ -158,7 +137,7 @@ Then to run the script, update your `package.json` to include the following:
 
 Now, you can run `npm run custom-build` to build your application and generate the `package.json` and lock file.
 
-You can replace _npm_ with _yarn_ or _pnpm_ if you are using those package managers.
+You can replace _npm_ with _yarn_, _pnpm_, or _bun_ if you are using those package managers.
 
 {% /tab %}
 

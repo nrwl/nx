@@ -4,7 +4,6 @@ import {
   GeneratorCallback,
   getPackageManagerCommand,
   joinPathFragments,
-  readNxJson,
   Tree,
   writeJson,
 } from '@nx/devkit';
@@ -16,8 +15,6 @@ import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
-import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
@@ -40,7 +37,7 @@ export async function addE2e(
     e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve-static`,
-    e2eCiBaseUrl: `http://localhost:4200`,
+    e2eCiBaseUrl: `http://localhost:${options.port ?? 4200}`,
     e2eDevServerTarget: `${options.projectName}:serve`,
   };
 
@@ -58,6 +55,20 @@ export async function addE2e(
       options.addPlugin,
       options.devServerPort ?? 4200
     );
+  } else if (options.bundler === 'rspack') {
+    const { getRspackE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/rspack')
+    >('@nx/rspack', nxVersion);
+    e2eWebServerInfo = await getRspackE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `rspack.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo, getReactRouterE2EWebServerInfo } =
       ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
@@ -70,7 +81,9 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200
+          options.devServerPort ?? 4200,
+          // If the user manually sets the port, then use it for dev and preview
+          options.port
         )
       : await getViteE2EWebServerInfo(
           tree,
@@ -80,7 +93,9 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200
+          options.devServerPort ?? 4200,
+          // If the user manually sets the port, then use it for dev and preview
+          options.port
         );
   } else if (options.bundler === 'rsbuild') {
     ensurePackage('@nx/rsbuild', nxVersion);
@@ -158,55 +173,13 @@ export async function addE2e(
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
         rootProject: options.rootProject,
-        webServerCommands: hasNxBuildPlugin
-          ? {
-              default: e2eWebServerInfo.e2eWebServerCommand,
-              production: e2eWebServerInfo.e2eCiWebServerCommand,
-            }
-          : undefined,
-        ciWebServerCommand: hasNxBuildPlugin
-          ? e2eWebServerInfo.e2eCiWebServerCommand
-          : undefined,
+        webServerCommands: {
+          default: e2eWebServerInfo.e2eWebServerCommand,
+          production: e2eWebServerInfo.e2eCiWebServerCommand,
+        },
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       });
-
-      if (
-        options.addPlugin ||
-        readNxJson(tree).plugins?.find((p) =>
-          typeof p === 'string'
-            ? p === '@nx/cypress/plugin'
-            : p.plugin === '@nx/cypress/plugin'
-        )
-      ) {
-        let buildTarget = '^build';
-        if (hasNxBuildPlugin) {
-          const configFile =
-            options.bundler === 'webpack'
-              ? 'webpack.config.js'
-              : options.bundler === 'vite'
-              ? `vite.config.${options.js ? 'js' : 'ts'}`
-              : 'webpack.config.js';
-          const matchingPlugin = await findPluginForConfigFile(
-            tree,
-            `@nx/${options.bundler}/plugin`,
-            joinPathFragments(options.appProjectRoot, configFile)
-          );
-          if (matchingPlugin && typeof matchingPlugin !== 'string') {
-            buildTarget = `^${
-              (matchingPlugin.options as any)?.buildTargetName ?? 'build'
-            }`;
-          }
-        }
-        await addE2eCiTargetDefaults(
-          tree,
-          '@nx/cypress/plugin',
-          buildTarget,
-          joinPathFragments(
-            options.e2eProjectRoot,
-            `cypress.config.${options.js ? 'js' : 'ts'}`
-          )
-        );
-      }
 
       return e2eTask;
     }
@@ -257,41 +230,6 @@ export async function addE2e(
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });
-
-      if (
-        options.addPlugin ||
-        readNxJson(tree).plugins?.find((p) =>
-          typeof p === 'string'
-            ? p === '@nx/playwright/plugin'
-            : p.plugin === '@nx/playwright/plugin'
-        )
-      ) {
-        let buildTarget = '^build';
-        if (hasNxBuildPlugin) {
-          const configFile =
-            options.bundler === 'webpack'
-              ? 'webpack.config.js'
-              : options.bundler === 'vite'
-              ? `vite.config.${options.js ? 'js' : 'ts'}`
-              : 'webpack.config.js';
-          const matchingPlugin = await findPluginForConfigFile(
-            tree,
-            `@nx/${options.bundler}/plugin`,
-            joinPathFragments(options.appProjectRoot, configFile)
-          );
-          if (matchingPlugin && typeof matchingPlugin !== 'string') {
-            buildTarget = `^${
-              (matchingPlugin.options as any)?.buildTargetName ?? 'build'
-            }`;
-          }
-        }
-        await addE2eCiTargetDefaults(
-          tree,
-          '@nx/playwright/plugin',
-          buildTarget,
-          joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
-        );
-      }
 
       return e2eTask;
     }

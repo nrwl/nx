@@ -8,6 +8,7 @@ import {
   SwcJsMinimizerRspackPlugin,
   CopyRspackPlugin,
   RspackOptionsNormalized,
+  Output,
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
@@ -19,6 +20,7 @@ import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getNonBuildableLibs } from './get-non-buildable-libs';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -26,6 +28,13 @@ const IGNORED_RSPACK_WARNINGS = [
 ];
 
 const extensions = ['...', '.ts', '.tsx', '.mjs', '.js', '.jsx'];
+
+const extensionAlias = {
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
+  '.mjs': ['.mts', '.mjs'],
+  '.cjs': ['.cts', '.cjs'],
+  '.jsx': ['.tsx', '.jsx'],
+};
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
@@ -63,6 +72,7 @@ function applyNxIndependentConfig(
 ): void {
   const isProd =
     process.env.NODE_ENV === 'production' || options.mode === 'production';
+  const isDevServer = process.env['WEBPACK_SERVE'];
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
   config.target ??= options.target as 'async-node' | 'node' | 'web';
@@ -97,12 +107,30 @@ function applyNxIndependentConfig(
 
   config.output = {
     ...(config.output ?? {}),
-    libraryTarget:
-      options.target === 'node'
-        ? 'commonjs'
-        : options.target === 'async-node'
-        ? 'commonjs-module'
-        : undefined,
+    libraryTarget: (() => {
+      const existingOutputConfig = config.output as Output;
+      const existingLibraryTarget = existingOutputConfig?.libraryTarget;
+      const existingLibraryType =
+        typeof existingOutputConfig?.library === 'object' &&
+        'type' in existingOutputConfig?.library
+          ? existingOutputConfig?.library?.type
+          : undefined;
+
+      // If user is using modern library.type, don't set the deprecated libraryTarget
+      if (existingLibraryType !== undefined) {
+        return undefined;
+      }
+
+      // If user has set libraryTarget explicitly, use it
+      if (existingLibraryTarget !== undefined) {
+        return existingLibraryTarget;
+      }
+
+      // Set defaults based on target when user hasn't configured anything
+      if (options.target === 'node') return 'commonjs';
+      if (options.target === 'async-node') return 'commonjs-module';
+      return undefined;
+    })(),
     path:
       config.output?.path ??
       (options.outputPath
@@ -121,7 +149,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
-    clean: options.deleteOutputPath,
+    clean: config.output?.clean ?? options.deleteOutputPath,
   };
 
   config.watch = options.watch;
@@ -145,40 +173,44 @@ function applyNxIndependentConfig(
     ...(config.ignoreWarnings ?? []),
   ];
 
-  config.optimization = !isProd
-    ? undefined
-    : {
-        ...(config.optimization ?? {}),
-        sideEffects: true,
-        minimize:
-          typeof options.optimization === 'object'
-            ? !!options.optimization.scripts
-            : !!options.optimization,
-        minimizer: [
-          new SwcJsMinimizerRspackPlugin({
-            extractComments: false,
-            minimizerOptions: {
-              // this needs to be false to allow toplevel variables to be used in the global scope
-              // important especially for module-federation which operates as such
-              module: false,
-              mangle: {
-                keep_classnames: true,
+  config.optimization = {
+    ...(config.optimization ?? {}),
+    ...(isProd
+      ? {
+          sideEffects: true,
+          minimize:
+            typeof options.optimization === 'object'
+              ? !!options.optimization.scripts
+              : !!options.optimization,
+          minimizer: [
+            new SwcJsMinimizerRspackPlugin({
+              extractComments: false,
+              minimizerOptions: {
+                // this needs to be false to allow toplevel variables to be used in the global scope
+                // important especially for module-federation which operates as such
+                module: false,
+                mangle: {
+                  keep_classnames: true,
+                },
+                format: {
+                  ecma: getTerserEcmaVersion(
+                    path.join(options.root, options.projectRoot)
+                  ),
+                  ascii_only: true,
+                  comments: false,
+                  webkit: true,
+                  safari10: true,
+                },
               },
-              format: {
-                ecma: getTerserEcmaVersion(
-                  path.join(options.root, options.projectRoot)
-                ),
-                ascii_only: true,
-                comments: false,
-                webkit: true,
-                safari10: true,
-              },
-            },
-          }),
-        ],
-        runtimeChunk: false,
-        concatenateModules: true,
-      };
+            }),
+          ],
+          concatenateModules: true,
+          runtimeChunk: isDevServer
+            ? config.optimization?.runtimeChunk ?? undefined
+            : false,
+        }
+      : {}),
+  };
 
   config.stats = {
     hash: true,
@@ -240,8 +272,13 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
   }
 
-  // New TS Solution already has a typecheck target
-  if (!options?.skipTypeChecking && !isUsingTsSolution) {
+  // New TS Solution already has a typecheck target but allow it to run during serve
+  if (
+    (!options?.skipTypeChecking && !isUsingTsSolution) ||
+    (isUsingTsSolution &&
+      options?.skipTypeChecking === false &&
+      process.env['WEBPACK_SERVE'])
+  ) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
     plugins.push(
       new TsCheckerRspackPlugin({
@@ -345,7 +382,21 @@ function applyNxDependentConfig(
     options.externalDependencies === 'all'
   ) {
     const modulesDir = `${options.root}/node_modules`;
-    externals.push(nodeExternals({ modulesDir }));
+    const graph = options.projectGraph;
+    const projectName = options.projectName;
+
+    // Collect non-buildable TS project references so that they are bundled
+    // in the final output. This is needed for projects that are not buildable
+    // but are referenced by buildable projects. This is needed for the new TS
+    // solution setup.
+
+    const nonBuildableWorkspaceLibs = isUsingTsSolution
+      ? getNonBuildableLibs(graph, projectName)
+      : [];
+
+    externals.push(
+      nodeExternals({ modulesDir, allowlist: nonBuildableWorkspaceLibs })
+    );
   } else if (Array.isArray(options.externalDependencies)) {
     externals.push(function (ctx, callback: Function) {
       if (options.externalDependencies.includes(ctx.request)) {
@@ -360,6 +411,10 @@ function applyNxDependentConfig(
   config.resolve = {
     ...config.resolve,
     extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    extensionAlias: {
+      ...(config.resolve?.extensionAlias ?? {}),
+      ...extensionAlias,
+    },
     alias: {
       ...(config.resolve?.alias ?? {}),
       ...(options.fileReplacements?.reduce(
@@ -419,6 +474,8 @@ function applyNxDependentConfig(
               tsx: true,
             },
             transform: {
+              legacyDecorator: true,
+              decoratorMetadata: true,
               react: {
                 runtime: 'automatic',
                 pragma: 'React.createElement',

@@ -1,12 +1,12 @@
-import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import {
   EnterpriseCustomers,
   Hero,
   OssProjects,
-} from '@nx/nx-dev/ui-customers';
-import { contactButton } from '../lib/components/headerCtaConfigs';
+} from '@nx/nx-dev-ui-customers';
+import { contactButton } from '../lib/header-cta.configs';
 
 export function Customers(): JSX.Element {
   const router = useRouter();
@@ -26,7 +26,7 @@ export function Customers(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

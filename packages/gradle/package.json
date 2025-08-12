@@ -15,7 +15,7 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -26,6 +26,7 @@
   "generators": "./generators.json",
   "exports": {
     ".": "./index.js",
+    "./plugin-v1": "./plugin-v1.js",
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json"
@@ -34,9 +35,11 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit"
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "executors": "./executors.json"
 }

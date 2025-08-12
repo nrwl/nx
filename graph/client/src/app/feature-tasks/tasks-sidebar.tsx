@@ -13,16 +13,16 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useMemo } from 'react';
-import { getGraphService } from '../machines/graph.service';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
-import { Dropdown } from '@nx/graph/legacy/components';
-import { useRouteConstructor } from '@nx/graph/legacy/shared';
+import { Dropdown, Spinner } from '@nx/graph-ui-common';
+import { useRouteConstructor } from '@nx/graph-shared';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ShowHideAll } from '../ui-components/show-hide-all';
 import { createTaskName } from '../util';
+import { useTaskGraphContext } from '@nx/graph/tasks';
 
-export function TasksSidebar() {
-  const graphService = getGraphService();
+function TasksSidebarInner() {
+  const { send } = useTaskGraphContext();
   const navigate = useNavigate();
   const params = useParams();
   const createRoute = useRouteConstructor();
@@ -35,22 +35,41 @@ export function TasksSidebar() {
   ) as ProjectGraphClientResponse & { targets: string[] };
   const workspaceLayout = selectedWorkspaceRouteData.layout;
 
-  const routeData = useRouteLoaderData(
+  const allTasksRouteData = useRouteLoaderData(
+    'allTasks'
+  ) as TaskGraphClientResponse | null;
+
+  const selectedTargetRouteData = useRouteLoaderData(
     'selectedTarget'
-  ) as TaskGraphClientResponse;
-  const { taskGraphs, errors } = routeData;
+  ) as TaskGraphClientResponse | null;
+
+  // Use selectedTarget data if available, otherwise empty defaults
+  const { taskGraphs, errors } = useMemo(() => {
+    return (allTasksRouteData ||
+      selectedTargetRouteData || {
+        taskGraphs: {},
+        errors: {},
+      }) as TaskGraphClientResponse;
+  }, [selectedTargetRouteData, allTasksRouteData]);
   let { projects, targets } = selectedWorkspaceRouteData;
 
-  const selectedTarget = params['selectedTarget'] ?? targets[0];
+  const selectedTarget = useMemo(
+    () => params['selectedTarget'] ?? targets[0],
+    [params['selectedTarget'], targets]
+  );
 
   const currentRoute = useCurrentPath();
   const isAllRoute =
     currentRoute.currentPath === `/tasks/${selectedTarget}/all`;
 
-  const allProjectsWithTargetAndNoErrors = projects.filter(
-    (project) =>
-      project.data.targets?.hasOwnProperty(selectedTarget) &&
-      !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
+  const allProjectsWithTargetAndNoErrors = useMemo(
+    () =>
+      projects.filter(
+        (project) =>
+          project.data.targets?.hasOwnProperty(selectedTarget) &&
+          !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
+      ),
+    [projects, selectedTarget, errors]
   );
 
   const selectedProjects = useMemo(
@@ -63,20 +82,11 @@ export function TasksSidebar() {
 
   function selectTarget(target: string) {
     if (target === selectedTarget) return;
-
     hideAllProjects();
-
-    if (params['selectedTarget']) {
-      navigate({
-        pathname: `../${encodeURIComponent(target)}`,
-        search: searchParams.toString(),
-      });
-    } else {
-      navigate({
-        pathname: `${encodeURIComponent(target)}`,
-        search: searchParams.toString(),
-      });
-    }
+    const pathname = params['selectedTarget']
+      ? `../${encodeURIComponent(target)}`
+      : `./${encodeURIComponent(target)}`;
+    navigate({ pathname, search: searchParams.toString() });
   }
 
   function toggleProject(project: string) {
@@ -157,35 +167,33 @@ export function TasksSidebar() {
   }
 
   useEffect(() => {
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphSetProjects',
+    send({
+      type: 'initGraph',
       projects: selectedWorkspaceRouteData.projects,
       taskGraphs,
     });
   }, [selectedWorkspaceRouteData]);
 
   useEffect(() => {
-    if (groupByProject) {
-      graphService.handleTaskEvent({
-        type: 'setGroupByProject',
-        groupByProject: true,
-      });
-    } else {
-      graphService.handleTaskEvent({
-        type: 'setGroupByProject',
-        groupByProject: false,
-      });
-    }
+    send({
+      type: 'mergeGraph',
+      projects: selectedWorkspaceRouteData.projects,
+      taskGraphs,
+    });
+  }, [selectedWorkspaceRouteData, taskGraphs, isAllRoute]);
+
+  useEffect(() => {
+    send({ type: 'toggleGroupByProject', groupByProject });
   }, [searchParams]);
 
   useEffect(() => {
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphSetTasks',
+    send({
+      type: 'show',
       taskIds: selectedProjects.map((p) => createTaskName(p, selectedTarget)),
     });
-  }, [graphService, selectedProjects, selectedTarget]);
+  }, [selectedProjects, selectedTarget]);
 
-  function groupByProjectChanged(checked) {
+  function groupByProjectChanged(checked: boolean) {
     setSearchParams(
       (currentSearchParams) => {
         if (checked) {
@@ -208,7 +216,7 @@ export function TasksSidebar() {
         showAffected={() => {}}
         hasAffected={false}
         label="tasks"
-      ></ShowHideAll>
+      />
 
       <CheckboxPanel
         checked={groupByProject}
@@ -248,4 +256,18 @@ export function TasksSidebar() {
       </TaskList>
     </>
   );
+}
+
+export function TasksSidebar() {
+  const { graphClient } = useTaskGraphContext();
+
+  if (!graphClient) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  return <TasksSidebarInner />;
 }

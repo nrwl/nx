@@ -13,7 +13,6 @@ export interface NormalizedSchema {
     buildable?: boolean;
     publishable?: boolean;
     importPath?: string;
-    standaloneConfig?: boolean;
     spec?: boolean;
     commonModule?: boolean;
     routing?: boolean;
@@ -26,6 +25,7 @@ export interface NormalizedSchema {
     skipModule?: boolean;
     skipPackageJson?: boolean;
     skipPostInstall?: boolean;
+    skipTsConfig?: boolean;
     standalone?: boolean;
     linter: Linter | LinterType;
     unitTestRunner: UnitTestRunner;
@@ -38,6 +38,7 @@ export interface NormalizedSchema {
     parsedTags: string[];
     ngCliSchematicLibRoot: string;
     standaloneComponentName: string;
+    moduleTypeSeparator: '-' | '.';
   };
   componentOptions: {
     name: string;
@@ -52,5 +53,6 @@ export interface NormalizedSchema {
     selector?: string;
     skipSelector?: boolean;
     flat?: boolean;
+    type?: string;
   };
 }

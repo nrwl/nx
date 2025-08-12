@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -21,13 +21,18 @@
         "@nx/dependency-checks": [
           "error",
           {
-            "ignoredDependencies": ["nx"]
+            "ignoredDependencies": ["nx", "tslib"]
           }
         ]
       }
     },
     {
-      "files": ["./package.json"],
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
       "parser": "jsonc-eslint-parser",
       "rules": {
         "@nx/nx-plugin-checks": "error"

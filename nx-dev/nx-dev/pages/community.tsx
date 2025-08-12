@@ -5,8 +5,8 @@ import {
   Footer,
   Header,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { ConnectWithUs } from '@nx/nx-dev/ui-community';
+} from '@nx/nx-dev-ui-common';
+import { ConnectWithUs } from '@nx/nx-dev-ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
@@ -47,7 +47,7 @@ export default function Community(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

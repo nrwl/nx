@@ -14,23 +14,37 @@
 import { join, relative } from 'node:path';
 import { URL } from 'node:url';
 import {
+  LegacyNxReleaseVersionConfiguration,
   NxJsonConfiguration,
   NxReleaseChangelogConfiguration,
+  NxReleaseConfiguration,
+  NxReleaseDockerConfiguration,
+  NxReleaseGitConfiguration,
+  NxReleaseVersionConfiguration,
 } from '../../../config/nx-json';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { readJsonFile } from '../../../utils/fileutils';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
-import { workspaceRoot } from '../../../utils/workspace-root';
 import { normalizePath } from '../../../utils/path';
+import { workspaceRoot } from '../../../utils/workspace-root';
+import { defaultCreateReleaseProvider as defaultGitHubCreateReleaseProvider } from '../utils/remote-release-clients/github';
+import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } from '../utils/remote-release-clients/gitlab';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
+import { shouldUseLegacyVersioning } from './use-legacy-versioning';
 
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
 }>;
+
+type EnsureDockerOptional<T> = {
+  [K in keyof T]: Omit<T[K], 'docker'> & {
+    docker: DeepRequired<NxReleaseDockerConfiguration> | undefined;
+  };
+};
 
 type EnsureProjectsArray<T> = {
   [K in keyof T]: T[K] extends { projects: any }
@@ -55,6 +69,9 @@ type RemoveBooleanFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
 
 export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
 
+export const DEFAULT_VERSION_ACTIONS_PATH =
+  '@nx/js/src/release/version-actions';
+
 /**
  * Our source of truth is a deeply required variant of the user-facing config interface, so that command
  * implementations can be sure that properties will exist and do not need to repeat the same checks over
@@ -66,16 +83,18 @@ export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
  */
 export type NxReleaseConfig = Omit<
   DeepRequired<
-    NxJsonConfiguration['release'] & {
-      groups: DeepRequired<
-        RemoveTrueFromPropertiesOnEach<
-          EnsureProjectsArray<NxJsonConfiguration['release']['groups']>,
-          'changelog'
+    NxReleaseConfiguration & {
+      groups: EnsureDockerOptional<
+        DeepRequired<
+          RemoveTrueFromPropertiesOnEach<
+            EnsureProjectsArray<NxReleaseConfiguration['groups']>,
+            'changelog' | 'docker'
+          >
         >
       >;
       // Remove the true shorthand from the changelog config types, it will be normalized to a default object
       changelog: RemoveTrueFromProperties<
-        DeepRequired<NxJsonConfiguration['release']['changelog']>,
+        DeepRequired<NxReleaseConfiguration['changelog']>,
         'workspaceChangelog' | 'projectChangelogs'
       >;
       // Remove the false shorthand from the conventionalCommits config types, it will be normalized to a semver bump of "none" and to be hidden on the changelog
@@ -84,7 +103,7 @@ export type NxReleaseConfig = Omit<
           DeepRequired<
             RemoveBooleanFromProperties<
               DeepRequired<
-                NxJsonConfiguration['release']['conventionalCommits']['types']
+                NxReleaseConfiguration['conventionalCommits']['types']
               >,
               string
             >
@@ -95,8 +114,11 @@ export type NxReleaseConfig = Omit<
     }
   >,
   // projects is just a shorthand for the default group's projects configuration, it does not exist in the final config
-  'projects'
->;
+  'projects' | 'docker'
+> & {
+  // docker is optional and only present when explicitly configured by the user
+  docker: DeepRequired<NxReleaseDockerConfiguration> | undefined;
+};
 
 // We explicitly handle some possible errors in order to provide the best possible DX
 export interface CreateNxReleaseConfigError {
@@ -105,7 +127,7 @@ export interface CreateNxReleaseConfigError {
     | 'RELEASE_GROUP_MATCHES_NO_PROJECTS'
     | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
-    | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS'
+    | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS'
     | 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG'
     | 'CANNOT_RESOLVE_CHANGELOG_RENDERER'
     | 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER'
@@ -147,12 +169,14 @@ export async function createNxReleaseConfig(
   if (hasInvalidConventionalCommitsConfig(userConfig)) {
     return {
       error: {
-        code: 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS',
+        code: 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS',
         data: {},
       },
       nxReleaseConfig: null,
     };
   }
+
+  const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(userConfig);
 
   const gitDefaults = {
     commit: false,
@@ -163,6 +187,7 @@ export async function createNxReleaseConfig(
     tagArgs: '',
     stageChanges: false,
     push: false,
+    pushArgs: '',
   };
   const versionGitDefaults = {
     ...gitDefaults,
@@ -221,10 +246,15 @@ export async function createNxReleaseConfig(
 
   const defaultFixedReleaseTagPattern = 'v{version}';
   /**
-   * TODO(v21): in v21, make it so that this pattern is used by default when any custom groups are used
+   * TODO(v22): in v22, make it so that this pattern is used by default when any custom groups are used
    */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+  const defaultReleaseTagPatternRequireSemver = true;
+  /**
+   * TODO(v22): in v22, set this to true by default
+   */
+  const defaultReleaseTagPatternStrictPreid = false;
 
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
@@ -254,17 +284,99 @@ export async function createNxReleaseConfig(
     __dirname,
     '../../../../release/changelog-renderer'
   );
+  // Helper function to create meaningful docker defaults when user opts in
+  function createDockerDefaults(
+    userDockerConfig: NxReleaseDockerConfiguration | true
+  ): DeepRequired<NxReleaseDockerConfiguration> {
+    const defaultVersionSchemes = {
+      production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+      hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+    };
+    const defaultPreVersionCommand = 'npx nx run-many -t docker:build';
+
+    // If user explicitly sets docker: true, apply meaningful defaults
+    if (userDockerConfig === true) {
+      return {
+        preVersionCommand: defaultPreVersionCommand,
+        skipVersionActions: undefined,
+        versionSchemes: defaultVersionSchemes,
+        repositoryName: undefined,
+        registryUrl: undefined,
+      };
+    }
+
+    // If user provides docker configuration object, merge with base defaults
+    return {
+      preVersionCommand:
+        userDockerConfig.preVersionCommand ?? defaultPreVersionCommand,
+      skipVersionActions: userDockerConfig.skipVersionActions
+        ? Array.isArray(userDockerConfig.skipVersionActions)
+          ? findMatchingProjects(
+              userDockerConfig.skipVersionActions,
+              projectGraph.nodes
+            )
+          : userDockerConfig.skipVersionActions
+        : undefined,
+      versionSchemes: userDockerConfig.versionSchemes ?? defaultVersionSchemes,
+      repositoryName: userDockerConfig.repositoryName,
+      registryUrl: userDockerConfig.registryUrl,
+    };
+  }
+
+  // Helper function to normalize docker config at group level
+  function normalizeDockerConfig(
+    dockerConfig: NxReleaseDockerConfiguration | true
+  ): DeepRequired<NxReleaseDockerConfiguration> | undefined {
+    // If user explicitly sets docker: true at group level, apply meaningful defaults
+    if (dockerConfig === true) {
+      return createDockerDefaults(true);
+    }
+
+    // If user provides docker configuration object at group level, return it
+    if (dockerConfig && typeof dockerConfig === 'object') {
+      return createDockerDefaults(dockerConfig);
+    }
+
+    // No group-level docker config
+    return undefined;
+  }
+
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
     // By default all projects in all groups are released together
     projectsRelationship: workspaceProjectsRelationship,
+    // Create docker defaults only if user has explicitly configured it, otherwise undefined
+    docker:
+      userConfig.docker !== undefined
+        ? createDockerDefaults(userConfig.docker)
+        : undefined,
     git: gitDefaults,
     version: {
+      useLegacyVersioning: USE_LEGACY_VERSIONING,
       git: versionGitDefaults,
       conventionalCommits: userConfig.version?.conventionalCommits || false,
-      generator: '@nx/js:release-version',
-      generatorOptions: defaultGeneratorOptions,
       preVersionCommand: userConfig.version?.preVersionCommand || '',
-    },
+      ...(USE_LEGACY_VERSIONING
+        ? {
+            generator: '@nx/js:release-version',
+            generatorOptions: defaultGeneratorOptions,
+          }
+        : {
+            versionActions: DEFAULT_VERSION_ACTIONS_PATH,
+            versionActionsOptions: {},
+            currentVersionResolver:
+              defaultGeneratorOptions.currentVersionResolver,
+            specifierSource: defaultGeneratorOptions.specifierSource,
+            preserveLocalDependencyProtocols:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.preserveLocalDependencyProtocols ?? true,
+            logUnchangedProjects:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.logUnchangedProjects ?? true,
+            updateDependents:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.updateDependents ?? 'auto',
+          }),
+    } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
       git: changelogGitDefaults,
       workspaceChangelog: disableWorkspaceChangelog
@@ -277,7 +389,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
-              mapAuthorsToGitHubUsernames: true,
+              applyUsernameToAuthors: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -292,7 +404,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
-              mapAuthorsToGitHubUsernames: true,
+              applyUsernameToAuthors: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -308,6 +420,12 @@ export async function createNxReleaseConfig(
         : defaultFixedReleaseTagPattern),
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternRequireSemver:
+      userConfig.releaseTagPatternRequireSemver ??
+      defaultReleaseTagPatternRequireSemver,
+    releaseTagPatternStrictPreid:
+      userConfig.releaseTagPatternStrictPreid ??
+      defaultReleaseTagPatternStrictPreid,
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     versionPlans: (userConfig.versionPlans ||
       false) as NxReleaseConfig['versionPlans'],
@@ -315,15 +433,50 @@ export async function createNxReleaseConfig(
 
   const groupProjectsRelationship =
     userConfig.projectsRelationship || WORKSPACE_DEFAULTS.projectsRelationship;
+  const groupReleaseTagPatternRequireSemver =
+    userConfig.releaseTagPatternRequireSemver ??
+    WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver;
+  const groupReleaseTagPatternStrictPreid =
+    userConfig.releaseTagPatternStrictPreid ??
+    defaultReleaseTagPatternStrictPreid;
+  const groupDocker = normalizeDockerConfig(
+    userConfig.docker ?? WORKSPACE_DEFAULTS.docker
+  );
 
-  const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
+  const GROUP_DEFAULTS: Omit<
+    NxReleaseConfig['groups'][string],
+    'projects' | 'docker'
+  > & {
+    docker:
+      | DeepRequired<NxReleaseConfig['groups'][string]['docker']>
+      | undefined;
+  } = {
     projectsRelationship: groupProjectsRelationship,
-    version: {
-      conventionalCommits: false,
-      generator: '@nx/js:release-version',
-      generatorOptions: {},
-      groupPreVersionCommand: '',
-    },
+    // Only include docker configuration if user has explicitly configured it
+    docker:
+      groupDocker && Object.keys(groupDocker).length > 0
+        ? {
+            ...groupDocker,
+            groupPreVersionCommand: '',
+          }
+        : undefined,
+    version: USE_LEGACY_VERSIONING
+      ? ({
+          conventionalCommits: false,
+          generator: '@nx/js:release-version',
+          generatorOptions: {},
+          groupPreVersionCommand: '',
+        } as DeepRequired<
+          NxReleaseConfiguration['groups']['string']['version']
+        >)
+      : ({
+          conventionalCommits: false,
+          versionActions: DEFAULT_VERSION_ACTIONS_PATH,
+          versionActionsOptions: {},
+          groupPreVersionCommand: '',
+        } as DeepRequired<
+          NxReleaseConfiguration['groups']['string']['version']
+        >),
     changelog: {
       createRelease: false,
       entryWhenNoChanges:
@@ -332,7 +485,7 @@ export async function createNxReleaseConfig(
       renderer: defaultRendererPath,
       renderOptions: {
         authors: true,
-        mapAuthorsToGitHubUsernames: true,
+        applyUsernameToAuthors: true,
         commitReferences: true,
         versionTitleDate: true,
       },
@@ -340,10 +493,16 @@ export async function createNxReleaseConfig(
     releaseTagPattern:
       // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
       groupProjectsRelationship === 'independent'
-        ? defaultIndependentReleaseTagPattern
+        ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+          // Otherwise, use the default value to guarantee unique tags
+          WORKSPACE_DEFAULTS.releaseTagPattern?.includes('{projectName}')
+          ? WORKSPACE_DEFAULTS.releaseTagPattern
+          : defaultIndependentReleaseTagPattern
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternRequireSemver: groupReleaseTagPatternRequireSemver,
+    releaseTagPatternStrictPreid: groupReleaseTagPatternStrictPreid,
     versionPlans: false,
   };
 
@@ -359,13 +518,20 @@ export async function createNxReleaseConfig(
     [
       WORKSPACE_DEFAULTS.version,
       // Merge in the git defaults from the top level
-      { git: versionGitDefaults } as NxReleaseConfig['version'],
+      {
+        git: versionGitDefaults,
+      } as NxReleaseConfig['version'],
       {
         git: userConfig.git as Partial<NxReleaseConfig['git']>,
       } as NxReleaseConfig['version'],
     ],
     userConfig.version as Partial<NxReleaseConfig['version']>
   );
+
+  const rootDockerConfig: NxReleaseConfig['docker'] = userConfig.docker && {
+    ...normalizeDockerConfig(WORKSPACE_DEFAULTS.docker),
+    ...normalizeDockerConfig(userConfig.docker),
+  };
 
   if (userConfig.changelog?.workspaceChangelog) {
     userConfig.changelog.workspaceChangelog = normalizeTrueToEmptyObject(
@@ -407,38 +573,68 @@ export async function createNxReleaseConfig(
     );
 
   // these options are not supported at the group level, only the root/command level
-  const rootVersionWithoutGlobalOptions = {
+  let rootVersionWithoutGlobalOptions = {
     ...rootVersionConfig,
-  };
+  } as DeepRequired<
+    {
+      useLegacyVersioning?: boolean;
+      git?: NxReleaseGitConfiguration;
+      preVersionCommand?: string;
+    } & LegacyNxReleaseVersionConfiguration
+  >;
   delete rootVersionWithoutGlobalOptions.git;
   delete rootVersionWithoutGlobalOptions.preVersionCommand;
 
   // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.version?.conventionalCommits === true) {
-    rootVersionWithoutGlobalOptions.generatorOptions = {
-      ...rootVersionWithoutGlobalOptions.generatorOptions,
-      currentVersionResolver: 'git-tag',
-      specifierSource: 'conventional-commits',
-    };
+    if (USE_LEGACY_VERSIONING) {
+      rootVersionWithoutGlobalOptions.generatorOptions = {
+        ...rootVersionWithoutGlobalOptions.generatorOptions,
+        currentVersionResolver: 'git-tag',
+        specifierSource: 'conventional-commits',
+      };
+    } else {
+      (
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
+      ).currentVersionResolver = 'git-tag';
+      (
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
+      ).specifierSource = 'conventional-commits';
+    }
   }
   if (userConfig.version?.conventionalCommits === false) {
     delete rootVersionWithoutGlobalOptions.generatorOptions
+      ?.currentVersionResolver;
+    delete rootVersionWithoutGlobalOptions.generatorOptions?.specifierSource;
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
       .currentVersionResolver;
-    delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
+      .specifierSource;
   }
 
   // Apply versionPlans shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.versionPlans) {
-    rootVersionWithoutGlobalOptions.generatorOptions = {
-      ...rootVersionWithoutGlobalOptions.generatorOptions,
-      specifierSource: 'version-plans',
-    };
+    if (USE_LEGACY_VERSIONING) {
+      rootVersionWithoutGlobalOptions.generatorOptions = {
+        ...rootVersionWithoutGlobalOptions.generatorOptions,
+        specifierSource: 'version-plans',
+      };
+    } else {
+      (
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
+      ).specifierSource = 'version-plans';
+    }
   }
   if (userConfig.versionPlans === false) {
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
+      .specifierSource;
   }
 
-  const groups: NxReleaseConfig['groups'] =
+  const rootDockerWithoutGlobalOptions = { ...rootDockerConfig };
+  delete rootDockerWithoutGlobalOptions.preVersionCommand;
+
+  const groups: EnsureDockerOptional<NxReleaseConfig['groups']> =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
       : /**
@@ -448,6 +644,14 @@ export async function createNxReleaseConfig(
         {
           [IMPLICIT_DEFAULT_RELEASE_GROUP]: <NxReleaseConfig['groups'][string]>{
             projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
+            // Only include docker configuration if user has explicitly configured it
+            docker:
+              Object.keys(rootDockerWithoutGlobalOptions).length > 0
+                ? (deepMergeDefaults(
+                    [GROUP_DEFAULTS.docker] as any,
+                    rootDockerWithoutGlobalOptions
+                  ) as any)
+                : undefined,
             projects: userConfig.projects
               ? // user-defined top level "projects" config takes priority if set
                 findMatchingProjects(
@@ -462,12 +666,15 @@ export async function createNxReleaseConfig(
              * be the valid source of truth for that type of config.
              */
             version: deepMergeDefaults(
-              [GROUP_DEFAULTS.version],
+              [GROUP_DEFAULTS.version] as any,
               rootVersionWithoutGlobalOptions
-            ),
+            ) as any,
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
+            releaseTagPatternRequireSemver:
+              userConfig.releaseTagPatternRequireSemver ??
+              GROUP_DEFAULTS.releaseTagPatternRequireSemver,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
             versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
@@ -478,7 +685,7 @@ export async function createNxReleaseConfig(
    * Resolve all the project names into their release groups, and check
    * that individual projects are not found in multiple groups.
    */
-  const releaseGroups: NxReleaseConfig['groups'] = {};
+  const releaseGroups: EnsureDockerOptional<NxReleaseConfig['groups']> = {};
   const alreadyMatchedProjects = new Set<string>();
 
   for (const [releaseGroupName, releaseGroup] of Object.entries(groups)) {
@@ -545,13 +752,31 @@ export async function createNxReleaseConfig(
       ) as NxReleaseConfig['groups']['string']['changelog'];
     }
 
+    const normalizedGroupDockerConfig = normalizeDockerConfig(
+      releaseGroup.docker
+    );
+
+    // Only include docker configuration if user has explicitly configured it at root or group level
+    const shouldIncludeDockerConfig =
+      Object.keys(rootDockerWithoutGlobalOptions).length > 0 ||
+      normalizedGroupDockerConfig !== undefined;
+
     const groupDefaults: NxReleaseConfig['groups']['string'] = {
       projectsRelationship,
+      // Only include docker configuration if user has explicitly configured it
+      docker: shouldIncludeDockerConfig
+        ? {
+            ...GROUP_DEFAULTS.docker,
+            ...rootDockerWithoutGlobalOptions,
+            groupPreVersionCommand: '',
+            ...releaseGroup.docker,
+          }
+        : undefined,
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
         [
-          GROUP_DEFAULTS.version,
+          GROUP_DEFAULTS.version as any,
           { ...rootVersionWithoutGlobalOptions, groupPreVersionCommand: '' },
         ],
         releaseGroup.version
@@ -564,17 +789,28 @@ export async function createNxReleaseConfig(
               releaseGroup.changelog || {}
             )
           : false,
-
       releaseTagPattern:
         releaseGroup.releaseTagPattern ||
         // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
         (projectsRelationship === 'independent'
-          ? defaultIndependentReleaseTagPattern
+          ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+            // Otherwise, use the default value to guarantee unique tags
+            userConfig.releaseTagPattern?.includes('{projectName}')
+            ? userConfig.releaseTagPattern
+            : defaultIndependentReleaseTagPattern
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
       releaseTagPatternCheckAllBranchesWhen:
         releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
         userConfig.releaseTagPatternCheckAllBranchesWhen ??
         undefined,
+      releaseTagPatternRequireSemver:
+        releaseGroup.releaseTagPatternRequireSemver ??
+        userConfig.releaseTagPatternRequireSemver ??
+        defaultReleaseTagPatternRequireSemver,
+      releaseTagPatternStrictPreid:
+        releaseGroup.releaseTagPatternStrictPreid ??
+        userConfig.releaseTagPatternStrictPreid ??
+        defaultReleaseTagPatternStrictPreid,
       versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
@@ -584,40 +820,99 @@ export async function createNxReleaseConfig(
       projects: matchingProjects,
     });
 
+    finalReleaseGroup.version =
+      finalReleaseGroup.version as unknown as DeepRequired<
+        LegacyNxReleaseVersionConfiguration & {
+          groupPreVersionCommand?: string;
+        }
+      >;
+
+    // Clean up docker global options that are not supported at the group level
+    if (finalReleaseGroup.docker) {
+      delete finalReleaseGroup.docker.preVersionCommand;
+    }
+
     // Apply conventionalCommits shorthand to the final group if explicitly configured in the original group
     if (releaseGroup.version?.conventionalCommits === true) {
-      finalReleaseGroup.version.generatorOptions = {
-        ...finalReleaseGroup.version.generatorOptions,
-        currentVersionResolver: 'git-tag',
-        specifierSource: 'conventional-commits',
-      };
+      if (USE_LEGACY_VERSIONING) {
+        finalReleaseGroup.version.generatorOptions = {
+          ...finalReleaseGroup.version.generatorOptions,
+          currentVersionResolver: 'git-tag',
+          specifierSource: 'conventional-commits',
+        };
+      } else {
+        (
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
+        ).currentVersionResolver = 'git-tag';
+        (
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
+        ).specifierSource = 'conventional-commits';
+      }
     }
     if (
       releaseGroup.version?.conventionalCommits === false &&
       releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
     ) {
-      delete finalReleaseGroup.version.generatorOptions.currentVersionResolver;
-      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+      if (USE_LEGACY_VERSIONING) {
+        delete finalReleaseGroup.version.generatorOptions
+          ?.currentVersionResolver;
+        delete finalReleaseGroup.version.generatorOptions?.specifierSource;
+      }
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
+        .currentVersionResolver;
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
+        .specifierSource;
     }
 
     // Apply versionPlans shorthand to the final group if explicitly configured in the original group
     if (releaseGroup.versionPlans) {
-      finalReleaseGroup.version = {
-        ...finalReleaseGroup.version,
-        generatorOptions: {
-          ...finalReleaseGroup.version?.generatorOptions,
-          specifierSource: 'version-plans',
-        },
-      };
+      if (USE_LEGACY_VERSIONING) {
+        finalReleaseGroup.version = {
+          ...finalReleaseGroup.version,
+          generatorOptions: {
+            ...finalReleaseGroup.version?.generatorOptions,
+            specifierSource: 'version-plans',
+          },
+        };
+      } else {
+        (
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
+        ).specifierSource = 'version-plans';
+      }
     }
     if (
       releaseGroup.versionPlans === false &&
       releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
     ) {
-      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+      if (USE_LEGACY_VERSIONING) {
+        delete finalReleaseGroup.version.generatorOptions?.specifierSource;
+      }
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
+        .specifierSource;
     }
-
     releaseGroups[releaseGroupName] = finalReleaseGroup;
+  }
+
+  // Infer docker-related properties based on project configurations
+  for (const [releaseGroupName, releaseGroup] of Object.entries(
+    releaseGroups
+  )) {
+    const hasDockerProjects = releaseGroup.projects.some((projectName) => {
+      const projectNode = projectGraph.nodes[projectName];
+      // Check if project has meaningful docker config (not just undefined/empty values)
+      const projectDockerConfig = projectNode?.data.release?.docker;
+      const hasProjectDockerConfig = projectDockerConfig !== undefined;
+
+      // Check if release group has docker config at all (since we now only include it when explicitly configured)
+      const hasGroupDockerConfig = !!releaseGroup.docker;
+
+      return hasProjectDockerConfig || hasGroupDockerConfig;
+    });
+
+    if (hasDockerProjects) {
+      // If any project in the group has docker configuration, disable semver requirement
+      releaseGroup.releaseTagPatternRequireSemver = false;
+    }
   }
 
   const configError = validateChangelogConfig(
@@ -635,10 +930,19 @@ export async function createNxReleaseConfig(
     error: null,
     nxReleaseConfig: {
       projectsRelationship: WORKSPACE_DEFAULTS.projectsRelationship,
+      // Only include docker configuration if user has explicitly configured it
+      ...(WORKSPACE_DEFAULTS.docker
+        ? { docker: WORKSPACE_DEFAULTS.docker }
+        : {}),
       releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
       releaseTagPatternCheckAllBranchesWhen:
         WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
+      releaseTagPatternRequireSemver:
+        WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver,
+      releaseTagPatternStrictPreid:
+        WORKSPACE_DEFAULTS.releaseTagPatternStrictPreid,
       git: rootGitConfig,
+      docker: rootDockerConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,
       groups: releaseGroups,
@@ -755,8 +1059,10 @@ function fillUnspecifiedConventionalCommitsProperties(
 }
 
 export async function handleNxReleaseConfigError(
-  error: CreateNxReleaseConfigError
+  error: CreateNxReleaseConfigError,
+  useLegacyVersioning: boolean
 ): Promise<never> {
+  const linkMessage = `\nRead more about Nx Release at https://nx.dev/features/manage-releases.`;
   switch (error.code) {
     case 'PROJECTS_AND_GROUPS_DEFINED':
       {
@@ -766,7 +1072,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `"projects" is not valid when explicitly defining release groups, and everything should be expressed within "groups" in that case. If you are using "groups" then you should remove the "projects" property`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -778,7 +1084,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Release group "${error.data.releaseGroupName}" matches no projects. Please ensure all release groups match at least one project:`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -790,7 +1096,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Project "${error.data.project}" matches multiple release groups. Please ensure all projects are part of only one release group:`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -804,18 +1110,21 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Release group "${error.data.releaseGroupName}" has an invalid releaseTagPattern. Please ensure the pattern contains exactly one instance of the "{version}" placeholder`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
-    case 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS':
+    case 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS':
       {
         const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
           'release',
         ]);
+        const text = useLegacyVersioning
+          ? '"version.generatorOptions"'
+          : 'configuration options';
         output.error({
-          title: `You have configured both the shorthand "version.conventionalCommits" and one or more of the related "version.generatorOptions" that it sets for you. Please use one or the other:`,
-          bodyLines: [nxJsonMessage],
+          title: `You have configured both the shorthand "version.conventionalCommits" and one or more of the related ${text} that it sets for you. Please use one or the other:`,
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -827,7 +1136,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `You have duplicate conflicting git configurations. If you are using the top level 'nx release' command, then remove the 'release.version.git' and 'release.changelog.git' properties in favor of 'release.git'. If you are using the subcommands or the programmatic API, then remove the 'release.git' property in favor of 'release.version.git' and 'release.changelog.git':`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -835,7 +1144,7 @@ export async function handleNxReleaseConfigError(
       const nxJsonMessage = await resolveNxJsonConfigErrorMessage(['release']);
       output.error({
         title: `There was an error when resolving the configured changelog renderer at path: ${error.data.workspaceRelativePath}`,
-        bodyLines: [nxJsonMessage],
+        bodyLines: [nxJsonMessage, linkMessage],
       });
       break;
     }
@@ -852,7 +1161,7 @@ export async function handleNxReleaseConfigError(
           )
             .map((p) => `"${p}"`)
             .join(', ')}`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -863,7 +1172,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Your "changelog.createRelease" config specifies an invalid hostname "${error.data.hostname}". Please ensure you provide a valid hostname value, such as "example.com"`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -874,7 +1183,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Your "changelog.createRelease" config specifies an invalid apiBaseUrl "${error.data.apiBaseUrl}". Please ensure you provide a valid URL value, such as "https://example.com"`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -885,7 +1194,7 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `The createRelease option for changelogs cannot be enabled when git push is explicitly disabled because the commit needs to be pushed to the remote in order to tie the release to it`,
-          bodyLines: [nxJsonMessage],
+          bodyLines: [nxJsonMessage, linkMessage],
         });
       }
       break;
@@ -990,7 +1299,7 @@ function deepMergeDefaults<T>(
 
 /**
  * We want to prevent users from setting both the conventionalCommits shorthand and any of the related
- * generatorOptions at the same time, since it is at best redundant, and at worst invalid.
+ * configuration options at the same time, since it is at best redundant, and at worst invalid.
  */
 function hasInvalidConventionalCommitsConfig(
   userConfig: NxJsonConfiguration['release']
@@ -998,8 +1307,15 @@ function hasInvalidConventionalCommitsConfig(
   // at the root
   if (
     userConfig.version?.conventionalCommits === true &&
-    (userConfig.version?.generatorOptions?.currentVersionResolver ||
-      userConfig.version?.generatorOptions?.specifierSource)
+    // v2 config - directly on version config
+    ((userConfig.version as NxReleaseVersionConfiguration)
+      ?.currentVersionResolver ||
+      (userConfig.version as NxReleaseVersionConfiguration)?.specifierSource ||
+      // Legacy config - on generatorOptions
+      (userConfig.version as LegacyNxReleaseVersionConfiguration)
+        ?.generatorOptions?.currentVersionResolver ||
+      (userConfig.version as LegacyNxReleaseVersionConfiguration)
+        ?.generatorOptions?.specifierSource)
   ) {
     return true;
   }
@@ -1008,8 +1324,15 @@ function hasInvalidConventionalCommitsConfig(
     for (const group of Object.values(userConfig.groups)) {
       if (
         group.version?.conventionalCommits === true &&
-        (group.version?.generatorOptions?.currentVersionResolver ||
-          group.version?.generatorOptions?.specifierSource)
+        // v2 config - directly on version config
+        ((group.version as NxReleaseVersionConfiguration)
+          ?.currentVersionResolver ||
+          (group.version as NxReleaseVersionConfiguration)?.specifierSource ||
+          // Legacy config - on generatorOptions
+          (group.version as LegacyNxReleaseVersionConfiguration)
+            ?.generatorOptions?.currentVersionResolver ||
+          (group.version as LegacyNxReleaseVersionConfiguration)
+            ?.generatorOptions?.specifierSource)
       ) {
         return true;
       }
@@ -1155,14 +1478,20 @@ const supportedCreateReleaseProviders = [
     name: 'github-enterprise-server',
     defaultApiBaseUrl: 'https://__hostname__/api/v3',
   },
+  {
+    name: 'gitlab',
+    defaultApiBaseUrl: 'https://__hostname__/api/v4',
+  },
 ];
 
-// User opts into the default by specifying the string value 'github'
-export const defaultCreateReleaseProvider = {
-  provider: 'github',
-  hostname: 'github.com',
-  apiBaseUrl: 'https://api.github.com',
-} as any;
+/**
+ * Full form of the createRelease config, with the provider, hostname, and apiBaseUrl resolved.
+ */
+export interface ResolvedCreateRemoteReleaseProvider {
+  provider: string;
+  hostname: string;
+  apiBaseUrl: string;
+}
 
 function validateCreateReleaseConfig(
   changelogConfig: NxReleaseChangelogConfiguration
@@ -1174,7 +1503,14 @@ function validateCreateReleaseConfig(
   }
   // GitHub shorthand, expand to full object form, mark as valid
   if (createRelease === 'github') {
-    changelogConfig.createRelease = defaultCreateReleaseProvider;
+    changelogConfig.createRelease =
+      defaultGitHubCreateReleaseProvider as unknown as NxReleaseChangelogConfiguration['createRelease'];
+    return null;
+  }
+  // Gitlab shorthand, expand to full object form, mark as valid
+  if (createRelease === 'gitlab') {
+    changelogConfig.createRelease =
+      defaultGitLabCreateReleaseProvider as unknown as NxReleaseChangelogConfiguration['createRelease'];
     return null;
   }
   // Object config, ensure that properties are valid

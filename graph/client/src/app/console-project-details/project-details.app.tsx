@@ -1,9 +1,7 @@
-import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
-import {
-  ErrorToastUI,
-  ExpandedTargetsProvider,
-  getExternalApiService,
-} from '@nx/graph/legacy/shared';
+import { ProjectDetails } from '@nx/graph-internal-ui-project-details';
+import { getExternalApiService } from '@nx/graph-shared';
+import { ErrorToastUI } from '@nx/graph-ui-common';
+import { ExpandedTargetsProvider } from '@nx/graph-internal-ui-project-details';
 import { useSelector } from '@xstate/react';
 import { useCallback } from 'react';
 import { Interpreter } from 'xstate';

@@ -1,9 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import {
-  generateFiles,
-  joinPathFragments,
-  readProjectConfiguration,
-} from '@nx/devkit';
+import { generateFiles, readProjectConfiguration } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
@@ -19,10 +16,19 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const baseFilesPath = join(__dirname, '..', 'files');
   let pathToFiles: string;
-  if (angularMajorVersion >= 19) {
+  if (angularMajorVersion >= 20) {
     pathToFiles = join(
       baseFilesPath,
-      'v19+',
+      'v20+',
+      options.isUsingApplicationBuilder
+        ? 'application-builder'
+        : 'server-builder',
+      'server'
+    );
+  } else if (angularMajorVersion === 19) {
+    pathToFiles = join(
+      baseFilesPath,
+      'v19',
       options.isUsingApplicationBuilder
         ? 'application-builder' +
             (options.serverRouting ? '' : '-common-engine')
@@ -40,8 +46,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
     );
   }
 
-  const sourceRoot =
-    project.sourceRoot ?? joinPathFragments(project.root, 'src');
+  const sourceRoot = getProjectSourceRoot(project, tree);
 
   generateFiles(
     tree,

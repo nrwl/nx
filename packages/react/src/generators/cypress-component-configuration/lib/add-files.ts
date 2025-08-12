@@ -1,3 +1,4 @@
+import type { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
@@ -6,11 +7,11 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion } from 'nx/src/utils/versions';
+import { getActualBundler, isComponent } from '../../../utils/ct-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
 import type { CypressComponentConfigurationSchema } from '../schema';
-import { getActualBundler, isComponent } from '../../../utils/ct-utils';
-import { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 
 export async function addFiles(
   tree: Tree,
@@ -18,11 +19,13 @@ export async function addFiles(
   options: CypressComponentConfigurationSchema,
   found: FoundTarget
 ) {
-  // must dyanmicaly import to prevent packages not using cypress from erroring out
+  // must dynamicaly import to prevent packages not using cypress from erroring out
   // when importing react
-  const { addMountDefinition, addDefaultCTConfig } = await import(
-    '@nx/cypress/src/utils/config'
+  const { addMountDefinition } = await import('@nx/cypress/src/utils/config');
+  const { getInstalledCypressMajorVersion } = await import(
+    '@nx/cypress/src/utils/versions'
   );
+  const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
   // Specifically undefined to allow Remix workaround of passing an empty string
   const actualBundler = await getActualBundler(tree, options, found);
@@ -46,9 +49,11 @@ export async function addFiles(
   const updatedCommandFile = await addMountDefinition(
     tree.read(commandFile, 'utf-8')
   );
+  const moduleSpecifier =
+    installedCypressMajorVersion >= 14 ? 'cypress/react' : 'cypress/react18';
   tree.write(
     commandFile,
-    `import { mount } from 'cypress/react18';\n${updatedCommandFile}`
+    `import { mount } from '${moduleSpecifier}';\n${updatedCommandFile}`
   );
 
   if (
@@ -67,7 +72,8 @@ export async function addFiles(
 
   if (options.generateTests) {
     const filePaths = [];
-    visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
+    const sourceRoot = getProjectSourceRoot(projectConfig, tree);
+    visitNotIgnoredFiles(tree, sourceRoot, (filePath) => {
       if (isComponent(tree, filePath)) {
         filePaths.push(filePath);
       }

@@ -4,6 +4,7 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  readJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -11,31 +12,33 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { vueInitGenerator } from '../init/init';
-import { Schema } from './schema';
-import { normalizeOptions } from './lib/normalize-options';
-import { addLinting } from '../../utils/add-linting';
-import { createLibraryFiles } from './lib/create-library-files';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import componentGenerator from '../component/component';
-import { addVite } from './lib/add-vite';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { relative } from 'path';
-import {
-  addProjectToTsSolutionWorkspace,
-  updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { determineEntryFields } from './lib/determine-entry-fields';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/src/generators/library/utils/add-release-config';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { relative } from 'path';
+import { addLinting } from '../../utils/add-linting';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
+import componentGenerator from '../component/component';
+import { vueInitGenerator } from '../init/init';
+import { addVite } from './lib/add-vite';
+import { createLibraryFiles } from './lib/create-library-files';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { normalizeOptions } from './lib/normalize-options';
+import { Schema } from './schema';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, {
@@ -48,14 +51,22 @@ export function libraryGenerator(tree: Tree, schema: Schema) {
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  const options = await normalizeOptions(tree, schema);
-  if (options.publishable === true && !schema.importPath) {
+  if (schema.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
 
-  tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
+  tasks.push(
+    await jsInitGenerator(tree, {
+      ...schema,
+      addTsPlugin,
+      skipFormat: true,
+    })
+  );
+
+  const options = await normalizeOptions(tree, schema);
 
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
@@ -178,7 +189,9 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         projectConfig
       );
     } else {
+      const nxJson = readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.projectName,
         projectConfig

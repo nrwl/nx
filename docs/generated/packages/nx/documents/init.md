@@ -5,7 +5,7 @@ description: 'Adds Nx to any type of workspace. It installs nx, creates an nx.js
 
 # init
 
-Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.
+Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check [https://nx.dev/recipes/adopting-nx](/recipes/adopting-nx).
 
 ## Usage
 

@@ -39,7 +39,7 @@ A `remote` is an application that exposes a federated module that can be fetched
 
 {% callout type="note" title="Creating a Remote" %}
 
-Follow our [How to Create a Remote Application Recipe](/recipes/module-federation/create-a-remote) to learn more.
+Follow our [How to Create a Remote Application Recipe](/technologies/module-federation/recipes/create-a-remote) to learn more.
 
 {% /callout %}
 
@@ -53,7 +53,7 @@ The federated module will then be executed as though it was always part of the `
 
 {% callout type="note" title="Creating a Host" %}
 
-Follow our [How to Create a Host Application Recipe](/recipes/module-federation/create-a-host) to learn more.
+Follow our [How to Create a Host Application Recipe](/technologies/module-federation/recipes/create-a-host) to learn more.
 
 {% /callout %}
 
@@ -65,7 +65,7 @@ This means that React Components, Angular Components, Services, Application Stat
 
 {% callout type="note" title="Federating a Module" %}
 
-Follow our [How to Federate a Module Recipe](/recipes/module-federation/federate-a-module) to learn more.
+Follow our [How to Federate a Module Recipe](/technologies/module-federation/recipes/federate-a-module) to learn more.
 
 {% /callout %}
 
@@ -91,7 +91,7 @@ Having multiple versions of a package would then break the package's Singleton n
 
 {% callout type="note" title="Managing Versions" %}
 
-Follow our [Manage Library Versions Guide](/concepts/module-federation/manage-library-versions-with-module-federation) to learn more.
+Follow our [Manage Library Versions Guide](/technologies/module-federation/concepts/manage-library-versions-with-module-federation) to learn more.
 
 {% /callout %}
 
@@ -111,9 +111,15 @@ For both the best DX (Development Experience) and most accurate development of a
 
 The `host` is the entry point and the `remotes` are modules used by the application. It just happens that the `remotes` are fetched over-the-wire at runtime rather than being bundled into the application.
 
-To support this, as well as to ensure a great local DX, we built our Module Federation support in such a way that when developing locally you should always run `serve` on your `host` application. This will start up your full Module Federation architecture; serving your `host` with `webpack-dev-server` and each `remote` via a single `http-server`. You can learn more about this on our [Nx Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview).
+To support this, as well as to ensure a great local DX, we built our Module Federation support in such a way that when developing locally you should always run `serve` on your `host` application. This will start up your full Module Federation architecture; serving your `host` with `webpack-dev-server` and each `remote` via a single `http-server`. You can learn more about this on our [Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview).
 
-When you're working on a specific `remote` application, you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
+With the introduction of Continuous Tasks in Nx 21 when you're working on a specific `remote` application, you now only need to run `nx serve remote` and it will serve the application along with your `host` application.
+
+{% callout type="note" title="Continuous Tasks Support in Module Federation" %}
+This is currently only supported for Rspack Module Federation using the `@nx/rspack/plugin` Inference Plugin.
+{% /callout %}
+
+If you are using Webpack Module Federation, or are not using [Inferred Tasks](/concepts/inferred-tasks), you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
 
 ## Use Cases
 
@@ -129,7 +135,7 @@ If you add [Nx Cloud](https://nx.app) to your Nx Workspace, then you can even ge
 
 {% callout type="note" title="Faster Builds with Module Federation" %}
 
-Follow our [Faster Builds with Module Federation Guide](/concepts/module-federation/faster-builds-with-module-federation) to learn more.
+Follow our [Faster Builds with Module Federation Guide](/technologies/module-federation/concepts/faster-builds-with-module-federation) to learn more.
 
 {% /callout %}
 
@@ -142,7 +148,7 @@ This lends itself to more of a Micro Frontend approach.
 
 {% callout type="note" title="Micro Frontend Architecture" %}
 
-Follow our [Micro Frontend Architecture Guide](/concepts/module-federation/micro-frontend-architecture) to learn more.
+Follow our [Micro Frontend Architecture Guide](/technologies/module-federation/concepts/micro-frontend-architecture) to learn more.
 
 {% /callout %}
 

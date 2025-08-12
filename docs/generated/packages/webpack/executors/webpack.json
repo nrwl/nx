@@ -141,7 +141,7 @@
                   "type": "string",
                   "description": "The file to include.",
                   "x-completion-type": "file",
-                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
                 },
                 "bundleName": {
                   "type": "string",
@@ -160,7 +160,7 @@
               "type": "string",
               "description": "The file to include.",
               "x-completion-type": "file",
-              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
             }
           ]
         }
@@ -177,7 +177,7 @@
                   "type": "string",
                   "description": "The file to include.",
                   "x-completion-type": "file",
-                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
                 },
                 "bundleName": {
                   "type": "string",
@@ -196,7 +196,7 @@
               "type": "string",
               "description": "The file to include.",
               "x-completion-type": "file",
-              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
             }
           ]
         }
@@ -330,12 +330,6 @@
         "type": "boolean",
         "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`."
       },
-      "isolatedConfig": {
-        "type": "boolean",
-        "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
-        "default": true,
-        "x-deprecated": "Automatic configuration of Webpack is deprecated in favor of an explicit 'webpack.config.js' file. This option will be removed in Nx 20. See https://nx.dev/recipes/webpack/webpack-config-setup."
-      },
       "standardWebpackConfigFunction": {
         "type": "boolean",
         "description": "Set to true if the webpack config exports a standard webpack function, not an Nx-specific one. See: https://webpack.js.org/configuration/configuration-types/#exporting-a-function",
@@ -448,7 +442,7 @@
                 "type": "string",
                 "description": "The file to include.",
                 "x-completion-type": "file",
-                "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
               },
               "bundleName": {
                 "type": "string",
@@ -467,7 +461,7 @@
             "type": "string",
             "description": "The file to include.",
             "x-completion-type": "file",
-            "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+            "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
           }
         ]
       },

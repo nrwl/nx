@@ -2,7 +2,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
 import storiesGenerator from './stories';
 
@@ -91,7 +90,7 @@ describe('react:stories for applications', () => {
   it('should not update existing stories', async () => {
     appTree.write(
       'test-ui-app/src/app/nx-welcome.stories.tsx',
-      `import { ComponentStory, ComponentMeta } from '@storybook/react'`
+      `import { ComponentStory, ComponentMeta } from '@storybook/react-webpack5'`
     );
 
     await storiesGenerator(appTree, {
@@ -321,7 +320,7 @@ export async function createTestUIApp(
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'cypress',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',

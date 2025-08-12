@@ -7,6 +7,7 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
@@ -28,10 +29,12 @@ import {
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
+import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
@@ -49,6 +52,7 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   isUsingTypeScriptPlugin,
+  shouldConfigureTsSolutionSetup,
 } from '../../utils/typescript/ts-solution-setup';
 import {
   esbuildVersion,
@@ -63,7 +67,6 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
@@ -89,17 +92,26 @@ export async function libraryGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
   tasks.push(
     await jsInitGenerator(tree, {
       ...schema,
       skipFormat: true,
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
+      addTsPlugin,
       // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
       formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })
   );
   const options = await normalizeOptions(tree, schema);
+
+  if (schema.simpleName !== undefined && schema.simpleName !== false) {
+    // TODO(v22): Remove simpleName as user should be using name.
+    logger.warn(
+      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
+    );
+  }
 
   createFiles(tree, options);
 
@@ -264,8 +276,9 @@ async function configureProject(
   tree: Tree,
   options: NormalizedLibraryGeneratorOptions
 ) {
+  const nxJson = readNxJson(tree);
+
   if (options.hasPlugin) {
-    const nxJson = readNxJson(tree);
     ensureProjectIsIncludedInPluginRegistrations(
       nxJson,
       options.projectRoot,
@@ -343,6 +356,7 @@ async function configureProject(
       );
     } else {
       await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.name,
         projectConfiguration,
@@ -573,7 +587,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
     );
   }
 
-  if (options.bundler === 'swc' || options.bundler === 'rollup') {
+  if (options.includeBabelRc) {
+    addBabelRc(tree, options);
+  } else if (options.bundler === 'swc' || options.bundler === 'rollup') {
     addSwcConfig(
       tree,
       options.projectRoot,
@@ -581,8 +597,6 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         ? 'commonjs'
         : 'es6'
     );
-  } else if (options.includeBabelRc) {
-    addBabelRc(tree, options);
   }
 
   if (options.unitTestRunner === 'none') {
@@ -847,7 +861,7 @@ async function normalizeOptions(
   }
 
   if (options.publishable) {
-    if (!options.importPath) {
+    if (!isUsingTsSolutionConfig && !options.importPath) {
       throw new Error(
         `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
       );
@@ -1057,12 +1071,6 @@ function createProjectTsConfigs(
         json.references.push({
           path: './tsconfig.lib.json',
         });
-        // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
-        // This applies to `@nx/js/typescript` plugin only.
-        if (options.bundler === 'tsc') {
-          json['nx'] ??= {};
-          json['nx'].addTypecheckTarget = false;
-        }
         return json;
       });
     } else {
@@ -1073,12 +1081,6 @@ function createProjectTsConfigs(
         include: [],
         references: [{ path: './tsconfig.lib.json' }],
       };
-      // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
-      // This applies to `@nx/js/typescript` plugin only.
-      if (options.bundler === 'tsc') {
-        tsconfig['nx'] ??= {};
-        tsconfig['nx'].addTypecheckTarget = false;
-      }
       writeJson(
         tree,
         joinPathFragments(options.projectRoot, 'tsconfig.json'),

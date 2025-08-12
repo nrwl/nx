@@ -66,7 +66,7 @@ describe('addLinting generator', () => {
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@typescript-eslint/utils']).toMatchInlineSnapshot(
-      `"^8.19.0"`
+      `"^8.29.0"`
     );
     delete process.env.ESLINT_USE_FLAT_CONFIG;
   });
@@ -137,7 +137,7 @@ describe('addLinting generator', () => {
                       "error",
                       {
                           ignoredFiles: [
-                              "{projectRoot}/eslint.config.{js,cjs,mjs}"
+                              "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
                           ]
                       }
                   ]
@@ -206,7 +206,7 @@ describe('addLinting generator', () => {
                       {
                           enforceBuildableLibDependency: true,
                           allow: [
-                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$"
                           ],
                           depConstraints: [
                               {

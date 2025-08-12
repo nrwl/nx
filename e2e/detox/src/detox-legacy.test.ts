@@ -7,7 +7,7 @@ import {
   uniq,
   killPorts,
   cleanupProject,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('@nx/detox (legacy)', () => {
   const appName = uniq('myapp');

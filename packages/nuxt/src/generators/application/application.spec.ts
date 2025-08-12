@@ -163,7 +163,6 @@ describe('app', () => {
               nxJson.plugins.find((p) => p.plugin === '@nx/vite/plugin')
             )
           );
-          expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchSnapshot();
         });
       });
 
@@ -269,7 +268,7 @@ describe('app', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "extends": "../tsconfig.base.json",
+          "extends": "./.nuxt/tsconfig.json",
           "files": [],
           "references": [
             {

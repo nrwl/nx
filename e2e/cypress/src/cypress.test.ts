@@ -9,7 +9,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
 
@@ -81,7 +81,6 @@ describe('env vars', () => {
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
         );
         expect(run1).toContain('All specs passed!');
-        await killPort(4200);
         // tests should not fail because of a config change
         updateFile(
           `apps/${myapp}-e2e/cypress.config.ts`,
@@ -114,7 +113,6 @@ export default defineConfig({
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
         );
         expect(run2).toContain('All specs passed!');
-        await killPort(4200);
 
         // make sure project.json env vars also work
         checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
@@ -143,8 +141,6 @@ export default defineConfig({
         );
         const run3 = runCLI(`e2e ${myapp}-e2e`);
         expect(run3).toContain('All specs passed!');
-
-        expect(await killPort(4200)).toBeTruthy();
       }
     },
     TEN_MINS_MS

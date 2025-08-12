@@ -10,7 +10,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
@@ -23,7 +22,7 @@ const getSchema: (overrides?: Partial<Schema>) => Schema = (
   skipTsConfig: false,
   skipFormat: false,
   skipLintChecks: false,
-  linter: Linter.EsLint,
+  linter: 'eslint',
   unitTestRunner: 'jest',
   ...overrides,
 });
@@ -466,9 +465,6 @@ describe('NxPlugin Plugin Generator', () => {
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
-          "nx": {
-            "addTypecheckTarget": false,
-          },
           "references": [
             {
               "path": "./tsconfig.lib.json",

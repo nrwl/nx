@@ -1,4 +1,4 @@
-import { JsonSchema } from '@nx/nx-dev/models-package';
+import { JsonSchema } from '@nx/nx-dev-models-package';
 
 export function getDescriptionForSchema(schema: JsonSchema): string {
   if (typeof schema === 'boolean') {

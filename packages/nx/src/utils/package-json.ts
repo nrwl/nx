@@ -10,8 +10,8 @@ import { mergeTargetConfigurations } from '../project-graph/utils/project-config
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
 import {
-  PackageManagerCommands,
   getPackageManagerCommand,
+  PackageManagerCommands,
 } from './package-manager';
 
 export interface NxProjectPackageJsonConfiguration
@@ -186,7 +186,9 @@ export function getTagsFromPackageJson(packageJson: PackageJson): string[] {
 
 export function readTargetsFromPackageJson(
   packageJson: PackageJson,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  projectRoot: string,
+  workspaceRoot: string
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
@@ -210,7 +212,11 @@ export function readTargetsFromPackageJson(
    * Any targetDefaults for the nx-release-publish target set by the user should
    * be merged with the implicit target.
    */
-  if (!isPrivate && !res['nx-release-publish']) {
+  if (
+    !isPrivate &&
+    !res['nx-release-publish'] &&
+    hasNxJsPlugin(projectRoot, workspaceRoot)
+  ) {
     const nxReleasePublishTargetDefaults =
       nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
     res['nx-release-publish'] = {
@@ -228,6 +234,18 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
+}
+
+function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
+  try {
+    // nx-ignore-next-line
+    require.resolve('@nx/js/package.json', {
+      paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

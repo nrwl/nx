@@ -1,41 +1,41 @@
 ---
 title: 'Run Language-Agnostic Conformance Rules'
-description: 'Learn how to use Nx Powerpack conformance rules to enforce organizational standards, maintain consistency, and ensure security across your workspace.'
+description: 'Learn how to use Nx Powerpack and Nx Enterprise conformance rules to enforce organizational standards, maintain consistency, and ensure security across your workspace.'
 ---
 
 # Run Language-Agnostic Conformance Rules
 
 {% youtube src="https://youtu.be/6wg23sLveTQ" title="Nx Powerpack workspace conformance" /%}
 
-The [`@nx/powerpack-conformance`](/nx-api/powerpack-conformance) plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
+The [`@nx/conformance`](/reference/core-api/conformance) plugin allows [Nx Powerpack](/powerpack) and [Nx Enterprise](/enterprise) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
 
 The conformance plugin allows you to **encode your own organization's standards** so that they can be enforced automatically. Conformance rules can also **complement linting tools** by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be **applied to any language in the codebase** or focus entirely on configuration files.
 
 The plugin also provides the following pre-written rules:
 
 - **Enforce Project Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
-- **Ensure Owners**: Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
+- **Ensure Owners**: Require every project to have an owner defined for the [`@nx/owners` plugin](/reference/core-api/owners)
 
 ## Setup
 
-The `@nx/powerpack-conformance` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
+The `@nx/conformance` plugin requires an Nx Powerpack or [Nx Enterprise license](/enterprise) to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
 
-{% call-to-action title="Get a License and Activate Powerpack" icon="nx" description="Unlock all the features of the Nx CLI" url="/nx-enterprise/activate-powerpack" /%}
+{% call-to-action title="Get a License and Activate Powerpack or Nx Enterprise" icon="nx" description="Unlock all the features of the Nx CLI" url="/nx-enterprise/activate-powerpack" /%}
 
 Then, add the Conformance plugin to your workspace.
 
-{% link-card title="Conformance" type="Nx Plugin" url="/nx-api/powerpack-conformance" icon="CheckBadgeIcon" /%}
+{% link-card title="Conformance" type="Nx Plugin" url="/reference/core-api/conformance/overview" icon="CheckBadgeIcon" /%}
 
 ## Configure Conformance Rules
 
-Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/nx-api/powerpack-conformance#custom-conformance-rules). See the [plugin documentation](/nx-api/powerpack-conformance) for more details.
+Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/reference/core-api/conformance#custom-conformance-rules). See the [plugin documentation](/reference/core-api/conformance) for more details.
 
 ```jsonc {% fileName="nx.json" %}
 {
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/powerpack-conformance/enforce-project-boundaries",
+        "rule": "@nx/conformance/enforce-project-boundaries",
         "options": {
           "depConstraints": [
             {
@@ -46,7 +46,7 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
         }
       },
       {
-        "rule": "@nx/powerpack-conformance/ensure-owners",
+        "rule": "@nx/conformance/ensure-owners",
         "projects": ["!experimental-app"]
       },
       {
@@ -59,7 +59,7 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
 
 ## Enforce Rules with the `nx conformance` and `nx conformance:check` Commands
 
-The `@nx/powerpack-conformance` plugin enables the `nx conformance` and `nx conformance:check` commands which check all the configured rules. The difference is that `nx conformance` will invoke any fix generators on a configured rule automatically, whereas `nx conformance:check` will only check the current workspace state and show any violations.
+The `@nx/conformance` plugin enables the `nx conformance` and `nx conformance:check` commands which check all the configured rules. The difference is that `nx conformance` will invoke any fix generators on a configured rule automatically, whereas `nx conformance:check` will only check the current workspace state and show any violations.
 
 Therefore, `nx conformance` is intended to be run locally while working on a feature branch. `nx conformance:check` should be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
 

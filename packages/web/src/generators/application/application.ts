@@ -28,7 +28,6 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
-import type { Linter } from '@nx/eslint';
 import { join } from 'path';
 import {
   nxVersion,
@@ -40,13 +39,9 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
-import {
-  addBuildTargetDefaults,
-  addE2eCiTargetDefaults,
-} from '@nx/devkit/src/generators/target-defaults-utils';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
-import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import {
   addProjectToTsSolutionWorkspace,
@@ -514,46 +509,13 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
-      webServerCommands: hasPlugin
-        ? {
-            default: e2eWebServerInfo.e2eWebServerCommand,
-            production: e2eWebServerInfo.e2eCiWebServerCommand,
-          }
-        : undefined,
-      ciWebServerCommand: hasPlugin
-        ? e2eWebServerInfo.e2eCiWebServerCommand
-        : undefined,
+      webServerCommands: {
+        default: e2eWebServerInfo.e2eWebServerCommand,
+        production: e2eWebServerInfo.e2eCiWebServerCommand,
+      },
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
     });
-
-    if (
-      options.addPlugin ||
-      readNxJson(host).plugins?.find((p) =>
-        typeof p === 'string'
-          ? p === '@nx/cypress/plugin'
-          : p.plugin === '@nx/cypress/plugin'
-      )
-    ) {
-      let buildTarget = '^build';
-      if (hasPlugin) {
-        const matchingPlugin = await findPluginForConfigFile(
-          host,
-          buildPlugin,
-          joinPathFragments(options.appProjectRoot, buildConfigFile)
-        );
-        if (matchingPlugin && typeof matchingPlugin !== 'string') {
-          buildTarget = `^${
-            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
-          }`;
-        }
-      }
-      await addE2eCiTargetDefaults(
-        host,
-        '@nx/cypress/plugin',
-        buildTarget,
-        joinPathFragments(options.e2eProjectRoot, `cypress.config.ts`)
-      );
-    }
 
     tasks.push(cypressTask);
   } else if (options.e2eTestRunner === 'playwright') {
@@ -602,35 +564,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
     });
-
-    if (
-      options.addPlugin ||
-      readNxJson(host).plugins?.find((p) =>
-        typeof p === 'string'
-          ? p === '@nx/playwright/plugin'
-          : p.plugin === '@nx/playwright/plugin'
-      )
-    ) {
-      let buildTarget = '^build';
-      if (hasPlugin) {
-        const matchingPlugin = await findPluginForConfigFile(
-          host,
-          buildPlugin,
-          joinPathFragments(options.appProjectRoot, buildConfigFile)
-        );
-        if (matchingPlugin && typeof matchingPlugin !== 'string') {
-          buildTarget = `^${
-            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
-          }`;
-        }
-      }
-      await addE2eCiTargetDefaults(
-        host,
-        '@nx/playwright/plugin',
-        buildTarget,
-        joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
-      );
-    }
 
     tasks.push(playwrightTask);
   }
@@ -739,7 +672,7 @@ async function normalizeOptions(
     : [];
 
   options.style = options.style || 'css';
-  options.linter = options.linter || ('eslint' as Linter.EsLint);
+  options.linter = options.linter || 'eslint';
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 

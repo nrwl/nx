@@ -5,16 +5,13 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/playwright"],
-      "options": {
-        "commands": ["node ./scripts/copy-readme.js playwright"]
-      }
+      "outputs": ["{workspaceRoot}/dist/packages/playwright/README.md"],
+      "commands": ["node ./scripts/copy-readme.js playwright"]
     },
-    "build-base": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/playwright",

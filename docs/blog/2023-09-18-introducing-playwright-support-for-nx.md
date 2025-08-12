@@ -2,7 +2,7 @@
 title: 'Introducing Playwright Support for Nx'
 slug: 'introducing-playwright-support-for-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-09-18/589bVpPTJ4D4IACBePXWQ.png'
+cover_image: '/blog/images/2023-09-18/589bVpPTJ4D4IACBePXWQ.avif'
 tags: [nx, release, tutorial]
 description: 'Discover how to integrate Playwright, a powerful end-to-end testing tool, into your Nx workspaces with our new @nx/playwright plugin.'
 ---
@@ -300,7 +300,7 @@ In this blog, we have:
 - Used Nx to run Playwright tests
 - Set up a Playwright configuration for an existing Nx app
 
-Hopefully, this gives you good insight into how to get started with Playwright. The Playwright configuration in this example is pretty simple, to learn more about `@nx/playwright` plugin, check out the Nx documentation: [/nx-api/playwright](/nx-api/playwright).
+Hopefully, this gives you good insight into how to get started with Playwright. The Playwright configuration in this example is pretty simple, to learn more about `@nx/playwright` plugin, check out the Nx documentation: [/technologies/test-tools/playwright/introduction](/technologies/test-tools/playwright/introduction).
 
 ## Learn more
 

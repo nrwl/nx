@@ -8,6 +8,10 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommandForTasks } from '../../tasks-runner/run-command';
 import {
@@ -17,6 +21,7 @@ import {
 import { handleErrors } from '../../utils/handle-errors';
 import { output } from '../../utils/output';
 import { projectHasTarget } from '../../utils/project-graph-utils';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
 import {
@@ -25,12 +30,8 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import { printConfigAndExit } from './utils/print-config';
-import { workspaceRoot } from '../../utils/workspace-root';
-import {
-  runPostTasksExecution,
-  runPreTasksExecution,
-} from '../../project-graph/plugins/tasks-execution-hooks';
 
 export interface PublishProjectsResult {
   [projectName: string]: {
@@ -83,7 +84,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -250,19 +257,24 @@ async function runPublishOnProjects(
       `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:\n${[
         ...projectsToRun.map((p) => `- ${p.name}`),
         '',
-        `This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically.`,
+        `This is usually caused by either`,
+        `- not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically`,
+        `- having "private": true set in your package.json, which prevents the target from being created`,
       ].join('\n')}\n`
     );
   }
   await runPreTasksExecution({
     workspaceRoot,
     nxJsonConfiguration: nxJson,
+    argv: process.argv,
   });
 
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
+   * NOTE: Force TUI to be disabled for now.
    */
-  const commandResults = await runCommandForTasks(
+  process.env.NX_TUI = 'false';
+  const { taskResults } = await runCommandForTasks(
     projectsWithTarget,
     projectGraph,
     { nxJson },
@@ -280,15 +292,16 @@ async function runPublishOnProjects(
   );
 
   const publishProjectsResult: PublishProjectsResult = {};
-  for (const taskData of Object.values(commandResults)) {
+  for (const taskData of Object.values(taskResults)) {
     publishProjectsResult[taskData.task.target.project] = {
       code: taskData.code,
     };
   }
   await runPostTasksExecution({
-    taskResults: commandResults,
+    taskResults,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
+    argv: process.argv,
   });
 
   return publishProjectsResult;
