@@ -79,6 +79,8 @@ export type PublishOptions = NxReleaseArgs &
     tag?: string;
     access?: string;
     otp?: number;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    versionData?: VersionData;
   };
 
 export type PlanOptions = NxReleaseArgs & {
