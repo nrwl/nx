@@ -193,65 +193,67 @@ export async function* nodeExecutor(
           if (task.killed) return;
 
           // Run the program
-          task.promise = new Promise<void>((resolve, reject) => {
-            const loaderFile =
-              moduleFormat === 'esm'
-                ? 'node-with-esm-loader'
-                : 'node-with-require-overrides';
-            task.childProcess = fork(
-              joinPathFragments(__dirname, loaderFile),
-              options.args ?? [],
-              {
-                execArgv: getExecArgv(options),
-                stdio: [0, 'pipe', 'pipe', 'ipc'],
-                env: {
-                  ...process.env,
-                  NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
-                  NX_MAPPINGS: JSON.stringify(mappings),
-                },
-              }
-            );
-
-            // Handle stdout with careful buffering
-            const handleStdOut = (data) => {
-              if (options.watch && task.killed) return;
-
-              // Just pipe the data directly
-              process.stdout.write(data);
-            };
-            task.childProcess.stdout.on('data', handleStdOut);
-
-            // Handle stderr similarly
-            const handleStdErr = (data) => {
-              // Don't log out error if task is killed and new one has started.
-              // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
-              // Log the error in normal mode
-              if (!options.watch || !task.killed) {
-                logger.error(data.toString());
-              }
-            };
-            task.childProcess.stderr.on('data', handleStdErr);
-
-            task.childProcess.once('exit', (code) => {
-              task.childProcess.stdout.removeListener('data', handleStdOut);
-              task.childProcess.stderr.removeListener('data', handleStdErr);
-              if (options.watch && !task.killed) {
-                logger.info(
-                  `NX Process exited with code ${code}, waiting for changes to restart...`
-                );
-              }
-              if (!options.watch) {
-                if (code !== 0) {
-                  error(new Error(`Process exited with code ${code}`));
-                } else {
-                  resolve(done());
+          task.promise = new Promise<{ success: boolean }>(
+            (resolve, reject) => {
+              const loaderFile =
+                moduleFormat === 'esm'
+                  ? 'node-with-esm-loader'
+                  : 'node-with-require-overrides';
+              task.childProcess = fork(
+                joinPathFragments(__dirname, loaderFile),
+                options.args ?? [],
+                {
+                  execArgv: getExecArgv(options),
+                  stdio: [0, 'pipe', 'pipe', 'ipc'],
+                  env: {
+                    ...process.env,
+                    NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
+                    NX_MAPPINGS: JSON.stringify(mappings),
+                  },
                 }
-              }
-              resolve({ success: true });
-            });
+              );
 
-            next({ success: true, options: buildOptions });
-          });
+              // Handle stdout with careful buffering
+              const handleStdOut = (data) => {
+                if (options.watch && task.killed) return;
+
+                // Just pipe the data directly
+                process.stdout.write(data);
+              };
+              task.childProcess.stdout.on('data', handleStdOut);
+
+              // Handle stderr similarly
+              const handleStdErr = (data) => {
+                // Don't log out error if task is killed and new one has started.
+                // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
+                // Log the error in normal mode
+                if (!options.watch || !task.killed) {
+                  logger.error(data.toString());
+                }
+              };
+              task.childProcess.stderr.on('data', handleStdErr);
+
+              task.childProcess.once('exit', (code) => {
+                task.childProcess.stdout.removeListener('data', handleStdOut);
+                task.childProcess.stderr.removeListener('data', handleStdErr);
+                if (options.watch && !task.killed) {
+                  logger.info(
+                    `NX Process exited with code ${code}, waiting for changes to restart...`
+                  );
+                }
+                if (!options.watch) {
+                  if (code !== 0) {
+                    error(new Error(`Process exited with code ${code}`));
+                  } else {
+                    done();
+                  }
+                }
+                resolve({ success: true });
+              });
+
+              next({ success: true, options: buildOptions });
+            }
+          );
         },
         stop: async (signal = 'SIGTERM') => {
           task.killed = true;
