@@ -50,6 +50,8 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       bodyLines.push('');
       bodyLines.push(`${output.dim('With additional flags:')}`);
       Object.entries(this.taskOverrides)
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+        .filter(([flag]) => flag !== 'nxReleaseVersionData')
         .map(([flag, value]) => formatFlags('', flag, value))
         .forEach((arg) => bodyLines.push(arg));
     }

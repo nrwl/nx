@@ -175,6 +175,8 @@ export function getTuiTerminalSummaryLifeCycle({
           `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
         Object.entries(overrides)
+          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+          .filter(([flag]) => flag !== 'nxReleaseVersionData')
           .map(([flag, value]) =>
             output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -212,6 +214,8 @@ export function getTuiTerminalSummaryLifeCycle({
           `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
         Object.entries(overrides)
+          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+          .filter(([flag]) => flag !== 'nxReleaseVersionData')
           .map(([flag, value]) =>
             output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -316,6 +320,8 @@ export function getTuiTerminalSummaryLifeCycle({
           `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
         Object.entries(overrides)
+          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+          .filter(([flag]) => flag !== 'nxReleaseVersionData')
           .map(([flag, value]) =>
             output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
@@ -350,6 +356,8 @@ export function getTuiTerminalSummaryLifeCycle({
           `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
         Object.entries(overrides)
+          // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+          .filter(([flag]) => flag !== 'nxReleaseVersionData')
           .map(([flag, value]) =>
             output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )

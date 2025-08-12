@@ -120,6 +120,7 @@ import * as yargs from 'yargs';
     dryRun: options.dryRun,
     verbose: options.verbose,
     // You can optionally pass through the version data (e.g. if you are using a custom publish executor that needs to be aware of versions)
+    // It will then be provided to the publish executor options as `nxReleaseVersionData`
     // This is not required for the default @nx/js publish executor
     versionData: projectsVersionData,
   });
