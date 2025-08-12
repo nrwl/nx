@@ -472,6 +472,7 @@ export function createOrEditViteConfig(
 
   const testOption = options.includeVitest
     ? `  test: {
+    name: '${options.project}',
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',

@@ -1115,6 +1115,7 @@ describe('app', () => {
             },
           },
           test: {
+            name: 'my-app',
             watch: false,
             globals: true,
             environment: 'jsdom',
