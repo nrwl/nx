@@ -740,8 +740,8 @@
           "type": ["string", "array"],
           "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
         },
-        "push":{
-          "type":"boolean",
+        "push": {
+          "type": "boolean",
           "description": "Whether or not to automatically push the changes made by this command. This defaults to false"
         },
         "pushArgs": {
@@ -830,10 +830,6 @@
             "type": "string",
             "enum": ["disk"],
             "description": "The fallback version resolver to use when the configured currentVersionResolver fails to resolve the current version."
-          },
-          "firstRelease":{
-            "type":"boolean",
-            "description": "Whether this is the first release of the project."
           },
           "versionPrefix": {
             "type": "string",
