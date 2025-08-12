@@ -181,7 +181,7 @@ Plugin documentation is auto-generated during build. To update:
 
 ### Sidebar Management
 
-The sidebar structure is defined in `sidebar.mjs`. To add new sections:
+The sidebar structure is defined in `sidebar.mts`. To add new sections:
 
 ```javascript
 export const sidebar = [
