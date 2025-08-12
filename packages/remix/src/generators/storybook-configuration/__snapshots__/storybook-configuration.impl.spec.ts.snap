@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework jest 1`] = `
 "/// <reference types="vitest" />
@@ -102,6 +102,7 @@ export default defineConfig(() => ({
   // },
   test: {
     setupFiles: ['./src/test-setup.ts'],
+    name: 'storybook-test',
     watch: false,
     globals: true,
     environment: 'jsdom',

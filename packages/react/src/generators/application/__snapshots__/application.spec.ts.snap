@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app --bundler=rsbuild should generate valid rsbuild config files for @emotion/styled 1`] = `
 "import styled from '@emotion/styled';
@@ -445,6 +445,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
+    name: 'my-app',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -508,6 +509,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
+    name: 'my-app',
     watch: false,
     globals: true,
     environment: 'jsdom',

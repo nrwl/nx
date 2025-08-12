@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app generated files content - as-provided - my-app general application should add nuxt entries in .gitignore 1`] = `
 "# Nuxt dev/build outputs
@@ -173,6 +173,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'my-app',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -566,6 +567,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'myApp',
     watch: false,
     globals: true,
     environment: 'jsdom',

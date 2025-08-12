@@ -181,6 +181,7 @@ describe('generator utils', () => {
             'import.meta.vitest': undefined
           },
           test: {
+            name: 'myproj',
             watch: false,
             globals: true,
             environment: 'jsdom',
@@ -324,6 +325,7 @@ describe('generator utils', () => {
             'import.meta.vitest': undefined
           },
           test: {
+            name: 'myproj',
             watch: false,
             globals: true,
             environment: 'jsdom',

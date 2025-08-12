@@ -552,6 +552,7 @@ module.exports = [
           //  plugins: [ nxViteTsPaths() ],
           // },
           test: {
+            name: '@proj/my-lib',
             watch: false,
             globals: true,
             environment: 'jsdom',

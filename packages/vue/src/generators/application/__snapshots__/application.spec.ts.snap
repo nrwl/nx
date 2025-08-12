@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`application generator should set up project correctly for cypress 1`] = `
 "{
@@ -71,6 +71,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
+    name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -162,6 +163,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -281,6 +283,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
+    name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',

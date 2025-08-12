@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 1`] = `
 "export default {
@@ -38,6 +38,7 @@ export default defineConfig(() => ({
   // },
   test: {
     setupFiles: ['./src/test-setup.ts'],
+    name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',

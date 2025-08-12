@@ -1017,6 +1017,7 @@ module.exports = withNx(
             },
           },
           test: {
+            name: '@proj/mylib',
             watch: false,
             globals: true,
             environment: 'jsdom',
