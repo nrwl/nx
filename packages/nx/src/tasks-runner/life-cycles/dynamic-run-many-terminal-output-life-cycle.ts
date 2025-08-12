@@ -342,6 +342,7 @@ export async function createRunManyDynamicOutputRenderer({
       )}`;
       const taskOverridesRows = [];
       const filteredOverrides = Object.entries(overrides).filter(
+        // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
         ([flag]) => flag !== 'nxReleaseVersionData'
       );
       if (filteredOverrides.length > 0) {
