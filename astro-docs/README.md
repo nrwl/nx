@@ -159,9 +159,9 @@ description: 'Learn how to use this feature'
 
 # Introduction
 
-{% callout type="note" title="Important" %}
+{% aside type="note" title="Important" %}
 This is a note about the feature.
-{% /callout %}
+{% /aside %}
 ```
 
 #### Adding Custom Markdoc Tags
