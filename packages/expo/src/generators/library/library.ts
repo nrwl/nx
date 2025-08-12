@@ -37,7 +37,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { expoComponentGenerator } from '../component/component';
-import { relative } from 'path';
+import { relative, join } from 'path';
 import { reactNativeVersion, reactVersion } from '../../utils/versions';
 
 export async function expoLibraryGenerator(
@@ -273,20 +273,12 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(
-    host,
-    joinPathFragments(__dirname, './files/lib'),
-    options.projectRoot,
-    {
-      ...options,
-      tmpl: '',
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
-      rootTsConfigPath: getRelativePathToRootTsConfig(
-        host,
-        options.projectRoot
-      ),
-    }
-  );
+  generateFiles(host, join(__dirname, './files/lib'), options.projectRoot, {
+    ...options,
+    tmpl: '',
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
+  });
 
   if (options.js) {
     toJS(host);
