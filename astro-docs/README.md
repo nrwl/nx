@@ -61,8 +61,6 @@ The site uses custom content loaders to dynamically generate documentation:
 - **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
 
-
-
 ## Content Management
 
 ### Content Types
@@ -118,7 +116,7 @@ The site includes custom Markdoc tags for rich content.
 
 #### Content Enhancement
 
-- `{% pill %}` - Status/label pills
+- `{% badge %}` - Status/label pills
 - `{% metrics %}` - Metrics display
 - `{% testimonial %}` - Customer testimonials
 
