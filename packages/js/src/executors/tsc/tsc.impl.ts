@@ -33,7 +33,8 @@ export function determineModuleFormatFromTsConfig(
     tsConfig.options.module === ts.ModuleKind.ES2015 ||
     tsConfig.options.module === ts.ModuleKind.ES2020 ||
     tsConfig.options.module === ts.ModuleKind.ES2022 ||
-    tsConfig.options.module === ts.ModuleKind.ESNext
+    tsConfig.options.module === ts.ModuleKind.ESNext ||
+    tsConfig.options.module === ts.ModuleKind.NodeNext
   ) {
     return 'esm';
   } else {
