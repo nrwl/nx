@@ -268,10 +268,25 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
 
           // Only add the directory group if it contains items
           if (subItems.length > 0) {
-            items.push({
-              label: file.name,
-              items: subItems,
-            } as SidebarSubItem);
+            // Check if there's an index.mdoc file in this directory
+            const indexPath = join(fullPath, 'index.mdoc');
+            const hasIndex = existsSync(indexPath);
+
+            // For directories with content, add them as a group
+            // If there's an index.mdoc, we'll use its title for the label
+            if (hasIndex) {
+              const label = extractLabelFromFile(indexPath, file.name);
+
+              items.push({
+                label: label,
+                items: subItems,
+              } as SidebarSubItem);
+            } else {
+              items.push({
+                label: file.name,
+                items: subItems,
+              } as SidebarSubItem);
+            }
           }
         } else if (
           file.isFile() &&
@@ -280,6 +295,12 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
             file.name.endsWith('.mdoc'))
         ) {
           const fileName = basename(file.name, extname(file.name));
+
+          // Skip index files as they're handled by directory processing
+          if (fileName === 'index') {
+            continue;
+          }
+
           const fileSlug = fileName.split(' ').join('-').toLowerCase();
 
           // Build the full slug including the relative path
