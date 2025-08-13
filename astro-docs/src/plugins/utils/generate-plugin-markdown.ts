@@ -45,8 +45,8 @@ export function getMigrationsMarkdown(
   const packageName = `@nx/${pluginName}`;
 
   let markdown = `
-  The ${packageName} plugin provides various migrations to help you create and configure ${pluginName} projects within your Nx workspace.
-Below is a complete reference for all available migrations and their options.
+  The ${packageName} plugin provides various migrations to help you migrate to newer versions of ${pluginName} projects within your Nx workspace.
+Below is a complete reference for all available migrations.
 `;
 
   // Group migrations by major.minor version
@@ -210,15 +210,15 @@ nx generate ${fullItemName} ${positionalArgs
           continue;
         }
 
-        const type = getPropertyType(property);
+        let type = getPropertyType(property);
         const description = property.description || '';
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
 
-        let optionName = `\`--${propName}\``;
+        const optionName = `\`${propName}\``;
 
         if (isRequired) {
-          optionName += '[**required**]';
+          type += ' [**required**]';
         }
 
         markdown += `\n| ${optionName} | ${type} | ${description} | ${defaultValue} |`;
@@ -269,12 +269,6 @@ Below is a complete reference for all available executors and their options.
       markdown += getExampleForSchema(schemaPath, schema);
     }
 
-    markdown += `**Usage:**
-\`\`\`bash
-nx run project:${name} [options]
-\`\`\`
-`;
-
     if (config?.aliases && config.aliases.length > 0) {
       markdown += `
 **Aliases:** ${config.aliases.map((a: string) => `\`${a}\``).join(', ')}
@@ -306,15 +300,14 @@ nx run project:${name} [options]
       });
 
       for (const [propName, property] of sortedProperties as [string, any][]) {
-        const type = getPropertyType(property);
+        let type = getPropertyType(property);
         const description = property.description || '';
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
-
-        let optionName = `\`--${propName}\``;
+        const optionName = `\`${propName}\``;
 
         if (isRequired) {
-          optionName += '[**required**]';
+          type += ' [**required**]';
         }
 
         markdown += `\n| ${optionName} | ${type} | ${description} | ${defaultValue} |`;
@@ -322,19 +315,7 @@ nx run project:${name} [options]
 
       markdown += '\n';
     }
-
-    markdown += `
-## Getting Help
-
-You can get help for any executor by adding the \`--help\` flag:
-
-\`\`\`bash
-nx run project:executors --help
-\`\`\`
-`;
   }
 
   return markdown;
 }
-
-type PluginGenerator = {};

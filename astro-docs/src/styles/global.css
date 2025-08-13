@@ -122,3 +122,7 @@ h6:hover .anchor-link {
 iframe[src*='youtube'] {
   aspect-ratio: 16 / 9;
 }
+
+table code {
+  word-wrap: break-word;
+}
