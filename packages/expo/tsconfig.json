@@ -4,12 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../webpack"
-    },
-    {
-      "path": "../web"
-    },
-    {
       "path": "../rollup"
     },
     {
@@ -17,9 +11,6 @@
     },
     {
       "path": "../js"
-    },
-    {
-      "path": "../jest"
     },
     {
       "path": "../eslint"

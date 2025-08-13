@@ -131,7 +131,7 @@ export function Callout({
   return (
     <div
       className={cx(
-        'my-6 overflow-hidden rounded-md border',
+        'not-content my-6 overflow-hidden rounded-md border',
         ui.borderColor,
         ui.backgroundColor
       )}

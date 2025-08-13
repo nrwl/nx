@@ -346,7 +346,7 @@ function generateReactRouterFiles(
   } else {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, '../files/react-router-ssr/non-root'),
+      join(__dirname, '../files/react-router-ssr/non-root'),
       options.appProjectRoot,
       templateVariables
     );
@@ -355,7 +355,7 @@ function generateReactRouterFiles(
   if (options.isUsingTsSolutionConfig) {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, '../files/react-router-ssr/ts-solution'),
+      join(__dirname, '../files/react-router-ssr/ts-solution'),
       options.appProjectRoot,
       templateVariables
     );

@@ -34,7 +34,6 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "tslib",
               "nx",
               "@nx/jest",
               "typescript",

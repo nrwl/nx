@@ -28,24 +28,22 @@
   "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "@nx/detox": "workspace:*",
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
-    "@nx/jest": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
-    "@nx/rollup": "workspace:*",
-    "@nx/web": "workspace:*",
-    "@nx/webpack": "workspace:*",
     "enhanced-resolve": "^5.8.3",
-    "metro-config": "~0.80.4",
-    "metro-resolver": "~0.80.4",
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
   },
-  "devDepndencies": {
-    "nx": "workspace:*"
+  "peerDependencies": {
+    "metro-config": ">= 0.82.0",
+    "metro-resolver": ">= 0.82.0"
+  },
+  "optionalDependencies": {
+    "@nx/detox": "workspace:*",
+    "@nx/rollup": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {

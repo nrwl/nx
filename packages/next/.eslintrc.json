@@ -90,7 +90,6 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "tslib",
               "nx",
               "@nx/webpack",
               "@nx/cypress",

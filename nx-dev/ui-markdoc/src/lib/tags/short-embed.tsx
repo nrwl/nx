@@ -88,7 +88,10 @@ export function ShortEmbeds({
     <ShortEmbedContext.Provider
       value={{ current: currentVideo, userInteraction }}
     >
-      <aside id="short-embed" className="fixed bottom-5 right-5 z-50 w-80">
+      <aside
+        id="short-embed"
+        className="not-content fixed bottom-5 right-5 z-50 w-80"
+      >
         <Transition
           appear={true}
           show={isShowing}
@@ -167,7 +170,7 @@ export function ShortVideo({ embedUrl, title }: ShortVideoProps) {
   }
 
   return (
-    <div className="h-96 w-full overflow-hidden rounded-lg">
+    <div className="not-content h-96 w-full overflow-hidden rounded-lg">
       <iframe
         className="!m-0 border-0"
         width="100%"

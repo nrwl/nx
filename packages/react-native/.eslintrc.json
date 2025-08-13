@@ -24,7 +24,6 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "tslib",
               "nx",
               "eslint",
               "prettier",
@@ -33,6 +32,7 @@
               "react-native",
 
               // These are in ensurePackage
+              "@nx/jest",
               "@nx/rollup",
               "@nx/storybook",
               "@nx/vite",
@@ -51,6 +51,7 @@
       "rules": {
         "no-restricted-imports": [
           "error",
+          "@nx/workspace",
           {
             "name": "fs-extra",
             "message": "Please use equivalent utilities from `node:fs` instead."

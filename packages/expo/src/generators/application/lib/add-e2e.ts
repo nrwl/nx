@@ -8,7 +8,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
-import { webStaticServeGenerator } from '@nx/web';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { nxVersion } from '../../../utils/versions';
@@ -20,6 +19,11 @@ export async function addE2e(
 ): Promise<GeneratorCallback> {
   const hasPlugin = hasExpoPlugin(tree);
   if (!hasPlugin) {
+    const { webStaticServeGenerator } = ensurePackage<typeof import('@nx/web')>(
+      '@nx/web',
+      nxVersion
+    );
+
     await webStaticServeGenerator(tree, {
       buildTarget: `${options.projectName}:export`,
       targetName: 'serve-static',

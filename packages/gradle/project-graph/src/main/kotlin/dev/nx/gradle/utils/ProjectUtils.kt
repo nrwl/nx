@@ -52,8 +52,14 @@ fun createNodeForProject(
     nodes = emptyMap()
     externalNodes = emptyMap()
   }
-  val buildFileRelativePath = project.buildFile.relativeTo(File(workspaceRoot)).path
-  return GradleNodeReport(nodes, dependencies, externalNodes, listOf(buildFileRelativePath))
+  val buildFileRelativePath =
+      if (project.buildFile.exists()) {
+        project.buildFile.relativeTo(File(workspaceRoot)).path
+      } else {
+        null
+      }
+  return GradleNodeReport(
+      nodes, dependencies, externalNodes, buildFileRelativePath?.let { listOf(it) } ?: emptyList())
 }
 
 /**
@@ -91,6 +97,11 @@ fun processTargetsForProject(
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
   val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
 
+  logger.info(
+      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetName, testTasks.size=${testTasks.size}, atomized=$atomized)")
+  logger.info(
+      "${project.name}: hasCiIntTestTarget = $hasCiIntTestTarget (ciIntTestTargetName=$ciIntTestTargetName, intTestTasks.size=${intTestTasks.size}, atomized=$atomized)")
+
   project.tasks.forEach { task ->
     try {
       val now = Date()
@@ -125,7 +136,7 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciTestTargetName!!)
+            ciTestTargetName)
       }
 
       if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
@@ -138,7 +149,7 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciIntTestTargetName!!)
+            ciIntTestTargetName)
       }
 
       if (ciTestTargetName != null || ciIntTestTargetName != null) {

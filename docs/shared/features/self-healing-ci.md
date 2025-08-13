@@ -32,18 +32,21 @@ Next, check the Nx Cloud workspace settings in the Nx Cloud web application to e
 
 ### Configure your CI pipeline
 
-**Using [Nx Agents](/ci/features/distribute-task-execution):** There's nothing to be done. You're already good to go.
+Add the `fix-ci` step to your pipeline. **Important:** This step must run at the end with `if: always()` to ensure it executes even when previous steps fail:
 
-**Not using Nx Agents:** Add the `fix-ci` step to your pipeline. Important: this step must run at the end with `if: always()` to ensure it executes even when previous steps fail:
-
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[10,11] %}
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[15,16] %}
 name: CI
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+
       ...
+
       - run: npx nx affected -t lint test build
 
       - run: npx nx-cloud fix-ci

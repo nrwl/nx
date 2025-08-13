@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { deduceDefaultBase } from './default-base';
 import { output } from '../output';
 import { execAndWait, spawnAndWait } from '../child-process-utils';
@@ -117,7 +118,8 @@ export async function initializeGitRepo(
   }
   const insideRepo = await execAndWait(
     'git rev-parse --is-inside-work-tree',
-    directory
+    directory,
+    true
   ).then(
     () => true,
     () => false

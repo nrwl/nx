@@ -1,8 +1,14 @@
 const fs = require('fs');
 
 const p = process.argv[2];
+const possibleInputPath = process.argv[3];
+const possibleOutputPath = process.argv[4];
 
 let sourceReadmePath = `packages/${p}/README.md`;
+if (possibleInputPath && fs.existsSync(possibleInputPath)) {
+  sourceReadmePath = possibleInputPath;
+}
+
 // we need exception for linter
 if (p === 'linter') {
   sourceReadmePath = 'packages/eslint/README.md';
@@ -21,6 +27,8 @@ r = r.replace(
   fs.readFileSync('scripts/readme-fragments/resources.md')
 );
 
-console.log('WRITING', `dist/packages/${p}/README.md`);
+const outputPath = possibleOutputPath ?? `dist/packages/${p}/README.md`;
 
-fs.writeFileSync(`dist/packages/${p}/README.md`, r);
+console.log('WRITING', outputPath);
+
+fs.writeFileSync(outputPath, r);

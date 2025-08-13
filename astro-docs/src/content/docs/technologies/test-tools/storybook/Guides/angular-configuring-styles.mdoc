@@ -1,0 +1,242 @@
+---
+title: Angular - Configuring styles and preprocessor options
+description: This guide explains how to configure styles and preprocessor options for Angular Storybook projects in your Nx workspace.
+sidebar:
+  label: Angular - Configuring styles and preprocessor options
+---
+
+When working with Angular and Storybook in an Nx workspace, you may need to configure styles and CSS preprocessors to ensure your components render correctly in Storybook.
+
+## Global styles
+
+### Adding global styles to Storybook
+
+You can add global styles to your Storybook by creating a `preview.ts` file in your `.storybook` directory:
+
+```typescript frame="none"
+// .storybook/preview.ts
+import type { Preview } from '@storybook/angular';
+
+// Import global styles
+import '../src/styles.scss'; // Your global styles
+import '@angular/material/prebuilt-themes/indigo-pink.css'; // Material theme
+
+const preview: Preview = {
+  parameters: {
+    actions: { argTypesRegex: '^on[A-Z].*' },
+    controls: {
+      matchers: {
+        color: /(background|color)$/i,
+        date: /Date$/,
+      },
+    },
+  },
+};
+
+export default preview;
+```
+
+### Using Angular Material styles
+
+If you're using Angular Material, you can include the theme in your Storybook:
+
+```typescript frame="none"
+// .storybook/preview.ts
+import '@angular/material/prebuilt-themes/indigo-pink.css';
+// or your custom theme
+import '../src/styles/material-theme.scss';
+```
+
+## SCSS/SASS configuration
+
+### Configuring SCSS in Storybook
+
+If your Angular project uses SCSS, you can configure Storybook to handle SCSS files properly:
+
+```typescript frame="none"
+// .storybook/main.ts
+import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
+  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+  ],
+  framework: {
+    name: '@storybook/angular',
+    options: {},
+  },
+  core: {
+    builder: '@storybook/builder-webpack5',
+  },
+  typescript: {
+    check: false,
+    checkOptions: {},
+    reactDocgen: 'react-docgen-typescript',
+    reactDocgenTypescriptOptions: {
+      shouldExtractLiteralValuesFromEnum: true,
+      propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+    },
+  },
+};
+
+export default config;
+```
+
+### Including SCSS variables and mixins
+
+To use SCSS variables and mixins in your stories, you may need to configure additional include paths:
+
+```typescript frame="none"
+// .storybook/main.ts
+import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
+  // ... other config
+  webpackFinal: async (config) => {
+    // Add SCSS support with include paths
+    const scssRule = config.module?.rules?.find((rule: any) => 
+      rule.test?.toString().includes('scss')
+    );
+    
+    if (scssRule && scssRule.use) {
+      const sassLoaderOptions = scssRule.use.find((use: any) => 
+        use.loader?.includes('sass-loader')
+      );
+      
+      if (sassLoaderOptions) {
+        sassLoaderOptions.options = {
+          ...sassLoaderOptions.options,
+          sassOptions: {
+            includePaths: ['src/styles', 'src/assets/styles'],
+          },
+        };
+      }
+    }
+
+    return config;
+  },
+};
+
+export default config;
+```
+
+## Tailwind CSS configuration
+
+### Setting up Tailwind CSS with Storybook
+
+If your Angular project uses Tailwind CSS, configure it in your Storybook:
+
+1. Install Tailwind CSS for Storybook:
+
+```shell frame="none"
+npm install -D @storybook/addon-postcss
+```
+
+2. Add the addon to your Storybook configuration:
+
+```typescript frame="none"
+// .storybook/main.ts
+import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
+  // ... other config
+  addons: [
+    '@storybook/addon-essentials',
+    {
+      name: '@storybook/addon-postcss',
+      options: {
+        postcssLoaderOptions: {
+          implementation: require('postcss'),
+        },
+      },
+    },
+  ],
+};
+
+export default config;
+```
+
+3. Import Tailwind in your preview file:
+
+```typescript frame="none"
+// .storybook/preview.ts
+import '../src/styles.css'; // This should include Tailwind CSS imports
+```
+
+## Component-specific styles
+
+### Using Angular component styles in stories
+
+Component styles defined in Angular components should work automatically in Storybook. However, if you need to override styles for stories, you can do so in individual story files:
+
+```typescript frame="none"
+// button.stories.ts
+import type { Meta, StoryObj } from '@storybook/angular';
+import { ButtonComponent } from './button.component';
+
+const meta: Meta<ButtonComponent> = {
+  title: 'Components/Button',
+  component: ButtonComponent,
+  parameters: {
+    // Add custom styles for this story
+    docs: {
+      description: {
+        component: 'A customizable button component.',
+      },
+    },
+  },
+  decorators: [
+    (story) => ({
+      template: `
+        <div style="padding: 20px; background: #f5f5f5;">
+          <story></story>
+        </div>
+      `,
+    }),
+  ],
+};
+
+export default meta;
+type Story = StoryObj<ButtonComponent>;
+
+export const Default: Story = {
+  args: {
+    label: 'Button',
+  },
+};
+
+export const CustomStyling: Story = {
+  args: {
+    label: 'Custom Button',
+  },
+  decorators: [
+    (story) => ({
+      template: `
+        <div style="padding: 40px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4);">
+          <story></story>
+        </div>
+      `,
+    }),
+  ],
+};
+```
+
+## Troubleshooting style issues
+
+### Common issues and solutions
+
+1. **Styles not loading**: Ensure your global styles are imported in `.storybook/preview.ts`
+
+2. **SCSS variables not available**: Configure include paths in the webpack configuration
+
+3. **Angular Material styles missing**: Import the Material theme CSS file in your preview
+
+4. **Component styles not applying**: Check that component stylesheets are properly referenced in the component decorator
+
+5. **CSS modules not working**: Ensure your webpack configuration supports CSS modules if your project uses them
+
+### Debug style loading
+
+You can debug style loading by checking the browser's developer tools to see if stylesheets are being loaded correctly and if there are any 404 errors for missing style files.
