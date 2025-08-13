@@ -214,7 +214,7 @@ nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-project-g
 
     const buildContent = tree.read('proj/build.gradle', 'utf-8');
     const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
-    
+
     expect(buildContent).toContain(
       `id "${gradleProjectGraphPluginName}" version "0.1.5"`
     );
@@ -252,7 +252,7 @@ junit-base = ["junit"]
     await update(tree);
 
     const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
-    
+
     // Verify the nx-gradle-project-graph version was updated from 0.1.3 to 0.1.5
     expect(catalogContent).toContain('nx-gradle-project-graph = "0.1.5"');
     expect(catalogContent).not.toContain('nx-gradle-project-graph = "0.1.3"');
