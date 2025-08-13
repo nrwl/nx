@@ -34,6 +34,11 @@ export function ProjectGraphApp({
     (state) => state.context.projectGraph
   );
 
+  const initialCommand = useSelector(
+    service,
+    (state) => state.context.initialCommand
+  );
+
   useEffect(() => {
     if (!graphClient) return;
 
@@ -52,11 +57,10 @@ export function ProjectGraphApp({
       dependencies: projectGraph.dependencies,
       affectedProjects: [],
     });
-
-    send({
-      type: 'showAll',
-      autoExpand: true,
-    });
+    if (initialCommand) {
+      send(initialCommand);
+    }
+    console.log('initGraph called');
   }, [graphClient]);
 
   return (

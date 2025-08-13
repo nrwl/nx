@@ -15,6 +15,7 @@ import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-a
 // nx-ignore-next-line
 import { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
+import { ProjectGraphEvent } from '@nx/graph/projects';
 import { inspect } from '@xstate/inspect';
 import { render } from 'preact';
 import { StrictMode } from 'react';
@@ -27,7 +28,6 @@ import { migrateMachine } from './app/console-migrate/migrate.machine';
 import { ProjectDetailsApp } from './app/console-project-details/project-details.app';
 import { ExternalApiImpl } from './app/external-api-impl';
 import { ErrorPage } from './app/ui-components/error-page';
-import { NxGraphProjectGraphProvider } from '@nx/graph/projects';
 
 console.log('hello', window.__NX_RENDER_GRAPH__);
 if (true) {
@@ -90,13 +90,20 @@ if (true) {
     return service;
   };
 
-  window.renderProjectGraph = (projectGraph: ProjectGraph) => {
+  window.renderProjectGraph = (
+    projectGraph: ProjectGraph,
+    initialCommand: ProjectGraphEvent
+  ) => {
     const service = interpret(projectGraphMachine).start();
     service.send({
       type: 'loadData',
       projectGraph,
     });
 
+    service.send({
+      type: 'setInitialCommand',
+      command: initialCommand,
+    });
     render(
       <StrictMode>
         <ProjectGraphApp service={service} />

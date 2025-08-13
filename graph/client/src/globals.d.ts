@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraph } from '@nx/devkit';
+import type { ProjectGraphEvent } from '@nx/graph/projects';
 import type { AppConfig, ExternalApi } from '@nx/graph/shared';
 import type {
   ExpandedTaskInputsReponse,
@@ -39,7 +40,8 @@ export declare global {
 
     // New graph rendering functions
     renderProjectGraph?: (
-      projectGraph: ProjectGraph
+      projectGraph: ProjectGraph,
+      initialCommand: ProjectGraphEvent
     ) => Interpreter<ProjectGraphState, any, ProjectGraphEvents>;
 
     // renderTaskGraph?: (taskData: any) => {

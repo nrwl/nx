@@ -3,17 +3,22 @@ import { ActorRef, assign, send, spawn } from 'xstate';
 import { createMachine } from 'xstate';
 import { ProjectGraphClientActor } from '../feature-projects/machines/interfaces';
 import { graphClientActor } from '../feature-projects/machines/graph.actor';
-import { ProjectGraphEvent } from '@nx/graph/projects/project-graph-event';
+import {
+  ProjectGraphEvent,
+  ProjectGraphEventType,
+} from '@nx/graph/projects/project-graph-event';
 import { RenderGraphConfigEvent } from '@nx/graph';
 import { GRAPH_CLIENT_EVENTS } from '../feature-projects/machines/project-graph.machine';
 
 export interface ProjectGraphStateMachineContext {
   projectGraph: null | ProjectGraph;
+  initialCommand: null | ProjectGraphEvent;
   graphActor: ActorRef<ProjectGraphEvent | RenderGraphConfigEvent>;
 }
 
 const initialContext: ProjectGraphStateMachineContext = {
   projectGraph: null,
+  initialCommand: null,
   graphActor: null,
 };
 export type ProjectGraphStateMachineEvents =
@@ -24,6 +29,10 @@ export type ProjectGraphStateMachineEvents =
   | {
       type: 'setGraphClient';
       graphClient: ProjectGraphClientActor;
+    }
+  | {
+      type: 'setInitialCommand';
+      command: ProjectGraphEvent;
     };
 export const projectGraphMachine = createMachine<
   ProjectGraphStateMachineContext,
@@ -48,6 +57,13 @@ export const projectGraphMachine = createMachine<
           ],
         },
       ],
+      setInitialCommand: {
+        actions: [
+          assign({
+            initialCommand: (_, event) => event.command,
+          }),
+        ],
+      },
       setGraphClient: {
         actions: [
           assign({

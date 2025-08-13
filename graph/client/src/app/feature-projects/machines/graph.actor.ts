@@ -24,6 +24,7 @@ export const graphClientActor =
       ) {
         sendRenderConfigEvent(event);
       } else {
+        console.log('sending event', event);
         send(event);
       }
 
