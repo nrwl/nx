@@ -43,10 +43,19 @@ pnpm update-all-repos
 4. Install updated dependencies
 5. Run `nx migrate --run-migrations --create-commits` (auto-generates commits)
 6. Clean up `migrations.json` file after successful migration
-7. Run `nx reset` to clear cache (prevents prepush hook issues)
-8. Push branch to remote (with `--no-verify` to skip git hooks)
-9. Create new PR or update existing PR with current version info
-10. Open PR in browser
+7. Run `post-nx-update` script if it exists in package.json (optional)
+8. Commit any changes from post-nx-update script separately
+9. Run `nx reset` to clear cache (prevents prepush hook issues)
+10. Push branch to remote (with `--no-verify` to skip git hooks)
+11. Create new PR or update existing PR with current version info
+12. Open PR in browser
+
+**Post-Update Hook**:
+
+- Repositories can define a `post-nx-update` script in their root package.json
+- This script runs after Nx migrations complete but before pushing changes
+- Any changes made by the script are committed separately
+- If the script doesn't exist, the process continues normally (no failure)
 
 **PR Management**:
 

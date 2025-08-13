@@ -162,6 +162,72 @@ function getResetCommand(packageManager: PackageManager): string {
   }
 }
 
+function getPostUpdateCommand(packageManager: PackageManager): string {
+  switch (packageManager) {
+    case 'pnpm':
+      return 'pnpm run post-nx-update';
+    case 'yarn':
+      return 'yarn run post-nx-update';
+    case 'bun':
+      return 'bun run post-nx-update';
+    case 'npm':
+    default:
+      return 'npm run post-nx-update';
+  }
+}
+
+async function runPostUpdateScript(
+  repoDir: string,
+  packageManager: PackageManager
+): Promise<boolean> {
+  try {
+    // Check if package.json exists and has post-nx-update script
+    const packageJsonPath = path.join(repoDir, 'package.json');
+    if (!fs.existsSync(packageJsonPath)) {
+      return false;
+    }
+
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    if (!packageJson.scripts || !packageJson.scripts['post-nx-update']) {
+      log('📋 No post-nx-update script found, skipping');
+      return false;
+    }
+
+    log('🔧 Found post-nx-update script, executing...');
+    const postUpdateCmd = getPostUpdateCommand(packageManager);
+    await execWithOutput(
+      postUpdateCmd,
+      repoDir,
+      'Running post-nx-update script'
+    );
+
+    // Check if the script made any changes
+    const { stdout } = await execAsync('git status --porcelain', {
+      cwd: repoDir,
+    });
+    if (stdout.trim()) {
+      log('📝 Post-nx-update script made changes, committing...');
+      await execWithOutput('git add .', repoDir, 'Staging post-update changes');
+      await execWithOutput(
+        'git commit -m "chore(repo): apply post-nx-update script changes"',
+        repoDir,
+        'Committing post-update changes'
+      );
+      return true;
+    } else {
+      log('📋 No changes from post-nx-update script');
+      return false;
+    }
+  } catch (error) {
+    log(
+      `⚠️  Warning: Failed to run post-nx-update script: ${getErrorMessage(
+        error
+      )}`
+    );
+    return false;
+  }
+}
+
 async function getNxVersion(
   repoDir: string,
   _packageManager: PackageManager
@@ -438,6 +504,9 @@ async function updateRepository(repoName: string): Promise<void> {
     } else {
       log('📋 No migrations.json found, migration setup complete');
     }
+
+    // Run post-nx-update script if it exists
+    await runPostUpdateScript(repoDir, packageManager);
 
     // Reset Nx cache to avoid prepush hook issues
     const resetCmd = getResetCommand(packageManager);
