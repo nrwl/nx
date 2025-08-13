@@ -50,6 +50,18 @@ describe('component', () => {
         tree.exists('my-app/pages/posts/[dynamic]/index.module.css')
       ).toBeTruthy();
     });
+  
+    it('should generate component in pages directory using fileName', async () => {
+      await pageGenerator(tree, {
+        name: 'hello',
+        path: 'my-app/pages/hello',
+        fileName: 'foo',
+        style: 'css',
+      });
+
+      expect(tree.exists('my-app/pages/hello/foo.tsx')).toBeTruthy();
+      expect(tree.exists('my-app/pages/hello/foo.module.css')).toBeTruthy();
+    });
   });
 
   describe('app router', () => {
@@ -87,6 +99,22 @@ describe('component', () => {
       const content = tree
         .read(`${appRouterProjectName}/app/posts/[dynamic]/page.tsx`)
         .toString();
+    });
+
+    it('should generate component in app directory using fileName', async () => {
+      await pageGenerator(tree, {
+        name: 'about',
+        path: `${appRouterProjectName}/app/about`,
+        fileName: 'bar',
+        style: 'css',
+      });
+
+      expect(
+        tree.exists(`${appRouterProjectName}/app/about/bar.tsx`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`${appRouterProjectName}/app/about/bar.module.css`)
+      ).toBeTruthy();
     });
   });
 });
