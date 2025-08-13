@@ -69,7 +69,6 @@
               "nx",
               "typescript",
               "prettier",
-              "tslib",
               // Installed to workspace by plugins
               "rxjs",
               "@angular-devkit/core",

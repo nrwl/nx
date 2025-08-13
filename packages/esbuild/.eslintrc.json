@@ -45,7 +45,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "tslib", "typescript", "esbuild"]
+            "ignoredDependencies": ["nx", "typescript", "esbuild"]
           }
         ]
       }

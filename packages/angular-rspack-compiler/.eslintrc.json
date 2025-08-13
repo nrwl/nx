@@ -37,6 +37,7 @@
         "@nx/dependency-checks": [
           "error",
           {
+            "buildTargets": ["build-base"],
             "ignoredFiles": [
               "{projectRoot}/.eslintrc.json",
               "{projectRoot}/vite.config.{js,ts,mjs,mts}"
@@ -45,8 +46,7 @@
               "@angular/core",
               "jsonc-eslint-parser",
               "vitest",
-              "memfs",
-              "tslib"
+              "memfs"
             ]
           }
         ]

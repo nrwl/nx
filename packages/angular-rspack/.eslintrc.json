@@ -37,6 +37,7 @@
         "@nx/dependency-checks": [
           "error",
           {
+            "buildTargets": ["build-base"],
             "ignoredFiles": [
               "{projectRoot}/.eslintrc.json",
               "{projectRoot}/vite.config.{js,ts,mjs,mts}"
@@ -46,7 +47,6 @@
               "jsonc-eslint-parser",
               "vitest",
               "memfs",
-              "tslib",
               // it's only a type import, so it won't be required at runtime
               "sass",
               // shown as unused because it's required using `createRequire`
