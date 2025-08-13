@@ -82,7 +82,11 @@ jobs:
       - name: Install packages
         run: |
           pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+
+      - name: Install Browsers
+        run: |
+          pnpm exec cypress install
+          pnpm exec playwright install --with-deps
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -186,7 +190,11 @@ jobs:
       - name: Install packages
         run: |
           pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+
+      - name: Install Browsers
+        run: |
+          pnpm exec cypress install
+          pnpm exec playwright install --with-deps
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
