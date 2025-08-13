@@ -6,7 +6,7 @@ import { ProjectGraphEvent } from '@nx/graph/projects/project-graph-event';
 import { RenderGraphConfigEvent } from '@nx/graph';
 import { GRAPH_CLIENT_EVENTS } from '../feature-projects/machines/project-graph.machine';
 import { TaskGraphClientActor } from '../feature-tasks/interfaces';
-import { graphClientActor } from '../feature-tasks/graph.actor';
+// import { graphClientActor } from '../feature-tasks/graph.actor';
 
 export interface TaskGraphStateMachineContext {
   projectGraph: null | ProjectGraph;
@@ -51,13 +51,13 @@ export const projectGraphMachine = createMachine<
       ],
       setGraphClient: {
         actions: [
-          assign({
-            graphActor: (_, event) =>
-              spawn(
-                graphClientActor(event.graphClient),
-                'taskGraphClientActor'
-              ),
-          }),
+          // assign({
+          //   graphActor: (_, event) =>
+          //     spawn(
+          //       graphClientActor(event.graphClient),
+          //       'taskGraphClientActor'
+          //     ),
+          // }),
         ],
       },
       '*': {
