@@ -168,6 +168,9 @@ importers:
       sharp:
         specifier: ^0.32.5
         version: 0.32.6
+      smol-toml:
+        specifier: ^1.4.1
+        version: 1.4.1
       starlight-links-validator:
         specifier: ^0.17.0
         version: 0.17.0(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(lightningcss@1.30.1)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))
@@ -1563,7 +1566,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
+        version: 29.7.0(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@24.2.0)(typescript@5.8.3))
 
   graph/migrate:
     dependencies:
@@ -1607,7 +1610,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^29.4.1
-        version: 29.7.0(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@24.2.0)(typescript@5.8.3))
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
 
   graph/ui-common: {}
 
@@ -2427,7 +2430,7 @@ importers:
         version: 2.3.0
       '@angular/build':
         specifier: '>=19.0.0 <21.0.0'
-        version: 20.1.0(d9dbd80732b6df7ac2836178a0eedc48)
+        version: 20.1.0(d25739ada84fd66398df5f97294c077c)
       '@angular/localize':
         specifier: '>=19.0.0 <21.0.0'
         version: 20.1.4(@angular/compiler-cli@20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3))(@angular/compiler@20.1.0)
@@ -2533,7 +2536,7 @@ importers:
     dependencies:
       '@angular/build':
         specifier: ~20.1.0
-        version: 20.1.0(7ce16857013eee842f91a930fb1e021d)
+        version: 20.1.0(67d1df19533bf64cb64f3b778de091a7)
       '@angular/compiler-cli':
         specifier: '>=19.0.0 <21.0.0'
         version: 20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3)
@@ -2884,6 +2887,9 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
+      smol-toml:
+        specifier: ^1.4.1
+        version: 1.4.1
 
   packages/jest:
     dependencies:
@@ -25154,10 +25160,10 @@ snapshots:
       - tsx
       - yaml
 
-  '@angular/build@20.1.0(7ce16857013eee842f91a930fb1e021d)':
+  '@angular/build@20.1.0(67d1df19533bf64cb64f3b778de091a7)':
     dependencies:
       '@ampproject/remapping': 2.3.0
-      '@angular-devkit/architect': 0.2001.0(chokidar@3.6.0)
+      '@angular-devkit/architect': 0.2001.0(chokidar@4.0.3)
       '@angular/compiler': 20.1.0
       '@angular/compiler-cli': 20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3)
       '@babel/core': 7.27.7
@@ -25198,6 +25204,63 @@ snapshots:
       postcss: 8.5.6
       tailwindcss: 4.1.11
       vitest: 3.0.5(@types/debug@4.1.12)(@types/node@24.2.0)(jiti@2.4.2)(jsdom@26.1.0)(less@4.3.0)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+    transitivePeerDependencies:
+      - '@types/node'
+      - chokidar
+      - jiti
+      - lightningcss
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+
+  '@angular/build@20.1.0(d25739ada84fd66398df5f97294c077c)':
+    dependencies:
+      '@ampproject/remapping': 2.3.0
+      '@angular-devkit/architect': 0.2001.0(chokidar@4.0.3)
+      '@angular/compiler': 20.1.0
+      '@angular/compiler-cli': 20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3)
+      '@babel/core': 7.27.7
+      '@babel/helper-annotate-as-pure': 7.27.3
+      '@babel/helper-split-export-declaration': 7.24.7
+      '@inquirer/confirm': 5.1.13(@types/node@24.2.0)
+      '@vitejs/plugin-basic-ssl': 2.1.0(vite@7.0.0(@types/node@24.2.0)(jiti@2.4.2)(less@4.3.0)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
+      beasties: 0.3.4
+      browserslist: 4.25.1
+      esbuild: 0.25.5
+      https-proxy-agent: 7.0.6
+      istanbul-lib-instrument: 6.0.3
+      jsonc-parser: 3.3.1
+      listr2: 8.3.3
+      magic-string: 0.30.17
+      mrmime: 2.0.1
+      parse5-html-rewriting-stream: 7.1.0
+      picomatch: 4.0.2
+      piscina: 5.1.2
+      rollup: 4.44.1
+      sass: 1.89.2
+      semver: 7.7.2
+      source-map-support: 0.5.21
+      tinyglobby: 0.2.14
+      tslib: 2.8.1
+      typescript: 5.8.3
+      vite: 7.0.0(@types/node@24.2.0)(jiti@2.4.2)(less@4.3.0)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      watchpack: 2.4.4
+    optionalDependencies:
+      '@angular/core': 20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1)
+      '@angular/localize': 20.1.4(@angular/compiler-cli@20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3))(@angular/compiler@20.1.0)
+      '@angular/platform-browser': 20.1.0(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))
+      '@angular/platform-server': 20.1.4(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/compiler@20.1.0)(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@20.1.0(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
+      '@angular/ssr': 20.1.4(52c0e9af8a98935c0fae38caa74d0f43)
+      less: 4.3.0
+      lmdb: 3.4.1
+      ng-packagr: 20.1.0(@angular/compiler-cli@20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3))(tailwindcss@4.1.11)(tslib@2.8.1)(typescript@5.8.3)
+      postcss: 8.5.3
+      tailwindcss: 4.1.11
+      vitest: 3.0.5(@types/debug@4.1.12)(@types/node@20.16.10)(jiti@2.4.2)(jsdom@26.1.0)(less@4.1.3)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
     transitivePeerDependencies:
       - '@types/node'
       - chokidar
@@ -25254,63 +25317,6 @@ snapshots:
       ng-packagr: 20.1.0(@angular/compiler-cli@20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3))(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3)))(tslib@2.8.1)(typescript@5.8.3)
       postcss: 8.5.6
       tailwindcss: 3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
-      vitest: 3.0.5(@types/debug@4.1.12)(@types/node@20.16.10)(jiti@2.4.2)(jsdom@26.1.0)(less@4.1.3)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
-    transitivePeerDependencies:
-      - '@types/node'
-      - chokidar
-      - jiti
-      - lightningcss
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
-
-  '@angular/build@20.1.0(d9dbd80732b6df7ac2836178a0eedc48)':
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@angular-devkit/architect': 0.2001.0(chokidar@3.6.0)
-      '@angular/compiler': 20.1.0
-      '@angular/compiler-cli': 20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3)
-      '@babel/core': 7.27.7
-      '@babel/helper-annotate-as-pure': 7.27.3
-      '@babel/helper-split-export-declaration': 7.24.7
-      '@inquirer/confirm': 5.1.13(@types/node@24.2.0)
-      '@vitejs/plugin-basic-ssl': 2.1.0(vite@7.0.0(@types/node@24.2.0)(jiti@2.4.2)(less@4.3.0)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
-      beasties: 0.3.4
-      browserslist: 4.25.1
-      esbuild: 0.25.5
-      https-proxy-agent: 7.0.6
-      istanbul-lib-instrument: 6.0.3
-      jsonc-parser: 3.3.1
-      listr2: 8.3.3
-      magic-string: 0.30.17
-      mrmime: 2.0.1
-      parse5-html-rewriting-stream: 7.1.0
-      picomatch: 4.0.2
-      piscina: 5.1.2
-      rollup: 4.44.1
-      sass: 1.89.2
-      semver: 7.7.2
-      source-map-support: 0.5.21
-      tinyglobby: 0.2.14
-      tslib: 2.8.1
-      typescript: 5.8.3
-      vite: 7.0.0(@types/node@24.2.0)(jiti@2.4.2)(less@4.3.0)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
-      watchpack: 2.4.4
-    optionalDependencies:
-      '@angular/core': 20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1)
-      '@angular/localize': 20.1.4(@angular/compiler-cli@20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3))(@angular/compiler@20.1.0)
-      '@angular/platform-browser': 20.1.0(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))
-      '@angular/platform-server': 20.1.4(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/compiler@20.1.0)(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@20.1.0(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
-      '@angular/ssr': 20.1.4(52c0e9af8a98935c0fae38caa74d0f43)
-      less: 4.3.0
-      lmdb: 3.4.1
-      ng-packagr: 20.1.0(@angular/compiler-cli@20.1.0(@angular/compiler@20.1.0)(typescript@5.8.3))(tailwindcss@4.1.11)(tslib@2.8.1)(typescript@5.8.3)
-      postcss: 8.5.3
-      tailwindcss: 4.1.11
       vitest: 3.0.5(@types/debug@4.1.12)(@types/node@20.16.10)(jiti@2.4.2)(jsdom@26.1.0)(less@4.1.3)(lightningcss@1.30.1)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
     transitivePeerDependencies:
       - '@types/node'
