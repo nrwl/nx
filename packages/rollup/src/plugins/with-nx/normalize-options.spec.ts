@@ -83,4 +83,28 @@ describe('normalizeOptions', () => {
       tsConfig: 'pkg/tsconfig.json',
     });
   });
+
+  describe('Windows path handling', () => {
+    it('should normalize Windows paths for additionalEntryPoints', () => {
+      const windowsPath = './src\\entrypoints\\*.ts';
+      const options = {
+        main: './src/main.ts',
+        additionalEntryPoints: [windowsPath],
+        outputPath: '../dist/test-lib',
+        tsConfig: './tsconfig.json',
+      };
+
+      const result = normalizeOptions(
+        'libs/test-lib',
+        'libs/test-lib/src',
+        options
+      );
+
+      expect(result.additionalEntryPoints).toBeDefined();
+      result.additionalEntryPoints.forEach((entry) => {
+        expect(entry).not.toContain('\\');
+        expect(entry).toMatch(/^libs\/test-lib\/src\/entrypoints\/\*\.ts$/);
+      });
+    });
+  });
 });
