@@ -21,7 +21,7 @@ import {
 } from '@nx/js';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
-import { addJest } from '../../utils/add-jest';
+import { addJest } from '../../utils/jest/add-jest';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
@@ -99,17 +99,6 @@ export async function expoLibraryGeneratorInternal(
   });
   tasks.push(lintTask);
 
-  const jestTask = await addJest(
-    host,
-    options.unitTestRunner,
-    options.projectName,
-    options.projectRoot,
-    options.js,
-    options.skipPackageJson,
-    options.addPlugin
-  );
-  tasks.push(jestTask);
-
   const relativeCwd = getRelativeCwd();
   const path = joinPathFragments(
     options.projectRoot,
@@ -147,6 +136,20 @@ export async function expoLibraryGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  // Update Jest tsconfig after general tsconfig updates to ensure Jest resolver configuration is preserved
+  if (options.unitTestRunner === 'jest') {
+    const jestTask = await addJest(
+      host,
+      options.unitTestRunner,
+      options.projectName,
+      options.projectRoot,
+      options.js,
+      options.skipPackageJson,
+      options.addPlugin
+    );
+    tasks.push(jestTask);
+  }
 
   sortPackageJsonFields(host, options.projectRoot);
 
@@ -234,7 +237,6 @@ async function addProject(
         name: options.projectName,
         format: ['cjs', 'esm'],
         style: 'none',
-        js: options.js,
         skipFormat: true,
       },
       external
