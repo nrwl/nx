@@ -122,7 +122,7 @@ export function getNestWebpackBuildConfig(
     options: {
       command: 'webpack-cli build',
       args: ['--node-env=production'],
-      cwd: project.sourceRoot,
+      cwd: project.root,
     },
     configurations: {
       development: {
