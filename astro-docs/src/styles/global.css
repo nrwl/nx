@@ -60,6 +60,15 @@
   --sl-color-gray-6: var(--color-slate-200);
 }
 
+/* Adaptive icons, like GitHub logo, etc. */
+[data-theme='dark'] .adaptive-icon {
+  filter: invert(1);
+}
+
+[data-theme='light'] .adaptive-icon {
+  fill: black;
+}
+
 /* Custom font for code blocks */
 @font-face {
   font-family: 'Input Mono';
@@ -108,4 +117,12 @@ h6:hover .anchor-link {
 
 .content-panel + .content-panel {
   border-top: 0;
+}
+
+iframe[src*='youtube'] {
+  aspect-ratio: 16 / 9;
+}
+
+table code {
+  word-wrap: break-word;
 }

@@ -1,0 +1,12 @@
+<ul>
+  <li><a routerLink="/bar">Bar</a></li>
+  <li><a routerLink="/nested">Nested</a></li>
+</ul>
+
+<router-outlet></router-outlet>
+
+<app-nx-welcome></app-nx-welcome>
+
+@defer (hydrate on viewport) {
+<app-foo />
+}

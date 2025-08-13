@@ -223,6 +223,15 @@ async function runPublishOnProjects(
     overrides.firstRelease = args.firstRelease;
   }
 
+  /**
+   * If using the `nx release` command, or possibly via the programmatic API, versionData will be passed through from the version subcommand.
+   * Provide it automatically to the publish executor options with a clear namespace to avoid userland conflicts.
+   * It will be filtered out of the final terminal output lifecycle to avoid cluttering the terminal.
+   */
+  if (args.versionData) {
+    overrides.nxReleaseVersionData = args.versionData;
+  }
+
   const requiredTargetName = 'nx-release-publish';
 
   if (args.graph) {

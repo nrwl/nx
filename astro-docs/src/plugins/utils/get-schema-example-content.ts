@@ -4,6 +4,23 @@ import { type PluginSchemaWithExamples } from './plugin-schema-parser';
 const EXAMPLE_SCHEMA_KEY = 'examplesFile';
 
 /**
+ * Strip frontmatter from markdown content
+ * Removes anything between the opening and closing --- delimiters
+ */
+function stripFrontmatter(content: string): string {
+  const frontmatterPattern = /^---\s*\n[\s\S]*?\n---\s*\n/;
+  return content.replace(frontmatterPattern, '').trim();
+}
+
+/**
+ * Check if content contains any markdown headers
+ */
+function hasHeaders(content: string): boolean {
+  const headerPattern = /^#{1,6}\s/m;
+  return headerPattern.test(content);
+}
+
+/**
  * Get the example content from the provided schema
  * path is required to be able to correctly resolve the path to the docs file
  * @returns null for missing example file paths
@@ -30,17 +47,24 @@ export function getExampleForSchema(
     );
   }
 
-  const content = readFileSync(docPath, 'utf-8')?.trim();
+  const rawContent = readFileSync(docPath, 'utf-8')?.trim();
+
+  if (!rawContent) {
+    return null;
+  }
+
+  // Strip frontmatter from the content
+  const content = stripFrontmatter(rawContent);
 
   if (!content) {
     return null;
   }
 
-  if (content.startsWith(`## Examples`)) {
-    // TODO(caleb): remove this logic after we remove old nx-dev site which wanted to use `##` level headings
-    // add extra `#` to make correct heading depth
-    return `#${content}`;
+  // If content already has headers, increase their level by 1 to nest under generator
+  if (hasHeaders(content)) {
+    return content.replace(/^(#{1,5})\s/gm, '#$1 ');
   }
 
+  // Only add Examples header if there are no existing headers
   return `### Examples\n\n${content}`;
 }

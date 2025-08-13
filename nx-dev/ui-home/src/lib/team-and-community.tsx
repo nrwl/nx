@@ -52,10 +52,7 @@ export function TeamAndCommunity(): ReactElement {
             monorepos and OSS
           </TextLink>
           . We are joined by a{' '}
-          <TextLink
-            href="/company?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
-            title="Our company"
-          >
+          <TextLink href="/company" title="Our company">
             talented and enthusiastic team
           </TextLink>
           , many of which are publicly recognized GDEs and MVPs.
@@ -104,11 +101,7 @@ export function TeamAndCommunity(): ReactElement {
           <div>
             <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition hover:text-slate-950 dark:border-slate-800/60 dark:hover:text-white">
               <NewspaperIcon aria-hidden="true" className="size-6 shrink-0" />
-              <Link
-                href="/blog?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
-                className="grow text-base"
-                prefetch={false}
-              >
+              <Link href="/blog" className="grow text-base">
                 <span className="absolute inset-0" />
                 Blog
               </Link>
@@ -178,13 +171,7 @@ export function TeamAndCommunity(): ReactElement {
                 aria-hidden="true"
                 className="size-6 shrink-0"
               />
-              <Link
-                href="https://go.nx.dev/june-webinar?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
-                prefetch={false}
-                target="_blank"
-                rel="noopener"
-                className="grow text-base"
-              >
+              <Link href="/webinar" className="grow text-base">
                 <span className="absolute inset-0" />
                 Webinars
               </Link>

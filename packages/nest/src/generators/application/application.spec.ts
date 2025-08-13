@@ -51,6 +51,7 @@ describe('application generator', () => {
                 "--node-env=production",
               ],
               "command": "webpack-cli build",
+              "cwd": "my-node-app",
             },
           },
           "copy-workspace-modules": {
@@ -277,6 +278,7 @@ describe('application generator', () => {
                     "--node-env=production",
                   ],
                   "command": "webpack-cli build",
+                  "cwd": "myapp",
                 },
               },
               "copy-workspace-modules": {
@@ -478,6 +480,7 @@ describe('application generator', () => {
                   "--node-env=production",
                 ],
                 "command": "webpack-cli build",
+                "cwd": "myapp",
               },
             },
             "copy-workspace-modules": {

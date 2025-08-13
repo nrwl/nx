@@ -13,6 +13,7 @@ on:
 
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
+  NX_NIGHTLY_TEST_RUN: 'true'
 
 permissions: { }
 jobs:
@@ -80,7 +81,9 @@ jobs:
         run: brew install python-setuptools
 
       - name: Install packages
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -182,7 +185,9 @@ jobs:
           bun-version: latest
 
       - name: Install packages
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}

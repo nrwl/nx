@@ -113,7 +113,8 @@ export function isValidPackageJsonBuildConfig(
           return !isPathSourceFile(dotExport);
         } else if (typeof dotExport === 'object') {
           const hasMatch = Object.entries(dotExport).some(([key, value]) => {
-            if (key === 'types' || key === 'development') return false;
+            if (key === 'types' || key === 'development' || key.startsWith('@'))
+              return false;
             return typeof value === 'string' && isPathSourceFile(value);
           });
           return !hasMatch;
@@ -193,7 +194,11 @@ export function isValidPackageJsonBuildConfig(
     } else if (typeof value === 'object') {
       return Object.entries(value).some(([currentKey, subValue]) => {
         // Skip types and development conditions
-        if (currentKey === 'types' || currentKey === 'development') {
+        if (
+          currentKey === 'types' ||
+          currentKey === 'development' ||
+          currentKey.startsWith('@')
+        ) {
           return false;
         }
         if (typeof subValue === 'string') {

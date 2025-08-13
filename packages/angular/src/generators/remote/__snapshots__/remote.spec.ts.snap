@@ -563,11 +563,10 @@ module.exports = {
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 3`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [CommonModule, NxWelcome],
+  imports: [NxWelcome],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
@@ -626,11 +625,10 @@ export default config;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 3`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [CommonModule, NxWelcome],
+  imports: [NxWelcome],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })

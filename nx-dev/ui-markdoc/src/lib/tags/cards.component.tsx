@@ -74,7 +74,7 @@ export function Cards({
   return (
     <div
       className={cx(
-        'mt-8 grid gap-4',
+        'not-content mt-8 grid gap-4',
         colsClasses[cols] || '',
         smColsClasses[smCols] || '',
         mdColsClasses[mdCols] || '',
@@ -136,7 +136,7 @@ export function LinkCard({
       {icon && (
         <div
           className={cx(
-            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
+            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg text-black dark:text-white',
             {
               'h-12 w-12': appearance === 'small',
             }
@@ -208,7 +208,7 @@ export function Card({
       key={title}
       href={url}
       title={title}
-      className="group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      className="not-content group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
       prefetch={false}
     >
       {!!hasYoutubeId && (

@@ -13,6 +13,7 @@ import {
   createDefautPropsObject,
   getDefinePropsObject,
 } from './utils';
+import { join } from 'path';
 
 let tsModule: typeof import('typescript');
 
@@ -44,7 +45,7 @@ export function createComponentStories(
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, `./files${js ? '/js' : '/ts'}`),
+    join(__dirname, `./files${js ? '/js' : '/ts'}`),
     normalizePath(componentDirectory),
     {
       tmpl: '',

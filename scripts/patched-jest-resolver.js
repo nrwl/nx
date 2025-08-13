@@ -50,6 +50,7 @@ module.exports = function (modulePath, options) {
     '@nx/eslint',
     '@nx/vite',
     '@nx/jest',
+    '@nx/docker',
     '@nx/js',
     '@nx/next',
     '@nx/storybook',
@@ -61,7 +62,6 @@ module.exports = function (modulePath, options) {
     '@nx/workspace',
     '@nx/module-federation',
     '@nx/rspack',
-    '@nx/docker',
     '@nx/eslint-plugin',
     '@nx/angular',
     '@nx/create-nx-plugin',
@@ -109,155 +109,136 @@ module.exports = function (modulePath, options) {
       return options.defaultResolver(modulePath, options);
     }
 
-    const packagesPath = '../';
+    // Find workspace root - avoid filesystem lookups inside node_modules
+    // For PNPM workspaces, we know the structure: workspace/packages/packageName
+    let workspaceRoot = options.rootDir;
 
-    // TS Solution: Allow specific workspace packages to be resolved to TypeScript source
-    const tsWorkspacePackages = {
-      '@nx/rollup': path.resolve(
-        options.rootDir,
-        `${packagesPath}rollup/index.ts`
-      ),
-      '@nx/eslint': path.resolve(
-        options.rootDir,
-        `${packagesPath}eslint/index.ts`
-      ),
-      '@nx/vite': path.resolve(options.rootDir, `${packagesPath}vite/index.ts`),
-      '@nx/jest': path.resolve(options.rootDir, `${packagesPath}jest/index.ts`),
-      '@nx/js': path.resolve(options.rootDir, `${packagesPath}js/src/index.ts`),
-      // Additional packages where tests are working
-      '@nx/next': path.resolve(options.rootDir, `${packagesPath}next/index.ts`),
-      '@nx/storybook': path.resolve(
-        options.rootDir,
-        `${packagesPath}storybook/index.ts`
-      ),
-      '@nx/rsbuild': path.resolve(
-        options.rootDir,
-        `${packagesPath}rsbuild/index.ts`
-      ),
-      '@nx/react-native': path.resolve(
-        options.rootDir,
-        `${packagesPath}react-native/index.ts`
-      ),
-      '@nx/express': path.resolve(
-        options.rootDir,
-        `${packagesPath}express/index.ts`
-      ),
-      '@nx/web': path.resolve(options.rootDir, `${packagesPath}web/index.ts`),
-      '@nx/vue': path.resolve(options.rootDir, `${packagesPath}vue/index.ts`),
-      '@nx/workspace': path.resolve(
-        options.rootDir,
-        `${packagesPath}workspace/index.ts`
-      ),
-      '@nx/module-federation': path.resolve(
-        options.rootDir,
-        `${packagesPath}module-federation/index.ts`
-      ),
-      '@nx/react': path.resolve(
-        options.rootDir,
-        `${packagesPath}react/index.ts`
-      ),
-      '@nx/remix': path.resolve(
-        options.rootDir,
-        `${packagesPath}remix/index.ts`
-      ),
-      '@nx/webpack': path.resolve(
-        options.rootDir,
-        `${packagesPath}webpack/index.ts`
-      ),
-      '@nx/playwright': path.resolve(
-        options.rootDir,
-        `${packagesPath}playwright/index.ts`
-      ),
-      '@nx/rspack': path.resolve(
-        options.rootDir,
-        `${packagesPath}rspack/src/index.ts`
-      ),
-    };
-
-    if (tsWorkspacePackages[modulePath]) {
-      return tsWorkspacePackages[modulePath];
-    }
-
-    // Handle @nx/js/src/* paths
-    if (modulePath.startsWith('@nx/js/src/')) {
-      const relativePath = modulePath.replace('@nx/js/src/', '');
-      return path.resolve(
-        options.rootDir,
-        `${packagesPath}js/src/`,
-        relativePath + '.ts'
-      );
-    }
-
-    // Handle @nx/eslint/src/* paths
-    if (modulePath.startsWith('@nx/eslint/src/')) {
-      const relativePath = modulePath.replace('@nx/eslint/src/', '');
-      return path.resolve(
-        options.rootDir,
-        `${packagesPath}eslint/src/`,
-        relativePath + '.ts'
-      );
-    }
-
-    if (modulePath.startsWith('@nx/docker/generators')) {
-      return path.resolve(
-        options.rootDir,
-        `${packagesPath}docker/generators.ts`
-      );
-    }
-
-    // Handle other packages with src/* structure where tests are working
-    const srcPackages = [
-      'rspack',
-      'nx',
-      'eslint-plugin',
-      'react',
-      'vite',
-      'rollup',
-      'workspace',
-      'angular',
-      'next',
-      'node',
-      'web',
-      'webpack',
-      'cypress',
-      'jest',
-    ];
-    for (const pkg of srcPackages) {
-      if (modulePath.startsWith(`@nx/${pkg}/src/`)) {
-        const relativePath = modulePath.replace(`@nx/${pkg}/src/`, '');
-        return path.resolve(
-          options.rootDir,
-          `${packagesPath}${pkg}/src/`,
-          relativePath + '.ts'
-        );
+    // If we're in a packages subdirectory, go up two levels to workspace root
+    if (workspaceRoot.includes('/packages/')) {
+      const packagesIndex = workspaceRoot.lastIndexOf('/packages/');
+      workspaceRoot = workspaceRoot.substring(0, packagesIndex);
+    } else {
+      // Fallback: go up directories until we find packages/ (but check pnpm-lock.yaml for validation)
+      while (workspaceRoot && workspaceRoot !== path.dirname(workspaceRoot)) {
+        const pnpmLock = path.join(workspaceRoot, 'pnpm-lock.yaml');
+        const packagesDir = path.join(workspaceRoot, 'packages');
+        if (fs.existsSync(pnpmLock) && fs.existsSync(packagesDir)) {
+          break;
+        }
+        workspaceRoot = path.dirname(workspaceRoot);
       }
     }
 
-    // Handle nx/src/* paths (for direct nx package imports)
-    if (modulePath.startsWith('nx/src/')) {
-      const relativePath = modulePath.replace('nx/src/', '');
-      return path.resolve(
-        options.rootDir,
-        `${packagesPath}nx/src/`,
-        relativePath + '.ts'
-      );
+    const packagesPath = path.join(workspaceRoot, 'packages');
+
+    // Handle main @nx/* package imports (e.g., '@nx/devkit', '@nx/js')
+    const nxPackageMatch = modulePath.match(/^@nx\/([^/]+)$/);
+    if (nxPackageMatch) {
+      const packageName = nxPackageMatch[1];
+
+      // Check if this package exists in workspace
+      const packageDir = path.join(packagesPath, packageName);
+
+      // Try different entry points based on package structure
+      const possibleEntries = [
+        path.join(packageDir, 'index.ts'),
+        path.join(packageDir, 'src', 'index.ts'),
+      ];
+
+      for (const entry of possibleEntries) {
+        if (fs.existsSync(entry) && fs.lstatSync(entry).isFile()) {
+          return entry;
+        }
+      }
     }
 
-    // Block other Nx packages from auto-resolution
+    // Handle @nx/*/src/* subpath imports (e.g., '@nx/devkit/src/utils/something')
+    const nxSubpathMatch = modulePath.match(/^@nx\/([^/]+)\/src\/(.+)$/);
+    if (nxSubpathMatch) {
+      const packageName = nxSubpathMatch[1];
+      const subpath = nxSubpathMatch[2];
+
+      // Try different patterns for subpath resolution
+      const possiblePaths = [
+        path.join(packagesPath, packageName, 'src', subpath + '.ts'), // Direct file
+        path.join(packagesPath, packageName, 'src', subpath, 'index.ts'), // Directory with index.ts
+      ];
+
+      for (const possiblePath of possiblePaths) {
+        if (
+          fs.existsSync(possiblePath) &&
+          fs.lstatSync(possiblePath).isFile()
+        ) {
+          return possiblePath;
+        }
+      }
+    }
+
+    // Handle @nx/* other subpaths (e.g., '@nx/devkit/testing', '@nx/devkit/package.json')
+    const nxOtherMatch = modulePath.match(/^@nx\/([^/]+)\/(.+)$/);
+    if (nxOtherMatch) {
+      const packageName = nxOtherMatch[1];
+      const subpath = nxOtherMatch[2];
+
+      const packageDir = path.join(packagesPath, packageName);
+
+      // Try different patterns for subpath resolution
+      const possiblePaths = [
+        path.join(packageDir, subpath), // For files like package.json
+        path.join(packageDir, subpath + '.ts'),
+        path.join(packageDir, 'src', subpath + '.ts'),
+      ];
+
+      for (const possiblePath of possiblePaths) {
+        if (
+          fs.existsSync(possiblePath) &&
+          fs.lstatSync(possiblePath).isFile()
+        ) {
+          return possiblePath;
+        }
+      }
+    }
+
+    // Handle nx/src/* imports (direct nx package imports)
+    const nxSrcMatch = modulePath.match(/^nx\/src\/(.+)$/);
+    if (nxSrcMatch) {
+      const subpath = nxSrcMatch[1];
+      const resolvedPath = path.join(
+        packagesPath,
+        'nx',
+        'src',
+        subpath + '.ts'
+      );
+      if (fs.existsSync(resolvedPath) && fs.lstatSync(resolvedPath).isFile()) {
+        return resolvedPath;
+      }
+    }
+
+    // Handle nx/package.json specifically
+    if (modulePath === 'nx/package.json') {
+      return path.join(packagesPath, 'nx', 'package.json');
+    }
+
+    // Handle other nx/* patterns
+    const nxOtherPatternMatch = modulePath.match(/^nx\/(.+)$/);
+    if (nxOtherPatternMatch) {
+      const subpath = nxOtherPatternMatch[1];
+      const resolvedPath = path.join(packagesPath, 'nx', subpath + '.ts');
+      if (fs.existsSync(resolvedPath)) {
+        return resolvedPath;
+      }
+    }
+
+    // Block excluded Nx packages from auto-resolution
     if (
       modulePath.startsWith('@nx/') &&
       !modulePath.startsWith('@nx/powerpack-') &&
       !excludedPackages.some((pkg) => modulePath.startsWith(pkg))
     ) {
-      throw new Error('custom resolution blocked');
-    }
-
-    if (modulePath.startsWith('nx/') && !modulePath.startsWith('nx/src/'))
-      throw new Error('custom resolution blocked');
-
-    if (modulePath.includes('@nx/workspace')) {
-      throw new Error(
-        'Reference to local Nx package found. Use local version instead.'
+      // If we get here, it means the workspace package couldn't be resolved above
+      // This might indicate a missing file or incorrect import
+      console.warn(
+        `[resolver] Could not resolve workspace package: ${modulePath}`
       );
     }
 

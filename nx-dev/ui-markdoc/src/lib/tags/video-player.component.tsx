@@ -59,7 +59,7 @@ export function VideoPlayer({
   loop,
 }: VideoPlayerProps): JSX.Element {
   return (
-    <div className="mb-4 overflow-x-auto">
+    <div className="not-content mb-4 overflow-x-auto">
       <div className="rounded-lg border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60">
         <div
           className={

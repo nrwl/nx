@@ -43,7 +43,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "tslib", "typescript", "@nx/webpack"]
+            "ignoredDependencies": ["nx", "typescript", "@nx/webpack"]
           }
         ]
       }

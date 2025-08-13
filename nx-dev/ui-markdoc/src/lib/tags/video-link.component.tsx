@@ -30,7 +30,7 @@ export type VideoLinkProps = { text: string; link: string };
 
 export function VideoLink({ text, link }: VideoLinkProps) {
   return (
-    <div className="no-prose my-4 flex">
+    <div className="not-content no-prose my-4 flex">
       <a
         href={link}
         target="_blank"

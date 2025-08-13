@@ -631,41 +631,34 @@ async function startServer(
 
     if (sanitizePath === 'task-graph.json') {
       const projectsParam = parsedUrl.searchParams.get('projects'); // Multiple projects
-      const projectParam = parsedUrl.searchParams.get('project'); // Single project (for CLI)
       const targetName = parsedUrl.searchParams.get('target');
       const configuration = parsedUrl.searchParams.get('configuration');
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
 
-      if (projectParam && targetName) {
-        // Case 1: Single project + target (CLI: nx build myapp --graph)
-        res.end(
+      if (projectsParam && targetName) {
+        // Multiple projects + target (UI: selected specific projects)
+        const projectNames = projectsParam.split(' ').filter(Boolean);
+        return res.end(
           JSON.stringify(
-            await createSpecificTaskGraphResponse(
-              projectParam,
+            await createTaskGraphsForTargetAndProjects(
               targetName,
+              projectNames,
               configuration
             )
           )
         );
-      } else if (projectsParam && targetName) {
-        // Case 2: Multiple projects + target (UI: selected specific projects)
-        const projectNames = projectsParam.split(' ').filter(Boolean);
-        res.end(
-          JSON.stringify(
-            await createTaskGraphsForTargetAndProjects(targetName, projectNames)
-          )
-        );
-      } else if (targetName) {
-        // Case 3: Target only (UI: all projects with this target)
-        res.end(
+      }
+
+      if (targetName) {
+        // Target only (UI: all projects with this target)
+        return res.end(
           JSON.stringify(await createTaskGraphsForTargetAndProjects(targetName))
         );
-      } else {
-        // Case 4: Legacy - load all task graphs
-        res.end(JSON.stringify(await createTaskGraphClientResponse()));
       }
-      return;
+
+      // Legacy - load all task graphs
+      return res.end(JSON.stringify(await createTaskGraphClientResponse()));
     }
 
     if (sanitizePath === 'task-inputs.json') {
@@ -1135,7 +1128,8 @@ function clearTaskGraphCache() {
  */
 async function createTaskGraphsForTargetAndProjects(
   targetName: string,
-  projectNames?: string[]
+  projectNames?: string[],
+  configuration?: string
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1169,7 +1163,7 @@ async function createTaskGraphsForTargetAndProjects(
   const taskGraphErrors: Record<string, string> = {};
 
   for (const projectName of projectsToProcess) {
-    const taskId = createTaskId(projectName, targetName);
+    const taskId = createTaskId(projectName, targetName, configuration);
 
     // Check cache first
     const cached = taskGraphCache.get(taskId);
@@ -1186,7 +1180,7 @@ async function createTaskGraphsForTargetAndProjects(
         {},
         [projectName],
         [targetName],
-        undefined,
+        configuration,
         {}
       );
     } catch (err) {
@@ -1222,7 +1216,7 @@ async function createTaskGraphsForTargetAndProjects(
 
   // Cache individual results for future requests
   for (const projectName of projectsToProcess) {
-    const taskId = createTaskId(projectName, targetName);
+    const taskId = createTaskId(projectName, targetName, configuration);
     if (!taskGraphCache.has(taskId)) {
       taskGraphCache.set(taskId, {
         taskGraphs: { [taskId]: taskGraphs[taskId] },
@@ -1250,110 +1244,14 @@ async function createTaskGraphsForTargetAndProjects(
   return { taskGraphs, plans, errors: taskGraphErrors };
 }
 
-/**
- * Creates a task graph response for a specific project and target
- * This is much faster than generating all task graphs upfront
- */
-async function createSpecificTaskGraphResponse(
-  projectName: string,
-  targetName: string,
-  configuration?: string
-): Promise<TaskGraphClientResponse> {
-  const taskId = createTaskId(projectName, targetName, configuration);
-
-  // Check cache first
-  const cached = taskGraphCache.get(taskId);
-  if (cached) {
-    return cached;
-  }
-
-  let graph: ProjectGraph;
-  try {
-    graph = await createProjectGraphAsync({ exitOnError: false });
-  } catch (e) {
-    if (e instanceof ProjectGraphError) {
-      graph = e.getPartialProjectGraph();
-    }
-  }
-
-  const nxJson = readNxJson();
-
-  performance.mark(`specific task graph generation:start`);
-
-  // Create only the specific task graph requested
-  const taskGraphs: Record<string, TaskGraph> = {};
-  const taskGraphErrors: Record<string, string> = {};
-
-  try {
-    taskGraphs[taskId] = createTaskGraph(
-      graph,
-      {},
-      [projectName],
-      [targetName],
-      configuration,
-      {}
-    );
-  } catch (err) {
-    taskGraphs[taskId] = {
-      tasks: {},
-      dependencies: {},
-      continuousDependencies: {},
-      roots: [],
-    };
-    taskGraphErrors[taskId] = err.message;
-  }
-
-  performance.mark(`specific task graph generation:end`);
-
-  const planner = new HashPlanner(
-    nxJson,
-    transferProjectGraph(transformProjectGraphForRust(graph))
-  );
-
-  performance.mark('specific task hash plan generation:start');
-  const plans: Record<string, string[]> = {};
-
-  // Get plans for all tasks in the task graph
-  const taskIds = Object.keys(taskGraphs[taskId].tasks);
-  if (taskIds.length > 0) {
-    const taskPlans = planner.getPlans(taskIds, taskGraphs[taskId]);
-    Object.assign(plans, taskPlans);
-  }
-
-  performance.mark('specific task hash plan generation:end');
-
-  const result = {
-    taskGraphs,
-    plans,
-    errors: taskGraphErrors,
-  };
-
-  // Cache the result
-  taskGraphCache.set(taskId, result);
-
-  performance.measure(
-    `specific task graph generation for ${taskId}`,
-    `specific task graph generation:start`,
-    `specific task graph generation:end`
-  );
-
-  performance.measure(
-    'specific task hash plan generation',
-    'specific task hash plan generation:start',
-    'specific task hash plan generation:end'
-  );
-
-  return result;
-}
-
 async function getExpandedTaskInputs(
   taskId: string
 ): Promise<Record<string, string[]>> {
   // Use the optimized version that only creates the specific task graph needed
   const [projectName, targetName, configuration] = taskId.split(':');
-  const taskGraphResponse = await createSpecificTaskGraphResponse(
-    projectName,
+  const taskGraphResponse = await createTaskGraphsForTargetAndProjects(
     targetName,
+    [projectName],
     configuration
   );
 

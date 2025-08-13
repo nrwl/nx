@@ -2,12 +2,12 @@ group = "dev.nx.gradle"
 
 plugins {
   // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-  id("org.jetbrains.kotlin.jvm") version "2.1.10"
+  id("org.jetbrains.kotlin.jvm") version "2.1.20"
   // Apply the application plugin to add support for building a CLI application in Java.
   application
   id("com.github.johnrengelman.shadow") version "8.1.1"
   id("com.ncorti.ktfmt.gradle") version "+"
-  id("dev.nx.gradle.project-graph") version "0.1.0"
+  id("dev.nx.gradle.project-graph") version "0.1.5"
 }
 
 repositories {

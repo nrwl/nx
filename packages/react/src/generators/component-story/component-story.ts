@@ -15,6 +15,7 @@ import {
 } from '../../utils/ast-utils';
 import { getComponentPropDefaults } from '../../utils/component-props';
 import { getUiFramework } from '../../utils/framework';
+import { join } from 'path';
 
 let tsModule: typeof import('typescript');
 
@@ -128,7 +129,7 @@ export function findPropsAndGenerateFile(
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, `./files${isPlainJs ? '/jsx' : '/tsx'}`),
+    join(__dirname, `./files${isPlainJs ? '/jsx' : '/tsx'}`),
     normalizePath(componentDirectory),
     {
       tmpl: '',

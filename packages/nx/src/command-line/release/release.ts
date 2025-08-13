@@ -370,7 +370,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     if (shouldPublish) {
-      const publishResults = await releasePublish(args);
+      const publishResults = await releasePublish({
+        ...args,
+        versionData: versionResult.projectsVersionData,
+      });
       const allExitOk = Object.values(publishResults).every(
         (result) => result.code === 0
       );

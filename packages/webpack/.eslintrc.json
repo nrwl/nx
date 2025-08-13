@@ -41,7 +41,6 @@
               "nx",
               "typescript",
               "eslint",
-              "tslib",
               // Used in require.resolve calls
               "@babel/core",
               "css-loader",

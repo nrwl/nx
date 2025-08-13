@@ -38,7 +38,7 @@
     "enquirer": "~2.3.6",
     "express": "^4.21.2",
     "ts-checker-rspack-plugin": "^1.1.1",
-    "http-proxy-middleware": "^3.0.3",
+    "http-proxy-middleware": "^3.0.5",
     "less-loader": "^11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "^2.0.3",
@@ -60,8 +60,8 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "^0.17.0",
-    "@module-federation/node": "^2.7.9"
+    "@module-federation/enhanced": "^0.18.0",
+    "@module-federation/node": "^2.7.11"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

@@ -10,6 +10,7 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { NormalizedSchema } from '../schema';
 import { createTsConfig } from '../../../utils/create-ts-config';
+import { join } from 'path';
 
 export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
   const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
@@ -26,7 +27,7 @@ export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, '../files'),
+    join(__dirname, '../files'),
     options.projectRoot,
     substitutions
   );

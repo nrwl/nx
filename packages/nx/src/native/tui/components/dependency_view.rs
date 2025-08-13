@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::native::tasks::types::TaskGraph;
 use crate::native::tui::components::tasks_list::TaskStatus;
-use crate::native::tui::graph_utils::is_task_continuous;
+use crate::native::tui::graph_utils::{get_dependency_chain_failures, is_task_continuous};
 use crate::native::tui::status_icons;
 use crate::native::tui::theme::THEME;
 use ratatui::{
@@ -94,9 +94,12 @@ impl DependencyViewState {
         self.pane_area = pane_area;
     }
 
-    /// Returns true if this dependency view should handle key events (i.e., task is pending)
+    /// Returns true if this dependency view should handle key events (i.e., task is pending or skipped with scrollable content)
     pub fn should_handle_key_events(&self) -> bool {
-        matches!(self.task_status, TaskStatus::NotStarted)
+        matches!(
+            self.task_status,
+            TaskStatus::NotStarted | TaskStatus::Skipped
+        )
     }
 
     /// Calculate viewport height from pane area, accounting for borders and padding
@@ -210,6 +213,78 @@ impl<'a> DependencyView<'a> {
         }
     }
 
+    /// Check if a rectangle fits within buffer boundaries
+    fn fits_in_buffer(area: &Rect, buf: &Buffer) -> bool {
+        area.x + area.width <= buf.area().width && area.y < buf.area().height
+    }
+
+    /// Create a safe rectangle clamped to buffer boundaries
+    fn clamp_to_buffer(area: Rect, buf: &Buffer) -> Option<Rect> {
+        if area.width == 0 || area.height == 0 {
+            return None;
+        }
+
+        let safe_area = Rect {
+            x: area.x,
+            y: area.y,
+            width: area.width.min(buf.area().width.saturating_sub(area.x)),
+            height: area.height.min(buf.area().height.saturating_sub(area.y)),
+        };
+
+        if safe_area.width > 0 && safe_area.height > 0 {
+            Some(safe_area)
+        } else {
+            None
+        }
+    }
+
+    /// Render padding around scrollbar with bounds checking
+    fn render_scrollbar_padding(outer_area: Rect, buf: &mut Buffer, style: Style) {
+        const PADDING_WIDTH: u16 = 2;
+        const RIGHT_MARGIN: u16 = 3;
+        const WIDTH_PADDING: u16 = 2;
+        const TOTAL_WIDTH: u16 = PADDING_WIDTH + RIGHT_MARGIN + WIDTH_PADDING;
+
+        // Early exit if area is too small or has no height
+        if outer_area.width < TOTAL_WIDTH || outer_area.height == 0 {
+            return;
+        }
+
+        let padding_text = Line::from(vec![Span::raw("  ")]);
+        let x_pos = outer_area.x + outer_area.width - PADDING_WIDTH - RIGHT_MARGIN;
+        let padding_area_width = PADDING_WIDTH + WIDTH_PADDING;
+
+        // Render top padding
+        let top_area = Rect {
+            x: x_pos,
+            y: outer_area.y,
+            width: padding_area_width,
+            height: 1,
+        };
+
+        if Self::fits_in_buffer(&top_area, buf) {
+            Paragraph::new(padding_text.clone())
+                .alignment(Alignment::Right)
+                .style(style)
+                .render(top_area, buf);
+        }
+
+        // Render bottom padding
+        let bottom_area = Rect {
+            x: x_pos,
+            y: outer_area.y + outer_area.height - 1,
+            width: padding_area_width,
+            height: 1,
+        };
+
+        if Self::fits_in_buffer(&bottom_area, buf) {
+            Paragraph::new(padding_text)
+                .alignment(Alignment::Right)
+                .style(style)
+                .render(bottom_area, buf);
+        }
+    }
+
     /// Render the no dependencies message
     fn render_no_dependencies(&self, state: &DependencyViewState, area: Rect, buf: &mut Buffer) {
         let base_style = Style::default().fg(THEME.success);
@@ -227,6 +302,73 @@ impl<'a> DependencyView<'a> {
         Widget::render(paragraph, area, buf);
     }
 
+    /// Get the header text for a dependency view based on task status
+    fn get_dependency_view_header(&self, state: &DependencyViewState) -> String {
+        match state.task_status {
+            TaskStatus::NotStarted => {
+                let total_count = state.dependencies.len();
+                let incomplete_count = state
+                    .dependencies
+                    .iter()
+                    .filter(|dep| self.is_task_incomplete(dep))
+                    .count();
+
+                if incomplete_count == 0 && total_count > 0 {
+                    "All dependencies satisfied, waiting for an available thread...".to_string()
+                } else {
+                    format!(
+                        "Not started yet, waiting for {} / {} tasks to complete...",
+                        incomplete_count, total_count
+                    )
+                }
+            }
+            TaskStatus::Skipped => {
+                let root_causes = get_dependency_chain_failures(
+                    &state.current_task,
+                    self.task_graph,
+                    self.status_map,
+                );
+
+                if let Some((root_task, _)) = root_causes.first() {
+                    format!("Skipped because {} failed.", root_task)
+                } else {
+                    "Skipped due to dependency failures.".to_string()
+                }
+            }
+            _ => "Dependencies:".to_string(),
+        }
+    }
+
+    /// Get the header style for a dependency view based on task status
+    fn get_dependency_view_header_style(&self, state: &DependencyViewState) -> Style {
+        let base_style = match state.task_status {
+            TaskStatus::NotStarted => {
+                let total_count = state.dependencies.len();
+                let incomplete_count = state
+                    .dependencies
+                    .iter()
+                    .filter(|dep| self.is_task_incomplete(dep))
+                    .count();
+
+                Style::default()
+                    .fg(if incomplete_count == 0 && total_count > 0 {
+                        THEME.success
+                    } else {
+                        THEME.primary_fg
+                    })
+                    .add_modifier(Modifier::BOLD)
+            }
+            TaskStatus::Skipped => Style::default()
+                .fg(THEME.warning)
+                .add_modifier(Modifier::BOLD),
+            _ => Style::default()
+                .fg(THEME.primary_fg)
+                .add_modifier(Modifier::BOLD),
+        };
+
+        Self::apply_focus_styling(base_style, state.is_focused)
+    }
+
     fn render_dependency_list(
         &self,
         state: &mut DependencyViewState,
@@ -241,33 +383,9 @@ impl<'a> DependencyView<'a> {
 
         let mut lines = Vec::new();
 
-        // Count incomplete dependencies
-        let total_count = state.dependencies.len();
-        let incomplete_count = state
-            .dependencies
-            .iter()
-            .filter(|dep| self.is_task_incomplete(dep))
-            .count();
-
-        // Add header with progress
-        let header_text = if incomplete_count == 0 && total_count > 0 {
-            "All dependencies satisfied, waiting for an available thread...".to_string()
-        } else {
-            format!(
-                "Not started yet, waiting for {} / {} tasks to complete...",
-                incomplete_count, total_count
-            )
-        };
-
-        let header_base_style = Style::default()
-            .fg(if incomplete_count == 0 && total_count > 0 {
-                THEME.success
-            } else {
-                THEME.primary_fg
-            })
-            .add_modifier(Modifier::BOLD);
-
-        let header_style = Self::apply_focus_styling(header_base_style, state.is_focused);
+        // Add header with status-specific text and styling
+        let header_text = self.get_dependency_view_header(state);
+        let header_style = self.get_dependency_view_header_style(state);
         let header = Line::from(vec![Span::styled(header_text, header_style)]);
         lines.push(header);
         lines.push(Line::from("")); // Empty line for spacing
@@ -338,11 +456,16 @@ impl<'a> DependencyView<'a> {
 
         // Render scrollbar if needed (using outer_area to extend to border edge)
         if needs_scrollbar {
-            let border_style = if state.is_focused {
-                Style::default().fg(THEME.info)
+            let border_color = match state.task_status {
+                TaskStatus::Skipped => THEME.warning,
+                _ => THEME.info,
+            };
+
+            let scrollbar_style = if state.is_focused {
+                Style::default().fg(border_color)
             } else {
                 Style::default()
-                    .fg(THEME.secondary_fg)
+                    .fg(border_color)
                     .add_modifier(Modifier::DIM)
             };
 
@@ -350,44 +473,15 @@ impl<'a> DependencyView<'a> {
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"))
-                .style(border_style);
+                .style(scrollbar_style);
 
-            scrollbar.render(outer_area, buf, &mut state.scrollbar_state);
+            // Render scrollbar with bounds checking
+            if let Some(safe_scrollbar_area) = Self::clamp_to_buffer(outer_area, buf) {
+                scrollbar.render(safe_scrollbar_area, buf, &mut state.scrollbar_state);
+            }
 
             // Render padding around scrollbar
-            let padding_text = Line::from(vec![Span::raw("  ")]);
-            let padding_width = 2;
-            let right_margin = 3;
-            let width_padding = 2;
-
-            // Ensure paddings don't extend past outer area
-            if padding_width + right_margin < outer_area.width {
-                // Top padding
-                let top_right_area = Rect {
-                    x: outer_area.x + outer_area.width - padding_width - right_margin,
-                    y: outer_area.y,
-                    width: padding_width + width_padding,
-                    height: 1,
-                };
-
-                Paragraph::new(padding_text.clone())
-                    .alignment(Alignment::Right)
-                    .style(border_style)
-                    .render(top_right_area, buf);
-
-                // Bottom padding
-                let bottom_right_area = Rect {
-                    x: outer_area.x + outer_area.width - padding_width - right_margin,
-                    y: outer_area.y + outer_area.height - 1,
-                    width: padding_width + width_padding,
-                    height: 1,
-                };
-
-                Paragraph::new(padding_text)
-                    .alignment(Alignment::Right)
-                    .style(border_style)
-                    .render(bottom_right_area, buf);
-            }
+            Self::render_scrollbar_padding(outer_area, buf, scrollbar_style);
         }
     }
 }
@@ -396,16 +490,19 @@ impl<'a> StatefulWidget for DependencyView<'a> {
     type State = DependencyViewState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        // Safety check for minimum area
-        if area.width < 10 || area.height < 5 {
-            return;
-        }
+        // Update state with area info for responsive scrollbar
+        state.pane_area = area;
+
+        let border_color = match state.task_status {
+            TaskStatus::Skipped => THEME.warning,
+            _ => THEME.info,
+        };
 
         let border_style = if state.is_focused {
-            Style::default().fg(THEME.info)
+            Style::default().fg(border_color)
         } else {
             Style::default()
-                .fg(THEME.secondary_fg)
+                .fg(border_color)
                 .add_modifier(Modifier::DIM)
         };
 
@@ -443,8 +540,11 @@ impl<'a> StatefulWidget for DependencyView<'a> {
         let inner_area = block.inner(area);
         block.render(area, buf);
 
-        // Only show dependency info for pending tasks
-        if matches!(state.task_status, TaskStatus::NotStarted) {
+        // Show different content based on task status
+        if matches!(
+            state.task_status,
+            TaskStatus::NotStarted | TaskStatus::Skipped
+        ) {
             self.render_dependency_list(state, inner_area, area, buf);
         } else {
             // Show a message indicating why the dependency view is not relevant
@@ -452,7 +552,6 @@ impl<'a> StatefulWidget for DependencyView<'a> {
                 TaskStatus::InProgress => "Task is now running",
                 TaskStatus::Success => "Task completed successfully",
                 TaskStatus::Failure => "Task failed",
-                TaskStatus::Skipped => "Task was skipped",
                 _ => "Task is no longer pending",
             };
 
@@ -466,6 +565,251 @@ impl<'a> StatefulWidget for DependencyView<'a> {
                 .style(Style::default());
 
             Widget::render(paragraph, inner_area, buf);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::buffer::Buffer;
+
+    #[test]
+    fn test_render_scrollbar_padding_normal_case() {
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 30,
+        };
+        let mut buf = Buffer::empty(outer_area);
+        let style = Style::default();
+
+        // Should not panic
+        DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
+    }
+
+    #[test]
+    fn test_render_scrollbar_padding_narrow_buffer() {
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 76,
+            height: 30,
+        };
+        let mut buf = Buffer::empty(outer_area);
+        let style = Style::default();
+
+        // This was a problematic case that caused panics before the fix
+        DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
+    }
+
+    #[test]
+    fn test_render_scrollbar_padding_very_narrow_buffer() {
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 10,
+            height: 30,
+        };
+        let mut buf = Buffer::empty(outer_area);
+        let style = Style::default();
+
+        // Should handle very narrow buffers gracefully
+        DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
+    }
+
+    #[test]
+    fn test_render_scrollbar_padding_too_narrow_buffer() {
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 3,
+            height: 30,
+        };
+        let mut buf = Buffer::empty(outer_area);
+        let style = Style::default();
+
+        // Should handle buffers too narrow for padding gracefully
+        DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
+    }
+
+    #[test]
+    fn test_render_scrollbar_padding_zero_width() {
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 30,
+        };
+        let buffer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 30,
+        };
+        let mut buf = Buffer::empty(buffer_area);
+        let style = Style::default();
+
+        // Should handle zero width gracefully
+        DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
+    }
+
+    #[test]
+    fn test_render_scrollbar_padding_zero_height() {
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 0,
+        };
+        let buffer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 30,
+        };
+        let mut buf = Buffer::empty(buffer_area);
+        let style = Style::default();
+
+        // Should handle zero height gracefully
+        DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
+    }
+
+    #[test]
+    fn test_render_scrollbar_padding_offset_areas() {
+        let outer_area = Rect {
+            x: 10,
+            y: 5,
+            width: 60,
+            height: 20,
+        };
+        let buffer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 30,
+        };
+        let mut buf = Buffer::empty(buffer_area);
+        let style = Style::default();
+
+        // Should handle offset areas correctly
+        DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
+    }
+
+    #[test]
+    fn test_safe_scrollbar_area_calculation() {
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 135,
+            height: 37,
+        };
+        let buffer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 135,
+            height: 37,
+        };
+        let buf = Buffer::empty(buffer_area);
+
+        // This mimics the calculation done in render_dependency_list
+        let safe_scrollbar_area = Rect {
+            x: outer_area.x,
+            y: outer_area.y,
+            width: outer_area
+                .width
+                .min(buf.area().width.saturating_sub(outer_area.x)),
+            height: outer_area
+                .height
+                .min(buf.area().height.saturating_sub(outer_area.y)),
+        };
+
+        // Should not exceed buffer boundaries
+        assert!(safe_scrollbar_area.x + safe_scrollbar_area.width <= buf.area().width);
+        assert!(safe_scrollbar_area.y + safe_scrollbar_area.height <= buf.area().height);
+        assert!(safe_scrollbar_area.width > 0);
+        assert!(safe_scrollbar_area.height > 0);
+    }
+
+    #[test]
+    fn test_safe_scrollbar_area_problematic_case() {
+        // This was the case that caused the (134, 37) panic
+        let outer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 135,
+            height: 37,
+        };
+        let buffer_area = Rect {
+            x: 0,
+            y: 0,
+            width: 135,
+            height: 37,
+        };
+        let buf = Buffer::empty(buffer_area);
+
+        let safe_scrollbar_area = Rect {
+            x: outer_area.x,
+            y: outer_area.y,
+            width: outer_area
+                .width
+                .min(buf.area().width.saturating_sub(outer_area.x)),
+            height: outer_area
+                .height
+                .min(buf.area().height.saturating_sub(outer_area.y)),
+        };
+
+        // The key test: Y coordinate should never equal or exceed buffer height
+        assert!(safe_scrollbar_area.y < buf.area().height);
+        assert!(safe_scrollbar_area.y + safe_scrollbar_area.height <= buf.area().height);
+
+        // Specifically test that we don't try to access Y=37 on a height-37 buffer
+        assert!(safe_scrollbar_area.y + safe_scrollbar_area.height <= 37);
+    }
+
+    #[test]
+    fn test_safe_scrollbar_area_edge_cases() {
+        // Test various edge cases that previously caused panics
+        let test_cases = vec![
+            (45, 30),  // Original panic case
+            (104, 30), // Second panic case
+            (76, 30),  // Third panic case
+            (141, 18), // Fourth panic case
+            (135, 37), // Fifth panic case
+        ];
+
+        for (width, height) in test_cases {
+            let outer_area = Rect {
+                x: 0,
+                y: 0,
+                width,
+                height,
+            };
+            let buffer_area = Rect {
+                x: 0,
+                y: 0,
+                width,
+                height,
+            };
+            let buf = Buffer::empty(buffer_area);
+
+            let safe_scrollbar_area = Rect {
+                x: outer_area.x,
+                y: outer_area.y,
+                width: outer_area
+                    .width
+                    .min(buf.area().width.saturating_sub(outer_area.x)),
+                height: outer_area
+                    .height
+                    .min(buf.area().height.saturating_sub(outer_area.y)),
+            };
+
+            // These should never panic or exceed buffer bounds
+            assert!(safe_scrollbar_area.x + safe_scrollbar_area.width <= width);
+            assert!(safe_scrollbar_area.y + safe_scrollbar_area.height <= height);
+            assert!(safe_scrollbar_area.width > 0);
+            assert!(safe_scrollbar_area.height > 0);
         }
     }
 }

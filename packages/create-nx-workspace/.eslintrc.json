@@ -33,7 +33,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["tslib"]
+            "ignoredDependencies": []
           }
         ]
       }

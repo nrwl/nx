@@ -84,7 +84,7 @@ export async function reactNativeLibraryGeneratorInternal(
   tasks.push(initTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host));
+    tasks.push(ensureDependencies(host, options.unitTestRunner));
   }
 
   createFiles(host, options);
