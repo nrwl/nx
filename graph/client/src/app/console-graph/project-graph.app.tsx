@@ -34,22 +34,8 @@ export function ProjectGraphApp({
     (state) => state.context.projectGraph
   );
 
-  const initialCommand = useSelector(
-    service,
-    (state) => state.context.initialCommand
-  );
-
   useEffect(() => {
     if (!graphClient) return;
-
-    service.send({
-      type: 'setGraphClient',
-      graphClient: { graphClient, send, sendRenderConfigEvent },
-    });
-  }, [graphClient]);
-
-  useEffect(() => {
-    if (!graphClient || !projectGraph) return;
 
     send({
       type: 'initGraph',
@@ -57,11 +43,37 @@ export function ProjectGraphApp({
       dependencies: projectGraph.dependencies,
       affectedProjects: [],
     });
-    if (initialCommand) {
-      send(initialCommand);
-    }
     console.log('initGraph called');
+
+    service.send({
+      type: 'setGraphClient',
+      graphClient: { graphClient, send, sendRenderConfigEvent },
+    });
   }, [graphClient]);
+
+  // useEffect(() => {
+  //   if (!graphClient || !projectGraph) return;
+
+  //   send({
+  //     type: 'initGraph',
+  //     projects: Object.values(projectGraph.nodes),
+  //     dependencies: projectGraph.dependencies,
+  //     affectedProjects: [],
+  //   });
+  //   if (initialCommand) {
+  //     send(initialCommand);
+  //   }
+  //   console.log('initGraph called');
+  // }, [graphClient]);
+
+  // Emit graph client results through the state machine so consumers can observe them
+  useEffect(() => {
+    if (!handleEventResult) return;
+    service.send({
+      type: 'handleEventResult',
+      result: handleEventResult,
+    });
+  }, [handleEventResult]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

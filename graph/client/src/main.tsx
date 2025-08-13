@@ -90,20 +90,13 @@ if (true) {
     return service;
   };
 
-  window.renderProjectGraph = (
-    projectGraph: ProjectGraph,
-    initialCommand: ProjectGraphEvent
-  ) => {
+  window.renderProjectGraph = (projectGraph: ProjectGraph) => {
     const service = interpret(projectGraphMachine).start();
     service.send({
       type: 'loadData',
       projectGraph,
     });
 
-    service.send({
-      type: 'setInitialCommand',
-      command: initialCommand,
-    });
     render(
       <StrictMode>
         <ProjectGraphApp service={service} />

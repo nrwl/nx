@@ -1,6 +1,5 @@
 import { ProjectGraph } from '@nx/devkit';
-import { ActorRef, assign, send, spawn } from 'xstate';
-import { createMachine } from 'xstate';
+import { ActorRef, assign, send, spawn, createMachine } from 'xstate';
 import { ProjectGraphClientActor } from '../feature-projects/machines/interfaces';
 import { graphClientActor } from '../feature-projects/machines/graph.actor';
 import {
@@ -9,17 +8,18 @@ import {
 } from '@nx/graph/projects/project-graph-event';
 import { RenderGraphConfigEvent } from '@nx/graph';
 import { GRAPH_CLIENT_EVENTS } from '../feature-projects/machines/project-graph.machine';
+import { ProjectGraphHandleEventResult } from '@nx/graph/projects/project-graph-client';
 
 export interface ProjectGraphStateMachineContext {
   projectGraph: null | ProjectGraph;
-  initialCommand: null | ProjectGraphEvent;
   graphActor: ActorRef<ProjectGraphEvent | RenderGraphConfigEvent>;
+  handleEventResult: ProjectGraphHandleEventResult | null;
 }
 
 const initialContext: ProjectGraphStateMachineContext = {
   projectGraph: null,
-  initialCommand: null,
   graphActor: null,
+  handleEventResult: null,
 };
 export type ProjectGraphStateMachineEvents =
   | {
@@ -33,6 +33,10 @@ export type ProjectGraphStateMachineEvents =
   | {
       type: 'setInitialCommand';
       command: ProjectGraphEvent;
+    }
+  | {
+      type: 'handleEventResult';
+      result: ProjectGraphHandleEventResult;
     };
 export const projectGraphMachine = createMachine<
   ProjectGraphStateMachineContext,
@@ -57,13 +61,6 @@ export const projectGraphMachine = createMachine<
           ],
         },
       ],
-      setInitialCommand: {
-        actions: [
-          assign({
-            initialCommand: (_, event) => event.command,
-          }),
-        ],
-      },
       setGraphClient: {
         actions: [
           assign({
@@ -72,6 +69,13 @@ export const projectGraphMachine = createMachine<
                 graphClientActor(event.graphClient),
                 'projectGraphClientActor'
               ),
+          }),
+        ],
+      },
+      handleEventResult: {
+        actions: [
+          assign({
+            handleEventResult: (_, event) => event.result,
           }),
         ],
       },
