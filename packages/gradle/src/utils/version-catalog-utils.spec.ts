@@ -4,11 +4,11 @@ import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import {
   findVersionCatalogFiles,
   updatePluginVersionInCatalog,
-  hasPluginInCatalog,
   extractPluginVersionFromCatalog,
   updateNxPluginVersionInCatalogs,
 } from './version-catalog-utils';
 import { gradleProjectGraphPluginName } from './versions';
+import * as TOML from 'smol-toml';
 
 describe('version-catalog-utils', () => {
   let tempFs: TempFs;
@@ -40,35 +40,14 @@ describe('version-catalog-utils', () => {
     });
   });
 
-  describe('hasPluginInCatalog', () => {
-    it('should detect plugin with id format', () => {
-      const content = `[plugins]
-nx-graph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`;
-
-      expect(hasPluginInCatalog(content, gradleProjectGraphPluginName)).toBe(
-        true
-      );
-      expect(hasPluginInCatalog(content, 'com.other.plugin')).toBe(false);
-    });
-
-    it('should detect plugin with simple format', () => {
-      const content = `[plugins]
-nx-graph = "${gradleProjectGraphPluginName}:1.0.0"`;
-
-      expect(hasPluginInCatalog(content, gradleProjectGraphPluginName)).toBe(
-        true
-      );
-      expect(hasPluginInCatalog(content, 'com.other.plugin')).toBe(false);
-    });
-  });
-
   describe('extractPluginVersionFromCatalog', () => {
     it('should extract version from plugin with direct version', () => {
       const content = `[plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version = "1.2.3" }`;
+      const toml = TOML.parse(content);
 
       const version = extractPluginVersionFromCatalog(
-        content,
+        toml,
         gradleProjectGraphPluginName
       );
       expect(version).toBe('1.2.3');
@@ -80,9 +59,10 @@ nx-version = "2.3.4"
 
 [plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" }`;
+      const toml = TOML.parse(content);
 
       const version = extractPluginVersionFromCatalog(
-        content,
+        toml,
         gradleProjectGraphPluginName
       );
       expect(version).toBe('2.3.4');
@@ -91,9 +71,10 @@ nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" 
     it('should extract version from simple format', () => {
       const content = `[plugins]
 nx-graph = "${gradleProjectGraphPluginName}:3.4.5"`;
+      const toml = TOML.parse(content);
 
       const version = extractPluginVersionFromCatalog(
-        content,
+        toml,
         gradleProjectGraphPluginName
       );
       expect(version).toBe('3.4.5');
@@ -102,9 +83,10 @@ nx-graph = "${gradleProjectGraphPluginName}:3.4.5"`;
     it('should return null if plugin not found', () => {
       const content = `[plugins]
 other-plugin = "com.other:1.0.0"`;
+      const toml = TOML.parse(content);
 
       const version = extractPluginVersionFromCatalog(
-        content,
+        toml,
         gradleProjectGraphPluginName
       );
       expect(version).toBeNull();
@@ -116,9 +98,10 @@ other-plugin = "com.other:1.0.0"`;
       const content = `[plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }
 other = { id = "com.other", version = "2.0.0" }`;
+      const toml = TOML.parse(content);
 
       const updated = updatePluginVersionInCatalog(
-        content,
+        toml,
         gradleProjectGraphPluginName,
         '1.5.0'
       );
@@ -134,9 +117,10 @@ other-version = "2.0.0"
 
 [plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" }`;
+      const toml = TOML.parse(content);
 
       const updated = updatePluginVersionInCatalog(
-        content,
+        toml,
         gradleProjectGraphPluginName,
         '1.5.0'
       );
@@ -149,9 +133,10 @@ nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" 
       const content = `[plugins]
 nx-graph = "${gradleProjectGraphPluginName}:1.0.0"
 other = "com.other:2.0.0"`;
+      const toml = TOML.parse(content);
 
       const updated = updatePluginVersionInCatalog(
-        content,
+        toml,
         gradleProjectGraphPluginName,
         '1.5.0'
       );
