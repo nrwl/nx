@@ -44,16 +44,20 @@ describe('version-catalog-utils', () => {
     it('should detect plugin with id format', () => {
       const content = `[plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`;
-      
-      expect(hasPluginInCatalog(content, gradleProjectGraphPluginName)).toBe(true);
+
+      expect(hasPluginInCatalog(content, gradleProjectGraphPluginName)).toBe(
+        true
+      );
       expect(hasPluginInCatalog(content, 'com.other.plugin')).toBe(false);
     });
 
     it('should detect plugin with simple format', () => {
       const content = `[plugins]
 nx-graph = "${gradleProjectGraphPluginName}:1.0.0"`;
-      
-      expect(hasPluginInCatalog(content, gradleProjectGraphPluginName)).toBe(true);
+
+      expect(hasPluginInCatalog(content, gradleProjectGraphPluginName)).toBe(
+        true
+      );
       expect(hasPluginInCatalog(content, 'com.other.plugin')).toBe(false);
     });
   });
@@ -62,8 +66,11 @@ nx-graph = "${gradleProjectGraphPluginName}:1.0.0"`;
     it('should extract version from plugin with direct version', () => {
       const content = `[plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version = "1.2.3" }`;
-      
-      const version = extractPluginVersionFromCatalog(content, gradleProjectGraphPluginName);
+
+      const version = extractPluginVersionFromCatalog(
+        content,
+        gradleProjectGraphPluginName
+      );
       expect(version).toBe('1.2.3');
     });
 
@@ -73,24 +80,33 @@ nx-version = "2.3.4"
 
 [plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" }`;
-      
-      const version = extractPluginVersionFromCatalog(content, gradleProjectGraphPluginName);
+
+      const version = extractPluginVersionFromCatalog(
+        content,
+        gradleProjectGraphPluginName
+      );
       expect(version).toBe('2.3.4');
     });
 
     it('should extract version from simple format', () => {
       const content = `[plugins]
 nx-graph = "${gradleProjectGraphPluginName}:3.4.5"`;
-      
-      const version = extractPluginVersionFromCatalog(content, gradleProjectGraphPluginName);
+
+      const version = extractPluginVersionFromCatalog(
+        content,
+        gradleProjectGraphPluginName
+      );
       expect(version).toBe('3.4.5');
     });
 
     it('should return null if plugin not found', () => {
       const content = `[plugins]
 other-plugin = "com.other:1.0.0"`;
-      
-      const version = extractPluginVersionFromCatalog(content, gradleProjectGraphPluginName);
+
+      const version = extractPluginVersionFromCatalog(
+        content,
+        gradleProjectGraphPluginName
+      );
       expect(version).toBeNull();
     });
   });
@@ -100,8 +116,12 @@ other-plugin = "com.other:1.0.0"`;
       const content = `[plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }
 other = { id = "com.other", version = "2.0.0" }`;
-      
-      const updated = updatePluginVersionInCatalog(content, gradleProjectGraphPluginName, '1.5.0');
+
+      const updated = updatePluginVersionInCatalog(
+        content,
+        gradleProjectGraphPluginName,
+        '1.5.0'
+      );
       expect(updated).toContain('version = "1.5.0"');
       expect(updated).toContain('version = "2.0.0"');
       expect(updated).not.toContain('version = "1.0.0"');
@@ -114,8 +134,12 @@ other-version = "2.0.0"
 
 [plugins]
 nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" }`;
-      
-      const updated = updatePluginVersionInCatalog(content, gradleProjectGraphPluginName, '1.5.0');
+
+      const updated = updatePluginVersionInCatalog(
+        content,
+        gradleProjectGraphPluginName,
+        '1.5.0'
+      );
       expect(updated).toContain('nx-version = "1.5.0"');
       expect(updated).toContain('other-version = "2.0.0"');
       expect(updated).not.toContain('nx-version = "1.0.0"');
@@ -125,8 +149,12 @@ nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" 
       const content = `[plugins]
 nx-graph = "${gradleProjectGraphPluginName}:1.0.0"
 other = "com.other:2.0.0"`;
-      
-      const updated = updatePluginVersionInCatalog(content, gradleProjectGraphPluginName, '1.5.0');
+
+      const updated = updatePluginVersionInCatalog(
+        content,
+        gradleProjectGraphPluginName,
+        '1.5.0'
+      );
       expect(updated).toContain(`"${gradleProjectGraphPluginName}:1.5.0"`);
       expect(updated).toContain('com.other:2.0.0');
       expect(updated).not.toContain(':1.0.0"');
@@ -150,7 +178,7 @@ nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" 
 
       const content1 = tree.read('proj1/gradle/libs.versions.toml', 'utf-8');
       const content2 = tree.read('proj2/gradle/libs.versions.toml', 'utf-8');
-      
+
       expect(content1).toContain(':2.0.0');
       expect(content2).toContain('nx-version = "2.0.0"');
     });

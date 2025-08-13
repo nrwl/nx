@@ -36,7 +36,8 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "smol-toml": "^1.4.1"
   },
   "publishConfig": {
     "access": "public"

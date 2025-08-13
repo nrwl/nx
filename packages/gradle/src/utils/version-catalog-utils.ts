@@ -1,4 +1,5 @@
 import { Tree, globAsync } from '@nx/devkit';
+import * as TOML from 'smol-toml';
 import { gradleProjectGraphPluginName } from './versions';
 
 export async function findVersionCatalogFiles(tree: Tree): Promise<string[]> {
@@ -25,188 +26,122 @@ export function updatePluginVersionInCatalog(
   pluginName: string,
   newVersion: string
 ): string {
-  const lines = catalogContent.split('\n');
-  let inVersionsSection = false;
-  let inPluginsSection = false;
-  let versionRefName: string | null = null;
+  const toml = TOML.parse(catalogContent);
 
-  // First pass: find version.ref name if using one
-  for (const line of lines) {
-    if (line.trim().startsWith('[versions]')) {
-      inVersionsSection = true;
-      inPluginsSection = false;
-    } else if (line.trim().startsWith('[plugins]')) {
-      inPluginsSection = true;
-      inVersionsSection = false;
-    } else if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
-      inVersionsSection = false;
-      inPluginsSection = false;
-    }
-
-    if (inPluginsSection && line.includes(pluginName)) {
-      const versionRefMatch = line.match(/version\.ref\s*=\s*["']([^"']+)["']/);
-      if (versionRefMatch) {
-        versionRefName = versionRefMatch[1];
-        break;
+  // Handle plugins section
+  if (toml.plugins) {
+    for (const [pluginAlias, pluginConfig] of Object.entries(toml.plugins)) {
+      if (typeof pluginConfig === 'string') {
+        // Handle simple format: plugin = "id:version"
+        if (pluginConfig.startsWith(`${pluginName}:`)) {
+          toml.plugins[pluginAlias] = `${pluginName}:${newVersion}`;
+          break;
+        }
+      } else if (typeof pluginConfig === 'object' && pluginConfig !== null) {
+        // Handle object format: { id = "plugin.name", version = "1.0.0" }
+        const config = pluginConfig as any;
+        if (config.id === pluginName) {
+          if (config.version && typeof config.version === 'string') {
+            // Direct version
+            config.version = newVersion;
+          } else if (
+            config.version &&
+            typeof config.version === 'object' &&
+            config.version.ref &&
+            toml.versions
+          ) {
+            // Version reference in object form: version = { ref = "nx-version" }
+            const versionRef = config.version.ref;
+            if (toml.versions[versionRef]) {
+              toml.versions[versionRef] = newVersion;
+            }
+          } else if (config['version.ref'] && toml.versions) {
+            // Version reference - update the referenced version
+            let versionRef = config['version.ref'];
+            // Handle the case where version.ref might be an object with ref property
+            if (typeof versionRef === 'object' && versionRef.ref) {
+              versionRef = versionRef.ref;
+            }
+            if (toml.versions[versionRef]) {
+              toml.versions[versionRef] = newVersion;
+            }
+          }
+          break;
+        }
       }
     }
   }
 
-  // Second pass: update the content
-  inVersionsSection = false;
-  inPluginsSection = false;
-
-  return lines
-    .map((line) => {
-      if (line.trim().startsWith('[versions]')) {
-        inVersionsSection = true;
-        inPluginsSection = false;
-      } else if (line.trim().startsWith('[plugins]')) {
-        inPluginsSection = true;
-        inVersionsSection = false;
-      } else if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
-        inVersionsSection = false;
-        inPluginsSection = false;
-      }
-
-      // Update in versions section if we have a version.ref
-      if (inVersionsSection && versionRefName) {
-        const escapedRefName = versionRefName.replace(
-          /[.*+?^${}()|[\]\\]/g,
-          '\\$&'
-        );
-        const versionRefPattern = new RegExp(
-          `^(\\s*${escapedRefName}\\s*=\\s*["'])([^"']+)(["'])(.*)$`
-        );
-        if (versionRefPattern.test(line)) {
-          return line.replace(versionRefPattern, `$1${newVersion}$3$4`);
-        }
-      }
-
-      // Update in plugins section for direct version
-      if (inPluginsSection && line.includes(pluginName)) {
-        // Handle direct version in object format: version = "1.0.0"
-        const directVersionPattern = /(\bversion\s*=\s*["'])([^"']+)(["'])/;
-        if (directVersionPattern.test(line) && line.includes(pluginName)) {
-          return line.replace(directVersionPattern, `$1${newVersion}$3`);
-        }
-
-        // Handle simple plugin format: plugin = "id:version"
-        const escapedPluginName = pluginName.replace(
-          /[.*+?^${}()|[\]\\]/g,
-          '\\$&'
-        );
-        const simpleVersionPattern = new RegExp(
-          `(["']${escapedPluginName}:)([^"']+)(["'])`
-        );
-        if (simpleVersionPattern.test(line)) {
-          return line.replace(simpleVersionPattern, `$1${newVersion}$3`);
-        }
-      }
-
-      return line;
-    })
-    .join('\n');
+  return TOML.stringify(toml);
 }
 
 export function hasPluginInCatalog(
   catalogContent: string,
   pluginName: string
 ): boolean {
-  const pluginIdPattern = new RegExp(
-    `id\\s*=\\s*["']${pluginName.replace(/\./g, '\\.')}["']`
-  );
+  const toml = TOML.parse(catalogContent);
 
-  const simplePluginPattern = new RegExp(
-    `=\\s*["']${pluginName.replace(/\./g, '\\.')}:`
-  );
+  if (!toml.plugins) {
+    return false;
+  }
 
-  return (
-    pluginIdPattern.test(catalogContent) ||
-    simplePluginPattern.test(catalogContent)
-  );
+  for (const pluginConfig of Object.values(toml.plugins)) {
+    if (typeof pluginConfig === 'string') {
+      // Handle simple format: plugin = "id:version"
+      if (pluginConfig.startsWith(`${pluginName}:`)) {
+        return true;
+      }
+    } else if (typeof pluginConfig === 'object' && pluginConfig !== null) {
+      // Handle object format: { id = "plugin.name", version = "1.0.0" }
+      const config = pluginConfig as any;
+      if (config.id === pluginName) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 export function extractPluginVersionFromCatalog(
   catalogContent: string,
   pluginName: string
 ): string | null {
-  const lines = catalogContent.split('\n');
-  let inVersionsSection = false;
-  let inPluginsSection = false;
-  let versionRefName: string | null = null;
+  const toml = TOML.parse(catalogContent);
 
-  // First pass: find if plugin uses version.ref or direct version
-  for (const line of lines) {
-    if (line.trim().startsWith('[versions]')) {
-      inVersionsSection = true;
-      inPluginsSection = false;
-    } else if (line.trim().startsWith('[plugins]')) {
-      inPluginsSection = true;
-      inVersionsSection = false;
-    } else if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
-      inVersionsSection = false;
-      inPluginsSection = false;
-    }
-
-    if (inPluginsSection) {
-      const pluginMatch = line.match(
-        new RegExp(`id\\s*=\\s*["']${pluginName.replace(/\./g, '\\.')}["']`)
-      );
-
-      if (pluginMatch) {
-        const versionRefMatch = line.match(
-          /version\.ref\s*=\s*["']([^"']+)["']/
-        );
-        const directVersionMatch = line.match(/version\s*=\s*["']([^"']+)["']/);
-
-        if (versionRefMatch) {
-          versionRefName = versionRefMatch[1];
-          break;
-        } else if (directVersionMatch) {
-          return directVersionMatch[1];
-        }
-      }
-
-      const simplePluginMatch = line.match(
-        new RegExp(`=\\s*["']${pluginName.replace(/\./g, '\\.')}:([^"']+)["']`)
-      );
-
-      if (simplePluginMatch) {
-        return simplePluginMatch[1];
-      }
-    }
+  if (!toml.plugins) {
+    return null;
   }
 
-  // Second pass: if we found a version.ref, look for the version value
-  if (versionRefName) {
-    inVersionsSection = false;
-    inPluginsSection = false;
-
-    for (const line of lines) {
-      if (line.trim().startsWith('[versions]')) {
-        inVersionsSection = true;
-        inPluginsSection = false;
-      } else if (line.trim().startsWith('[plugins]')) {
-        inPluginsSection = true;
-        inVersionsSection = false;
-      } else if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
-        inVersionsSection = false;
-        inPluginsSection = false;
+  for (const pluginConfig of Object.values(toml.plugins)) {
+    if (typeof pluginConfig === 'string') {
+      // Handle simple format: plugin = "id:version"
+      if (pluginConfig.startsWith(`${pluginName}:`)) {
+        return pluginConfig.split(':')[1];
       }
-
-      if (inVersionsSection) {
-        const versionMatch = line.match(
-          new RegExp(
-            `^\\s*${versionRefName.replace(
-              /[.*+?^${}()|[\]\\]/g,
-              '\\$&'
-            )}\\s*=\\s*["']([^"']+)["']`
-          )
-        );
-
-        if (versionMatch) {
-          return versionMatch[1];
+    } else if (typeof pluginConfig === 'object' && pluginConfig !== null) {
+      // Handle object format: { id = "plugin.name", version = "1.0.0" }
+      const config = pluginConfig as any;
+      if (config.id === pluginName) {
+        if (config.version && typeof config.version === 'string') {
+          // Direct version
+          return config.version;
+        } else if (
+          config.version &&
+          typeof config.version === 'object' &&
+          config.version.ref &&
+          toml.versions
+        ) {
+          // Version reference in object form: version = { ref = "nx-version" }
+          return toml.versions[config.version.ref] || null;
+        } else if (config['version.ref'] && toml.versions) {
+          // Version reference - look up the referenced version
+          let versionRef = config['version.ref'];
+          // Handle the case where version.ref might be an object with ref property
+          if (typeof versionRef === 'object' && versionRef.ref) {
+            versionRef = versionRef.ref;
+          }
+          return toml.versions[versionRef] || null;
         }
       }
     }

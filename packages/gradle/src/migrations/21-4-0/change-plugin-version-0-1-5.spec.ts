@@ -222,4 +222,39 @@ nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-project-g
     expect(buildContent).not.toContain('version "0.0.1"');
     expect(catalogContent).not.toContain('nx-project-graph = "0.0.2"');
   });
+
+  it('should update nx-gradle-project-graph version in comprehensive libs.versions.toml', async () => {
+    await tempFs.createFiles({
+      'nx.json': JSON.stringify({
+        plugins: ['@nx/gradle'],
+      }),
+      'proj/settings.gradle': '',
+      'proj/build.gradle': `plugins {
+    id 'java'
+}`,
+      'proj/gradle/libs.versions.toml': `[versions]
+nx-gradle-project-graph = "0.1.3"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+
+[plugins]
+nx-gradle-project-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-gradle-project-graph" }
+
+[bundles]
+kotlin-base = ["kotlin-stdlib", "kotlin-reflect"]
+junit-base = ["junit"]
+`,
+    });
+
+    await update(tree);
+
+    const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
+    
+    // Verify the nx-gradle-project-graph version was updated from 0.1.3 to 0.1.5
+    expect(catalogContent).toContain('nx-gradle-project-graph = "0.1.5"');
+    expect(catalogContent).not.toContain('nx-gradle-project-graph = "0.1.3"');
+  });
 });

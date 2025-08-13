@@ -13,10 +13,12 @@ export default async function update(tree: Tree) {
   if (!hasGradlePlugin(tree)) {
     return;
   }
-  
+
   // Update version in version catalogs first
+  console.log("Updating plugin version in version catalogs...");
   await updateNxPluginVersionInCatalogs(tree, '0.1.5');
   
   // Then update in build.gradle(.kts) files
+  console.log("Updating plugin version in build.gradle(.kts) files...");
   await addNxProjectGraphPlugin(tree, '0.1.5');
 }
