@@ -44,11 +44,15 @@ function getPluginSlug(pluginName: string, docType: string) {
 
   const category = getTechnologyCategory(pluginName);
 
+  // Apply the same remapping logic used in sidebar generation
+  // JS plugin is referenced as typescript, so we remap it to match the URL structure
+  const remappedPluginName = pluginName === 'js' ? 'typescript' : pluginName;
+
   // plugin is the top level tech, then we make the docs on the top level too
-  if (pluginName === category) {
-    return `technologies/${pluginName}/${docType}`;
+  if (remappedPluginName === category) {
+    return `technologies/${remappedPluginName}/${docType}`;
   }
-  return `technologies/${category}/${pluginName}/${docType}`;
+  return `technologies/${category}/${remappedPluginName}/${docType}`;
 }
 
 function getPluginDescription(pluginPath: string, pluginName: string): string {
@@ -271,6 +275,8 @@ export function PluginLoader(options: any = {}): Loader {
           join(import.meta.dirname, 'plugin.loader.ts'),
           join(import.meta.dirname, 'utils', 'plugin-schema-parser.ts'),
           join(import.meta.dirname, 'utils', 'get-schema-example-content.ts'),
+          join(import.meta.dirname, 'utils', 'plugin-mappings.ts'),
+          join(import.meta.dirname, '..', '..', 'sidebar.mts'),
         ];
         watchAndCall(watcher, pathsToWatch, generate);
       }

@@ -1,5 +1,6 @@
 import type { StarlightUserConfig } from '@astrojs/starlight/types';
 import { getPluginItems } from './src/plugins/utils/plugin-mappings';
+
 export const sidebar: StarlightUserConfig['sidebar'] = [
   {
     label: 'Getting Started',
@@ -29,7 +30,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       {
         label: 'TypeScript',
         collapsed: true,
-        items: getPluginItems('js', 'typescript'),
+        items: getPluginItems('js'),
       },
       {
         label: 'Angular',
