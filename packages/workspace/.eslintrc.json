@@ -47,7 +47,6 @@
             "ignoredDependencies": [
               "nx",
               "prettier",
-              "tslib",
               "typescript",
               "@angular-devkit/schematics",
               "@angular-devkit/core",

@@ -32,12 +32,12 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@swc/helpers": "~0.5.0",
     "enquirer": "~2.3.6",
     "@nx/js": "workspace:*",
     "picomatch": "4.0.2",
     "tsconfig-paths": "^4.1.2",
     "semver": "^7.6.3",
+    "tslib": "^2.3.0",
     "ajv": "^8.0.0"
   },
   "devDependencies": {

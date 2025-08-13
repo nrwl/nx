@@ -21,7 +21,7 @@
         "@nx/dependency-checks": [
           "error",
           {
-            "ignoredDependencies": ["nx", "tslib"]
+            "ignoredDependencies": ["nx"]
           }
         ]
       }

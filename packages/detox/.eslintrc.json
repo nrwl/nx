@@ -23,7 +23,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "tslib", "typescript", "detox"]
+            "ignoredDependencies": ["nx", "typescript", "detox"]
           }
         ]
       }
