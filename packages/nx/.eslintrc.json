@@ -102,6 +102,7 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              // the nx/bin/nx module must handle global vs local installation thus we have require('nx/...') in there
               "nx",
               "typescript",
               "@nrwl/angular",

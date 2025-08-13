@@ -37,6 +37,7 @@
               "@nx/playwright",
               "@nx/vite",
               "@module-federation/node",
+              // Usage `require.resolve` in withModuleFederation to get full path to loaders is causing the self-import, ignore
               "@nx/module-federation"
             ]
           }
