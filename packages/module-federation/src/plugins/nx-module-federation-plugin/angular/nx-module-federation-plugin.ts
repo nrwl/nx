@@ -26,7 +26,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     if (compiler.options.optimization.splitChunks) {
       compiler.options.optimization.splitChunks.cacheGroups ??= {};
       compiler.options.optimization.splitChunks.cacheGroups.default = false;
-      compiler.options.optimization.splitChunks.cacheGroups.common = false
+      compiler.options.optimization.splitChunks.cacheGroups.common = false;
     }
     compiler.options.output.publicPath = !compiler.options.output.publicPath
       ? 'auto'
