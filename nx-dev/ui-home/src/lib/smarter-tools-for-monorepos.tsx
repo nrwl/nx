@@ -19,6 +19,7 @@ import {
   ExpressIcon,
   FastifyIcon,
   GoIcon,
+  GradleIcon,
   JavaIcon,
   JestIcon,
   JetBrainsIcon,
@@ -112,7 +113,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   className="h-full w-full p-2 sm:p-4"
                 >
                   <span className="absolute inset-0" />
-                  <JavaIcon
+                  <GradleIcon
                     aria-hidden="true"
                     className="h-full w-full shrink-0"
                   />
@@ -638,7 +639,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   className="h-full w-full p-2 sm:p-4"
                 >
                   <span className="absolute inset-0" />
-                  <JavaIcon
+                  <GradleIcon
                     aria-hidden="true"
                     className="h-full w-full shrink-0"
                   />

@@ -1,5 +1,5 @@
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
-import { GradleIcon, JavaIcon } from '@nx/nx-dev-ui-icons';
+import { GradleIcon } from '@nx/nx-dev-ui-icons';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import React, { ReactElement } from 'react';
 import Link from 'next/link';
@@ -59,7 +59,7 @@ export function CallToAction(): ReactElement {
       {/* Content */}
       <div className="mx-auto max-w-2xl text-center">
         <div className="mb-8 flex justify-center">
-          <JavaIcon className="h-16 w-16 text-slate-900 dark:text-white" />
+          <GradleIcon className="h-16 w-16 text-slate-900 dark:text-white" />
         </div>
 
         <h2 className="text-3xl font-medium tracking-tight text-slate-950 sm:text-5xl dark:text-white">
