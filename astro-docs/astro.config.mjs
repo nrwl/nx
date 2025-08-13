@@ -7,12 +7,14 @@ import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import { sidebar } from './sidebar.mts';
+import { redirects } from './redirects.mts';
 
 // https://astro.build/config
 export default defineConfig({
   vite: { plugins: [tailwindcss()] },
   site: 'https://docs.nx.dev',
   adapter: netlify(),
+  redirects,
   integrations: [
     markdoc(),
     starlight({
