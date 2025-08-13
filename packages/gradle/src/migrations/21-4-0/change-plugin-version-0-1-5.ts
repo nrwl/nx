@@ -1,6 +1,7 @@
 import { Tree, readNxJson } from '@nx/devkit';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
 import { addNxProjectGraphPlugin } from '../../generators/init/gradle-project-graph-plugin-utils';
+import { updateNxPluginVersionInCatalogs } from '../../utils/version-catalog-utils';
 
 /* Change the plugin version to 0.1.5
  */
@@ -12,5 +13,10 @@ export default async function update(tree: Tree) {
   if (!hasGradlePlugin(tree)) {
     return;
   }
+  
+  // Update version in version catalogs first
+  await updateNxPluginVersionInCatalogs(tree, '0.1.5');
+  
+  // Then update in build.gradle(.kts) files
   await addNxProjectGraphPlugin(tree, '0.1.5');
 }

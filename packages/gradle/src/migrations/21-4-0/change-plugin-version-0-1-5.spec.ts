@@ -125,4 +125,101 @@ describe('change-plugin-version-0-1-5 migration', () => {
     expect(proj1Content).not.toContain('version "0.0.1"');
     expect(proj2Content).not.toContain('version "0.0.1"');
   });
+
+  it('should update plugin version in libs.versions.toml with version.ref', async () => {
+    await tempFs.createFiles({
+      'nx.json': JSON.stringify({
+        plugins: ['@nx/gradle'],
+      }),
+      'proj/settings.gradle': '',
+      'proj/build.gradle': `plugins {
+    id 'java'
+}`,
+      'proj/gradle/libs.versions.toml': `[versions]
+nx-project-graph = "0.0.1"
+
+[plugins]
+nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-project-graph" }
+`,
+    });
+
+    await update(tree);
+
+    const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
+    expect(catalogContent).toContain('nx-project-graph = "0.1.5"');
+    expect(catalogContent).not.toContain('nx-project-graph = "0.0.1"');
+  });
+
+  it('should update plugin version in libs.versions.toml with direct version', async () => {
+    await tempFs.createFiles({
+      'nx.json': JSON.stringify({
+        plugins: ['@nx/gradle'],
+      }),
+      'proj/settings.gradle': '',
+      'proj/build.gradle': `plugins {
+    id 'java'
+}`,
+      'proj/gradle/libs.versions.toml': `[plugins]
+nx-graph = { id = "${gradleProjectGraphPluginName}", version = "0.0.1" }
+`,
+    });
+
+    await update(tree);
+
+    const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
+    expect(catalogContent).toContain('version = "0.1.5"');
+    expect(catalogContent).not.toContain('version = "0.0.1"');
+  });
+
+  it('should update plugin version in libs.versions.toml with simple format', async () => {
+    await tempFs.createFiles({
+      'nx.json': JSON.stringify({
+        plugins: ['@nx/gradle'],
+      }),
+      'proj/settings.gradle': '',
+      'proj/build.gradle': `plugins {
+    id 'java'
+}`,
+      'proj/gradle/libs.versions.toml': `[plugins]
+nx-graph = "${gradleProjectGraphPluginName}:0.0.1"
+`,
+    });
+
+    await update(tree);
+
+    const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
+    expect(catalogContent).toContain(`"${gradleProjectGraphPluginName}:0.1.5"`);
+    expect(catalogContent).not.toContain(':0.0.1');
+  });
+
+  it('should handle both version catalog and build.gradle updates', async () => {
+    await tempFs.createFiles({
+      'nx.json': JSON.stringify({
+        plugins: ['@nx/gradle'],
+      }),
+      'proj/settings.gradle': '',
+      'proj/build.gradle': `plugins {
+    id 'java'
+    id "${gradleProjectGraphPluginName}" version "0.0.1"
+}`,
+      'proj/gradle/libs.versions.toml': `[versions]
+nx-project-graph = "0.0.2"
+
+[plugins]
+nx-graph = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-project-graph" }
+`,
+    });
+
+    await update(tree);
+
+    const buildContent = tree.read('proj/build.gradle', 'utf-8');
+    const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
+    
+    expect(buildContent).toContain(
+      `id "${gradleProjectGraphPluginName}" version "0.1.5"`
+    );
+    expect(catalogContent).toContain('nx-project-graph = "0.1.5"');
+    expect(buildContent).not.toContain('version "0.0.1"');
+    expect(catalogContent).not.toContain('nx-project-graph = "0.0.2"');
+  });
 });
