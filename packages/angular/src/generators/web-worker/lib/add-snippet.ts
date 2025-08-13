@@ -7,7 +7,10 @@ export function addSnippet(tree: Tree, name: string, path: string) {
   const siblingModules = tree
     .children(path)
     .filter(
-      (f) => fileRegExp.test(f) && !/(module|spec|config|routes)\.ts$/.test(f)
+      (f) =>
+        fileRegExp.test(f) &&
+        !/\.(module|spec|config|routes)\.ts$/.test(f) &&
+        !f.endsWith('.worker.ts')
     )
     .sort();
 
@@ -15,7 +18,6 @@ export function addSnippet(tree: Tree, name: string, path: string) {
     return;
   }
 
-  const siblingModulePath = joinPathFragments(path, siblingModules[0]);
   const logMessage = 'console.log(`page got message ${data}`);';
   const workerCreationSnippet = stripIndents`
       if (typeof Worker !== 'undefined') {
@@ -31,10 +33,11 @@ export function addSnippet(tree: Tree, name: string, path: string) {
       }
     `;
 
+  // Add snippet to the first alphabetically sorted sibling file
+  const siblingModulePath = joinPathFragments(path, siblingModules[0]);
   const originalContent = tree.read(siblingModulePath, 'utf-8');
-  tree.write(
-    siblingModulePath,
-    stripIndents`${originalContent}
-  ${workerCreationSnippet}`
-  );
+  const newContent = originalContent.trim()
+    ? `${originalContent}\n${workerCreationSnippet}`
+    : workerCreationSnippet;
+  tree.write(siblingModulePath, newContent);
 }
