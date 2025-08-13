@@ -280,16 +280,24 @@ function applyNxDependentConfig(
       process.env['WEBPACK_SERVE'])
   ) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
-    plugins.push(
-      new TsCheckerRspackPlugin({
-        typescript: {
-          configFile: path.isAbsolute(tsConfig)
-            ? tsConfig
-            : path.join(options.root, tsConfig),
-          memoryLimit: options.memoryLimit || 8192, // default memory limit is 8192
-        },
-      })
-    );
+
+    const pluginConfig: any = {
+      typescript: {
+        configFile: path.isAbsolute(tsConfig)
+          ? tsConfig
+          : path.join(options.root, tsConfig),
+        memoryLimit: options.memoryLimit || 8192,
+      },
+    };
+
+    // When using TS solution setup, enable build mode to generate declaration files
+    // This prevents TS6305 errors when declaration files are expected but missing
+    // from module federation remote imports
+    if (isUsingTsSolution) {
+      pluginConfig.typescript.build = true;
+    }
+
+    plugins.push(new TsCheckerRspackPlugin(pluginConfig));
   }
   const entries: Array<{ name: string; import: string[] }> = [];
 
