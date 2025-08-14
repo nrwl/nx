@@ -66,7 +66,10 @@ import { output } from '../../utils/output';
 import { existsSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import {
+  getNxInstallationPath,
+  getNxRequirePaths,
+} from '../../utils/installation-directory';
 import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
@@ -1849,8 +1852,10 @@ export function nxCliPath(nxWorkspaceRoot?: string) {
       },
       license: 'MIT',
     });
+    const root = nxWorkspaceRoot ?? workspaceRoot;
+    const isNonJs = !existsSync(join(root, 'package.json'));
     copyPackageManagerConfigurationFiles(
-      nxWorkspaceRoot ?? workspaceRoot,
+      isNonJs ? getNxInstallationPath(root) : root,
       tmpDir
     );
 
