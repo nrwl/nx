@@ -1,11 +1,10 @@
-import { NormalizedJestProjectSchema } from '../schema';
 import {
-  readProjectConfiguration,
-  Tree,
-  updateProjectConfiguration,
   joinPathFragments,
-  normalizePath,
+  readProjectConfiguration,
+  type Tree,
+  updateProjectConfiguration,
 } from '@nx/devkit';
+import type { NormalizedJestProjectSchema } from '../schema';
 
 export function updateWorkspace(
   tree: Tree,
@@ -29,11 +28,17 @@ export function updateWorkspace(
     ],
     options: {
       jestConfig: joinPathFragments(
-        normalizePath(projectConfig.root),
+        projectConfig.root,
         `jest.config.${options.js ? 'js' : 'ts'}`
       ),
     },
   };
+
+  if (options.setupFile === 'angular') {
+    // We set the tsConfig in the target options so Angular migrations can discover it
+    projectConfig.targets[options.targetName].options.tsConfig =
+      joinPathFragments(projectConfig.root, 'tsconfig.spec.json');
+  }
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 }

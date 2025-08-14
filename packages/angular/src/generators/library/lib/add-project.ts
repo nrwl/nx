@@ -36,14 +36,13 @@ export async function addProject(
       outputs: ['{workspaceRoot}/dist/{projectRoot}'],
       options: {
         project: `${libraryOptions.projectRoot}/ng-package.json`,
+        tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.json`,
       },
       configurations: {
         production: {
           tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.prod.json`,
         },
-        development: {
-          tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.json`,
-        },
+        development: {},
       },
       defaultConfiguration: 'production',
     };
