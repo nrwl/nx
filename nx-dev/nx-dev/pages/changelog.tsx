@@ -207,11 +207,11 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
           description: 'Learn about all the changes',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
               alt: 'Nx: Smart Repos · Fast Builds',
-              type: 'image/jpeg',
+              type: 'image/png',
             },
           ],
           siteName: 'Nx',

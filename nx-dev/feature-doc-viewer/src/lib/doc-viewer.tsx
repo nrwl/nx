@@ -24,8 +24,8 @@ export function DocViewer({
   widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
-  const [currentPath, setCurrentPath] = useState<string>('');
-  const [basePath, setBasePath] = useState<string>('');
+  const [currentPath, setCurrentPath] = useState<string>(router.asPath);
+  const [basePath, setBasePath] = useState<string>(router.basePath);
 
   useEffect(() => {
     setCurrentPath(router.asPath);
@@ -91,8 +91,10 @@ export function DocViewer({
           images: [
             {
               url: `https://nx.dev/images/open-graph/${currentPath
-                .replace('/', '')
-                .replace(/\//gi, '-')}.${
+                .split('#')[0]
+                .split('?')[0]
+                .replace(/^\//, '')
+                .replace(/\//g, '-')}.${
                 vm.mediaImage ? getExtension(vm.mediaImage) : 'jpg'
               }`,
               width: 1600,

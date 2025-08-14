@@ -22,6 +22,22 @@ export default function AiDocs(): JSX.Element {
           maxImagePreview: 'none',
           maxVideoPreview: -1,
         }}
+        openGraph={{
+          url: 'https://nx.dev/ai-chat',
+          title: 'Nx AI Chat',
+          description: 'AI chat powered by Nx docs.',
+          images: [
+            {
+              url: 'https://nx.dev/socials/nx-media.png',
+              width: 800,
+              height: 421,
+              alt: 'Nx: Smart Repos · Fast Builds',
+              type: 'image/png',
+            },
+          ],
+          siteName: 'Nx',
+          type: 'website',
+        }}
       />
       <div
         id="shell"
