@@ -23,6 +23,7 @@ import {
   readYamlFile,
   writeJsonFile,
 } from './fileutils';
+import { getNxInstallationPath } from './installation-directory';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
@@ -296,6 +297,10 @@ export function findFileInPackageJsonDirectory(
   directory: string = process.cwd()
 ): string | null {
   while (!existsSync(join(directory, 'package.json'))) {
+    if (directory === workspaceRoot) {
+      // we reached the workspace root and we didn't find a package.json file
+      return null;
+    }
     directory = dirname(directory);
   }
   const path = join(directory, file);
@@ -406,7 +411,11 @@ export function createTempNpmDirectory() {
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
-  copyPackageManagerConfigurationFiles(workspaceRoot, dir);
+  const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
+  copyPackageManagerConfigurationFiles(
+    isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
+    dir
+  );
 
   const cleanup = async () => {
     try {
