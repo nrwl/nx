@@ -19,6 +19,8 @@ import { join } from 'path';
 import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
+import { LineAwareStream } from './lib/line-aware-stream';
+import { createCoalescingDebounce } from './lib/coalescing-debounce';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
@@ -27,39 +29,14 @@ import { detectModuleFormat } from './lib/detect-module-format';
 interface ActiveTask {
   id: string;
   killed: boolean;
-  promise: Promise<void>;
+  promise: Promise<{ success: boolean }>;
   childProcess: null | ChildProcess;
+  cancellationToken: { cancelled: boolean };
   start: () => Promise<void>;
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
 
-function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
-  let timeoutId: NodeJS.Timeout;
-  let pendingPromise: Promise<T> | null = null;
-
-  return () => {
-    if (!pendingPromise) {
-      pendingPromise = new Promise<T>((resolve, reject) => {
-        timeoutId = setTimeout(() => {
-          fn()
-            .then((result) => {
-              pendingPromise = null;
-              resolve(result);
-            })
-            .catch((error) => {
-              pendingPromise = null;
-              reject(error);
-            })
-            .finally(() => {
-              clearTimeout(timeoutId);
-            });
-        }, wait);
-      });
-    }
-
-    return pendingPromise;
-  };
-}
+const globalLineAwareStream = new LineAwareStream();
 
 export async function* nodeExecutor(
   options: NodeExecutorOptions,
@@ -135,12 +112,27 @@ export async function* nodeExecutor(
 
       const previousTask = currentTask;
       const task = tasks.shift();
+
+      if (previousTask && !previousTask.killed) {
+        previousTask.killed = true;
+
+        if (previousTask.childProcess?.connected) {
+          previousTask.childProcess.disconnect();
+        }
+
+        previousTask.childProcess?.removeAllListeners();
+
+        await previousTask.stop('SIGTERM');
+
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+
       currentTask = task;
-      await previousTask?.stop('SIGTERM');
+      globalLineAwareStream.setActiveProcess(task.id);
       await task.start();
     };
 
-    const debouncedProcessQueue = debounce(
+    const debouncedProcessQueue = createCoalescingDebounce(
       processQueue,
       options.debounce ?? 1_000
     );
@@ -149,10 +141,19 @@ export async function* nodeExecutor(
       childProcess: null | ChildProcess,
       buildResult: Promise<{ success: boolean }>
     ) => {
+      for (const task of tasks) {
+        if (!task.killed) {
+          task.cancellationToken.cancelled = true;
+          await task.stop('SIGTERM');
+        }
+      }
+      tasks.length = 0;
+
       const task: ActiveTask = {
         id: randomUUID(),
         killed: false,
         childProcess,
+        cancellationToken: { cancelled: false },
         promise: null,
         start: async () => {
           // Wait for build to finish.
@@ -171,71 +172,89 @@ export async function* nodeExecutor(
             }
           }
 
-          // Before running the program, check if the task has been killed (by a new change during watch).
-          if (task.killed) return;
+          if (task.killed || task.cancellationToken.cancelled) return;
 
           // Run the program
-          task.promise = new Promise<void>((resolve, reject) => {
-            const loaderFile =
-              moduleFormat === 'esm'
-                ? 'node-with-esm-loader'
-                : 'node-with-require-overrides';
+          task.promise = new Promise<{ success: boolean }>(
+            (resolve, reject) => {
+              const loaderFile =
+                moduleFormat === 'esm'
+                  ? 'node-with-esm-loader'
+                  : 'node-with-require-overrides';
 
-            task.childProcess = fork(
-              joinPathFragments(__dirname, loaderFile),
-              options.args ?? [],
-              {
-                execArgv: getExecArgv(options),
-                stdio: [0, 1, 'pipe', 'ipc'],
-                env: {
-                  ...process.env,
-                  NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
-                  NX_MAPPINGS: JSON.stringify(mappings),
-                },
-              }
-            );
-
-            const handleStdErr = (data) => {
-              // Don't log out error if task is killed and new one has started.
-              // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
-              // Log the error in normal mode
-              if (!options.watch || !task.killed) {
-                logger.error(data.toString());
-              }
-            };
-            task.childProcess.stderr.on('data', handleStdErr);
-            task.childProcess.once('exit', (code) => {
-              task.childProcess.off('data', handleStdErr);
-              if (options.watch && !task.killed) {
-                logger.info(
-                  `NX Process exited with code ${code}, waiting for changes to restart...`
-                );
-              }
-              if (!options.watch) {
-                if (code !== 0) {
-                  error(new Error(`Process exited with code ${code}`));
-                } else {
-                  resolve(done());
+              task.childProcess = fork(
+                joinPathFragments(__dirname, loaderFile),
+                options.args ?? [],
+                {
+                  execArgv: getExecArgv(options),
+                  stdio: [0, 'pipe', 'pipe', 'ipc'],
+                  env: {
+                    ...process.env,
+                    NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
+                    NX_MAPPINGS: JSON.stringify(mappings),
+                  },
                 }
-              }
-              resolve();
-            });
+              );
 
-            next({ success: true, options: buildOptions });
-          });
+              task.childProcess.stdout?.on('data', (data) => {
+                globalLineAwareStream.write(data, task.id);
+              });
+
+              const handleStdErr = (data) => {
+                if (
+                  !options.watch ||
+                  (!task.killed && !task.cancellationToken.cancelled)
+                ) {
+                  if (task.id === globalLineAwareStream.currentProcessId) {
+                    logger.error(data.toString());
+                  }
+                }
+              };
+              task.childProcess.stderr?.on('data', handleStdErr);
+              task.childProcess.once('exit', (code) => {
+                task.childProcess.off('data', handleStdErr);
+                if (options.watch && !task.killed) {
+                  logger.info(
+                    `NX Process exited with code ${code}, waiting for changes to restart...`
+                  );
+                }
+                if (!options.watch) {
+                  if (code !== 0) {
+                    error(new Error(`Process exited with code ${code}`));
+                  } else {
+                    resolve({ success: true });
+                  }
+                }
+                resolve({ success: code === 0 });
+              });
+
+              next({ success: true, options: buildOptions });
+            }
+          );
         },
         stop: async (signal = 'SIGTERM') => {
           task.killed = true;
-          // Request termination and wait for process to finish gracefully.
-          // NOTE: `childProcess` may not have been set yet if the task did not have a chance to start.
-          // e.g. multiple file change events in a short time (like git checkout).
+          task.cancellationToken.cancelled = true;
+
           if (task.childProcess) {
+            if (task.childProcess.stdout) {
+              task.childProcess.stdout.pause();
+            }
+            if (task.childProcess.stderr) {
+              task.childProcess.stderr.pause();
+            }
+
+            if (task.childProcess.connected) {
+              task.childProcess.disconnect();
+            }
+
+            task.childProcess.removeAllListeners();
+
             await killTree(task.childProcess.pid, signal);
           }
-          try {
-            await task.promise;
-          } catch {
-            // Doesn't matter if task fails, we just need to wait until it finishes.
+
+          if (task.id === globalLineAwareStream.currentProcessId) {
+            globalLineAwareStream.setActiveProcess(null);
           }
         },
       };
@@ -244,12 +263,18 @@ export async function* nodeExecutor(
     };
 
     const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
+      debouncedProcessQueue.cancel();
+
+      globalLineAwareStream.flush();
+
       if (typeof additionalExitHandler === 'function') {
         additionalExitHandler();
       }
+
       if (typeof currentTask?.stop === 'function') {
         await currentTask.stop(signal);
       }
+
       for (const task of tasks) {
         await task.stop(signal);
       }
@@ -298,7 +323,7 @@ export async function* nodeExecutor(
           });
         });
         await addToQueue(childProcess, whenReady);
-        await debouncedProcessQueue();
+        await debouncedProcessQueue.trigger();
       };
       if (isDaemonEnabled()) {
         additionalExitHandler = await daemonClient.registerFileWatcher(
@@ -341,7 +366,7 @@ export async function* nodeExecutor(
       while (true) {
         const event = await output.next();
         await addToQueue(null, Promise.resolve(event.value));
-        await debouncedProcessQueue();
+        await debouncedProcessQueue.trigger();
         if (event.done || !options.watch) {
           break;
         }
