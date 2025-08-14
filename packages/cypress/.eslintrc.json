@@ -34,14 +34,12 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "tslib",
               "nx",
               "typescript",
               // Type imports only
               "eslint",
               "rollup",
-              "vite",
-              "@nx/cypress"
+              "vite"
             ]
           }
         ]

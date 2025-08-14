@@ -2,6 +2,7 @@ import type { StarlightUserConfig } from '@astrojs/starlight/types';
 import { workspaceRoot } from '@nx/devkit';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
+import frontMatter from 'front-matter';
 
 /**
  * Map of plugins names to their technology grouping
@@ -113,10 +114,13 @@ export function getPluginItems(
   }
   const items: SidebarItem[] = [];
 
+  // JS plugin is refed as typescript, so for now we remap it, but might be others we need to do this for
+  // down the road
+  const remappedPluginName = plugin === 'js' ? 'typescript' : plugin;
   // NOTE: some docs are at the top level of a category, so the route needs to reflect that
   const baseUrl = technologyCategory
-    ? `/technologies/${technologyCategory}/${plugin}`
-    : `/technologies/${plugin}`;
+    ? `/technologies/${technologyCategory}/${remappedPluginName}`
+    : `/technologies/${remappedPluginName}`;
 
   if (hasValidConfig(pluginPath, 'generators')) {
     items.push({
@@ -165,28 +169,57 @@ function hasValidConfig(
   const content = JSON.parse(readFileSync(configPath, 'utf-8'));
 
   if (type === 'executors') {
-    if (
-      !content.executors ||
-      typeof content.executors !== 'object' ||
-      Object.keys(content.executors).length === 0
-    ) {
-      // have file, but no generators configured
-      return false;
+    return (
+      content.executors &&
+      typeof content.executors === 'object' &&
+      Object.keys(content.executors).length > 0
+    );
+  }
+
+  // migrations can be generators or packageJsonUpdates
+  const hasGenerators =
+    content.generators &&
+    typeof content.generators === 'object' &&
+    Object.keys(content.generators).length > 0;
+
+  const hasPackageJsonUpdates =
+    content.packageJsonUpdates &&
+    typeof content.packageJsonUpdates === 'object' &&
+    Object.keys(content.packageJsonUpdates).length > 0;
+
+  return hasGenerators || hasPackageJsonUpdates;
+}
+
+/**
+ * Extract label from frontmatter with fallback priority:
+ * 1. sidebar.label
+ * 2. title
+ * 3. filename (fallback)
+ */
+function extractLabelFromFile(filePath: string, fileName: string): string {
+  try {
+    const fileContent = readFileSync(filePath, 'utf-8');
+    const parsed = frontMatter<{
+      title?: string;
+      sidebar?: { label?: string };
+    }>(fileContent);
+
+    // Priority 1: sidebar.label
+    if (parsed.attributes?.sidebar?.label) {
+      return parsed.attributes.sidebar.label;
     }
-    return true;
+
+    // Priority 2: title
+    if (parsed.attributes?.title) {
+      return parsed.attributes.title;
+    }
+  } catch (error) {
+    // If parsing fails, fall back to filename
+    console.warn(`Failed to parse frontmatter for ${filePath}:`, error);
   }
 
-  // migrations are also generator configurations
-  if (
-    !content.generators ||
-    typeof content.generators !== 'object' ||
-    Object.keys(content.generators).length === 0
-  ) {
-    // have file, but no generators configured
-    return false;
-  }
-
-  return true;
+  // Priority 3: filename (fallback)
+  return fileName;
 }
 
 function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
@@ -197,7 +230,11 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
   }
 
   try {
+    // eg. "/technologies/build-tools/esbuild/introduction.mdoc" -> "build-tools/esbuild/introdumentation.mdoc"
     const baseUrl = pluginContentDir.split(`/technologies/`).pop();
+
+    // Get all plugin names to check against subdirectories
+    const allPluginNames = Object.keys(pluginToTechnology);
 
     // Recursive function to process directories and build nested structure
     function processDirectory(
@@ -218,6 +255,11 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
         const fullPath = join(dirPath, file.name);
 
         if (file.isDirectory()) {
+          // Skip this directory if it's the name of another plugin
+          if (allPluginNames.includes(file.name)) {
+            continue;
+          }
+
           // Process subdirectory recursively
           const newRelativePath = relativePath
             ? `${relativePath}/${file.name}`
@@ -226,10 +268,25 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
 
           // Only add the directory group if it contains items
           if (subItems.length > 0) {
-            items.push({
-              label: file.name,
-              items: subItems,
-            } as SidebarSubItem);
+            // Check if there's an index.mdoc file in this directory
+            const indexPath = join(fullPath, 'index.mdoc');
+            const hasIndex = existsSync(indexPath);
+
+            // For directories with content, add them as a group
+            // If there's an index.mdoc, we'll use its title for the label
+            if (hasIndex) {
+              const label = extractLabelFromFile(indexPath, file.name);
+
+              items.push({
+                label: label,
+                items: subItems,
+              } as SidebarSubItem);
+            } else {
+              items.push({
+                label: file.name,
+                items: subItems,
+              } as SidebarSubItem);
+            }
           }
         } else if (
           file.isFile() &&
@@ -238,6 +295,12 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
             file.name.endsWith('.mdoc'))
         ) {
           const fileName = basename(file.name, extname(file.name));
+
+          // Skip index files as they're handled by directory processing
+          if (fileName === 'index') {
+            continue;
+          }
+
           const fileSlug = fileName.split(' ').join('-').toLowerCase();
 
           // Build the full slug including the relative path
@@ -245,9 +308,12 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
             ? `technologies/${baseUrl}/${relativePath}/${fileSlug}`
             : `technologies/${baseUrl}/${fileSlug}`;
 
+          // Extract label from frontmatter with fallback priority
+          const label = extractLabelFromFile(fullPath, fileName);
+
           items.push({
-            label: fileName,
-            slug: fullSlug,
+            label: label,
+            slug: fullSlug.toLowerCase(),
           });
         }
       }

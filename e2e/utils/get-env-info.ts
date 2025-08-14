@@ -136,7 +136,7 @@ export const packageManagerLockFile = {
 
 export function ensureCypressInstallation() {
   // Skip Cypress installation on CI where it's pre-installed in agents.yaml
-  if (isCI) {
+  if (isCI && process.env.NX_NIGHTLY_TEST_RUN !== 'true') {
     e2eConsoleLogger('Running on CI - Cypress pre-installed via agents.yaml');
     return;
   }
@@ -167,7 +167,7 @@ export function ensureCypressInstallation() {
 
 export function ensurePlaywrightBrowsersInstallation() {
   // Skip browser installation on CI where browsers are pre-installed in agents.yaml
-  if (isCI) {
+  if (isCI && process.env.NX_NIGHTLY_TEST_RUN !== 'true') {
     e2eConsoleLogger(
       'Running on CI - Playwright browsers pre-installed via agents.yaml'
     );

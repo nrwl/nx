@@ -24,9 +24,10 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "tslib",
               "nx",
+              "@nx/jest",
               "@nx/rollup",
+              "@nx/web",
               "@nx/webpack",
               "@nx/cypress",
               "@nx/playwright",

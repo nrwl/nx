@@ -202,6 +202,15 @@ export default defineMarkdocConfig({
         },
       },
     },
+    index_page_cards: {
+      render: component('./src/components/markdoc/IndexPageCards.astro'),
+      attributes: {
+        path: {
+          type: 'String',
+          required: true,
+        },
+      },
+    },
     metrics: {
       render: component('./src/components/markdoc/Metrics.astro'),
       attributes: {

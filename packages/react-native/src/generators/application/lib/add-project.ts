@@ -2,6 +2,7 @@ import {
   addProjectConfiguration,
   joinPathFragments,
   ProjectConfiguration,
+  readJson,
   readNxJson,
   TargetConfiguration,
   Tree,
@@ -26,7 +27,13 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
+  const templatedPackageJson = readJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'package.json')
+  );
+
   const packageJson: PackageJson = {
+    ...templatedPackageJson,
     name: options.importPath,
     version: '0.0.1',
     private: true,

@@ -154,6 +154,7 @@ describe('preset', () => {
           },
         },
         test: {
+          name: 'vue-preset-monorepo',
           watch: false,
           globals: true,
           environment: 'jsdom',
@@ -307,6 +308,7 @@ describe('preset', () => {
           },
         },
         test: {
+          name: 'react-standalone-preset-vite',
           watch: false,
           globals: true,
           environment: 'jsdom',
@@ -363,6 +365,7 @@ describe('preset', () => {
           },
         },
         test: {
+          name: 'vue-standalone-preset',
           watch: false,
           globals: true,
           environment: 'jsdom',

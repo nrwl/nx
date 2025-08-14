@@ -1,0 +1,275 @@
+---
+import config from 'virtual:starlight/user-config';
+import Search from 'virtual:starlight/components/Search';
+import SiteTitle from 'virtual:starlight/components/SiteTitle';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+
+/**
+ * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
+ */
+const shouldRenderSearch =
+	config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
+
+// Version options
+const versions = [
+	{ version: 'v21', href: '/', current: true },
+	{ version: 'v20', href: 'https://20.nx.dev/docs' },
+	{ version: 'v19', href: 'https://19.nx.dev/docs' },
+];
+
+const currentVersion = versions.find(v => v.current);
+---
+
+<div class="flex items-center justify-between h-full gap-4 px-4">
+	<div class="flex items-center gap-2 flex-shrink-0">
+		<SiteTitle />
+		<a href="/getting-started/intro" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+			Docs
+		</a>
+		<!-- Version Switcher -->
+		<div class="relative ml-1">
+			<button class="version-trigger flex items-center gap-1 px-2 py-1 text-sm bg-transparent hover:text-blue-500" aria-expanded="false" aria-haspopup="true">
+				<span>{currentVersion?.version}</span>
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 transition-transform version-icon">
+					<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+				</svg>
+			</button>
+			<div class="version-menu absolute top-full left-0 mt-1 min-w-[8rem] bg-white border border-slate-200 rounded-md shadow-lg opacity-0 invisible translate-y-1 transition-all z-50 dark:bg-slate-900 dark:border-slate-800">
+				<div class="py-1">
+					{versions.map((item) => (
+						<a 
+							href={item.href} 
+							class={`block px-4 py-2 text-sm no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60 ${item.current ? 'text-blue-600 font-semibold dark:text-sky-400' : 'text-slate-700 dark:text-slate-300'}`}
+							aria-current={item.current ? 'page' : undefined}
+						>
+							<span class="flex items-center justify-between">
+								{item.version}
+								{item.current && <span class="text-blue-600 dark:text-sky-400">✓</span>}
+							</span>
+						</a>
+					))}
+				</div>
+			</div>
+		</div>
+	</div>
+	<nav class="hidden lg:flex items-center gap-1 ml-8 flex-shrink-0">
+		<a href="https://nx.dev/blog" class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+			Blog
+		</a>
+		
+		<!-- Resources Dropdown -->
+		<div class="relative nav-dropdown">
+			<button class="dropdown-trigger flex items-center gap-1 px-3 py-2 text-sm bg-transparent hover:text-blue-500 rounded-md transition-colors whitespace-nowrap dark:text-slate-200 dark:hover:text-sky-500" aria-expanded="false" aria-haspopup="true">
+				<span>Resources</span>
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 transition-transform dropdown-icon">
+					<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+				</svg>
+			</button>
+			<div class="dropdown-menu absolute top-full left-0 mt-2 w-[32rem] bg-slate-50/95 backdrop-blur-sm rounded-lg shadow-lg ring-1 ring-slate-200/40 opacity-0 invisible translate-y-1 transition-all z-50 dark:bg-slate-950/95 dark:ring-slate-800/60">
+				<div class="grid grid-cols-2 gap-6 p-6">
+					<!-- Learn Section -->
+					<div class="space-y-1">
+						<h5 class="text-xs font-semibold uppercase tracking-wider text-slate-500 px-2 pb-2 dark:text-slate-400">Learn</h5>
+						<a href="https://nx.dev/podcast" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+							<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+							</svg>
+							<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Podcasts</span>
+						</a>
+						<a href="https://nx.dev/webinar" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+							<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
+							</svg>
+							<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Webinars</span>
+						</a>
+						<a href="https://nx.dev/courses" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+							<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+								<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z" />
+							</svg>
+							<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Nx Video Courses</span>
+						</a>
+						<a href="https://go.nrwl.io/nx-newsletter" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+							<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
+							</svg>
+							<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Newsletter</span>
+						</a>
+						<a href="https://nx.dev/community" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+							<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+							</svg>
+							<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Community</span>
+						</a>
+						<a href="https://go.nx.dev/community" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+							<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
+							</svg>
+							<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Discord</span>
+						</a>
+					</div>
+					<!-- Right Column -->
+					<div class="space-y-4">
+						<!-- Events Section -->
+						<div class="space-y-1">
+							<h5 class="text-xs font-semibold uppercase tracking-wider text-slate-500 px-2 pb-2 dark:text-slate-400">Events</h5>
+							<a href="https://go.nx.dev/office-hours" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+								<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
+								</svg>
+								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Office Hours</span>
+							</a>
+							<a href="https://www.youtube.com/@nxdevtools/streams" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+								<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+									<path stroke-linecap="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+								</svg>
+								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Live Streams</span>
+							</a>
+						</div>
+						<!-- Company Section -->
+						<div class="space-y-1">
+							<h5 class="text-xs font-semibold uppercase tracking-wider text-slate-500 px-2 pb-2 dark:text-slate-400">Company</h5>
+							<a href="https://nx.dev/company" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+								<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+								</svg>
+								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">About Us</span>
+							</a>
+							<a href="https://nx.dev/customers" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+								<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+								</svg>
+								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Customers</span>
+							</a>
+							<a href="https://nx.dev/partners" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+								<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M16.712 4.33a9.027 9.027 0 0 1 1.652 1.306c.51.51.944 1.064 1.306 1.652M16.712 4.33l-3.448 4.138m3.448-4.138a9.014 9.014 0 0 0-9.424 0M19.67 7.288l-4.138 3.448m4.138-3.448a9.014 9.014 0 0 1 0 9.424m-1.306 1.652a9.027 9.027 0 0 1-1.652 1.306m0 0-3.448-4.138m3.448 4.138a9.014 9.014 0 0 1-9.424 0m5.976-4.138a3.765 3.765 0 0 1-2.528 0m0 0a3.736 3.736 0 0 1-1.388-.88 3.737 3.737 0 0 1-.88-1.388m2.268 2.268L7.288 19.67m0 0a9.024 9.024 0 0 1-1.652-1.306 9.027 9.027 0 0 1-1.306-1.652m0 0 4.138-3.448M4.33 16.712a9.014 9.014 0 0 1 0-9.424m4.138-3.448A9.027 9.027 0 0 1 7.162 5.146a9.024 9.024 0 0 1 1.306 1.652M4.33 7.288 8.468 10.736m0 0a3.736 3.736 0 0 1 .88-1.388 3.737 3.737 0 0 1 1.388-.88m-2.268 2.268L4.33 7.288m6.406 1.18L7.288 4.33m0 0a9.024 9.024 0 0 0-1.652 1.306A9.025 9.025 0 0 0 4.33 7.288" />
+								</svg>
+								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Partners</span>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="h-6 w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
+		<a href="https://nx.dev/ai" class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+			AI
+		</a>
+		<a href="https://nx.dev/nx-cloud" class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+			Nx Cloud
+		</a>
+		<div class="h-6 w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
+		<a href="https://nx.dev/enterprise" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+			Nx Enterprise
+		</a>
+	</nav>
+	<div class="flex-1 max-w-sm mx-4 print:hidden">
+		{shouldRenderSearch && <Search />}
+	</div>
+	<div class="hidden md:flex items-center gap-4 print:hidden">
+		<div class="flex items-center gap-4">
+			<SocialIcons />
+		</div>
+		<div class="after:content-[''] after:h-8 after:border-l after:border-slate-200 dark:after:border-slate-700"></div>
+		<ThemeSelect />
+	</div>
+</div>
+
+<script>
+	// Handle dropdown interactions
+	document.addEventListener('DOMContentLoaded', () => {
+		const dropdowns = document.querySelectorAll('.nav-dropdown');
+		
+		dropdowns.forEach(dropdown => {
+			const trigger = dropdown.querySelector('.dropdown-trigger');
+			const menu = dropdown.querySelector('.dropdown-menu');
+			let closeTimeout: number;
+			
+			// Mouse interactions
+			trigger?.addEventListener('mouseenter', () => {
+				clearTimeout(closeTimeout);
+				trigger.setAttribute('aria-expanded', 'true');
+				menu?.classList.remove('opacity-0', 'invisible', 'translate-y-1');
+				menu?.classList.add('opacity-100', 'visible', 'translate-y-0');
+				trigger.querySelector('.dropdown-icon')?.classList.add('rotate-180');
+			});
+			
+			dropdown.addEventListener('mouseleave', () => {
+				closeTimeout = window.setTimeout(() => {
+					trigger?.setAttribute('aria-expanded', 'false');
+					menu?.classList.add('opacity-0', 'invisible', 'translate-y-1');
+					menu?.classList.remove('opacity-100', 'visible', 'translate-y-0');
+					trigger?.querySelector('.dropdown-icon')?.classList.remove('rotate-180');
+				}, 150);
+			});
+			
+			dropdown.addEventListener('mouseenter', () => {
+				clearTimeout(closeTimeout);
+			});
+			
+			// Keyboard interactions
+			trigger?.addEventListener('click', (e) => {
+				e.preventDefault();
+				const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+				trigger.setAttribute('aria-expanded', (!isOpen).toString());
+				if (isOpen) {
+					menu?.classList.add('opacity-0', 'invisible', 'translate-y-1');
+					menu?.classList.remove('opacity-100', 'visible', 'translate-y-0');
+					trigger.querySelector('.dropdown-icon')?.classList.remove('rotate-180');
+				} else {
+					menu?.classList.remove('opacity-0', 'invisible', 'translate-y-1');
+					menu?.classList.add('opacity-100', 'visible', 'translate-y-0');
+					trigger.querySelector('.dropdown-icon')?.classList.add('rotate-180');
+				}
+			});
+		});
+		
+		// Version switcher
+		const versionSwitcher = document.querySelector('.version-trigger')?.parentElement;
+		const versionTrigger = versionSwitcher?.querySelector('.version-trigger');
+		const versionMenu = versionSwitcher?.querySelector('.version-menu');
+		
+		versionTrigger?.addEventListener('click', (e) => {
+			e.stopPropagation();
+			const isOpen = versionTrigger.getAttribute('aria-expanded') === 'true';
+			versionTrigger.setAttribute('aria-expanded', (!isOpen).toString());
+			if (isOpen) {
+				versionMenu?.classList.add('opacity-0', 'invisible', 'translate-y-1');
+				versionMenu?.classList.remove('opacity-100', 'visible', 'translate-y-0');
+				versionTrigger.querySelector('.version-icon')?.classList.remove('rotate-180');
+			} else {
+				versionMenu?.classList.remove('opacity-0', 'invisible', 'translate-y-1');
+				versionMenu?.classList.add('opacity-100', 'visible', 'translate-y-0');
+				versionTrigger.querySelector('.version-icon')?.classList.add('rotate-180');
+			}
+		});
+		
+		// Close dropdowns when clicking outside
+		document.addEventListener('click', (e) => {
+			const target = e.target as HTMLElement;
+			
+			// Close nav dropdowns
+			if (!target.closest('.nav-dropdown')) {
+				dropdowns.forEach(dropdown => {
+					const trigger = dropdown.querySelector('.dropdown-trigger');
+					const menu = dropdown.querySelector('.dropdown-menu');
+					trigger?.setAttribute('aria-expanded', 'false');
+					menu?.classList.add('opacity-0', 'invisible', 'translate-y-1');
+					menu?.classList.remove('opacity-100', 'visible', 'translate-y-0');
+					trigger?.querySelector('.dropdown-icon')?.classList.remove('rotate-180');
+				});
+			}
+			
+			// Close version switcher
+			if (!target.closest('.version-trigger') && !target.closest('.version-menu')) {
+				versionTrigger?.setAttribute('aria-expanded', 'false');
+				versionMenu?.classList.add('opacity-0', 'invisible', 'translate-y-1');
+				versionMenu?.classList.remove('opacity-100', 'visible', 'translate-y-0');
+				versionTrigger?.querySelector('.version-icon')?.classList.remove('rotate-180');
+			}
+		});
+	});
+</script>

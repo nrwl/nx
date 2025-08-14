@@ -51,7 +51,6 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "tslib",
               "@angular-devkit/architect",
               "@angular-devkit/schematics",
               "@nx/cypress",

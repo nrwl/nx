@@ -114,12 +114,15 @@ export function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   };
 }
 
-export function getNestWebpackBuildConfig(): TargetConfiguration {
+export function getNestWebpackBuildConfig(
+  project: ProjectConfiguration
+): TargetConfiguration {
   return {
     executor: 'nx:run-commands',
     options: {
       command: 'webpack-cli build',
       args: ['--node-env=production'],
+      cwd: project.root,
     },
     configurations: {
       development: {

@@ -90,7 +90,6 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "tslib",
               "nx",
               "@nx/webpack",
               "@nx/cypress",
@@ -104,6 +103,7 @@
               "tailwindcss",
               "file-loader",
               "@svgr/webpack",
+              // since `with-nx.ts` is included in the prod build, we need to use `require('@nx/next')` instead of proper relative imports
               "@nx/next"
             ]
           }

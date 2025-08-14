@@ -4,12 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../workspace"
-    },
-    {
-      "path": "../rollup"
-    },
-    {
       "path": "../react"
     },
     {
@@ -19,16 +13,13 @@
       "path": "../js"
     },
     {
-      "path": "../jest"
-    },
-    {
-      "path": "../nx"
-    },
-    {
       "path": "../devkit"
     },
     {
       "path": "../detox"
+    },
+    {
+      "path": "../rollup"
     },
     {
       "path": "./tsconfig.lib.json"

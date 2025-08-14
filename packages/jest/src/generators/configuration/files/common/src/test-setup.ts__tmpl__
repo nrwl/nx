@@ -1,4 +1,3 @@
-<% if(setupFile === 'react-native') { %>import '@testing-library/jest-native/extend-expect';<% } %>
 <%_ if(setupFile === 'react-router') { _%>
 import { TextEncoder, TextDecoder as NodeTextDecoder } from "util";
 

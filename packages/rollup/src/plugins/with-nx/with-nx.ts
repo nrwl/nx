@@ -1,5 +1,6 @@
 import {
   logger,
+  normalizePath,
   type ProjectGraph,
   readCachedProjectGraph,
   readJsonFile,
@@ -353,9 +354,11 @@ function createInput(
   if (global.NX_GRAPH_CREATION) return {};
   const mainEntryFileName = options.outputFileName || options.main;
   const input: Record<string, string> = {};
-  input[parse(mainEntryFileName).name] = join(workspaceRoot, options.main);
+  input[parse(mainEntryFileName).name] = normalizePath(
+    join(workspaceRoot, options.main)
+  );
   options.additionalEntryPoints?.forEach((entry) => {
-    input[parse(entry).name] = join(workspaceRoot, entry);
+    input[parse(entry).name] = normalizePath(join(workspaceRoot, entry));
   });
   return input;
 }
