@@ -19,7 +19,7 @@ import { join } from 'path';
 import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
-import { LineAwareStream } from './lib/line-aware-stream';
+import { LineAwareWriter } from './lib/line-aware-writer';
 import { createCoalescingDebounce } from './lib/coalescing-debounce';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
@@ -29,13 +29,13 @@ import { detectModuleFormat } from './lib/detect-module-format';
 interface ActiveTask {
   id: string;
   killed: boolean;
-  promise: Promise<{ success: boolean }>;
+  promise: Promise<void>;
   childProcess: null | ChildProcess;
   start: () => Promise<void>;
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
 
-const globalLineAwareStream = new LineAwareStream();
+const globalLineAwareWriter = new LineAwareWriter();
 
 export async function* nodeExecutor(
   options: NodeExecutorOptions,
@@ -127,7 +127,7 @@ export async function* nodeExecutor(
       }
 
       currentTask = task;
-      globalLineAwareStream.setActiveProcess(task.id);
+      globalLineAwareWriter.setActiveProcess(task.id);
       await task.start();
     };
 
@@ -173,59 +173,57 @@ export async function* nodeExecutor(
           if (task.killed) return;
 
           // Run the program
-          task.promise = new Promise<{ success: boolean }>(
-            (resolve, reject) => {
-              const loaderFile =
-                moduleFormat === 'esm'
-                  ? 'node-with-esm-loader'
-                  : 'node-with-require-overrides';
+          task.promise = new Promise<void>((resolve, reject) => {
+            const loaderFile =
+              moduleFormat === 'esm'
+                ? 'node-with-esm-loader'
+                : 'node-with-require-overrides';
 
-              task.childProcess = fork(
-                joinPathFragments(__dirname, loaderFile),
-                options.args ?? [],
-                {
-                  execArgv: getExecArgv(options),
-                  stdio: [0, 'pipe', 'pipe', 'ipc'],
-                  env: {
-                    ...process.env,
-                    NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
-                    NX_MAPPINGS: JSON.stringify(mappings),
-                  },
-                }
-              );
+            task.childProcess = fork(
+              joinPathFragments(__dirname, loaderFile),
+              options.args ?? [],
+              {
+                execArgv: getExecArgv(options),
+                stdio: [0, 'pipe', 'pipe', 'ipc'],
+                env: {
+                  ...process.env,
+                  NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
+                  NX_MAPPINGS: JSON.stringify(mappings),
+                },
+              }
+            );
 
-              task.childProcess.stdout?.on('data', (data) => {
-                globalLineAwareStream.write(data, task.id);
-              });
+            task.childProcess.stdout?.on('data', (data) => {
+              globalLineAwareWriter.write(data, task.id);
+            });
 
-              const handleStdErr = (data) => {
-                if (!options.watch || !task.killed) {
-                  if (task.id === globalLineAwareStream.currentProcessId) {
-                    logger.error(data.toString());
-                  }
+            const handleStdErr = (data) => {
+              if (!options.watch || !task.killed) {
+                if (task.id === globalLineAwareWriter.currentProcessId) {
+                  logger.error(data.toString());
                 }
-              };
-              task.childProcess.stderr?.on('data', handleStdErr);
-              task.childProcess.once('exit', (code) => {
-                task.childProcess.off('data', handleStdErr);
-                if (options.watch && !task.killed) {
-                  logger.info(
-                    `NX Process exited with code ${code}, waiting for changes to restart...`
-                  );
+              }
+            };
+            task.childProcess.stderr?.on('data', handleStdErr);
+            task.childProcess.once('exit', (code) => {
+              task.childProcess.off('data', handleStdErr);
+              if (options.watch && !task.killed) {
+                logger.info(
+                  `NX Process exited with code ${code}, waiting for changes to restart...`
+                );
+              }
+              if (!options.watch) {
+                if (code !== 0) {
+                  error(new Error(`Process exited with code ${code}`));
+                } else {
+                  resolve(done());
                 }
-                if (!options.watch) {
-                  if (code !== 0) {
-                    error(new Error(`Process exited with code ${code}`));
-                  } else {
-                    resolve({ success: true });
-                  }
-                }
-                resolve({ success: code === 0 });
-              });
+              }
+              resolve();
+            });
 
-              next({ success: true, options: buildOptions });
-            }
-          );
+            next({ success: true, options: buildOptions });
+          });
         },
         stop: async (signal = 'SIGTERM') => {
           task.killed = true;
@@ -247,8 +245,8 @@ export async function* nodeExecutor(
             await killTree(task.childProcess.pid, signal);
           }
 
-          if (task.id === globalLineAwareStream.currentProcessId) {
-            globalLineAwareStream.setActiveProcess(null);
+          if (task.id === globalLineAwareWriter.currentProcessId) {
+            globalLineAwareWriter.setActiveProcess(null);
           }
         },
       };
@@ -259,7 +257,7 @@ export async function* nodeExecutor(
     const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
       debouncedProcessQueue.cancel();
 
-      globalLineAwareStream.flush();
+      globalLineAwareWriter.flush();
 
       if (typeof additionalExitHandler === 'function') {
         additionalExitHandler();

@@ -1,4 +1,4 @@
-export class LineAwareStream {
+export class LineAwareWriter {
   private buffer = '';
   private activeTaskId: string | null = null;
 
