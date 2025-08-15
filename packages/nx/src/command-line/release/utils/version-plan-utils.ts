@@ -109,22 +109,6 @@ export function areAllVersionPlanProjectsFiltered(
   );
 }
 
-function checkVersionPlanContainsFilteredProjects(
-  plan: GroupVersionPlan | ProjectsVersionPlan,
-  releaseGroup: ReleaseGroupWithName,
-  filteredProjects: Set<string> | undefined
-) {
-  if (!filteredProjects) {
-    return true;
-  }
-
-  const planProjects = getProjectsAffectedByVersionPlan(plan, releaseGroup);
-
-  return Array.from(filteredProjects).some((project) =>
-    planProjects.has(project)
-  );
-}
-
 /**
  * Finds projects in a version plan that are NOT included in the filtered projects set.
  *
@@ -146,5 +130,29 @@ export function getVersionPlanProjectsOutsideFilter(
 
   return Array.from(planProjects).filter(
     (project) => !filteredProjects.has(project)
+  );
+}
+
+/**
+ * Checks whether the version plan contains any of the filtered projects.
+ *
+ * @param plan - The version plan to check.
+ * @param releaseGroup - The release group associated with the version plan.
+ * @param filteredProjects - Set of projects that are being released (filtered).
+ * @returns Returns true if the version plan contains any of the filtered projects, or if no filtered projects are provided.
+ */
+function checkVersionPlanContainsFilteredProjects(
+  plan: GroupVersionPlan | ProjectsVersionPlan,
+  releaseGroup: ReleaseGroupWithName,
+  filteredProjects: Set<string> | undefined
+): boolean {
+  if (!filteredProjects) {
+    return true;
+  }
+
+  const planProjects = getProjectsAffectedByVersionPlan(plan, releaseGroup);
+
+  return Array.from(filteredProjects).some((project) =>
+    planProjects.has(project)
   );
 }
