@@ -38,6 +38,7 @@
   "dependencies": {
     "@angular/build": ">=19.0.0 <21.0.0 || ^20.2.0-rc.1",
     "sass-embedded": "^1.79.3",
+    "semver": "^7.6.3",
     "ts-morph": "^24.0.0",
     "tslib": "^2.3.0",
     "typescript": "5.8.3"
