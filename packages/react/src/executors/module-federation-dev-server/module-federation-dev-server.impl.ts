@@ -89,9 +89,10 @@ export default async function* moduleFederationDevServer(
           const baseUrl = `http${options.ssl ? 's' : ''}://${host}:${
             options.port
           }`;
-          const portsToWaitFor = staticRemotesIter
-            ? [options.staticRemotesPort, ...remotes.remotePorts]
-            : [...remotes.remotePorts];
+          const portsToWaitFor =
+            staticRemotesIter && options.staticRemotesPort
+              ? [options.staticRemotesPort, ...remotes.remotePorts]
+              : [...remotes.remotePorts];
           await Promise.all(
             portsToWaitFor.map((port) =>
               waitForPortOpen(port, {

@@ -367,9 +367,10 @@ export default async function* moduleFederationStaticServer(
         }
 
         try {
-          const portsToWaitFor = staticFileServerIter
-            ? [options.serveOptions.staticRemotesPort, ...remotes.remotePorts]
-            : [...remotes.remotePorts];
+          const portsToWaitFor =
+            staticFileServerIter && options.serveOptions.staticRemotesPort
+              ? [options.serveOptions.staticRemotesPort, ...remotes.remotePorts]
+              : [...remotes.remotePorts];
           await Promise.all(
             portsToWaitFor.map((port) =>
               waitForPortOpen(port, {

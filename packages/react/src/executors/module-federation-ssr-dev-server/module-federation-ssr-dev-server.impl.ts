@@ -89,9 +89,10 @@ export default async function* moduleFederationSsrDevServer(
         }
 
         try {
-          const portsToWaitFor = staticRemotesIter
-            ? [options.staticRemotesPort, ...remotes.remotePorts]
-            : [...remotes.remotePorts];
+          const portsToWaitFor =
+            staticRemotesIter && options.staticRemotesPort
+              ? [options.staticRemotesPort, ...remotes.remotePorts]
+              : [...remotes.remotePorts];
 
           await Promise.all(
             portsToWaitFor.map((port) =>
