@@ -2,10 +2,7 @@ import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
 import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
 import { loadCompilerCli } from '../utils';
-import {
-  ComponentStylesheetBundler,
-  type ComponentStylesheetResult,
-} from '@angular/build/src/tools/esbuild/angular/component-stylesheets';
+import { ComponentStylesheetBundler } from '@angular/build/private';
 import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers';
 import { getSupportedBrowsers } from '@angular/build/private';
 
@@ -99,7 +96,7 @@ export function styleTransform(
     stylesheetFile?: string
   ) => {
     try {
-      let stylesheetResult: ComponentStylesheetResult;
+      let stylesheetResult;
       if (stylesheetFile) {
         stylesheetResult = await componentStylesheetBundler.bundleFile(
           stylesheetFile
