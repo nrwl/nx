@@ -175,7 +175,7 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
-    "@types/node": "18.16.9",
+    "@types/node": "20.19.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "@vitejs/plugin-vue": "^5.2.3",
