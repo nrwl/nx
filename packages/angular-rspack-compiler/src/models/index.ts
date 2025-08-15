@@ -1,17 +1,15 @@
-import { JavaScriptTransformer } from '@angular/build/private';
-import { ParallelCompilation } from '@angular/build/src/tools/angular/compilation/parallel-compilation';
-import { AotCompilation } from '@angular/build/src/tools/angular/compilation/aot-compilation';
-import { JitCompilation } from '@angular/build/src/tools/angular/compilation/jit-compilation';
-import { AngularCompilation } from '@angular/build/src/tools/angular/compilation/angular-compilation';
-import { SourceFileCache } from '@angular/build/private';
-
-export {
-  ParallelCompilation,
+import {
   JavaScriptTransformer,
   SourceFileCache,
-  AotCompilation,
-  JitCompilation,
   AngularCompilation,
+  createAngularCompilation,
+} from '@angular/build/private';
+
+export {
+  JavaScriptTransformer,
+  SourceFileCache,
+  AngularCompilation,
+  createAngularCompilation,
 };
 
 export * from './inline-style-language';
