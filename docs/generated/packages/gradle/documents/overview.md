@@ -1,13 +1,13 @@
 ---
-title: Overview of the Nx Gradle Plugin
-description: The Nx Plugin for Gradle allows Gradle tasks to be run through Nx.
+title: Overview of the Nx Plugin for Gradle
+description: This plugin allows Gradle tasks to be run through Nx.
 ---
 
 # @nx/gradle
 
 [Gradle](https://gradle.org/) is a fast, dependable, and adaptable open-source build automation tool with an elegant and extensible declarative build language. Gradle supports Android, Java, Kotlin Multiplatform, Groovy, Scala, Javascript, and C/C++.
 
-The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/recipes/set-up).
+The Nx plugin for Gradle registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/recipes/set-up).
 
 Nx adds the following features to your workspace:
 

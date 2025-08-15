@@ -12,7 +12,7 @@ youtubeUrl: https://youtu.be/TOPxKJXUaqw
 
 This article is part of the Java Week series:
 
-- [The Journey of Nx Gradle](/blog/journey-of-nx-gradle)
+- [The Journey of the Nx Plugin for Gradle](/blog/journey-of-the-nx-plugin-for-gradle)
 - [Polyglot Projects Made Easy](/blog/spring-boot-with-nx)
 - [Getting Mobile Into Your Monorepo](/blog/android-and-nx)
 - **Seamless Deploys With Docker**
@@ -149,8 +149,8 @@ If you're interested in knowing more, let us know! Join our community Discord an
 
 Learn more:
 
-- 🌌 [Nx Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
-- 📖 [Nx Gradle API](/technologies/java/api)
+- 🌌 [Nx Plugin for Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
+- 📖 [API for the Nx plugin for Gradle](/technologies/java/api)
 - 📦 [Nx Release](/features/manage-releases)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

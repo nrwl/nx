@@ -11,7 +11,7 @@ description: 'Learn how to integrate an Android app using Kotlin and Jetpack Com
 
 This article is part of the Java Week series:
 
-- [The Journey of Nx Gradle](/blog/journey-of-nx-gradle)
+- [The Journey of the Nx Plugin for Gradle](/blog/journey-of-the-nx-plugin-for-gradle)
 - [Polyglot Projects Made Easy](/blog/spring-boot-with-nx)
 - **Getting Mobile Into Your Monorepo**
 - [Seamless Deploys With Docker](/blog/seamless-deploys-with-docker)
@@ -58,7 +58,7 @@ Once imported, we do need to help Nx know about this project a bit more. For sta
 }
 ```
 
-Then we need to modify the `build.gradle.kt` to include the Nx Gradle plugin. This is currently a bug in the import process, so this is temporary. Remember, this isn't technically fully supported, so there be dragons:
+Then we need to modify the `build.gradle.kt` to include the Nx plugin. This is currently a bug in the import process, so this is temporary. Remember, this isn't technically fully supported, so there be dragons:
 
 ```diff {% fileName="build.gralde.kt" %}
 plugins {
@@ -115,14 +115,14 @@ We do need to have an emulator open, so we can start one from Android Studio or 
 
 ## What’s Next
 
-And that's it! It might seem not that impressive, but in the future, there could hypothetically be a dedicated Nx Android plugin that could handle starting your emulator and deploying your app. This could build on the Nx Gradle plugin and really help Android developers work more closely with their colleagues on the web team. We got one last blog post this week for our Java developers, so be sure to check back tomorrow and we'll get our app shipped 🚀.
+And that's it! It might seem not that impressive, but in the future, there could hypothetically be a dedicated Nx Android plugin that could handle starting your emulator and deploying your app. This could build on the Nx plugin for Gradle and really help Android developers work more closely with their colleagues on the web team. We got one last blog post this week for our Java developers, so be sure to check back tomorrow and we'll get our app shipped 🚀.
 
 ---
 
 Learn more:
 
-- 🌌 [Nx Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
-- 📖 [Nx Gradle API](/technologies/java/api)
+- 🌌 [Nx Plugin for Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
+- 📖 [API for the Nx plugin for Gradle](/technologies/java/api)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
