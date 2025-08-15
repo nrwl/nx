@@ -1,13 +1,13 @@
 export class LineAwareStream {
   private buffer = '';
-  private activeProcessId: string | null = null;
+  private activeTaskId: string | null = null;
 
   get currentProcessId(): string | null {
-    return this.activeProcessId;
+    return this.activeTaskId;
   }
 
-  write(data: Buffer | string, processId: string): void {
-    if (processId !== this.activeProcessId) return;
+  write(data: Buffer | string, taskId: string): void {
+    if (taskId !== this.activeTaskId) return;
 
     const text = data.toString();
     this.buffer += text;
@@ -27,8 +27,8 @@ export class LineAwareStream {
     }
   }
 
-  setActiveProcess(processId: string | null): void {
+  setActiveProcess(taskId: string | null): void {
     this.flush();
-    this.activeProcessId = processId;
+    this.activeTaskId = taskId;
   }
 }

@@ -31,7 +31,6 @@ interface ActiveTask {
   killed: boolean;
   promise: Promise<{ success: boolean }>;
   childProcess: null | ChildProcess;
-  cancellationToken: { cancelled: boolean };
   start: () => Promise<void>;
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
@@ -143,7 +142,7 @@ export async function* nodeExecutor(
     ) => {
       for (const task of tasks) {
         if (!task.killed) {
-          task.cancellationToken.cancelled = true;
+          task.killed = true;
           await task.stop('SIGTERM');
         }
       }
@@ -153,7 +152,6 @@ export async function* nodeExecutor(
         id: randomUUID(),
         killed: false,
         childProcess,
-        cancellationToken: { cancelled: false },
         promise: null,
         start: async () => {
           // Wait for build to finish.
@@ -172,7 +170,7 @@ export async function* nodeExecutor(
             }
           }
 
-          if (task.killed || task.cancellationToken.cancelled) return;
+          if (task.killed) return;
 
           // Run the program
           task.promise = new Promise<{ success: boolean }>(
@@ -201,10 +199,7 @@ export async function* nodeExecutor(
               });
 
               const handleStdErr = (data) => {
-                if (
-                  !options.watch ||
-                  (!task.killed && !task.cancellationToken.cancelled)
-                ) {
+                if (!options.watch || !task.killed) {
                   if (task.id === globalLineAwareStream.currentProcessId) {
                     logger.error(data.toString());
                   }
@@ -234,7 +229,6 @@ export async function* nodeExecutor(
         },
         stop: async (signal = 'SIGTERM') => {
           task.killed = true;
-          task.cancellationToken.cancelled = true;
 
           if (task.childProcess) {
             if (task.childProcess.stdout) {
