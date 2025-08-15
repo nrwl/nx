@@ -22,7 +22,19 @@
           "target": "build"
         }
       ],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/.astro",
+        "{projectRoot}/.netlify"
+      ],
       "command": "astro build",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "preview": {
+      "dependsOn": ["build"],
+      "command": "astro preview",
       "options": {
         "cwd": "astro-docs"
       }
