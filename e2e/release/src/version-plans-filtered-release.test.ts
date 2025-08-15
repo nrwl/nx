@@ -21,6 +21,7 @@ describe('nx release with version plans and project filter', () => {
   beforeAll(async () => {
     newProject({
       packages: ['@nx/js'],
+      preset: 'ts',
     });
 
     pkg1 = uniq('my-pkg-1');
@@ -161,7 +162,7 @@ Update multiple packages
     });
 
     expect(result).toContain(
-      'version plan contains projects not included in the release filter'
+      'Version plan contains projects not included in the release filter'
     );
 
     // Version plan should NOT be deleted since release failed
