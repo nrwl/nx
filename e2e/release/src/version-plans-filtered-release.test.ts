@@ -24,13 +24,19 @@ describe('nx release with version plans and project filter', () => {
     });
 
     pkg1 = uniq('my-pkg-1');
-    runCLI(`generate @nx/js:library ${pkg1} --publishable`);
+    runCLI(
+      `generate @nx/js:library ${pkg1} --publishable --importPath=${pkg1}`
+    );
 
     pkg2 = uniq('my-pkg-2');
-    runCLI(`generate @nx/js:library ${pkg2} --publishable`);
+    runCLI(
+      `generate @nx/js:library ${pkg2} --publishable --importPath=${pkg2}`
+    );
 
     pkg3 = uniq('my-pkg-3');
-    runCLI(`generate @nx/js:library ${pkg3} --publishable`);
+    runCLI(
+      `generate @nx/js:library ${pkg3} --publishable --importPath=${pkg3}`
+    );
 
     // Enable independent versioning with version plans
     updateJson('nx.json', (nxJson) => {
@@ -124,7 +130,7 @@ Update packages 3 with major
     expect(exists(join(versionPlansDir, 'bump-pkg2.md'))).toBeTruthy();
 
     // - bump-pkg3.md should be preserved (affects pkg3, which is not in the filter)
-    expect(exists(join(versionPlansDir, 'bump-pk3.md'))).toBeTruthy();
+    expect(exists(join(versionPlansDir, 'bump-pkg3.md'))).toBeTruthy();
   }, 120000);
 
   it('should error if version plan contains packages not in the filter', async () => {
