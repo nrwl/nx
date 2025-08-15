@@ -184,16 +184,18 @@ export function getRemotes(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
   const staticRemotePort =
-    Math.max(
-      ...([
-        ...remotePorts,
-        ...staticRemotes.map(
-          (r) =>
-            context.projectGraph.nodes[r].data.targets['serve'].options.port
-        ),
-      ] as number[])
-    ) +
-    (remotesToSkip.size + 1);
+    staticRemotes.length === 0 && remotePorts.length === 0
+      ? undefined
+      : Math.max(
+          ...([
+            ...remotePorts,
+            ...staticRemotes.map(
+              (r) =>
+                context.projectGraph.nodes[r].data.targets['serve'].options.port
+            ),
+          ] as number[])
+        ) +
+        (remotesToSkip.size + 1);
 
   return {
     staticRemotes,
