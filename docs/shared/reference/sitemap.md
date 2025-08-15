@@ -833,6 +833,7 @@
     - [Heartbeat](/ci/concepts/heartbeat)
     - [Nx Cloud AI](/ci/concepts/nx-cloud-ai)
   - [Guides](/ci/recipes)
+    - [Improving your Time to Green (TTG)](/ci/recipes/improving-ttg)
     - [Set Up CI](/ci/recipes/set-up)
       - [Setting up Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure)
       - [Setting up CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci)

@@ -2621,6 +2621,11 @@
           "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",
           "itemList": [
             {
+              "name": "Improving your Time to Green (TTG)",
+              "id": "improving-ttg",
+              "file": "nx-cloud/recipes/optimize-your-ttg"
+            },
+            {
               "name": "Set Up CI",
               "id": "set-up",
               "description": "Learn how to set up Nx Cloud for your workspace. Get started connecting to Nx Cloud by running `nx connect`.",

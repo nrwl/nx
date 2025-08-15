@@ -125,6 +125,12 @@ describe('hostGenerator', () => {
       expect(tree.exists('test/src/bootstrap.jsx')).toBeTruthy();
       expect(tree.exists('test/src/main.jsx')).toBeTruthy();
       expect(tree.exists('test/src/app/app.jsx')).toBeTruthy();
+      // as no remotes provided, dynamic federation helper should not be included
+      expect(tree.read('test/src/app/app.jsx', 'utf-8')).not.toEqual(
+        expect.stringContaining(
+          `import { loadRemote } from '@module-federation/enhanced/runtime';`
+        )
+      );
     });
 
     it('should generate host files and configs when --js=false', async () => {

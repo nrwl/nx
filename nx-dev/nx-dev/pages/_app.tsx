@@ -38,11 +38,11 @@ export default function CustomApp({
             'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
               alt: 'Nx: Smart Repos · Fast Builds',
-              type: 'image/jpeg',
+              type: 'image/png',
             },
           ],
           siteName: 'Nx',

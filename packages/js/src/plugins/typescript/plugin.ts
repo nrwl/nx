@@ -61,6 +61,7 @@ export interface TscPluginOptions {
         configName?: string;
         buildDepsName?: string;
         watchDepsName?: string;
+        skipBuildCheck?: boolean;
       };
   verboseOutput?: boolean;
 }
@@ -78,6 +79,7 @@ interface NormalizedPluginOptions {
         configName: string;
         buildDepsName?: string;
         watchDepsName?: string;
+        skipBuildCheck?: boolean;
       };
   verboseOutput: boolean;
 }
@@ -469,11 +471,12 @@ function buildTscTargets(
         );
         if (
           context.configFiles.some((f) => f === buildConfigPath) &&
-          isValidPackageJsonBuildConfig(
-            retrieveTsConfigFromCache(buildConfigPath, context.workspaceRoot),
-            context.workspaceRoot,
-            projectRoot
-          )
+          (options.build.skipBuildCheck ||
+            isValidPackageJsonBuildConfig(
+              retrieveTsConfigFromCache(buildConfigPath, context.workspaceRoot),
+              context.workspaceRoot,
+              projectRoot
+            ))
         ) {
           dependsOn.unshift(options.build.targetName);
         }
@@ -519,7 +522,12 @@ function buildTscTargets(
   if (
     options.build &&
     basename(configFilePath) === options.build.configName &&
-    isValidPackageJsonBuildConfig(tsConfig, context.workspaceRoot, projectRoot)
+    (options.build.skipBuildCheck ||
+      isValidPackageJsonBuildConfig(
+        tsConfig,
+        context.workspaceRoot,
+        projectRoot
+      ))
   ) {
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
@@ -1302,6 +1310,7 @@ function normalizePluginOptions(
     configName: defaultBuildConfigName,
     buildDepsName: 'build-deps',
     watchDepsName: 'watch-deps',
+    skipBuildCheck: false,
   };
   // Build target is not enabled by default
   if (!pluginOptions.build) {
@@ -1312,6 +1321,7 @@ function normalizePluginOptions(
       configName: pluginOptions.build.configName ?? defaultBuildConfigName,
       buildDepsName: pluginOptions.build.buildDepsName ?? 'build-deps',
       watchDepsName: pluginOptions.build.watchDepsName ?? 'watch-deps',
+      skipBuildCheck: pluginOptions.build.skipBuildCheck ?? false,
     };
   }
 
