@@ -21,6 +21,17 @@ export function validateResolvedVersionPlansAgainstFilter(
       const filteredProjects = releaseGroupToFilteredProjects.get(releaseGroup);
 
       for (const plan of releaseGroup.resolvedVersionPlans) {
+        // check if version plan applies to filtered projects
+        if (
+          !checkVersionPlanContainsFilteredProjects(
+            plan,
+            releaseGroup,
+            filteredProjects
+          )
+        ) {
+          continue;
+        }
+
         // Check if version plan contains projects outside the filter
         const projectsOutsideFilter = getVersionPlanProjectsOutsideFilter(
           plan,
@@ -95,6 +106,22 @@ export function areAllVersionPlanProjectsFiltered(
   return (
     planProjects.size > 0 &&
     Array.from(planProjects).every((project) => filteredProjects.has(project))
+  );
+}
+
+function checkVersionPlanContainsFilteredProjects(
+  plan: GroupVersionPlan | ProjectsVersionPlan,
+  releaseGroup: ReleaseGroupWithName,
+  filteredProjects: Set<string> | undefined
+) {
+  if (!filteredProjects) {
+    return true;
+  }
+
+  const planProjects = getProjectsAffectedByVersionPlan(plan, releaseGroup);
+
+  return Array.from(filteredProjects).some((project) =>
+    planProjects.has(project)
   );
 }
 
