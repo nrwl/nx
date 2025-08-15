@@ -42,20 +42,10 @@ describe('nx release with version plans and project filter', () => {
     // Enable independent versioning with version plans
     updateJson('nx.json', (nxJson) => {
       nxJson.release = {
-        ...nxJson.release,
         projectsRelationship: 'independent',
         versionPlans: true,
-        version: {
-          conventionalCommits: false,
-          generatorOptions: {
-            specifierSource: 'version-plans',
-          },
-        },
         changelog: {
           workspaceChangelog: false,
-          projectChangelogs: {
-            createRelease: false,
-          },
         },
       };
       return nxJson;
