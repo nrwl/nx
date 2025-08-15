@@ -4,6 +4,7 @@ import { join } from 'path';
 import {
   cleanupProject,
   newProject,
+  readJson,
   runCLI,
   runCommandAsync,
   tmpProjPath,
@@ -60,10 +61,13 @@ describe('nx release with version plans and project filter', () => {
   it('should only delete version plans that exclusively apply to filtered projects', async () => {
     const versionPlansDir = tmpProjPath('.nx/version-plans');
     await ensureDir(versionPlansDir);
+    const pkg1VersionPlan = join(versionPlansDir, 'bump-pkg1.md');
+    const pkg2VersionPlan = join(versionPlansDir, 'bump-pkg2.md');
+    const pkg3VersionPlan = join(versionPlansDir, 'bump-pkg3.md');
 
     // Create version plan for pkg1 only
     await writeFile(
-      join(versionPlansDir, 'bump-pkg1.md'),
+      pkg1VersionPlan,
       `---
 ${pkg1}: minor
 ---
@@ -74,7 +78,7 @@ Update package 1 with a minor bump
 
     // Create version plan for pkg2 only
     await writeFile(
-      join(versionPlansDir, 'bump-pkg2.md'),
+      pkg2VersionPlan,
       `---
 ${pkg2}: patch
 ---
@@ -85,7 +89,7 @@ Update package 2 with a patch bump
 
     // Create version plan for pkg3 only
     await writeFile(
-      join(versionPlansDir, 'bump-pkg3.md'),
+      pkg3VersionPlan,
       `---
 ${pkg3}: major
 ---
@@ -98,30 +102,28 @@ Update packages 3 with major
     await runCommandAsync(`git commit -m "chore: add version plans"`);
 
     // Verify all version plans exist before release
-    expect(exists(join(versionPlansDir, 'bump-pkg1.md'))).toBeTruthy();
-    expect(exists(join(versionPlansDir, 'bump-pkg2.md'))).toBeTruthy();
-    expect(exists(join(versionPlansDir, 'bump-pkg3.md'))).toBeTruthy();
+    expect(exists(pkg1VersionPlan)).toBeTruthy();
+    expect(exists(pkg2VersionPlan)).toBeTruthy();
+    expect(exists(pkg3VersionPlan)).toBeTruthy();
 
     // Run release with filter for only pkg1
-    const result = runCLI(`release -p ${pkg1} --skip-publish --verbose`, {
-      silenceError: true,
-    });
+    const result = runCLI(`release -p ${pkg1} --skip-publish --verbose`);
 
     // Verify pkg1 was versioned
-    expect(result).toContain(`${pkg1} ❓ Applied`);
+    expect(readJson(`${pkg1}/package.json`).version).toEqual('0.1.0');
 
     // Verify pkg2 and pkg3 were NOT versioned
-    expect(result).not.toContain(`${pkg2} ❓ Applied`);
-    expect(result).not.toContain(`${pkg3} ❓ Applied`);
+    expect(readJson(`${pkg2}/package.json`).version).toEqual('0.0.1');
+    expect(readJson(`${pkg3}/package.json`).version).toEqual('0.0.1');
 
     // - bump-pkg1.md should be deleted (only affects pkg1, which is in the filter)
-    expect(exists(join(versionPlansDir, 'bump-pkg1.md'))).toBeFalsy();
+    expect(exists(pkg1VersionPlan)).toBeFalsy();
 
     // - bump-pkg2.md should be preserved (affects pkg2, which is not in the filter)
-    expect(exists(join(versionPlansDir, 'bump-pkg2.md'))).toBeTruthy();
+    expect(exists(pkg2VersionPlan)).toBeTruthy();
 
     // - bump-pkg3.md should be preserved (affects pkg3, which is not in the filter)
-    expect(exists(join(versionPlansDir, 'bump-pkg3.md'))).toBeTruthy();
+    expect(exists(pkg3VersionPlan)).toBeTruthy();
   }, 120000);
 
   it('should error if version plan contains packages not in the filter', async () => {
