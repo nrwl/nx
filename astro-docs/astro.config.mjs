@@ -64,6 +64,7 @@ export default defineConfig({
         PageFrame: './src/components/layout/PageFrame.astro',
         Sidebar: './src/components/layout/Sidebar.astro',
         TwoColumnContent: './src/components/layout/TwoColumnContent.astro',
+        PageTitle: './src/components/layout/PageTitle.astro',
       },
     }),
     react(),
