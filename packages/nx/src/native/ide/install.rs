@@ -165,6 +165,17 @@ pub fn get_install_command() -> Option<&'static str> {
                 Some("code")
             }
         }
+        SupportedEditor::Cursor => {
+            debug!("Installing Nx Console extension for Cursor");
+            #[cfg(target_os = "windows")]
+            {
+                Some("cursor.cmd")
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                Some("cursor")
+            }
+        }
         SupportedEditor::Windsurf => {
             debug!("Installing Nx Console extension for Windsurf");
             #[cfg(target_os = "windows")]
