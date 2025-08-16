@@ -11,11 +11,9 @@ Nx provides deep integration with AI coding assistants through the **Nx Model Co
 
 ### Automatic Setup with Nx Console
 
-Make sure you have **Nx Console** [installed in your editor](/getting-started/editor-setup), as it automatically exposes the Nx MCP server. Once Nx Console is installed and you open an Nx workspace, you'll receive a notification to **"Improve Copilot/AI agent with Nx-specific context"** - click **"Yes"** to automatically configure it.
+Make sure you have **Nx Console** [installed in your editor](/getting-started/editor-setup), as it automatically exposes the Nx MCP server.
 
-![VS Code showing the Nx MCP installation prompt](/blog/images/articles/copilot-mcp-install.avif)
-
-If you miss the notification, you can manually run the configuration by opening the command palette (`Ctrl/Cmd + Shift + P`) and running `nx.configureMcpServer` (`Nx: Setup MCP Server` in JetBrains IDEs).
+In VSCode, the MCP server is registered automatically without any further steps required by you. In Cursor or JetBrains IDEs, you will receive a notification to configure the MCP server. Read more under [Setting up Nx MCP](/features/enhance-AI#setting-up-nx-mcp).
 
 ### Manual Setup for Other AI Clients
 
