@@ -1,0 +1,453 @@
+---
+title: 'Manual Distributed Task Execution'
+description: 'Learn how to set up manual distributed task execution on various CI providers'
+---
+
+Using [Nx Agents](/features/CI Features/distribute-task-execution) is the easiest way to distribute task execution, but your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipes below.
+
+{% tabs syncKey="ci-provider" %}
+
+{% tabitem label="GitHub" %}
+
+
+Our [reusable GitHub workflow](https://github.com/nrwl/ci) represents a good set of defaults that works for a large number of our users. However, reusable GitHub workflows come with their [limitations](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
+
+If the reusable workflow above doesn't satisfy your needs you should create a custom workflow. If you were to rewrite the reusable workflow yourself, it would look something like this:
+
+```yaml
+// .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
+
+env:
+  NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables DTE
+  NX_BRANCH: ${{ github.event.number || github.ref_name }}
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # this is needed if our pipeline publishes to npm
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout [Pull Request]
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          # By default, PRs will be checked-out based on the Merge Commit, but we want the actual branch HEAD.
+          ref: ${{ github.event.pull_request.head.sha }}
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
+          filter: tree:0
+
+      - uses: actions/checkout@v4
+        name: Checkout [Default Branch]
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
+          filter: tree:0
+
+      # Set node/npm/yarn versions using volta
+      - uses: volta-cli/action@v4
+        with:
+          package-json-path: '${{ github.workspace }}/package.json'
+
+      - name: Use the package manager cache if available
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check out the default branch
+        run: git branch --track main origin/main
+
+      - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
+        run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+
+      - name: Check the formatting
+        run: npx nx-cloud record -- nx format:check
+
+      - name: Lint, test, build, and run e2e
+        run: npx nx affected -t lint,test,build,e2e-ci --configuration=ci
+
+  agents:
+    name: Agent ${{ matrix.agent }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Add more agents here as your repository expands
+        agent: [1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Set node/npm/yarn versions using volta
+      - uses: volta-cli/action@v4
+        with:
+          package-json-path: '${{ github.workspace }}/package.json'
+
+      - name: Use the package manager cache if available
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Nx Agent ${{ matrix.agent }}
+        run: npx nx-cloud start-agent
+        env:
+          NX_AGENT_NAME: ${{ matrix.agent }}
+```
+
+There are comments throughout the workflow to help you understand what is happening in each section.
+
+{% /tabitem %}
+
+{% tabitem label="Circle CI" %}
+
+
+Run agents directly on Circle CI with the workflow below:
+
+```yaml
+// .circleci/config.yml
+version: 2.1
+orbs:
+  nx: nrwl/nx@1.5.1
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+      - run: npm ci
+      - nx/set-shas
+
+      # Tell Nx Cloud to use DTE and stop agents when the e2e-ci tasks are done
+      - run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+      # Send logs to Nx Cloud for any CLI command
+      - run: npx nx-cloud record -- nx format:check
+      # Lint, test, build and run e2e on agent jobs for everything affected by a change
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
+  agent:
+    docker:
+      - image: cimg/node:lts-browsers
+    parameters:
+      ordinal:
+        type: integer
+    steps:
+      - checkout
+      - run: npm ci
+      # Wait for instructions from Nx Cloud
+      - run:
+          command: npx nx-cloud start-agent
+          no_output_timeout: 60m
+workflows:
+  build:
+    jobs:
+      - agent:
+          matrix:
+            parameters:
+              ordinal: [1, 2, 3]
+      - main
+```
+
+This configuration is setting up two types of jobs - a main job and three agent jobs.
+
+The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
+
+The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
+
+{% /tabitem %}
+
+{% tabitem label="Azure" %}
+
+
+Run agents directly on Azure Pipelines with the workflow below:
+
+```yaml
+// azure-pipelines.yml
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: agents
+    strategy:
+      parallel: 3
+    displayName: Nx Cloud Agent
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
+        persistCredentials: true
+
+      - script: npm ci
+      - script: npx nx-cloud start-agent
+
+  - job: main
+    displayName: Nx Cloud Main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      - script: git branch --track main origin/main
+      - script: npm ci
+      - script: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
+      - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
+```
+
+This configuration is setting up two types of jobs - a main job and three agent jobs.
+
+The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
+
+The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
+
+{% /tabitem %}
+
+{% tabitem label="Bitbucket" %}
+
+
+Run agents directly on Bitbucket Pipelines with the workflow below:
+
+```yaml
+// bitbucket-pipelines.yml
+image: node:20
+
+clone:
+  depth: full
+
+definitions:
+  steps:
+    - step: &agent
+        name: Agent
+        script:
+          - export NX_BRANCH=$BITBUCKET_PR_ID
+
+          - npm ci
+          - npx nx-cloud start-agent
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+          - step:
+              name: CI
+              script:
+                - export NX_BRANCH=$BITBUCKET_PR_ID
+
+                - npm ci
+                - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
+                - npx nx-cloud record -- nx format:check
+                - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
+          - step: *agent
+          - step: *agent
+          - step: *agent
+```
+
+This configuration is setting up two types of jobs - a main job and three agent jobs.
+
+The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
+
+The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
+
+{% /tabitem %}
+
+{% tabitem label="GitLab" %}
+
+
+Run agents directly on GitLab with the workflow below:
+
+```yaml
+// .gitlab-ci.yml
+image: node:18
+
+# Creating template for DTE agents
+.dte-agent:
+  interruptible: true
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - '.yarn-cache/'
+  script:
+    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+    - yarn nx-cloud start-agent
+
+# Creating template for a job running DTE (orchestrator)
+.base-pipeline:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - '.yarn-cache/'
+  before_script:
+    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+  artifacts:
+    expire_in: 5 days
+    paths:
+      - dist
+
+# Main job running DTE
+nx-dte:
+  stage: affected
+  extends: .base-pipeline
+  script:
+    - yarn nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+    - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
+
+# Create as many agents as you want
+nx-dte-agent1:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent2:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent3:
+  extends: .dte-agent
+  stage: affected
+```
+
+This configuration is setting up two types of jobs - a main job and three agent jobs.
+
+The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
+
+The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
+
+{% /tabitem %}
+
+{% tabitem label="Jenkins" %}
+
+
+Run agents directly on Jenkins with the workflow below:
+
+```groovy
+// Jenkinsfile
+pipeline {
+    agent none
+    environment {
+        NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
+    }
+    stages {
+        stage('Pipeline') {
+            parallel {
+                stage('Main') {
+                    when {
+                        branch 'main'
+                    }
+                    agent any
+                    steps {
+                        sh "npm ci"
+                        sh "npx nx-cloud start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
+                        sh "npx nx-cloud record -- nx format:check"
+                        sh "npx nx affected --base=HEAD~1 -t lint,test,build,e2e-ci --configuration=ci --parallel=2"
+                    }
+                }
+                stage('PR') {
+                    when {
+                        not { branch 'main' }
+                    }
+                    agent any
+                    steps {
+                        sh "npm ci"
+                        sh "npx nx-cloud start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
+                        sh "npx nx-cloud record -- nx format:check"
+                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint,test,build,e2e-ci --parallel=2 --configuration=ci"
+                    }
+                }
+
+                # Add as many agent you want
+                stage('Agent1') {
+                   agent any
+                   steps {
+                    sh "npm ci"
+                    sh "npx nx-cloud start-agent"
+                   }
+                }
+                stage('Agent2') {
+                   agent any
+                   steps {
+                    sh "npm ci"
+                    sh "npx nx-cloud start-agent"
+                   }
+                }
+                stage('Agent3') {
+                   agent any
+                   steps {
+                    sh "npm ci"
+                    sh "npx nx-cloud start-agent"
+                   }
+                }
+            }
+        }
+    }
+}
+```
+
+This configuration is setting up two types of jobs - a main job and three agent jobs.
+
+The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
+
+The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
+
+{% /tabitem %}
+
+{% /tabs %}
+
+{% aside type="caution" title="Two types of parallelization" %}
+The agent configuration and the `--parallel` flag both parallelize tasks, but in different ways. 
+In the examples above, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
+{% /aside %}
