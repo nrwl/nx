@@ -53,7 +53,9 @@ export interface JestPluginOptions {
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
 function readTargetsCache(cachePath: string): Record<string, JestTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
+    ? readJsonFile(cachePath)
+    : {};
 }
 
 function writeTargetsToCache(
