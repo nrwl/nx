@@ -83,7 +83,6 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
         : {}),
       ...(this.configOverride ? this.configOverride : {}),
       runtimePlugins,
-      virtualRuntimeEntry: true,
     }).apply(compiler);
 
     if (sharedLibraries) {
