@@ -248,40 +248,81 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
   
   if (mavenData.projects && Array.isArray(mavenData.projects)) {
     for (const project of mavenData.projects) {
-      const { artifactId, groupId, packaging, root, sourceRoot, hasTests } = project;
+      const { artifactId, groupId, packaging, root, sourceRoot, hasTests, lifecycle } = project;
       
       if (!artifactId || !root) continue;
       
       const projectType = packaging === 'pom' ? 'library' : 'application';
       const targets: Record<string, TargetConfiguration> = {};
       
-      // Build target
-      targets[options.buildTargetName || 'build'] = {
-        executor: './dist/packages/maven:compile',
-        options: { goals: ['compile'] }
-      };
-
-      // Test target (only if project has tests)
-      if (hasTests) {
-        targets[options.testTargetName || 'test'] = {
-          executor: './dist/packages/maven:test',
-          options: { goals: ['test'] }
+      // Generate targets from actual Maven lifecycle data
+      if (lifecycle && lifecycle.commonPhases) {
+        for (const phase of lifecycle.commonPhases) {
+          const executor = getExecutorForPhase(phase);
+          targets[phase] = {
+            executor: executor,
+            options: { 
+              goals: [phase],
+              projectRoot: root
+            }
+          };
+        }
+      }
+      
+      // Add specific goal-based targets from lifecycle data
+      if (lifecycle && lifecycle.goals) {
+        const goalsByPhase = new Map();
+        
+        // Group goals by phase
+        for (const goal of lifecycle.goals) {
+          if (goal.phase) {
+            if (!goalsByPhase.has(goal.phase)) {
+              goalsByPhase.set(goal.phase, []);
+            }
+            goalsByPhase.get(goal.phase).push(`${goal.plugin}:${goal.goal}`);
+          }
+        }
+        
+        // Create composite targets for phases with multiple goals
+        for (const [phase, goals] of goalsByPhase.entries()) {
+          if (goals.length > 1) {
+            targets[`${phase}-all`] = {
+              executor: './dist/packages/maven:multi-goal',
+              options: {
+                goals: goals,
+                projectRoot: root
+              }
+            };
+          }
+        }
+      }
+      
+      // Fallback to essential targets if no lifecycle data
+      if (!lifecycle || !lifecycle.commonPhases || lifecycle.commonPhases.length === 0) {
+        targets['compile'] = {
+          executor: './dist/packages/maven:compile',
+          options: { goals: ['compile'], projectRoot: root }
+        };
+        
+        if (hasTests) {
+          targets['test'] = {
+            executor: './dist/packages/maven:test',
+            options: { goals: ['test'], projectRoot: root }
+          };
+        }
+        
+        if (projectType === 'application') {
+          targets['package'] = {
+            executor: './dist/packages/maven:package',
+            options: { goals: ['package'], projectRoot: root }
+          };
+        }
+        
+        targets['clean'] = {
+          executor: './dist/packages/maven:compile',
+          options: { goals: ['clean'], projectRoot: root }
         };
       }
-
-      // Package target for applications
-      if (projectType === 'application') {
-        targets['package'] = {
-          executor: './dist/packages/maven:package',
-          options: { goals: ['package'] }
-        };
-      }
-
-      // Clean target
-      targets['clean'] = {
-        executor: './dist/packages/maven:compile',
-        options: { goals: ['clean'] }
-      };
 
       const projectConfig = {
         name: artifactId,
@@ -300,6 +341,32 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
     createNodesResults,
     createDependencies: [] // Empty for now
   };
+}
+
+/**
+ * Get the appropriate executor for a Maven phase
+ */
+function getExecutorForPhase(phase: string): string {
+  switch (phase) {
+    case 'test':
+    case 'integration-test':
+      return './dist/packages/maven:test';
+    case 'package':
+    case 'verify':
+      return './dist/packages/maven:package';
+    case 'clean':
+      return './dist/packages/maven:clean';
+    case 'compile':
+    case 'process-classes':
+    case 'generate-sources':
+    case 'process-sources':
+    case 'generate-resources':
+    case 'process-resources':
+    case 'validate':
+    case 'initialize':
+    default:
+      return './dist/packages/maven:compile';
+  }
 }
 
 /**
