@@ -235,7 +235,7 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-auto">
+          <div className="mx-4 w-auto flex-grow">
             <AlgoliaSearch />
           </div>
         </div>
@@ -268,7 +268,7 @@ export function DocumentationHeader({
           <AlgoliaSearch />
         </div>
         {/*NAVIGATION*/}
-        <div className="hidden flex-shrink-0 xl:flex">
+        <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
             className="hidden items-center justify-center space-x-2 text-sm lg:flex"
@@ -354,15 +354,23 @@ export function DocumentationHeader({
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-4 lg:flex"
+            className="items-justified hidden justify-center space-x-2 lg:flex"
           >
             <ButtonLink
-              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
-              title="Get started"
+              href="/contact"
+              title="Contact"
+              variant="secondary"
+              size="small"
+            >
+              Contact
+            </ButtonLink>
+            <ButtonLink
+              href="https://cloud.nx.app/?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
+              title="Login"
               variant="primary"
               size="small"
             >
-              Get started
+              Login
             </ButtonLink>
           </nav>
         </div>

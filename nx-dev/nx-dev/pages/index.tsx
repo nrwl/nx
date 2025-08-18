@@ -18,10 +18,9 @@ import {
   CallToActionJuriGraphic,
   Features,
 } from '@nx/nx-dev-ui-home';
-import { contactButton } from '../lib/header-cta.configs';
 
 export default function Index(): JSX.Element {
-  const headerCTAConfig = [contactButton];
+  // const headerCTAConfig = [contactButton];
 
   return (
     <>
@@ -47,7 +46,7 @@ export default function Index(): JSX.Element {
         }}
       />
       <h1 className="sr-only">Build system with advanced CI capabilities.</h1>
-      <DefaultLayout isHome headerCTAConfig={headerCTAConfig}>
+      <DefaultLayout isHome>
         <Hero />
         <div className="mt-16 lg:mt-40">
           <Statistics />

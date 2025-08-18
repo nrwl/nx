@@ -2,7 +2,6 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import { blogApi } from '../../../lib/blog.api';
 import { BlogDetails } from '@nx/nx-dev-ui-blog';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
-import { tryNxCloudForFree } from '../../../lib/header-cta.configs';
 
 // Needed without it Next.js will fail to serve the page with start
 export const revalidate = 3600;
@@ -50,7 +49,6 @@ export async function generateStaticParams() {
 export default async function BlogPostDetail({
   params: { slug },
 }: BlogPostDetailProps) {
-  const ctaHeaderConfig = [tryNxCloudForFree];
   const blog = await blogApi.getBlogPostBySlug(slug);
   const allPosts = await blogApi.getBlogs((p) => !!p.published);
 
@@ -58,7 +56,7 @@ export default async function BlogPostDetail({
     <>
       {/* This empty div is necessary as app router does not automatically scroll on route changes */}
       <div></div>
-      <DefaultLayout headerCTAConfig={ctaHeaderConfig}>
+      <DefaultLayout>
         <BlogDetails post={blog} allPosts={allPosts} />
       </DefaultLayout>
     </>

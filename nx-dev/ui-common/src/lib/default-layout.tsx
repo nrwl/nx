@@ -10,16 +10,23 @@ export function DefaultLayout({
   hideHeader = false,
   hideFooter = false,
   headerCTAConfig,
+  scrollCTAConfig,
 }: {
   isHome?: boolean;
   hideBackground?: boolean;
   hideHeader?: boolean;
   hideFooter?: boolean;
   headerCTAConfig?: ButtonLinkProps[];
+  scrollCTAConfig?: ButtonLinkProps[];
 } & PropsWithChildren): JSX.Element {
   return (
     <div className="w-full dark:bg-slate-950">
-      {!hideHeader && <Header ctaButtons={headerCTAConfig} />}
+      {!hideHeader && (
+        <Header
+          ctaButtons={headerCTAConfig}
+          scrollCtaButtons={scrollCTAConfig}
+        />
+      )}
       <div className="relative isolate">
         {!hideBackground && (
           <div

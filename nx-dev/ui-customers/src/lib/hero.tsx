@@ -19,7 +19,7 @@ export function Hero(): ReactElement {
           </SectionHeading>
           <div className="mt-16 flex items-center justify-center gap-x-6">
             <ButtonLink
-              href="https://cloud.nx.app/get-started/"
+              href="https://cloud.nx.app/get-started"
               title="Get started now"
               variant="primary"
               size="default"
@@ -29,20 +29,14 @@ export function Hero(): ReactElement {
             >
               Get started now
             </ButtonLink>
-
-            <a
-              title="Live demo"
-              href="https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview"
-              className="group font-semibold leading-6 text-slate-950 dark:text-white"
+            <ButtonLink
+              href="/contact/sales"
+              title="Book a demo"
+              variant="secondary"
+              size="default"
             >
-              Live demo{' '}
-              <span
-                aria-hidden="true"
-                className="inline-block transition group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </a>
+              Book a demo
+            </ButtonLink>
           </div>
         </div>
       </div>

@@ -1,4 +1,8 @@
-import { CallToAction, DefaultLayout } from '@nx/nx-dev-ui-common';
+import {
+  CallToAction,
+  DefaultLayout,
+  ButtonLinkProps,
+} from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import {
@@ -6,10 +10,20 @@ import {
   Hero,
   OssProjects,
 } from '@nx/nx-dev-ui-customers';
-import { contactButton } from '../lib/header-cta.configs';
 
 export function Customers(): JSX.Element {
   const router = useRouter();
+
+  const scrollCTAConfig: ButtonLinkProps[] = [
+    {
+      href: '/contact/sales',
+      variant: 'primary',
+      size: 'small',
+      target: '_blank',
+      title: 'Book a demo',
+      children: 'Book a demo',
+    },
+  ];
 
   return (
     <>
@@ -34,7 +48,7 @@ export function Customers(): JSX.Element {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={[contactButton]}>
+      <DefaultLayout scrollCTAConfig={scrollCTAConfig}>
         <div>
           <Hero />
         </div>

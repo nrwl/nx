@@ -2,7 +2,6 @@ import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Hero, PartnersList } from '@nx/nx-dev-ui-partners';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { contactButton } from '../lib/header-cta.configs';
 
 export function Partners(): JSX.Element {
   const router = useRouter();
@@ -29,7 +28,7 @@ export function Partners(): JSX.Element {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={[contactButton]}>
+      <DefaultLayout>
         <div>
           <Hero />
         </div>

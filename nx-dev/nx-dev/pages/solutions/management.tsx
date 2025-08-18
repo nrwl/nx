@@ -18,13 +18,13 @@ import { type ReactElement } from 'react';
 export function EnterpriseSolutionsManagement(): ReactElement {
   const router = useRouter();
 
-  const headerCTAConfig: ButtonLinkProps[] = [
+  const scrollCTAConfig: ButtonLinkProps[] = [
     {
-      href: '/contact',
-      variant: 'secondary',
+      href: '/contact/sales',
+      variant: 'primary',
       size: 'small',
-      title: 'Contact us',
-      children: 'Contact us',
+      title: 'Talk to our team',
+      children: 'Talk to our team',
     },
   ];
 
@@ -52,7 +52,7 @@ export function EnterpriseSolutionsManagement(): ReactElement {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={headerCTAConfig}>
+      <DefaultLayout scrollCTAConfig={scrollCTAConfig}>
         <SolutionsManagementHero />
         <CustomerLogos />
         <SolutionsTopCallToAction />
