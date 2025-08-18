@@ -235,6 +235,7 @@ export interface HashedTask {
   project: string
   target: string
   configuration?: string
+  cache?: boolean
 }
 
 export interface HasherOptions {
