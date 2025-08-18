@@ -375,11 +375,51 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
     }
   }
   
-  // Create dependencies based on Maven reactor dependencies
+
+  return {
+    createNodesResults,
+    createDependencies: []
+  };
+}
+
+/**
+ * Create dependencies between Maven projects based on their Maven dependencies
+ */
+export const createDependencies: CreateDependencies = (options, context) => {
+  const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
+  const isVerbose = opts.verbose || process.env.NX_VERBOSE_LOGGING === 'true' || process.argv.includes('--verbose');
+  
+  if (isVerbose) {
+    console.log(`\n📊 [DEPENDENCIES-PLUGIN] ===============================`);
+    console.log(`📊 [DEPENDENCIES-PLUGIN] Maven createDependencies starting...`);
+    console.log(`📊 [DEPENDENCIES-PLUGIN] Workspace root: ${context.workspaceRoot}`);
+    console.log(`📊 [DEPENDENCIES-PLUGIN] ===============================`);
+  }
+
+  // Read Maven analysis data
+  const analysisFile = join(context.workspaceRoot, '.nx/workspace-data/nx-maven-projects.json');
+  
+  if (!existsSync(analysisFile)) {
+    if (isVerbose) {
+      console.log(`📊 [DEPENDENCIES] No Maven analysis file found at ${analysisFile}`);
+    }
+    return [];
+  }
+
+  let mavenData;
+  try {
+    mavenData = JSON.parse(readFileSync(analysisFile, 'utf-8'));
+  } catch (error) {
+    if (isVerbose) {
+      console.log(`📊 [DEPENDENCIES] Failed to parse Maven analysis file: ${error}`);
+    }
+    return [];
+  }
+
   const createDependencies = [];
   
   if (mavenData.projects && Array.isArray(mavenData.projects)) {
-    if (opts.verbose) {
+    if (isVerbose) {
       console.log(`📊 [DEPENDENCIES] Processing ${mavenData.projects.length} projects for dependencies`);
     }
     
@@ -393,7 +433,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
       }
     }
     
-    if (opts.verbose) {
+    if (isVerbose) {
       console.log(`📊 [DEPENDENCIES] Project map has ${projectMap.size} entries`);
     }
     
@@ -419,7 +459,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
               type: 'static'
             });
             
-            if (opts.verbose) {
+            if (isVerbose) {
               console.log(`📊 [DEPENDENCIES] Added: ${root} -> ${targetRoot} (${projectCoordinates} -> ${depCoordinates})`);
             }
           }
@@ -428,15 +468,13 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
     }
   }
   
-  if (opts.verbose) {
+  if (isVerbose) {
     console.log(`📊 [DEPENDENCIES] Total dependencies created: ${createDependencies.length}`);
+    console.log(`📊 [DEPENDENCIES-PLUGIN] ===============================\n`);
   }
 
-  return {
-    createNodesResults,
-    createDependencies
-  };
-}
+  return createDependencies;
+};
 
 /**
  * Detect Maven wrapper in workspace root, fallback to 'mvn'
