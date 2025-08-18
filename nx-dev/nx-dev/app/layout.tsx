@@ -62,8 +62,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
-      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
-      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+      {process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
         <Script
           id="Cookiebot"
           src="https://consent.cookiebot.com/uc.js"
