@@ -9,6 +9,7 @@ import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
+import { addMcpToCodexConfig } from './utils/add-mcp-to-codex-config';
 import {
   initializeGitRepo,
   pushToGitHub,
@@ -17,6 +18,7 @@ import {
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import { Preset } from './utils/preset/preset';
+import * as ora from 'ora';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
@@ -63,6 +65,12 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       packageManager,
       directory
     );
+  }
+
+  const writtenCodexPath = addMcpToCodexConfig();
+
+  if (writtenCodexPath) {
+    ora(`Added nx_mcp to ${writtenCodexPath}`).succeed();
   }
 
   let connectUrl: string | undefined;
