@@ -53,29 +53,15 @@ export const createNodesV2: CreateNodesV2 = [
   async (configFiles, options, context): Promise<CreateNodesResultV2> => {
     const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
     
-    // Check for verbose logging from multiple sources
-    const isVerbose = opts.verbose || process.env.NX_VERBOSE_LOGGING === 'true' || process.argv.includes('--verbose');
-
-    if (isVerbose) {
-      console.log(`\n🔍 [MAVEN-PLUGIN] ===========================================`);
-      console.log(`🔍 [MAVEN-PLUGIN] Maven createNodesV2 starting...`);
-      console.log(`🔍 [MAVEN-PLUGIN] Found ${configFiles.length} pom.xml files initially`);
-      console.log(`🔍 [MAVEN-PLUGIN] Workspace root: ${context.workspaceRoot}`);
-      console.log(`🔍 [MAVEN-PLUGIN] ===========================================`);
-    }
+    // Check for verbose logging from multiple sources  
+    const isVerbose = false; // Disable all verbose logging for cleaner output
 
     // Only process if we have the root pom.xml in the workspace root
     const rootPomExists = configFiles.some(file => file === 'pom.xml');
     if (!rootPomExists) {
-      if (isVerbose) {
-        console.log(`🔍 [MAVEN-PLUGIN] No root pom.xml found, skipping processing`);
-      }
       return [];
     }
 
-    if (isVerbose) {
-      console.log(`🔍 [MAVEN-PLUGIN] Processing root Maven project`);
-    }
 
 
     // Generate cache key based on pom.xml files and options
@@ -87,15 +73,9 @@ export const createNodesV2: CreateNodesV2 = [
     );
     const cacheKey = projectHash;
 
-    if (isVerbose) {
-      console.log(`🔍 [MAVEN-PLUGIN] Generated cache key: ${cacheKey}`);
-    }
 
     // OPTIMIZATION: Check global in-memory cache first
     if (globalAnalysisCache && globalCacheKey === cacheKey) {
-      if (isVerbose) {
-        console.log(`🔍 [MAVEN-PLUGIN] ✅ HIT: Using global in-memory cache`);
-      }
       return globalAnalysisCache.createNodesResults || [];
     }
 
@@ -105,18 +85,12 @@ export const createNodesV2: CreateNodesV2 = [
 
     // Check if we have valid cached results
     if (cache[cacheKey]) {
-      if (isVerbose) {
-        console.log(`🔍 [MAVEN-PLUGIN] ✅ HIT: Using disk-cached Maven analysis results`);
-      }
       // Store in global cache for faster subsequent access
       globalAnalysisCache = cache[cacheKey];
       globalCacheKey = cacheKey;
       return cache[cacheKey].createNodesResults || [];
     }
 
-    if (isVerbose) {
-      console.log(`🔍 [MAVEN-PLUGIN] ❌ MISS: No cache found - running fresh Maven analysis`);
-    }
 
     // Run analysis if not cached
     const result = await runMavenAnalysis({...opts, verbose: isVerbose});
@@ -129,9 +103,6 @@ export const createNodesV2: CreateNodesV2 = [
     globalAnalysisCache = result;
     globalCacheKey = cacheKey;
 
-    if (isVerbose) {
-      console.log(`🔍 [MAVEN-PLUGIN] Results cached - returning ${result.createNodesResults?.length || 0} project nodes`);
-    }
 
     return result.createNodesResults || [];
   },
@@ -144,10 +115,6 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
   const outputFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
   const isVerbose = options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
 
-  if (isVerbose) {
-    console.log(`\n🔧 [MAVEN-ANALYSIS] Starting Maven analysis...`);
-    console.log(`🔧 [MAVEN-ANALYSIS] Output file: ${outputFile}`);
-  }
 
   // Detect Maven wrapper or fallback to 'mvn'
   const mavenExecutable = detectMavenWrapper();
@@ -163,9 +130,6 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
     mavenArgs.push('-q');
   }
 
-  if (isVerbose) {
-    console.log(`🔧 [MAVEN-ANALYSIS] Maven command: ${mavenExecutable} ${mavenArgs.join(' ')}`);
-  }
 
   // Run Maven plugin
   await new Promise<void>((resolve, reject) => {
@@ -188,9 +152,6 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
 
     child.on('close', (code) => {
       if (code === 0) {
-        if (isVerbose) {
-          console.log(`🔧 [MAVEN-ANALYSIS] ✅ Maven analysis completed successfully`);
-        }
         resolve();
       } else {
         let errorMsg = `Maven analysis failed with code ${code}`;
@@ -213,16 +174,25 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
   const jsonContent = readFileSync(outputFile, 'utf8');
   const mavenData = JSON.parse(jsonContent);
   
-  if (isVerbose) {
-    console.log(`🔧 [MAVEN-ANALYSIS] Found ${mavenData.projects?.length || 0} projects`);
-  }
 
   // Convert to Nx createNodesV2 format
   const createNodesResults: any[] = [];
   
   if (mavenData.projects && Array.isArray(mavenData.projects)) {
+    // First pass: create a map of Maven coordinates to qualified project names for dependency resolution
+    const coordinatesToProjectName = new Map();
     for (const project of mavenData.projects) {
-      const { artifactId, groupId, packaging, root, sourceRoot, hasTests, lifecycle } = project;
+      const { artifactId, groupId } = project;
+      if (artifactId && groupId) {
+        const coordinates = `${groupId}:${artifactId}`;
+        const projectName = `${groupId}.${artifactId}`;
+        coordinatesToProjectName.set(coordinates, projectName);
+      }
+    }
+    
+    // Second pass: create project configurations with dependsOn relationships
+    for (const project of mavenData.projects) {
+      const { artifactId, groupId, packaging, root, sourceRoot, hasTests, lifecycle, dependencies: projectDeps } = project;
       
       if (!artifactId || !root) continue;
       
@@ -231,6 +201,21 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
       
       // Use qualified name with group and artifact for Maven -pl flag
       const qualifiedName = `${groupId}:${artifactId}`;
+      
+      // Create dependsOn relationships for Maven dependencies
+      const createDependsOnForPhase = (phaseName: string): string[] => {
+        const dependsOn: string[] = [];
+        if (projectDeps && Array.isArray(projectDeps)) {
+          for (const dep of projectDeps) {
+            const depCoordinates = `${dep.groupId}:${dep.artifactId}`;
+            const depProjectName = coordinatesToProjectName.get(depCoordinates);
+            if (depProjectName && depProjectName !== `${groupId}.${artifactId}`) {
+              dependsOn.push(`${depProjectName}:${phaseName}`);
+            }
+          }
+        }
+        return dependsOn;
+      };
       
       // Generate targets from actual Maven lifecycle data using run-commands
       const allPhases = new Set();
@@ -249,16 +234,25 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         }
       }
       
-      // Create targets for all unique phases
-      for (const phase of allPhases) {
-        targets[phase as string] = {
+      // Create targets for all unique phases with dependency relationships
+      allPhases.forEach(phase => {
+        const phaseName = phase as string;
+        const dependsOn = createDependsOnForPhase(phaseName);
+        const target: TargetConfiguration = {
           executor: 'nx:run-commands',
           options: { 
-            command: `mvn ${phase} -pl ${qualifiedName}`,
+            command: `mvn ${phaseName} -pl ${qualifiedName}`,
             cwd: '{workspaceRoot}'
           }
         };
-      }
+        
+        // Add dependsOn only if there are dependencies
+        if (dependsOn.length > 0) {
+          target.dependsOn = dependsOn;
+        }
+        
+        targets[phaseName] = target;
+      });
       
       // Add specific goal-based targets from lifecycle data
       if (lifecycle && lifecycle.goals) {
@@ -292,7 +286,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         }
         
         // Create composite targets for phases with multiple goals
-        for (const [phase, goals] of goalsByPhase.entries()) {
+        goalsByPhase.forEach((goals, phase) => {
           if (goals.length > 1) {
             targets[`${phase}-all`] = {
               executor: 'nx:run-commands',
@@ -302,46 +296,66 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
               }
             };
           }
-        }
+        });
       }
       
       // Fallback to essential targets if no lifecycle data
       if (!lifecycle || !lifecycle.commonPhases || lifecycle.commonPhases.length === 0) {
-        targets['compile'] = {
+        const compileDependsOn = createDependsOnForPhase('compile');
+        const compileTarget: TargetConfiguration = {
           executor: 'nx:run-commands',
           options: { 
             command: `mvn compile -pl ${qualifiedName}`,
             cwd: '{workspaceRoot}'
           }
         };
+        if (compileDependsOn.length > 0) {
+          compileTarget.dependsOn = compileDependsOn;
+        }
+        targets['compile'] = compileTarget;
         
         if (hasTests) {
-          targets['test'] = {
+          const testDependsOn = createDependsOnForPhase('test');
+          const testTarget: TargetConfiguration = {
             executor: 'nx:run-commands',
             options: { 
               command: `mvn test -pl ${qualifiedName}`,
               cwd: '{workspaceRoot}'
             }
           };
+          if (testDependsOn.length > 0) {
+            testTarget.dependsOn = testDependsOn;
+          }
+          targets['test'] = testTarget;
         }
         
         if (projectType === 'application') {
-          targets['package'] = {
+          const packageDependsOn = createDependsOnForPhase('package');
+          const packageTarget: TargetConfiguration = {
             executor: 'nx:run-commands',
             options: { 
               command: `mvn package -pl ${qualifiedName}`,
               cwd: '{workspaceRoot}'
             }
           };
+          if (packageDependsOn.length > 0) {
+            packageTarget.dependsOn = packageDependsOn;
+          }
+          targets['package'] = packageTarget;
         }
         
-        targets['clean'] = {
+        const cleanDependsOn = createDependsOnForPhase('clean');
+        const cleanTarget: TargetConfiguration = {
           executor: 'nx:run-commands',
           options: { 
             command: `mvn clean -pl ${qualifiedName}`,
             cwd: '{workspaceRoot}'
           }
         };
+        if (cleanDependsOn.length > 0) {
+          cleanTarget.dependsOn = cleanDependsOn;
+        }
+        targets['clean'] = cleanTarget;
       }
 
       const projectConfig = {
@@ -368,36 +382,33 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
  * Create dependencies between Maven projects based on their Maven dependencies
  */
 export const createDependencies: CreateDependencies = (options, context) => {
-  console.log(`🚨 [DEPENDENCIES] createDependencies function called!`);
-  
   const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
-  const isVerbose = true; // Force verbose for debugging
-  
-  console.log(`📊 [DEPENDENCIES] Workspace root: ${context.workspaceRoot}`);
+  const isVerbose = false; // Disable verbose logging
 
-  // Read Maven analysis data
-  const analysisFile = join(context.workspaceRoot, '.nx/workspace-data/nx-maven-projects.json');
+  // Read Maven analysis data - check both possible locations
+  const analysisFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
+  const fallbackAnalysisFile = join(context.workspaceRoot, 'nx-maven-projects.json');
   
+  let actualAnalysisFile = analysisFile;
   if (!existsSync(analysisFile)) {
-    console.log(`📊 [DEPENDENCIES] No Maven analysis file found at ${analysisFile}`);
-    return [];
+    if (existsSync(fallbackAnalysisFile)) {
+      actualAnalysisFile = fallbackAnalysisFile;
+    } else {
+      return [];
+    }
   }
 
   let mavenData;
   try {
-    const fileContent = readFileSync(analysisFile, 'utf-8');
-    console.log(`📊 [DEPENDENCIES] Read ${fileContent.length} bytes from analysis file`);
+    const fileContent = readFileSync(actualAnalysisFile, 'utf-8');
     mavenData = JSON.parse(fileContent);
-    console.log(`📊 [DEPENDENCIES] Parsed JSON successfully`);
   } catch (error) {
-    console.log(`📊 [DEPENDENCIES] Failed to parse Maven analysis file: ${error}`);
     return [];
   }
 
   const dependencies = [];
   
   if (mavenData.projects && Array.isArray(mavenData.projects)) {
-    console.log(`📊 [DEPENDENCIES] Processing ${mavenData.projects.length} projects for dependencies`);
     
     // First, create a map of Maven coordinates to project names
     const projectMap = new Map();
@@ -410,7 +421,6 @@ export const createDependencies: CreateDependencies = (options, context) => {
       }
     }
     
-    console.log(`📊 [DEPENDENCIES] Project map has ${projectMap.size} entries`);
     
     // Then create dependencies
     for (const project of mavenData.projects) {
@@ -432,17 +442,15 @@ export const createDependencies: CreateDependencies = (options, context) => {
               source: sourceProjectName,
               target: targetProjectName,
               type: DependencyType.static,
-              sourceFile: analysisFile
+              sourceFile: join(project.root || '', 'pom.xml')
             });
             
-            console.log(`📊 [DEPENDENCIES] Added: ${sourceProjectName} -> ${targetProjectName}`);
           }
         }
       }
     }
   }
   
-  console.log(`📊 [DEPENDENCIES] Total dependencies created: ${dependencies.length}`);
   return dependencies;
 };
 
