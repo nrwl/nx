@@ -59,6 +59,12 @@
         "index": 0
       }
     },
+    "tsConfig": {
+      "description": "The path to the TypeScript configuration file, relative to the workspace root. Note this is only metadata used by Angular migrations. This executor does not use it.",
+      "type": "string",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
+    },
     "setupFile": {
       "description": "The name of a setup file used by Jest.",
       "type": "string",
