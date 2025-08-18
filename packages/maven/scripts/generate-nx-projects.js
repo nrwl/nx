@@ -35,31 +35,43 @@ for (const project of data.projects) {
   
   const projectType = packaging === 'pom' ? 'library' : 'application';
   
-  // Create targets
+  // Create targets based on reactor project data
   const targets = {
-    build: {
-      executor: './dist/packages/maven:compile',
-      options: { goals: ['compile'] }
+    compile: {
+      executor: '@nx/maven:compile',
+      options: { 
+        goals: ['compile'],
+        projectRoot: root
+      }
     },
     clean: {
-      executor: './dist/packages/maven:compile', 
-      options: { goals: ['clean'] }
+      executor: '@nx/maven:compile', 
+      options: { 
+        goals: ['clean'],
+        projectRoot: root
+      }
     }
   };
   
   // Add test target if project has tests
   if (hasTests) {
     targets.test = {
-      executor: './dist/packages/maven:test',
-      options: { goals: ['test'] }
+      executor: '@nx/maven:test',
+      options: { 
+        goals: ['test'],
+        projectRoot: root
+      }
     };
   }
   
   // Add package target for applications
   if (projectType === 'application') {
     targets.package = {
-      executor: './dist/packages/maven:package',
-      options: { goals: ['package'] }
+      executor: '@nx/maven:package',
+      options: { 
+        goals: ['package'],
+        projectRoot: root
+      }
     };
   }
   
