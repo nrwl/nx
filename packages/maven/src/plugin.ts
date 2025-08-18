@@ -92,8 +92,24 @@ export const createNodesV2: CreateNodesV2 = [
     }
 
 
-    // Run analysis if not cached
-    const result = await runMavenAnalysis({...opts, verbose: isVerbose});
+    // Check if Maven analysis output already exists before running analysis
+    const existingAnalysisFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
+    let result;
+    
+    if (existsSync(existingAnalysisFile)) {
+      // Use existing analysis file instead of re-running Maven
+      try {
+        const jsonContent = readFileSync(existingAnalysisFile, 'utf8');
+        const mavenData = JSON.parse(jsonContent);
+        result = await processMavenData(mavenData);
+      } catch (error) {
+        console.warn('Failed to read existing Maven analysis, running fresh analysis');
+        result = await runMavenAnalysis({...opts, verbose: isVerbose});
+      }
+    } else {
+      // Run analysis if no existing file
+      result = await runMavenAnalysis({...opts, verbose: isVerbose});
+    }
 
     // Cache the complete result
     cache[cacheKey] = result;
@@ -174,7 +190,13 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
   const jsonContent = readFileSync(outputFile, 'utf8');
   const mavenData = JSON.parse(jsonContent);
   
+  return await processMavenData(mavenData);
+}
 
+/**
+ * Process Maven analysis data and convert to Nx createNodesV2 format
+ */
+async function processMavenData(mavenData: any) {
   // Convert to Nx createNodesV2 format
   const createNodesResults: any[] = [];
   
