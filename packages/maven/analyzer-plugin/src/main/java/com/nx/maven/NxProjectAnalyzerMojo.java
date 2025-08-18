@@ -5,10 +5,15 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.lifecycle.LifecycleExecutor;
+import org.apache.maven.lifecycle.MavenExecutionPlan;
+import org.apache.maven.plugin.MojoExecution;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +37,9 @@ public class NxProjectAnalyzerMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
+
+    @Component
+    private LifecycleExecutor lifecycleExecutor;
 
     @Parameter(property = "nx.outputFile", defaultValue = "nx-maven-projects.json")
     private String outputFile;
@@ -145,6 +153,10 @@ public class NxProjectAnalyzerMojo extends AbstractMojo {
             File resourcesDir = new File(mavenProject.getBasedir(), "src/main/resources");
             projectNode.put("hasResources", resourcesDir.exists() && resourcesDir.isDirectory());
             
+            // Extract lifecycle phases and plugin goals
+            ObjectNode lifecycleData = extractLifecycleData(mavenProject);
+            projectNode.set("lifecycle", lifecycleData);
+            
             getLog().debug("Analyzed project: " + mavenProject.getArtifactId() + " at " + relativePath);
             
             return projectNode;
@@ -168,5 +180,113 @@ public class NxProjectAnalyzerMojo extends AbstractMojo {
             default:
                 return "library";
         }
+    }
+    
+    private ObjectNode extractLifecycleData(MavenProject mavenProject) {
+        ObjectNode lifecycleNode = objectMapper.createObjectNode();
+        
+        try {
+            // Get the execution plan for the default lifecycle
+            MavenExecutionPlan executionPlan = lifecycleExecutor.calculateExecutionPlan(
+                session, "deploy"
+            );
+            
+            // Extract phases
+            ArrayNode phasesArray = objectMapper.createArrayNode();
+            Set<String> uniquePhases = new HashSet<>();
+            
+            for (MojoExecution execution : executionPlan.getMojoExecutions()) {
+                String phase = execution.getLifecyclePhase();
+                if (phase != null && !uniquePhases.contains(phase)) {
+                    uniquePhases.add(phase);
+                    phasesArray.add(phase);
+                }
+            }
+            lifecycleNode.set("phases", phasesArray);
+            
+            // Extract plugin goals and their configurations
+            ArrayNode goalsArray = objectMapper.createArrayNode();
+            ArrayNode pluginsArray = objectMapper.createArrayNode();
+            
+            // Process build plugins
+            if (mavenProject.getBuild() != null && mavenProject.getBuild().getPlugins() != null) {
+                for (Plugin plugin : mavenProject.getBuild().getPlugins()) {
+                    ObjectNode pluginNode = objectMapper.createObjectNode();
+                    pluginNode.put("groupId", plugin.getGroupId());
+                    pluginNode.put("artifactId", plugin.getArtifactId());
+                    pluginNode.put("version", plugin.getVersion());
+                    
+                    // Plugin executions with goals
+                    ArrayNode executionsArray = objectMapper.createArrayNode();
+                    if (plugin.getExecutions() != null) {
+                        for (PluginExecution execution : plugin.getExecutions()) {
+                            ObjectNode executionNode = objectMapper.createObjectNode();
+                            executionNode.put("id", execution.getId());
+                            executionNode.put("phase", execution.getPhase());
+                            
+                            ArrayNode goalsList = objectMapper.createArrayNode();
+                            for (String goal : execution.getGoals()) {
+                                goalsList.add(goal);
+                                // Add to global goals list
+                                ObjectNode goalNode = objectMapper.createObjectNode();
+                                goalNode.put("plugin", plugin.getArtifactId());
+                                goalNode.put("goal", goal);
+                                goalNode.put("phase", execution.getPhase());
+                                goalsArray.add(goalNode);
+                            }
+                            executionNode.set("goals", goalsList);
+                            executionsArray.add(executionNode);
+                        }
+                    }
+                    pluginNode.set("executions", executionsArray);
+                    pluginsArray.add(pluginNode);
+                }
+            }
+            
+            lifecycleNode.set("goals", goalsArray);
+            lifecycleNode.set("plugins", pluginsArray);
+            
+            // Add common Maven phases based on packaging
+            ArrayNode commonPhases = objectMapper.createArrayNode();
+            switch (mavenProject.getPackaging().toLowerCase()) {
+                case "jar":
+                case "war":
+                case "ear":
+                    commonPhases.add("validate");
+                    commonPhases.add("compile");
+                    commonPhases.add("test");
+                    commonPhases.add("package");
+                    commonPhases.add("verify");
+                    commonPhases.add("install");
+                    commonPhases.add("deploy");
+                    break;
+                case "pom":
+                    commonPhases.add("validate");
+                    commonPhases.add("install");
+                    commonPhases.add("deploy");
+                    break;
+                case "maven-plugin":
+                    commonPhases.add("validate");
+                    commonPhases.add("compile");
+                    commonPhases.add("test");
+                    commonPhases.add("package");
+                    commonPhases.add("install");
+                    commonPhases.add("deploy");
+                    break;
+            }
+            lifecycleNode.set("commonPhases", commonPhases);
+            
+        } catch (Exception e) {
+            getLog().warn("Failed to extract lifecycle data for project: " + mavenProject.getArtifactId(), e);
+            // Return minimal lifecycle data
+            ArrayNode fallbackPhases = objectMapper.createArrayNode();
+            fallbackPhases.add("compile");
+            fallbackPhases.add("test");
+            fallbackPhases.add("package");
+            fallbackPhases.add("clean");
+            lifecycleNode.set("commonPhases", fallbackPhases);
+        }
+        
+        return lifecycleNode;
     }
 }
