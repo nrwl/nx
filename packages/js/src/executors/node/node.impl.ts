@@ -180,7 +180,7 @@ export async function* nodeExecutor(
                 : 'node-with-require-overrides';
 
             task.childProcess = fork(
-              joinPathFragments(__dirname, loaderFile),
+              join(__dirname, loaderFile),
               options.args ?? [],
               {
                 execArgv: getExecArgv(options),

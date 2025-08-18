@@ -9,7 +9,7 @@ async function main() {
   try {
     // Register ESM loader for workspace path mappings
     register(
-      path.join(__dirname, 'lib', 'esm-loader.js'),
+      pathToFileURL(path.join(__dirname, 'lib', 'esm-loader.js')).href,
       pathToFileURL(__filename)
     );
 
