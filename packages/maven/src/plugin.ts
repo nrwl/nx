@@ -379,6 +379,10 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
   const createDependencies = [];
   
   if (mavenData.projects && Array.isArray(mavenData.projects)) {
+    if (opts.verbose) {
+      console.log(`📊 [DEPENDENCIES] Processing ${mavenData.projects.length} projects for dependencies`);
+    }
+    
     // First, create a map of Maven coordinates to project roots
     const projectMap = new Map();
     for (const project of mavenData.projects) {
@@ -387,6 +391,10 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         const coordinates = `${groupId}:${artifactId}`;
         projectMap.set(coordinates, root);
       }
+    }
+    
+    if (opts.verbose) {
+      console.log(`📊 [DEPENDENCIES] Project map has ${projectMap.size} entries`);
     }
     
     // Then create dependencies
@@ -410,10 +418,18 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
               target: targetRoot,
               type: 'static'
             });
+            
+            if (opts.verbose) {
+              console.log(`📊 [DEPENDENCIES] Added: ${root} -> ${targetRoot} (${projectCoordinates} -> ${depCoordinates})`);
+            }
           }
         }
       }
     }
+  }
+  
+  if (opts.verbose) {
+    console.log(`📊 [DEPENDENCIES] Total dependencies created: ${createDependencies.length}`);
   }
 
   return {
