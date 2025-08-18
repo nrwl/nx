@@ -1,0 +1,485 @@
+---
+title: Setting Up CI for Nx Cloud
+description: Learn how to set up CI for your Nx workspace with Nx Cloud across different CI platforms including GitHub Actions, CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket.
+sidebar:
+  label: Setup CI
+---
+
+Learn how to set up Nx Cloud for your workspace with your preferred CI platform. Get started connecting to Nx Cloud by running `nx connect`.
+
+Each platform has specific configurations and optimizations that help you build and test only what is affected, retrieve previous successful builds, and optimize CI performance.
+
+
+## CI Configuration
+{% tabs syncKey="ci-provider" %}
+{% tabitem label="GitHub" %}
+Need a starting point? Generate a new workflow file with the following command:
+
+```shell {% frame="none" %}
+nx g ci-workflow --ci=github
+```
+
+Below is an example of a GitHub Actions setup, building, and testing only what is affected.
+
+```yaml
+// .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected -t lint test build
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - run: npx nx fix-ci
+        if: always()
+```
+
+{% /tabitem %}
+
+{% tabitem label="CircleCI" %}
+
+Need a starting point? Generate a new workflow file with the following command:
+
+```shell {% frame="none" %}
+nx g ci-workflow --ci=circleci
+```
+Below is an example of a Circle CI setup, building, and testing only what is affected.
+
+```yaml
+// .circleci/config.yml
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: npm ci --legacy-peer-deps
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run:
+          command: npx nx affected -t lint test build
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - run:
+          command: npx nx fix-ci
+          when: always
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+```
+
+{% /tabitem %}
+
+{% tabitem label="GitLab" %}
+Need a starting point? Generate a new workflow file with the following command:
+
+```shell {% frame="none" %}
+nx g ci-workflow --ci=gitlab
+```
+
+Below is an example of a GitLab setup, building and testing only what is affected.
+
+```yaml
+// .gitlab-ci.yml
+image: node:20
+variables:
+  CI: 'true'
+
+# Main job
+CI:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  script:
+    # This enables task distribution via Nx Cloud
+    # Run this command as early as possible, before dependencies are installed
+    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+    - npm ci --legacy-peer-deps
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+    # - npx nx-cloud record -- echo Hello World
+    - npx nx affected -t lint test build
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+
+  after_script:
+    - npx nx fix-ci
+```
+{% /tabitem %}
+
+{% tabitem label="Azure" %}
+
+Need a starting point? Generate a new workflow file with the following command:
+
+```shell {% frame="none" %}
+nx g ci-workflow --ci=azure-pipelines
+```
+
+
+
+Below is an example of an Azure Pipelines setup building and testing only what is affected.
+
+```yaml
+// azure-pipelines.yml
+name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: npm ci --legacy-peer-deps
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: npx nx-cloud record -- echo Hello World
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - script: npx nx fix-ci
+        condition: always()
+```
+
+{% /tabitem %}
+
+{% tabitem label="Jenkins" %}
+
+Below is an example of a Jenkins setup, building and testing only what is affected.
+
+```groovy
+pipeline {
+    agent none
+    environment {
+        NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
+    }
+    stages {
+        stage('Pipeline') {
+            parallel {
+                stage('Main') {
+                    when {
+                        branch 'main'
+                    }
+                    agent any
+                    steps {
+                        // This line enables distribution
+                        // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+                        // sh "npx nx-cloud start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
+                        sh "npm ci"
+
+                        // Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+                        // This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+                        // sh "npx nx-cloud record -- nx format:check"
+
+                        // Without Nx Cloud, run format:check directly
+                        sh "npx nx format:check"
+                        sh "npx nx affected --base=HEAD~1 -t lint test build e2e-ci"
+                    }
+                }
+                stage('PR') {
+                    when {
+                        not { branch 'main' }
+                    }
+                    agent any
+                    steps {
+                        // This line enables distribution
+                        // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+                        // sh "npx nx-cloud start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
+                        sh "npm ci"
+
+                        // Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+                        // This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+                        // sh "npx nx-cloud record -- nx format:check"
+
+                        // Without Nx Cloud, run format:check directly
+                        sh "npx nx format:check"
+                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint test build e2e-ci"
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+{% /tabitem %}
+
+{% tabitem label="Bitbucket" %}
+
+Need a starting point? Generate a new workflow file with the following command:
+
+```shell {% frame="none" %}
+nx g ci-workflow --ci=bitbucket-pipelines
+```
+
+
+
+Below is an example of a Bitbucket Pipelines, building and testing only what is affected.
+
+```yaml
+// bitbucket-pipelines.yml
+image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
+            - npx nx affected --base=origin/main -t lint test build
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+
+          after-script:
+            - npx nx fix-ci
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - npx nx-cloud record -- echo Hello World
+            - npx nx affected -t lint test build --base=HEAD~1
+```
+
+The `pull-requests` and `main` jobs implement the CI workflow.
+{% /tabitem %}
+{% /tabs %}
+
+## Get the Commit of the Last Successful Build
+
+{% tabs syncKey="ci-provider" %}
+{% tabitem label="GitHub" %}
+The `GitHub` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The [nrwl/nx-set-shas](https://github.com/marketplace/actions/nx-set-shas) provides a convenient implementation of this functionality, which you can drop into your existing CI workflow.
+
+To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation in Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
+{% /tabitem %}
+
+{% tabitem label="CircleCI" %}
+`CircleCI` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The [Nx Orb](https://github.com/nrwl/nx-orb) provides a convenient implementation of this functionality, which you can drop into your existing CI workflow. Specifically, for push commits, `nx/set-shas` populates the `$NX_BASE` environment variable with the commit SHA of the last successful run.
+
+To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation in Orb's docs](https://github.com/nrwl/nx-orb#background).
+
+### Using CircleCI in a private repository
+
+To use the [Nx Orb](https://github.com/nrwl/nx-orb) with a private repository on your main branch, you need to grant the orb access to your CircleCI API. Create an environment variable called `CIRCLE_API_TOKEN` in the context of the project.
+
+{% aside type="caution" title="Caution" %}
+It should be a user token, not the project token.
+{% /aside %}
+{% /tabitem %}
+
+{% tabitem label="GitLab" %}
+GitLab CI/CD uses built-in environment variables to determine the commit range for affected commands. The configuration automatically sets:
+
+- `NX_HEAD=$CI_COMMIT_SHA` - Current commit SHA
+- `NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}` - Base commit for comparison
+
+This approach works for both merge requests and direct pushes to main, using GitLab's built-in variables to determine the appropriate base commit.
+{% /tabitem %}
+
+{% tabitem label="Azure" %}
+In the example above, we ran a script to retrieve the commit of the last successful build. The idea is to
+use [Azure Devops CLI](https://learn.microsoft.com/en-us/cli/azure/pipelines?view=azure-cli-latest) directly in the [Pipeline Yaml](https://learn.microsoft.com/en-us/azure/devops/cli/azure-devops-cli-in-yaml?view=azure-devops)
+
+First, we configure Devops CLI
+
+```yaml
+# Set Azure Devops CLI default settings
+- bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+  displayName: 'Set default Azure DevOps organization and project'
+```
+
+Then we can query the pipelines API (providing the auth token)
+
+```yaml
+# Get last successfull commit from Azure Devops CLI
+- bash: |
+    LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+    if [ -z "$LAST_SHA" ]
+    then
+      echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+    else
+      echo "Last successful commit SHA: $LAST_SHA"
+      echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+    fi
+  displayName: 'Get last successful commit SHA'
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+```
+
+We can target a specific build; in this example, we specified:
+
+- The branch (--branch)
+- The result type (--result)
+- The number of the result (--top)
+
+The command returns an entire JSON object with all the information. But we can narrow it down to the desired result with the `--query` param that uses [JMESPath](https://jmespath.org/)
+format ([more details](https://learn.microsoft.com/en-us/cli/azure/query-azure-cli?tabs=concepts%2Cbash))
+
+Finally, we extract the result in a common [custom variable](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/set-variables-scripts?view=azure-devops&tabs=bash)
+named `BASE_SHA` used later by the `nx format` and `nx affected` commands.
+{% /tabitem %}
+
+{% tabitem label="Jenkins" %}
+Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1` (for push) or branching point (for pull requests), but a more robust solution would be to tag an SHA in the main job once it succeeds and then use this tag as a base. See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) (version 1 implements tagging mechanism) repositories for more information.
+
+We also have to set `NX_BRANCH` explicitly.
+{% /tabitem %}
+
+{% tabitem label="Bitbucket" %}
+Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1` (for push) or branching point (for pull requests), but a more robust solution would be to tag an SHA in the main job once it succeeds and then use this tag as a base. See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) (version 1 implements tagging mechanism) repositories for more information.
+
+We also have to set `NX_BRANCH` explicitly.
+{% /tabitem %}
+{% /tabs %}
+
+## Common Features Across Platforms
+
+### Task Distribution with Nx Cloud
+
+All CI platforms support task distribution via Nx Cloud. To enable it:
+
+1. Connect your workspace by running `nx connect`
+2. Uncomment the `npx nx start-ci-run` command in your CI configuration
+3. Configure the distribution settings based on your needs
+
+Learn more at [Nx Cloud CI Reference](https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun).
+
+### Self-Healing CI
+
+Nx Cloud can recommend fixes for failures to help you get CI green faster. The `nx fix-ci` command is included in all platform configurations and runs automatically after failures.
+
+Learn more about [Self-Healing CI features](https://nx.dev/ci/features/self-healing-ci).
+
+### Recording Commands
+
+You can record any command's logs to Nx Cloud by prepending it with `nx-cloud record --`. This helps with debugging and monitoring your CI pipeline.
+
+Example:
+```bash
+npx nx-cloud record -- echo Hello World
+```
