@@ -262,7 +262,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
       if (lifecycle && lifecycle.commonPhases) {
         for (const phase of lifecycle.commonPhases) {
           targets[phase] = {
-            executor: '@nx/workspace:run-commands',
+            executor: 'nx:run-commands',
             options: { 
               command: `mvn ${phase} -pl ${qualifiedName}`,
               cwd: '{workspaceRoot}'
@@ -289,7 +289,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         for (const [phase, goals] of goalsByPhase.entries()) {
           if (goals.length > 1) {
             targets[`${phase}-all`] = {
-              executor: '@nx/workspace:run-commands',
+              executor: 'nx:run-commands',
               options: {
                 command: `mvn ${goals.join(' ')} -pl ${qualifiedName}`,
                 cwd: '{workspaceRoot}'
@@ -302,7 +302,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
       // Fallback to essential targets if no lifecycle data
       if (!lifecycle || !lifecycle.commonPhases || lifecycle.commonPhases.length === 0) {
         targets['compile'] = {
-          executor: '@nx/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: { 
             command: `mvn compile -pl ${qualifiedName}`,
             cwd: '{workspaceRoot}'
@@ -311,7 +311,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         
         if (hasTests) {
           targets['test'] = {
-            executor: '@nx/workspace:run-commands',
+            executor: 'nx:run-commands',
             options: { 
               command: `mvn test -pl ${qualifiedName}`,
               cwd: '{workspaceRoot}'
@@ -321,7 +321,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         
         if (projectType === 'application') {
           targets['package'] = {
-            executor: '@nx/workspace:run-commands',
+            executor: 'nx:run-commands',
             options: { 
               command: `mvn package -pl ${qualifiedName}`,
               cwd: '{workspaceRoot}'
@@ -330,7 +330,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         }
         
         targets['clean'] = {
-          executor: '@nx/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: { 
             command: `mvn clean -pl ${qualifiedName}`,
             cwd: '{workspaceRoot}'
