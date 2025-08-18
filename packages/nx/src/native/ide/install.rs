@@ -171,9 +171,14 @@ pub fn get_install_command() -> Option<&'static str> {
             {
                 Some("cursor.cmd")
             }
-            #[cfg(not(target_os = "windows"))]
+            #[cfg(target_os = "macos")]
             {
                 Some("cursor")
+            }
+            #[cfg(target_os = "linux")]
+            {
+                debug!("Cursor extension installation not supported on Linux");
+                None
             }
         }
         SupportedEditor::Windsurf => {
