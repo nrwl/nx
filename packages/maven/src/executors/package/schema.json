@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "cwd": {
+      "type": "string",
+      "description": "Current working directory for the Maven command"
+    },
+    "goals": {
+      "type": "array",
+      "description": "Maven goals to execute",
+      "default": ["package"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "options": {
+      "type": "array",
+      "description": "Additional Maven options",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skipTests": {
+      "type": "boolean",
+      "description": "Skip running tests during packaging",
+      "default": false
+    }
+  }
+}
