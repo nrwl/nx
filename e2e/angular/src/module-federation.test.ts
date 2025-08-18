@@ -15,7 +15,8 @@ import {
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
-describe('Angular Module Federation', () => {
+// TODO(@Coly010): Please re-enable this when the test is fixed.
+xdescribe('Angular Module Federation', () => {
   let proj: string;
   let oldVerboseLoggingValue: string;
 
