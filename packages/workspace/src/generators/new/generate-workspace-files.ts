@@ -16,6 +16,7 @@ import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import type { NormalizedSchema } from './new';
+import { setupAiAgentsGenerator } from '../setup-ai-agents/setup-ai-agents';
 
 type PresetInfo = {
   generateAppCmd?: string;
@@ -183,6 +184,12 @@ export async function generateWorkspaceFiles(
       : null;
 
   await createReadme(tree, options, token);
+
+  await setupAiAgentsGenerator(tree, {
+    directory: options.directory,
+    writeNxCloudRules: options.nxCloud !== 'skip',
+    packageVersion: 'latest',
+  });
 
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
