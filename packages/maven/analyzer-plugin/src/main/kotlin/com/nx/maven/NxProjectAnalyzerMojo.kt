@@ -63,7 +63,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 }
             }
             
-            rootNode.set<ArrayNode>("projects", projectsArray)
+            rootNode.put("projects", projectsArray)
             rootNode.put("generatedAt", System.currentTimeMillis())
             rootNode.put("workspaceRoot", workspaceRoot)
             rootNode.put("totalProjects", allProjects.size)
@@ -118,7 +118,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     dependenciesArray.add(depNode)
                 }
             }
-            projectNode.set<ArrayNode>("dependencies", dependenciesArray)
+            projectNode.put("dependencies", dependenciesArray)
             
             // Tags
             val tagsArray = objectMapper.createArrayNode()
@@ -127,15 +127,16 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             if (mavenProject.packaging == "maven-plugin") {
                 tagsArray.add("maven:plugin")
             }
-            projectNode.set<ArrayNode>("tags", tagsArray)
+            projectNode.put("tags", tagsArray)
             
             // Modules (for parent POMs)
-            mavenProject.modules?.takeIf { it.isNotEmpty() }?.let { modules ->
+            if (mavenProject.modules?.isNotEmpty() == true) {
+                val modules = mavenProject.modules
                 val modulesArray = objectMapper.createArrayNode()
                 for (module in modules) {
                     modulesArray.add(module)
                 }
-                projectNode.set<ArrayNode>("modules", modulesArray)
+                projectNode.put("modules", modulesArray)
             }
             
             // Check if project has tests
@@ -148,7 +149,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             
             // Extract lifecycle phases and plugin goals
             val lifecycleData = extractLifecycleData(mavenProject)
-            projectNode.set<ObjectNode>("lifecycle", lifecycleData)
+            projectNode.put("lifecycle", lifecycleData)
             
             log.debug("Analyzed project: ${mavenProject.artifactId} at $relativePath")
             
@@ -188,7 +189,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     }
                 }
             }
-            lifecycleNode.set<ArrayNode>("phases", phasesArray)
+            lifecycleNode.put("phases", phasesArray)
             
             // Extract plugin goals and their configurations
             val goalsArray = objectMapper.createArrayNode()
@@ -220,17 +221,17 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                                 goalNode.put("phase", execution.phase)
                                 goalsArray.add(goalNode)
                             }
-                            executionNode.set<ArrayNode>("goals", goalsList)
+                            executionNode.put("goals", goalsList)
                             executionsArray.add(executionNode)
                         }
                     }
-                    pluginNode.set<ArrayNode>("executions", executionsArray)
+                    pluginNode.put("executions", executionsArray)
                     pluginsArray.add(pluginNode)
                 }
             }
             
-            lifecycleNode.set<ArrayNode>("goals", goalsArray)
-            lifecycleNode.set<ArrayNode>("plugins", pluginsArray)
+            lifecycleNode.put("goals", goalsArray)
+            lifecycleNode.put("plugins", pluginsArray)
             
             // Add common Maven phases based on packaging
             val commonPhases = objectMapper.createArrayNode()
@@ -258,7 +259,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     commonPhases.add("deploy")
                 }
             }
-            lifecycleNode.set<ArrayNode>("commonPhases", commonPhases)
+            lifecycleNode.put("commonPhases", commonPhases)
             
         } catch (e: Exception) {
             log.warn("Failed to extract lifecycle data for project: ${mavenProject.artifactId}", e)
@@ -268,7 +269,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             fallbackPhases.add("test")
             fallbackPhases.add("package")
             fallbackPhases.add("clean")
-            lifecycleNode.set<ArrayNode>("commonPhases", fallbackPhases)
+            lifecycleNode.put("commonPhases", fallbackPhases)
         }
         
         return lifecycleNode
