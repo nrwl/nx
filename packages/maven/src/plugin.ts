@@ -150,13 +150,24 @@ async function processMavenData(mavenData: any) {
       const createDependsOnForPhase = (phaseName: string): string[] => {
         const dependsOn: string[] = [];
         
+        // Helper function to get the best available phase for a dependency
+        const getBestDependencyPhase = (depProjectName: string, requestedPhase: string): string => {
+          // For verify phase, fall back to install if verify doesn't exist
+          if (requestedPhase === 'verify') {
+            // Most projects should have install phase, which is sufficient for verify dependencies
+            return 'install';
+          }
+          return requestedPhase;
+        };
+        
         // Add parent dependency first (parent POMs must be installed before children)
         // Only include parent dependencies that exist in the reactor (exclude external parents)
         if (parent) {
           const parentCoordinates = `${parent.groupId}:${parent.artifactId}`;
           const parentProjectName = coordinatesToProjectName.get(parentCoordinates);
           if (parentProjectName && parentProjectName !== `${groupId}.${artifactId}`) {
-            dependsOn.push(`${parentProjectName}:${phaseName}`);
+            const depPhase = getBestDependencyPhase(parentProjectName, phaseName);
+            dependsOn.push(`${parentProjectName}:${depPhase}`);
           }
         }
         
@@ -166,7 +177,8 @@ async function processMavenData(mavenData: any) {
             const depCoordinates = `${dep.groupId}:${dep.artifactId}`;
             const depProjectName = coordinatesToProjectName.get(depCoordinates);
             if (depProjectName && depProjectName !== `${groupId}.${artifactId}`) {
-              dependsOn.push(`${depProjectName}:${phaseName}`);
+              const depPhase = getBestDependencyPhase(depProjectName, phaseName);
+              dependsOn.push(`${depProjectName}:${depPhase}`);
             }
           }
         }
