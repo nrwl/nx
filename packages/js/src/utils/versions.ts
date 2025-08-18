@@ -7,7 +7,7 @@ export const swcCoreVersion = '~1.5.7';
 export const swcHelpersVersion = '~0.5.11';
 export const swcNodeVersion = '~1.9.1';
 export const tsLibVersion = '^2.3.0';
-export const typesNodeVersion = '20.19.9';
+export const typesNodeVersion = '18.16.9';
 export const verdaccioVersion = '^6.0.5';
 
 // Typescript
