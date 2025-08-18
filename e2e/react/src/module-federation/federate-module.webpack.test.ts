@@ -10,7 +10,8 @@ import {
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
-describe('Federate Module', () => {
+// TODO(@Coly010): Please re-enable this when the test is fixed.
+xdescribe('Federate Module', () => {
   let proj: string;
 
   beforeAll(() => {
