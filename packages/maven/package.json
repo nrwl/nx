@@ -1,0 +1,32 @@
+{
+  "name": "@nx/maven",
+  "version": "0.1.0",
+  "description": "Nx plugin for Maven integration",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "keywords": [
+    "nx",
+    "maven",
+    "plugin",
+    "java",
+    "build"
+  ],
+  "author": "Nx Team",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@nx/devkit": "^21.3.11",
+    "tslib": "^2.3.0",
+    "glob": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
