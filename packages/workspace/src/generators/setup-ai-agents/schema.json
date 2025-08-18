@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "SetupAiAgents",
+  "title": "Setup AI Agents",
+  "type": "object",
+  "properties": {
+    "directory": {
+      "type": "string",
+      "description": "Directory where the AI agent configuration files will be generated",
+      "default": "."
+    },
+    "writeNxCloudRules": {
+      "type": "boolean",
+      "description": "Whether to write Nx Cloud rules",
+      "default": false
+    },
+    "packageVersion": {
+      "type": "string",
+      "description": "The version of the package to use",
+      "default": "next"
+    }
+  },
+  "required": ["directory"]
+}

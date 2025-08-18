@@ -59,6 +59,12 @@
       "factory": "./src/generators/infer-targets/infer-targets",
       "schema": "./src/generators/infer-targets/schema.json",
       "description": "Convert Nx projects to use inferred targets."
+    },
+    "setup-ai-agents": {
+      "factory": "./dist/generators/setup-ai-agents/setup-ai-agents",
+      "schema": "./dist/generators/setup-ai-agents/schema.json",
+      "description": "Sets up the Nx MCP & rule files for common AI Agents",
+      "hidden": true
     }
   }
 }
