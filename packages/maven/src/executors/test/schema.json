@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "cwd": {
+      "type": "string",
+      "description": "Current working directory for the Maven command"
+    },
+    "goals": {
+      "type": "array",
+      "description": "Maven goals to execute",
+      "default": ["test"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "options": {
+      "type": "array",
+      "description": "Additional Maven options",
+      "items": {
+        "type": "string"
+      }
+    },
+    "testNamePattern": {
+      "type": "string",
+      "description": "Run tests matching this pattern"
+    }
+  }
+}
