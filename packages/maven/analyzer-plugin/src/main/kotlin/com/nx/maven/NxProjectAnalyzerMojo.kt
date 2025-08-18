@@ -69,7 +69,13 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             rootNode.put("totalProjects", allProjects.size)
             
             // Write JSON file
-            val outputPath = File(workspaceRoot, outputFile)
+            val outputPath = if (outputFile.startsWith("/")) {
+                // Absolute path
+                File(outputFile)
+            } else {
+                // Relative path
+                File(workspaceRoot, outputFile)
+            }
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath, rootNode)
             
             log.info("Generated Nx project analysis: ${outputPath.absolutePath}")
@@ -109,7 +115,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             // Dependencies
             val dependenciesArray = objectMapper.createArrayNode()
             for (dependency in mavenProject.dependencies) {
-                if ("compile" == dependency.scope || dependency.scope == null) {
+                // Include compile, provided, test, and null scope dependencies for build ordering
+                if ("compile" == dependency.scope || "provided" == dependency.scope || "test" == dependency.scope || dependency.scope == null) {
                     val depNode = objectMapper.createObjectNode()
                     depNode.put("groupId", dependency.groupId)
                     depNode.put("artifactId", dependency.artifactId)
@@ -119,6 +126,16 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 }
             }
             projectNode.put("dependencies", dependenciesArray)
+            
+            // Parent POM relationship
+            val parent = mavenProject.parent
+            if (parent != null) {
+                val parentNode = objectMapper.createObjectNode()
+                parentNode.put("groupId", parent.groupId)
+                parentNode.put("artifactId", parent.artifactId)
+                parentNode.put("version", parent.version)
+                projectNode.put("parent", parentNode)
+            }
             
             // Tags
             val tagsArray = objectMapper.createArrayNode()

@@ -2,9 +2,7 @@ import {
   CreateDependencies,
   CreateNodesResultV2,
   CreateNodesV2,
-  readJsonFile,
   workspaceRoot,
-  writeJsonFile,
   TargetConfiguration,
   DependencyType,
 } from '@nx/devkit';
@@ -12,7 +10,6 @@ import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { spawn } from 'child_process';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 
 export interface MavenPluginOptions {
   buildTargetName?: string;
@@ -23,26 +20,6 @@ export interface MavenPluginOptions {
 
 const DEFAULT_OPTIONS: MavenPluginOptions = {};
 
-// Global cache to avoid running Maven analysis multiple times
-let globalAnalysisCache: any = null;
-let globalCacheKey: string | null = null;
-
-// Cache management functions
-function readMavenCache(cachePath: string): Record<string, any> {
-  try {
-    return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeMavenCache(cachePath: string, cache: Record<string, any>) {
-  try {
-    writeJsonFile(cachePath, cache);
-  } catch (error) {
-    console.warn('Failed to write Maven cache:', error instanceof Error ? error.message : String(error));
-  }
-}
 
 
 /**
@@ -62,64 +39,8 @@ export const createNodesV2: CreateNodesV2 = [
       return [];
     }
 
-
-
-    // Generate cache key based on pom.xml files and options
-    const projectHash = await calculateHashForCreateNodes(
-      workspaceRoot,
-      (options as object) ?? {},
-      context,
-      ['{projectRoot}/pom.xml', '{workspaceRoot}/**/pom.xml']
-    );
-    const cacheKey = projectHash;
-
-
-    // OPTIMIZATION: Check global in-memory cache first
-    if (globalAnalysisCache && globalCacheKey === cacheKey) {
-      return globalAnalysisCache.createNodesResults || [];
-    }
-
-    // Set up cache path
-    const cachePath = join(workspaceDataDirectory, 'maven-analysis-cache.json');
-    const cache = readMavenCache(cachePath);
-
-    // Check if we have valid cached results
-    if (cache[cacheKey]) {
-      // Store in global cache for faster subsequent access
-      globalAnalysisCache = cache[cacheKey];
-      globalCacheKey = cacheKey;
-      return cache[cacheKey].createNodesResults || [];
-    }
-
-
-    // Check if Maven analysis output already exists before running analysis
-    const existingAnalysisFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
-    let result;
-    
-    if (existsSync(existingAnalysisFile)) {
-      // Use existing analysis file instead of re-running Maven
-      try {
-        const jsonContent = readFileSync(existingAnalysisFile, 'utf8');
-        const mavenData = JSON.parse(jsonContent);
-        result = await processMavenData(mavenData);
-      } catch (error) {
-        console.warn('Failed to read existing Maven analysis, running fresh analysis');
-        result = await runMavenAnalysis({...opts, verbose: isVerbose});
-      }
-    } else {
-      // Run analysis if no existing file
-      result = await runMavenAnalysis({...opts, verbose: isVerbose});
-    }
-
-    // Cache the complete result
-    cache[cacheKey] = result;
-    writeMavenCache(cachePath, cache);
-
-    // Store in global cache
-    globalAnalysisCache = result;
-    globalCacheKey = cacheKey;
-
-
+    // Always run fresh Maven analysis
+    const result = await runMavenAnalysis({...opts, verbose: isVerbose});
     return result.createNodesResults || [];
   },
 ];
@@ -137,7 +58,7 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
   
   const mavenArgs = [
     'com.nx.maven:nx-maven-analyzer-plugin:1.0-SNAPSHOT:analyze',
-    `-Doutput.file=${outputFile}`,
+    `-Dnx.outputFile=${outputFile}`,
     '--batch-mode',
     '--no-transfer-progress'
   ];
@@ -214,8 +135,9 @@ async function processMavenData(mavenData: any) {
     
     // Second pass: create project configurations with dependsOn relationships
     for (const project of mavenData.projects) {
-      const { artifactId, groupId, packaging, root, sourceRoot, hasTests, lifecycle, dependencies: projectDeps } = project;
+      const { artifactId, groupId, packaging, root, sourceRoot, hasTests, lifecycle, dependencies: projectDeps, parent } = project;
       
+      // Skip root project with empty root to avoid conflict with Nx workspace
       if (!artifactId || !root) continue;
       
       const projectType = packaging === 'pom' ? 'library' : 'application';
@@ -224,9 +146,21 @@ async function processMavenData(mavenData: any) {
       // Use qualified name with group and artifact for Maven -pl flag
       const qualifiedName = `${groupId}:${artifactId}`;
       
-      // Create dependsOn relationships for Maven dependencies
+      // Create dependsOn relationships for Maven dependencies and parent
       const createDependsOnForPhase = (phaseName: string): string[] => {
         const dependsOn: string[] = [];
+        
+        // Add parent dependency first (parent POMs must be installed before children)
+        // Only include parent dependencies that exist in the reactor (exclude external parents)
+        if (parent) {
+          const parentCoordinates = `${parent.groupId}:${parent.artifactId}`;
+          const parentProjectName = coordinatesToProjectName.get(parentCoordinates);
+          if (parentProjectName && parentProjectName !== `${groupId}.${artifactId}`) {
+            dependsOn.push(`${parentProjectName}:${phaseName}`);
+          }
+        }
+        
+        // Add regular dependencies
         if (projectDeps && Array.isArray(projectDeps)) {
           for (const dep of projectDeps) {
             const depCoordinates = `${dep.groupId}:${dep.artifactId}`;
@@ -380,16 +314,20 @@ async function processMavenData(mavenData: any) {
         targets['clean'] = cleanTarget;
       }
 
+      // Handle root project with empty root path
+      // If root is empty, use 'maven-root' to avoid conflict with Nx workspace root
+      const normalizedRoot = root || 'maven-root';
+      
       const projectConfig = {
         name: `${groupId}.${artifactId}`,
-        root: root,
+        root: normalizedRoot,
         projectType,
         sourceRoot: sourceRoot,
         targets,
         tags: project.tags || [`maven:${groupId}`, `maven:${packaging}`]
       };
       
-      createNodesResults.push([root, { projects: { [root]: projectConfig } }]);
+      createNodesResults.push([normalizedRoot, { projects: { [normalizedRoot]: projectConfig } }]);
     }
   }
   
