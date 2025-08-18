@@ -1,0 +1,8 @@
+{
+  "name": "@nx/maven",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/maven/src",
+  "projectType": "library",
+  "targets": {},
+  "tags": []
+}
