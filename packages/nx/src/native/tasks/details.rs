@@ -10,6 +10,7 @@ pub struct HashedTask {
     pub project: String,
     pub target: String,
     pub configuration: Option<String>,
+    pub cache: Option<bool>,
 }
 
 #[napi]
@@ -34,7 +35,8 @@ impl TaskDetails {
                 hash    TEXT PRIMARY KEY NOT NULL,
                 project  TEXT NOT NULL,
                 target  TEXT NOT NULL,
-                configuration  TEXT
+                configuration  TEXT,
+                cache  BOOLEAN
             );",
             params![],
         )?;
@@ -46,10 +48,10 @@ impl TaskDetails {
     pub fn record_task_details(&mut self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
         trace!("Recording task details");
         self.db.transaction(|conn| {
-            let mut stmt = conn.prepare("INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)")?;
+            let mut stmt = conn.prepare("INSERT OR REPLACE INTO task_details (hash, project, target, configuration, cache) VALUES (?1, ?2, ?3, ?4, ?5)")?;
             for task in tasks.iter() {
                 stmt.execute(
-                    params![task.hash, task.project, task.target, task.configuration],
+                    params![task.hash, task.project, task.target, task.configuration, task.cache],
                 )?;
             }
             Ok(())
