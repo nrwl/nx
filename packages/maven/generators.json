@@ -5,11 +5,6 @@
       "implementation": "./src/generators/init/generator",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize Maven support in an Nx workspace"
-    },
-    "project": {
-      "implementation": "./src/generators/project/generator",
-      "schema": "./src/generators/project/schema.json", 
-      "description": "Generate a new Maven project"
     }
   }
 }
