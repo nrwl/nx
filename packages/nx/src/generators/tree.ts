@@ -52,7 +52,7 @@ export interface Tree {
    */
   write(
     filePath: string,
-    content: Buffer | string,
+    content: ArrayBufferLike | Buffer | string,
     options?: TreeWriteOptions
   ): void;
 
@@ -165,7 +165,7 @@ export class FsTree implements Tree {
 
   write(
     filePath: string,
-    content: Buffer | string,
+    content: ArrayBufferLike | Buffer | string,
     options?: TreeWriteOptions
   ): void {
     this.assertUnlocked();
@@ -183,7 +183,7 @@ export class FsTree implements Tree {
 
     if (
       this.fsExists(this.rp(filePath)) &&
-      Buffer.from(content).equals(this.fsReadFile(filePath))
+      this.toBuffer(content).equals(this.fsReadFile(filePath))
     ) {
       // Remove recorded change because the file has been restored to it's original contents
       delete this.recordedChanges[this.rp(filePath)];
@@ -192,7 +192,7 @@ export class FsTree implements Tree {
 
     try {
       this.recordedChanges[this.rp(filePath)] = {
-        content: Buffer.from(content),
+        content: this.toBuffer(content),
         isDeleted: false,
         options,
       };
@@ -430,6 +430,18 @@ export class FsTree implements Tree {
 
   private rp(pp: string): string {
     return pp.startsWith('/') ? pp.substring(1) : pp;
+  }
+
+  private toBuffer(content: ArrayBufferLike | Buffer | string): Buffer {
+    if (Buffer.isBuffer(content)) {
+      return content;
+    }
+
+    if (typeof content === 'string') {
+      return Buffer.from(content);
+    }
+
+    return Buffer.from(content, 0, content.byteLength);
   }
 }
 

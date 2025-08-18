@@ -70,12 +70,12 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@angular/build": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/build-angular": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/core": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/schematics": ">= 18.0.0 < 21.0.0",
-    "@schematics/angular": ">= 18.0.0 < 21.0.0",
-    "ng-packagr": ">= 18.0.0 < 21.0.0",
+    "@angular/build": ">= 18.0.0 < 21.0.0 || ^20.2.0-rc.1",
+    "@angular-devkit/build-angular": ">= 18.0.0 < 21.0.0 || ^20.2.0-rc.1",
+    "@angular-devkit/core": ">= 18.0.0 < 21.0.0 || ^20.2.0-rc.1",
+    "@angular-devkit/schematics": ">= 18.0.0 < 21.0.0 || ^20.2.0-rc.1",
+    "@schematics/angular": ">= 18.0.0 < 21.0.0 || ^20.2.0-rc.1",
+    "ng-packagr": ">= 18.0.0 < 21.0.0 || ^20.2.0-rc.0",
     "rxjs": "^6.5.3 || ^7.5.0"
   },
   "peerDependenciesMeta": {
