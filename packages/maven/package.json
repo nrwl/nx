@@ -16,15 +16,22 @@
   "author": "Nx Team",
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest"
   },
   "dependencies": {
-    "@nx/devkit": "^21.3.11",
-    "tslib": "^2.3.0",
-    "glob": "^10.3.0"
+    "@nx/devkit": "^21.4.0",
+    "glob": "^10.3.0",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@types/node": "^20.19.10"
+    "@types/jest": "^29.4.0",
+    "@types/node": "^20.19.10",
+    "jest": "^29.4.0",
+    "memfs": "^4.9.2",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
   },
   "publishConfig": {
     "access": "public"
