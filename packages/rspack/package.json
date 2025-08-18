@@ -53,7 +53,7 @@
     "postcss-loader": "^8.1.1",
     "postcss": "^8.4.38",
     "tslib": "^2.3.0",
-    "webpack": "^5.80.0",
+    "webpack": "^5.101.3",
     "webpack-node-externals": "^3.0.0"
   },
   "devDependencies": {

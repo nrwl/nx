@@ -323,7 +323,7 @@
     "verdaccio": "6.0.5",
     "vite": "7.1.3",
     "vitest": "3.2.4",
-    "webpack": "5.99.9",
+    "webpack": "5.101.3",
     "webpack-dev-server": "5.2.1",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
