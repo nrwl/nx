@@ -97,11 +97,24 @@ async function fetchGithubRelease(
 export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  // do 2 fetches of 100 records, which should be enough releases to display
-  const githubReleases = [
-    ...(await fetchGithubRelease(octokit, 1)),
-    ...(await fetchGithubRelease(octokit, 2)),
-  ];
+  let githubReleases: GithubReleaseData[] = [];
+
+  try {
+    // do 2 fetches of 100 records, which should be enough releases to display
+    githubReleases = [
+      ...(await fetchGithubRelease(octokit, 1)),
+      ...(await fetchGithubRelease(octokit, 2)),
+    ];
+  } catch (error: unknown) {
+    if (!error || typeof error !== 'object' || !('status' in error))
+      throw error;
+
+    if (error.status === 401) {
+      throw new Error(
+        'The GitHub token is invalid or has expired. Please provide a new Personal Access Token (PAT) via the GITHUB_TOKEN environment variable.'
+      );
+    }
+  }
 
   const releasesByMinorVersion: {
     [tag_name: string]: ChangelogEntry;
