@@ -29,7 +29,7 @@ export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
 export const jestPresetAngularVersion = '~15.0.0';
-export const typesNodeVersion = '18.16.9';
+export const typesNodeVersion = '20.19.9';
 export const jasmineMarblesVersion = '^0.9.2';
 
 export const jsoncEslintParserVersion = '^2.1.0';
