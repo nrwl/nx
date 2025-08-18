@@ -81,9 +81,94 @@
 
 /* Apply custom font to code elements */
 code,
-pre,
-.astro-code {
+pre {
   font-family: 'Input Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* Rounded corners for code blocks and UI elements using CSS layers */
+@layer components {
+  /* Standalone code blocks (without headers) */
+  pre:not(figure pre) {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  /* Figure containers should have overall rounded corners */
+  figure:has(pre) {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  /* Header/title bar for code blocks should only have top corners rounded */
+  figure > div:first-child:has(+ pre),
+  figure > div:first-child:has(+ code),
+  figure > figcaption:first-child,
+  figure > div[class*='header'],
+  figure > div[class*='title'] {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  /* Code content when it has a header should only have bottom corners rounded */
+  figure:not(.has-title):not(.is-terminal) > pre {
+    border-radius: var(--radius-lg);
+    margin: 0;
+    overflow: hidden;
+  }
+
+  /* If title exists, make sure code block does not have top corners rounded */
+  figure.is-terminal > pre,
+  figure.has-title > pre {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    margin: 0;
+    overflow: hidden;
+  }
+
+  /* Ensure inner code elements don't overflow */
+  figure pre code {
+    border-radius: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  /* Inline code */
+  :not(pre) > code {
+    border-radius: var(--radius-sm);
+  }
+
+  /* Search bar and inputs */
+  input[type='search'],
+  input[type='text'],
+  .search-input,
+  [data-pagefind-ui] input {
+    border-radius: var(--radius-lg);
+  }
+
+  /* Buttons */
+  button,
+  .button,
+  a[role='button'] {
+    border-radius: var(--radius-md);
+  }
+
+  /* Cards and panels */
+  .card,
+  .panel,
+  .content-panel {
+    border-radius: var(--radius-lg);
+  }
+
+  /* Callouts and alerts */
+  .callout,
+  .alert,
+  .note,
+  .tip,
+  .warning,
+  .caution,
+  aside {
+    border-radius: var(--radius-lg);
+  }
 }
 
 /* Additional custom styles can be added here */
