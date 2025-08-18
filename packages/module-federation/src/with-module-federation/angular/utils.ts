@@ -24,17 +24,6 @@ export function applyDefaultEagerPackages(
   const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = [
     '@angular/localize',
     '@angular/localize/init',
-    ...(useRspack
-      ? [
-          '@angular/core',
-          '@angular/core/primitives/signals',
-          '@angular/core/event-dispatch',
-          '@angular/core/rxjs-interop',
-          '@angular/common',
-          '@angular/common/http',
-          '@angular/platform-browser',
-        ]
-      : []),
   ];
   for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
     if (!sharedConfig[pkg]) {
@@ -53,8 +42,13 @@ export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
 ];
 export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/core',
+  '@angular/core/primitives/signals',
+  '@angular/core/event-dispatch',
+  '@angular/core/rxjs-interop',
   '@angular/animations',
   '@angular/common',
+  '@angular/common/http',
+  '@angular/platform-browser',
 ];
 
 export function getFunctionDeterminateRemoteUrl(
