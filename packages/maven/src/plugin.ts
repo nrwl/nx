@@ -6,6 +6,7 @@ import {
   workspaceRoot,
   writeJsonFile,
   TargetConfiguration,
+  DependencyType,
 } from '@nx/devkit';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
@@ -43,25 +44,6 @@ function writeMavenCache(cachePath: string, cache: Record<string, any>) {
   }
 }
 
-/**
- * Create dependencies using Maven analysis results
- */
-export const createDependencies: CreateDependencies = async (options, context) => {
-  const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
-  
-  // Check for verbose logging from multiple sources
-  const isVerbose = opts.verbose || process.env.NX_VERBOSE_LOGGING === 'true' || process.argv.includes('--verbose');
-
-  if (isVerbose) {
-    console.log(`\n📊 [DEPENDENCIES-PLUGIN] ===============================`);
-    console.log(`📊 [DEPENDENCIES-PLUGIN] Maven createDependencies starting...`);
-    console.log(`📊 [DEPENDENCIES-PLUGIN] Workspace root: ${context.workspaceRoot}`);
-    console.log(`📊 [DEPENDENCIES-PLUGIN] ===============================`);
-  }
-
-  // For now, return empty dependencies array - can be enhanced later
-  return [];
-};
 
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
@@ -449,7 +431,8 @@ export const createDependencies: CreateDependencies = (options, context) => {
             dependencies.push({
               source: sourceProjectName,
               target: targetProjectName,
-              type: 'static'
+              type: DependencyType.static,
+              sourceFile: analysisFile
             });
             
             console.log(`📊 [DEPENDENCIES] Added: ${sourceProjectName} -> ${targetProjectName}`);
