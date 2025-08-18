@@ -255,15 +255,17 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
       const projectType = packaging === 'pom' ? 'library' : 'application';
       const targets: Record<string, TargetConfiguration> = {};
       
-      // Generate targets from actual Maven lifecycle data
+      // Use qualified name with group and artifact for Maven -pl flag
+      const qualifiedName = `${groupId}:${artifactId}`;
+      
+      // Generate targets from actual Maven lifecycle data using run-commands
       if (lifecycle && lifecycle.commonPhases) {
         for (const phase of lifecycle.commonPhases) {
-          const executor = getExecutorForPhase(phase);
           targets[phase] = {
-            executor: executor,
+            executor: '@nx/workspace:run-commands',
             options: { 
-              goals: [phase],
-              projectRoot: root
+              command: `mvn ${phase} -pl ${qualifiedName}`,
+              cwd: '{workspaceRoot}'
             }
           };
         }
@@ -287,10 +289,10 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
         for (const [phase, goals] of goalsByPhase.entries()) {
           if (goals.length > 1) {
             targets[`${phase}-all`] = {
-              executor: './dist/packages/maven:multi-goal',
+              executor: '@nx/workspace:run-commands',
               options: {
-                goals: goals,
-                projectRoot: root
+                command: `mvn ${goals.join(' ')} -pl ${qualifiedName}`,
+                cwd: '{workspaceRoot}'
               }
             };
           }
@@ -300,32 +302,44 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
       // Fallback to essential targets if no lifecycle data
       if (!lifecycle || !lifecycle.commonPhases || lifecycle.commonPhases.length === 0) {
         targets['compile'] = {
-          executor: './dist/packages/maven:compile',
-          options: { goals: ['compile'], projectRoot: root }
+          executor: '@nx/workspace:run-commands',
+          options: { 
+            command: `mvn compile -pl ${qualifiedName}`,
+            cwd: '{workspaceRoot}'
+          }
         };
         
         if (hasTests) {
           targets['test'] = {
-            executor: './dist/packages/maven:test',
-            options: { goals: ['test'], projectRoot: root }
+            executor: '@nx/workspace:run-commands',
+            options: { 
+              command: `mvn test -pl ${qualifiedName}`,
+              cwd: '{workspaceRoot}'
+            }
           };
         }
         
         if (projectType === 'application') {
           targets['package'] = {
-            executor: './dist/packages/maven:package',
-            options: { goals: ['package'], projectRoot: root }
+            executor: '@nx/workspace:run-commands',
+            options: { 
+              command: `mvn package -pl ${qualifiedName}`,
+              cwd: '{workspaceRoot}'
+            }
           };
         }
         
         targets['clean'] = {
-          executor: './dist/packages/maven:compile',
-          options: { goals: ['clean'], projectRoot: root }
+          executor: '@nx/workspace:run-commands',
+          options: { 
+            command: `mvn clean -pl ${qualifiedName}`,
+            cwd: '{workspaceRoot}'
+          }
         };
       }
 
       const projectConfig = {
-        name: artifactId,
+        name: `${groupId}.${artifactId}`,
         root: root,
         projectType,
         sourceRoot: sourceRoot,
@@ -341,32 +355,6 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
     createNodesResults,
     createDependencies: [] // Empty for now
   };
-}
-
-/**
- * Get the appropriate executor for a Maven phase
- */
-function getExecutorForPhase(phase: string): string {
-  switch (phase) {
-    case 'test':
-    case 'integration-test':
-      return './dist/packages/maven:test';
-    case 'package':
-    case 'verify':
-      return './dist/packages/maven:package';
-    case 'clean':
-      return './dist/packages/maven:clean';
-    case 'compile':
-    case 'process-classes':
-    case 'generate-sources':
-    case 'process-sources':
-    case 'generate-resources':
-    case 'process-resources':
-    case 'validate':
-    case 'initialize':
-    default:
-      return './dist/packages/maven:compile';
-  }
 }
 
 /**
