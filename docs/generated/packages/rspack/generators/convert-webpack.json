@@ -1,6 +1,6 @@
 {
   "name": "convert-webpack",
-  "alias": "convert-to-rspack",
+  "aliases": ["convert-to-rspack"],
   "factory": "./src/generators/convert-webpack/convert-webpack",
   "schema": {
     "$schema": "http://json-schema.org/schema",
@@ -28,7 +28,6 @@
   },
   "description": "Convert a webpack application to use rspack.",
   "implementation": "/packages/rspack/src/generators/convert-webpack/convert-webpack.ts",
-  "aliases": [],
   "hidden": false,
   "path": "/packages/rspack/src/generators/convert-webpack/schema.json",
   "type": "generator"
