@@ -386,94 +386,81 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
  * Create dependencies between Maven projects based on their Maven dependencies
  */
 export const createDependencies: CreateDependencies = (options, context) => {
-  const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
-  const isVerbose = opts.verbose || process.env.NX_VERBOSE_LOGGING === 'true' || process.argv.includes('--verbose');
+  console.log(`🚨 [DEPENDENCIES] createDependencies function called!`);
   
-  if (isVerbose) {
-    console.log(`\n📊 [DEPENDENCIES-PLUGIN] ===============================`);
-    console.log(`📊 [DEPENDENCIES-PLUGIN] Maven createDependencies starting...`);
-    console.log(`📊 [DEPENDENCIES-PLUGIN] Workspace root: ${context.workspaceRoot}`);
-    console.log(`📊 [DEPENDENCIES-PLUGIN] ===============================`);
-  }
+  const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
+  const isVerbose = true; // Force verbose for debugging
+  
+  console.log(`📊 [DEPENDENCIES] Workspace root: ${context.workspaceRoot}`);
 
   // Read Maven analysis data
   const analysisFile = join(context.workspaceRoot, '.nx/workspace-data/nx-maven-projects.json');
   
   if (!existsSync(analysisFile)) {
-    if (isVerbose) {
-      console.log(`📊 [DEPENDENCIES] No Maven analysis file found at ${analysisFile}`);
-    }
+    console.log(`📊 [DEPENDENCIES] No Maven analysis file found at ${analysisFile}`);
     return [];
   }
 
   let mavenData;
   try {
-    mavenData = JSON.parse(readFileSync(analysisFile, 'utf-8'));
+    const fileContent = readFileSync(analysisFile, 'utf-8');
+    console.log(`📊 [DEPENDENCIES] Read ${fileContent.length} bytes from analysis file`);
+    mavenData = JSON.parse(fileContent);
+    console.log(`📊 [DEPENDENCIES] Parsed JSON successfully`);
   } catch (error) {
-    if (isVerbose) {
-      console.log(`📊 [DEPENDENCIES] Failed to parse Maven analysis file: ${error}`);
-    }
+    console.log(`📊 [DEPENDENCIES] Failed to parse Maven analysis file: ${error}`);
     return [];
   }
 
-  const createDependencies = [];
+  const dependencies = [];
   
   if (mavenData.projects && Array.isArray(mavenData.projects)) {
-    if (isVerbose) {
-      console.log(`📊 [DEPENDENCIES] Processing ${mavenData.projects.length} projects for dependencies`);
-    }
+    console.log(`📊 [DEPENDENCIES] Processing ${mavenData.projects.length} projects for dependencies`);
     
-    // First, create a map of Maven coordinates to project roots
+    // First, create a map of Maven coordinates to project names
     const projectMap = new Map();
     for (const project of mavenData.projects) {
-      const { artifactId, groupId, root } = project;
-      if (artifactId && groupId && root) {
+      const { artifactId, groupId } = project;
+      if (artifactId && groupId) {
         const coordinates = `${groupId}:${artifactId}`;
-        projectMap.set(coordinates, root);
+        const projectName = `${groupId}.${artifactId}`;
+        projectMap.set(coordinates, projectName);
       }
     }
     
-    if (isVerbose) {
-      console.log(`📊 [DEPENDENCIES] Project map has ${projectMap.size} entries`);
-    }
+    console.log(`📊 [DEPENDENCIES] Project map has ${projectMap.size} entries`);
     
     // Then create dependencies
     for (const project of mavenData.projects) {
-      const { artifactId, groupId, dependencies, root } = project;
+      const { artifactId, groupId, dependencies: projectDeps } = project;
       
-      if (!artifactId || !root || !dependencies) continue;
+      if (!artifactId || !groupId || !projectDeps) continue;
       
-      const projectCoordinates = `${groupId}:${artifactId}`;
+      const sourceProjectName = `${groupId}.${artifactId}`;
       
       // Create dependencies for each Maven dependency that exists in the reactor
-      if (Array.isArray(dependencies)) {
-        for (const dep of dependencies) {
+      if (Array.isArray(projectDeps)) {
+        for (const dep of projectDeps) {
           const depCoordinates = `${dep.groupId}:${dep.artifactId}`;
-          const targetRoot = projectMap.get(depCoordinates);
+          const targetProjectName = projectMap.get(depCoordinates);
           
           // Only create dependency if target exists in reactor and is different from source
-          if (targetRoot && targetRoot !== root) {
-            createDependencies.push({
-              source: root,
-              target: targetRoot,
+          if (targetProjectName && targetProjectName !== sourceProjectName) {
+            dependencies.push({
+              source: sourceProjectName,
+              target: targetProjectName,
               type: 'static'
             });
             
-            if (isVerbose) {
-              console.log(`📊 [DEPENDENCIES] Added: ${root} -> ${targetRoot} (${projectCoordinates} -> ${depCoordinates})`);
-            }
+            console.log(`📊 [DEPENDENCIES] Added: ${sourceProjectName} -> ${targetProjectName}`);
           }
         }
       }
     }
   }
   
-  if (isVerbose) {
-    console.log(`📊 [DEPENDENCIES] Total dependencies created: ${createDependencies.length}`);
-    console.log(`📊 [DEPENDENCIES-PLUGIN] ===============================\n`);
-  }
-
-  return createDependencies;
+  console.log(`📊 [DEPENDENCIES] Total dependencies created: ${dependencies.length}`);
+  return dependencies;
 };
 
 /**
