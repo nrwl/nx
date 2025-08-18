@@ -1075,10 +1075,10 @@ export function wrapAngularDevkitSchematic(
             event.content.toString()
           );
         } else {
-          host.write(eventPath, event.content);
+          host.write(eventPath, toBufferOrString(event.content));
         }
       } else if (event.kind === 'create') {
-        host.write(eventPath, event.content);
+        host.write(eventPath, toBufferOrString(event.content));
       } else if (event.kind === 'delete') {
         host.delete(eventPath);
       } else if (event.kind === 'rename') {
@@ -1145,6 +1145,16 @@ export function wrapAngularDevkitSchematic(
       );
     };
   };
+}
+
+function toBufferOrString(
+  content: ArrayBufferLike | Buffer | string
+): Buffer | string {
+  if (Buffer.isBuffer(content) || typeof content === 'string') {
+    return content;
+  }
+
+  return Buffer.from(content, 0, content.byteLength);
 }
 
 let logger: logging.Logger;
