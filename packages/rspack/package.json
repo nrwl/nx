@@ -57,7 +57,8 @@
     "webpack-node-externals": "^3.0.0"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/nest": "workspace:*"
   },
   "peerDependencies": {
     "@module-federation/enhanced": "^0.18.0",
