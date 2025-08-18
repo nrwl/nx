@@ -8,6 +8,9 @@ describe('Maven Plugin Basic Tests', () => {
       serveTargetName: 'serve',
       verbose: true
     };
+    
+    expect(options.buildTargetName).toBe('build');
+    expect(options.verbose).toBe(true);
 
     expect(options.buildTargetName).toBe('build');
     expect(options.testTargetName).toBe('test');

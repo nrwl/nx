@@ -17,7 +17,10 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "test:unit": "jest --testPathIgnorePatterns=\".*\\.e2e\\.spec\\.ts\"",
+    "test:e2e": "jest --testPathPattern=\".*\\.e2e\\.spec\\.ts\" --testTimeout=400000",
+    "test:maven-cli": "jest --testPathPattern=\".*\\.e2e\\.spec\\.ts\" --testNamePattern=\"maven-cli install\" --testTimeout=400000"
   },
   "dependencies": {
     "@nx/devkit": "^21.4.0",
