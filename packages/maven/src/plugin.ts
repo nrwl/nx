@@ -259,29 +259,61 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
       const qualifiedName = `${groupId}:${artifactId}`;
       
       // Generate targets from actual Maven lifecycle data using run-commands
+      const allPhases = new Set();
+      
+      // Add all detected phases from execution plan
+      if (lifecycle && lifecycle.phases) {
+        for (const phase of lifecycle.phases) {
+          allPhases.add(phase);
+        }
+      }
+      
+      // Add common phases for this packaging type
       if (lifecycle && lifecycle.commonPhases) {
         for (const phase of lifecycle.commonPhases) {
-          targets[phase] = {
-            executor: 'nx:run-commands',
-            options: { 
-              command: `mvn ${phase} -pl ${qualifiedName}`,
-              cwd: '{workspaceRoot}'
-            }
-          };
+          allPhases.add(phase);
         }
+      }
+      
+      // Create targets for all unique phases
+      for (const phase of allPhases) {
+        targets[phase as string] = {
+          executor: 'nx:run-commands',
+          options: { 
+            command: `mvn ${phase} -pl ${qualifiedName}`,
+            cwd: '{workspaceRoot}'
+          }
+        };
       }
       
       // Add specific goal-based targets from lifecycle data
       if (lifecycle && lifecycle.goals) {
         const goalsByPhase = new Map();
+        const seenGoals = new Set();
         
-        // Group goals by phase
+        // Group goals by phase and create individual goal targets
         for (const goal of lifecycle.goals) {
+          const goalCommand = `${goal.plugin}:${goal.goal}`;
+          
+          // Create individual goal target (avoid duplicates)
+          if (!seenGoals.has(goalCommand)) {
+            seenGoals.add(goalCommand);
+            const goalTargetName = `${goal.plugin}-${goal.goal}`.replace(/[^a-zA-Z0-9\-_]/g, '-');
+            targets[goalTargetName] = {
+              executor: 'nx:run-commands',
+              options: {
+                command: `mvn ${goalCommand} -pl ${qualifiedName}`,
+                cwd: '{workspaceRoot}'
+              }
+            };
+          }
+          
+          // Group by phase for composite targets
           if (goal.phase) {
             if (!goalsByPhase.has(goal.phase)) {
               goalsByPhase.set(goal.phase, []);
             }
-            goalsByPhase.get(goal.phase).push(`${goal.plugin}:${goal.goal}`);
+            goalsByPhase.get(goal.phase).push(goalCommand);
           }
         }
         
@@ -351,9 +383,38 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
     }
   }
   
+  // Create dependencies based on Maven reactor dependencies
+  const createDependencies = [];
+  
+  if (mavenData.projects && Array.isArray(mavenData.projects)) {
+    for (const project of mavenData.projects) {
+      const { artifactId, groupId, dependencies, root } = project;
+      
+      if (!artifactId || !root || !dependencies) continue;
+      
+      const projectName = `${groupId}.${artifactId}`;
+      
+      // Create dependencies for each Maven dependency that exists in the reactor
+      if (Array.isArray(dependencies)) {
+        for (const dep of dependencies) {
+          const depProjectName = `${dep.groupId}.${dep.artifactId}`;
+          
+          // Only create dependency if it's different from the current project
+          if (depProjectName !== projectName) {
+            createDependencies.push({
+              source: root,
+              target: depProjectName,
+              type: 'static'
+            });
+          }
+        }
+      }
+    }
+  }
+
   return {
     createNodesResults,
-    createDependencies: [] // Empty for now
+    createDependencies
   };
 }
 
