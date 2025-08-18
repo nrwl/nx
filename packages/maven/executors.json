@@ -15,6 +15,16 @@
       "implementation": "./src/executors/package/executor",
       "schema": "./src/executors/package/schema.json", 
       "description": "Package Maven project using mvn package"
+    },
+    "clean": {
+      "implementation": "./src/executors/compile/executor",
+      "schema": "./src/executors/compile/schema.json", 
+      "description": "Clean Maven project using mvn clean"
+    },
+    "multi-goal": {
+      "implementation": "./src/executors/compile/executor",
+      "schema": "./src/executors/compile/schema.json", 
+      "description": "Execute multiple Maven goals"
     }
   }
 }
