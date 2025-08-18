@@ -4,5 +4,5 @@
     "declaration": true,
     "declarationMap": true
   },
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/test-setup.ts"]
 }
