@@ -82,27 +82,19 @@ export const createNodesV2: CreateNodesV2 = [
       console.log(`🔍 [MAVEN-PLUGIN] ===========================================`);
     }
 
-    // Filter out unwanted pom.xml files
-    const filteredFiles = configFiles.filter(file =>
-      !file.includes('target/') &&
-      !file.includes('node_modules/') &&
-      !file.includes('src/test/') &&
-      !file.includes('its/core-it-suite/src/test/')
-    );
-
-    if (isVerbose) {
-      console.log(`🔍 [MAVEN-PLUGIN] After filtering: ${filteredFiles.length} pom.xml files`);
-      if (configFiles.length !== filteredFiles.length) {
-        console.log(`🔍 [MAVEN-PLUGIN] Filtered out ${configFiles.length - filteredFiles.length} test/build files`);
-      }
-    }
-
-    if (filteredFiles.length === 0) {
+    // Only process if we have the root pom.xml in the workspace root
+    const rootPomExists = configFiles.some(file => file === 'pom.xml');
+    if (!rootPomExists) {
       if (isVerbose) {
-        console.log(`🔍 [MAVEN-PLUGIN] No valid pom.xml files found after filtering`);
+        console.log(`🔍 [MAVEN-PLUGIN] No root pom.xml found, skipping processing`);
       }
       return [];
     }
+
+    if (isVerbose) {
+      console.log(`🔍 [MAVEN-PLUGIN] Processing root Maven project`);
+    }
+
 
     // Generate cache key based on pom.xml files and options
     const projectHash = await calculateHashForCreateNodes(
@@ -387,23 +379,35 @@ async function runMavenAnalysis(options: MavenPluginOptions): Promise<any> {
   const createDependencies = [];
   
   if (mavenData.projects && Array.isArray(mavenData.projects)) {
+    // First, create a map of Maven coordinates to project roots
+    const projectMap = new Map();
+    for (const project of mavenData.projects) {
+      const { artifactId, groupId, root } = project;
+      if (artifactId && groupId && root) {
+        const coordinates = `${groupId}:${artifactId}`;
+        projectMap.set(coordinates, root);
+      }
+    }
+    
+    // Then create dependencies
     for (const project of mavenData.projects) {
       const { artifactId, groupId, dependencies, root } = project;
       
       if (!artifactId || !root || !dependencies) continue;
       
-      const projectName = `${groupId}.${artifactId}`;
+      const projectCoordinates = `${groupId}:${artifactId}`;
       
       // Create dependencies for each Maven dependency that exists in the reactor
       if (Array.isArray(dependencies)) {
         for (const dep of dependencies) {
-          const depProjectName = `${dep.groupId}.${dep.artifactId}`;
+          const depCoordinates = `${dep.groupId}:${dep.artifactId}`;
+          const targetRoot = projectMap.get(depCoordinates);
           
-          // Only create dependency if it's different from the current project
-          if (depProjectName !== projectName) {
+          // Only create dependency if target exists in reactor and is different from source
+          if (targetRoot && targetRoot !== root) {
             createDependencies.push({
               source: root,
-              target: depProjectName,
+              target: targetRoot,
               type: 'static'
             });
           }
