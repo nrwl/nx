@@ -64,6 +64,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         project: task.target.project,
         target: task.target.target,
         configuration: task.target.configuration,
+        cache: task.cache,
       }))
     );
   }
@@ -111,6 +112,7 @@ export async function hashTask(
         project: task.target.project,
         target: task.target.target,
         configuration: task.target.configuration,
+        cache: task.cache,
       },
     ]);
   }
