@@ -28,6 +28,7 @@ export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
       const script = document.createElement('script');
       script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
       script.async = true;
+      script.defer = true;
       document.head.appendChild(script);
 
       // Initialize gtag
@@ -52,6 +53,8 @@ export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
           dl = l != 'dataLayer' ? '&l=' + l : '';
         // @ts-ignore
         j.async = true;
+        // @ts-ignore
+        j.defer = true;
         // @ts-ignore
         j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
         f.parentNode.insertBefore(j, f);
