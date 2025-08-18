@@ -46,6 +46,8 @@
               // @nx/workspace is only required in < 15.8
               "@nx/workspace",
               "@nx/react",
+              // Used in spec file only
+              "@nx/nest",
               // Imported types only
               "@module-federation/sdk",
               "@module-federation/enhanced",
