@@ -77,8 +77,7 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
-      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+      {process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
         <Script
           id="Cookiebot"
           src="https://consent.cookiebot.com/uc.js"
