@@ -328,6 +328,7 @@ export class ProcessTasks {
         const dummyId = createTaskId(
           depProject.name,
           task.target.project +
+            task.target.target +
             '__' +
             dependencyConfig.target +
             DUMMY_TASK_TARGET,
