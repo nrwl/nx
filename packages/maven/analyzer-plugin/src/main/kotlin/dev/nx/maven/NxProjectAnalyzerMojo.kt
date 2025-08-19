@@ -55,7 +55,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         
         // Initialize analyzers
         lifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log)
-        nxConfigGenerator = NxProjectConfigurationGenerator(objectMapper, dependencyResolver, workspaceRoot, log)
+        nxConfigGenerator = NxProjectConfigurationGenerator(objectMapper, dependencyResolver, workspaceRoot, log, session, lifecycleExecutor)
         
         try {
             val rootNode = objectMapper.createObjectNode()
