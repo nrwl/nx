@@ -20,5 +20,3 @@ An AI-first build platform that connects everything from your editor to CI. Help
 This library provides utilities for compiling Angular applications with Rspack.
 
 {{content}}
-
-{{resources}}
