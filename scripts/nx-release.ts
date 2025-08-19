@@ -200,6 +200,8 @@ const VALID_AUTHORS_FOR_LATEST = [
     windowsHide: false,
   });
 
+  hackFixForDevkitPeerDependencies();
+
   // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
   let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
   if (options.dryRun) {
@@ -510,4 +512,27 @@ function determineDistTag(
       : 'latest';
 
   return distTag;
+}
+
+//TODO(@Coly010): Remove this after fixing up the release peer dep handling
+function hackFixForDevkitPeerDependencies() {
+  const { readFileSync, writeFileSync } = require('fs');
+  const devkitPackageJson = JSON.parse(
+    readFileSync('./dist/packages/devkit/package.json', 'utf-8')
+  );
+
+  const beforeVersion = devkitPackageJson.peerDependencies['nx'];
+  if (!beforeVersion.includes('<')) {
+    console.log(
+      '@nx/devkit peer dependencies range is broken - needs release fix. Patching it to avoid broken publishes.'
+    );
+    const majorVersion = major(beforeVersion);
+    devkitPackageJson.peerDependencies['nx'] = `>= ${majorVersion - 1} <= ${
+      majorVersion + 1
+    }`;
+    writeFileSync(
+      './dist/packages/devkit/package.json',
+      JSON.stringify(devkitPackageJson, null, 2)
+    );
+  }
 }
