@@ -8,6 +8,7 @@
   "description": "Rspack Plugin and Loaders for building Angular.",
   "author": "Victor Savkin",
   "license": "MIT",
+  "homepage": "https://nx.dev",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
