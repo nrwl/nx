@@ -13,11 +13,19 @@ pub enum SupportedEditor {
 static CURRENT_EDITOR: OnceLock<SupportedEditor> = OnceLock::new();
 
 pub fn get_current_editor() -> &'static SupportedEditor {
-    CURRENT_EDITOR.get_or_init(|| detect_editor(HashMap::new()))
+    CURRENT_EDITOR.get_or_init(|| {
+        let env_map: HashMap<String, String> = std::env::vars().collect();
+        detect_editor(env_map)
+    })
 }
 
-pub fn detect_editor(mut env_map: HashMap<String, String>) -> SupportedEditor {
-    let term_editor = if let Some(term) = get_env_var("TERM_PROGRAM", &mut env_map) {
+pub fn detect_editor(env_map: HashMap<String, String>) -> SupportedEditor {
+    // Check for Cursor-specific environment variable first
+    if get_env_var("CURSOR_TRACE_ID", &env_map).is_some() {
+        return SupportedEditor::Cursor;
+    }
+
+    let term_editor = if let Some(term) = get_env_var("TERM_PROGRAM", &env_map) {
         let term_lower = term.to_lowercase();
         match term_lower.as_str() {
             "vscode" => SupportedEditor::VSCode,
@@ -36,7 +44,7 @@ pub fn detect_editor(mut env_map: HashMap<String, String>) -> SupportedEditor {
     }
 
     if matches!(term_editor, SupportedEditor::VSCode) {
-        if let Some(vscode_git_var) = get_env_var("VSCODE_GIT_ASKPASS_NODE", &mut env_map) {
+        if let Some(vscode_git_var) = get_env_var("VSCODE_GIT_ASKPASS_NODE", &env_map) {
             let vscode_git_var_lowercase = vscode_git_var.to_lowercase();
             if vscode_git_var_lowercase.contains("cursor") {
                 return SupportedEditor::Cursor;
@@ -53,18 +61,8 @@ pub fn detect_editor(mut env_map: HashMap<String, String>) -> SupportedEditor {
     SupportedEditor::Unknown
 }
 
-fn get_env_var<'a>(name: &str, env_map: &'a mut HashMap<String, String>) -> Option<&'a str> {
-    if env_map.contains_key(name) {
-        return env_map.get(name).map(|s| s.as_str());
-    }
-
-    match std::env::var(name) {
-        Ok(val) => {
-            env_map.insert(name.to_string(), val);
-            env_map.get(name).map(|s| s.as_str())
-        }
-        Err(_) => None,
-    }
+fn get_env_var<'a>(name: &str, env_map: &'a HashMap<String, String>) -> Option<&'a str> {
+    env_map.get(name).map(|s| s.as_str())
 }
 
 #[cfg(test)]
@@ -192,5 +190,12 @@ mod tests {
             "some/path/with/no/matching/editor".to_string(),
         );
         assert_eq!(detect_editor(test_env), SupportedEditor::Unknown);
+    }
+
+    #[test]
+    fn test_detect_cursor_via_trace_id() {
+        let mut test_env = HashMap::new();
+        test_env.insert("CURSOR_TRACE_ID".to_string(), "test-trace-id".to_string());
+        assert_eq!(detect_editor(test_env), SupportedEditor::Cursor);
     }
 }
