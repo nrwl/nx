@@ -1,8 +1,7 @@
 import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
 import { CreateDependencies, DependencyType } from '@nx/devkit';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { MavenPluginOptions, DEFAULT_OPTIONS, MavenAnalysisData } from './types';
+import { MavenPluginOptions, DEFAULT_OPTIONS } from './types';
+import { getCachedMavenData } from './maven-data-cache';
 
 /**
  * Create dependencies between Maven projects by analyzing the Nx project configurations
@@ -11,24 +10,9 @@ import { MavenPluginOptions, DEFAULT_OPTIONS, MavenAnalysisData } from './types'
 export const createDependencies: CreateDependencies = (options, context) => {
   const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
 
-  // Read Maven analysis data - check both possible locations
-  const analysisFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
-  const fallbackAnalysisFile = join(context.workspaceRoot, 'nx-maven-projects.json');
-  
-  let actualAnalysisFile = analysisFile;
-  if (!existsSync(analysisFile)) {
-    if (existsSync(fallbackAnalysisFile)) {
-      actualAnalysisFile = fallbackAnalysisFile;
-    } else {
-      return [];
-    }
-  }
-
-  let mavenData: MavenAnalysisData;
-  try {
-    const fileContent = readFileSync(actualAnalysisFile, 'utf-8');
-    mavenData = JSON.parse(fileContent);
-  } catch (error) {
+  // Get cached Maven analysis data
+  const mavenData = getCachedMavenData(context.workspaceRoot);
+  if (!mavenData) {
     return [];
   }
 

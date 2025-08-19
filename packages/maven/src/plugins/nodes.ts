@@ -4,6 +4,7 @@ import {
 } from '@nx/devkit';
 import { MavenPluginOptions, DEFAULT_OPTIONS } from './types';
 import { runMavenAnalysis } from './maven-analyzer';
+import { getCachedMavenData } from './maven-data-cache';
 
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
@@ -23,8 +24,13 @@ export const createNodesV2: CreateNodesV2 = [
     }
 
     try {
-      // Run fresh Maven analysis
-      const mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
+      // Try to get cached data first
+      let mavenData = getCachedMavenData(context.workspaceRoot);
+      
+      // If no cached data or cache is stale, run fresh Maven analysis
+      if (!mavenData) {
+        mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
+      }
       
       // Return Kotlin analyzer's pre-computed createNodesResults directly
       return mavenData.createNodesResults || [];
