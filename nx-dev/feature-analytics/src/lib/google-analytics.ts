@@ -22,6 +22,7 @@ export function sendPageViewEvent(data: {
 
   // Check if user has consented to statistics cookies
   if (
+    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
     typeof window !== 'undefined' &&
     window.Cookiebot &&
     !window.Cookiebot.consent?.statistics
@@ -55,6 +56,7 @@ export function sendCustomEvent(
 
   // Check if user has consented to statistics cookies
   if (
+    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
     typeof window !== 'undefined' &&
     window.Cookiebot &&
     !window.Cookiebot.consent?.statistics
