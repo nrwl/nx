@@ -1,0 +1,72 @@
+import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { spawn } from 'child_process';
+import { workspaceRoot } from '@nx/devkit';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { MavenPluginOptions, MavenAnalysisData } from './types';
+import { detectMavenWrapper } from './utils';
+
+/**
+ * Run Maven analysis using our Kotlin analyzer plugin
+ */
+export async function runMavenAnalysis(options: MavenPluginOptions): Promise<MavenAnalysisData> {
+  const outputFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
+  const isVerbose = options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
+
+  // Detect Maven wrapper or fallback to 'mvn'
+  const mavenExecutable = detectMavenWrapper();
+  
+  const mavenArgs = [
+    'com.nx.maven:nx-maven-analyzer-plugin:1.0-SNAPSHOT:analyze',
+    `-Dnx.outputFile=${outputFile}`,
+    '--batch-mode',
+    '--no-transfer-progress'
+  ];
+
+  if (!isVerbose) {
+    mavenArgs.push('-q');
+  }
+
+  // Run Maven plugin
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(mavenExecutable, mavenArgs, {
+      cwd: workspaceRoot,
+      stdio: isVerbose ? 'inherit' : 'pipe'
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    if (!isVerbose) {
+      child.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+      child.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        let errorMsg = `Maven analysis failed with code ${code}`;
+        if (stderr) errorMsg += `\nStderr: ${stderr}`;
+        if (stdout && !isVerbose) errorMsg += `\nStdout: ${stdout}`;
+        reject(new Error(errorMsg));
+      }
+    });
+
+    child.on('error', (error) => {
+      reject(new Error(`Failed to spawn Maven process: ${error.message}`));
+    });
+  });
+
+  // Read and parse the JSON output
+  if (!existsSync(outputFile)) {
+    throw new Error(`Maven analysis output file not found: ${outputFile}`);
+  }
+
+  const jsonContent = readFileSync(outputFile, 'utf8');
+  return JSON.parse(jsonContent) as MavenAnalysisData;
+}
