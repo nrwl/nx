@@ -129,13 +129,15 @@ export function TaskNodeContextMenu({
               <DocumentMagnifyingGlassIcon className="h-5 w-5" />
             )}
           </button>
-          <button
-            className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
-            title="Run Task"
-            onClick={onRunTaskClick}
-          >
-            <PlayIcon className="h-5 w-5" />
-          </button>
+          {renderPlatform === 'nx-console' ? (
+            <button
+              className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+              title="Run Task"
+              onClick={onRunTaskClick}
+            >
+              <PlayIcon className="h-5 w-5" />
+            </button>
+          ) : null}
         </div>
       </div>
 
