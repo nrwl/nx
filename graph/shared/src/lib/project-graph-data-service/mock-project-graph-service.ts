@@ -97,6 +97,19 @@ export class MockProjectGraphService implements ProjectGraphService {
     return new Promise((resolve) => resolve({}));
   }
 
+  async getExpandedTaskInputs(
+    taskId: string
+  ): Promise<Record<string, string[]>> {
+    // Generate mock data for the task
+    const mockInputs: Record<string, string[]> = {
+      general: ['src/**/*.ts', 'package.json'],
+      [taskId.split(':')[0]]: [`${taskId.split(':')[0]}/src/**/*.ts`],
+      external: ['node_modules/**/*'],
+    };
+
+    return new Promise((resolve) => resolve(mockInputs));
+  }
+
   private createNewProject(): ProjectGraphProjectNode {
     const type = Math.random() > 0.25 ? 'lib' : 'app';
     const name = `${type}-${this.projectGraphsResponse.projects.length + 1}`;

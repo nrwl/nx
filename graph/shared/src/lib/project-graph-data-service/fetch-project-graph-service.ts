@@ -76,6 +76,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
     if (!this.taskInputsUrl) {
       return {};
     }
+
     const request = new Request(`${this.taskInputsUrl}?taskId=${taskId}`, {
       mode: 'no-cors',
     });
