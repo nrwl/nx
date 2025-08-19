@@ -27,13 +27,21 @@ class MavenBuildCacheIntegration(
                 return cacheabilityFromExtension
             }
             
-            // Fallback to our own analysis if extension not available
-            analyzeWithoutExtension(execution, project)
+            // Return null if extension not available - only use Maven's logic
+            CacheabilityDecision(
+                cacheable = false,
+                reason = "Maven Build Cache Extension not available",
+                source = "Extension unavailable"
+            )
             
         } catch (e: Exception) {
             log.debug("Failed to check Build Cache Extension cacheability", e)
-            // Fallback analysis
-            analyzeWithoutExtension(execution, project)
+            // Only use Maven's logic - no fallback
+            CacheabilityDecision(
+                cacheable = false,
+                reason = "Failed to access Maven Build Cache Extension: ${e.message}",
+                source = "Extension error"
+            )
         }
     }
     
@@ -222,30 +230,6 @@ class MavenBuildCacheIntegration(
         }
     }
     
-    private fun analyzeWithoutExtension(execution: MojoExecution, project: MavenProject): CacheabilityDecision {
-        val goal = "${execution.plugin.artifactId}:${execution.goal}"
-        
-        // Simple fallback analysis based on known patterns
-        val cacheable = when {
-            goal.contains("install") || goal.contains("deploy") -> false
-            goal.contains("clean") -> false
-            goal.contains("compile") || goal.contains("test") || goal.contains("package") -> true
-            else -> true // Default to cacheable
-        }
-        
-        val reason = when {
-            goal.contains("install") || goal.contains("deploy") -> "Modifies external repositories"
-            goal.contains("clean") -> "Destructive file operations"
-            goal.contains("compile") || goal.contains("test") || goal.contains("package") -> "Standard build goal"
-            else -> "No known side effects"
-        }
-        
-        return CacheabilityDecision(
-            cacheable = cacheable,
-            reason = reason,
-            source = "Fallback analysis"
-        )
-    }
     
     /**
      * Apply the cacheability decision to an Nx target configuration
@@ -254,10 +238,13 @@ class MavenBuildCacheIntegration(
         if (decision.cacheable) {
             target.put("cache", true)
             
-            // Add basic inputs for cacheable targets
-            val inputs = target.putArray("inputs")
-            inputs.add("{projectRoot}/src/**/*")
-            inputs.add("{projectRoot}/pom.xml")
+            // Use Maven-derived inputs if available, otherwise no inputs
+            if (decision.inputs.isNotEmpty()) {
+                val inputs = target.putArray("inputs")
+                decision.inputs.forEach { input ->
+                    inputs.add(input)
+                }
+            }
             
             // Add basic outputs for cacheable targets  
             val outputs = target.putArray("outputs")
@@ -271,6 +258,144 @@ class MavenBuildCacheIntegration(
         val metadata = target.putObject("metadata")
         metadata.put("cacheDecisionReason", decision.reason)
         metadata.put("cacheDecisionSource", decision.source)
+        if (decision.inputs.isNotEmpty()) {
+            metadata.put("mavenInputsCount", decision.inputs.size)
+        }
+    }
+    
+    /**
+     * Extract Maven's input analysis for a mojo execution to use as Nx target inputs
+     */
+    fun extractMavenInputs(execution: MojoExecution, project: MavenProject): List<String> {
+        return try {
+            val inputs = mutableListOf<String>()
+            
+            // Try to access Maven Build Cache Extension input calculator
+            val inputCalculator = getProjectInputCalculator()
+            if (inputCalculator != null) {
+                val mavenInputs = calculateInputsWithExtension(inputCalculator, execution, project)
+                inputs.addAll(mavenInputs)
+                log.debug("Extracted ${mavenInputs.size} inputs from Maven Build Cache Extension")
+            } else {
+                // Only use Maven's logic - no fallback
+                log.debug("Maven Build Cache Extension input calculator not available")
+            }
+            
+            inputs
+        } catch (e: Exception) {
+            log.debug("Failed to extract Maven inputs", e)
+            emptyList() // Only use Maven's logic - no fallback
+        }
+    }
+    
+    private fun getProjectInputCalculator(): Any? {
+        return try {
+            val container = session.container
+            val calculatorClass = Class.forName("org.apache.maven.buildcache.DefaultProjectInputCalculator")
+            container.lookup(calculatorClass)
+        } catch (e: Exception) {
+            log.debug("Failed to lookup ProjectInputCalculator", e)
+            null
+        }
+    }
+    
+    private fun calculateInputsWithExtension(calculator: Any, execution: MojoExecution, project: MavenProject): List<String> {
+        return try {
+            val calculatorClass = calculator.javaClass
+            val methods = calculatorClass.methods
+            
+            // Look for methods that calculate inputs
+            val calculateMethod = methods.find { method ->
+                method.name.contains("calculate", ignoreCase = true) || 
+                method.name.contains("input", ignoreCase = true)
+            }
+            
+            if (calculateMethod != null) {
+                log.debug("Found input calculation method: ${calculateMethod.name}")
+                
+                // Try to invoke the method with different parameter combinations
+                val result = when {
+                    calculateMethod.parameterCount == 2 -> calculateMethod.invoke(calculator, execution, project)
+                    calculateMethod.parameterCount == 1 -> calculateMethod.invoke(calculator, project)
+                    else -> calculateMethod.invoke(calculator)
+                }
+                
+                return extractInputPathsFromResult(result, project)
+            }
+            
+            emptyList()
+        } catch (e: Exception) {
+            log.debug("Failed to calculate inputs with extension", e)
+            emptyList()
+        }
+    }
+    
+    private fun extractInputPathsFromResult(result: Any?, project: MavenProject): List<String> {
+        val inputs = mutableListOf<String>()
+        
+        when (result) {
+            is Collection<*> -> {
+                result.forEach { item ->
+                    extractPathFromInputItem(item, project)?.let { inputs.add(it) }
+                }
+            }
+            is Array<*> -> {
+                result.forEach { item ->
+                    extractPathFromInputItem(item, project)?.let { inputs.add(it) }
+                }
+            }
+            else -> {
+                extractPathFromInputItem(result, project)?.let { inputs.add(it) }
+            }
+        }
+        
+        return inputs
+    }
+    
+    private fun extractPathFromInputItem(item: Any?, project: MavenProject): String? {
+        if (item == null) return null
+        
+        return try {
+            val itemClass = item.javaClass
+            
+            // Look for path-related methods or fields
+            val pathMethods = itemClass.methods.filter { method ->
+                method.name.contains("path", ignoreCase = true) ||
+                method.name.contains("file", ignoreCase = true) ||
+                method.name == "toString"
+            }
+            
+            for (method in pathMethods) {
+                if (method.parameterCount == 0) {
+                    val result = method.invoke(item)
+                    if (result is String && result.isNotBlank()) {
+                        return convertToNxInputPattern(result, project)
+                    }
+                }
+            }
+            
+            // Fallback to toString
+            item.toString().takeIf { it.isNotBlank() }?.let { convertToNxInputPattern(it, project) }
+        } catch (e: Exception) {
+            log.debug("Failed to extract path from input item", e)
+            null
+        }
+    }
+    
+    private fun convertToNxInputPattern(mavenPath: String, project: MavenProject): String {
+        val projectRoot = project.basedir.absolutePath
+        
+        return when {
+            mavenPath.startsWith(projectRoot as CharSequence) -> {
+                // Convert absolute path to relative Nx pattern
+                val relativePath = mavenPath.removePrefix(projectRoot).removePrefix("/")
+                "{projectRoot}/$relativePath"
+            }
+            mavenPath.startsWith("src/") -> "{projectRoot}/$mavenPath"
+            mavenPath == "pom.xml" -> "{projectRoot}/pom.xml"
+            mavenPath.startsWith("/") -> mavenPath // Keep absolute paths as-is
+            else -> "{projectRoot}/$mavenPath" // Default to project-relative
+        }
     }
 }
 
@@ -280,5 +405,6 @@ class MavenBuildCacheIntegration(
 data class CacheabilityDecision(
     val cacheable: Boolean,
     val reason: String,
-    val source: String // "Build Cache Extension" or "Fallback analysis"
+    val source: String, // "Build Cache Extension" or "Fallback analysis"
+    val inputs: List<String> = emptyList() // Maven-derived input patterns
 )
