@@ -10,7 +10,7 @@ pub struct HashedTask {
     pub project: String,
     pub target: String,
     pub configuration: Option<String>,
-    pub cache: Option<bool>,
+    pub cache: bool,
 }
 
 #[napi]
@@ -36,7 +36,7 @@ impl TaskDetails {
                 project  TEXT NOT NULL,
                 target  TEXT NOT NULL,
                 configuration  TEXT,
-                cache  BOOLEAN
+                cache  BOOLEAN NOT NULL DEFAULT 0
             );",
             params![],
         )?;
