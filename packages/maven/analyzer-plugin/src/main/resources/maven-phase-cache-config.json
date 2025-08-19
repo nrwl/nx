@@ -1,0 +1,103 @@
+{
+  "cacheablePhases": {
+    "compile": {
+      "cache": true,
+      "parallelism": true,
+      "inputs": [
+        "default",
+        "^production",
+        "{projectRoot}/pom.xml"
+      ],
+      "outputs": [
+        "{projectRoot}/target/classes"
+      ],
+      "description": "Compiles main source code to bytecode"
+    },
+    "test-compile": {
+      "cache": true,
+      "parallelism": true,
+      "inputs": [
+        "default",
+        "^production",
+        "{projectRoot}/pom.xml",
+        "{projectRoot}/src/test/**/*"
+      ],
+      "outputs": [
+        "{projectRoot}/target/test-classes"
+      ],
+      "description": "Compiles test source code to bytecode"
+    },
+    "test": {
+      "cache": true,
+      "parallelism": true,
+      "inputs": [
+        "default",
+        "^production",
+        "{projectRoot}/pom.xml",
+        "{projectRoot}/src/test/**/*"
+      ],
+      "outputs": [
+        "{projectRoot}/target/test-reports",
+        "{projectRoot}/target/surefire-reports",
+        "{projectRoot}/target/failsafe-reports",
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "description": "Runs unit and integration tests"
+    },
+    "package": {
+      "cache": true,
+      "parallelism": true,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/pom.xml"
+      ],
+      "outputs": {
+        "jar": ["{projectRoot}/target/*.jar"],
+        "maven-plugin": ["{projectRoot}/target/*.jar"],
+        "war": ["{projectRoot}/target/*.war"],
+        "ear": ["{projectRoot}/target/*.ear"],
+        "pom": ["{projectRoot}/target/maven-archiver"]
+      },
+      "description": "Creates distributable artifacts (JAR, WAR, etc.)"
+    },
+    "verify": {
+      "cache": true,
+      "parallelism": true,
+      "inputs": [
+        "default",
+        "^production",
+        "{projectRoot}/pom.xml"
+      ],
+      "outputs": [
+        "{projectRoot}/target/verify-reports",
+        "{projectRoot}/target/integration-test-reports"
+      ],
+      "description": "Runs verification checks and integration tests"
+    }
+  },
+  "nonCacheablePhases": {
+    "clean": {
+      "cache": false,
+      "reason": "Destructive operation that deletes files"
+    },
+    "install": {
+      "cache": false,
+      "reason": "Modifies local Maven repository (external state)"
+    },
+    "deploy": {
+      "cache": false,
+      "reason": "Modifies remote repository (external state)"
+    },
+    "validate": {
+      "cache": false,
+      "parallelism": true,
+      "reason": "Fast validation, caching overhead not beneficial"
+    }
+  },
+  "phasePriority": {
+    "high": ["compile", "package"],
+    "medium": ["test", "test-compile"],
+    "low": ["verify"]
+  }
+}
