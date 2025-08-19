@@ -9,6 +9,7 @@ import type {
 import { ProjectGraphService } from './get-project-graph-data-service';
 
 export class MockProjectGraphService implements ProjectGraphService {
+  private expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
   private projectGraphsResponse: ProjectGraphClientResponse = {
     hash: '79054025255fb1a26e4bc422aef54eb4',
     layout: {
@@ -95,6 +96,27 @@ export class MockProjectGraphService implements ProjectGraphService {
     _url: string
   ): Promise<Record<string, Record<string, string[]>>> {
     return new Promise((resolve) => resolve({}));
+  }
+
+  async getExpandedTaskInputs(
+    taskId: string
+  ): Promise<Record<string, string[]>> {
+    // Check cache first
+    if (this.expandedTaskInputsCache.has(taskId)) {
+      return this.expandedTaskInputsCache.get(taskId)!;
+    }
+
+    // Generate mock data for the task
+    const mockInputs: Record<string, string[]> = {
+      general: ['src/**/*.ts', 'package.json'],
+      [taskId.split(':')[0]]: [`${taskId.split(':')[0]}/src/**/*.ts`],
+      external: ['node_modules/**/*'],
+    };
+    
+    // Cache the result
+    this.expandedTaskInputsCache.set(taskId, mockInputs);
+    
+    return new Promise((resolve) => resolve(mockInputs));
   }
 
   private createNewProject(): ProjectGraphProjectNode {

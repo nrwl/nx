@@ -1117,9 +1117,13 @@ function createTaskId(
 // In-memory cache for task graphs to avoid regeneration
 const taskGraphCache = new Map<string, TaskGraphClientResponse>();
 
+// In-memory cache for expanded task inputs to avoid regeneration
+const expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
+
 // Clear cache when project graph changes
 function clearTaskGraphCache() {
   taskGraphCache.clear();
+  expandedTaskInputsCache.clear();
 }
 
 /**
@@ -1247,6 +1251,11 @@ async function createTaskGraphsForTargetAndProjects(
 async function getExpandedTaskInputs(
   taskId: string
 ): Promise<Record<string, string[]>> {
+  // Check cache first
+  if (expandedTaskInputsCache.has(taskId)) {
+    return expandedTaskInputsCache.get(taskId)!;
+  }
+
   // Use the optimized version that only creates the specific task graph needed
   const [projectName, targetName, configuration] = taskId.split(':');
   const taskGraphResponse = await createTaskGraphsForTargetAndProjects(
@@ -1258,8 +1267,10 @@ async function getExpandedTaskInputs(
   const allWorkspaceFiles = await allFileData();
 
   const inputs = taskGraphResponse.plans[taskId];
+  let result: Record<string, string[]> = {};
+  
   if (inputs) {
-    return expandInputs(
+    result = expandInputs(
       inputs,
       currentProjectGraphClientResponse.projects.find(
         (p) => p.name === projectName
@@ -1268,7 +1279,11 @@ async function getExpandedTaskInputs(
       currentProjectGraphClientResponse
     );
   }
-  return {};
+  
+  // Cache the result
+  expandedTaskInputsCache.set(taskId, result);
+  
+  return result;
 }
 
 function expandInputs(

@@ -141,7 +141,7 @@ export function TaskNodeContextMenu({
 
       {data.description ? <p>{data.description}</p> : null}
 
-      {inputSections.length > 0 && <ContextMenuList sections={inputSections} />}
+      <ContextMenuList sections={inputSections} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import type {
 import { ProjectGraphService } from './get-project-graph-data-service';
 
 export class NxConsoleProjectGraphService implements ProjectGraphService {
+  private expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
   async getHash(): Promise<string> {
     return new Promise((resolve) => resolve('some-hash'));
   }
@@ -20,8 +21,18 @@ export class NxConsoleProjectGraphService implements ProjectGraphService {
   async getExpandedTaskInputs(
     taskId: string
   ): Promise<Record<string, string[]>> {
+    // Check cache first
+    if (this.expandedTaskInputsCache.has(taskId)) {
+      return this.expandedTaskInputsCache.get(taskId)!;
+    }
+
     const res = await window.externalApi.loadExpandedTaskInputs?.(taskId);
-    return res ? res[taskId] : {};
+    const result = res ? res[taskId] : {};
+    
+    // Cache the result
+    this.expandedTaskInputsCache.set(taskId, result);
+    
+    return result;
   }
 
   async getSpecificTaskGraph(
