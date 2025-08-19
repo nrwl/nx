@@ -8,6 +8,7 @@
   "description": "Compilation utilities for Angular with Rspack and Rsbuild.",
   "author": "Victor Savkin",
   "license": "MIT",
+  "homepage": "https://nx.dev",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },

@@ -23,6 +23,9 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /docs/generated/packages/angular/** @nrwl/nx-angular-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/angular/** @nrwl/nx-angular-reviewers @nrwl/nx-docs-reviewers
 /packages/angular/** @nrwl/nx-angular-reviewers
+/packages/angular-rspack/** @nrwl/nx-angular-reviewers
+/packages/angular-rspack-compiler/** @nrwl/nx-angular-reviewers
+/examples/angular-rspack/** @nrwl/nx-angular-reviewers
 /e2e/angular/** @nrwl/nx-angular-reviewers
 /packages/angular/plugins/component-testing.ts @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/angular/src/generators/cypress-component-configuration/** @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
