@@ -71,4 +71,32 @@ export interface MavenAnalysisData {
   generatedAt?: number;
   workspaceRoot?: string;
   totalProjects?: number;
+  createNodesResults?: CreateNodesResult[];
+}
+
+// Nx-specific types for the createNodesResults format
+export type CreateNodesResult = [string, ProjectsWrapper]; // [root path, projects wrapper]
+
+export interface ProjectsWrapper {
+  projects: Record<string, NxProjectConfiguration>;
+}
+
+export interface NxProjectConfiguration {
+  name: string;
+  root: string;
+  projectType: 'library' | 'application';
+  sourceRoot?: string;
+  targets: Record<string, NxTargetConfiguration>;
+  tags?: string[];
+}
+
+export interface NxTargetConfiguration {
+  executor: string;
+  options: NxTargetOptions;
+  dependsOn?: string[];
+}
+
+export interface NxTargetOptions {
+  command: string;
+  cwd: string;
 }
