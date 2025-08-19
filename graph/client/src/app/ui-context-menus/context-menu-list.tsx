@@ -8,14 +8,30 @@ interface ContextMenuListSection {
 export function ContextMenuList({
   sections,
   className,
+  isLoading,
 }: {
   sections: ContextMenuListSection[] | ContextMenuListSection;
   className?: string;
+  isLoading?: boolean;
 }) {
   const normalizedSections = Array.isArray(sections) ? sections : [sections];
   const hasItems = normalizedSections.some(
     (section) => section.items.length > 0
   );
+
+  if (isLoading) {
+    return (
+      <div
+        className={classNames(
+          'rounded-md border border-slate-200 dark:border-slate-700',
+          'overflow-hidden',
+          className
+        )}
+      >
+        <SkeletonSection />
+      </div>
+    );
+  }
 
   if (!hasItems) return null;
 
@@ -64,5 +80,31 @@ function ListSection({ label, items }: ContextMenuListSection) {
         ))}
       </ul>
     </div>
+  );
+}
+
+function SkeletonSection() {
+  return (
+    <>
+      <div className="bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+        <div className="h-3 w-20 animate-pulse rounded bg-slate-300 dark:bg-slate-600"></div>
+      </div>
+      <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <li
+            key={index}
+            className="whitespace-nowrap px-4 py-2 text-sm font-medium"
+          >
+            <span className="block truncate font-normal">
+              <div
+                className={`h-4 animate-pulse rounded bg-slate-200 dark:bg-slate-600 ${
+                  index === 0 ? 'w-48' : index === 1 ? 'w-40' : 'w-36'
+                }`}
+              ></div>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
