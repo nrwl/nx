@@ -2,9 +2,8 @@ import {
   CreateNodesResultV2,
   CreateNodesV2,
 } from '@nx/devkit';
-import { MavenPluginOptions, DEFAULT_OPTIONS, MavenAnalysisData } from './types';
+import { MavenPluginOptions, DEFAULT_OPTIONS } from './types';
 import { runMavenAnalysis } from './maven-analyzer';
-import { processMavenData } from './data-processor';
 
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
@@ -27,9 +26,8 @@ export const createNodesV2: CreateNodesV2 = [
       // Run fresh Maven analysis
       const mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
       
-      // Process Maven data and convert to Nx format
-      const result = await processMavenData(mavenData);
-      return result.createNodesResults || [];
+      // Return Kotlin analyzer's pre-computed createNodesResults directly
+      return mavenData.createNodesResults || [];
     } catch (error) {
       console.warn('Maven analysis failed:', error instanceof Error ? error.message : error);
       return [];
