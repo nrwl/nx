@@ -148,23 +148,21 @@ export function getPluginItems(
     join(workspaceRoot, 'astro-docs', 'src', 'content', 'docs', baseUrl)
   );
 
-  // Separate static files into categories
+  // Enforce consistent ordering across all technology sections
+  // Order: Introduction → Guides → Generated items (Generators, Executors, Migrations) → Everything else
+  const finalItems: SidebarSubItem[] = [];
   let introItem: SidebarItem | undefined;
   let guidesItem: SidebarItem | undefined;
   const otherStaticFiles: SidebarItem[] = [];
-  
+
   if (staticFiles.length > 0) {
     for (const file of staticFiles) {
-      // Check for Introduction
-      // @ts-ignore - accessing properties
-      const isIntro = file.label === 'Introduction' || 
-                     (file.slug && typeof file.slug === 'string' && file.slug.endsWith('/introduction'));
-      
+      if (typeof file === 'string') continue;
+      const isIntro = file.label === 'Introduction';
+
       if (isIntro) {
         introItem = file;
-      // Check for Guides folder (must be specifically named "Guides" and have items)
-      // @ts-ignore - accessing properties  
-      } else if (file.label === 'Guides' && file.items && Array.isArray(file.items)) {
+      } else if (file.label === 'Guides') {
         guidesItem = file;
       } else {
         otherStaticFiles.push(file);
@@ -172,32 +170,11 @@ export function getPluginItems(
     }
   }
 
-  // Build final items array with proper ordering:
-  // 1. Introduction (if exists)
-  // 2. Guides (if exists)
-  // 3. Generators (if exists)
-  // 4. Executors (if exists)
-  // 5. Migrations (if exists)
-  // 6. Everything else
-  const finalItems: SidebarItem[] = [];
-  
-  // 1. Add Introduction first if it exists
-  if (introItem) {
-    finalItems.push(introItem);
-  }
-  
-  // 2. Add Guides second if it exists
-  if (guidesItem) {
-    finalItems.push(guidesItem);
-  }
-  
-  // 3-5. Add generated items (Generators, Executors, Migrations) - they're already in correct order in 'items'
-  finalItems.push(...items);
-  
-  // 6. Finally add other static files (nested sections, other items)
-  finalItems.push(...otherStaticFiles);
+  introItem && finalItems.push(introItem as SidebarSubItem);
+  guidesItem && finalItems.push(guidesItem as SidebarSubItem);
+  finalItems.push(...(items as SidebarSubItem[]));
+  finalItems.push(...(otherStaticFiles as SidebarSubItem[]));
 
-  // @ts-expect-error - idk I'll figure out to type it
   return finalItems;
 }
 
