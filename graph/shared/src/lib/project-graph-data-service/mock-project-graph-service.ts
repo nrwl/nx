@@ -112,10 +112,10 @@ export class MockProjectGraphService implements ProjectGraphService {
       [taskId.split(':')[0]]: [`${taskId.split(':')[0]}/src/**/*.ts`],
       external: ['node_modules/**/*'],
     };
-    
+
     // Cache the result
     this.expandedTaskInputsCache.set(taskId, mockInputs);
-    
+
     return new Promise((resolve) => resolve(mockInputs));
   }
 

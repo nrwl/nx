@@ -28,10 +28,10 @@ export class NxConsoleProjectGraphService implements ProjectGraphService {
 
     const res = await window.externalApi.loadExpandedTaskInputs?.(taskId);
     const result = res ? res[taskId] : {};
-    
+
     // Cache the result
     this.expandedTaskInputsCache.set(taskId, result);
-    
+
     return result;
   }
 
