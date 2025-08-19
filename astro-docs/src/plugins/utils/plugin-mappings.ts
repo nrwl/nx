@@ -324,11 +324,13 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
 
               items.push({
                 label: label,
+                collapsed: true,
                 items: subItems,
               } as SidebarSubItem);
             } else {
               items.push({
                 label: file.name,
+                collapsed: true,
                 items: subItems,
               } as SidebarSubItem);
             }
