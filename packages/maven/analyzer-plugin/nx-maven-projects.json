@@ -1,25 +1,6 @@
 {
-  "projects" : [ {
-    "artifactId" : "nx-maven-analyzer-plugin",
-    "groupId" : "com.nx.maven",
-    "version" : "1.0-SNAPSHOT",
-    "packaging" : "maven-plugin",
-    "name" : "Nx Maven Analyzer Plugin",
-    "description" : "Maven plugin to analyze project structure for Nx integration",
-    "root" : "",
-    "projectType" : "library",
-    "sourceRoot" : "/src/main/java",
-    "dependencies" : [ {
-      "groupId" : "com.fasterxml.jackson.core",
-      "artifactId" : "jackson-databind",
-      "version" : "2.16.1",
-      "scope" : "compile"
-    } ],
-    "tags" : [ "maven:com.nx.maven", "maven:maven-plugin", "maven:plugin" ],
-    "hasTests" : false,
-    "hasResources" : false
-  } ],
-  "generatedAt" : 1755542689987,
+  "createNodesResults" : [ ],
+  "generatedAt" : 1755641114267,
   "workspaceRoot" : "/home/jason/projects/triage/java/maven/packages/maven/analyzer-plugin",
   "totalProjects" : 1
 }

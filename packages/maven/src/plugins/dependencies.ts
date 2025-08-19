@@ -1,27 +1,21 @@
 import { join } from 'path';
 import { CreateDependencies, DependencyType } from '@nx/devkit';
-import { MavenPluginOptions, DEFAULT_OPTIONS } from './types';
-import { getCachedMavenData } from './maven-data-cache';
 
 /**
  * Create dependencies between Maven projects by analyzing the Nx project configurations
- * Since all Maven logic is now in Kotlin, we extract dependencies from the generated targets
+ * Uses the projects already loaded in the context instead of reading files
  */
-export const createDependencies: CreateDependencies = (options, context) => {
-  const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
-
-  // Get cached Maven analysis data
-  const mavenData = getCachedMavenData(context.workspaceRoot);
-  if (!mavenData) {
-    return [];
-  }
-
+export const createDependencies: CreateDependencies = (_options, context) => {
   const dependencies = [];
   
-  // Extract dependencies from the createNodesResults
-  for (const [projectRoot, projectsWrapper] of mavenData.createNodesResults) {
-    const projectConfig = projectsWrapper.projects[projectRoot];
-    if (!projectConfig) continue;
+  // Use projects from context instead of reading the Maven data file
+  const projects = context.projects || {};
+  
+  for (const [, projectConfig] of Object.entries(projects)) {
+    // Only process Maven projects (those with maven tags)
+    if (!projectConfig.tags?.some(tag => tag.startsWith('maven:'))) {
+      continue;
+    }
 
     // Look at the compile target's dependsOn to find Maven dependencies
     const compileTarget = projectConfig.targets?.compile;
@@ -43,7 +37,7 @@ export const createDependencies: CreateDependencies = (options, context) => {
             source: projectConfig.name!,
             target: targetProjectName,
             type: DependencyType.static,
-            sourceFile: join(projectRoot, 'pom.xml')
+            sourceFile: join(projectConfig.root!, 'pom.xml')
           });
         }
       }

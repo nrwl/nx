@@ -122,6 +122,9 @@ class NxProjectConfigurationGenerator(
                 target.put("dependsOn", dependsOnArray)
             }
             
+            // Add caching configuration for cacheable phases
+            addCachingConfiguration(target, phase, mavenProject)
+            
             targets.put(phase, target)
         }
         
@@ -132,5 +135,122 @@ class NxProjectConfigurationGenerator(
         }
         
         return targets
+    }
+    
+    /**
+     * Add caching configuration to targets based on Maven phase characteristics
+     */
+    private fun addCachingConfiguration(target: ObjectNode, phase: String, mavenProject: MavenProject) {
+        val relativePath = Paths.get(workspaceRoot).relativize(mavenProject.basedir.toPath()).toString().replace("\\", "/")
+        
+        when (phase) {
+            "compile" -> {
+                target.put("cache", true)
+                target.put("parallelism", true)
+                
+                // Inputs: source files, pom.xml, dependencies
+                val inputs = objectMapper.createArrayNode()
+                inputs.add("default") // Default Nx inputs (source files)
+                inputs.add("^production") // Dependencies' production outputs
+                inputs.add("{projectRoot}/pom.xml")
+                target.put("inputs", inputs)
+                
+                // Outputs: compiled classes
+                val outputs = objectMapper.createArrayNode()
+                outputs.add("{projectRoot}/target/classes")
+                target.put("outputs", outputs)
+            }
+            
+            "test-compile" -> {
+                target.put("cache", true)
+                target.put("parallelism", true)
+                
+                val inputs = objectMapper.createArrayNode()
+                inputs.add("default")
+                inputs.add("^production")
+                inputs.add("{projectRoot}/pom.xml")
+                inputs.add("{projectRoot}/src/test/**/*")
+                target.put("inputs", inputs)
+                
+                val outputs = objectMapper.createArrayNode()
+                outputs.add("{projectRoot}/target/test-classes")
+                target.put("outputs", outputs)
+            }
+            
+            "test" -> {
+                target.put("cache", true)
+                target.put("parallelism", true)
+                
+                val inputs = objectMapper.createArrayNode()
+                inputs.add("default")
+                inputs.add("^production")
+                inputs.add("{projectRoot}/pom.xml")
+                inputs.add("{projectRoot}/src/test/**/*")
+                target.put("inputs", inputs)
+                
+                val outputs = objectMapper.createArrayNode()
+                outputs.add("{projectRoot}/target/test-reports")
+                outputs.add("{projectRoot}/target/surefire-reports")
+                outputs.add("{projectRoot}/target/failsafe-reports")
+                outputs.add("{workspaceRoot}/coverage/{projectRoot}")
+                target.put("outputs", outputs)
+            }
+            
+            "package" -> {
+                target.put("cache", true)
+                target.put("parallelism", true)
+                
+                val inputs = objectMapper.createArrayNode()
+                inputs.add("production") // Production files only (no tests)
+                inputs.add("^production")
+                inputs.add("{projectRoot}/pom.xml")
+                target.put("inputs", inputs)
+                
+                val outputs = objectMapper.createArrayNode()
+                when (mavenProject.packaging) {
+                    "jar", "maven-plugin" -> outputs.add("{projectRoot}/target/*.jar")
+                    "war" -> outputs.add("{projectRoot}/target/*.war")
+                    "ear" -> outputs.add("{projectRoot}/target/*.ear")
+                    "pom" -> {
+                        // POM projects don't produce artifacts, but cache anyway for consistency
+                        outputs.add("{projectRoot}/target/maven-archiver")
+                    }
+                }
+                target.put("outputs", outputs)
+            }
+            
+            "verify" -> {
+                target.put("cache", true)
+                target.put("parallelism", true)
+                
+                val inputs = objectMapper.createArrayNode()
+                inputs.add("default")
+                inputs.add("^production")
+                inputs.add("{projectRoot}/pom.xml")
+                target.put("inputs", inputs)
+                
+                val outputs = objectMapper.createArrayNode()
+                outputs.add("{projectRoot}/target/verify-reports")
+                outputs.add("{projectRoot}/target/integration-test-reports")
+                target.put("outputs", outputs)
+            }
+            
+            // Non-cacheable phases: clean, install, deploy, validate
+            "clean" -> {
+                // Clean is destructive and shouldn't be cached
+                target.put("cache", false)
+            }
+            
+            "install", "deploy" -> {
+                // These modify external state (repositories) and shouldn't be cached
+                target.put("cache", false)
+            }
+            
+            "validate" -> {
+                // Usually fast validation, caching overhead not worth it
+                target.put("cache", false)
+                target.put("parallelism", true) // But can run in parallel
+            }
+        }
     }
 }
