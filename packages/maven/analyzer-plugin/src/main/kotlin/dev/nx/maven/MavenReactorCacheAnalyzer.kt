@@ -23,7 +23,7 @@ class MavenReactorCacheAnalyzer(
 ) {
     
     /**
-     * Analyze if a Maven phase is cacheable by examining the actual mojo executions
+     * Determine if a Maven phase is cacheable by examining the actual mojo executions
      */
     fun isPhaseExecutionCacheable(phase: String, mavenProject: MavenProject): CacheabilityResult {
         return try {
@@ -43,8 +43,7 @@ class MavenReactorCacheAnalyzer(
             log.warn("Failed to analyze phase $phase for cacheability", e)
             CacheabilityResult(
                 cacheable = false,
-                reason = "Analysis failed: ${e.message}",
-                confidence = Confidence.LOW
+                reason = "Analysis failed: ${e.message}"
             )
         }
     }
@@ -53,8 +52,7 @@ class MavenReactorCacheAnalyzer(
         if (executions.isEmpty()) {
             return CacheabilityResult(
                 cacheable = false,
-                reason = "No mojo executions found for phase",
-                confidence = Confidence.HIGH
+                reason = "No mojo executions found for phase"
             )
         }
         
@@ -62,33 +60,20 @@ class MavenReactorCacheAnalyzer(
             analyzeSingleMojoExecution(execution)
         }
         
-        // If any mojo is definitely not cacheable, the whole phase is not cacheable
-        val nonCacheable = mojoAnalyses.find { !it.cacheable && it.confidence == Confidence.HIGH }
+        // If any mojo is not cacheable, the whole phase is not cacheable
+        val nonCacheable = mojoAnalyses.find { !it.cacheable }
         if (nonCacheable != null) {
             return CacheabilityResult(
                 cacheable = false,
                 reason = "Contains non-cacheable mojo: ${nonCacheable.reason}",
-                confidence = Confidence.HIGH,
                 mojoAnalyses = mojoAnalyses
             )
         }
         
-        // If all mojos are definitely cacheable, the phase is cacheable
-        val allCacheable = mojoAnalyses.all { it.cacheable }
-        if (allCacheable) {
-            return CacheabilityResult(
-                cacheable = true,
-                reason = "All mojos appear cacheable",
-                confidence = determineConfidence(mojoAnalyses),
-                mojoAnalyses = mojoAnalyses
-            )
-        }
-        
-        // Mixed or uncertain results
+        // All mojos are cacheable, so the phase is cacheable
         return CacheabilityResult(
-            cacheable = false,
-            reason = "Uncertain mojo cacheability - defaulting to safe (non-cacheable)",
-            confidence = Confidence.MEDIUM,
+            cacheable = true,
+            reason = "All mojos are cacheable",
             mojoAnalyses = mojoAnalyses
         )
     }
@@ -118,7 +103,7 @@ class MavenReactorCacheAnalyzer(
     private fun checkKnownNonCacheablePatterns(descriptor: MojoDescriptor, execution: MojoExecution): MojoAnalysis? {
         val goal = "${execution.plugin.artifactId}:${execution.goal}"
         
-        // Known non-cacheable goals
+        // Known non-cacheable goals that modify external state
         val knownNonCacheable = mapOf(
             "maven-install-plugin:install" to "Modifies local repository",
             "maven-deploy-plugin:deploy" to "Modifies remote repository", 
@@ -133,7 +118,6 @@ class MavenReactorCacheAnalyzer(
                 goal = goal,
                 cacheable = false,
                 reason = reason,
-                confidence = Confidence.HIGH,
                 evidence = listOf("Known non-cacheable pattern: $pattern")
             )
         }
@@ -235,33 +219,36 @@ class MavenReactorCacheAnalyzer(
         evidence.addAll(paramAnalysis.evidence)
         evidence.addAll(pluginAnalysis.evidence)
         
-        // Determine cacheability based on combined analysis
-        val (cacheable, reason, confidence) = when {
-            // Definitely not cacheable
+        // Make definitive cacheability decisions based on analysis
+        val (cacheable, reason) = when {
+            // Not cacheable - modifies external state
             pluginAnalysis.category == PluginCategory.DEPLOYMENT -> {
-                Triple(false, "Deployment plugin modifies external repositories", Confidence.HIGH)
+                Pair(false, "Deployment plugin modifies external repositories")
             }
             pluginAnalysis.category == PluginCategory.CLEANUP -> {
-                Triple(false, "Cleanup plugin performs destructive operations", Confidence.HIGH)
+                Pair(false, "Cleanup plugin performs destructive operations")
             }
             paramAnalysis.hasNetworkParams -> {
-                Triple(false, "Has network parameters - likely modifies external state", Confidence.HIGH)
+                Pair(false, "Has network parameters - modifies external state")
             }
             paramAnalysis.hasFileSystemWrite -> {
-                Triple(false, "Has file system write parameters", Confidence.HIGH)
+                Pair(false, "Has destructive file system operations")
             }
             
-            // Likely cacheable
-            pluginAnalysis.category == PluginCategory.COMPILER && paramAnalysis.hasInputs && paramAnalysis.hasOutputs -> {
-                Triple(true, "Compiler plugin with clear inputs/outputs", Confidence.HIGH)
+            // Cacheable - deterministic with local inputs/outputs
+            pluginAnalysis.category == PluginCategory.COMPILER -> {
+                Pair(true, "Compiler plugin produces deterministic outputs")
             }
-            pluginAnalysis.category == PluginCategory.TESTING && paramAnalysis.hasInputs -> {
-                Triple(true, "Test plugin with inputs - likely deterministic", Confidence.MEDIUM)
+            pluginAnalysis.category == PluginCategory.TESTING -> {
+                Pair(true, "Test plugin with deterministic behavior")
+            }
+            paramAnalysis.hasInputs && paramAnalysis.hasOutputs -> {
+                Pair(true, "Has clear input/output patterns")
             }
             
-            // Uncertain
+            // Default to cacheable - most Maven plugins are deterministic build tools
             else -> {
-                Triple(false, "Insufficient information to determine cacheability", Confidence.LOW)
+                Pair(true, "Standard Maven plugin - deterministic by default")
             }
         }
         
@@ -269,25 +256,16 @@ class MavenReactorCacheAnalyzer(
             goal = goal,
             cacheable = cacheable,
             reason = reason,
-            confidence = confidence,
             evidence = evidence
         )
     }
     
-    private fun determineConfidence(analyses: List<MojoAnalysis>): Confidence {
-        return when {
-            analyses.all { it.confidence == Confidence.HIGH } -> Confidence.HIGH
-            analyses.any { it.confidence == Confidence.HIGH } -> Confidence.MEDIUM
-            else -> Confidence.LOW
-        }
-    }
 }
 
 // Data classes for analysis results
 data class CacheabilityResult(
     val cacheable: Boolean,
     val reason: String,
-    val confidence: Confidence,
     val mojoAnalyses: List<MojoAnalysis> = emptyList()
 )
 
@@ -295,7 +273,6 @@ data class MojoAnalysis(
     val goal: String,
     val cacheable: Boolean,
     val reason: String,
-    val confidence: Confidence,
     val evidence: List<String>
 )
 
@@ -311,10 +288,6 @@ data class PluginAnalysis(
     val category: PluginCategory,
     val evidence: List<String>
 )
-
-enum class Confidence {
-    HIGH, MEDIUM, LOW
-}
 
 enum class PluginCategory {
     COMPILER, TESTING, DEPLOYMENT, CLEANUP, EXECUTION, UNKNOWN
