@@ -22,7 +22,7 @@ class NxProjectConfigurationGenerator(
     private val lifecycleExecutor: LifecycleExecutor
 ) {
     
-    private val reactorCacheAnalyzer = MavenReactorCacheAnalyzer(session, lifecycleExecutor, objectMapper, log)
+    private val buildCacheIntegration = MavenBuildCacheIntegration(session, objectMapper, log)
     
     fun generateNxProjectConfiguration(
         mavenProject: MavenProject,
@@ -148,22 +148,24 @@ class NxProjectConfigurationGenerator(
      */
     private fun applyReactorBasedCaching(target: ObjectNode, phase: String, mavenProject: MavenProject) {
         try {
-            val cacheabilityResult = reactorCacheAnalyzer.isPhaseExecutionCacheable(phase, mavenProject)
+            // TODO: Integrate with MavenBuildCacheIntegration for individual mojo executions
+            // For now, use basic defaults since we removed the old hardcoded logic
             
-            // Apply the caching decision
-            target.put("cache", cacheabilityResult.cacheable)
+            // Apply basic defaults - only cache compile and test phases
+            val cacheable = phase in setOf("compile", "test-compile", "test", "package")
+            target.put("cache", cacheable)
             
             // Always enable parallelism for phases that don't modify external state
             val canRunInParallel = !isExternalStateModifyingPhase(phase)
             target.put("parallelism", canRunInParallel)
             
-            if (cacheabilityResult.cacheable) {
-                // Add inputs and outputs for cacheable phases
-                addCacheInputsAndOutputs(target, phase, mavenProject, cacheabilityResult)
+            if (cacheable) {
+                // Add basic inputs and outputs for cacheable phases
+                addBasicCacheInputsAndOutputs(target, phase, mavenProject)
             }
             
             // Log the caching decision for debugging
-            log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${cacheabilityResult.cacheable} (${cacheabilityResult.reason})")
+            log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${cacheable} (basic fallback)")
             
         } catch (e: Exception) {
             log.warn("Failed to apply Reactor-based caching for phase $phase", e)
@@ -177,11 +179,10 @@ class NxProjectConfigurationGenerator(
         return phase in setOf("install", "deploy", "release")
     }
     
-    private fun addCacheInputsAndOutputs(
+    private fun addBasicCacheInputsAndOutputs(
         target: ObjectNode, 
         phase: String, 
-        mavenProject: MavenProject, 
-        cacheabilityResult: CacheabilityResult
+        mavenProject: MavenProject
     ) {
         // Add standard inputs
         val inputs = objectMapper.createArrayNode()
