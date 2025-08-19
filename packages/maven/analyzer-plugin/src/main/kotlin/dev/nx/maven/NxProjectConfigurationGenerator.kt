@@ -3,6 +3,8 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import org.apache.maven.execution.MavenSession
+import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.project.MavenProject
 import org.apache.maven.plugin.logging.Log
 import java.io.File
@@ -15,10 +17,12 @@ class NxProjectConfigurationGenerator(
     private val objectMapper: ObjectMapper,
     private val dependencyResolver: MavenDependencyResolver,
     private val workspaceRoot: String,
-    private val log: Log
+    private val log: Log,
+    private val session: MavenSession,
+    private val lifecycleExecutor: LifecycleExecutor
 ) {
     
-    private val cacheConfiguration = MavenCacheConfiguration(objectMapper, log)
+    private val reactorCacheAnalyzer = MavenReactorCacheAnalyzer(session, lifecycleExecutor, objectMapper, log)
     
     fun generateNxProjectConfiguration(
         mavenProject: MavenProject,
@@ -124,8 +128,8 @@ class NxProjectConfigurationGenerator(
                 target.put("dependsOn", dependsOnArray)
             }
             
-            // Apply caching configuration using data-driven approach
-            cacheConfiguration.applyCachingToTarget(target, phase, mavenProject)
+            // Apply caching configuration using Maven Reactor analysis
+            applyReactorBasedCaching(target, phase, mavenProject)
             
             targets.put(phase, target)
         }
@@ -139,4 +143,86 @@ class NxProjectConfigurationGenerator(
         return targets
     }
     
+    /**
+     * Apply caching configuration based on Maven Reactor analysis
+     */
+    private fun applyReactorBasedCaching(target: ObjectNode, phase: String, mavenProject: MavenProject) {
+        try {
+            val cacheabilityResult = reactorCacheAnalyzer.isPhaseExecutionCacheable(phase, mavenProject)
+            
+            // Apply the caching decision
+            target.put("cache", cacheabilityResult.cacheable)
+            
+            // Always enable parallelism for phases that don't modify external state
+            val canRunInParallel = !isExternalStateModifyingPhase(phase)
+            target.put("parallelism", canRunInParallel)
+            
+            if (cacheabilityResult.cacheable) {
+                // Add inputs and outputs for cacheable phases
+                addCacheInputsAndOutputs(target, phase, mavenProject, cacheabilityResult)
+            }
+            
+            // Log the caching decision for debugging
+            log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${cacheabilityResult.cacheable} (${cacheabilityResult.reason}) [confidence: ${cacheabilityResult.confidence}]")
+            
+        } catch (e: Exception) {
+            log.warn("Failed to apply Reactor-based caching for phase $phase", e)
+            // Fallback to safe defaults
+            target.put("cache", false)
+            target.put("parallelism", true)
+        }
+    }
+    
+    private fun isExternalStateModifyingPhase(phase: String): Boolean {
+        return phase in setOf("install", "deploy", "release")
+    }
+    
+    private fun addCacheInputsAndOutputs(
+        target: ObjectNode, 
+        phase: String, 
+        mavenProject: MavenProject, 
+        cacheabilityResult: CacheabilityResult
+    ) {
+        // Add standard inputs
+        val inputs = objectMapper.createArrayNode()
+        inputs.add("default") // Source files
+        inputs.add("{projectRoot}/pom.xml") // POM file
+        
+        // Add dependency inputs for non-clean phases
+        if (phase != "clean") {
+            inputs.add("^production") // Dependencies' production outputs
+        }
+        
+        // Add test-specific inputs for test phases
+        if (phase.contains("test")) {
+            inputs.add("{projectRoot}/src/test/**/*")
+        }
+        
+        target.put("inputs", inputs)
+        
+        // Add standard outputs based on phase and packaging
+        val outputs = objectMapper.createArrayNode()
+        when (phase) {
+            "compile" -> outputs.add("{projectRoot}/target/classes")
+            "test-compile" -> outputs.add("{projectRoot}/target/test-classes")
+            "test" -> {
+                outputs.add("{projectRoot}/target/test-reports")
+                outputs.add("{projectRoot}/target/surefire-reports")
+                outputs.add("{workspaceRoot}/coverage/{projectRoot}")
+            }
+            "package" -> {
+                when (mavenProject.packaging) {
+                    "jar", "maven-plugin" -> outputs.add("{projectRoot}/target/*.jar")
+                    "war" -> outputs.add("{projectRoot}/target/*.war")
+                    "ear" -> outputs.add("{projectRoot}/target/*.ear")
+                    "pom" -> outputs.add("{projectRoot}/target/maven-archiver")
+                }
+            }
+            "verify" -> outputs.add("{projectRoot}/target/verify-reports")
+        }
+        
+        if (outputs.size() > 0) {
+            target.put("outputs", outputs)
+        }
+    }
 }
