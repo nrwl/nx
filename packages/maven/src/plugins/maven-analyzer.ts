@@ -4,7 +4,16 @@ import { spawn } from 'child_process';
 import { workspaceRoot } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenPluginOptions, MavenAnalysisData } from './types';
-import { detectMavenWrapper } from './utils';
+/**
+ * Detect Maven wrapper in workspace root, fallback to 'mvn'
+ */
+function detectMavenWrapper(): string {
+  if (process.platform === 'win32') {
+    return existsSync(join(workspaceRoot, 'mvnw.cmd')) ? 'mvnw.cmd' : 'mvn';
+  } else {
+    return existsSync(join(workspaceRoot, 'mvnw')) ? './mvnw' : 'mvn';
+  }
+}
 
 /**
  * Run Maven analysis using our Kotlin analyzer plugin
@@ -17,7 +26,7 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
   const mavenExecutable = detectMavenWrapper();
   
   const mavenArgs = [
-    'com.nx.maven:nx-maven-analyzer-plugin:1.0-SNAPSHOT:analyze',
+    'dev.nx.maven:nx-maven-analyzer-plugin:1.0-SNAPSHOT:analyze',
     `-Dnx.outputFile=${outputFile}`,
     '--batch-mode',
     '--no-transfer-progress'
