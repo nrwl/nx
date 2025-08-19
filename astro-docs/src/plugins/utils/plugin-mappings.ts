@@ -148,12 +148,57 @@ export function getPluginItems(
     join(workspaceRoot, 'astro-docs', 'src', 'content', 'docs', baseUrl)
   );
 
+  // Separate static files into categories
+  let introItem: SidebarItem | undefined;
+  let guidesItem: SidebarItem | undefined;
+  const otherStaticFiles: SidebarItem[] = [];
+  
   if (staticFiles.length > 0) {
-    items.push(...staticFiles);
+    for (const file of staticFiles) {
+      // Check for Introduction
+      // @ts-ignore - accessing properties
+      const isIntro = file.label === 'Introduction' || 
+                     (file.slug && typeof file.slug === 'string' && file.slug.endsWith('/introduction'));
+      
+      if (isIntro) {
+        introItem = file;
+      // Check for Guides folder (must be specifically named "Guides" and have items)
+      // @ts-ignore - accessing properties  
+      } else if (file.label === 'Guides' && file.items && Array.isArray(file.items)) {
+        guidesItem = file;
+      } else {
+        otherStaticFiles.push(file);
+      }
+    }
   }
 
+  // Build final items array with proper ordering:
+  // 1. Introduction (if exists)
+  // 2. Guides (if exists)
+  // 3. Generators (if exists)
+  // 4. Executors (if exists)
+  // 5. Migrations (if exists)
+  // 6. Everything else
+  const finalItems: SidebarItem[] = [];
+  
+  // 1. Add Introduction first if it exists
+  if (introItem) {
+    finalItems.push(introItem);
+  }
+  
+  // 2. Add Guides second if it exists
+  if (guidesItem) {
+    finalItems.push(guidesItem);
+  }
+  
+  // 3-5. Add generated items (Generators, Executors, Migrations) - they're already in correct order in 'items'
+  finalItems.push(...items);
+  
+  // 6. Finally add other static files (nested sections, other items)
+  finalItems.push(...otherStaticFiles);
+
   // @ts-expect-error - idk I'll figure out to type it
-  return items;
+  return finalItems;
 }
 
 function hasValidConfig(
