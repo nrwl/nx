@@ -5,10 +5,6 @@ description: Learn how to use Nx Release to version and publish Docker images fr
 
 # Release Docker Images
 
-{% callout type="warning" title="Docker is Experimental" %}
-Docker support in Nx Release is currently experimental and only available in the `next`/beta version. It may undergo breaking changes without following semantic versioning.
-{% /callout %}
-
 This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo using calendar-based versioning.
 
 {% youtube title="What is Nx?" src="https://www.youtube.com/embed/TOPxKJXUaqw" /%}
@@ -19,12 +15,11 @@ Before starting, ensure you have:
 
 1. Docker installed and running locally
 2. Run `docker login` to authenticate with your Docker registry (e.g., `docker login docker.io` for Docker Hub)
-3. Make sure that you are on the `next`/beta version of Nx and Nx plugins (e.g. `npx create-nx-workspace@next` for new workspaces)
 
 ## Install Nx Docker Plugin
 
 ```shell
-nx add @nx/docker@next
+nx add @nx/docker
 ```
 
 This command adds the `@nx/docker` plugin to your `nx.json` so that projects with a `Dockerfile` is automatically configured with Docker targets (e.g. `docker:build` and `docker:run`).
