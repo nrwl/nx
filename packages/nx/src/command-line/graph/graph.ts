@@ -888,8 +888,8 @@ async function createProjectGraphAndSourceMapClientResponse(
   }
 
   let graph = pruneExternalNodes(projectGraph);
-  let fileMap: ProjectFileMap | undefined =
-    readFileMapCache()?.fileMap.projectFileMap;
+  const fileMap: ProjectFileMap =
+    readFileMapCache()?.fileMap.projectFileMap || {};
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 
@@ -1268,7 +1268,7 @@ async function getExpandedTaskInputs(
 
   const inputs = taskGraphResponse.plans[taskId];
   let result: Record<string, string[]> = {};
-  
+
   if (inputs) {
     result = expandInputs(
       inputs,
@@ -1279,10 +1279,10 @@ async function getExpandedTaskInputs(
       currentProjectGraphClientResponse
     );
   }
-  
+
   // Cache the result
   expandedTaskInputsCache.set(taskId, result);
-  
+
   return result;
 }
 
@@ -1356,7 +1356,7 @@ function expandInputs(
       const projectInputExpanded = {
         [fileSetProject.name]: filterUsingGlobPatterns(
           fileSetProject.data.root,
-          depGraphClientResponse.fileMap[fileSetProject.name],
+          depGraphClientResponse.fileMap[fileSetProject.name] || [],
           fileSets
         ).map((f) => f.file),
       };
