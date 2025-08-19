@@ -6,8 +6,7 @@ import {
   uniq,
 } from '@nx/e2e-utils';
 
-// TODO(@Coly010): Please re-enable this when the test is fixed.
-xdescribe('Next.js Storybook', () => {
+describe('Next.js Storybook', () => {
   const appName = uniq('app');
   beforeAll(() => {
     newProject({

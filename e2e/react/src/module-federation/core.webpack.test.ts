@@ -15,8 +15,7 @@ import {
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
-// TODO(@Coly010): Please re-enable this when the test is fixed.
-xdescribe('React Module Federation', () => {
+describe('React Module Federation', () => {
   describe('Default Configuration', () => {
     beforeAll(() => {
       newProject({ packages: ['@nx/react', '@nx/webpack'] });
