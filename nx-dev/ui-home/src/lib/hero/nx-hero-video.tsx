@@ -50,7 +50,7 @@ export function NxHeroVideo(): ReactElement {
                       sendCustomEvent(
                         'nx-hero-video-play-click',
                         'hero-video',
-                        'home'
+                        'homepage'
                       );
                     }}
                   />

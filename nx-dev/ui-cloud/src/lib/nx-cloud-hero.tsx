@@ -1,6 +1,8 @@
+'use client';
 import { ReactElement } from 'react';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { NxCloudHeroVideo } from './hero/nx-cloud-hero-video';
+import { sendCustomEvent } from 'nx-dev/feature-analytics/src';
 
 export function NxCloudHero(): ReactElement {
   return (
@@ -139,6 +141,13 @@ export function NxCloudHero(): ReactElement {
                 title="Nx AI Integration"
                 variant="primary"
                 size="default"
+                onClick={() =>
+                  sendCustomEvent(
+                    'get-started-click',
+                    'nx-cloud-hero',
+                    'nx-cloud'
+                  )
+                }
               >
                 Get started now
               </ButtonLink>
@@ -147,6 +156,13 @@ export function NxCloudHero(): ReactElement {
                 title="Nx AI Integration"
                 variant="secondary"
                 size="default"
+                onClick={() =>
+                  sendCustomEvent(
+                    'contact-sales-click',
+                    'nx-cloud-hero-book-demo',
+                    'nx-cloud'
+                  )
+                }
               >
                 Book a demo
               </ButtonLink>

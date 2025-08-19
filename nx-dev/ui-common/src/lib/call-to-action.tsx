@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export interface CTAProps {
   mainActionLinkText?: string;
@@ -81,6 +83,7 @@ export function CallToAction({
             title="Get in touch"
             prefetch={false}
             className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
+            onClick={() => sendCustomEvent('contact-click', 'footer-cta', '')}
           >
             Contact us{' '}
             <span

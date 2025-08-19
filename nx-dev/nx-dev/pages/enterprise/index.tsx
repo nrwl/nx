@@ -16,6 +16,7 @@ import {
 } from '@nx/nx-dev-ui-enterprise';
 import { ReactElement } from 'react';
 import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function Enterprise(): ReactElement {
   const router = useRouter();
@@ -27,6 +28,12 @@ export function Enterprise(): ReactElement {
       size: 'small',
       title: 'Request a free trial',
       children: 'Request a free trial',
+      onClick: () =>
+        sendCustomEvent(
+          'request-trial-click',
+          'scrolling-header-cta',
+          'enterprise'
+        ),
     },
   ];
 

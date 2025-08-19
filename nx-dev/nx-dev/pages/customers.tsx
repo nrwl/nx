@@ -10,6 +10,7 @@ import {
   Hero,
   OssProjects,
 } from '@nx/nx-dev-ui-customers';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function Customers(): JSX.Element {
   const router = useRouter();
@@ -22,6 +23,12 @@ export function Customers(): JSX.Element {
       target: '_blank',
       title: 'Book a demo',
       children: 'Book a demo',
+      onClick: () =>
+        sendCustomEvent(
+          'contact-sales-click',
+          'scrolling-header-cta-book-demo',
+          'customers'
+        ),
     },
   ];
 

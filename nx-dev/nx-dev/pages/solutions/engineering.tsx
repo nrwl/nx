@@ -13,6 +13,7 @@ import {
   SolutionsTopCallToAction,
 } from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function EnterpriseSolutionsEngineering(): ReactElement {
   const router = useRouter();
@@ -24,6 +25,12 @@ export function EnterpriseSolutionsEngineering(): ReactElement {
       size: 'small',
       title: 'Talk to our team',
       children: 'Talk to our team',
+      onClick: () =>
+        sendCustomEvent(
+          'contact-sales-click',
+          'scrolling-header-cta',
+          'solutions-engineering'
+        ),
     },
   ];
 

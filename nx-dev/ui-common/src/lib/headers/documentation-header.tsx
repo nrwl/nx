@@ -27,6 +27,7 @@ import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
 import { VersionPicker } from '../version-picker';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
@@ -256,6 +257,13 @@ export function DocumentationHeader({
             href="/getting-started/intro"
             className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
             prefetch={false}
+            onClick={() =>
+              sendCustomEvent(
+                'documentation-click',
+                'header-navigation',
+                'documentation-header'
+              )
+            }
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -361,6 +369,13 @@ export function DocumentationHeader({
               title="Contact"
               variant="secondary"
               size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'contact-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
             >
               Contact
             </ButtonLink>
@@ -369,6 +384,13 @@ export function DocumentationHeader({
               title="Login"
               variant="primary"
               size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'login-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
             >
               Login
             </ButtonLink>

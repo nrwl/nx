@@ -36,6 +36,7 @@ import { SectionsMenu } from './sections-menu';
 import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import { GitHubIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import { useRouter } from 'next/navigation';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 interface HeaderProps {
   ctaButtons?: ButtonLinkProps[];
@@ -95,6 +96,8 @@ export function Header({
       size: 'small',
       title: 'Contact Us',
       children: <span>Contact</span>,
+      onClick: () =>
+        sendCustomEvent('contact-click', 'header-cta', 'page-header'),
     },
     {
       href: 'https://cloud.nx.app?utm_source=nx-dev&utm_medium=header',
@@ -103,6 +106,8 @@ export function Header({
       target: '_blank',
       title: 'Login to Nx Cloud',
       children: 'Login',
+      onClick: () =>
+        sendCustomEvent('login-click', 'header-cta', 'page-header'),
     },
   ];
 
@@ -150,6 +155,13 @@ export function Header({
               title="Documentation"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent(
+                  'documentation-click',
+                  'header-navigation',
+                  'page-header'
+                )
+              }
             >
               Docs
             </Link>
@@ -445,6 +457,13 @@ export function Header({
                               target="_blank"
                               title="Try Nx Cloud for free"
                               className="w-full"
+                              onClick={() =>
+                                sendCustomEvent(
+                                  'get-started-click',
+                                  'mobile-header-cta',
+                                  'mobile-navigation'
+                                )
+                              }
                             >
                               Get started
                             </ButtonLink>
@@ -476,6 +495,13 @@ export function Header({
                             title="Documentation"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'documentation-click',
+                                'mobile-header-navigation',
+                                'page-header'
+                              )
+                            }
                           >
                             Docs
                           </Link>
@@ -628,6 +654,13 @@ export function Header({
                             title="Contact"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'contact-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
                           >
                             Contact
                           </Link>

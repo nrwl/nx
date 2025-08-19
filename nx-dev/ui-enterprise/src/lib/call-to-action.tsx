@@ -87,8 +87,8 @@ export function CallToAction(): ReactElement {
               prefetch={false}
               onClick={() =>
                 sendCustomEvent(
-                  'contact-team',
-                  'enterprise-bottom-cta',
+                  'contact-sales-click',
+                  'enterprise-bottom-cta-contact-team',
                   'enterprise'
                 )
               }

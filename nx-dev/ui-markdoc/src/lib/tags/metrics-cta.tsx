@@ -17,7 +17,11 @@ export function MetricsCTA() {
         variant="primary"
         size="default"
         onClick={() =>
-          sendCustomEvent('request-trial-click', 'metrics-cta', 'blog')
+          sendCustomEvent(
+            'contact-sales-click',
+            'metrics-cta-customer-success',
+            'blog'
+          )
         }
       >
         Reach out

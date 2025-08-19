@@ -27,6 +27,9 @@ export function Pricing(): ReactElement {
               title="Talk to the sales team"
               variant="secondary"
               size="default"
+              onClick={() =>
+                sendCustomEvent('contact-sales-click', 'pricing', 'nx-cloud')
+              }
             >
               Got questions? Talk to our team
             </ButtonLink>
@@ -307,7 +310,7 @@ export function Pricing(): ReactElement {
                   variant="secondary"
                   onClick={() =>
                     sendCustomEvent(
-                      'request-enterprise-trial',
+                      'request-trial-click',
                       'plans-table',
                       'pricing-plans'
                     )

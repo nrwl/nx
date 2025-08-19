@@ -1,3 +1,4 @@
+'use client';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
@@ -24,7 +25,7 @@ export function Hero(): ReactElement {
               variant="primary"
               size="default"
               onClick={() =>
-                sendCustomEvent('try-nx-cloud', 'customers-hero', 'customers')
+                sendCustomEvent('get-started-click', 'hero', 'customers')
               }
             >
               Get started now
@@ -34,6 +35,13 @@ export function Hero(): ReactElement {
               title="Book a demo"
               variant="secondary"
               size="default"
+              onClick={() =>
+                sendCustomEvent(
+                  'contact-sales-click',
+                  'customers-hero-book-demo',
+                  'customers'
+                )
+              }
             >
               Book a demo
             </ButtonLink>
