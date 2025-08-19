@@ -366,6 +366,14 @@
       },
       "description": "Update the @angular/cli package version to ~20.2.0.",
       "factory": "./src/migrations/update-21-5-0/update-angular-cli"
+    },
+    "remove-default-karma-configuration-files": {
+      "version": "21.5.0-beta.0",
+      "requires": {
+        "@angular/core": ">=20.2.0"
+      },
+      "description": "Remove any Karma configuration files that only contain the default content. The default configuration is automatically available without a specific project configurationfile.",
+      "factory": "./src/migrations/update-21-5-0/remove-default-karma-configuration-files"
     }
   },
   "packageJsonUpdates": {
