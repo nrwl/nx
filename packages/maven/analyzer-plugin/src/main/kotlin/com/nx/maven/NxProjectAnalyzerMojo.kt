@@ -45,6 +45,16 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     private lateinit var workspaceRoot: String
 
     private val objectMapper = ObjectMapper()
+    
+    // Maven lifecycle phases in order
+    private val mavenPhases = listOf(
+        "validate", "initialize", "generate-sources", "process-sources", 
+        "generate-resources", "process-resources", "compile", "process-classes",
+        "generate-test-sources", "process-test-sources", "generate-test-resources",
+        "process-test-resources", "test-compile", "process-test-classes", "test",
+        "prepare-package", "package", "pre-integration-test", "integration-test",
+        "post-integration-test", "verify", "install", "deploy"
+    )
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
@@ -58,14 +68,29 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             val allProjects = session.allProjects
             log.info("Found ${allProjects.size} Maven projects")
             
+            // First pass: create coordinates-to-project-name mapping
+            val coordinatesToProjectName = mutableMapOf<String, String>()
             for (mavenProject in allProjects) {
-                val projectNode = analyzeProject(mavenProject)
+                val coordinates = "${mavenProject.groupId}:${mavenProject.artifactId}"
+                val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
+                coordinatesToProjectName[coordinates] = projectName
+            }
+            
+            for (mavenProject in allProjects) {
+                val projectNode = analyzeProject(mavenProject, coordinatesToProjectName, allProjects)
                 if (projectNode != null) {
                     projectsArray.add(projectNode)
                 }
             }
             
             rootNode.put("projects", projectsArray)
+            
+            // Add coordinates mapping to output
+            val coordinatesMapping = objectMapper.createObjectNode()
+            for ((coordinates, projectName) in coordinatesToProjectName) {
+                coordinatesMapping.put(coordinates, projectName)
+            }
+            rootNode.put("coordinatesToProjectName", coordinatesMapping)
             rootNode.put("generatedAt", System.currentTimeMillis())
             rootNode.put("workspaceRoot", workspaceRoot)
             rootNode.put("totalProjects", allProjects.size)
@@ -88,7 +113,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         }
     }
 
-    private fun analyzeProject(mavenProject: MavenProject): ObjectNode? {
+    private fun analyzeProject(mavenProject: MavenProject, coordinatesToProjectName: Map<String, String>, allProjects: List<MavenProject>): ObjectNode? {
         return try {
             val projectNode = objectMapper.createObjectNode()
             
@@ -169,6 +194,12 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             // Extract lifecycle phases and plugin goals
             val lifecycleData = extractLifecycleData(mavenProject)
             projectNode.put("lifecycle", lifecycleData)
+            
+            // Compute dependency relationships with phase resolution
+            val dependencyRelationships = computeDependencyRelationships(
+                mavenProject, coordinatesToProjectName, allProjects, lifecycleData
+            )
+            projectNode.put("dependencyRelationships", dependencyRelationships)
             
             log.debug("Analyzed project: ${mavenProject.artifactId} at $relativePath")
             
@@ -306,5 +337,116 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         }
         
         return lifecycleNode
+    }
+    
+    private fun getBestDependencyPhase(
+        dependencyProjectName: String, 
+        requestedPhase: String, 
+        allProjects: List<MavenProject>
+    ): String {
+        // Find the dependency project's available phases
+        val depProject = allProjects.find { "${it.groupId}.${it.artifactId}" == dependencyProjectName }
+        if (depProject == null) {
+            return requestedPhase // Fallback to requested phase if we can't find the project
+        }
+        
+        // Get available phases from the project's lifecycle
+        val availablePhases = mutableSetOf<String>()
+        
+        // Add common phases based on packaging
+        when (depProject.packaging.lowercase()) {
+            "jar", "war", "ear" -> {
+                availablePhases.addAll(listOf("validate", "compile", "test", "package", "verify", "install", "deploy"))
+            }
+            "pom" -> {
+                availablePhases.addAll(listOf("validate", "install", "deploy"))
+            }
+            "maven-plugin" -> {
+                availablePhases.addAll(listOf("validate", "compile", "test", "package", "install", "deploy"))
+            }
+        }
+        
+        // Always add clean phase
+        availablePhases.add("clean")
+        
+        val requestedPhaseIndex = mavenPhases.indexOf(requestedPhase)
+        
+        // If the requested phase is available, use it
+        if (availablePhases.contains(requestedPhase)) {
+            return requestedPhase
+        }
+        
+        // Otherwise, find the highest available phase that comes before the requested phase
+        if (requestedPhaseIndex > 0) {
+            for (i in requestedPhaseIndex - 1 downTo 0) {
+                if (availablePhases.contains(mavenPhases[i])) {
+                    return mavenPhases[i]
+                }
+            }
+        }
+        
+        // If no earlier phase is available, use the earliest available phase
+        return availablePhases.minByOrNull { mavenPhases.indexOf(it) } ?: requestedPhase
+    }
+    
+    private fun computeDependencyRelationships(
+        mavenProject: MavenProject,
+        coordinatesToProjectName: Map<String, String>,
+        allProjects: List<MavenProject>,
+        lifecycleData: ObjectNode
+    ): ObjectNode {
+        val relationshipsNode = objectMapper.createObjectNode()
+        
+        // Get all available phases for this project
+        val availablePhases = mutableSetOf<String>()
+        
+        // Add phases from lifecycle data
+        val phasesNode = lifecycleData.get("phases")
+        if (phasesNode != null && phasesNode.isArray) {
+            for (phase in phasesNode) {
+                availablePhases.add(phase.asText())
+            }
+        }
+        
+        // Add common phases
+        val commonPhasesNode = lifecycleData.get("commonPhases")
+        if (commonPhasesNode != null && commonPhasesNode.isArray) {
+            for (phase in commonPhasesNode) {
+                availablePhases.add(phase.asText())
+            }
+        }
+        
+        // For each available phase, compute the dependsOn relationships
+        for (phase in availablePhases) {
+            val dependsOnArray = objectMapper.createArrayNode()
+            
+            // Add parent dependency first (parent POMs must be installed before children)
+            val parent = mavenProject.parent
+            if (parent != null) {
+                val parentCoordinates = "${parent.groupId}:${parent.artifactId}"
+                val parentProjectName = coordinatesToProjectName[parentCoordinates]
+                if (parentProjectName != null && parentProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
+                    val bestPhase = getBestDependencyPhase(parentProjectName, phase, allProjects)
+                    dependsOnArray.add("$parentProjectName:$bestPhase")
+                }
+            }
+            
+            // Add regular dependencies
+            for (dependency in mavenProject.dependencies) {
+                // Include compile, provided, test, and null scope dependencies for build ordering
+                if (listOf("compile", "provided", "test", null).contains(dependency.scope)) {
+                    val depCoordinates = "${dependency.groupId}:${dependency.artifactId}"
+                    val depProjectName = coordinatesToProjectName[depCoordinates]
+                    if (depProjectName != null && depProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
+                        val bestPhase = getBestDependencyPhase(depProjectName, phase, allProjects)
+                        dependsOnArray.add("$depProjectName:$bestPhase")
+                    }
+                }
+            }
+            
+            relationshipsNode.put(phase, dependsOnArray)
+        }
+        
+        return relationshipsNode
     }
 }
