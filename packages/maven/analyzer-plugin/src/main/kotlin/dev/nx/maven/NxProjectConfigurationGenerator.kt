@@ -163,7 +163,7 @@ class NxProjectConfigurationGenerator(
             }
             
             // Log the caching decision for debugging
-            log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${cacheabilityResult.cacheable} (${cacheabilityResult.reason}) [confidence: ${cacheabilityResult.confidence}]")
+            log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${cacheabilityResult.cacheable} (${cacheabilityResult.reason})")
             
         } catch (e: Exception) {
             log.warn("Failed to apply Reactor-based caching for phase $phase", e)
