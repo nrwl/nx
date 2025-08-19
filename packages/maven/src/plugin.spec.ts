@@ -1,4 +1,4 @@
-import { createNodesV2, createDependencies } from './plugin';
+import { createNodesV2, createDependencies } from './plugins';
 import { CreateNodesContext, CreateDependenciesContext, DependencyType } from '@nx/devkit';
 import { vol } from 'memfs';
 import { join } from 'path';
