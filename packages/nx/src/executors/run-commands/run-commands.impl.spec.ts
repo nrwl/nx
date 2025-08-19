@@ -1,4 +1,4 @@
-import { appendFileSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
 import runCommands, {
@@ -715,7 +715,7 @@ describe('Run Commands', () => {
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(normalize(readFile(f))).toBe(root);
+      expect(normalize(readFile(f))).toBe(normalize(root));
     });
 
     it('should run the task in the specified cwd relative to the workspace root when cwd is not an absolute path', async () => {
@@ -739,7 +739,7 @@ describe('Run Commands', () => {
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(normalize(readFile(f))).toBe(childFolder);
+      expect(normalize(readFile(f))).toBe(normalize(childFolder));
     });
 
     it('should terminate properly with an error if the cwd is not valid', async () => {
@@ -783,7 +783,7 @@ describe('Run Commands', () => {
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(normalize(readFile(f))).toBe(childFolder);
+      expect(normalize(readFile(f))).toBe(normalize(childFolder));
     });
 
     it('should add node_modules/.bins to the env for the cwd', async () => {
@@ -807,9 +807,11 @@ describe('Run Commands', () => {
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toContain(
-        `${childFolder}/node_modules/.bin`
+        normalize(`${childFolder}/node_modules/.bin`)
       );
-      expect(normalize(readFile(f))).toContain(`${root}/node_modules/.bin`);
+      expect(normalize(readFile(f))).toContain(
+        normalize(`${root}/node_modules/.bin`)
+      );
     });
   });
 
