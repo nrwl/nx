@@ -92,8 +92,8 @@ fun processTargetsForProject(
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
   val intTestTargetName = targetNameOverrides.getOrDefault("intTestTargetName", "intTest")
 
-  val testTasks = project.getTasksByName("test", false)
-  val intTestTasks = project.getTasksByName("intTest", false)
+  val testTasks = project.getTasksByName(testTargetName, false)
+  val intTestTasks = project.getTasksByName(intTestTargetName, false)
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
   val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
 
