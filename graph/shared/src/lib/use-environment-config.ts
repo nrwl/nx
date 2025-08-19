@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 import { useRef } from 'react';
 import { AppConfig } from './app-config';

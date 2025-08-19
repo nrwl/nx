@@ -8,22 +8,14 @@ import type {
 } from '@nx/devkit';
 /* eslint-enable @nx/enforce-module-boundaries */
 import {
-  InitGraphEvent,
   ProjectGraphClient,
   ProjectGraphClientScratchData,
-  ProjectGraphClientScratchPad,
   ProjectGraphEvent,
   ProjectGraphHandleEventResult,
   ProjectGraphRenderScratchData,
-  UpdateGraphEvent,
 } from '@nx/graph/projects';
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
-import { GraphRenderEvents } from '../../machines/interfaces';
-import {
-  CompositeProjectNodeElementData,
-  RenderGraphConfigEvent,
-  RenderGraphScratchData,
-} from '@nx/graph';
+import { RenderGraphConfigEvent, RenderGraphScratchData } from '@nx/graph';
 
 // The hierarchical schema for the states
 export interface ProjectGraphSchema {

@@ -1,14 +1,12 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
-import type { TaskGraphClientResponse } from 'nx/src/command-line/graph/graph';
-/* eslint-enable @nx/enforce-module-boundaries */
+import type { TaskGraphClientResponse } from '@nx/graph-shared';
 
 interface CacheEntry {
-  taskGraphs: TaskGraphClientResponse['taskGraphs'];
-  errors: Record<string, string>;
-  // Track which projects we've fetched for this target
+  taskGraph: TaskGraphClientResponse['taskGraph'];
+  plans?: Record<string, string[]>;
+  error?: string | null;
+  // Track which projects we've fetched for this combination
   fetchedProjects: Set<string>;
-  // Track if we've fetched ALL projects for this target
+  // Track if we've fetched ALL projects for this combination
   hasAllProjects: boolean;
 }
 
@@ -27,13 +25,13 @@ class TaskGraphCache {
   }
 
   /**
-   * Get cached data for a target, considering which projects are requested
+   * Get cached data for a cache key, considering which projects are requested
    */
   getCached(
-    target: string,
+    cacheKey: string,
     requestedProjects?: string[]
   ): TaskGraphClientResponse | null {
-    const cacheEntry = this.cache.get(target);
+    const cacheEntry = this.cache.get(cacheKey);
     if (!cacheEntry) {
       return null;
     }
@@ -41,10 +39,11 @@ class TaskGraphCache {
     // If no specific projects requested, check if we have all projects
     if (!requestedProjects || requestedProjects.length === 0) {
       if (cacheEntry.hasAllProjects) {
-        // We have all projects cached for this target
+        // We have all projects cached for this combination
         return {
-          taskGraphs: cacheEntry.taskGraphs,
-          errors: cacheEntry.errors,
+          taskGraph: cacheEntry.taskGraph,
+          plans: cacheEntry.plans,
+          error: cacheEntry.error,
         };
       }
       // We don't have all projects, need to fetch
@@ -57,23 +56,11 @@ class TaskGraphCache {
     );
 
     if (missingProjects.length === 0) {
-      // We have all requested projects, return filtered result
-      const filteredGraphs: TaskGraphClientResponse['taskGraphs'] = {};
-      const filteredErrors: Record<string, string> = {};
-
-      for (const project of requestedProjects) {
-        const taskId = `${project}:${target}`;
-        if (cacheEntry.taskGraphs[taskId]) {
-          filteredGraphs[taskId] = cacheEntry.taskGraphs[taskId];
-        }
-        if (cacheEntry.errors[taskId]) {
-          filteredErrors[taskId] = cacheEntry.errors[taskId];
-        }
-      }
-
+      // We have all requested projects, return the cached data
       return {
-        taskGraphs: filteredGraphs,
-        errors: filteredErrors,
+        taskGraph: cacheEntry.taskGraph,
+        plans: cacheEntry.plans,
+        error: cacheEntry.error,
       };
     }
 
@@ -82,65 +69,42 @@ class TaskGraphCache {
   }
 
   /**
-   * Get list of projects we need to fetch (not yet cached)
-   */
-  getMissingProjects(
-    target: string,
-    requestedProjects?: string[]
-  ): string[] | null {
-    const cacheEntry = this.cache.get(target);
-
-    // If no specific projects requested
-    if (!requestedProjects || requestedProjects.length === 0) {
-      // If we already have all projects, return empty array
-      if (cacheEntry?.hasAllProjects) {
-        return [];
-      }
-      // Need to fetch all projects for this target
-      return null; // null means fetch all
-    }
-
-    if (!cacheEntry) {
-      // Nothing cached yet, need all requested projects
-      return requestedProjects;
-    }
-
-    // Return only the projects we haven't fetched yet
-    return requestedProjects.filter(
-      (project) => !cacheEntry.fetchedProjects.has(project)
-    );
-  }
-
-  /**
    * Update cache with new data
    */
   updateCache(
-    target: string,
+    cacheKey: string,
     response: TaskGraphClientResponse,
     requestedProjects?: string[],
     isAllProjects: boolean = false
   ) {
-    const existing = this.cache.get(target) || {
-      taskGraphs: {},
-      errors: {},
+    const existing = this.cache.get(cacheKey) || {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      plans: {},
+      error: null,
       fetchedProjects: new Set<string>(),
       hasAllProjects: false,
     };
 
-    // Merge task graphs
+    // Create new cache entry
     const merged: CacheEntry = {
-      taskGraphs: { ...existing.taskGraphs, ...response.taskGraphs },
-      errors: { ...existing.errors, ...response.errors },
+      taskGraph: response.taskGraph,
+      plans: response.plans,
+      error: response.error,
       fetchedProjects: new Set(existing.fetchedProjects),
       hasAllProjects: existing.hasAllProjects || isAllProjects,
     };
 
     // Update fetched projects tracking
     if (isAllProjects) {
-      // Mark that we have all projects for this target
+      // Mark that we have all projects for this combination
       merged.hasAllProjects = true;
       // Add all projects from the response to fetchedProjects
-      Object.keys(response.taskGraphs).forEach((taskId) => {
+      Object.keys(response.taskGraph.tasks).forEach((taskId) => {
         const [project] = taskId.split(':');
         merged.fetchedProjects.add(project);
       });
@@ -151,49 +115,32 @@ class TaskGraphCache {
       });
     }
 
-    this.cache.set(target, merged);
+    this.cache.set(cacheKey, merged);
   }
 
   /**
    * Get merged response combining cached and new data
    */
   getMergedResponse(
-    target: string,
+    cacheKey: string,
     newResponse: TaskGraphClientResponse,
     requestedProjects?: string[],
     isAllProjects: boolean = false
   ): TaskGraphClientResponse {
     // Update the cache first
-    this.updateCache(target, newResponse, requestedProjects, isAllProjects);
+    this.updateCache(cacheKey, newResponse, requestedProjects, isAllProjects);
 
-    // Return the appropriate response based on what was requested
-    if (!requestedProjects || requestedProjects.length === 0) {
-      // Return all cached data for this target
-      const cached = this.cache.get(target);
-      return {
-        taskGraphs: cached?.taskGraphs || {},
-        errors: cached?.errors || {},
-      };
-    }
-
-    // Return only the requested projects
-    const cached = this.cache.get(target);
-    const filteredGraphs: TaskGraphClientResponse['taskGraphs'] = {};
-    const filteredErrors: Record<string, string> = {};
-
-    for (const project of requestedProjects) {
-      const taskId = `${project}:${target}`;
-      if (cached?.taskGraphs[taskId]) {
-        filteredGraphs[taskId] = cached.taskGraphs[taskId];
-      }
-      if (cached?.errors[taskId]) {
-        filteredErrors[taskId] = cached.errors[taskId];
-      }
-    }
-
+    // Return the cached data for this cache key
+    const cached = this.cache.get(cacheKey);
     return {
-      taskGraphs: filteredGraphs,
-      errors: filteredErrors,
+      taskGraph: cached?.taskGraph || {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      plans: cached?.plans || {},
+      error: cached?.error || null,
     };
   }
 

@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 import type { GraphError } from 'nx/src/command-line/graph/graph';
 
 export function ErrorRenderer({ errors }: { errors: GraphError[] }) {

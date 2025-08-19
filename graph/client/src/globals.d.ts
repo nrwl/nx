@@ -3,7 +3,6 @@
 import type {
   ExpandedTaskInputsReponse,
   ProjectGraphClientResponse,
-  TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
 import type { AppConfig, ExternalApi } from '@nx/graph/shared';
 import {
@@ -12,6 +11,7 @@ import {
   ProjectDetailsState,
 } from './app/console/project-details/project-details.machine';
 import { Interpreter } from 'xstate';
+import type { TaskGraphClientResponse } from '@nx/graph-shared';
 
 export declare global {
   interface Window {

@@ -7,7 +7,6 @@ import { Shell } from './shell';
 import type {
   GraphError,
   ProjectGraphClientResponse,
-  TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
@@ -36,6 +35,10 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
+
   projectGraphDataService.setTaskInputsUrl?.(workspaceInfo.taskInputsUrl);
 
   const projectGraph: ProjectGraphClientResponse =
@@ -63,104 +66,90 @@ const sourceMapsLoader = async (selectedWorkspaceId: string) => {
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
+
   return await projectGraphDataService.getSourceMaps(
     workspaceInfo.sourceMapsUrl
   );
 };
 
-const selectedTargetLoader: LoaderFunction = async ({ params, request }) => {
-  if (!projectGraphDataService.getSpecificTaskGraph) {
-    // Fallback to empty response if method not available
-    return { taskGraphs: {}, errors: {} };
-  }
-
+const tasksLoader: LoaderFunction = async ({ params, request }) => {
   const selectedWorkspaceId =
     params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
-  const selectedTarget = params.selectedTarget;
 
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
+
   // Set the workspace to handle cache invalidation
   taskGraphCache.setWorkspace(selectedWorkspaceId);
 
-  // Check URL for specific projects
-  const url = new URL(request.url);
-  const projectsParam = url.searchParams.get('projects');
+  // Check URL for targets and projects
+  const requestUrl = new URL(request.url);
+  const targetsParam = requestUrl.searchParams.get('targets');
+  const projectsParam = requestUrl.searchParams.get('projects');
+
+  const selectedTargets = targetsParam
+    ? targetsParam.split(' ').filter(Boolean)
+    : [];
   const requestedProjects = projectsParam
     ? projectsParam.split(' ').filter(Boolean)
     : undefined;
 
-  if (!requestedProjects && !url.pathname.endsWith('all')) {
-    return { taskGraphs: {}, errors: {} };
+  // If no targets selected, return empty (UI will show target selector)
+  if (selectedTargets.length === 0) {
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      error: null,
+    };
   }
 
-  // Check if we have cached data
-  const cached = taskGraphCache.getCached(selectedTarget, requestedProjects);
+  // Check if this is the "all" route (all projects for selected targets)
+  const isAllRoute = requestUrl.pathname.endsWith('/all');
+  if (!requestedProjects && !isAllRoute) {
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      error: null,
+    };
+  }
+
+  // Create cache key for this combination of targets and projects
+  const cacheKey = `${selectedTargets.join(',')}-${
+    requestedProjects?.join(',') || 'all'
+  }`;
+
+  // Check if we have cached data for this exact combination
+  const cached = taskGraphCache.getCached(cacheKey, requestedProjects);
   if (cached) {
-    // We have all the data we need in cache
     return cached;
   }
 
-  // Determine what we need to fetch
-  const missingProjects = taskGraphCache.getMissingProjects(
-    selectedTarget,
-    requestedProjects
+  const response = await projectGraphDataService.getSpecificTaskGraph(
+    workspaceInfo.taskGraphUrl,
+    requestedProjects,
+    selectedTargets
   );
 
-  let response: TaskGraphClientResponse;
+  // Update cache
+  taskGraphCache.updateCache(cacheKey, response, requestedProjects, isAllRoute);
 
-  if (missingProjects === null) {
-    // Need to fetch all projects for this target
-    response = await projectGraphDataService.getSpecificTaskGraph(
-      workspaceInfo.taskGraphUrl,
-      null,
-      selectedTarget,
-      null
-    );
-
-    // Return merged response (cache + new data)
-    return taskGraphCache.getMergedResponse(
-      selectedTarget,
-      response,
-      requestedProjects,
-      true // isAllProjects
-    );
-  } else if (missingProjects.length > 0) {
-    // Fetch only the missing projects
-
-    response = await projectGraphDataService.getSpecificTaskGraph(
-      workspaceInfo.taskGraphUrl,
-      missingProjects,
-      selectedTarget,
-      null
-    );
-
-    // Return merged response (cache + new data)
-    return taskGraphCache.getMergedResponse(
-      selectedTarget,
-      response,
-      requestedProjects,
-      false
-    );
-  } else {
-    // All requested projects are already cached, but getCached() returned null
-    // This shouldn't happen, but let's handle it
-    response = await projectGraphDataService.getSpecificTaskGraph(
-      workspaceInfo.taskGraphUrl,
-      requestedProjects || null,
-      selectedTarget,
-      null
-    );
-
-    return taskGraphCache.getMergedResponse(
-      selectedTarget,
-      response,
-      requestedProjects,
-      !requestedProjects
-    );
-  }
+  return response;
 };
 
 const projectDetailsLoader = async (
@@ -231,11 +220,26 @@ const childRoutes: RouteObject[] = [
     path: 'tasks',
     id: 'tasks',
     errorElement: <TasksSidebarErrorBoundary />,
-    shouldRevalidate: ({ currentParams, nextParams }) => {
-      return (
+    loader: tasksLoader,
+    shouldRevalidate: ({ currentParams, nextParams, currentUrl, nextUrl }) => {
+      // Always revalidate if workspace changes
+      if (
         !currentParams.selectedWorkspaceId ||
         currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
-      );
+      ) {
+        return true;
+      }
+
+      // Revalidate if query parameters change (targets or projects)
+      const currentSearchParams = new URLSearchParams(currentUrl.search);
+      const nextSearchParams = new URLSearchParams(nextUrl.search);
+
+      const currentTargets = currentSearchParams.get('targets');
+      const nextTargets = nextSearchParams.get('targets');
+      const currentProjects = currentSearchParams.get('projects');
+      const nextProjects = nextSearchParams.get('projects');
+
+      return currentTargets !== nextTargets || currentProjects !== nextProjects;
     },
     children: [
       {
@@ -243,18 +247,37 @@ const childRoutes: RouteObject[] = [
         element: <TasksSidebar />,
       },
       {
-        path: ':selectedTarget',
-        id: 'selectedTarget',
-        loader: selectedTargetLoader,
+        path: 'all',
+        id: 'allTasks',
+        loader: tasksLoader,
+        shouldRevalidate: ({
+          currentParams,
+          nextParams,
+          currentUrl,
+          nextUrl,
+        }) => {
+          // Always revalidate if workspace changes
+          if (
+            !currentParams.selectedWorkspaceId ||
+            currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
+          ) {
+            return true;
+          }
+
+          // Revalidate if query parameters change (targets or projects)
+          const currentSearchParams = new URLSearchParams(currentUrl.search);
+          const nextSearchParams = new URLSearchParams(nextUrl.search);
+
+          const currentTargets = currentSearchParams.get('targets');
+          const nextTargets = nextSearchParams.get('targets');
+          const currentProjects = currentSearchParams.get('projects');
+          const nextProjects = nextSearchParams.get('projects');
+
+          return (
+            currentTargets !== nextTargets || currentProjects !== nextProjects
+          );
+        },
         element: <TasksSidebar />,
-        children: [
-          {
-            path: 'all',
-            id: 'allTasks',
-            loader: selectedTargetLoader,
-            element: <TasksSidebar />,
-          },
-        ],
       },
     ],
   },

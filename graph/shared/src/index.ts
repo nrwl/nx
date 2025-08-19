@@ -6,3 +6,4 @@ export * from './lib/use-route-constructor';
 export * from './lib/fetch-project-graph';
 export * from './lib/use-poll';
 export * from './lib/app-config';
+export type * from './lib/task-graph-client-response';

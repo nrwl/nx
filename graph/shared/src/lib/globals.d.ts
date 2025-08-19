@@ -1,10 +1,11 @@
+// nx-ignore-next-line
 import type {
   ExpandedTaskInputsReponse,
   ProjectGraphClientResponse,
-  TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
-import { AppConfig } from './lib/app-config';
-import { ExternalApi } from './lib/external-api';
+import type { AppConfig } from './app-config';
+import type { ExternalApi } from './external-api';
+import type { TaskGraphClientResponse } from './task-graph-client-response';
 
 export declare global {
   interface Window {

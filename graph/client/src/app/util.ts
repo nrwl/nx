@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphDependency } from '@nx/devkit';
+// nx-ignore-next-line
 import type {
   FileDataDependency,
   ProjectGraphProjectNode,
