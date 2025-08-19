@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.LifecycleExecutor
+import org.apache.maven.lifecycle.Lifecycle
+import org.apache.maven.lifecycle.mapping.LifecycleMapping
 import org.apache.maven.model.Dependency
 import org.apache.maven.model.Plugin
 import org.apache.maven.model.PluginExecution
@@ -191,18 +193,28 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val lifecycleNode = objectMapper.createObjectNode()
         
         try {
-            // Get the execution plan for the default lifecycle
-            val executionPlan = lifecycleExecutor.calculateExecutionPlan(session, "deploy")
+            // Get execution plans for all major Maven lifecycles
+            val lifecyclePhases = listOf("deploy", "clean", "site")
+            val allExecutionPlans = lifecyclePhases.mapNotNull { phase ->
+                try {
+                    lifecycleExecutor.calculateExecutionPlan(session, phase)
+                } catch (e: Exception) {
+                    log.debug("Could not calculate execution plan for phase: $phase", e)
+                    null
+                }
+            }
             
-            // Extract phases
+            // Extract phases from all lifecycles
             val phasesArray = objectMapper.createArrayNode()
             val uniquePhases = mutableSetOf<String>()
             
-            for (execution in executionPlan.mojoExecutions) {
-                execution.lifecyclePhase?.let { phase ->
-                    if (!uniquePhases.contains(phase)) {
-                        uniquePhases.add(phase)
-                        phasesArray.add(phase)
+            for (executionPlan in allExecutionPlans) {
+                for (execution in executionPlan.mojoExecutions) {
+                    execution.lifecyclePhase?.let { phase ->
+                        if (!uniquePhases.contains(phase)) {
+                            uniquePhases.add(phase)
+                            phasesArray.add(phase)
+                        }
                     }
                 }
             }
@@ -250,8 +262,12 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             lifecycleNode.put("goals", goalsArray)
             lifecycleNode.put("plugins", pluginsArray)
             
-            // Add common Maven phases based on packaging
+            // Add common Maven phases based on packaging (including clean which is always available)
             val commonPhases = objectMapper.createArrayNode()
+            
+            // Clean is available for all project types
+            commonPhases.add("clean")
+            
             when (mavenProject.packaging.lowercase()) {
                 "jar", "war", "ear" -> {
                     commonPhases.add("validate")
