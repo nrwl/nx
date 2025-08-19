@@ -158,10 +158,18 @@ const navigation = {
 export function Footer({
   className = '',
   disableThemeSwitcher = false,
+  useDomainPrefix = false,
 }: {
   className?: string;
   disableThemeSwitcher?: boolean;
+  useDomainPrefix?: boolean;
 } = {}): JSX.Element {
+  const prefixHref = (href: string) => {
+    if (useDomainPrefix && href.startsWith('/')) {
+      return `https://nx.dev${href}`;
+    }
+    return href;
+  };
   return (
     <footer
       className={`bg-white dark:bg-slate-950 ${className}`}
@@ -214,7 +222,7 @@ export function Footer({
                 ) : (
                   <Link
                     key={item.name}
-                    href={item.href}
+                    href={prefixHref(item.href)}
                     title={item.name}
                     prefetch={false}
                     className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
@@ -251,7 +259,7 @@ export function Footer({
                         </a>
                       ) : (
                         <Link
-                          href={item.href}
+                          href={prefixHref(item.href)}
                           prefetch={false}
                           title={item.name}
                           className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
@@ -271,7 +279,7 @@ export function Footer({
                   {navigation.solutions.map((item) => (
                     <li key={item.name} className="list-none">
                       <Link
-                        href={item.href}
+                        href={prefixHref(item.href)}
                         prefetch={false}
                         title={item.name}
                         className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
@@ -303,7 +311,7 @@ export function Footer({
                         </a>
                       ) : (
                         <Link
-                          href={item.href}
+                          href={prefixHref(item.href)}
                           prefetch={false}
                           title={item.name}
                           className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
@@ -323,7 +331,7 @@ export function Footer({
                   {navigation.company.map((item) => (
                     <li key={item.name} className="list-none">
                       <Link
-                        href={item.href}
+                        href={prefixHref(item.href)}
                         prefetch={false}
                         title={item.name}
                         className="text-sm text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
@@ -343,7 +351,7 @@ export function Footer({
             <HeartIcon className="inline h-4 w-4" />
             <span>by</span>
             <Link
-              href="/company"
+              href={prefixHref('/company')}
               prefetch={false}
               title="Company"
               className="inline-flex items-center text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"

@@ -21,7 +21,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
     )
   }
   <div class="main-frame"><slot /></div>
-  <Footer disableThemeSwitcher={true} className="mt-32 dark:bg-slate-900" />
+  <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="mt-32 dark:bg-slate-900" />
 </div>
 
 <style>
