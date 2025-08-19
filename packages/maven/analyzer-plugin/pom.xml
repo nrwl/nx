@@ -75,6 +75,14 @@
       <artifactId>kotlin-stdlib</artifactId>
       <version>${kotlin.version}</version>
     </dependency>
+    
+    <!-- Maven Build Cache Extension for native cacheability detection -->
+    <dependency>
+      <groupId>org.apache.maven.extensions</groupId>
+      <artifactId>maven-build-cache-extension</artifactId>
+      <version>1.2.0</version>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
 
   <build>
