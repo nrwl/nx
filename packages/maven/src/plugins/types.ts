@@ -1,3 +1,5 @@
+import { TargetConfiguration, ProjectConfiguration } from '@nx/devkit';
+
 export interface MavenPluginOptions {
   buildTargetName?: string;
   testTargetName?: string;
@@ -8,7 +10,7 @@ export interface MavenPluginOptions {
 export const DEFAULT_OPTIONS: MavenPluginOptions = {};
 
 // All Maven-specific types are now handled in the Kotlin analyzer
-// TypeScript only needs the final Nx format
+// TypeScript only needs the final Nx format using official @nx/devkit types
 
 export interface MavenAnalysisData {
   createNodesResults: CreateNodesResult[];
@@ -17,29 +19,9 @@ export interface MavenAnalysisData {
   totalProjects?: number;
 }
 
-// Nx-specific types for the createNodesResults format
+// Nx-specific types for the createNodesResults format using official types
 export type CreateNodesResult = [string, ProjectsWrapper]; // [root path, projects wrapper]
 
 export interface ProjectsWrapper {
-  projects: Record<string, NxProjectConfiguration>;
-}
-
-export interface NxProjectConfiguration {
-  name: string;
-  root: string;
-  projectType: 'library' | 'application';
-  sourceRoot?: string;
-  targets: Record<string, NxTargetConfiguration>;
-  tags?: string[];
-}
-
-export interface NxTargetConfiguration {
-  executor: string;
-  options: NxTargetOptions;
-  dependsOn?: string[];
-}
-
-export interface NxTargetOptions {
-  command: string;
-  cwd: string;
+  projects: Record<string, ProjectConfiguration>;
 }
