@@ -235,7 +235,7 @@ export interface HashedTask {
   project: string
   target: string
   configuration?: string
-  cache?: boolean
+  cache: boolean
 }
 
 export interface HasherOptions {
@@ -321,6 +321,7 @@ export interface Task {
   startTime?: number
   endTime?: number
   continuous?: boolean
+  cache?: boolean
 }
 
 export interface TaskGraph {
