@@ -1,2 +1,3 @@
 export * from './generators/init/generator';
-export { createNodesV2, createDependencies } from './plugins';
+export { createNodesV2 } from './plugins/nodes';
+export { createDependencies } from './plugins/dependencies';
