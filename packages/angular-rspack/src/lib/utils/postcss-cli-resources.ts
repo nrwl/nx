@@ -96,7 +96,9 @@ export default function (options?: PostcssCliResourcesOptions): Plugin {
       inputUrl = inputUrl.slice(1);
     }
 
-    const { pathname, hash, search } = url.parse(inputUrl.replace(/\\/g, '/'));
+    const normalizedUrl = inputUrl.replace(/\\/g, '/');
+    const parsedUrl = new URL(normalizedUrl, 'file:///');
+    const { pathname, hash, search } = parsedUrl;
     const resolver = (file: string, base: string) =>
       new Promise<string>((resolve, reject) => {
         loader.resolve(base, decodeURI(file), (err, result) => {
@@ -144,11 +146,11 @@ export default function (options?: PostcssCliResourcesOptions): Plugin {
 
         let outputUrl = outputPath.replace(/\\/g, '/');
         if (hash || search) {
-          outputUrl = url.format({ pathname: outputUrl, hash, search });
+          outputUrl = outputUrl + (search || '') + (hash || '');
         }
 
         if (deployUrl && !extracted) {
-          outputUrl = url.resolve(deployUrl, outputUrl);
+          outputUrl = new URL(outputUrl, deployUrl).href;
         }
 
         resourceCache.set(cacheKey, outputUrl);
