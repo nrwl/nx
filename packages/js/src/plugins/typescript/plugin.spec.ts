@@ -6064,7 +6064,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-          compilerOptions: { outDir: 'build' },
+          compilerOptions: {},
           include: ['lib/**/*.ts'],
         }),
         'libs/my-lib/package.json': JSON.stringify({
@@ -6094,7 +6094,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-          compilerOptions: { outDir: 'build' },
+          compilerOptions: {},
           include: ['lib/**/*.ts'],
         }),
         'libs/my-lib/package.json': JSON.stringify({
@@ -6150,7 +6150,19 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/build",
+                    "{projectRoot}/**/*.js",
+                    "{projectRoot}/**/*.cjs",
+                    "{projectRoot}/**/*.mjs",
+                    "{projectRoot}/**/*.jsx",
+                    "{projectRoot}/**/*.js.map",
+                    "{projectRoot}/**/*.jsx.map",
+                    "{projectRoot}/**/*.d.ts",
+                    "{projectRoot}/**/*.d.cts",
+                    "{projectRoot}/**/*.d.mts",
+                    "{projectRoot}/**/*.d.ts.map",
+                    "{projectRoot}/**/*.d.cts.map",
+                    "{projectRoot}/**/*.d.mts.map",
+                    "{projectRoot}/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
