@@ -25,7 +25,10 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
-import { waitForDaemonToExitAndCleanupProcessJson } from '../cache';
+import {
+  getDaemonProcessIdSync,
+  waitForDaemonToExitAndCleanupProcessJson,
+} from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
@@ -607,6 +610,31 @@ export class DaemonClient {
     });
   }
 
+  private retryMessageAfterNewDaemonStarts() {
+    const [msg, res, rej] = [
+      this.currentMessage,
+      this.currentResolve,
+      this.currentReject,
+    ];
+    // If we get to this point the daemon is about to close, and we don't
+    // want to halt on our daemon terminated unexpectedly condition,
+    // so we decrement the promise queue to make it look empty.
+    this.queue.decrementQueueCounter();
+    if (msg) {
+      setTimeout(() => {
+        // We wait a bit to allow the server to finish shutting down before
+        // retrying the message, which will start a new daemon. Part of
+        // the process of starting up the daemon clears this.currentMessage etc
+        // so we need to store them before waiting.
+        this.sendToDaemonViaQueue(msg).then(res, rej);
+      }, 50);
+    } else {
+      throw new Error(
+        'Daemon client attempted to retry a message without a current message'
+      );
+    }
+  }
+
   private handleMessage(serializedResult: string) {
     try {
       performance.mark('json-parse-start');
@@ -618,7 +646,14 @@ export class DaemonClient {
         'json-parse-end'
       );
       if (parsedResult.error) {
-        this.currentReject(parsedResult.error);
+        if (
+          'message' in parsedResult.error &&
+          parsedResult.error.message === 'NX_VERSION_CHANGED'
+        ) {
+          this.retryMessageAfterNewDaemonStarts();
+        } else {
+          this.currentReject(parsedResult.error);
+        }
       } else {
         performance.measure(
           'total for sendMessageToDaemon()',
@@ -705,8 +740,7 @@ export class DaemonClient {
 
   async stop(): Promise<void> {
     try {
-      await this.sendMessageToDaemon({ type: FORCE_SHUTDOWN });
-      await waitForDaemonToExitAndCleanupProcessJson();
+      process.kill(getDaemonProcessIdSync(), 'SIGTERM');
     } catch (err) {
       output.error({
         title:
