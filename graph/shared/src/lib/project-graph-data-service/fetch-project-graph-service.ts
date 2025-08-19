@@ -6,7 +6,6 @@ import { ProjectGraphService } from './get-project-graph-data-service';
 
 export class FetchProjectGraphService implements ProjectGraphService {
   private taskInputsUrl: string;
-  private expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
 
   async getHash(): Promise<string> {
     const request = new Request('currentHash', { mode: 'no-cors' });
@@ -74,11 +73,6 @@ export class FetchProjectGraphService implements ProjectGraphService {
   async getExpandedTaskInputs(
     taskId: string
   ): Promise<Record<string, string[]>> {
-    // Check cache first
-    if (this.expandedTaskInputsCache.has(taskId)) {
-      return this.expandedTaskInputsCache.get(taskId)!;
-    }
-
     if (!this.taskInputsUrl) {
       return {};
     }
@@ -88,11 +82,6 @@ export class FetchProjectGraphService implements ProjectGraphService {
     });
 
     const response = await fetch(request);
-    const result = (await response.json())[taskId];
-
-    // Cache the result
-    this.expandedTaskInputsCache.set(taskId, result);
-
-    return result;
+    return (await response.json())[taskId];
   }
 }
