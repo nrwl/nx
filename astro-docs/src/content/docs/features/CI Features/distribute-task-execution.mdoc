@@ -13,7 +13,7 @@ title="Nx Agents Walkthrough"
 
 Nx Agents is a **distributed task execution system that intelligently allocates tasks across multiple machines**, optimizing your CI pipeline for speed and efficiency. While using [Nx Affected](/ci/features/affected) and [remote caching (Nx Replay)](/ci/features/remote-cache) can significantly speed up your CI pipeline, you might still encounter bottlenecks as your codebase scales. Combining affected runs and remote caching with task distribution is key to maintaining low CI times. Nx Agents handles this distribution efficiently, avoiding the complexity and maintenance required if you were to set it up manually.
 
-![Nx Cloud visualization of how tasks are being distributed with Nx Agents](/src/assets/features/nx-agents-live-chart.avif)
+![Nx Cloud visualization of how tasks are being distributed with Nx Agents](../../../../assets/features/nx-agents-live-chart.avif)
 
 Nx Agents offer several key advantages:
 
@@ -89,7 +89,7 @@ Every organization manages their CI/CD pipelines differently, so the guides don'
 
 ## How Nx Agents Work
 
-![Distribute Task Execution with Nx Agents](/src/assets/features/nx-agents-orchestration-diagram.svg)
+![Distribute Task Execution with Nx Agents](../../../../assets/features/nx-agents-orchestration-diagram.svg)
 
 _**Nx Agents are declarative**_ in that you only specify the number of agents and the type of agent you want to use. Nx Cloud then picks up the Nx commands that are being issued on your CI and distributes them automatically. This results in **low maintenance and a much more efficient distribution strategy**. A non-declarative approach would be one where you define which tasks or projects get executed on which machine, requiring you to adjust the configuration as your codebase changes.
 

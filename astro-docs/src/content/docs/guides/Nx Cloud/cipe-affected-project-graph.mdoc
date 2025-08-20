@@ -9,7 +9,7 @@ When it comes to troubleshooting long-running CI pipeline executions, there are 
 
 To access the affected project graph for the CI pipeline execution, navigate to the CI pipeline execution details page and click on the **Affected Project Graph** navigation item.
 
-![CIPE Affected Project Graph](/nx-cloud/recipes/cipe-affected-project-graph-nav-item.png)
+![CIPE Affected Project Graph](../../../../assets/nx-cloud/cipe-affected-project-graph-nav-item.png)
 
 The affected project graph visualizes the projects that are part of the **current** CI pipeline execution.
 
@@ -19,29 +19,29 @@ In this recipe, we will walk through a scenario where the affected project graph
 
 This is our repository structure:
 
-```text
-apps/
-├── web
-├── web-e2e
-├── nx-graph-test
-├── nx-graph-test-e2e
-└── recipes/
-    ├── client
-    └── client-e2e
-libs/
-├── ui (button and icon components)
-├── forms/
-│   └── input
-└── tooltip
-```
+{% filetree %}
+- apps/
+  - web/
+  - web-e2e
+  - nx-graph-test/
+  - nx-graph-test-e2e/
+  - recipes/
+    - client/
+    - client-e2e/
+- libs/
+  - ui/ (button and icon components)
+  - forms/
+    - input/
+  - tooltip/
+{% /filetree %}
 
 Our most recent CI pipeline execution affects everything in the repository.
 
-![CIPE Affected Project Graph -- every tasks](/nx-cloud/recipes/cipe-affected-project-graph-every-tasks.png)
+![CIPE Affected Project Graph -- every tasks](../../../../assets/nx-cloud/cipe-affected-project-graph-every-tasks.png)
 
 Likewise, the affected project graph for the Ci pipeline execution also visualizes all projects because everything is affected.
 
-![CIPE Affected Project Graph -- affect everything](/nx-cloud/recipes/cipe-affected-project-graph-every-projects.png)
+![CIPE Affected Project Graph -- affect everything](../../../../assets/nx-cloud/cipe-affected-project-graph-every-projects.png)
 
 ## Create a New CI Pipeline Execution with a Code Change
 
@@ -49,11 +49,11 @@ Our `ui` library has 2 components: `button` and `tooltip`. From the graph, we ca
 
 Let's make an update to the `tooltip` component and see how it affects our next CI pipeline execution. Pushing this change to our repository will trigger a new CI pipeline execution.
 
-![CIPE Affected Project Graph -- new CIPE](/nx-cloud/recipes/cipe-affected-project-graph-tooltip-tasks.png)
+![CIPE Affected Project Graph -- new CIPE](../../../../assets/nx-cloud/cipe-affected-project-graph-tooltip-tasks.png)
 
 This CI pipeline execution contains 14 tasks that are affected by the change we made to the `tooltip` component.
 
-![CIPE Affected Project Graph -- new CIPE tasks](/nx-cloud/recipes/cipe-affected-project-graph-tooltip-affected.png)
+![CIPE Affected Project Graph -- new CIPE tasks](../../../../assets/nx-cloud/cipe-affected-project-graph-tooltip-affected.png)
 
 The affected project graph also shows that the change to `tooltip` component , which is part of the `ui` library, affects both the `client` and `web` apps.
 
@@ -67,15 +67,15 @@ To achieve our goal, we can break up the `ui` library into 2 separate libraries:
 
 Once we have done this, we will end up with the following project graph:
 
-![CIPE Affected Project Graph -- break up ui](/nx-cloud/recipes/cipe-affected-project-graph-break-up-ui.png)
+![CIPE Affected Project Graph -- break up ui](../../../../assets/nx-cloud/cipe-affected-project-graph-break-up-ui.png)
 
 Let's make a change to the `button` component this time and see how it affects our next CI pipeline execution.
 
-![CIPE Affected Project Graph -- button tasks](/nx-cloud/recipes/cipe-affected-project-graph-button-tasks.png)
+![CIPE Affected Project Graph -- button tasks](../../../../assets/nx-cloud/cipe-affected-project-graph-button-tasks.png)
 
 We've reduced the number of affected tasks from 14 to 8.
 
-![CIPE Affected Project Graph -- button affected](/nx-cloud/recipes/cipe-affected-project-graph-button-affected.png)
+![CIPE Affected Project Graph -- button affected](../../../../assets/nx-cloud/cipe-affected-project-graph-button-affected.png)
 
 And the affected project graph also reflects that change properly.
 

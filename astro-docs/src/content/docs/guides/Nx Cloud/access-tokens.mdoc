@@ -9,7 +9,7 @@ sidebar:
 The permissions and membership define what developers can access on [nx.app](https://cloud.nx.app?utm_source=nx.dev&utm_medium=docs&utm_campaign=nx-cloud-security), but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in your workspace settings, under the `Access Control` tab.
 Learn more about [cache security best practices](/ci/concepts/cache-security).
 
-![Access Control Settings Page](/src/src/assets/nx-cloud/access-control-settings.avif)
+![Access Control Settings Page](../../../../assets/nx-cloud/access-control-settings.avif)
 
 ## Access Types
 
@@ -44,24 +44,24 @@ We recommend setting up a `read-write` token for you protected branches in CI an
 Azure DevOps provides various [mechanisms to limit access to secrets](https://learn.microsoft.com/en-us/azure/devops/pipelines/security/secrets?view=azure-devops#limit-access-to-secret-variables). We'll be using _Variable groups_ in this process, but you can achieve the same result leveraging [Azure Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/overview).
 
 1. In your project, navigate to Pipelines > Library.
-   ![Variable group settings page](/src/src/assets/nx-cloud/ado-library-start.avif)
+   ![Variable group settings page](../../../../assets/nx-cloud/ado-library-start.avif)
 2. Create a new _Variable group_ called _protected_.
    - If you already have a variable group for protected environments, we recommend reusing that variable group.
 3. Add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the `read-write` token from Nx Cloud.
-   ![create protected variable group](/src/assets/nx-cloud/ado-protected-var-group.avif)
+   ![create protected variable group](../../../../assets/nx-cloud/ado-protected-var-group.avif)
 4. In _Pipeline permissions_, add your current pipeline configuration.
-   ![variable group pipeline permission settings](/src/assets/nx-cloud/ado-pipeline-permission.avif)
+   ![variable group pipeline permission settings](../../../../assets/nx-cloud/ado-pipeline-permission.avif)
 5. In _Approvals and checks_, add a new _Branch control_ check.
-   ![variable group branch control settings](/src/assets/nx-cloud/ado-add-branch-control.avif)
+   ![variable group branch control settings](../../../../assets/nx-cloud/ado-add-branch-control.avif)
 6. Create the _Branch control_ check with only allowing your protected branches and checking _Verify branch protection_ option.
-   ![variable group branch control settings](/src/assets/nx-cloud/ado-protected-branch.avif)
+   ![variable group branch control settings](../../../../assets/nx-cloud/ado-protected-branch.avif)
 7. Create another variable group called _unprotected_.
 8. Add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the `read-only` token from Nx Cloud.
 9. In _Pipeline permissions_, add your current pipeline configuration.
 10. In _Approvals and checks_, add a new _Branch control_ check with the `*` wildcard for branches and leaving _Verify branch protection_ unchecked.
-    ![unprotected variable group settings](/src/assets/nx-cloud/ado-unprotected-branch.avif)
+    ![unprotected variable group settings](../../../../assets/nx-cloud/ado-unprotected-branch.avif)
 11. Now you should see 2 _Variable groups_ for _protected_ and _unprotected_ usage.
-    ![completed variable group setup](/src/assets/nx-cloud/ado-library-end.avif)
+    ![completed variable group setup](../../../../assets/nx-cloud/ado-library-end.avif)
 12. Update your pipeline to include the 2 variable groups, with conditional access for the _protected_ variable group.
 
 Example usage:
@@ -87,10 +87,10 @@ BitBucket Cloud supports setting environment variables per environment called _D
 1. In your repository, navigate to the _Repository settings_ > _Deployment_.
 2. Select an environment you have configured for protected branches, or create a new one and protect your primary branches.
    - Note: selecting branch protection rules is a premium feature of BitBucket Cloud.
-     ![Use deployments variables to provide protected environment variable access](/src/assets/nx-cloud/bitbucket-deployment-env.avif)
+     ![Use deployments variables to provide protected environment variable access](../../../../assets/nx-cloud/bitbucket-deployment-env.avif)
 3. Set the environment variable `NX_CLOUD_ACCESS_TOKEN` with the `read-write` token from Nx Cloud.
 4. Navigate to the _Repository settings_ > _Repository variables_ tab and set the variable `NX_CLOUD_ACCESS_TOKEN` with the `read-only` token from Nx Cloud.
-   ![add read-only nx cloud access token to bitbucket](/src/assets/nx-cloud/bitbucket-repo-vars.avif)
+   ![add read-only nx cloud access token to bitbucket](../../../../assets/nx-cloud/bitbucket-repo-vars.avif)
 5. Update the `bitbucket-pipelines.yml` file to include the deployment name mentioned in step 2.
 
 Example usage:
@@ -112,13 +112,13 @@ Circle CI allows creating _contexts_ and restricting those based on various rule
 
 1. In your organization, navigate to _Organization settings_ > _Contexts_ and create a new context.
    - If you already have a context for protected environments, we recommend reusing that context.
-     ![create a new context for protected environments](/src/assets/nx-cloud/circle-new-context.avif)
+     ![create a new context for protected environments](../../../../assets/nx-cloud/circle-new-context.avif)
 2. Click on _Add Expression Restriction_ that restricts the context to protected branches only such as only the `main` branch, e.g., `pipeline.git.branch == "main"`.
-   ![restrict context to protected branches](/src/assets/nx-cloud/circle-expression-restriction.avif)
+   ![restrict context to protected branches](../../../../assets/nx-cloud/circle-expression-restriction.avif)
 3. Click on _Add Environment Variable_ and add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the `read-write` token from Nx Cloud.
 4. Back on the organization home page, navigate to your projects, then view the pipeline settings.
 5. Navigate to _Environment Variables_ and click _Add Environment Variable_ and add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the `read-only` token from Nx Cloud.
-   ![add read-only nx cloud access token to circleci](/src/assets/nx-cloud/circle-new-env-var-token.avif)
+   ![add read-only nx cloud access token to circleci](../../../../assets/nx-cloud/circle-new-env-var-token.avif)
 6. Update your pipeline to include steps where you want to write to the nx cache with the correct contexts.
 
 Example usage:
@@ -156,12 +156,12 @@ You can read the [official GitHub Actions documentation](https://docs.github.com
    - Typically, organizations already have some kind of 'release' or 'protected' environments that can be leveraged.
    - If you do not have any protected branches, it's recommended to make at least your _default_ branch a protected branch i.e., `main`/`master`.
 3. Add a restriction for how the environment will be applied, and apply to all protected branches.
-   ![Select protected branches for the environment restriction configuration](/src/assets/nx-cloud/github-select-protected-branches.avif)
+   ![Select protected branches for the environment restriction configuration](../../../../assets/nx-cloud/github-select-protected-branches.avif)
 4. Add the `read-write` access token with the name `NX_CLOUD_ACCESS_TOKEN` to your environment.
 5. Click the _Secrets and variables_ > _Actions_ tab in the sidebar.
 6. Add the `read-only` access token with the name `NX_CLOUD_ACCESS_TOKEN` to the repository secrets.
 7. Now you should see 2 secrets where 1 is a part of the protected environment and the other is the default repository secrets.
-   ![overview of GitHub Action secret configuration settings with environments set](/src/assets/nx-cloud/github-secrets-settings.avif)
+   ![overview of GitHub Action secret configuration settings with environments set](../../../../assets/nx-cloud/github-secrets-settings.avif)
 
 Example usage:
 
@@ -184,7 +184,7 @@ GitLab allows creating variables scoped to specific environments. You can read t
 
 1. In your project, navigate to _Operate_ > _Environments_ and create a new environment. You do not need to fill out the External Url or GitLab agent.
    - Most projects already have a production/protected environments, so we recommend using this one if it's already defined.
-     ![define gitlab environment for protected branches](/src/assets/nx-cloud/gitlab-new-environment.avif)
+     ![define gitlab environment for protected branches](../../../../assets/nx-cloud/gitlab-new-environment.avif)
 2. In your project, navigate to _Settings_ > _CI/CD_ tab and expand the _Variables_ section.
 3. Click on _Add variable_ and fill in the following information:
    - Type: _Variable_
@@ -195,7 +195,7 @@ GitLab allows creating variables scoped to specific environments. You can read t
    - Key: `NX_CLOUD_ACCESS_TOKEN`
    - Value: Your `read-only` token from Nx Cloud
 4. Click _Add variable_.
-   ![add read-only nx cloud access token to gitlab](/src/assets/nx-cloud/gitlab-variable-settings-readonly.avif)
+   ![add read-only nx cloud access token to gitlab](../../../../assets/nx-cloud/gitlab-variable-settings-readonly.avif)
 5. Click on _Add variable_ again and fill in the following information:
    - Type: _Variable_
    - Environments: Your protected environment created in step 1
@@ -205,9 +205,9 @@ GitLab allows creating variables scoped to specific environments. You can read t
    - Key: `NX_CLOUD_ACCESS_TOKEN`
    - Value: Your `read-write` token from Nx Cloud
 6. Click _Add variable_.
-   ![add read-write nx cloud access token to gitlab](/src/assets/nx-cloud/gitlab-variable-settings-readwrite.avif)
+   ![add read-write nx cloud access token to gitlab](../../../../assets/nx-cloud/gitlab-variable-settings-readwrite.avif)
 7. Now you should see 2 secrets where 1 is a part of the protected & tagged to the environment and the other is not.
-   ![GitLab project variable configuration screen](/src/assets/nx-cloud/gitlab-variable-setting.avif)
+   ![GitLab project variable configuration screen](../../../../assets/nx-cloud/gitlab-variable-setting.avif)
 8. Update your pipeline to include steps where you want to write to the nx cache with the correct contexts.
 
 Example usage:
