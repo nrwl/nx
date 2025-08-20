@@ -17,15 +17,15 @@ What you'll learn:
 
 ## Ready to start?
 
-{% callout type="note" title="Prerequisites" %}
+{% aside type="note" title="Prerequisites" %}
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
-{% /callout %}
+{% /aside %}
 
 ### Step 1: Creating a new Nx TypeScript workspace
 
 Let's create your workspace. The setup process takes about 2 minutes and will configure TypeScript, testing, and CI/CD automatically.
 
-{% call-to-action variant="gradient" title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
+{% call_to_action variant="gradient" title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -47,24 +47,26 @@ This is important for using remote caching and self-healing in CI later in the t
 
 Let's take a look at the structure of our new Nx workspace:
 
-```plaintext
-acme
-├─ .github
-│  └─ workflows
-│     └─ ci.yml
-├─ .nx
-│  └─ ...
-├─ packages
-│  └─ .gitkeep
-├─ README.md
-├─ .prettierignore
-├─ .prettierrc
-├─ nx.json
-├─ package-lock.json
-├─ package.json
-├─ tsconfig.base.json
-└─ tsconfig.json
-```
+{%filetree %}
+- acme/
+  - .github/
+    - workflows/
+      - ci.yml
+  - .nx/
+    - ...
+  - packages/
+    - .gitkeep
+  - README.md
+  - .prettierignore
+  - .prettierrc
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+  - tsconfig.json
+
+{% /filetree %}
+
 
 Here are some files that might jump to your eyes:
 
@@ -92,15 +94,15 @@ npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=
 
 Running these commands should lead to new directories and files in your workspace:
 
-```plaintext
-acme
-├── packages
-│   ├── animal
-│   └── zoo
-├── ...
-└── vitest.workspace.ts
-```
+{%filetree %}
+- acme/
+  - packages/
+    - animal/
+    - zoo/
+    - ...
+  - vitest.workspace.ts
 
+{%/filetree %}
 Let's add some code to our packages. First, add the following code to the `animal` package:
 
 ```ts {6-19}
@@ -205,9 +207,8 @@ To view the tasks that Nx has detected, look in the [Nx Console](/getting-starte
 npx nx show project animal
 ```
 
-{% project-details title="Project Details View (Simplified)" %}
+{% project_details title="Project Details View (Simplified)" %}
 
-```json
 {
   "project": {
     "name": "@acme/animal",
@@ -328,15 +329,14 @@ npx nx show project animal
     "tags": ["packages/animal/project.json", "nx/core/project-json"]
   }
 }
-```
 
-{% /project-details %}
+{% /project_details %}
 
 The `@nx/js` plugin automatically configures both the build and typecheck tasks based on your TypeScript configuration. Notice also how the outputs are set to `{projectRoot}/dist` - this is where your compiled TypeScript files will be placed, and it defined by the `outDir` option in `packages/animal/tsconfig.lib.json`.
 
-{% callout type="note" title="Overriding inferred task options" %}
+{% aside type="note" title="Overriding inferred task options" %}
 You can override the options for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
-{% /callout %}
+{% /aside %}
 
 ## Code Sharing with Local Libraries
 
@@ -358,14 +358,15 @@ npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --li
 
 Now we have:
 
-```plaintext
-acme
-├── packages
-│   ├── animal
-│   ├── util
-│   └── zoo
-└── ...
-```
+{%filetree %}
+- acme/
+  - packages/
+    - animal/
+    - util/
+    - zoo/
+  - ...
+
+{%/filetree %}
 
 Let's add a utility function that our packages can share:
 
@@ -448,7 +449,6 @@ You should be able to see something similar to the following in your browser.
 
 {% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -487,7 +487,6 @@ You should be able to see something similar to the following in your browser.
   "focus": null,
   "groupByFolder": false
 }
-```
 
 {% /graph %}
 
@@ -525,7 +524,7 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, there will be a note that a matching cache result was found and therefore the task was not run again.
 
-```{% command="npx nx run-many -t built test" path="~/acme" %}
+```text {% title="npx nx run-many -t built test" frame="terminal" %}
       ✔  nx run @acme/util:build
    ✔  nx run @acme/util:test
    ✔  nx run @acme/animal:test
@@ -590,7 +589,7 @@ jobs:
 
 You will also need to install the [Nx Console](/getting-started/editor-setup) editor extension for VS Code, Cursor, or IntelliJ. For the complete AI setup guide, see our [AI integration documentation](/getting-started/ai-integration).
 
-{% install-nx-console /%}
+{% install_nx_console /%}
 
 Now, let's push the `add-zoo-packages` branch to GitHub and open a new pull request.
 
@@ -625,9 +624,9 @@ This happens because Nx Cloud caches the results of tasks and reuses them across
 
 This significantly speeds up the time to green for your pull requests, because subsequent changes to them have a good chance to replay tasks from cache.
 
-{% callout type="note" title="Remote Cache Outputs" %}
+{% aside type="note" title="Remote Cache Outputs" %}
 Outputs from cached tasks, such as the `dist` folder for builds or `coverage` folder for tests, are also read from cache. Even though a task was not run again, its outputs are available. The [Cache Task Results](/features/cache-task-results) page provides more details on caching.
-{% /callout %}
+{% /aside %}
 
 This pull request is now ready to be merged with the help of Nx Cloud's self-healing CI and remote caching.
 
