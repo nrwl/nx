@@ -1,6 +1,83 @@
 {
-  "createNodesResults" : [ ],
-  "generatedAt" : 1755728139732,
+  "createNodesResults" : [ [ ".", {
+    "projects" : {
+      "." : {
+        "name" : "dev.nx.maven.nx-maven-analyzer-plugin",
+        "root" : ".",
+        "projectType" : "application",
+        "sourceRoot" : "./src/main/java",
+        "targets" : {
+          "clean" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn clean -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "validate" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn validate -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "compile" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn compile -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : true,
+            "parallelism" : true,
+            "inputs" : [ "default", "{projectRoot}/pom.xml", "^production" ],
+            "outputs" : [ "{projectRoot}/target/classes" ]
+          },
+          "package" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn package -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : true,
+            "parallelism" : true,
+            "inputs" : [ "default", "{projectRoot}/pom.xml", "^production" ],
+            "outputs" : [ "{projectRoot}/target/*.jar" ]
+          },
+          "install" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn install -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "deploy" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn deploy -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          }
+        },
+        "targetGroups" : {
+          "build" : [ "validate", "compile" ],
+          "package" : [ "package" ],
+          "deploy" : [ "install", "deploy" ],
+          "clean" : [ "clean" ],
+          "compiler" : [ "compile" ]
+        },
+        "tags" : [ "maven:dev.nx.maven", "maven:maven-plugin", "maven:plugin" ]
+      }
+    }
+  } ] ],
+  "generatedAt" : 1755728315879,
   "workspaceRoot" : "/home/jason/projects/triage/java/maven/packages/maven/analyzer-plugin",
   "totalProjects" : 1
 }
