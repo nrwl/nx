@@ -86,7 +86,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -141,7 +140,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -199,7 +197,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -257,7 +254,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -313,7 +309,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -372,7 +367,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -432,7 +426,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -452,7 +445,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -474,7 +466,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -535,7 +526,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -598,7 +588,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -679,7 +668,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -744,7 +732,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -811,7 +798,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -878,7 +864,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -950,7 +935,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1029,7 +1013,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1106,7 +1089,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1189,7 +1171,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1267,7 +1248,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1359,7 +1339,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1465,7 +1444,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1523,7 +1501,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 },
               },
               "libs/my-lib/nested-project": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1608,7 +1585,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1874,7 +1850,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1949,7 +1924,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2014,7 +1988,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2086,7 +2059,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -2188,7 +2160,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2293,7 +2264,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2352,7 +2322,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 },
               },
               "libs/my-lib/nested-project": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2418,7 +2387,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2484,7 +2452,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2561,7 +2528,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2627,7 +2593,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2689,7 +2654,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2758,7 +2722,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2781,7 +2744,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2807,7 +2769,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2831,7 +2792,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2862,7 +2822,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2896,7 +2855,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -2974,7 +2932,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3050,7 +3007,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3129,7 +3085,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3206,7 +3161,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3274,7 +3228,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "my-build": {
                   "cache": true,
@@ -3342,7 +3295,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3429,7 +3381,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3501,7 +3452,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3571,7 +3521,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3646,7 +3595,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3725,7 +3673,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3805,7 +3752,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3893,7 +3839,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3974,7 +3919,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4071,7 +4015,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4158,7 +4101,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4241,7 +4183,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4506,7 +4447,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4576,7 +4516,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4648,7 +4587,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4713,7 +4651,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4800,7 +4737,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4878,7 +4814,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4949,7 +4884,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5031,7 +4965,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5102,7 +5035,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5170,7 +5102,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5243,7 +5174,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5315,7 +5245,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5387,7 +5316,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -5419,7 +5347,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5491,7 +5418,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5563,7 +5489,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5635,7 +5560,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -5666,7 +5590,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5739,7 +5662,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5811,7 +5733,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5883,7 +5804,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -5913,7 +5833,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -5982,7 +5901,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -6012,7 +5930,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -6082,7 +5999,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -6113,7 +6029,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
