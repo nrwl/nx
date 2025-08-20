@@ -18,7 +18,7 @@ export async function ensureNxConsoleInstalled() {
     return;
   }
 
-  if (typeof setting !== 'boolean') {
+  if (process.stdout.isTTY && typeof setting !== 'boolean') {
     setting = await promptForNxConsoleInstallation();
     preferences.setAutoInstallPreference(setting);
   }
