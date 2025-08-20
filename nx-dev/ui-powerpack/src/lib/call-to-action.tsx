@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { ReactElement } from 'react';
 
 export function CallToAction(): ReactElement {
@@ -65,10 +67,17 @@ export function CallToAction(): ReactElement {
             Get Nx Powerpack
           </a>
           <Link
-            href="/contact"
+            href="/contact/sales"
             title="Get in touch"
             prefetch={false}
             className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
+            onClick={() =>
+              sendCustomEvent(
+                'contact-sales-click',
+                'powerpack-footer-cta',
+                'powerpack'
+              )
+            }
           >
             Contact us{' '}
             <span

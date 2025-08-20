@@ -12,7 +12,6 @@ import {
   Testimonials,
   TrustedBy,
 } from '@nx/nx-dev-ui-common';
-import { gotoAppButton } from '../../lib/header-cta.configs';
 
 // Needed without it Next.js will fail to serve the page with start
 export const revalidate = 3600;
@@ -45,7 +44,7 @@ export const metadata: Metadata = {
 
 export default async function PricingPage() {
   return (
-    <DefaultLayout headerCTAConfig={[gotoAppButton]}>
+    <DefaultLayout>
       <PlansDisplay />
       <div className="mt-18 lg:mt-32">
         <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
