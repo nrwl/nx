@@ -1,11 +1,9 @@
 ---
-title: 'Angular Monorepo Tutorial'
+title: 'Building and Testing Angular Apps in Nx'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 sidebar:
   label: 'Angular Monorepo'
 ---
-
-# Building and Testing Angular Apps in Nx
 
 This tutorial walks you through creating an Angular monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
 

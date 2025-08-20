@@ -1,11 +1,9 @@
 ---
-title: 'TypeScript Monorepo Tutorial'
+title: 'Building and Testing TypeScript Packages in Nx'
 description: In this tutorial you'll create a TypeScript monorepo with Nx.gradient
 sidebar:
   label: 'TypeScript Monorepo'
 ---
-
-# Building and Testing TypeScript Packages in Nx
 
 This tutorial walks you through creating a TypeScript monorepo with Nx. You'll build a small example project to understand the core concepts and workflows.
 
