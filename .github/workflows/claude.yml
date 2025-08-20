@@ -16,7 +16,7 @@ on:
 jobs:
   claude:
     if: |
-      contains(fromJson('["AgentEnder", "barbados-clemens", "Cammisuli", "Coly010", "FrozenPandaz", "isaacplmann", "JamesHenry", "jaysoo", "leosvelperez", "mandarini", "MaxKless", "meeroslav", "nartc", "ndcunningham", "philipjfulcher", "vsavkin", "xiongemi"]'), github.actor) &&
+      contains(fromJson('["AgentEnder", "barbados-clemens", "Cammisuli", "Coly010", "FrozenPandaz", "JamesHenry", "jaysoo", "leosvelperez", "MaxKless", "meeroslav", "nartc", "philipjfulcher", "vsavkin"]'), github.actor) &&
       ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
