@@ -433,7 +433,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       isAngularPluginInstalled()
     ) {
       return this.readMergedWorkspaceConfiguration().pipe(
-        map((r) => Buffer.from(JSON.stringify(toOldFormat(r))))
+        map((r) => stringToArrayBuffer(JSON.stringify(toOldFormat(r))))
       );
     } else {
       return super.read(path);
@@ -566,13 +566,15 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
                         allObservables.push(
                           super.write(
                             path as any,
-                            Buffer.from(JSON.stringify(updatedContent, null, 2))
+                            stringToArrayBuffer(
+                              JSON.stringify(updatedContent, null, 2)
+                            )
                           )
                         );
                       }
                     } else {
                       allObservables.push(
-                        super.write(path as any, Buffer.from(content))
+                        super.write(path as any, stringToArrayBuffer(content))
                       );
                     }
                   },
@@ -756,7 +758,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       return super.readExistingAngularJson().pipe(
         map((angularJson) => {
           if (angularJson) {
-            return Buffer.from(
+            return stringToArrayBuffer(
               JSON.stringify({
                 version: 1,
                 projects: {
@@ -766,14 +768,14 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
               })
             );
           } else {
-            return Buffer.from(JSON.stringify(projectJsonConfig));
+            return stringToArrayBuffer(JSON.stringify(projectJsonConfig));
           }
         })
       );
     } else {
       const match = findMatchingFileChange(this.host, path);
       if (match) {
-        return of(Buffer.from(match.content));
+        return of(bufferToArrayBuffer(Buffer.from(match.content)));
       } else {
         return super.read(path);
       }
@@ -1147,16 +1149,6 @@ export function wrapAngularDevkitSchematic(
   };
 }
 
-function toBufferOrString(
-  content: ArrayBufferLike | Buffer | string
-): Buffer | string {
-  if (Buffer.isBuffer(content) || typeof content === 'string') {
-    return content;
-  }
-
-  return Buffer.from(content, 0, content.byteLength);
-}
-
 let logger: logging.Logger;
 
 export const getLogger = (isVerbose = false): logging.Logger => {
@@ -1447,4 +1439,26 @@ export function restoreNxTokensInOptions<T extends Object | Array<unknown>>(
     }
   }
   return result;
+}
+
+function toBufferOrString(
+  content: ArrayBufferLike | Buffer | string
+): Buffer | string {
+  if (Buffer.isBuffer(content) || typeof content === 'string') {
+    return content;
+  }
+
+  // it's an ArrayBuffer
+  return Buffer.from(content);
+}
+
+function stringToArrayBuffer(str: string): ArrayBuffer {
+  return new TextEncoder().encode(str).buffer as ArrayBuffer;
+}
+
+function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  return buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength
+  ) as ArrayBuffer;
 }
