@@ -155,10 +155,16 @@ class MavenBuildCacheIntegration(
                 val result = cacheableMethod.invoke(controller, execution)
                 log.debug("CacheController method ${cacheableMethod.name} returned: $result")
                 
+                val cacheable = result == true || (result is String && result != "skip")
+                val inputs = if (cacheable) extractMavenInputs(execution, project) else emptyList()
+                val outputs = if (cacheable) extractMavenOutputs(execution, project) else emptyList()
+                
                 return CacheabilityDecision(
-                    cacheable = result == true || (result is String && result != "skip"),
+                    cacheable = cacheable,
                     reason = "Maven Build Cache Extension decision",
-                    source = "Build Cache Extension"
+                    source = "Build Cache Extension",
+                    inputs = inputs,
+                    outputs = outputs
                 )
             }
             
@@ -218,10 +224,15 @@ class MavenBuildCacheIntegration(
                 }
             }
             
+            val inputs = if (cacheable) extractMavenInputs(execution, project) else emptyList()
+            val outputs = if (cacheable) extractMavenOutputs(execution, project) else emptyList()
+            
             return CacheabilityDecision(
                 cacheable = cacheable,
                 reason = reason,
-                source = "Build Cache Extension Config"
+                source = "Build Cache Extension Config",
+                inputs = inputs,
+                outputs = outputs
             )
             
         } catch (e: Exception) {
@@ -246,9 +257,15 @@ class MavenBuildCacheIntegration(
                 }
             }
             
-            // Add basic outputs for cacheable targets  
+            // Use Maven-derived outputs if available, otherwise basic default
             val outputs = target.putArray("outputs")
-            outputs.add("{projectRoot}/target")
+            if (decision.outputs.isNotEmpty()) {
+                decision.outputs.forEach { output ->
+                    outputs.add(output)
+                }
+            } else {
+                outputs.add("{projectRoot}/target")
+            }
             
         } else {
             target.put("cache", false)
@@ -260,6 +277,9 @@ class MavenBuildCacheIntegration(
         metadata.put("cacheDecisionSource", decision.source)
         if (decision.inputs.isNotEmpty()) {
             metadata.put("mavenInputsCount", decision.inputs.size)
+        }
+        if (decision.outputs.isNotEmpty()) {
+            metadata.put("mavenOutputsCount", decision.outputs.size)
         }
     }
     
@@ -285,6 +305,192 @@ class MavenBuildCacheIntegration(
         } catch (e: Exception) {
             log.debug("Failed to extract Maven inputs", e)
             emptyList() // Only use Maven's logic - no fallback
+        }
+    }
+    
+    /**
+     * Extract Maven's output analysis for a mojo execution to use as Nx target outputs
+     */
+    fun extractMavenOutputs(execution: MojoExecution, project: MavenProject): List<String> {
+        return try {
+            val outputs = mutableListOf<String>()
+            
+            // Try to access Maven Build Cache Extension output calculator or config
+            val cacheConfig = getCacheConfig()
+            if (cacheConfig != null) {
+                val mavenOutputs = calculateOutputsWithExtension(cacheConfig, execution, project)
+                outputs.addAll(mavenOutputs)
+                log.debug("Extracted ${mavenOutputs.size} outputs from Maven Build Cache Extension")
+            } else {
+                // Only use Maven's logic - no fallback
+                log.debug("Maven Build Cache Extension config not available for output analysis")
+            }
+            
+            outputs
+        } catch (e: Exception) {
+            log.debug("Failed to extract Maven outputs", e)
+            emptyList() // Only use Maven's logic - no fallback
+        }
+    }
+    
+    private fun calculateOutputsWithExtension(config: Any, execution: MojoExecution, project: MavenProject): List<String> {
+        return try {
+            val outputs = mutableListOf<String>()
+            
+            // Try to access output-related configuration
+            val configClass = config.javaClass
+            val methods = configClass.methods
+            
+            // Look for methods that might indicate output directories or patterns
+            val outputMethods = methods.filter { method ->
+                method.name.contains("output", ignoreCase = true) ||
+                method.name.contains("target", ignoreCase = true) ||
+                method.name.contains("build", ignoreCase = true)
+            }
+            
+            log.debug("Found ${outputMethods.size} potential output methods in cache config")
+            
+            for (method in outputMethods) {
+                if (method.parameterCount == 0) {
+                    try {
+                        val result = method.invoke(config)
+                        log.debug("Output method ${method.name} returned: $result")
+                        extractOutputPathsFromResult(result, project)?.let { outputs.addAll(it) }
+                    } catch (e: Exception) {
+                        log.debug("Failed to invoke output method ${method.name}", e)
+                    }
+                }
+            }
+            
+            // If no outputs found from config, try to infer from mojo execution
+            if (outputs.isEmpty()) {
+                outputs.addAll(inferOutputsFromMojoExecution(execution, project))
+            }
+            
+            outputs
+        } catch (e: Exception) {
+            log.debug("Failed to calculate outputs with extension", e)
+            emptyList()
+        }
+    }
+    
+    private fun extractOutputPathsFromResult(result: Any?, project: MavenProject): List<String>? {
+        if (result == null) return null
+        
+        val outputs = mutableListOf<String>()
+        
+        when (result) {
+            is Collection<*> -> {
+                result.forEach { item ->
+                    extractPathFromOutputItem(item, project)?.let { outputs.add(it) }
+                }
+            }
+            is Array<*> -> {
+                result.forEach { item ->
+                    extractPathFromOutputItem(item, project)?.let { outputs.add(it) }
+                }
+            }
+            is String -> {
+                convertToNxOutputPattern(result, project)?.let { outputs.add(it) }
+            }
+            else -> {
+                extractPathFromOutputItem(result, project)?.let { outputs.add(it) }
+            }
+        }
+        
+        return outputs.takeIf { it.isNotEmpty() }
+    }
+    
+    private fun extractPathFromOutputItem(item: Any?, project: MavenProject): String? {
+        if (item == null) return null
+        
+        return try {
+            val itemClass = item.javaClass
+            
+            // Look for path-related methods
+            val pathMethods = itemClass.methods.filter { method ->
+                method.name.contains("path", ignoreCase = true) ||
+                method.name.contains("dir", ignoreCase = true) ||
+                method.name.contains("target", ignoreCase = true) ||
+                method.name == "toString"
+            }
+            
+            for (method in pathMethods) {
+                if (method.parameterCount == 0) {
+                    val result = method.invoke(item)
+                    if (result is String && result.isNotBlank()) {
+                        return convertToNxOutputPattern(result, project)
+                    }
+                }
+            }
+            
+            // Fallback to toString
+            item.toString().takeIf { it.isNotBlank() }?.let { convertToNxOutputPattern(it, project) }
+        } catch (e: Exception) {
+            log.debug("Failed to extract path from output item", e)
+            null
+        }
+    }
+    
+    private fun inferOutputsFromMojoExecution(execution: MojoExecution, project: MavenProject): List<String> {
+        val outputs = mutableListOf<String>()
+        val goal = execution.goal
+        
+        // Infer outputs based on common Maven goals
+        when {
+            goal.contains("compile") -> {
+                outputs.add("{projectRoot}/target/classes")
+            }
+            goal.contains("test-compile") -> {
+                outputs.add("{projectRoot}/target/test-classes")
+            }
+            goal.contains("test") && !goal.contains("compile") -> {
+                outputs.add("{projectRoot}/target/surefire-reports")
+                outputs.add("{projectRoot}/target/test-results") 
+            }
+            goal.contains("package") -> {
+                outputs.add("{projectRoot}/target/*.jar")
+                outputs.add("{projectRoot}/target/*.war")
+                outputs.add("{projectRoot}/target/*.ear")
+            }
+            goal.contains("jar") -> {
+                outputs.add("{projectRoot}/target/*.jar")
+            }
+            goal.contains("war") -> {
+                outputs.add("{projectRoot}/target/*.war")
+            }
+            goal.contains("resources") -> {
+                if (goal.contains("test")) {
+                    outputs.add("{projectRoot}/target/test-classes")
+                } else {
+                    outputs.add("{projectRoot}/target/classes")
+                }
+            }
+            else -> {
+                // Default output directory for unknown goals
+                outputs.add("{projectRoot}/target")
+            }
+        }
+        
+        log.debug("Inferred ${outputs.size} outputs for goal $goal: $outputs")
+        return outputs
+    }
+    
+    private fun convertToNxOutputPattern(mavenPath: String, project: MavenProject): String? {
+        if (mavenPath.isBlank()) return null
+        
+        val projectRoot = project.basedir.absolutePath
+        
+        return when {
+            mavenPath.startsWith(projectRoot as CharSequence) -> {
+                // Convert absolute path to relative Nx pattern
+                val relativePath = mavenPath.removePrefix(projectRoot).removePrefix("/")
+                "{projectRoot}/$relativePath"
+            }
+            mavenPath.startsWith("target/") -> "{projectRoot}/$mavenPath"
+            mavenPath == "target" -> "{projectRoot}/target"
+            mavenPath.startsWith("/") -> mavenPath // Keep absolute paths as-is
+            else -> "{projectRoot}/$mavenPath" // Default to project-relative
         }
     }
     
@@ -406,5 +612,6 @@ data class CacheabilityDecision(
     val cacheable: Boolean,
     val reason: String,
     val source: String, // "Build Cache Extension" or "Fallback analysis"
-    val inputs: List<String> = emptyList() // Maven-derived input patterns
+    val inputs: List<String> = emptyList(), // Maven-derived input patterns
+    val outputs: List<String> = emptyList() // Maven-derived output patterns
 )
