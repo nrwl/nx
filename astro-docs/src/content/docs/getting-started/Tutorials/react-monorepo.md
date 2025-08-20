@@ -1,11 +1,9 @@
 ---
-title: 'React Monorepo Tutorial'
+title: 'Building and Testing React Apps in Nx'
 sidebar:
   label: 'React Monorepo'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
-
-# Building and Testing React Apps in Nx
 
 This tutorial walks you through creating a React monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
 

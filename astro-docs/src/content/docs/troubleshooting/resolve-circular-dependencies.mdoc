@@ -3,8 +3,6 @@ title: Resolve Circular Dependencies
 description: Learn how to identify and fix circular dependencies in your Nx workspace to improve code organization and make the affected algorithm more effective.
 ---
 
-# Resolve Circular Dependencies
-
 A circular dependency is when a project transitively depends on itself. This can cause problems in the design of your software and also makes Nx's affected algorithm less effective. The lint rule, `@nx/enforce-module-boundaries`, will produce an error if any circular dependencies are created and ensures that any `import` statements going across projects only `import` from the defined public apis in a project's root `index.ts` file.
 
 When migrating a new codebase into an nx workspace, you'll likely begin to uncover existing circular dependencies. Let's look at the simplest possible circular dependency, where `projectA` depends on `projectB` and vice versa.
