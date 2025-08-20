@@ -45,6 +45,7 @@ class NxProjectConfigurationGenerator(
             
             // Generate targets using the same logic as TypeScript
             val targets = generateTargetsForProject(mavenProject, coordinatesToProjectName, allProjects)
+            val targetGroups = generateTargetGroupsForProject(targets, mavenProject)
             
             // Create the Nx project configuration
             val projectConfig = objectMapper.createObjectNode()
@@ -53,6 +54,7 @@ class NxProjectConfigurationGenerator(
             projectConfig.put("projectType", projectType)
             projectConfig.put("sourceRoot", sourceRoot)
             projectConfig.put("targets", targets)
+            projectConfig.put("targetGroups", targetGroups)
             
             // Tags
             val tagsArray = objectMapper.createArrayNode()
@@ -141,6 +143,141 @@ class NxProjectConfigurationGenerator(
         }
         
         return targets
+    }
+    
+    /**
+     * Generate target groups to organize Maven phases and goals logically
+     */
+    private fun generateTargetGroupsForProject(targets: ObjectNode, mavenProject: MavenProject): ObjectNode {
+        val targetGroups = objectMapper.createObjectNode()
+        
+        // Get all target names from the targets object
+        val targetNames = targets.fieldNames().asSequence().toList()
+        
+        // Maven Lifecycle Phases Groups
+        val buildPhases = targetNames.filter { it in setOf("validate", "initialize", "generate-sources", 
+            "process-sources", "generate-resources", "process-resources", "compile", "process-classes") }
+        if (buildPhases.isNotEmpty()) {
+            val buildGroup = objectMapper.createArrayNode()
+            buildPhases.forEach { buildGroup.add(it) }
+            targetGroups.put("build", buildGroup)
+        }
+        
+        val testPhases = targetNames.filter { it in setOf("generate-test-sources", "process-test-sources",
+            "generate-test-resources", "process-test-resources", "test-compile", "process-test-classes", "test") }
+        if (testPhases.isNotEmpty()) {
+            val testGroup = objectMapper.createArrayNode()
+            testPhases.forEach { testGroup.add(it) }
+            targetGroups.put("test", testGroup)
+        }
+        
+        val packagePhases = targetNames.filter { it in setOf("prepare-package", "package") }
+        if (packagePhases.isNotEmpty()) {
+            val packageGroup = objectMapper.createArrayNode()
+            packagePhases.forEach { packageGroup.add(it) }
+            targetGroups.put("package", packageGroup)
+        }
+        
+        val integrationPhases = targetNames.filter { it in setOf("pre-integration-test", "integration-test", 
+            "post-integration-test", "verify") }
+        if (integrationPhases.isNotEmpty()) {
+            val integrationGroup = objectMapper.createArrayNode()
+            integrationPhases.forEach { integrationGroup.add(it) }
+            targetGroups.put("integration", integrationGroup)
+        }
+        
+        val deployPhases = targetNames.filter { it in setOf("install", "deploy") }
+        if (deployPhases.isNotEmpty()) {
+            val deployGroup = objectMapper.createArrayNode()
+            deployPhases.forEach { deployGroup.add(it) }
+            targetGroups.put("deploy", deployGroup)
+        }
+        
+        val cleanPhases = targetNames.filter { it in setOf("pre-clean", "clean", "post-clean") }
+        if (cleanPhases.isNotEmpty()) {
+            val cleanGroup = objectMapper.createArrayNode()
+            cleanPhases.forEach { cleanGroup.add(it) }
+            targetGroups.put("clean", cleanGroup)
+        }
+        
+        val sitePhases = targetNames.filter { it in setOf("pre-site", "site", "post-site", "site-deploy") }
+        if (sitePhases.isNotEmpty()) {
+            val siteGroup = objectMapper.createArrayNode()
+            sitePhases.forEach { siteGroup.add(it) }
+            targetGroups.put("site", siteGroup)
+        }
+        
+        // Goal-based groups for common Maven plugins
+        val compilerGoals = targetNames.filter { it.contains("compile") && !testPhases.contains(it) }
+        if (compilerGoals.isNotEmpty()) {
+            val compilerGroup = objectMapper.createArrayNode()
+            compilerGoals.forEach { compilerGroup.add(it) }
+            targetGroups.put("compiler", compilerGroup)
+        }
+        
+        val testGoals = targetNames.filter { it.contains("test") || it.contains("surefire") || it.contains("failsafe") }
+        if (testGoals.isNotEmpty()) {
+            val testToolsGroup = objectMapper.createArrayNode()
+            testGoals.forEach { testToolsGroup.add(it) }
+            targetGroups.put("test-tools", testToolsGroup)
+        }
+        
+        val jarGoals = targetNames.filter { it.contains("jar") && !it.contains("test") }
+        if (jarGoals.isNotEmpty()) {
+            val jarGroup = objectMapper.createArrayNode()
+            jarGoals.forEach { jarGroup.add(it) }
+            targetGroups.put("jar", jarGroup)
+        }
+        
+        // Packaging-specific groups
+        when (mavenProject.packaging) {
+            "war" -> {
+                val warGoals = targetNames.filter { it.contains("war") }
+                if (warGoals.isNotEmpty()) {
+                    val warGroup = objectMapper.createArrayNode()
+                    warGoals.forEach { warGroup.add(it) }
+                    targetGroups.put("war", warGroup)
+                }
+            }
+            "ear" -> {
+                val earGoals = targetNames.filter { it.contains("ear") }
+                if (earGoals.isNotEmpty()) {
+                    val earGroup = objectMapper.createArrayNode()
+                    earGoals.forEach { earGroup.add(it) }
+                    targetGroups.put("ear", earGroup)
+                }
+            }
+            "maven-plugin" -> {
+                val pluginGoals = targetNames.filter { it.contains("plugin") }
+                if (pluginGoals.isNotEmpty()) {
+                    val pluginGroup = objectMapper.createArrayNode()
+                    pluginGoals.forEach { pluginGroup.add(it) }
+                    targetGroups.put("plugin", pluginGroup)
+                }
+            }
+        }
+        
+        // Quality and analysis groups
+        val qualityGoals = targetNames.filter { 
+            it.contains("checkstyle") || it.contains("pmd") || it.contains("spotbugs") || 
+            it.contains("jacoco") || it.contains("sonar") 
+        }
+        if (qualityGoals.isNotEmpty()) {
+            val qualityGroup = objectMapper.createArrayNode()
+            qualityGoals.forEach { qualityGroup.add(it) }
+            targetGroups.put("quality", qualityGroup)
+        }
+        
+        val docsGoals = targetNames.filter { 
+            it.contains("javadoc") || it.contains("asciidoc") || it.contains("antora") 
+        }
+        if (docsGoals.isNotEmpty()) {
+            val docsGroup = objectMapper.createArrayNode()
+            docsGoals.forEach { docsGroup.add(it) }
+            targetGroups.put("docs", docsGroup)
+        }
+        
+        return targetGroups
     }
     
     /**
