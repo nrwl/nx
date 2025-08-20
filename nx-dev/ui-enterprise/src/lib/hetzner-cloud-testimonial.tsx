@@ -1,3 +1,4 @@
+'use client';
 import { ComponentProps, ReactElement, useState } from 'react';
 import { Button, SectionHeading } from '@nx/nx-dev-ui-common';
 import { HetznerCloudIcon } from '@nx/nx-dev-ui-icons';
@@ -253,6 +254,13 @@ export function HetznerCloudTestimonial(): ReactElement {
                   href="/customers"
                   prefetch={false}
                   className="text-sm/6 font-semibold"
+                  onClick={() =>
+                    sendCustomEvent(
+                      'customers-click',
+                      'hetzner-cloud-testimonial',
+                      'enterprise'
+                    )
+                  }
                 >
                   See our customers <span aria-hidden="true">→</span>
                 </Link>

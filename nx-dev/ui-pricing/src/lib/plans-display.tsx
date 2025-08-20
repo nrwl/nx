@@ -304,7 +304,7 @@ export function PlansDisplay(): ReactElement {
                   variant="secondary"
                   onClick={() =>
                     sendCustomEvent(
-                      'request-enterprise-trial',
+                      'request-trial-click',
                       'plans-table',
                       'pricing-plans'
                     )

@@ -69,7 +69,7 @@ export function SecurityCallToAction(): ReactElement {
               prefetch={false}
               onClick={() =>
                 sendCustomEvent(
-                  'contact-team',
+                  'contact-sales-click',
                   'enterprise-security-bottom-cta',
                   'enterprise-security'
                 )

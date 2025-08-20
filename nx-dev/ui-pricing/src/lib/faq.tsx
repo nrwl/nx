@@ -10,6 +10,7 @@ import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
 import Link from 'next/link';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { ReactElement } from 'react';
 
 export function Faq(): ReactElement {
@@ -128,9 +129,16 @@ export function Faq(): ReactElement {
 
             <p className="text-md mt-4 text-slate-400 dark:text-slate-600">
               <Link
-                href="/contact"
+                href="/contact/sales"
                 title="Reach out to the team"
                 className="font-semibold"
+                onClick={() =>
+                  sendCustomEvent(
+                    'contact-sales-click',
+                    'pricing-faq-more-questions',
+                    'pricing'
+                  )
+                }
               >
                 Can’t find the answer you’re looking for?
               </Link>

@@ -3,6 +3,7 @@ import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { RustIcon, TypeScriptIcon } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 import { NxHeroVideo } from './nx-hero-video';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function Hero(): ReactElement {
   return (
@@ -42,6 +43,9 @@ export function Hero(): ReactElement {
               title="Get started with Nx & Nx Cloud"
               variant="primary"
               size="default"
+              onClick={() =>
+                sendCustomEvent('get-started-click', 'hero', 'homepage')
+              }
             >
               Get started
             </ButtonLink>
@@ -50,6 +54,9 @@ export function Hero(): ReactElement {
               title="Get started"
               variant="secondary"
               size="default"
+              onClick={() =>
+                sendCustomEvent('documentation-click', 'hero', 'homepage')
+              }
             >
               Documentation
             </ButtonLink>
