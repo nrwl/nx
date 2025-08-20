@@ -7,6 +7,26 @@ module.exports = withNx({
   typescript: {
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
+    const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL;
+
+    if (!astroDocsUrl) {
+      // Skip rewrites if env var is not set
+      return [];
+    }
+
+    return [
+      {
+        source: '/docs',
+        destination: `${astroDocsUrl}/`,
+      },
+      {
+        source: '/docs/:path*',
+        destination: `${astroDocsUrl}/:path*`,
+      },
+    ];
+  },
   // Transpile nx-dev packages
   transpilePackages: [
     '@nx/nx-dev-data-access-documents',
