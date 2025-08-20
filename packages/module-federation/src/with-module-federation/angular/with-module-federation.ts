@@ -13,6 +13,10 @@ export async function withModuleFederation(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
+  // This is required to ensure that the webpack version used by the Angular CLI is used
+  process.env['FEDERATION_WEBPACK_PATH'] = require.resolve('webpack', {
+    paths: [require.resolve('@angular-devkit/build-angular')],
+  });
   const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
