@@ -92,7 +92,8 @@ By default Nx simply runs your `package.json` scripts. However, you can also ado
 
 In `nx.json` there's already the `@nx/vite` plugin registered which automatically identifies `build`, `test`, `serve`, and other Vite-related targets.
 
-```json {% fileName="nx.json" %}
+```json
+// nx.json
 {
   ...
   "plugins": [
@@ -184,7 +185,8 @@ npx nx show project demo
 
 If you expand the `build` task, you can see that it was created by the `@nx/vite` plugin by analyzing your `vite.config.ts` file. Notice the outputs are defined as `{projectRoot}/dist`. This value is being read from the `build.outDir` defined in your `vite.config.ts` file. Let's change that value in your `vite.config.ts` file:
 
-```ts {% fileName="apps/demo/vite.config.ts" %}
+```ts
+// apps/demo/vite.config.ts
 export default defineConfig({
   // ...
   build: {
@@ -269,7 +271,8 @@ npx nx test ui
 
 All libraries that we generate are automatically included in the `workspaces` defined in the root-level `package.json`.
 
-```json {% fileName="package.json" %}
+```json
+// package.json
 {
   "workspaces": ["apps/*", "packages/*"]
 }
@@ -279,13 +282,15 @@ Hence, we can easily import them into other libraries and our React application.
 
 You can see that the `AcmeUi` component is exported via the `index.ts` file of our `ui` library so that other projects in the repository can use it. This is our public API with the rest of the workspace and is enforced by the `exports` field in the `package.json` file. Only export what's necessary to be usable outside the library itself.
 
-```ts {% fileName="packages/ui/src/index.ts" %}
+```ts
+// packages/ui/src/index.ts
 export * from './lib/ui';
 ```
 
 Let's add a simple `Hero` component that we can use in our demo app.
 
-```tsx {% fileName="packages/ui/src/lib/hero.tsx" %}
+```tsx
+// packages/ui/src/lib/hero.tsx
 export function Hero(props: {
   title: string;
   subtitle: string;
@@ -338,14 +343,16 @@ export function Hero(props: {
 
 Then, export it from `index.ts`.
 
-```ts {% fileName="packages/ui/src/index.ts" %}
+```ts
+// packages/ui/src/index.ts
 export * from './lib/hero';
 export * from './lib/ui';
 ```
 
 We're ready to import it into our main application now.
 
-```tsx {% fileName="apps/demo/src/app/app.tsx" %}
+```tsx
+// apps/demo/src/app/app.tsx
 import { Route, Routes } from 'react-router-dom';
 // importing the component from the library
 import { Hero } from '@acme/ui';
@@ -478,7 +485,8 @@ In this section, we'll explore how Nx Cloud can help your pull request get to gr
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
+```yaml {32,33}
+# .github/workflows/ci.yml
 name: CI
 
 on:

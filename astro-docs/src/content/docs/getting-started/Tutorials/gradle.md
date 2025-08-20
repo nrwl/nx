@@ -273,7 +273,8 @@ You can copy the example GitHub Action workflow file and place it in the `.githu
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[33,34] %}
+```yaml {34,35}
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -324,7 +325,8 @@ git checkout -b self-healing-ci
 
 Now for demo purposes, we'll make a mistake in our `DemoApplication` class that will cause the build to fail.
 
-```diff {% fileName="application/src/main/java/com/example/multimodule/application/DemoApplication.java" %}
+```diff
+// application/src/main/java/com/example/multimodule/application/DemoApplication.java
     @GetMapping("/")
     public String home() {
 +       return myService.messages();
