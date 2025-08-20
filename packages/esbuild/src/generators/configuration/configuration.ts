@@ -12,6 +12,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
+  getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -185,10 +186,7 @@ function updatePackageJson(
       outputFileExtensionForEsm: getOutExtension('esm', {
         userDefinedBuildOptions: esbuildOptions,
       }),
-      skipDevelopmentExports:
-        !tsconfigBase.compilerOptions?.customConditions?.includes(
-          'development'
-        ),
+      developmentConditionName: getDefinedCustomConditionName(tree),
     });
 
     if (declarationRootDir !== dirname(main)) {

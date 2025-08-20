@@ -958,7 +958,7 @@ module.exports = withNx(
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -1266,8 +1266,8 @@ module.exports = withNx(
         {
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.esm.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
@@ -1287,7 +1287,7 @@ module.exports = withNx(
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;
