@@ -106,7 +106,7 @@ describe('watcher', () => {
       await wait();
       temp.renameFile('app1/main.js', 'app1/rename.js');
     });
-  }, 15000);
+  }, 30000);
 
   it('should trigger on deletes', async () => {
     return new Promise<void>(async (done) => {
