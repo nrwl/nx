@@ -9,9 +9,8 @@ Nx can watch your workspace and execute commands based on project or files chang
 
 Imagine the following project graph with these projects:
 
-\{% graph height="450px" %}
+{% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -75,9 +74,8 @@ Imagine the following project graph with these projects:
   "groupByFolder": false,
   "exclude": []
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
 Traditionally, if you want to rebuild your projects whenever they change, you would have to set up an ad-hoc watching system to watch each project. Rather than setting up a watch manually, Nx can be used to watch projects and execute a command whenever they change.
 

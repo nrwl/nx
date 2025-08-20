@@ -22,7 +22,7 @@ Whenever possible, Nx will detect the existing configuration settings of other t
 
 If your repository is using package manager workspaces, Nx will use those settings to find all the [projects](/reference/project-configuration) in your repository. So you don't need to define a project for your package manager and separately identify the project for Nx. The `workspaces` configuration on the left allows Nx to detect the project graph on the right.
 
-\{% side-by-side align="top" %}
+{% side_by_side align="top" %}
 
 ```json
 // package.json
@@ -31,9 +31,8 @@ If your repository is using package manager workspaces, Nx will use those settin
 }
 ```
 
-\{% graph height="200px" title="Project View" %}
+{% graph height="200px" title="Project View" %}
 
-```json
 {
   "composite": false,
   "projects": [
@@ -80,11 +79,10 @@ If your repository is using package manager workspaces, Nx will use those settin
   "exclude": [],
   "enableTooltips": false
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
-\{% /side-by-side %}
+{% /side_by_side %}
 
 ### Inferred Tasks with Tooling Plugins
 
@@ -94,7 +92,7 @@ In the example below, because the `/apps/cart/vite.config.ts` file exists, Nx kn
 
 With inferred tasks, you can keep your tooling configuration file as the one source of truth for that tool's configuration, instead of adding an extra layer of configuration on top.
 
-\{% side-by-side align="top" %}
+{% side_by_side align="top" %}
 
 ```ts
 // /apps/cart/vite.config.ts
@@ -117,9 +115,8 @@ export default defineConfig({
 });
 ```
 
-\{% project-details %}
+{% project_details %}
 
-```json
 {
   "project": {
     "name": "cart",
@@ -181,11 +178,10 @@ export default defineConfig({
     "tags": ["apps/cart/project.json", "nx/core/project-json"]
   }
 }
-```
 
-\{% /project-details %}
+{% /project_details %}
 
-\{% /side-by-side %}
+{% /side_by_side %}
 
 ## Enhance Tools for Monorepos
 
@@ -197,11 +193,10 @@ TypeScript provides a feature called [Project References](https://www.typescript
 
 The main downside of this feature is that you have to manually define each project's references (dependencies) in the appropriate `tsconfig.*.json` file. This process is tedious to set up and very difficult to maintain as the repository changes over time. Nx can help by using a [sync generator](/concepts/sync-generators) to automatically update the references defined in the `tsconfig.json` files based on the project graph it already knows about.
 
-\{% side-by-side align="top" %}
+{% side_by_side align="top" %}
 
-\{% graph height="200px" title="Project View" %}
+{% graph height="200px" title="Project View" %}
 
-```json
 {
   "composite": false,
   "projects": [
@@ -248,9 +243,8 @@ The main downside of this feature is that you have to manually define each proje
   "exclude": [],
   "enableTooltips": false
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
 ```jsonc
 // apps/cart/tsconfig.json
@@ -277,7 +271,7 @@ The main downside of this feature is that you have to manually define each proje
 }
 ```
 
-\{% /side-by-side %}
+{% /side_by_side %}
 
 Later, if someone adds another dependency to the `cart` app and then runs the `build` task, Nx will detect that the project references are out of sync and ask if the references should be updated.
 

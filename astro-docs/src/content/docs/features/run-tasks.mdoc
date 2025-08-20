@@ -161,9 +161,8 @@ It is pretty common to have dependencies between tasks, requiring one task to be
 
 Nx can automatically detect the dependencies between projects (see [project graph](/features/explore-graph)).
 
-\{% graph height="450px" %}
+{% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -206,9 +205,8 @@ Nx can automatically detect the dependencies between projects (see [project grap
   "focus": null,
   "groupByFolder": false
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
 However, you need to specify for which targets this ordering is important. In the following example we are telling Nx that before running the `build` target it needs to run the `build` target on all the projects the current project depends on:
 

@@ -28,8 +28,309 @@ Another way is to look at the **Projects** pane in [Nx Console](/getting-started
 
 You can see more details about a specific project in Nx Console or by running `nx show project <project-name> --web`. Both methods will show something like the example below:
 
-\{% project-details  jsonFile="/src/assets/concepts/myreactapp.json"%}
-\{% /project-details %}
+{% project_details%}
+
+{
+  "project": {
+    "name": "myreactapp",
+    "type": "app",
+    "data": {
+      "root": "apps/myreactapp",
+      "targets": {
+        "build": {
+          "options": {
+            "cwd": "apps/myreactapp",
+            "command": "vite build"
+          },
+          "cache": true,
+          "dependsOn": [
+            "^build"
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "vite"
+              ]
+            }
+          ],
+          "outputs": [
+            "{workspaceRoot}/dist/apps/myreactapp"
+          ],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": [
+              "vite"
+            ]
+          }
+        },
+        "serve": {
+          "options": {
+            "cwd": "apps/myreactapp",
+            "command": "vite serve",
+            "continuous": true
+          },
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": [
+              "vite"
+            ]
+          }
+        },
+        "preview": {
+          "options": {
+            "cwd": "apps/myreactapp",
+            "command": "vite preview"
+          },
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": [
+              "vite"
+            ]
+          }
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build",
+            "continuous": true
+          },
+          "configurations": {}
+        },
+        "test": {
+          "options": {
+            "cwd": "apps/myreactapp",
+            "command": "vitest run"
+          },
+          "cache": true,
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": [
+                "vitest"
+              ]
+            }
+          ],
+          "outputs": [
+            "{workspaceRoot}/coverage/apps/myreactapp"
+          ],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": [
+              "vite"
+            ]
+          }
+        },
+        "lint": {
+          "cache": true,
+          "options": {
+            "cwd": "apps/myreactapp",
+            "command": "eslint ."
+          },
+          "inputs": [
+            "default",
+            "{workspaceRoot}/.eslintrc.json",
+            "{workspaceRoot}/apps/myreactapp/.eslintrc.json",
+            "{workspaceRoot}/tools/eslint-rules/**/*",
+            {
+              "externalDependencies": [
+                "eslint"
+              ]
+            }
+          ],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": [
+              "eslint"
+            ]
+          }
+        }
+      },
+      "name": "myreactapp",
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "apps/myreactapp/src",
+      "projectType": "application",
+      "tags": [],
+      "implicitDependencies": [],
+      "metadata": {
+        "technologies": [
+          "react"
+        ]
+      }
+    }
+  },
+  "sourceMap": {
+    "root": [
+      "apps/myreactapp/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "apps/myreactapp/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.command": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.options": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.cache": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.dependsOn": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.inputs": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.outputs": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.options.cwd": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.command": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.options": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.options.cwd": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.command": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.options": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.options.cwd": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.executor": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.options": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.options.buildTarget": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.command": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.options": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.cache": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.inputs": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.outputs": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.options.cwd": [
+      "apps/myreactapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.lint": [
+      "apps/myreactapp/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.command": [
+      "apps/myreactapp/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.cache": [
+      "apps/myreactapp/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options": [
+      "apps/myreactapp/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.inputs": [
+      "apps/myreactapp/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options.cwd": [
+      "apps/myreactapp/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "name": [
+      "apps/myreactapp/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "apps/myreactapp/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "apps/myreactapp/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "apps/myreactapp/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "apps/myreactapp/project.json",
+      "nx/core/project-json"
+    ]
+  }
+}
+
+{% /project_details %}
 
 The view shows a list of targets which can be [run by Nx](/features/run-tasks).
 Each target has different options which determine how Nx runs the task.
@@ -69,11 +370,10 @@ Composite nodes represent a set of projects in the same folder and can be expand
 
 Try playing around with a [fully interactive graph on a sample repo](https://nrwl-nx-examples-dep-graph.netlify.app/?focus=cart) or look at the more limited example below:
 
-\{% side-by-side %}
+{% side_by_side %}
 
-\{% graph height="450px" title="Project View" %}
+{% graph height="450px" title="Project View" %}
 
-```json
 {
   "composite": false,
   "projects": [
@@ -182,13 +482,11 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
   "exclude": [],
   "enableTooltips": false
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
-\{% graph height="450px" title="Composite View (Nx 20+)" %}
+{% graph height="450px" title="Composite View (Nx 20+)" %}
 
-```json
 {
   "composite": true,
   "projects": [
@@ -297,11 +595,10 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
   "exclude": [],
   "enableTooltips": false
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
-\{% /side-by-side %}
+{% /side_by_side %}
 
 ### Export Project Graph to JSON
 
