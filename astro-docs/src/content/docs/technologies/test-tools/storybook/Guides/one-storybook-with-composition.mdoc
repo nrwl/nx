@@ -30,7 +30,7 @@ It does not matter which framework you use for the host Storybook library. It ca
 
 So, let's use React for the Storybook Composition host library:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:lib libs/storybook-host --bundler=none --unitTestRunner=none
 ```
 
@@ -40,7 +40,7 @@ Now that your library is generated, you can write your intro in the generated co
 
 Since you do need a story for your host Storybook, you should use the React storybook configuration generator, and actually choose to generate stories (not an e2e project though):
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:storybook-configuration storybook-host --interactionTests=true --generateStories=true
 ```
 
@@ -50,7 +50,7 @@ It's important to change the Storybook ports in the `storybook-host-angular` and
 
 Update the `project.json` file of each library to set the `port` option to `4401` and `4402` accordingly:
 
-```json frame="none" meta="{7}"
+```json {% meta="{8}" %}
 // libs/storybook-host-angular/project.json
 {
   // ...
@@ -65,7 +65,7 @@ Update the `project.json` file of each library to set the `port` option to `4401
 }
 ```
 
-```json frame="none" meta="{7}"
+```json {% meta="{8}" %}
 // libs/storybook-host-react/project.json
 {
   // ...
@@ -90,7 +90,7 @@ If the project has the `storybook` target explicitly defined in the `project.jso
 
 Update the `libs/storybook-host/.storybook/main.ts` file as shown below:
 
-```javascript frame="none" meta="{12-21}"
+```javascript {% meta="{14-23}" %}
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -128,19 +128,19 @@ export default config;
 
 Now, you can serve your host Storybook, as well as the hosted, composed Storybooks. You need to serve the composed Storybooks first, and then your host.
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run storybook-host-angular:storybook
 ```
 
 and on a different terminal:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run storybook-host-react:storybook
 ```
 
 and then on a different terminal serve the host:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run storybook-host:storybook
 ```
 
@@ -152,7 +152,7 @@ You can now build and deploy the Storybook host.
 
 You can build the Storybook with:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run storybook-host:build-storybook
 ```
 
@@ -163,7 +163,7 @@ Here's the catch. You will need to build and deploy the composed Storybooks inde
 
 and then change the host Storybook's `main.ts` file to point to these URLs accordingly:
 
-```javascript frame="none"
+```javascript
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';

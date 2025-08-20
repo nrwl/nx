@@ -1,0 +1,17 @@
+- workspace name/
+  - apps/
+  - libs/
+    - feature/
+      - ui/
+        - .storybook/
+      - src/
+        - lib/
+          - my-button/
+            - my-button.tsx
+            - my-button.stories.tsx
+        - etc...
+      - README.md
+      - tsconfig.json
+  - nx.json
+  - package.json
+  - README.md

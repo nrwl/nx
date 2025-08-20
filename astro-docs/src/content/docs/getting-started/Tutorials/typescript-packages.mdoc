@@ -80,13 +80,13 @@ Let's create two TypeScript packages that demonstrate how to structure a TypeScr
 
 First, generate the `animal` package:
 
-```shell
+```shell {% frame="none" %}
 npx nx g @nx/js:lib packages/animal --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
 Then generate the `zoo` package:
 
-```shell
+```shell {% frame="none" %}
 npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
@@ -148,13 +148,13 @@ console.log(zoo());
 
 To build your packages, run:
 
-```shell
+```shell {% frame="none" %}
 npx nx build animal
 ```
 
 This creates a compiled version of your package in the `dist/packages/animal` folder. Since the `zoo` package depends on `animal`, building `zoo` will automatically build `animal` first:
 
-```shell
+```shell {% frame="none" %}
 npx nx build zoo
 ```
 
@@ -162,7 +162,7 @@ You'll see both packages are built, with outputs in their respective `dist` fold
 
 You can also run the `zoo` package to see it in action:
 
-```shell
+```shell {% frame="none" %}
 node packages/zoo/dist/index.js
 ```
 
@@ -201,7 +201,7 @@ In `nx.json` there's already the `@nx/js` plugin registered which automatically 
 
 To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
-```shell
+```shell {% frame="none" %}
 npx nx show project animal
 ```
 
@@ -352,7 +352,7 @@ When you develop packages, creating shared utilities that multiple packages can 
 
 Let's create a shared utilities library that both our existing packages can use:
 
-```shell
+```shell {% frame="none" %}
 npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
@@ -430,7 +430,7 @@ Now when you run `npx nx build zoo`, Nx will automatically build all the depende
 
 Run the `zoo` package to see the updated output format:
 
-```shell
+```shell {% frame="none" %}
 node packages/zoo/dist/index.js
 ```
 
@@ -440,7 +440,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell
+```shell {% frame="none" %}
 npx nx graph
 ```
 
@@ -493,7 +493,7 @@ You should be able to see something similar to the following in your browser.
 
 Let's create a git branch with our new packages so we can open a pull request later:
 
-```shell
+```shell {% frame="none" %}
 git checkout -b add-zoo-packages
 git add .
 git commit -m 'add animal and zoo packages'
@@ -505,13 +505,13 @@ Our packages come with preconfigured building and testing . Let's intentionally 
 
 You can run tests for individual packages:
 
-```shell
+```shell {% frame="none" %}
 npx nx build zoo
 ```
 
 Or run multiple tasks in parallel across all packages:
 
-```shell
+```shell {% frame="none" %}
 npx nx run-many -t build test
 ```
 
@@ -594,7 +594,7 @@ You will also need to install the [Nx Console](/getting-started/editor-setup) ed
 
 Now, let's push the `add-zoo-packages` branch to GitHub and open a new pull request.
 
-```shell
+```shell {% frame="none" %}
 git push origin add-zoo-packages
 # Don't forget to open a pull request on GitHub
 ```
@@ -657,13 +657,13 @@ Now you're ready to use the `nx release` command to publish your packages. The f
 
 To preview your first release, run:
 
-```shell
+```shell {% frame="none" %}
 npx nx release --first-release --dry-run
 ```
 
 The command will ask you a series of questions and then show you what the results would be. Once you are happy with the results, run it again without the `--dry-run` flag:
 
-```shell
+```shell {% frame="none" %}
 npx nx release --first-release
 ```
 

@@ -9,20 +9,20 @@ In your application's `nuxt.config.ts` file, ensure that the `nitro` property is
 
 For example, if your Nx workspace is structured like this:
 
-```treeview
-├── apps
-│   └── my-app
-│       ├── nuxt.config.ts
-│       ├── src
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-├── nx.json
-├── package-lock.json
-├── package.json
-└── tsconfig.base.json
-```
+{%filetree %}
+- apps/
+  - my-app/
+    - nuxt.config.ts
+    - src/
+    - tsconfig.app.json
+    - tsconfig.json
+    - tsconfig.spec.json
+- nx.json
+- package-lock.json
+- package.json
+- tsconfig.base.json
 
+{% /filetree %}
 Then your `nitro` configuration should look like this:
 
 ```ts {% meta="{2-6}" %}

@@ -32,7 +32,7 @@ Make sure to install the `@nx/react` version that matches the version of `nx` in
 
 In any Nx workspace, you can install `@nx/react` by running the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx add @nx/react
 ```
 
@@ -44,7 +44,7 @@ This will install the correct version of `@nx/react`.
 
 You can add a new application with the following:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:app apps/my-new-app
 ```
 
@@ -52,7 +52,7 @@ To start the application in development mode, run `nx serve my-new-app`.
 
 And add a new library as follows:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:lib libs/my-new-lib
 
 # If you want the library to be buildable or publishable to npm
@@ -69,7 +69,7 @@ Read more about [building and publishing libraries here](/concepts/buildable-and
 
 Adding a component to an existing project can be done with:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:component libs/my-new-lib/src/lib/my-new-component
 
 # Note: If you want to export the component
@@ -83,7 +83,7 @@ Replace `my-new-app` and `my-new-lib` with the name of your projects.
 
 If you want to add a new hook, run the following
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:hook libs/my-new-lib/src/lib/my-new-hook
 ```
 
@@ -95,7 +95,7 @@ Replace `my-new-lib` with the name of your project.
 
 You can run unit tests with:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx test my-new-app
 nx test my-new-lib
 ```
@@ -104,7 +104,7 @@ Replace `my-new-app` with the name or your project. This command works for both 
 
 You can also run E2E tests for applications:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx e2e my-new-app-e2e
 ```
 
@@ -114,13 +114,13 @@ Replace `my-new-app-e2e` with the name or your project with `-e2e` appended.
 
 React applications can be build with:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build my-new-app
 ```
 
 And if you generated a library with `--bundler` specified, then you can build a library as well:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build my-new-lib
 ```
 
@@ -129,7 +129,7 @@ project's `project.json` file.
 
 The application in `dist` is deployable, and you can try it out locally with:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx http-server dist/apps/my-new-app
 ```
 

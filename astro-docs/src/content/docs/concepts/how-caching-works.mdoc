@@ -189,7 +189,7 @@ results.
 Note, only the flags passed to the npm scripts itself affect results of the computation. For instance, the following
 commands are identical from the caching perspective.
 
-```shell
+```shell {% frame="none" %}
 npx nx build remixapp
 npx nx run-many -t build -p remixapp
 ```
@@ -200,13 +200,13 @@ If you build/test/lint… multiple projects, each individual build has its own h
 from
 cache or run. This means that from the caching point of view, the following command:
 
-```shell
+```shell {% frame="none" %}
 npx nx run-many -t build -p header footer
 ```
 
 is identical to the following two commands:
 
-```shell
+```shell {% frame="none" %}
 npx nx build header
 npx nx build footer
 ```

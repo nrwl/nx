@@ -76,7 +76,7 @@ Now, let's build some features and see how Nx helps get us to production faster.
 
 To serve your new React app, run:
 
-```shell
+```shell {% frame="none" %}
 npx nx serve demo
 ```
 
@@ -117,7 +117,7 @@ In `nx.json` there's already the `@nx/vite` plugin registered which automaticall
 
 To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
-```shell
+```shell {% frame="none" %}
 npx nx show project demo
 ```
 
@@ -256,13 +256,13 @@ acme
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 
-```shell
+```shell {% frame="none" %}
 npx nx show project ui
 ```
 
 In this case, we have the `lint` and `test` tasks available, among other inferred tasks.
 
-```shell
+```shell {% frame="none" %}
 npx nx lint ui
 npx nx test ui
 ```
@@ -385,7 +385,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell
+```shell {% frame="none" %}
 npx nx graph
 ```
 
@@ -427,7 +427,7 @@ You should be able to see something similar to the following in your browser.
 
 Let's create a git branch with the new hero component so we can open a pull request later:
 
-```shell
+```shell {% frame="none" %}
 git checkout -b add-hero-component
 git add .
 git commit -m 'add hero component'
@@ -437,14 +437,14 @@ git commit -m 'add hero component'
 
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for testing and linting. We can use the same syntax as before to run these tasks:
 
-```shell
+```shell {% frame="none" %}
 npx nx test demo # runs the tests for demo
 npx nx lint ui   # runs the linter on ui
 ```
 
 More conveniently, we can also run tasks in parallel using the following syntax:
 
-```shell
+```shell {% frame="none" %}
 npx nx run-many -t test lint
 ```
 
@@ -527,7 +527,7 @@ You will also need to install the [Nx Console](/getting-started/editor-setup) ed
 
 Now, let's push the `add-hero-component` branch to GitHub and open a new pull request.
 
-```shell
+```shell {% frame="none" %}
 git push origin add-hero-component
 # Don't forget to open a pull request on GitHub
 ```

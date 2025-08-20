@@ -5,7 +5,7 @@ sidebar:
   label: 'Create Config'
 ---
 
-```shell frame="none"
+```shell {% frame="none" %}
 import { createConfig } from '@nx/angular-rsbuild';
 ```
 
@@ -13,7 +13,7 @@ The `createConfig` function is used to create an Rsbuild configuration object se
 
 It takes an optional `RsbuildConfig` object as an argument, which allows for customization of the Rsbuild configuration.
 
-```ts frame="none"
+```ts
 async function createConfig(
   defaultOptions: {
     options: PluginAngularOptions;
@@ -39,8 +39,8 @@ async function createConfig(
 {% tabitem label="Server-Side Rendering (SSR)" %}
 The following example shows how to create a configuration for a SSR application:
 
-```ts frame="none"
-// filename: myapp/rsbuild.config.ts
+```ts
+// myapp/rsbuild.config.ts
 import { createConfig } from '@nx/angular-rsbuild';
 
 export default createConfig({
@@ -57,8 +57,8 @@ export default createConfig({
 {% tabitem label="Client-Side Rendering (CSR)" %}
 The following example shows how to create a configuration for a CSR application:
 
-```ts frame="none"
-// filename: myapp/rsbuild.config.ts
+```ts
+// myapp/rsbuild.config.ts
 import { createConfig } from '@nx/angular-rsbuild';
 
 export default createConfig({
@@ -73,8 +73,8 @@ export default createConfig({
 {% tabitem label="Modify Rsbuild Configuration" %}
 The following example shows how to modify the base Rsbuild configuration:
 
-```ts frame="none"
-// filename: myapp/rsbuild.config.ts
+```ts
+// myapp/rsbuild.config.ts
 import { createConfig } from '@nx/angular-rsbuild';
 
 export default createConfig({
@@ -94,8 +94,8 @@ export default createConfig({
 {% tabitem label="File Replacements" %}
 The following example shows how to use file replacements:
 
-```ts frame="none"
-// filename: myapp/rsbuild.config.ts
+```ts 
+// myapp/rsbuild.config.ts
 import { createConfig } from '@nx/angular-rsbuild';
 
 export default createConfig({
@@ -123,7 +123,7 @@ export default createConfig({
 
 The `PluginAngularOptions` object is an object that contains the following properties:
 
-```ts frame="none"
+```ts
 export interface PluginAngularOptions extends PluginUnsupportedOptions {
   aot?: boolean;
   assets?: AssetElement[];
