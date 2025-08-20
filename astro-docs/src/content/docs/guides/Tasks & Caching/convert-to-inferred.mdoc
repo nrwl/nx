@@ -69,9 +69,8 @@ npx nx show project <project-name>
 
 For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @nx/vite:convert-to-inferred --project demo`), then running `nx show project demo` will show a screen similar to the following.
 
-\{% project-details title="Test" height="100px" %}
+{% project_details title="Test" height="100px" %}
 
-```json
 {
   "project": {
     "name": "demo",
@@ -103,9 +102,8 @@ For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @
     "targets.build": ["apps/demo/vite.config.ts", "@nx/vite"]
   }
 }
-```
 
-\{% /project-details %}
+{% /project_details %}
 
 You'll notice that the `serve` and `build` tasks are running the [Vite CLI](https://vitejs.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vitejs.dev/guide/cli.html#options)
 The same CLI setup applies to other plugins as well.
@@ -214,7 +212,7 @@ The Atomizer splits potentially slow tasks into separate tasks per file. This fe
 
 To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/recipes/set-up), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/plugin-registry) for more details.
 
-\{% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/ci/recipes/set-up" /%}
+{% call_to_action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/ci/recipes/set-up" /%}
 
 ## Troubleshooting
 

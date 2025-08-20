@@ -20,9 +20,8 @@ For this recipe we'll use a project with the following `project.json` file:
 
 And the following [final configuration](/reference/project-configuration):
 
-\{% project-details title="Project Details View" %}
+{% project_details title="Project Details View" %}
 
-```json
 {
   "project": {
     "name": "my-app",
@@ -155,9 +154,8 @@ And the following [final configuration](/reference/project-configuration):
     "tags": ["apps/my-app/project.json", "nx/core/project-json"]
   }
 }
-```
 
-\{% /project-details %}
+{% /project_details %}
 
 We'll focus on the `build` target of the project. If you expand the `build` target in the Project Details View above, you'll see that it runs the command `vite build`. In the next sections, we'll see how to provide `--assetsInlineLimit=2048` and `--assetsDir=static/assets` args to that command.
 

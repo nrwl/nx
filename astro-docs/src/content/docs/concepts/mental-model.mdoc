@@ -43,29 +43,137 @@ graph and then executes the tasks in that graph.
 
 For instance `nx test lib` creates a task graph with a single node:
 
-\{% graph height="100px" type="task" jsonFile="shared/mental-model/single-task.json" %\}
-\{% /graph %\}
+{% graph height="100px" type="task" %}
+
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": [
+        "lib:test"
+      ],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": {
+            "project": "lib",
+            "target": "test"
+          },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+
+{% /graph %}
 
 A task is an invocation of a target. If you invoke the same target twice, you create two tasks.
 
 Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren't isomorphic, meaning they
 aren't directly connected. In the case above, `app1` and `app2` depend on `lib`, but
 running `nx run-many -t test -p app1 app2 lib`, the created task graph will look like this:
-\{% side-by-side %\}
+{% side_by_side %}
 
 **Project Graph**
 
 **Task Graph**
 
-\{% /side-by-side %\}
+{% /side_by_side %}
 
-\{% side-by-side %\}
-\{% graph height="200px" type="project" jsonFile="shared/mental-model/three-projects.json" %\}
-\{% /graph %\}
+{% side_by_side %}
+{% graph height="200px" type="project" %}
 
-\{% graph height="200px" type="task" jsonFile="shared/mental-model/disconnected-tasks.json"%\}
-\{% /graph %\}
-\{% /side-by-side %\}
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": [
+        "lib:test"
+      ],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": {
+            "project": "lib",
+            "target": "test"
+          },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+
+{% /graph %}
+
+{% graph height="200px" type="task"%}
+
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": [
+        "lib:test"
+      ],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": {
+            "project": "lib",
+            "target": "test"
+          },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+
+{% /graph %}
+{% /side_by_side %}
 
 Even though the apps depend on `lib`, testing `app1` doesn't depend on the testing `lib`. This means that the two tasks
 can
@@ -89,21 +197,93 @@ Let's look at the test target relying on its dependencies.
 
 With this, running the same test command creates the following task graph:
 
-\{% side-by-side %\}
+{% side_by_side %}
 
 **Project Graph**
 
 **Task Graph**
 
-\{% /side-by-side %\}
+{% /side_by_side %}
 
-\{% side-by-side %\}
-\{% graph height="200px" type="project" jsonFile="shared/mental-model/three-projects.json" %\}
-\{% /graph %\}
+{% side_by_side %}
+{% graph height="200px" type="project" %}
 
-\{% graph height="200px" type="task" jsonFile="shared/mental-model/connected-tasks.json" %\}
-\{% /graph %\}
-\{% /side-by-side %\}
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": [
+        "lib:test"
+      ],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": {
+            "project": "lib",
+            "target": "test"
+          },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+
+{% /graph %}
+
+{% graph height="200px" type="task" %}
+
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": [
+        "lib:test"
+      ],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": {
+            "project": "lib",
+            "target": "test"
+          },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+
+{% /graph %}
+{% /side_by_side %}
 
 This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
 similar
@@ -184,8 +364,44 @@ instance, Nx:
 
 As your workspace grows, the task graph looks more like this:
 
-\{% graph height="400px" type="task" jsonFile="shared/mental-model/large-tasks.json"%\}
-\{% /graph %\}
+{% graph height="400px" type="task"%}
+
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": [
+        "lib:test"
+      ],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": {
+            "project": "lib",
+            "target": "test"
+          },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+
+{% /graph %}
 
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.

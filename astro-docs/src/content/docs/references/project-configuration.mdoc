@@ -19,9 +19,8 @@ Each source will [overwrite the previous source](/recipes/running-tasks/pass-arg
 nx show project myproject --web
 ```
 
-\{% project-details title="Project Details View" %}
+{% project_details title="Project Details View" %}
 
-```json
 {
   "project": {
     "name": "demo",
@@ -59,9 +58,8 @@ nx show project myproject --web
     "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
   }
 }
-```
 
-\{% /project-details %}
+{% /project_details %}
 
 The project details view also shows where each setting is defined so that you know where to change it.
 

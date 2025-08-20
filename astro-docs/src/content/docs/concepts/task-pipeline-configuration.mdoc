@@ -9,7 +9,7 @@ If you have a monorepo workspace (or modularized app), you rarely just run one t
 
 As you can see in the graph visualization below, the `myreactapp` project depends on other projects. Therefore, when running the build for `myreactapp`, these dependencies need to be built first so that `myreactapp` can use the resulting build artifacts.
 
-\{% graph height="450px" %\}
+{% graph height="450px" %}
 
 ```json
 {
@@ -56,7 +56,7 @@ As you can see in the graph visualization below, the `myreactapp` project depend
 }
 ```
 
-\{% /graph %\}
+{% /graph %}
 
 While you could manage these relationships on your own and set up custom scripts to build all projects in the proper order (e.g. first build `shared-ui`, then `feat-products` and finally `myreactapp`), that kind of approach is not scalable and would need constant maintenance as you keep changing and adding projects to your workspace.
 
