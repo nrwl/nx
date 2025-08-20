@@ -91,7 +91,8 @@ Nx uses the following syntax to run tasks:
 
 The project tasks are defined in the `project.json` file.
 
-```json {% fileName="apps/demo/project.json" %}
+```json
+// apps/demo/project.json
 {
   "name": "demo",
   ...
@@ -108,7 +109,8 @@ The project tasks are defined in the `project.json` file.
 
 Each target contains a configuration object that tells Nx how to run that target.
 
-```json {% fileName="project.json" %}
+```json
+// project.json
 {
   "name": "angular-store",
   ...
@@ -286,7 +288,8 @@ npx nx test ui
 
 All libraries that we generate are automatically included in the TypeScript path mappings configured in the root-level `tsconfig.base.json`.
 
-```json {% fileName="tsconfig.base.json" %}
+```json
+// tsconfig.base.json
 {
   "compilerOptions": {
     ...
@@ -302,13 +305,15 @@ Hence, we can easily import them into other libraries and our Angular applicatio
 
 You can see that the `Ui` component is exported via the `index.ts` file of our `ui` library so that other projects in the repository can use it. This is our public API with the rest of the workspace and is enforced by the library's build configuration. Only export what's necessary to be usable outside the library itself.
 
-```ts {% fileName="packages/ui/src/index.ts" %}
+```ts
+// packages/ui/src/index.ts
 export * from './lib/ui/ui';
 ```
 
 Let's add a simple `Hero` component that we can use in our demo app.
 
-```ts {% fileName="packages/ui/src/lib/hero/hero.ts" %}
+```ts
+// packages/ui/src/lib/hero/hero.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -368,14 +373,16 @@ export class Hero {
 
 Then, export it from `index.ts`.
 
-```ts {% fileName="packages/ui/src/index.ts" %}
+```ts
+// packages/ui/src/index.ts
 export * from './lib/hero/hero';
 export * from './lib/ui/ui';
 ```
 
 We're ready to import it into our main application now.
 
-```ts {% fileName="apps/demo/src/app/app.ts" %}
+```ts
+// apps/demo/src/app/app.ts
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 // importing the component from the library
@@ -506,7 +513,8 @@ In this section, we'll explore how Nx Cloud can help your pull request get to gr
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
+```yaml {32,33}
+# .github/workflows/ci.yml
 name: CI
 
 on:

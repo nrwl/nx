@@ -105,7 +105,8 @@ acme
 
 Let's add some code to our packages. First, add the following code to the `animal` package:
 
-```ts {% fileName="packages/animal/src/lib/animal.ts" highlightLines=["5-18"] %}
+```ts {6-19}
+// packages/animal/src/lib/animal.ts
 export function animal(): string {
   return 'animal';
 }
@@ -128,7 +129,8 @@ export function getRandomAnimal(): Animal {
 
 Now let's update the `zoo` package to use the `animal` package:
 
-```ts {% fileName="packages/zoo/src/lib/zoo.ts" %}
+```ts
+// packages/zoo/src/lib/zoo.ts
 import { getRandomAnimal } from '@acme/animal';
 
 export function zoo(): string {
@@ -139,7 +141,8 @@ export function zoo(): string {
 
 Also create an executable entry point for the zoo package:
 
-```ts {% fileName="packages/zoo/src/index.ts" %}
+```ts
+// packages/zoo/src/index.ts
 import { zoo } from './lib/zoo.js';
 
 console.log(zoo());
@@ -175,7 +178,8 @@ By default Nx simply runs your `package.json` scripts. However, you can also ado
 
 In `nx.json` there's already the `@nx/js` plugin registered which automatically identifies `typecheck` and `build` targets.
 
-```json {% fileName="nx.json" %}
+```json
+// nx.json
 {
   ...
   "plugins": [
@@ -195,7 +199,6 @@ In `nx.json` there's already the `@nx/js` plugin registered which automatically 
     }
   ]
 }
-
 ```
 
 To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
@@ -368,7 +371,8 @@ acme
 
 Let's add a utility function that our packages can share:
 
-```ts {% fileName="packages/util/src/lib/util.ts"  highlightLines=["5-11"] %}
+```ts {6-12}
+// packages/util/src/lib/util.ts
 export function util(): string {
   return 'util';
 }
@@ -386,7 +390,8 @@ export function getRandomItem<T>(items: T[]): T {
 
 This allows us to easily import them into other packages. Let's update our `animals` package to use the shared utility:
 
-```ts {% fileName="packages/animals/src/lib/animals.ts"  highlightLines=[1, "18-20"]%}
+```ts {2,19-21}
+// packages/animals/src/lib/animals.ts
 import { getRandomItem } from '@acme/util';
 
 export function animal(): string {
@@ -411,7 +416,8 @@ export function getRandomAnimal(): Animal {
 
 And update the `zoo` package to use the formatting utility:
 
-```ts {% fileName="packages/zoo/src/lib/zoo.ts"  highlightLines=[2, 6, 7] %}
+```ts {3,7,8}
+// packages/zoo/src/lib/zoo.ts
 import { getRandomAnimal } from '@acme/animal';
 import { formatMessage } from '@acme/util';
 
@@ -548,7 +554,8 @@ In this section, we'll explore how Nx Cloud can help your pull request get to gr
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
+```yaml {32,33}
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -636,7 +643,8 @@ If you decide to publish your packages to NPM, Nx can help you [manage the relea
 
 First you'll need to define which projects Nx should manage releases for by setting the `release.projects` property in `nx.json`:
 
-```json {% fileName="nx.json" highlightLines=["3-5"] %}
+```json {4-6}
+// nx.json
 {
   ...
   "release": {
