@@ -1,4 +1,38 @@
 {
+  "/ci/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started",
+    "description": "Nx Cloud introduction",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "intro",
+        "name": "Intro",
+        "description": "Nx Cloud introduction",
+        "mediaImage": "",
+        "file": "nx-cloud/getting-started/intro",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/getting-started/intro",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/getting-started",
+    "tags": []
+  },
+  "/ci/getting-started/intro": {
+    "id": "intro",
+    "name": "Intro",
+    "description": "Nx Cloud introduction",
+    "mediaImage": "",
+    "file": "nx-cloud/getting-started/intro",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/getting-started/intro",
+    "tags": []
+  },
   "/ci/features": {
     "id": "features",
     "name": "Features",

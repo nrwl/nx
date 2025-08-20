@@ -815,6 +815,8 @@
       - [Overview](/extending-nx/api/plugin/overview)
 
 - Ci
+  - [Getting Started](/ci/getting-started)
+    - [Intro](/ci/getting-started/intro)
   - [Features](/ci/features)
     - [AI-Powered Self-Healing CI](/ci/features/self-healing-ci)
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
