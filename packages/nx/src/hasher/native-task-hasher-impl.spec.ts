@@ -809,14 +809,14 @@ describe('native task hasher', () => {
     // The runtime command should have access to NX_PROJECT_ROOT
     // and the hash should include that output
     expect(hash.details).toHaveProperty(
-      'parent:runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'
+      'runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'
     );
 
     // Verify the hash is deterministic and non-empty, proving NX_PROJECT_ROOT was available
     const runtimeHash =
-      hash.details['parent:runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'];
+      hash.details['runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'];
     expect(runtimeHash).toBeDefined();
     expect(runtimeHash).not.toBe('3244421341483603138'); // Should not be empty hash
-    expect(runtimeHash).toBe('12937326468511235161'); // Should be consistent hash for "libs/parent"
+    expect(runtimeHash).toBe('17104739612706417536'); // Should be consistent hash for "libs/parent"
   });
 });
