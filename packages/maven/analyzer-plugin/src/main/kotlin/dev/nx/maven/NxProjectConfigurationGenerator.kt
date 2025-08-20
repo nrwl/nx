@@ -34,9 +34,13 @@ class NxProjectConfigurationGenerator(
         
         val workspaceRootPath = Paths.get(workspaceRoot)
         val projectPath = mavenProject.basedir?.toPath() ?: return null
-        val relativePath = workspaceRootPath.relativize(projectPath).toString().replace("\\", "/")
+        var relativePath = workspaceRootPath.relativize(projectPath).toString().replace("\\", "/")
         
-        if (relativePath.isEmpty()) return null
+        if (relativePath.isEmpty()) {
+            // Project is at workspace root, use "." as the path
+            relativePath = "."
+            log.debug("Project ${mavenProject.artifactId} is at workspace root, using '.' as relative path")
+        }
         
         try {
             val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
