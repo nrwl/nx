@@ -208,7 +208,6 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
           return {
             projects: {
               [projectRoot]: {
-                projectType: 'library',
                 targets,
               },
             },
