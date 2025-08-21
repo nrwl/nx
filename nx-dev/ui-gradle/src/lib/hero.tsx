@@ -25,8 +25,8 @@ export function Hero(): ReactElement {
         </SectionHeading>
         <SectionDescription as="h2" className="mt-6">
           Get distributed tasks, intelligent caching, and target affected
-          packages to optimize your build process and CI pipeline. Support for{' '}
-          <Strong>Gradle</Strong> and <Strong>Maven</Strong> (coming soon)
+          packages to optimize your build process and CI pipeline for{' '}
+          <Strong>Java</Strong> projects.
         </SectionDescription>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
