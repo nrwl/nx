@@ -1,0 +1,27 @@
+{
+  "name": "convert-to-monorepo",
+  "factory": "./src/generators/convert-to-monorepo/convert-to-monorepo",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxWorkspaceConvertToMonorepo",
+    "cli": "nx",
+    "title": "Nx Convert to Monorepo",
+    "description": "Convert an Nx project to a monorepo.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nx/workspace:monorepo",
+        "description": "Convert an Nx standalone project to a monorepo."
+      }
+    ],
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "Convert a Nx project to a monorepo.",
+  "implementation": "/packages/workspace/src/generators/convert-to-monorepo/convert-to-monorepo.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/workspace/src/generators/convert-to-monorepo/schema.json",
+  "type": "generator"
+}

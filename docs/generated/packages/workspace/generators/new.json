@@ -1,0 +1,116 @@
+{
+  "name": "new",
+  "factory": "./src/generators/new/new#newGenerator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxWorkspaceNew",
+    "title": "Create an empty workspace",
+    "description": "Create an empty workspace.",
+    "type": "object",
+    "cli": "nx",
+    "properties": {
+      "name": {
+        "description": "The name of the workspace.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the workspace?"
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "default": "css"
+      },
+      "routing": {
+        "description": "Add routing to the generated application.",
+        "type": "boolean",
+        "default": true
+      },
+      "useReactRouter": {
+        "description": "Use React Router for routing.",
+        "type": "boolean",
+        "default": false
+      },
+      "standaloneApi": {
+        "description": "Use Standalone Components if generating an Angular application.",
+        "type": "boolean",
+        "default": false
+      },
+      "defaultBase": {
+        "type": "string",
+        "description": "Default base branch for affected."
+      },
+      "skipInstall": {
+        "description": "Skip installing dependency packages.",
+        "type": "boolean",
+        "default": false
+      },
+      "preset": {
+        "description": "What to create in the new workspace.",
+        "type": "string"
+      },
+      "appName": { "type": "string", "description": "Application name." },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "default": "eslint"
+      },
+      "packageManager": {
+        "description": "The package manager used to install dependencies.",
+        "type": "string"
+      },
+      "framework": {
+        "description": "The framework which the application is using",
+        "type": "string"
+      },
+      "nextAppDir": {
+        "description": "Enable the App Router for this project.",
+        "type": "boolean",
+        "default": true
+      },
+      "nextSrcDir": {
+        "description": "Generate a `src` directory for this project.",
+        "type": "boolean",
+        "default": true
+      },
+      "unitTestRunner": {
+        "description": "The tool to use for running unit tests.",
+        "type": "string"
+      },
+      "e2eTestRunner": {
+        "description": "The tool to use for running e2e tests.",
+        "type": "string"
+      },
+      "ssr": {
+        "description": "Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.",
+        "type": "boolean",
+        "default": false
+      },
+      "prefix": {
+        "description": "The prefix to use for Angular component and directive selectors.",
+        "type": "string"
+      },
+      "formatter": {
+        "description": "The tool to use for code formatting.",
+        "type": "string",
+        "default": "none"
+      },
+      "workspaces": {
+        "description": "Whether to use package manager workspaces.",
+        "type": "boolean",
+        "default": true
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+      }
+    },
+    "additionalProperties": true,
+    "presets": []
+  },
+  "description": "Create a workspace.",
+  "hidden": true,
+  "implementation": "/packages/workspace/src/generators/new/new#newGenerator.ts",
+  "aliases": [],
+  "path": "/packages/workspace/src/generators/new/schema.json",
+  "type": "generator"
+}
