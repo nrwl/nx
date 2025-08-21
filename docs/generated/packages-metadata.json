@@ -440,21 +440,11 @@
     ],
     "migrations": [
       {
-        "description": "Set the 'tsConfig' option to build and test targets to help with Angular migration issues.",
-        "file": "generated/packages/angular/migrations/set-tsconfig-option.json",
-        "hidden": false,
-        "name": "set-tsconfig-option",
-        "version": "21.5.0-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "angular/migrations/set-tsconfig-option",
-        "type": "migration"
-      },
-      {
         "description": "Update the @angular/cli package version to ~20.2.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-2-0.json",
         "hidden": false,
         "name": "update-angular-cli-version-20-2-0",
-        "version": "21.5.0-beta.0",
+        "version": "21.5.0-beta.1",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/update-angular-cli-version-20-2-0",
         "type": "migration"
@@ -464,7 +454,7 @@
         "file": "generated/packages/angular/migrations/remove-default-karma-configuration-files.json",
         "hidden": false,
         "name": "remove-default-karma-configuration-files",
-        "version": "21.5.0-beta.0",
+        "version": "21.5.0-beta.1",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/remove-default-karma-configuration-files",
         "type": "migration"
@@ -474,9 +464,19 @@
         "file": "generated/packages/angular/migrations/21.5.0-package-updates.json",
         "hidden": false,
         "name": "21.5.0-package-updates",
-        "version": "21.5.0-beta.0",
+        "version": "21.5.0-beta.1",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/21.5.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "Set the 'tsConfig' option to build and test targets to help with Angular migration issues.",
+        "file": "generated/packages/angular/migrations/set-tsconfig-option.json",
+        "hidden": false,
+        "name": "set-tsconfig-option",
+        "version": "21.5.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/set-tsconfig-option",
         "type": "migration"
       },
       {
@@ -1939,7 +1939,7 @@
         "file": "generated/packages/eslint/migrations/21.5.0-typescript-eslint-package-updates.json",
         "hidden": false,
         "name": "21.5.0-typescript-eslint-package-updates",
-        "version": "21.5.0-beta.0",
+        "version": "21.5.0-beta.1",
         "originalFilePath": "/packages/eslint",
         "path": "eslint/migrations/21.5.0-typescript-eslint-package-updates",
         "type": "migration"
@@ -1949,7 +1949,7 @@
         "file": "generated/packages/eslint/migrations/21.5.0-@typescript-eslint-package-updates.json",
         "hidden": false,
         "name": "21.5.0-@typescript-eslint-package-updates",
-        "version": "21.5.0-beta.0",
+        "version": "21.5.0-beta.1",
         "originalFilePath": "/packages/eslint",
         "path": "eslint/migrations/21.5.0-@typescript-eslint-package-updates",
         "type": "migration"
@@ -2888,7 +2888,7 @@
         "file": "generated/packages/js/migrations/21.5.0-package-updates.json",
         "hidden": false,
         "name": "21.5.0-package-updates",
-        "version": "21.5.0-beta.0",
+        "version": "21.5.0-beta.1",
         "originalFilePath": "/packages/js",
         "path": "js/migrations/21.5.0-package-updates",
         "type": "migration"
@@ -6338,7 +6338,7 @@
         "file": "generated/packages/workspace/migrations/21.5.0-package-updates.json",
         "hidden": false,
         "name": "21.5.0-package-updates",
-        "version": "21.5.0-beta.0",
+        "version": "21.5.0-beta.1",
         "originalFilePath": "/packages/workspace",
         "path": "workspace/migrations/21.5.0-package-updates",
         "type": "migration"

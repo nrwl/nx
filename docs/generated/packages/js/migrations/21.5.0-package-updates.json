@@ -1,6 +1,6 @@
 {
   "name": "21.5.0-package-updates",
-  "version": "21.5.0-beta.0",
+  "version": "21.5.0-beta.1",
   "x-prompt": "Do you want to update to TypeScript v5.9?",
   "requires": { "typescript": ">=5.8.0 <5.9.0" },
   "packages": {
