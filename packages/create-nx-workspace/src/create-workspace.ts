@@ -1,23 +1,22 @@
-import { CreateWorkspaceOptions } from './create-workspace-options';
-import { output } from './utils/output';
-import {
-  createNxCloudOnboardingUrl,
-  getNxCloudInfo,
-  readNxCloudToken,
-} from './utils/nx/nx-cloud';
-import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
+import { createSandbox } from './create-sandbox';
+import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
+import { mapErrorToBodyLines } from './utils/error-utils';
 import {
   initializeGitRepo,
   pushToGitHub,
   VcsPushStatus,
 } from './utils/git/git';
+import {
+  createNxCloudOnboardingUrl,
+  getNxCloudInfo,
+  readNxCloudToken,
+} from './utils/nx/nx-cloud';
+import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
-import { mapErrorToBodyLines } from './utils/error-utils';
 import { Preset } from './utils/preset/preset';
-import * as ora from 'ora';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
