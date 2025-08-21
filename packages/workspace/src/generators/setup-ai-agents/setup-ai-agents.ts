@@ -90,12 +90,6 @@ export async function setupAiAgentsGeneratorImpl(
       agent: 'CLAUDE',
     });
   }
-  if (!tree.exists(join(options.directory, 'AGENTS.md'))) {
-    generateFiles(tree, join(__dirname, './files'), options.directory, {
-      writeNxCloudRules: options.writeNxCloudRules,
-      agent: 'AGENTS',
-    });
-  }
   if (!tree.exists(join(options.directory, 'GEMINI.md'))) {
     generateFiles(tree, join(__dirname, './files'), options.directory, {
       writeNxCloudRules: options.writeNxCloudRules,
