@@ -67,12 +67,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     );
   }
 
-  const writtenCodexPath = addMcpToCodexConfig();
-
-  if (writtenCodexPath) {
-    ora(`Added nx_mcp to ${writtenCodexPath}`).succeed();
-  }
-
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
   if (nxCloud !== 'skip') {
