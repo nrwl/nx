@@ -14,7 +14,6 @@ fun addTestCiTargets(
     testFiles: FileCollection,
     projectBuildPath: String,
     testTask: Task,
-    testTargetName: String,
     targets: NxTargets,
     targetGroups: TargetGroups,
     projectRoot: String,
@@ -78,13 +77,9 @@ private fun processTestFiles(
 
 private fun isTestFile(file: File, workspaceRoot: String): Boolean {
   val content = file.takeIf { it.exists() }?.readText()
-  return if (content != null && containsEssentialTestAnnotations(content)) {
-    true
-  } else {
-    // Additional check for test files that might not have obvious annotations
-    // Could be extended with more sophisticated logic
-    false
-  }
+  return content != null && containsEssentialTestAnnotations(content)
+  // Additional check for test files that might not have obvious annotations
+  // Could be extended with more sophisticated logic
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
