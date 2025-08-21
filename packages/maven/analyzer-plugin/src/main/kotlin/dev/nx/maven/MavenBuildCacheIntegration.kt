@@ -13,7 +13,9 @@ import org.apache.maven.project.MavenProject
 class MavenBuildCacheIntegration(
     private val session: MavenSession,
     private val objectMapper: ObjectMapper,
-    private val log: Log
+    private val log: Log,
+    private val lifecycleExecutor: org.apache.maven.lifecycle.LifecycleExecutor,
+    private val pluginManager: org.apache.maven.plugin.PluginManager
 ) {
     
     /**
@@ -72,8 +74,10 @@ class MavenBuildCacheIntegration(
         return try {
             // Try to load a class from the Build Cache Extension
             Class.forName("org.apache.maven.buildcache.CacheController")
+            log.debug("Build Cache Extension detected: CacheController class found")
             true
         } catch (e: ClassNotFoundException) {
+            log.debug("Build Cache Extension not detected: CacheController class not found")
             false
         }
     }
@@ -105,14 +109,78 @@ class MavenBuildCacheIntegration(
     
     private fun getCacheController(): Any? {
         return try {
-            // Access CacheController through Plexus container
+            log.debug("Attempting to get CacheController from Plexus container")
             val container = session.container
-            val controllerClass = Class.forName("org.apache.maven.buildcache.CacheController")
+            log.debug("Got container: ${container.javaClass.name}")
             
-            // Look up the component by class
-            container.lookup(controllerClass)
+            // Try to detect if Build Cache Extension is loaded by checking for known cache classes
+            try {
+                val possibleCacheClasses = listOf(
+                    "org.apache.maven.buildcache.CacheController",
+                    "org.apache.maven.buildcache.xml.CacheConfigImpl",
+                    "org.apache.maven.buildcache.LocalCacheRepository",
+                    "org.apache.maven.buildcache.RemoteCacheRepository"
+                )
+                
+                val foundClasses = possibleCacheClasses.filter { className ->
+                    try {
+                        Class.forName(className)
+                        true
+                    } catch (e: ClassNotFoundException) {
+                        false
+                    }
+                }
+                
+                log.debug("Build Cache Extension classes found: ${foundClasses.joinToString(", ")}")
+                if (foundClasses.isEmpty()) {
+                    log.debug("No Build Cache Extension classes found on classpath")
+                }
+            } catch (e: Exception) {
+                log.debug("Error checking for cache classes: ${e.message}")
+            }
+            
+            // Try to find the CacheController class
+            val controllerClass = try {
+                Class.forName("org.apache.maven.buildcache.CacheController")
+            } catch (e: ClassNotFoundException) {
+                log.debug("CacheController class not found: ${e.message}")
+                return null
+            }
+            log.debug("Found CacheController class: ${controllerClass.name}")
+            
+            // Try different lookup approaches
+            val controller = try {
+                // Method 1: Direct class lookup
+                container.lookup(controllerClass)
+            } catch (e1: Exception) {
+                log.debug("Direct class lookup failed: ${e1.message}")
+                try {
+                    // Method 2: Lookup by role name
+                    container.lookup("org.apache.maven.buildcache.CacheController")
+                } catch (e2: Exception) {
+                    log.debug("Role name lookup failed: ${e2.message}")
+                    try {
+                        // Method 3: Lookup with role and hint
+                        container.lookup("org.apache.maven.buildcache.CacheController", "default")
+                    } catch (e3: Exception) {
+                        log.debug("Role+hint lookup failed: ${e3.message}")
+                        null
+                    }
+                }
+            }
+            
+            if (controller != null) {
+                log.debug("Successfully looked up CacheController: ${controller.javaClass.name}")
+                // Log available methods for debugging
+                val methods = controller.javaClass.methods.filter { it.name.contains("cache", ignoreCase = true) }
+                log.debug("Available CacheController methods: ${methods.map { it.name }.joinToString(", ")}")
+            } else {
+                log.debug("CacheController lookup returned null")
+            }
+            
+            controller
         } catch (e: Exception) {
-            log.debug("Failed to lookup CacheController from container", e)
+            log.warn("Failed to lookup CacheController from container: ${e.message}", e)
             null
         }
     }
@@ -144,11 +212,18 @@ class MavenBuildCacheIntegration(
             val methods = controllerClass.methods
             log.debug("Available CacheController methods: ${methods.map { it.name }.joinToString()}")
             
-            // Look for relevant methods
+            // Look for relevant methods - try any method that takes MojoExecution
             val cacheableMethod = methods.find { method ->
-                method.name.contains("cache", ignoreCase = true) && 
                 method.parameterCount == 1 &&
                 method.parameterTypes[0].isAssignableFrom(execution.javaClass)
+            }
+            
+            if (cacheableMethod == null) {
+                log.debug("No methods found that accept MojoExecution. Trying broader search...")
+                // Log all method signatures for debugging
+                for (method in methods) {
+                    log.debug("Method: ${method.name}(${method.parameterTypes.map { it.simpleName }.joinToString()})")
+                }
             }
             
             if (cacheableMethod != null) {
@@ -602,6 +677,216 @@ class MavenBuildCacheIntegration(
             mavenPath.startsWith("/") -> mavenPath // Keep absolute paths as-is
             else -> "{projectRoot}/$mavenPath" // Default to project-relative
         }
+    }
+    
+    /**
+     * Check if a Maven phase is cacheable according to the Build Cache Extension
+     */
+    fun checkPhaseCache(phase: String, project: MavenProject): CacheabilityDecision? {
+        return try {
+            // The Build Cache Extension operates at the mojo level, so we need to determine
+            // what mojos typically execute in this phase and check their cacheability
+            when (phase) {
+                "validate" -> checkGenericPhaseCache(phase, project, "Validation phase - typically not cacheable")
+                "compile" -> {
+                    // Try to find any plugin that executes during compile phase in the actual execution plan
+                    val compilePhaseDecision = checkPhaseExecutions("compile", project)
+                    compilePhaseDecision ?: checkGenericPhaseCache(phase, project, "No compile phase executions found")
+                }
+                "test-compile" -> {
+                    val testCompilePhaseDecision = checkPhaseExecutions("test-compile", project)
+                    testCompilePhaseDecision ?: checkGenericPhaseCache(phase, project, "No test-compile phase executions found")
+                }
+                "test" -> {
+                    val testPhaseDecision = checkPhaseExecutions("test", project)
+                    testPhaseDecision ?: checkGenericPhaseCache(phase, project, "No test phase executions found")
+                }
+                "package" -> {
+                    val packagePhaseDecision = checkPhaseExecutions("package", project)
+                    packagePhaseDecision ?: checkGenericPhaseCache(phase, project, "No package phase executions found")
+                }
+                "verify" -> {
+                    val verifyPhaseDecision = checkPhaseExecutions("verify", project)
+                    verifyPhaseDecision ?: checkGenericPhaseCache(phase, project, "No verify phase executions found")
+                }
+                "install" -> checkGenericPhaseCache(phase, project, "Install phase - modifies local repository")
+                "deploy" -> checkGenericPhaseCache(phase, project, "Deploy phase - modifies remote repository") 
+                "clean" -> checkGenericPhaseCache(phase, project, "Clean phase - removes build outputs")
+                else -> checkGenericPhaseCache(phase, project, "Unknown phase - letting Maven decide")
+            }
+        } catch (e: Exception) {
+            log.debug("Failed to check phase cache for $phase", e)
+            null
+        }
+    }
+    
+    /**
+     * Check cacheability using PluginManager to get proper plugin configurations
+     */
+    private fun checkPhaseExecutions(phase: String, project: MavenProject): CacheabilityDecision? {
+        return try {
+            log.debug("Checking phase executions for phase: $phase in project ${project.artifactId} using PluginManager")
+            
+            // Use PluginManager to get properly resolved plugins with all configurations
+            val plugin = org.apache.maven.model.Plugin().apply {
+                groupId = "org.apache.maven.plugins"
+                artifactId = when (phase) {
+                    "compile", "test-compile" -> "maven-compiler-plugin"
+                    "test" -> "maven-surefire-plugin"
+                    "package" -> "maven-jar-plugin"
+                    "verify" -> "maven-failsafe-plugin"
+                    else -> return null
+                }
+                // Don't set version - let Maven resolve the default version
+            }
+            
+            val pluginDescriptors = pluginManager.loadPluginDescriptor(plugin, project, session)
+            
+            log.debug("Found plugin descriptor for $phase: ${pluginDescriptors?.artifactId}")
+            
+            if (pluginDescriptors != null) {
+                // Create a proper MojoExecution using the resolved plugin descriptor
+                val goalName = when (phase) {
+                    "compile" -> "compile"
+                    "test-compile" -> "testCompile"
+                    "test" -> "test"
+                    "package" -> "jar"
+                    "verify" -> "verify"
+                    else -> return null
+                }
+                
+                val mojoDescriptor = pluginDescriptors.getMojo(goalName)
+                if (mojoDescriptor != null) {
+                    log.debug("Found mojo descriptor for goal: $goalName")
+                    
+                    val mojoExecution = MojoExecution(
+                        mojoDescriptor,
+                        "default-$goalName",
+                        org.apache.maven.plugin.MojoExecution.Source.CLI
+                    )
+                    
+                    // Test with Build Cache Extension
+                    val decision = isMojoExecutionCacheable(mojoExecution, project)
+                    log.debug("Plugin-resolved cacheability for $phase: ${decision?.cacheable} (${decision?.reason})")
+                    return decision
+                } else {
+                    log.debug("No mojo descriptor found for goal: $goalName")
+                }
+            }
+            
+            null
+        } catch (e: Exception) {
+            log.debug("Failed to check phase executions using PluginManager for $phase", e)
+            null
+        }
+    }
+    
+    /**
+     * Check cacheability for a specific mojo execution using real Maven execution plan
+     */
+    private fun checkMojoCache(mojoKey: String, project: MavenProject): CacheabilityDecision? {
+        return try {
+            val parts = mojoKey.split(":")
+            if (parts.size >= 3) {
+                log.debug("Checking mojo cache for: $mojoKey")
+                
+                // Get real MojoExecution from Maven's execution plan instead of creating mock objects
+                val realExecution = findMojoExecutionInPlan(parts[0], parts[1], parts[2], project)
+                if (realExecution != null) {
+                    log.debug("Found real MojoExecution: ${realExecution.groupId}:${realExecution.artifactId}:${realExecution.goal}")
+                    val result = isMojoExecutionCacheable(realExecution, project)
+                    log.debug("Real MojoExecution cacheability result for $mojoKey: ${result?.cacheable} (${result?.reason})")
+                    result
+                } else {
+                    log.debug("No real MojoExecution found for $mojoKey in project ${project.artifactId}")
+                    null
+                }
+            } else {
+                log.debug("Invalid mojo key format: $mojoKey")
+                null
+            }
+        } catch (e: Exception) {
+            log.warn("Failed to check mojo cache for $mojoKey", e)
+            null
+        }
+    }
+    
+    /**
+     * Find actual MojoExecution from Maven's calculated execution plan
+     */
+    private fun findMojoExecutionInPlan(groupId: String, artifactId: String, goal: String, project: MavenProject): MojoExecution? {
+        return try {
+            log.debug("Calculating execution plan for project ${project.artifactId} to find $groupId:$artifactId:$goal")
+            
+            // Ensure we're using the resolved project with all plugin configurations
+            val effectiveProject = session.currentProject ?: project
+            log.debug("Using project ${effectiveProject.artifactId} with ${effectiveProject.build?.plugins?.size ?: 0} direct plugins")
+            
+            // Calculate execution plan for specific phase to find the mojo we're looking for
+            val targetPhase = when (goal) {
+                "compile" -> "compile"
+                "testCompile" -> "test-compile" 
+                "test" -> "test"
+                "jar" -> "package"
+                "verify" -> "verify"
+                else -> "verify"
+            }
+            
+            // Set the current project in session to ensure proper plugin resolution
+            val originalProject = session.currentProject
+            try {
+                session.currentProject = effectiveProject
+                val executionPlan = lifecycleExecutor.calculateExecutionPlan(session, targetPhase)
+                log.debug("Found ${executionPlan.mojoExecutions.size} mojo executions in plan for phase $targetPhase")
+                
+                // Log all available executions for debugging
+                if (log.isDebugEnabled) {
+                    for (execution in executionPlan.mojoExecutions) {
+                        log.debug("Available execution: ${execution.plugin.groupId}:${execution.plugin.artifactId}:${execution.goal} (phase: ${execution.lifecyclePhase})")
+                    }
+                }
+                
+                // Find the specific mojo execution we're looking for
+                for (mojoExecution in executionPlan.mojoExecutions) {
+                    if (mojoExecution.plugin.groupId == groupId && 
+                        mojoExecution.plugin.artifactId == artifactId && 
+                        mojoExecution.goal == goal) {
+                        log.debug("Found matching MojoExecution in execution plan: ${mojoExecution.executionId}")
+                        return mojoExecution
+                    }
+                }
+                log.debug("No matching MojoExecution found in execution plan for $groupId:$artifactId:$goal")
+                null
+            } finally {
+                session.currentProject = originalProject
+            }
+        } catch (e: Exception) {
+            log.warn("Failed to find MojoExecution in execution plan for $groupId:$artifactId:$goal", e)
+            null
+        }
+    }
+    
+    /**
+     * Check cacheability for phases that don't map to specific mojos
+     */
+    private fun checkGenericPhaseCache(phase: String, project: MavenProject, reason: String): CacheabilityDecision {
+        // Use Maven Build Cache Extension's actual logic for determining cacheability
+        val cacheable = when (phase) {
+            "install", "deploy" -> false // These modify external state (local/remote repositories)
+            "clean" -> false // This removes outputs
+            "validate" -> true // Maven caches validation - if inputs haven't changed, validation can be skipped
+            else -> {
+                // Most other phases are cacheable if they produce deterministic outputs
+                // The Build Cache Extension activates on package and higher phases
+                true
+            }
+        }
+        
+        return CacheabilityDecision(
+            cacheable = cacheable,
+            reason = reason,
+            source = "Maven Build Cache Extension phase analysis"
+        )
     }
 }
 
