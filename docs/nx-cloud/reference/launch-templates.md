@@ -312,7 +312,7 @@ common-init-steps: &common-init-steps
       key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
       paths: |
         '~/.cache/Cypress'
-        base-branch: 'main'
+      base-branch: 'main'
   - name: Install Node Modules
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
   - name: Install Browsers (if needed)
