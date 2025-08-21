@@ -17,7 +17,7 @@ import {
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
 import { ProjectDetailsPage } from '@nx/graph-internal-project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';
-import { taskGraphCache } from './task-graph-cache';
+import { taskGraphClientCache } from './task-graph-client-cache';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -87,10 +87,9 @@ const tasksLoader: LoaderFunction = async ({ params, request }) => {
     throw new Error(`Workspace ${selectedWorkspaceId} not found`);
   }
 
-  // Set the workspace to handle cache invalidation
-  taskGraphCache.setWorkspace(selectedWorkspaceId);
+  // bust the task graph cache if workspaceId changes
+  taskGraphClientCache.setWorkspace(selectedWorkspaceId);
 
-  // Check URL for targets and projects
   const requestUrl = new URL(request.url);
   const targetsParam = requestUrl.searchParams.get('targets');
   const projectsParam = requestUrl.searchParams.get('projects');
@@ -102,7 +101,7 @@ const tasksLoader: LoaderFunction = async ({ params, request }) => {
     ? projectsParam.split(' ').filter(Boolean)
     : undefined;
 
-  // If no targets selected, return empty (UI will show target selector)
+  // if no targets are selected, empty taskGraph response
   if (selectedTargets.length === 0) {
     return {
       taskGraph: {
@@ -115,8 +114,10 @@ const tasksLoader: LoaderFunction = async ({ params, request }) => {
     };
   }
 
-  // Check if this is the "all" route (all projects for selected targets)
   const isAllRoute = requestUrl.pathname.endsWith('/all');
+
+  // if we don't request any projects and we're not on the "all" route,
+  // we return empty taskGraph response. consumers need to select projects
   if (!requestedProjects && !isAllRoute) {
     return {
       taskGraph: {
@@ -129,27 +130,26 @@ const tasksLoader: LoaderFunction = async ({ params, request }) => {
     };
   }
 
-  // Create cache key for this combination of targets and projects
-  const cacheKey = `${selectedTargets.join(',')}-${
-    requestedProjects?.join(',') || 'all'
-  }`;
-
   // Check if we have cached data for this exact combination
-  const cached = taskGraphCache.getCached(cacheKey, requestedProjects);
-  if (cached) {
-    return cached;
-  }
+  const { cached, missingTargets, missingProjects } =
+    taskGraphClientCache.getCached(selectedTargets, requestedProjects);
+
+  if (cached) return cached;
 
   const response = await projectGraphDataService.getSpecificTaskGraph(
     workspaceInfo.taskGraphUrl,
-    requestedProjects,
-    selectedTargets
+    missingProjects,
+    missingTargets
   );
 
-  // Update cache
-  taskGraphCache.updateCache(cacheKey, response, requestedProjects, isAllRoute);
+  if (response.error) return response;
 
-  return response;
+  // only merge if we don't have error
+  return taskGraphClientCache.mergeTaskGraph(
+    response,
+    missingTargets,
+    missingProjects
+  );
 };
 
 const projectDetailsLoader = async (
