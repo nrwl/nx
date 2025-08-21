@@ -255,23 +255,6 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  if (
-    Array.isArray(args.targets) &&
-    args.targets.length > 1 &&
-    args.file &&
-    !(args.file === 'stdout' || args.file.endsWith('.json'))
-  ) {
-    output.note({
-      title: 'Multiple Targets Supported',
-      bodyLines: [
-        `Task graphs for ${
-          args.targets.length
-        } targets will be generated: ${args.targets.join(', ')}`,
-        'Note: File output only supports single target. Use the interactive view for multiple targets.',
-      ],
-    });
-  }
-
   if (args.view === 'project-details' && !args.focus) {
     output.error({
       title: `The project details view requires the --focus option.`,
@@ -639,8 +622,8 @@ async function startServer(
     }
 
     if (sanitizePath === 'task-graph.json') {
-      const projectsParam = parsedUrl.searchParams.get('projects'); // Multiple projects
-      const targetsParam = parsedUrl.searchParams.get('targets'); // Multiple targets
+      const projectsParam = parsedUrl.searchParams.get('projects');
+      const targetsParam = parsedUrl.searchParams.get('targets');
       const configuration = parsedUrl.searchParams.get('configuration');
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -662,7 +645,7 @@ async function startServer(
         );
       }
 
-      // Legacy - load all task graphs
+      // load all task graphs if there's no targets specified
       return res.end(JSON.stringify(await createTaskGraphClientResponse()));
     }
 
@@ -968,7 +951,6 @@ async function createTaskGraphClientResponse(
 
   performance.mark('task graph generation:start');
 
-  // Get all projects and all targets for legacy full workspace support
   const projects = Object.keys(graph.nodes);
   const allTargets = new Set<string>();
 
@@ -982,7 +964,6 @@ async function createTaskGraphClientResponse(
   const targets = Array.from(allTargets);
 
   try {
-    // Create single task graph for all projects and targets
     const taskGraph = createTaskGraph(
       graph,
       {},
@@ -1018,11 +999,7 @@ async function createTaskGraphClientResponse(
       'task hash plan generation:end'
     );
 
-    return {
-      taskGraph,
-      plans,
-      error: null,
-    };
+    return { taskGraph, plans, error: null };
   } catch (err) {
     performance.mark('task graph generation:end');
     performance.measure(
@@ -1110,10 +1087,8 @@ async function createTaskGraphForTargetsAndProjects(
 
   performance.mark(`task graph generation:start`);
 
-  // Determine which projects to use
   let projectsToUse: string[];
   if (projectNames && projectNames.length > 0) {
-    // Use specified projects (filter to only those that have at least one of the targets)
     projectsToUse = projectNames;
   } else {
     // Get all projects that have at least one of the targets
@@ -1137,7 +1112,6 @@ async function createTaskGraphForTargetsAndProjects(
 
     performance.mark(`task graph generation:end`);
 
-    // Generate hash plans for all tasks at once
     const planner = new HashPlanner(
       nxJson,
       transferProjectGraph(transformProjectGraphForRust(graph))

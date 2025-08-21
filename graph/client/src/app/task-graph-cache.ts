@@ -105,8 +105,8 @@ class TaskGraphCache {
       merged.hasAllProjects = true;
       // Add all projects from the response to fetchedProjects
       Object.keys(response.taskGraph.tasks).forEach((taskId) => {
-        const [project] = taskId.split(':');
-        merged.fetchedProjects.add(project);
+        const task = response.taskGraph.tasks[taskId];
+        merged.fetchedProjects.add(task.target.project);
       });
     } else if (requestedProjects) {
       // Add specific projects to the set
