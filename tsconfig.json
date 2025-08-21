@@ -402,6 +402,9 @@
     },
     {
       "path": "./packages/angular-rspack"
+    },
+    {
+      "path": "./tools/update-repos"
     }
   ],
   "extends": "./tsconfig.base.json"
