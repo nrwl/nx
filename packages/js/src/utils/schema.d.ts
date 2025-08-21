@@ -20,6 +20,7 @@ export interface ExecutorOptions {
   generateLockfile?: boolean;
   stripLeadingPaths?: boolean;
   generatePackageJson?: boolean;
+  includeIgnoredAssetFiles?: boolean;
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {

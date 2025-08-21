@@ -30,6 +30,7 @@ interface CopyAssetHandlerOptions {
   outputDir: string;
   assets: (string | AssetGlob)[];
   callback?: (events: FileEvent[]) => void;
+  includeIgnoredFiles?: boolean;
 }
 
 interface AssetEntry {
@@ -38,6 +39,7 @@ interface AssetEntry {
   ignore: string[] | null;
   input: string;
   output: string;
+  includeIgnoredFiles?: boolean;
 }
 
 export const defaultFileEventHandler = (events: FileEvent[]) => {
@@ -66,12 +68,14 @@ export class CopyAssetsHandler {
   private readonly assetGlobs: AssetEntry[];
   private readonly ignore: ReturnType<typeof ignore>;
   private readonly callback: (events: FileEvent[]) => void;
+  private readonly includeIgnoredFiles: boolean;
 
   constructor(opts: CopyAssetHandlerOptions) {
     this.rootDir = opts.rootDir;
     this.projectDir = opts.projectDir;
     this.outputDir = opts.outputDir;
     this.callback = opts.callback ?? defaultFileEventHandler;
+    this.includeIgnoredFiles = opts.includeIgnoredFiles ?? false;
 
     // TODO(jack): Should handle nested .gitignore files
     this.ignore = ignore();
@@ -92,6 +96,7 @@ export class CopyAssetsHandler {
       let input: string;
       let output: string;
       let ignore: string[] | null = null;
+      let includeIgnoredFiles: boolean | undefined = undefined;
 
       const resolvedOutputDir = path.isAbsolute(opts.outputDir)
         ? opts.outputDir
@@ -111,6 +116,7 @@ export class CopyAssetsHandler {
         );
         if (f.ignore)
           ignore = f.ignore.map((ig) => pathPosix.join(f.input, ig));
+        includeIgnoredFiles = f.includeIgnoredFiles;
       }
       return {
         isGlob,
@@ -118,6 +124,7 @@ export class CopyAssetsHandler {
         pattern,
         ignore,
         output,
+        includeIgnoredFiles,
       };
     });
   }
@@ -192,7 +199,8 @@ export class CopyAssetsHandler {
         if (
           picomatch(ag.pattern)(pathFromRoot) &&
           !ag.ignore?.some((ig) => picomatch(ig)(pathFromRoot)) &&
-          !this.ignore.ignores(pathFromRoot)
+          ((ag.includeIgnoredFiles ?? this.includeIgnoredFiles) ||
+            !this.ignore.ignores(pathFromRoot))
         ) {
           const relPath = path.relative(ag.input, pathFromRoot);
           const destPath = relPath.startsWith('..') ? pathFromRoot : relPath;
@@ -214,7 +222,8 @@ export class CopyAssetsHandler {
     return files.reduce((acc, src) => {
       if (
         !assetGlob.ignore?.some((ig) => picomatch(ig)(src)) &&
-        !this.ignore.ignores(src)
+        ((assetGlob.includeIgnoredFiles ?? this.includeIgnoredFiles) ||
+          !this.ignore.ignores(src))
       ) {
         const relPath = path.relative(assetGlob.input, src);
         const dest = relPath.startsWith('..') ? src : relPath;
