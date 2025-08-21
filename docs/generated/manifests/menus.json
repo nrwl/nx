@@ -5877,9 +5877,9 @@
                         "disableCollapsible": false
                       },
                       {
-                        "id": "setup-ai-agents",
-                        "path": "/reference/core-api/workspace/generators/setup-ai-agents",
-                        "name": "setup-ai-agents",
+                        "id": "set-up-ai-agents",
+                        "path": "/reference/core-api/workspace/generators/set-up-ai-agents",
+                        "name": "set-up-ai-agents",
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false

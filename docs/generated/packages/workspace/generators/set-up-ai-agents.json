@@ -1,10 +1,10 @@
 {
-  "name": "setup-ai-agents",
-  "factory": "./src/generators/setup-ai-agents/setup-ai-agents",
+  "name": "set-up-ai-agents",
+  "factory": "./src/generators/set-up-ai-agents/set-up-ai-agents",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "SetupAiAgents",
-    "title": "Setup AI Agents",
+    "title": "Set Up AI Agents",
     "description": "Sets up the Nx MCP & rule files for common AI Agents",
     "type": "object",
     "properties": {
@@ -29,8 +29,8 @@
   },
   "description": "Sets up the Nx MCP & rule files for common AI Agents",
   "hidden": true,
-  "implementation": "/packages/workspace/src/generators/setup-ai-agents/setup-ai-agents.ts",
+  "implementation": "/packages/workspace/src/generators/set-up-ai-agents/set-up-ai-agents.ts",
   "aliases": [],
-  "path": "/packages/workspace/src/generators/setup-ai-agents/schema.json",
+  "path": "/packages/workspace/src/generators/set-up-ai-agents/schema.json",
   "type": "generator"
 }

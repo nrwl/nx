@@ -710,7 +710,7 @@
           - [npm-package](/reference/core-api/workspace/generators/npm-package)
           - [ci-workflow](/reference/core-api/workspace/generators/ci-workflow)
           - [infer-targets](/reference/core-api/workspace/generators/infer-targets)
-          - [setup-ai-agents](/reference/core-api/workspace/generators/setup-ai-agents)
+          - [set-up-ai-agents](/reference/core-api/workspace/generators/set-up-ai-agents)
         - [migrations](/reference/core-api/workspace/migrations)
       - [owners](/reference/core-api/owners)
         - [Overview](/reference/core-api/owners/overview)

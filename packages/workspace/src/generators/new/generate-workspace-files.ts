@@ -17,6 +17,7 @@ import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import type { NormalizedSchema } from './new';
 import { setupAiAgentsGenerator } from '../setup-ai-agents/setup-ai-agents';
+import { setupAiAgentsGenerator } from '../set-up-ai-agents/set-up-ai-agents';
 
 type PresetInfo = {
   generateAppCmd?: string;
