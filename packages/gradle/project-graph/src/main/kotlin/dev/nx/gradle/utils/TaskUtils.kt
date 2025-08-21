@@ -25,6 +25,7 @@ fun processTask(
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
+
   val target = mutableMapOf<String, Any?>()
   target["cache"] = isCacheable(task)
 
@@ -59,19 +60,20 @@ fun processTask(
 
   target["executor"] = "@nx/gradle:gradle"
 
+  val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
   val metadata =
       getMetadata(
-          task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
+          task.description ?: "Run ${projectBuildPath}.$taskName", projectBuildPath, taskName)
   target["metadata"] = metadata
 
   target["options"] =
       if (continuous) {
         mapOf(
-            "taskName" to "${projectBuildPath}:${task.name}",
+            "taskName" to "${projectBuildPath}:$taskName",
             "continuous" to true,
             "excludeDependsOn" to shouldExcludeDependsOn(task))
       } else {
-        mapOf("taskName" to "${projectBuildPath}:${task.name}")
+        mapOf("taskName" to "${projectBuildPath}:$taskName")
       }
 
   return target

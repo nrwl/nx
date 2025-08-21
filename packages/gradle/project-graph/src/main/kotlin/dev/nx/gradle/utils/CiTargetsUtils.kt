@@ -108,7 +108,7 @@ private fun buildTestCiTarget(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
                   "testClassName" to testClassPackagePath),
           "metadata" to
-              getMetadata("Runs Gradle test $testClassPackagePath in CI", projectBuildPath, "test"),
+              getMetadata("Runs Gradle test $testClassPackagePath in CI", projectBuildPath, testTask.name),
           "cache" to true,
           "inputs" to taskInputs)
 
@@ -138,7 +138,7 @@ private fun ensureParentCiTarget(
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(
             "executor" to "nx:noop",
-            "metadata" to getMetadata("Runs all Gradle tests in CI", projectBuildPath, "test"),
+            "metadata" to getMetadata("Runs all Gradle tests in CI", projectBuildPath, testTask.name),
             "cache" to true,
             "inputs" to taskInputs,
             "dependsOn" to ciDependsOn)

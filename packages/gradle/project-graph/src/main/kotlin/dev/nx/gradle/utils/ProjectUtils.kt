@@ -63,7 +63,7 @@ fun createNodeForProject(
 }
 
 /**
- * Process targets for project
+ * Process gradle targets and convert them to Nx targets
  *
  * @return targets and targetGroups
  */
@@ -107,13 +107,15 @@ fun processTargetsForProject(
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
+      // Add task to its Gradle group (e.g., "build", "verification") if it has one
+      val gradleGroup = task.group
+      if (!gradleGroup.isNullOrBlank()) {
+        val tasksInGroup = targetGroups.getOrPut(gradleGroup) { mutableListOf() }
+        tasksInGroup.add(task.name)
+      }
+
+      // Set the target name that will be used with Nx if the override is set, else use the task name
       val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
-
-      // Group task under its group if available
-      task.group
-          ?.takeIf { it.isNotBlank() }
-          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(taskName) }
-
       val target =
           processTask(
               task,
