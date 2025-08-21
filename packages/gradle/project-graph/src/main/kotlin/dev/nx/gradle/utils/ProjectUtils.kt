@@ -173,7 +173,7 @@ fun processTargetsForProject(
                   "dependsOn" to replacedDependencies,
                   "executor" to "nx:noop",
                   "cache" to true,
-                  "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"))
+                  "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, task.name))
 
           targets[ciCheckTargetName] = newTarget
           ensureTargetGroupExists(targetGroups, testCiTargetGroup)

@@ -33,7 +33,8 @@ fun addTestCiTargets(
       projectRoot,
       workspaceRoot,
       ciTestTargetName,
-      ciDependsOn)
+      ciDependsOn
+  )
 
   ensureParentCiTarget(
       targets,
