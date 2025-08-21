@@ -230,6 +230,9 @@ export class Migrator {
       )) {
         if (
           this.areRequirementsMet(packageUpdate.requires) &&
+          !this.areIncompatiblePackagesPresent(
+            packageUpdate.incompatibleWith
+          ) &&
           (!this.interactive ||
             (await this.runPackageJsonUpdatesConfirmationPrompt(
               packageUpdate,
@@ -315,7 +318,8 @@ export class Migrator {
     const shouldCheckUpdates = Object.values(packageJsonUpdates).some(
       (packageJsonUpdate) =>
         (this.interactive && packageJsonUpdate['x-prompt']) ||
-        Object.keys(packageJsonUpdate.requires ?? {}).length
+        Object.keys(packageJsonUpdate.requires ?? {}).length ||
+        Object.keys(packageJsonUpdate.incompatibleWith ?? {}).length
     );
 
     if (shouldCheckUpdates) {
@@ -515,6 +519,31 @@ export class Migrator {
     }
 
     return Object.entries(requirements).every(([pkgName, versionRange]) => {
+      if (this.packageUpdates[pkgName]) {
+        return satisfies(
+          cleanSemver(this.packageUpdates[pkgName].version),
+          versionRange,
+          { includePrerelease: true }
+        );
+      }
+
+      return (
+        this.getPkgVersion(pkgName) &&
+        satisfies(this.getPkgVersion(pkgName), versionRange, {
+          includePrerelease: true,
+        })
+      );
+    });
+  }
+
+  private areIncompatiblePackagesPresent(
+    incompatibleWith: PackageJsonUpdates[string]['incompatibleWith']
+  ): boolean {
+    if (!incompatibleWith || !Object.keys(incompatibleWith).length) {
+      return false;
+    }
+
+    return Object.entries(incompatibleWith).some(([pkgName, versionRange]) => {
       if (this.packageUpdates[pkgName]) {
         return satisfies(
           cleanSemver(this.packageUpdates[pkgName].version),
