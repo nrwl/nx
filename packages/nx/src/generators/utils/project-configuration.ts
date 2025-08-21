@@ -155,14 +155,160 @@ function updateProjectConfigurationInProjectJson(
     'project.json'
   );
 
-  handleEmptyTargets(projectName, projectConfiguration);
+  // Read the existing project.json to understand what properties it originally had
+  const existingProjectJson = tree.exists(projectConfigFile)
+    ? readJson(tree, projectConfigFile)
+    : {};
 
-  writeJson(tree, projectConfigFile, {
+  // If package.json exists, read it to understand what properties come from there
+  const packageJsonFile = joinPathFragments(
+    projectConfiguration.root,
+    'package.json'
+  );
+  let packageJsonNxConfig: any = {};
+  if (tree.exists(packageJsonFile)) {
+    const packageJson = readJson<PackageJson>(tree, packageJsonFile);
+    packageJsonNxConfig = packageJson.nx || {};
+  }
+
+  // Only include properties in project.json that should be there:
+  // 1. Properties that were originally in the existing project.json
+  // 2. New properties that are being set but weren't in package.json
+  // 3. Always include core project.json properties (name, $schema, root)
+  const updatedProjectJson: any = {
     name: projectConfiguration.name ?? projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
-    ...projectConfiguration,
-    root: undefined,
-  });
+  };
+
+  // For each property in the updated configuration, decide whether it should go in project.json
+  for (const [key, value] of Object.entries(projectConfiguration)) {
+    if (key === 'root') {
+      // Skip root as it's inferred from file location
+      continue;
+    }
+
+    if (key === 'name') {
+      // Already handled above
+      continue;
+    }
+
+    // Handle nested properties like targets specially
+    if (key === 'targets' && value && typeof value === 'object') {
+      const projectTargets = existingProjectJson.targets || {};
+      const packageTargets = packageJsonNxConfig.targets || {};
+      const resultTargets = {};
+
+      for (const [targetName, targetConfig] of Object.entries(value)) {
+        // Include target if it was originally in project.json OR it's not in package.json
+        const wasInProjectJson = projectTargets.hasOwnProperty(targetName);
+        const isInPackageJson = packageTargets.hasOwnProperty(targetName);
+
+        if (wasInProjectJson || !isInPackageJson) {
+          resultTargets[targetName] = targetConfig;
+        }
+      }
+
+      if (
+        Object.keys(resultTargets).length > 0 ||
+        Object.keys(value).length === 0
+      ) {
+        // Include targets if there are any, OR if the original targets was empty
+        // (empty targets need special handling by handleEmptyTargets)
+        updatedProjectJson[key] = resultTargets;
+      }
+    } else {
+      // For non-nested properties, use the original logic
+      const wasInProjectJson = existingProjectJson.hasOwnProperty(key);
+      const isInPackageJson = packageJsonNxConfig.hasOwnProperty(key);
+
+      if (wasInProjectJson || !isInPackageJson) {
+        // If the property was in both files, use the new value but preserve the intent
+        // For properties that existed in both files, we want to keep the new updates
+        // but not include properties that were merged in from package.json
+        if (wasInProjectJson && isInPackageJson) {
+          // This property exists in both files.
+          // If it's an object like metadata, we need to be more careful
+          if (
+            typeof value === 'object' &&
+            value !== null &&
+            !Array.isArray(value)
+          ) {
+            // For object properties that exist in both files, only include the parts
+            // that were originally in project.json or are new
+            const originalProjectValue = existingProjectJson[key] || {};
+            const packageValue = packageJsonNxConfig[key] || {};
+            const resultValue = {};
+
+            // Include properties that were in the original project.json
+            for (const [subKey, subValue] of Object.entries(
+              originalProjectValue
+            )) {
+              if (value[subKey] !== undefined) {
+                // For properties that existed in both files, we need to determine what to use
+                const wasInPackage = packageValue.hasOwnProperty(subKey);
+                if (wasInPackage) {
+                  // This property existed in both files
+                  // Check if the current value looks like a merge artifact (array concatenation)
+                  const currentValue = value[subKey];
+                  const packageSubValue = packageValue[subKey];
+
+                  if (
+                    Array.isArray(currentValue) &&
+                    Array.isArray(subValue) &&
+                    Array.isArray(packageSubValue)
+                  ) {
+                    // Check if current value looks like [packageValue, projectValue] merge
+                    const expectedMerge = [...packageSubValue, ...subValue];
+                    const isLikelyMergeArtifact =
+                      JSON.stringify(currentValue) ===
+                      JSON.stringify(expectedMerge);
+
+                    if (isLikelyMergeArtifact) {
+                      // This looks like a merge artifact, use original project.json value
+                      resultValue[subKey] = subValue;
+                    } else {
+                      // This looks like an intentional update, use the new value
+                      resultValue[subKey] = currentValue;
+                    }
+                  } else {
+                    // For non-array values, use the current value (likely an intentional update)
+                    resultValue[subKey] = currentValue;
+                  }
+                } else {
+                  // This property was only in project.json, use the updated value
+                  resultValue[subKey] = value[subKey];
+                }
+              }
+            }
+
+            // Include new properties that are not in package.json
+            for (const [subKey, subValue] of Object.entries(value)) {
+              if (
+                !originalProjectValue.hasOwnProperty(subKey) &&
+                !packageValue.hasOwnProperty(subKey)
+              ) {
+                resultValue[subKey] = subValue;
+              }
+            }
+
+            if (Object.keys(resultValue).length > 0) {
+              updatedProjectJson[key] = resultValue;
+            }
+          } else {
+            // For non-object values, just use the new value
+            updatedProjectJson[key] = value;
+          }
+        } else {
+          // Property only exists in one file or is new, include it as-is
+          updatedProjectJson[key] = value;
+        }
+      }
+    }
+  }
+
+  handleEmptyTargets(projectName, updatedProjectJson);
+
+  writeJson(tree, projectConfigFile, updatedProjectJson);
 }
 
 /**
