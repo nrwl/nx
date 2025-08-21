@@ -155,79 +155,76 @@ function updateProjectConfigurationInProjectJson(
     'project.json'
   );
 
-  // If there's no package.json, use the original simple logic
+  handleEmptyTargets(projectName, projectConfiguration);
+
+  // If package.json exists, filter out properties that should stay in package.json
   const packageJsonFile = joinPathFragments(
     projectConfiguration.root,
     'package.json'
   );
 
-  if (!tree.exists(packageJsonFile)) {
-    handleEmptyTargets(projectName, projectConfiguration);
+  if (tree.exists(packageJsonFile)) {
+    const existingProjectJson = tree.exists(projectConfigFile)
+      ? readJson(tree, projectConfigFile)
+      : {};
+    const packageJson = readJson<PackageJson>(tree, packageJsonFile);
+    const packageJsonNxConfig = packageJson.nx || {};
+
+    // Filter projectConfiguration to only include properties that should be in project.json
+    const filteredConfig = {};
+    for (const [key, value] of Object.entries(projectConfiguration)) {
+      if (key === 'root') continue; // root is always excluded
+
+      // Special handling for targets - check each target individually
+      if (key === 'targets' && value && typeof value === 'object') {
+        const projectTargets = existingProjectJson.targets || {};
+        const packageTargets = packageJsonNxConfig.targets || {};
+        const resultTargets = {};
+
+        for (const [targetName, targetConfig] of Object.entries(value)) {
+          const wasInProjectJson = projectTargets.hasOwnProperty(targetName);
+          const isInPackageJson = packageTargets.hasOwnProperty(targetName);
+
+          if (wasInProjectJson || !isInPackageJson) {
+            resultTargets[targetName] = targetConfig;
+          }
+        }
+
+        if (
+          Object.keys(resultTargets).length > 0 ||
+          Object.keys(value).length === 0
+        ) {
+          filteredConfig[key] = resultTargets;
+        }
+      } else {
+        const wasInProjectJson = existingProjectJson.hasOwnProperty(key);
+        const isInPackageJson = packageJsonNxConfig.hasOwnProperty(key);
+        const packageJsonValue = packageJsonNxConfig[key];
+        const isDifferentFromPackageJson =
+          !isInPackageJson ||
+          JSON.stringify(value) !== JSON.stringify(packageJsonValue);
+
+        if (wasInProjectJson || isDifferentFromPackageJson) {
+          filteredConfig[key] = value;
+        }
+      }
+    }
+
+    writeJson(tree, projectConfigFile, {
+      name: projectConfiguration.name ?? projectName,
+      $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
+      ...filteredConfig,
+      root: undefined,
+    });
+  } else {
+    // Original behavior when no package.json exists
     writeJson(tree, projectConfigFile, {
       name: projectConfiguration.name ?? projectName,
       $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
       ...projectConfiguration,
       root: undefined,
     });
-    return;
   }
-
-  // When both files exist, only include properties that shouldn't come from package.json
-  const existingProjectJson = tree.exists(projectConfigFile)
-    ? readJson(tree, projectConfigFile)
-    : {};
-
-  const packageJson = readJson<PackageJson>(tree, packageJsonFile);
-  const packageJsonNxConfig = packageJson.nx || {};
-
-  // Start with the structure that should always be in project.json
-  const updatedProjectJson: any = {
-    name: projectConfiguration.name ?? projectName,
-    $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
-  };
-
-  // Copy properties that should be in project.json (not package.json)
-  for (const [key, value] of Object.entries(projectConfiguration)) {
-    if (key === 'root' || key === 'name') continue;
-
-    // Special handling for targets - check each target individually
-    if (key === 'targets' && value && typeof value === 'object') {
-      const projectTargets = existingProjectJson.targets || {};
-      const packageTargets = packageJsonNxConfig.targets || {};
-      const resultTargets = {};
-
-      for (const [targetName, targetConfig] of Object.entries(value)) {
-        const wasInProjectJson = projectTargets.hasOwnProperty(targetName);
-        const isInPackageJson = packageTargets.hasOwnProperty(targetName);
-
-        if (wasInProjectJson || !isInPackageJson) {
-          resultTargets[targetName] = targetConfig;
-        }
-      }
-
-      if (
-        Object.keys(resultTargets).length > 0 ||
-        Object.keys(value).length === 0
-      ) {
-        updatedProjectJson[key] = resultTargets;
-      }
-    } else {
-      // For other properties, include if: originally in project.json OR not in package.json OR different from package.json value
-      const wasInProjectJson = existingProjectJson.hasOwnProperty(key);
-      const isInPackageJson = packageJsonNxConfig.hasOwnProperty(key);
-      const packageJsonValue = packageJsonNxConfig[key];
-      const isDifferentFromPackageJson =
-        !isInPackageJson ||
-        JSON.stringify(value) !== JSON.stringify(packageJsonValue);
-
-      if (wasInProjectJson || isDifferentFromPackageJson) {
-        updatedProjectJson[key] = value;
-      }
-    }
-  }
-
-  handleEmptyTargets(projectName, updatedProjectJson);
-  writeJson(tree, projectConfigFile, updatedProjectJson);
 }
 
 /**
