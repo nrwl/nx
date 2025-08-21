@@ -13,7 +13,8 @@ import { redirects } from './redirects.mts';
 export default defineConfig({
   vite: { plugins: [tailwindcss()] },
   site: 'https://docs.nx.dev',
-  adapter: netlify(),
+  // This adapter doesn't support local previews, so only load it on Netlify.
+  adapter: process.env['NETLIFY'] ? netlify() : undefined,
   redirects,
   integrations: [
     markdoc(),
