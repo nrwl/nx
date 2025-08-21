@@ -44,12 +44,11 @@ class NxProjectConfigurationGenerator(
         
         try {
             val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
-            val projectType = if (mavenProject.packaging == "pom") "library" else "application"
+            val projectType = determineProjectType(mavenProject)
             val sourceRoot = "$relativePath/src/main/java"
             
             // Generate targets using the same logic as TypeScript
             val targets = generateTargetsForProject(mavenProject, coordinatesToProjectName, allProjects)
-            val targetGroups = generateTargetGroupsForProject(targets, mavenProject)
             
             // Create the Nx project configuration
             val projectConfig = objectMapper.createObjectNode()
@@ -58,7 +57,6 @@ class NxProjectConfigurationGenerator(
             projectConfig.put("projectType", projectType)
             projectConfig.put("sourceRoot", sourceRoot)
             projectConfig.put("targets", targets)
-            projectConfig.put("targetGroups", targetGroups)
             
             // Tags
             val tagsArray = objectMapper.createArrayNode()
@@ -87,6 +85,21 @@ class NxProjectConfigurationGenerator(
             return null
         }
     }
+    
+    /**
+     * Determine Nx project type based on Maven packaging and characteristics
+     */
+    private fun determineProjectType(mavenProject: MavenProject): String {
+        return when (mavenProject.packaging.lowercase()) {
+            "pom" -> "library"  // Parent/aggregator POMs are libraries
+            "jar" -> "library"  // Default JAR projects to library - safer assumption
+            "war", "ear" -> "application"  // Web/enterprise applications are clearly applications
+            "maven-plugin" -> "library"   // Maven plugins are libraries
+            "aar" -> "library"            // Android libraries
+            else -> "library"             // Default to library for unknown types
+        }
+    }
+    
     
     private fun generateTargetsForProject(
         mavenProject: MavenProject,
@@ -149,171 +162,80 @@ class NxProjectConfigurationGenerator(
         return targets
     }
     
-    /**
-     * Generate target groups to organize Maven phases and goals logically
-     */
-    private fun generateTargetGroupsForProject(targets: ObjectNode, mavenProject: MavenProject): ObjectNode {
-        val targetGroups = objectMapper.createObjectNode()
-        
-        // Get all target names from the targets object
-        val targetNames = targets.fieldNames().asSequence().toList()
-        
-        // Maven Lifecycle Phases Groups
-        val buildPhases = targetNames.filter { it in setOf("validate", "initialize", "generate-sources", 
-            "process-sources", "generate-resources", "process-resources", "compile", "process-classes") }
-        if (buildPhases.isNotEmpty()) {
-            val buildGroup = objectMapper.createArrayNode()
-            buildPhases.forEach { buildGroup.add(it) }
-            targetGroups.put("build", buildGroup)
-        }
-        
-        val testPhases = targetNames.filter { it in setOf("generate-test-sources", "process-test-sources",
-            "generate-test-resources", "process-test-resources", "test-compile", "process-test-classes", "test") }
-        if (testPhases.isNotEmpty()) {
-            val testGroup = objectMapper.createArrayNode()
-            testPhases.forEach { testGroup.add(it) }
-            targetGroups.put("test", testGroup)
-        }
-        
-        val packagePhases = targetNames.filter { it in setOf("prepare-package", "package") }
-        if (packagePhases.isNotEmpty()) {
-            val packageGroup = objectMapper.createArrayNode()
-            packagePhases.forEach { packageGroup.add(it) }
-            targetGroups.put("package", packageGroup)
-        }
-        
-        val integrationPhases = targetNames.filter { it in setOf("pre-integration-test", "integration-test", 
-            "post-integration-test", "verify") }
-        if (integrationPhases.isNotEmpty()) {
-            val integrationGroup = objectMapper.createArrayNode()
-            integrationPhases.forEach { integrationGroup.add(it) }
-            targetGroups.put("integration", integrationGroup)
-        }
-        
-        val deployPhases = targetNames.filter { it in setOf("install", "deploy") }
-        if (deployPhases.isNotEmpty()) {
-            val deployGroup = objectMapper.createArrayNode()
-            deployPhases.forEach { deployGroup.add(it) }
-            targetGroups.put("deploy", deployGroup)
-        }
-        
-        val cleanPhases = targetNames.filter { it in setOf("pre-clean", "clean", "post-clean") }
-        if (cleanPhases.isNotEmpty()) {
-            val cleanGroup = objectMapper.createArrayNode()
-            cleanPhases.forEach { cleanGroup.add(it) }
-            targetGroups.put("clean", cleanGroup)
-        }
-        
-        val sitePhases = targetNames.filter { it in setOf("pre-site", "site", "post-site", "site-deploy") }
-        if (sitePhases.isNotEmpty()) {
-            val siteGroup = objectMapper.createArrayNode()
-            sitePhases.forEach { siteGroup.add(it) }
-            targetGroups.put("site", siteGroup)
-        }
-        
-        // Goal-based groups for common Maven plugins
-        val compilerGoals = targetNames.filter { it.contains("compile") && !testPhases.contains(it) }
-        if (compilerGoals.isNotEmpty()) {
-            val compilerGroup = objectMapper.createArrayNode()
-            compilerGoals.forEach { compilerGroup.add(it) }
-            targetGroups.put("compiler", compilerGroup)
-        }
-        
-        val testGoals = targetNames.filter { it.contains("test") || it.contains("surefire") || it.contains("failsafe") }
-        if (testGoals.isNotEmpty()) {
-            val testToolsGroup = objectMapper.createArrayNode()
-            testGoals.forEach { testToolsGroup.add(it) }
-            targetGroups.put("test-tools", testToolsGroup)
-        }
-        
-        val jarGoals = targetNames.filter { it.contains("jar") && !it.contains("test") }
-        if (jarGoals.isNotEmpty()) {
-            val jarGroup = objectMapper.createArrayNode()
-            jarGoals.forEach { jarGroup.add(it) }
-            targetGroups.put("jar", jarGroup)
-        }
-        
-        // Packaging-specific groups
-        when (mavenProject.packaging) {
-            "war" -> {
-                val warGoals = targetNames.filter { it.contains("war") }
-                if (warGoals.isNotEmpty()) {
-                    val warGroup = objectMapper.createArrayNode()
-                    warGoals.forEach { warGroup.add(it) }
-                    targetGroups.put("war", warGroup)
-                }
-            }
-            "ear" -> {
-                val earGoals = targetNames.filter { it.contains("ear") }
-                if (earGoals.isNotEmpty()) {
-                    val earGroup = objectMapper.createArrayNode()
-                    earGoals.forEach { earGroup.add(it) }
-                    targetGroups.put("ear", earGroup)
-                }
-            }
-            "maven-plugin" -> {
-                val pluginGoals = targetNames.filter { it.contains("plugin") }
-                if (pluginGoals.isNotEmpty()) {
-                    val pluginGroup = objectMapper.createArrayNode()
-                    pluginGoals.forEach { pluginGroup.add(it) }
-                    targetGroups.put("plugin", pluginGroup)
-                }
-            }
-        }
-        
-        // Quality and analysis groups
-        val qualityGoals = targetNames.filter { 
-            it.contains("checkstyle") || it.contains("pmd") || it.contains("spotbugs") || 
-            it.contains("jacoco") || it.contains("sonar") 
-        }
-        if (qualityGoals.isNotEmpty()) {
-            val qualityGroup = objectMapper.createArrayNode()
-            qualityGoals.forEach { qualityGroup.add(it) }
-            targetGroups.put("quality", qualityGroup)
-        }
-        
-        val docsGoals = targetNames.filter { 
-            it.contains("javadoc") || it.contains("asciidoc") || it.contains("antora") 
-        }
-        if (docsGoals.isNotEmpty()) {
-            val docsGroup = objectMapper.createArrayNode()
-            docsGoals.forEach { docsGroup.add(it) }
-            targetGroups.put("docs", docsGroup)
-        }
-        
-        return targetGroups
-    }
     
     /**
-     * Apply caching configuration based on Maven Reactor analysis
+     * Apply caching configuration using Maven's native build cache analysis
      */
     private fun applyReactorBasedCaching(target: ObjectNode, phase: String, mavenProject: MavenProject) {
         try {
-            // TODO: Integrate with MavenBuildCacheIntegration for individual mojo executions
-            // For now, use basic defaults since we removed the old hardcoded logic
+            // Try to get Maven Build Cache Extension decision for common mojo executions
+            val decision = when (phase) {
+                "compile" -> tryGetMavenCacheDecision("org.apache.maven.plugins:maven-compiler-plugin:compile", mavenProject)
+                "test-compile" -> tryGetMavenCacheDecision("org.apache.maven.plugins:maven-compiler-plugin:testCompile", mavenProject)
+                "test" -> tryGetMavenCacheDecision("org.apache.maven.plugins:maven-surefire-plugin:test", mavenProject)
+                "package" -> tryGetMavenCacheDecision("org.apache.maven.plugins:maven-jar-plugin:jar", mavenProject)
+                else -> null
+            }
             
-            // Apply basic defaults - only cache compile and test phases
-            val cacheable = phase in setOf("compile", "test-compile", "test", "package")
-            target.put("cache", cacheable)
+            if (decision != null && decision.cacheable) {
+                // Apply Maven's cacheability decision with native inputs/outputs
+                buildCacheIntegration.applyCacheabilityToTarget(target, decision)
+                log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${decision.cacheable} (${decision.reason}) with ${decision.inputs.size} inputs")
+            } else {
+                // Fallback to basic logic
+                applyBasicCachingFallback(target, phase, mavenProject)
+            }
             
             // Always enable parallelism for phases that don't modify external state
             val canRunInParallel = !isExternalStateModifyingPhase(phase)
             target.put("parallelism", canRunInParallel)
             
-            if (cacheable) {
-                // Add basic inputs and outputs for cacheable phases
-                addBasicCacheInputsAndOutputs(target, phase, mavenProject)
-            }
-            
-            // Log the caching decision for debugging
-            log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${cacheable} (basic fallback)")
-            
         } catch (e: Exception) {
-            log.warn("Failed to apply Reactor-based caching for phase $phase", e)
+            log.warn("Failed to apply Maven-based caching for phase $phase", e)
             // Fallback to safe defaults
-            target.put("cache", false)
-            target.put("parallelism", true)
+            applyBasicCachingFallback(target, phase, mavenProject)
         }
+    }
+    
+    /**
+     * Try to get Maven Build Cache Extension decision for a specific mojo execution
+     */
+    private fun tryGetMavenCacheDecision(mojoKey: String, mavenProject: MavenProject): CacheabilityDecision? {
+        return try {
+            // Create a mock MojoExecution for the given mojo
+            val parts = mojoKey.split(":")
+            if (parts.size >= 3) {
+                val mockExecution = org.apache.maven.plugin.MojoExecution(
+                    org.apache.maven.model.Plugin().apply {
+                        groupId = parts[0]
+                        artifactId = parts[1]
+                    },
+                    parts[2],
+                    "default-${parts[2]}"
+                )
+                buildCacheIntegration.isMojoExecutionCacheable(mockExecution, mavenProject)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            log.debug("Failed to check cacheability for $mojoKey", e)
+            null
+        }
+    }
+    
+    /**
+     * Fallback caching logic when Maven Build Cache Integration is not available
+     */
+    private fun applyBasicCachingFallback(target: ObjectNode, phase: String, mavenProject: MavenProject) {
+        val cacheable = phase in setOf("compile", "test-compile", "test", "package")
+        target.put("cache", cacheable)
+        target.put("parallelism", true)
+        
+        if (cacheable) {
+            addBasicCacheInputsAndOutputs(target, phase, mavenProject)
+        }
+        
+        log.info("Phase '$phase' in ${mavenProject.artifactId}: cache=${cacheable} (basic fallback)")
     }
     
     private fun isExternalStateModifyingPhase(phase: String): Boolean {
@@ -325,19 +247,18 @@ class NxProjectConfigurationGenerator(
         phase: String, 
         mavenProject: MavenProject
     ) {
-        // Add standard inputs
+        // Use Maven project model to derive precise inputs instead of generic "default"
         val inputs = objectMapper.createArrayNode()
-        inputs.add("default") // Source files
-        inputs.add("{projectRoot}/pom.xml") // POM file
         
-        // Add dependency inputs for non-clean phases
-        if (phase != "clean") {
-            inputs.add("^production") // Dependencies' production outputs
-        }
+        // Add actual source directories from Maven model
+        addMavenSourceInputs(inputs, phase, mavenProject)
         
-        // Add test-specific inputs for test phases
-        if (phase.contains("test")) {
-            inputs.add("{projectRoot}/src/test/**/*")
+        // Add POM file - always affects all targets
+        inputs.add("{projectRoot}/pom.xml")
+        
+        // Add dependency inputs for phases that depend on other modules
+        if (phase != "clean" && phase != "validate") {
+            inputs.add("^production") // Dependencies' outputs
         }
         
         target.put("inputs", inputs)
@@ -365,6 +286,68 @@ class NxProjectConfigurationGenerator(
         
         if (outputs.size() > 0) {
             target.put("outputs", outputs)
+        }
+    }
+    
+    /**
+     * Add source directory inputs based on Maven project model
+     */
+    private fun addMavenSourceInputs(inputs: com.fasterxml.jackson.databind.node.ArrayNode, phase: String, mavenProject: MavenProject) {
+        when (phase) {
+            "compile", "process-sources", "generate-sources", "process-resources", "generate-resources" -> {
+                // Main source directories
+                mavenProject.compileSourceRoots?.forEach { sourceRoot ->
+                    if (File(sourceRoot).exists()) {
+                        inputs.add(convertToNxPattern(sourceRoot, mavenProject))
+                    }
+                }
+                // Resource directories
+                mavenProject.resources?.forEach { resource ->
+                    if (File(resource.directory).exists()) {
+                        inputs.add(convertToNxPattern(resource.directory, mavenProject))
+                    }
+                }
+            }
+            "test", "test-compile", "process-test-sources", "generate-test-sources", "process-test-resources", "generate-test-resources" -> {
+                // Include main sources (tests depend on main)
+                addMavenSourceInputs(inputs, "compile", mavenProject)
+                
+                // Test source directories
+                mavenProject.testCompileSourceRoots?.forEach { sourceRoot ->
+                    if (File(sourceRoot).exists()) {
+                        inputs.add(convertToNxPattern(sourceRoot, mavenProject))
+                    }
+                }
+                // Test resource directories
+                mavenProject.testResources?.forEach { resource ->
+                    if (File(resource.directory).exists()) {
+                        inputs.add(convertToNxPattern(resource.directory, mavenProject))
+                    }
+                }
+            }
+            "package", "verify", "install", "deploy" -> {
+                // Package phases depend on compiled output, not source
+                inputs.add("{projectRoot}/target/classes/**/*")
+                if (File("${mavenProject.build.directory}/test-classes").exists()) {
+                    inputs.add("{projectRoot}/target/test-classes/**/*")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Convert absolute Maven path to Nx relative pattern
+     */
+    private fun convertToNxPattern(absolutePath: String, mavenProject: MavenProject): String {
+        val projectRoot = File(mavenProject.basedir.absolutePath)
+        val sourcePath = File(absolutePath)
+        
+        return try {
+            val relativePath = projectRoot.toPath().relativize(sourcePath.toPath())
+            "{projectRoot}/$relativePath/**/*"
+        } catch (e: Exception) {
+            // Fallback if path resolution fails
+            "{projectRoot}/src/**/*"
         }
     }
 }
