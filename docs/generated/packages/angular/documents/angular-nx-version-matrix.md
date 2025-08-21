@@ -54,8 +54,11 @@ Additionally, you can check the supported versions of Node and Typescript for th
 
 Below is a reference table that matches versions of [Angular Rspack](/technologies/angular/angular-rspack/introduction) to the versions of Angular and Nx that is compatible with it.
 
-| Angular Rspack | Angular     | Nx                  |
-| -------------- | ----------- | ------------------- |
-| ~20.8.0        | **~19.2.0** | >= 20.8.1 <= latest |
-| ~20.7.0        | **~19.2.0** | >= 20.8.1 <= latest |
-| ~20.6.0        | **~19.2.0** | >= 20.6.0 <= latest |
+| Angular Version | Angular Rspack Version | Nx Version          |
+| --------------- | ---------------------- | ------------------- |
+| ~20.2.0         | **latest**             | >= 21.5.0 <= latest |
+| ~20.1.0         | **~21.2.0**            | >= 21.1.0 <= 21.5.0 |
+| ~20.0.0         | **~21.1.0**            | >= 21.1.0 <= 21.5.0 |
+| ~19.2.0         | **~20.8.0**            | >= 20.8.1 <= 21.1.0 |
+| ~19.2.0         | **~20.7.0**            | >= 20.8.1 <= 21.1.0 |
+| ~19.2.0         | **~20.6.0**            | >= 20.6.0 <= 21.1.0 |
