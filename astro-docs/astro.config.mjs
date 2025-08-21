@@ -13,6 +13,14 @@ import { redirects } from './redirects.mts';
 export default defineConfig({
   vite: { plugins: [tailwindcss()] },
   site: 'https://docs.nx.dev',
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+      config: {
+        limitInputPixels: false, // Disable pixel limit
+      },
+    },
+  },
   // This adapter doesn't support local previews, so only load it on Netlify.
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
   redirects,
