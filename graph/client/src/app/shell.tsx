@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import {
+import type {
   GraphError,
   ProjectGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';

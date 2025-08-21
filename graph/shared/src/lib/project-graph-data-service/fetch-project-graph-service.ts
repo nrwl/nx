@@ -1,8 +1,7 @@
-import type {
-  ProjectGraphClientResponse,
-  TaskGraphClientResponse,
-} from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
+import type { TaskGraphClientResponse } from '../task-graph-client-response';
 
 export class FetchProjectGraphService implements ProjectGraphService {
   private taskInputsUrl: string;
@@ -48,7 +47,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
   async getSpecificTaskGraph(
     url: string,
     projects: string[] | null,
-    target: string,
+    targets: string[],
     configuration?: string
   ): Promise<TaskGraphClientResponse> {
     const params = new URLSearchParams();
@@ -57,7 +56,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
       params.append('projects', projects.join(' '));
     }
 
-    params.append('target', target);
+    params.append('targets', targets.join(' '));
 
     if (configuration) {
       params.append('configuration', configuration);

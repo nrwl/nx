@@ -1,8 +1,7 @@
-import type {
-  ProjectGraphClientResponse,
-  TaskGraphClientResponse,
-} from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
+import type { TaskGraphClientResponse } from '../task-graph-client-response';
 
 export class LocalProjectGraphService implements ProjectGraphService {
   async getHash(): Promise<string> {
@@ -28,7 +27,7 @@ export class LocalProjectGraphService implements ProjectGraphService {
   async getSpecificTaskGraph(
     _url: string,
     projects: string | string[] | null,
-    target: string,
+    targets: string[],
     configuration?: string
   ): Promise<TaskGraphClientResponse> {
     // In local mode, we still return the full task graph

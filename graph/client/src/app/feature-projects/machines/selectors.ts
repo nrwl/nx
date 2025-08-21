@@ -9,10 +9,6 @@ import {
   WorkspaceLayout,
 } from '../../interfaces';
 import { TracingAlgorithmType } from './interfaces';
-import {
-  CompositeProjectEdgeElementData,
-  CompositeProjectNodeElementData,
-} from '@nx/graph';
 
 export const allProjectsSelector: ProjectGraphSelector<
   ProjectGraphProjectNode[]

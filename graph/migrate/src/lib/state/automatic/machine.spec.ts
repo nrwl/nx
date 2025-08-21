@@ -1,7 +1,9 @@
 import { interpret } from 'xstate';
 import { machine } from './machine';
 /* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
 const makeMigration = (id: string): MigrationDetailsWithId => ({
