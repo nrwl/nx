@@ -38,6 +38,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     @Component
     private lateinit var lifecycleExecutor: LifecycleExecutor
 
+    @Component
+    private lateinit var pluginManager: org.apache.maven.plugin.PluginManager
+
     @Parameter(property = "nx.outputFile", defaultValue = "nx-maven-projects.json")
     private lateinit var outputFile: String
 
@@ -55,7 +58,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         
         // Initialize analyzers
         lifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log)
-        nxConfigGenerator = NxProjectConfigurationGenerator(objectMapper, dependencyResolver, workspaceRoot, log, session, lifecycleExecutor)
+        nxConfigGenerator = NxProjectConfigurationGenerator(objectMapper, dependencyResolver, workspaceRoot, log, session, lifecycleExecutor, pluginManager)
         
         try {
             val rootNode = objectMapper.createObjectNode()
