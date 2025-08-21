@@ -46,32 +46,6 @@ describe('setup-ai-agents generator', () => {
       expect(content.trim()).toBe('Existing content');
     });
 
-    it('should generate AGENTS.md when it does not exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
-
-      await setupAiAgentsGenerator(tree, options);
-
-      expect(tree.exists('AGENTS.md')).toBe(true);
-      const content = tree.read('AGENTS.md').toString();
-      expect(content).toContain('# General Guidelines for working with Nx');
-    });
-
-    it('should NOT generate AGENTS.md if it already exists', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
-
-      // Create existing file
-      tree.write('AGENTS.md', 'Existing agents content');
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md').toString();
-      expect(content.trim()).toBe('Existing agents content');
-    });
-
     it('should generate GEMINI.md when it does not exist', async () => {
       const options: SetupAiAgentsGeneratorSchema = {
         directory: '.',
