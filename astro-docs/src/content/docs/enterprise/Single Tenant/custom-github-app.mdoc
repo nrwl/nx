@@ -8,19 +8,19 @@ Before creating your container, you'll need to create a GitHub app for your orga
 
 From GitHub, click on your profile picture and chose "Settings":
 
-![Step 1](/src/assets/enterprise/single-tenant/github_auth_step_1.png)
+![Step 1](../../../../assets/enterprise/single-tenant/github_auth_step_1.png)
 
 Then "Developer settings" from the left-hand menu:
 
-![Step 2](/src/assets/enterprise/single-tenant/github_auth_step_2.png)
+![Step 2](../../../../assets/enterprise/single-tenant/github_auth_step_2.png)
 
 Then "GitHub Apps":
 
-![Step 3](/src/assets/enterprise/single-tenant/github_custom_app_step_3.avif)
+![Step 3](../../../../assets/enterprise/single-tenant/github_custom_app_step_3.avif)
 
 And create a new GitHub app:
 
-![Step 4](/src/assets/enterprise/single-tenant/github_custom_app_step_5.avif)
+![Step 4](../../../../assets/enterprise/single-tenant/github_custom_app_step_5.avif)
 
 Give it a name, and a homepage URL. The callback URL is the important bit. It needs to be in this form:
 
@@ -34,23 +34,23 @@ https://my.nx-enterprise.url:8080/callbacks/github-user
 Configure a webhook and give it a secret:
 (the URL needs to match `https://<your-NxCloud-instance-URL>/nx-cloud/github-webhook-handler`)
 
-![Step 5](/src/assets/enterprise/single-tenant/webhook.png)
+![Step 5](../../../../assets/enterprise/single-tenant/webhook.png)
 
 Make sure you subscribe to the "Organization" events:
 
-![Step 5.1](/src/assets/enterprise/single-tenant/webhook_events.png)
+![Step 5.1](../../../../assets/enterprise/single-tenant/webhook_events.png)
 
 Once you create the app, keep a note of the Client ID and App ID:
 
-![Step 6](/src/assets/enterprise/single-tenant/github_custom_app_step_6.avif)
+![Step 6](../../../../assets/enterprise/single-tenant/github_custom_app_step_6.avif)
 
 Then generate a new client secret, and save it somewhere secure (we'll use it in a bit):
 
-![Step 7](/src/assets/enterprise/single-tenant/github_auth_step_7.png)
+![Step 7](../../../../assets/enterprise/single-tenant/github_auth_step_7.png)
 
 Finally, scroll down and download a private key:
 
-![Step 7](/src/assets/enterprise/single-tenant/private-key.png)
+![Step 7](../../../../assets/enterprise/single-tenant/private-key.png)
 
 Then navigate to your download location locally and stringify the contents of the private key:
 

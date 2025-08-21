@@ -20,7 +20,7 @@ Let's see how we can implement this solution:
 
 According to the framework you are using, use the corresponding generator to generate a new library. Let's suppose that you are using React and all your stories are using the `@storybook/react-vite` framework:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:library libs/storybook-host --bundler=none --unitTestRunner=none
 ```
 
@@ -30,7 +30,7 @@ Now, you have a new library, which will act as a shell/host for all your stories
 
 Now let's configure our new library to use Storybook, using the [`@nx/storybook:configuration` generator](/technologies/test-tools/storybook/api/generators/configuration). Run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/storybook:configuration storybook-host --interactionTests=true --uiFramework=@storybook/react-vite
 ```
 
@@ -46,7 +46,7 @@ Now it's time to import the stories of our other projects in our new library's `
 
 Here is a sample `libs/storybook-host/.storybook/main.ts` file:
 
-```javascript frame="none" meta="{6}"
+```javascript {% meta="{6}" %}
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -73,8 +73,8 @@ Notice how we only link the stories matching a specific pattern. According to yo
 
 For example:
 
-```javascript frame="none"
-// ...
+```javascript 
+// libs/storybook-host/.storybook/main.ts
 const config: StorybookConfig = {
   stories: [
     '../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
@@ -89,7 +89,7 @@ const config: StorybookConfig = {
 
 Here is a sample `libs/storybook-host/.storybook/tsconfig.json` file:
 
-```json frame="none" meta="{7}"
+```json {%  meta="{7}" %}
 // libs/storybook-host/.storybook/tsconfig.json
 {
   "extends": "../tsconfig.json",
@@ -107,19 +107,19 @@ Notice how in the `include` array we are specifying the paths to our stories, us
 
 Now you can serve, test or build your Storybook as you would, normally. And then you can publish the bundled app!
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx storybook storybook-host
 ```
 
 or
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build-storybook storybook-host
 ```
 
 or
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx test-storybook storybook-host
 ```
 
@@ -139,7 +139,7 @@ Your new Storybook host, essentially, depends on all the projects from which it 
 
 The good thing is that there is a solution to this. You can manually add the projects your Storybook host depends on as implicit dependencies in your project's `project.json` file:
 
-```json frame="none" meta="{6-14}"
+```json {% meta="{6-14}" %}
 // libs/storybook-host/project.json
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",

@@ -15,8 +15,7 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 
 ## Create Nx Workspace
 
-```shell frame="terminal" title="npx create-nx-workspace@latest acme --preset=apps"
-// filename: ~/
+```text {% frame="terminal" title="npx create-nx-workspace@latest acme --preset=apps" %}
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
@@ -30,14 +29,13 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx add @nx/remix
 ```
 
 ## Generate a Remix Application
 
-```shell frame="terminal" title="nx g @nx/remix:app apps/myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx g @nx/remix:app apps/myapp" %}
 NX  Generating @nx/remix:application
 
 ✔ What unit test runner should be used? · vitest
@@ -74,8 +72,7 @@ CREATE apps/myapp-e2e/.eslintrc.json
 
 1. To build your application run:
 
-```shell frame="terminal" title="nx build myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx build myapp" %}
 > nx run myapp:build
 
 Building Remix app in production mode...
@@ -89,8 +86,7 @@ NX   Successfully ran target build for project myapp (3s)
 
 2. To serve your application for use during development run:
 
-```shell frame="terminal" title="nx dev myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx dev myapp" %}
 > nx run myapp:dev
 
 💿 Building...
@@ -100,8 +96,7 @@ Remix App Server started at http://localhost:3000 (http://192.168.0.14:3000)
 
 3. To test the application using vitest run:
 
-```shell frame="terminal" title="nx test myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx test myapp" %}
 > nx run myapp:test
 
 RUN  v0.31.4 /Users/columferry/dev/nrwl/issues/remixguide/acme/apps/myapp
@@ -124,8 +119,7 @@ When developing your application, it often makes sense to split your codebase in
 
 To generate a library to use in your Remix application run:
 
-```shell frame="terminal" title="nx g @nx/remix:lib libs/login"
-// filename: ~/acme
+```text {% frame="terminal" title="nx g @nx/remix:lib libs/login" %}
 NX  Generating @nx/remix:library
 
 ✔ What test runner should be used? · vitest
@@ -152,7 +146,8 @@ You can then use the library by importing one of the exports into your applicati
 
 `apps/myapp/app/routes/index.tsx`
 
-```tsx frame="none"
+```tsx
+// apps/myapp/app/routes/index.tsx
 import { Login } from '@acme/login';
 
 export default function Index() {
@@ -172,8 +167,7 @@ You can also run test on your library:
 
 To generate a route for your application:
 
-```shell frame="terminal" title="nx g @nx/remix:route apps/myapp/app/routes/admin"
-// filename: ~/acme
+```text {% frame="terminal" title="nx g @nx/remix:route apps/myapp/app/routes/admin" %}
 NX  Generating @nx/remix:route
 
 CREATE apps/myapp/app/routes/admin.tsx
@@ -186,8 +180,7 @@ To use a Route Loader where the logic lives in your library, follow the steps be
 
 1. Generate a loader for your route:
 
-```shell frame="terminal" title="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx"
-// filename: ~/acme
+```shell {% frame="terminal" title="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx" %}
 NX  Generating @nx/remix:loader
 
 UPDATE apps/myapp/app/routes/admin.tsx
@@ -197,7 +190,8 @@ UPDATE apps/myapp/app/routes/admin.tsx
 
 `libs/login/src/lib/admin/admin.loader.ts`
 
-```ts frame="none"
+```ts
+// libs/login/src/lib/admin/admin.loader.ts
 import { json, LoaderFunctionArgs } from '@remix-run/node';
 
 export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
@@ -209,7 +203,8 @@ export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
 
 Export the function from the `libs/login/src/server.ts` file:
 
-```ts frame="none"
+```ts
+// libs/login/src/server.ts
 export * from './lib/admin/admin.loader';
 ```
 
@@ -217,7 +212,8 @@ export * from './lib/admin/admin.loader';
 
 Replace the default loader code:
 
-```tsx frame="none"
+```tsx
+// apps/myapp/app/routes/admin.tsx
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({
     message: 'Hello, world!',
@@ -227,7 +223,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 with
 
-```tsx frame="none"
+```tsx
+// apps/myapp/app/routes/admin.tsx
 import { adminLoader } from '@acme/login/server';
 
 export const loader = adminLoader;

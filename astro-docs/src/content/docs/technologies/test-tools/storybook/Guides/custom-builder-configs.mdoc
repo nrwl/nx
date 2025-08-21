@@ -17,7 +17,7 @@ If you want to add a global configuration for Webpack or Vite in your workspace,
 
 The `webpackFinal` field would look like this:
 
-```ts frame="none"
+```ts
 // .storybook/main.ts
 webpackFinal: async (config, { configType }) => {
   // Make whatever fine-grained changes you need that should apply to all storybook configs
@@ -31,7 +31,7 @@ webpackFinal: async (config, { configType }) => {
 
 The `viteFinal` field would look like this:
 
-```ts frame="none"
+```ts
 // .storybook/main.ts
 async viteFinal(config, { configType }) {
    if (configType === 'DEVELOPMENT') {
@@ -48,7 +48,7 @@ async viteFinal(config, { configType }) {
 
 In the `viteFinal` case, you would have to import the `mergeConfig` function from `vite`. So, on the top of your root `.storybook/main.js|ts` file, you would have to add:
 
-```ts frame="none"
+```ts
 // .storybook/main.ts
 import { mergeConfig } from 'vite';
 ```
@@ -59,7 +59,7 @@ import { mergeConfig } from 'vite';
 
 You can customize the `webpack` configuration for a specific project by adding a `webpackFinal` field in your project-specific `.storybook/main.js|ts` file, like this:
 
-```ts frame="none"
+```ts
 // apps/my-react-webpack-app/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-webpack5';
 

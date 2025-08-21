@@ -18,7 +18,7 @@ The process of building an Angular Rspack application with i18n is similar to bu
 
 It is assumed you have an `i18n` property in your `project.json` file that looks like this:
 
-```json frame="none" meta="{ranges: '3-10'}"
+```json meta="{3-10}"
 {
   "name": "my-app",
   "i18n": {
@@ -44,7 +44,7 @@ You simply need to run `nx extract-i18n my-app` to extract the messages.
 
 To enable i18n, you need to add the following configuration to your `rspack.config` file:
 
-```js frame="none" meta="{ranges: '7,15'}"
+```js meta="{7,15}"
 export default createConfig(
   {
     options: {
@@ -70,19 +70,17 @@ export default createConfig(
 
 After configuring the Rspack configuration, you can run the build with the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx build my-app
 ```
 
 It will output bundles in the `dist` directory with the following structure:
-
-```text frame="none"
-dist
-├── browser
-│   ├── [localeCode]
-│   │   ├── main.js
-│   │   ├── main.js.map
-│   │   ├── index.html
-│   │   ├── styles.css
-│   │   ├── ...
-```
+{%filetree %}
+- dist
+  - browser
+    - [localeCode]
+      - main.js
+      - main.js.map
+      - index.html
+      - styles.css
+{% /filetree %}

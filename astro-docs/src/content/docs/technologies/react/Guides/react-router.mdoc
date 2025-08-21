@@ -13,8 +13,7 @@ We'll show you how to create a [React Router](https://reactrouter.com/home) appl
 
 ## Create Nx Workspace
 
-```shell frame="terminal" title="npx create-nx-workspace@latest acme --preset=apps"
-// filename: ~/
+```text {% frame="terminal" title="npx create-nx-workspace@latest acme --preset=apps" %}
 
 ✔ Which stack do you want to use? · react
 ✔ What framework would you like to use? · none
@@ -26,7 +25,7 @@ We'll show you how to create a [React Router](https://reactrouter.com/home) appl
 
 If you already have an existing React Router application and want to add Nx to it you can do so by running the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx@latest init
 ```
 
@@ -34,9 +33,8 @@ npx nx@latest init
 
 If you would like to generate a new React Router application, you can do so by running the following command in your Nx workspace
 
-```shell frame="terminal" title="nx g @nx/react:app apps/happynrwl --routing --use-react-router"
-// filename: ~/acme
-
+```shell {% frame="none" %}
+nx g @nx/react:app apps/happynrwl --routing --use-react-router
 ```
 
 There is no need to install any additional plugins to use React Router with Nx. The `@nx/react` plugin already includes support for React Router.
@@ -49,8 +47,7 @@ Now that you have created your React Router application with Nx you can build, s
 
 To build your application run the following command:
 
-```shell frame="terminal" title="nx build happynrwl"
-// filename: ~/acme
+```text {% frame="terminal" title="nx build happynrwl" %}
 
 > nx run acme:happynrwl
 
@@ -81,8 +78,7 @@ build/server/index.js             43.12 kB
 
 To serve your application for development use the following command:
 
-```shell frame="terminal" title="nx dev happynrwl"
-// filename: ~/acme
+```text {% frame="terminal" title="nx dev happynrwl" %}
 > nx run happynrwl:dev
 
 > react-router dev
@@ -96,8 +92,7 @@ To serve your application for development use the following command:
 
 To serve your application's production build use the following command:
 
-```shell frame="terminal" title="nx start happynrwl"
-// filename: ~/acme
+```text {% frame="terminal" title="nx start happynrwl" %}
 > nx run happynrwl:build
 
 > react-router build
@@ -133,7 +128,7 @@ The default port for `production` is 3000 if you want to change it use the PORT 
 
 To unit test the application run the following command:
 
-```shell frame="terminal" title="nx test happynrwl"
+```text {% frame="terminal" title="nx test happynrwl" %}
 // filename: ~/acme
 > nx run happynrwl:test
 
@@ -155,8 +150,7 @@ To unit test the application run the following command:
 
 By default a route is generated for you when you create a new React Router application. If you would like to generate a new route you can do so by running the following command:
 
-```shell frame="terminal" title="nx g @nx/react:component --path=apps/happynrwl/app/routes/contact"
-// filename: ~/happynrwl
+```shell {% frame="terminal" title="nx g @nx/react:component --path=apps/happynrwl/app/routes/contact" %}
 CREATE apps/happynrwl/app/routes/contact.tsx
 CREATE apps/happynrwl/app/routes/contact.module.scss
 CREATE apps/happynrwl/app/routes/contact.spec.tsx
@@ -164,7 +158,8 @@ CREATE apps/happynrwl/app/routes/contact.spec.tsx
 
 Now we have create a new route called `contact` in our application. Let's add that route to our `routes.tsx` file.
 
-```tsx frame="none"
+```tsx
+// routes.tsx
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [

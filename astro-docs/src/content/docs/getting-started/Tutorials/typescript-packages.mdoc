@@ -17,15 +17,15 @@ What you'll learn:
 
 ## Ready to start?
 
-{% callout type="note" title="Prerequisites" %}
+{% aside type="note" title="Prerequisites" %}
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
-{% /callout %}
+{% /aside %}
 
 ### Step 1: Creating a new Nx TypeScript workspace
 
 Let's create your workspace. The setup process takes about 2 minutes and will configure TypeScript, testing, and CI/CD automatically.
 
-{% call-to-action variant="gradient" title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
+{% call_to_action variant="gradient" title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -37,7 +37,7 @@ Please verify closely that you have the following setup:
 
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
-![](/src/assets/tutorials/connected-workspace.avif)
+![](../../../../assets/tutorials/connected-workspace.avif)
 
 If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=typescript).
 
@@ -47,24 +47,26 @@ This is important for using remote caching and self-healing in CI later in the t
 
 Let's take a look at the structure of our new Nx workspace:
 
-```plaintext
-acme
-├─ .github
-│  └─ workflows
-│     └─ ci.yml
-├─ .nx
-│  └─ ...
-├─ packages
-│  └─ .gitkeep
-├─ README.md
-├─ .prettierignore
-├─ .prettierrc
-├─ nx.json
-├─ package-lock.json
-├─ package.json
-├─ tsconfig.base.json
-└─ tsconfig.json
-```
+{%filetree %}
+- acme/
+  - .github/
+    - workflows/
+      - ci.yml
+  - .nx/
+    - ...
+  - packages/
+    - .gitkeep
+  - README.md
+  - .prettierignore
+  - .prettierrc
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+  - tsconfig.json
+
+{% /filetree %}
+
 
 Here are some files that might jump to your eyes:
 
@@ -80,27 +82,27 @@ Let's create two TypeScript packages that demonstrate how to structure a TypeScr
 
 First, generate the `animal` package:
 
-```shell
+```shell {% frame="none" %}
 npx nx g @nx/js:lib packages/animal --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
 Then generate the `zoo` package:
 
-```shell
+```shell {% frame="none" %}
 npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
 Running these commands should lead to new directories and files in your workspace:
 
-```plaintext
-acme
-├── packages
-│   ├── animal
-│   └── zoo
-├── ...
-└── vitest.workspace.ts
-```
+{%filetree %}
+- acme/
+  - packages/
+    - animal/
+    - zoo/
+    - ...
+  - vitest.workspace.ts
 
+{%/filetree %}
 Let's add some code to our packages. First, add the following code to the `animal` package:
 
 ```ts {6-19}
@@ -148,13 +150,13 @@ console.log(zoo());
 
 To build your packages, run:
 
-```shell
+```shell {% frame="none" %}
 npx nx build animal
 ```
 
 This creates a compiled version of your package in the `dist/packages/animal` folder. Since the `zoo` package depends on `animal`, building `zoo` will automatically build `animal` first:
 
-```shell
+```shell {% frame="none" %}
 npx nx build zoo
 ```
 
@@ -162,13 +164,13 @@ You'll see both packages are built, with outputs in their respective `dist` fold
 
 You can also run the `zoo` package to see it in action:
 
-```shell
+```shell {% frame="none" %}
 node packages/zoo/dist/index.js
 ```
 
 Nx uses the following syntax to run tasks:
 
-![Syntax for Running Tasks in Nx](/src/assets/getting-started/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](../../../../assets/getting-started/run-target-syntax.svg)
 
 ### Inferred Tasks
 
@@ -201,13 +203,12 @@ In `nx.json` there's already the `@nx/js` plugin registered which automatically 
 
 To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
-```shell
+```shell {% frame="none" %}
 npx nx show project animal
 ```
 
-{% project-details title="Project Details View (Simplified)" %}
+{% project_details title="Project Details View (Simplified)" %}
 
-```json
 {
   "project": {
     "name": "@acme/animal",
@@ -328,15 +329,14 @@ npx nx show project animal
     "tags": ["packages/animal/project.json", "nx/core/project-json"]
   }
 }
-```
 
-{% /project-details %}
+{% /project_details %}
 
 The `@nx/js` plugin automatically configures both the build and typecheck tasks based on your TypeScript configuration. Notice also how the outputs are set to `{projectRoot}/dist` - this is where your compiled TypeScript files will be placed, and it defined by the `outDir` option in `packages/animal/tsconfig.lib.json`.
 
-{% callout type="note" title="Overriding inferred task options" %}
+{% aside type="note" title="Overriding inferred task options" %}
 You can override the options for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
-{% /callout %}
+{% /aside %}
 
 ## Code Sharing with Local Libraries
 
@@ -352,20 +352,21 @@ When you develop packages, creating shared utilities that multiple packages can 
 
 Let's create a shared utilities library that both our existing packages can use:
 
-```shell
+```shell {% frame="none" %}
 npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
 Now we have:
 
-```plaintext
-acme
-├── packages
-│   ├── animal
-│   ├── util
-│   └── zoo
-└── ...
-```
+{%filetree %}
+- acme/
+  - packages/
+    - animal/
+    - util/
+    - zoo/
+  - ...
+
+{%/filetree %}
 
 Let's add a utility function that our packages can share:
 
@@ -430,7 +431,7 @@ Now when you run `npx nx build zoo`, Nx will automatically build all the depende
 
 Run the `zoo` package to see the updated output format:
 
-```shell
+```shell {% frame="none" %}
 node packages/zoo/dist/index.js
 ```
 
@@ -440,7 +441,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell
+```shell {% frame="none" %}
 npx nx graph
 ```
 
@@ -448,7 +449,6 @@ You should be able to see something similar to the following in your browser.
 
 {% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -487,13 +487,12 @@ You should be able to see something similar to the following in your browser.
   "focus": null,
   "groupByFolder": false
 }
-```
 
 {% /graph %}
 
 Let's create a git branch with our new packages so we can open a pull request later:
 
-```shell
+```shell {% frame="none" %}
 git checkout -b add-zoo-packages
 git add .
 git commit -m 'add animal and zoo packages'
@@ -505,13 +504,13 @@ Our packages come with preconfigured building and testing . Let's intentionally 
 
 You can run tests for individual packages:
 
-```shell
+```shell {% frame="none" %}
 npx nx build zoo
 ```
 
 Or run multiple tasks in parallel across all packages:
 
-```shell
+```shell {% frame="none" %}
 npx nx run-many -t build test
 ```
 
@@ -525,7 +524,7 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, there will be a note that a matching cache result was found and therefore the task was not run again.
 
-```{% command="npx nx run-many -t built test" path="~/acme" %}
+```text {% title="npx nx run-many -t built test" frame="terminal" %}
       ✔  nx run @acme/util:build
    ✔  nx run @acme/util:test
    ✔  nx run @acme/animal:test
@@ -590,24 +589,24 @@ jobs:
 
 You will also need to install the [Nx Console](/getting-started/editor-setup) editor extension for VS Code, Cursor, or IntelliJ. For the complete AI setup guide, see our [AI integration documentation](/getting-started/ai-integration).
 
-{% install-nx-console /%}
+{% install_nx_console /%}
 
 Now, let's push the `add-zoo-packages` branch to GitHub and open a new pull request.
 
-```shell
+```shell {% frame="none" %}
 git push origin add-zoo-packages
 # Don't forget to open a pull request on GitHub
 ```
 
 As expected, the CI check may show failures or issues. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and if there are any issues, it may have suggested fixes. This means that you don't have to waste time **babysitting your PRs**, and fixes can be applied directly from your editor.
 
-![Nx Console with notification](/src/assets/tutorials/ts-ci-notification.avif)
+![Nx Console with notification](../../../../assets/tutorials/ts-ci-notification.avif)
 
 ### Fix CI from Your Editor
 
 From the Nx Console notification, if there's a suggested fix (such as fixing the typo "formated" to "formatted"), you can click `Show Suggested Fix` button. Review the suggested fix and approve it by clicking `Apply Fix`.
 
-![Suggestion to fix the typo in the editor](/src/assets/tutorials/ts-ci-suggestion.avif)
+![Suggestion to fix the typo in the editor](../../../../assets/tutorials/ts-ci-suggestion.avif)
 
 You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
@@ -615,23 +614,23 @@ You didn't have to leave your editor or do any manual work to fix it. This is th
 
 After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
-![Notication of successful run](/src/assets/tutorials/ts-remote-cache-notification.avif)
+![Notication of successful run](../../../../assets/tutorials/ts-remote-cache-notification.avif)
 
 When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The tasks for packages that weren't affected by your change were read from remote cache and did not have to run again, thus each taking less than a second to complete.
 
-![Nx Cloud run showing remote cache hits](/src/assets/tutorials/ts-remote-cache-cloud.avif)
+![Nx Cloud run showing remote cache hits](../../../../assets/tutorials/ts-remote-cache-cloud.avif)
 
 This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/ci/features/remote-cache).
 
 This significantly speeds up the time to green for your pull requests, because subsequent changes to them have a good chance to replay tasks from cache.
 
-{% callout type="note" title="Remote Cache Outputs" %}
+{% aside type="note" title="Remote Cache Outputs" %}
 Outputs from cached tasks, such as the `dist` folder for builds or `coverage` folder for tests, are also read from cache. Even though a task was not run again, its outputs are available. The [Cache Task Results](/features/cache-task-results) page provides more details on caching.
-{% /callout %}
+{% /aside %}
 
 This pull request is now ready to be merged with the help of Nx Cloud's self-healing CI and remote caching.
 
-![Pull request is green](/src/assets/tutorials/ts-ci-green.avif)
+![Pull request is green](../../../../assets/tutorials/ts-ci-green.avif)
 
 The next section deals with publishing packages to a registry like NPM, but if you are not interested in publishing your packages, you can skip to [the end](#next-steps).
 
@@ -657,13 +656,13 @@ Now you're ready to use the `nx release` command to publish your packages. The f
 
 To preview your first release, run:
 
-```shell
+```shell {% frame="none" %}
 npx nx release --first-release --dry-run
 ```
 
 The command will ask you a series of questions and then show you what the results would be. Once you are happy with the results, run it again without the `--dry-run` flag:
 
-```shell
+```shell {% frame="none" %}
 npx nx release --first-release
 ```
 

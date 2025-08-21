@@ -13,7 +13,7 @@ Expo is a set of tools built on top of React Native. The Nx Plugin for Expo cont
 
 To create a new workspace with Expo, run the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
  npx create-nx-workspace@latest --preset=expo --appName=your-app-name
 ```
 
@@ -25,7 +25,7 @@ Make sure to install the `@nx/expo` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/expo` by running the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx add @nx/expo
 ```
 
@@ -40,7 +40,8 @@ The `@nx/expo` plugin will create a task for any project that has an app configu
 
 In the app config file, it needs to have key `expo`:
 
-```json frame="none"
+```json
+// app.json
 {
   "expo": {
     "name": "MyProject",
@@ -57,8 +58,8 @@ To view inferred tasks for a project, open the [project details view](/concepts/
 
 The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 
-```json frame="none"
-// filename: nx.json
+```json
+// nx.json
 {
   "plugins": [
     {
@@ -85,13 +86,13 @@ Once a Expo configuration file has been identified, the targets are created with
 
 Add a new application to your workspace with the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/expo:app apps/my-app
 ```
 
 Start the application by running:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx start my-app
 ```
 
@@ -99,7 +100,7 @@ nx start my-app
 
 To generate a new library run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/expo:lib libs/your-lib-name
 ```
 
@@ -107,7 +108,7 @@ npx nx g @nx/expo:lib libs/your-lib-name
 
 To generate a new component inside library run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/expo:component libs/your-lib-name/src/your-component-name --export
 ```
 
@@ -119,7 +120,7 @@ Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.js
 
 You can start a development server by running:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx start <app-name>
 ```
 
@@ -127,12 +128,12 @@ nx start <app-name>
 
 You can compile your app locally with `run-ios` and `run-android` commands:
 
-{% tabs %}
+{% tabs syncKey="platform" %}
 {% tabitem label="iOS" %}
 
 Compile for iOS:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run-ios <app-name>
 ```
 
@@ -141,7 +142,7 @@ nx run-ios <app-name>
 
 Compile for Android:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run-android <app-name>
 ```
 
@@ -154,16 +155,16 @@ To run these commands, you need to have your development environment setup. To r
 
 You can build your JavaScript bundle using Metro bundler by running:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx export <app-name>
 ```
 
-{% tabs %}
+{% tabs syncKey="platform" %}
 {% tabitem label="All Platforms" %}
 
 Compile for all platforms:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx export <app-name> --platform=all
 ```
 
@@ -172,7 +173,7 @@ nx export <app-name> --platform=all
 
 Compile for iOS:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx export <app-name> --platform=ios
 ```
 
@@ -181,7 +182,7 @@ nx export <app-name> --platform=ios
 
 Compile for Android:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx export <app-name> --platform=android
 ```
 
@@ -190,7 +191,7 @@ nx export <app-name> --platform=android
 
 Compile for Web:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx export <app-name> --platform=web
 ```
 
@@ -201,16 +202,16 @@ nx export <app-name> --platform=web
 
 To generate native code, run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx prebuild <app-name>
 ```
 
-{% tabs %}
+{% tabs syncKey="platform" %}
 {% tabitem label="All Platforms" %}
 
 Generate for all platforms:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx prebuild <app-name> --platform=all
 ```
 
@@ -219,7 +220,7 @@ nx prebuild <app-name> --platform=all
 
 Generate for iOS:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx prebuild <app-name> --platform=ios
 ```
 
@@ -228,7 +229,7 @@ nx prebuild <app-name> --platform=ios
 
 Generate for Android:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx prebuild <app-name> --platform=android
 ```
 
@@ -239,7 +240,7 @@ nx prebuild <app-name> --platform=android
 
 To install packages that is compatible with current version of Expo, run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx install <app-name>
 ```
 
@@ -247,7 +248,7 @@ Unlike npm's `install` command, this `install` command will install the exact ri
 
 To install a specify NPM package, run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx install <app-name> --packages=<packpage-name>
 nx install <app-name> --packages=<packpage-name-1>,<packpage-name-2>,<packpage-name-3>
 ```
@@ -259,7 +260,7 @@ To check and fix package versions, run:
 
 Check which packages needed to be updated:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx install <app-name> --check
 ```
 
@@ -268,7 +269,7 @@ nx install <app-name> --check
 
 Automatically update invalid packages versions:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx install <app-name> --fix
 ```
 
@@ -281,19 +282,19 @@ Expo Application Services (EAS) are deeply integrated cloud services for Expo an
 
 To run an EAS build:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build <app-name>
 ```
 
 If you are not signed into an EAS account, run the following command to log in:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx eas login
 ```
 
 To check the details of your build status, run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build-list  <app-name>
 ```
 
@@ -303,7 +304,7 @@ EAS Submit is a hosted service for uploading and submitting your app binaries to
 
 To submit an EAS build:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx submit <app-name>
 ```
 
@@ -315,7 +316,7 @@ EAS Update makes fixing small bugs and pushing quick fixes a snap in between app
 
 To update an EAS build:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx update <app-name>
 ```
 
@@ -323,7 +324,7 @@ nx update <app-name>
 
 You can run unit tests with:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx test <project-name>
 ```
 
