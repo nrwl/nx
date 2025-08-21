@@ -1,7 +1,6 @@
-import type {
-  ProjectGraphClientResponse,
-  TaskGraphClientResponse,
-} from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
+import type { TaskGraphClientResponse } from './task-graph-client-response';
 
 export abstract class ExternalApi {
   abstract openProjectDetails(projectName: string, targetName?: string): void;

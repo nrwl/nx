@@ -1,5 +1,6 @@
 import { Transition } from '@headlessui/react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+// nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
 import { ForwardedRef, forwardRef, useImperativeHandle, useRef } from 'react';
 import { ErrorRenderer } from './error-renderer';

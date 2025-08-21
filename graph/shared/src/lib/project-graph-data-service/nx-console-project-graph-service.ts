@@ -1,8 +1,7 @@
-import type {
-  ProjectGraphClientResponse,
-  TaskGraphClientResponse,
-} from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
+import type { TaskGraphClientResponse } from '../task-graph-client-response';
 
 export class NxConsoleProjectGraphService implements ProjectGraphService {
   async getHash(): Promise<string> {
@@ -27,7 +26,7 @@ export class NxConsoleProjectGraphService implements ProjectGraphService {
   async getSpecificTaskGraph(
     url: string,
     projects: string | string[] | null,
-    target: string,
+    targets: string[],
     configuration?: string
   ): Promise<TaskGraphClientResponse> {
     // Use the regular task graph loading through external API
