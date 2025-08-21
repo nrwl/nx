@@ -29,7 +29,7 @@
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
     "picocolors": "^1.1.0",
-    "webpack": "^5.88.0",
+    "webpack": "^5.101.3",
     "@rspack/core": "^1.3.8",
     "@module-federation/enhanced": "^0.18.0",
     "@module-federation/node": "^2.7.11",

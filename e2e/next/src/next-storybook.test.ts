@@ -6,7 +6,7 @@ import {
   uniq,
 } from '@nx/e2e-utils';
 
-// TODO(@Coly010): Please re-enable this when the test is fixed.
+// TODO(Colum): Re-enable this test once storybook releases a version with: https://github.com/storybookjs/storybook/pull/32306
 xdescribe('Next.js Storybook', () => {
   const appName = uniq('app');
   beforeAll(() => {
