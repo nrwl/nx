@@ -3,7 +3,7 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree } from '@nx/devkit';
 
-import { setupAiAgentsGenerator } from './setup-ai-agents';
+import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
 
 describe('setup-ai-agents generator', () => {

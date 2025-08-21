@@ -5792,13 +5792,13 @@
         "path": "/reference/core-api/workspace/generators/infer-targets",
         "type": "generator"
       },
-      "/reference/core-api/workspace/generators/setup-ai-agents": {
+      "/reference/core-api/workspace/generators/set-up-ai-agents": {
         "description": "Sets up the Nx MCP & rule files for common AI Agents",
-        "file": "generated/packages/workspace/generators/setup-ai-agents.json",
+        "file": "generated/packages/workspace/generators/set-up-ai-agents.json",
         "hidden": true,
-        "name": "setup-ai-agents",
-        "originalFilePath": "/packages/workspace/src/generators/setup-ai-agents/schema.json",
-        "path": "/reference/core-api/workspace/generators/setup-ai-agents",
+        "name": "set-up-ai-agents",
+        "originalFilePath": "/packages/workspace/src/generators/set-up-ai-agents/schema.json",
+        "path": "/reference/core-api/workspace/generators/set-up-ai-agents",
         "type": "generator"
       }
     },

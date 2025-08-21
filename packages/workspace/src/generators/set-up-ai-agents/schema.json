@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/schema",
   "$id": "SetupAiAgents",
-  "title": "Setup AI Agents",
+  "title": "Set Up AI Agents",
   "description": "Sets up the Nx MCP & rule files for common AI Agents",
   "type": "object",
   "properties": {
