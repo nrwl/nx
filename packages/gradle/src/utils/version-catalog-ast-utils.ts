@@ -1,7 +1,19 @@
-import { Tree } from '@nx/devkit';
+import { globAsync, Tree } from '@nx/devkit';
 import { parseTOML } from 'toml-eslint-parser';
-import { findVersionCatalogFiles } from './version-catalog-utils';
 import { gradleProjectGraphPluginName } from './versions';
+
+export async function findVersionCatalogFiles(tree: Tree): Promise<string[]> {
+  const versionCatalogPaths: string[] = [];
+
+  const globFiles = await globAsync(tree, ['**/gradle/*.versions.toml']);
+  for (const filePath of globFiles) {
+    if (!versionCatalogPaths.includes(filePath)) {
+      versionCatalogPaths.push(filePath);
+    }
+  }
+
+  return versionCatalogPaths;
+}
 
 /**
  * Reconstructs TOML content from source text with selective replacements
@@ -13,12 +25,15 @@ function reconstructTomlWithUpdates(
 ): string {
   // Sort updates by start position in reverse order to apply from end to beginning
   const sortedUpdates = updates.sort((a, b) => b.start - a.start);
-  
+
   let result = sourceText;
   for (const update of sortedUpdates) {
-    result = result.slice(0, update.start) + update.replacement + result.slice(update.end);
+    result =
+      result.slice(0, update.start) +
+      update.replacement +
+      result.slice(update.end);
   }
-  
+
   return result;
 }
 
@@ -27,7 +42,7 @@ function reconstructTomlWithUpdates(
  */
 function findKeyValueInTable(table: any, keyName: string): any | null {
   if (!table.body) return null;
-  
+
   for (const item of table.body) {
     if (item.type === 'TOMLKeyValue') {
       if (getKeyName(item.key) === keyName) {
@@ -44,14 +59,16 @@ function findKeyValueInTable(table: any, keyName: string): any | null {
 function getKeyName(key: any): string {
   if (key.type === 'TOMLKey' && key.keys && key.keys.length > 0) {
     // Handle TOMLKey type which contains an array of keys (for dotted keys like version.ref)
-    return key.keys.map((k: any) => {
-      if (k.type === 'TOMLBare') {
-        return k.name;
-      } else if (k.type === 'TOMLQuoted') {
-        return k.value;
-      }
-      return '';
-    }).join('.');
+    return key.keys
+      .map((k: any) => {
+        if (k.type === 'TOMLBare') {
+          return k.name;
+        } else if (k.type === 'TOMLQuoted') {
+          return k.value;
+        }
+        return '';
+      })
+      .join('.');
   } else if (key.type === 'TOMLBare') {
     return key.name;
   } else if (key.type === 'TOMLQuoted') {
@@ -78,7 +95,7 @@ function findPluginConfig(
   pluginName: string
 ): { keyValue: any; format: 'simple' | 'object' } | null {
   if (!pluginsTable.body) return null;
-  
+
   for (const item of pluginsTable.body) {
     if (item.type === 'TOMLKeyValue') {
       const value = item.value;
@@ -114,13 +131,15 @@ function findPluginsTable(ast: any): any | null {
       // Look through the body of the top-level table for [plugins] table
       for (const item of topLevel.body) {
         if (item.type === 'TOMLTable' && item.key && item.key.keys) {
-          const tableName = item.key.keys.map((key: any) => getKeyName(key)).join('.');
+          const tableName = item.key.keys
+            .map((key: any) => getKeyName(key))
+            .join('.');
           if (tableName === 'plugins') {
             return item;
           }
         }
       }
-      
+
       // If no [plugins] table found, check if there's a plugins key in the root table
       const pluginsKeyValue = findKeyValueInTable(topLevel, 'plugins');
       if (pluginsKeyValue?.value.type === 'TOMLInlineTable') {
@@ -128,7 +147,7 @@ function findPluginsTable(ast: any): any | null {
       }
     }
   }
-  
+
   return null;
 }
 
@@ -142,7 +161,9 @@ function findVersionsTable(ast: any): any | null {
       // Look through the body of the top-level table for [versions] table
       for (const item of topLevel.body) {
         if (item.type === 'TOMLTable' && item.key && item.key.keys) {
-          const tableName = item.key.keys.map((key: any) => getKeyName(key)).join('.');
+          const tableName = item.key.keys
+            .map((key: any) => getKeyName(key))
+            .join('.');
           if (tableName === 'versions') {
             return item;
           }
@@ -163,7 +184,8 @@ export function updatePluginVersionInCatalogAst(
 ): string | null {
   try {
     const ast = parseTOML(sourceText);
-    const updates: Array<{ start: number; end: number; replacement: string }> = [];
+    const updates: Array<{ start: number; end: number; replacement: string }> =
+      [];
 
     const pluginsTable = findPluginsTable(ast);
     if (!pluginsTable) {
@@ -181,55 +203,75 @@ export function updatePluginVersionInCatalogAst(
       // Update simple format: "plugin:version" -> "plugin:newVersion"
       const value = keyValue.value;
       const newValue = `${pluginName}:${newVersion}`;
-      
+
       // Preserve the quote style
       const quote = value.style === 'basic' ? '"' : "'";
       const replacement = `${quote}${newValue}${quote}`;
-      
+
       updates.push({
         start: value.range[0],
         end: value.range[1],
-        replacement
+        replacement,
       });
     } else if (format === 'object') {
       // Handle object format
       const inlineTable = keyValue.value;
-      
+
       // First, try to find direct version
       const versionKeyValue = findKeyValueInTable(inlineTable, 'version');
       if (versionKeyValue) {
         const versionValue = versionKeyValue.value;
-        if (versionValue.type === 'TOMLValue' && versionValue.kind === 'string') {
+        if (
+          versionValue.type === 'TOMLValue' &&
+          versionValue.kind === 'string'
+        ) {
           // Direct version update
           const quote = versionValue.style === 'basic' ? '"' : "'";
           const replacement = `${quote}${newVersion}${quote}`;
-          
+
           updates.push({
             start: versionValue.range[0],
             end: versionValue.range[1],
-            replacement
+            replacement,
           });
         }
       } else {
-        // Check for version.ref pattern
-        const versionRefKeyValue = findKeyValueInTable(inlineTable, 'version.ref');
+        // Check for version.ref pattern - look for either quoted or unquoted key
+        let versionRefKeyValue = findKeyValueInTable(
+          inlineTable,
+          'version.ref'
+        );
+        if (!versionRefKeyValue) {
+          // Try with quotes since TOML inline tables may require quoted keys for dotted keys
+          versionRefKeyValue = findKeyValueInTable(
+            inlineTable,
+            '"version.ref"'
+          );
+        }
+
         if (versionRefKeyValue) {
           // This means we need to update the referenced version in the [versions] table
           const refValue = getStringValue(versionRefKeyValue.value);
           if (refValue) {
             const versionsTable = findVersionsTable(ast);
             if (versionsTable) {
-              const referencedVersion = findKeyValueInTable(versionsTable, refValue);
+              const referencedVersion = findKeyValueInTable(
+                versionsTable,
+                refValue
+              );
               if (referencedVersion) {
                 const refVersionValue = referencedVersion.value;
-                if (refVersionValue.type === 'TOMLValue' && refVersionValue.kind === 'string') {
+                if (
+                  refVersionValue.type === 'TOMLValue' &&
+                  refVersionValue.kind === 'string'
+                ) {
                   const quote = refVersionValue.style === 'basic' ? '"' : "'";
                   const replacement = `${quote}${newVersion}${quote}`;
-                  
+
                   updates.push({
                     start: refVersionValue.range[0],
                     end: refVersionValue.range[1],
-                    replacement
+                    replacement,
                   });
                 }
               }
@@ -280,21 +322,29 @@ export function extractPluginVersionFromCatalogAst(
     } else if (format === 'object') {
       // Extract from object format
       const inlineTable = keyValue.value;
-      
+
       // First, try to find direct version
       const versionKeyValue = findKeyValueInTable(inlineTable, 'version');
       if (versionKeyValue) {
         return getStringValue(versionKeyValue.value);
       }
 
-      // Check for version.ref pattern
-      const versionRefKeyValue = findKeyValueInTable(inlineTable, 'version.ref');
+      // Check for version.ref pattern - look for either quoted or unquoted key
+      let versionRefKeyValue = findKeyValueInTable(inlineTable, 'version.ref');
+      if (!versionRefKeyValue) {
+        // Try with quotes since TOML inline tables may require quoted keys for dotted keys
+        versionRefKeyValue = findKeyValueInTable(inlineTable, '"version.ref"');
+      }
+
       if (versionRefKeyValue) {
         const refValue = getStringValue(versionRefKeyValue.value);
         if (refValue) {
           const versionsTable = findVersionsTable(ast);
           if (versionsTable) {
-            const referencedVersion = findKeyValueInTable(versionsTable, refValue);
+            const referencedVersion = findKeyValueInTable(
+              versionsTable,
+              refValue
+            );
             if (referencedVersion) {
               return getStringValue(referencedVersion.value);
             }
@@ -341,7 +391,7 @@ export async function updateNxPluginVersionInCatalogsAst(
         gradleProjectGraphPluginName,
         expectedVersion
       );
-      
+
       if (updatedContent) {
         tree.write(catalogPath, updatedContent);
         updated = true;
