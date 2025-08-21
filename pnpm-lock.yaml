@@ -1025,6 +1025,9 @@ importers:
       tmp:
         specifier: ~0.2.4
         version: 0.2.4
+      toml-eslint-parser:
+        specifier: ^0.10.0
+        version: 0.10.0
       tree-kill:
         specifier: 1.2.2
         version: 1.2.2
@@ -2888,9 +2891,9 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
-      smol-toml:
-        specifier: ^1.4.1
-        version: 1.4.1
+      toml-eslint-parser:
+        specifier: ^0.10.0
+        version: 0.10.0
 
   packages/jest:
     dependencies:
@@ -22787,6 +22790,10 @@ packages:
   token-types@6.0.3:
     resolution: {integrity: sha512-IKJ6EzuPPWtKtEIEPpIdXv9j5j2LGJEYk0CKY2efgKoYKLBiZdh6iQkLVBow/CB3phyWAWCyk+bZeaimJn6uRQ==}
     engines: {node: '>=14.16'}
+
+  toml-eslint-parser@0.10.0:
+    resolution: {integrity: sha512-khrZo4buq4qVmsGzS5yQjKe/WsFvV8fGfOjDQN0q4iy9FjRfPWRgTFrU8u1R2iu/SfWLhY9WnCi4Jhdrcbtg+g==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   toml@3.0.0:
     resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
@@ -51508,6 +51515,10 @@ snapshots:
     dependencies:
       '@tokenizer/token': 0.3.0
       ieee754: 1.2.1
+
+  toml-eslint-parser@0.10.0:
+    dependencies:
+      eslint-visitor-keys: 3.4.3
 
   toml@3.0.0: {}
 

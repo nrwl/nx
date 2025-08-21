@@ -3,6 +3,7 @@ import * as TOML from 'smol-toml';
 import { gradleProjectGraphPluginName } from './versions';
 import { TomlTable } from 'smol-toml';
 
+
 export async function findVersionCatalogFiles(tree: Tree): Promise<string[]> {
   const versionCatalogPaths: string[] = [];
 
