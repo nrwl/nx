@@ -580,5 +580,69 @@ describe('project configuration', () => {
         'from-project-tech',
       ]); // merged array (acceptable for this approach)
     });
+
+    it('should allow project.json to override properties from package.json', () => {
+      const projectRoot = 'libs/override-test';
+
+      // Create package.json with a name
+      writeJson<PackageJson>(tree, `${projectRoot}/package.json`, {
+        name: 'package-name',
+        version: '1.0.0',
+        nx: {
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                outputPath: 'dist/package-name',
+              },
+            },
+          },
+        },
+      });
+
+      // Create project.json that overrides the name and adds new targets
+      writeJson(tree, `${projectRoot}/project.json`, {
+        name: 'project-name-override',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          test: {
+            executor: '@nx/jest:jest',
+          },
+        },
+      });
+
+      // Read merged config - project.json name should take precedence
+      const mergedConfig = readProjectConfiguration(
+        tree,
+        'project-name-override'
+      );
+      expect(mergedConfig.name).toEqual('project-name-override'); // project.json overrides package.json
+      expect(mergedConfig.targets?.build).toBeDefined(); // from package.json
+      expect(mergedConfig.targets?.test).toBeDefined(); // from project.json
+
+      // Update configuration
+      updateProjectConfiguration(tree, 'project-name-override', {
+        ...mergedConfig,
+        targets: {
+          ...mergedConfig.targets,
+          lint: {
+            executor: '@nx/eslint:lint',
+          },
+        },
+      });
+
+      // Verify project.json keeps the override name and only its targets
+      const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
+
+      expect(projectJsonContent.name).toEqual('project-name-override'); // should keep the override
+      expect(projectJsonContent.targets?.test).toBeDefined(); // was in original project.json
+      expect(projectJsonContent.targets?.lint).toBeDefined(); // newly added
+      expect(projectJsonContent.targets?.build).toBeUndefined(); // came from package.json, shouldn't be copied
+
+      // Verify package.json is unchanged
+      const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
+      expect(packageJsonContent.name).toEqual('package-name'); // unchanged
+      expect(packageJsonContent.nx.targets?.build).toBeDefined(); // unchanged
+    });
   });
 });
