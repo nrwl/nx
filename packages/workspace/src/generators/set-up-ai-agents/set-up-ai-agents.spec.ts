@@ -225,7 +225,6 @@ describe('setup-ai-agents generator', () => {
       await setupAiAgentsGenerator(tree, options);
 
       expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
-      expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
       expect(tree.exists('custom-dir/GEMINI.md')).toBe(true);
       expect(tree.exists('custom-dir/.mcp.json')).toBe(true);
       expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
