@@ -4,7 +4,7 @@
       "." : {
         "name" : "dev.nx.maven.nx-maven-analyzer-plugin",
         "root" : ".",
-        "projectType" : "application",
+        "projectType" : "library",
         "sourceRoot" : "./src/main/java",
         "targets" : {
           "clean" : {
@@ -14,6 +14,10 @@
               "cwd" : "{workspaceRoot}"
             },
             "cache" : false,
+            "metadata" : {
+              "cacheDecisionReason" : "Clean phase - removes build outputs",
+              "cacheDecisionSource" : "Maven Build Cache Extension phase analysis"
+            },
             "parallelism" : true
           },
           "validate" : {
@@ -22,7 +26,12 @@
               "command" : "mvn validate -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
-            "cache" : false,
+            "cache" : true,
+            "outputs" : [ "{projectRoot}/target" ],
+            "metadata" : {
+              "cacheDecisionReason" : "Validation phase - typically not cacheable",
+              "cacheDecisionSource" : "Maven Build Cache Extension phase analysis"
+            },
             "parallelism" : true
           },
           "compile" : {
@@ -31,10 +40,12 @@
               "command" : "mvn compile -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
-            "cache" : true,
-            "parallelism" : true,
-            "inputs" : [ "default", "{projectRoot}/pom.xml", "^production" ],
-            "outputs" : [ "{projectRoot}/target/classes" ]
+            "cache" : false,
+            "metadata" : {
+              "cacheDecisionReason" : "Maven Build Cache Extension decision",
+              "cacheDecisionSource" : "Build Cache Extension"
+            },
+            "parallelism" : true
           },
           "package" : {
             "executor" : "nx:run-commands",
@@ -42,10 +53,12 @@
               "command" : "mvn package -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
-            "cache" : true,
-            "parallelism" : true,
-            "inputs" : [ "default", "{projectRoot}/pom.xml", "^production" ],
-            "outputs" : [ "{projectRoot}/target/*.jar" ]
+            "cache" : false,
+            "metadata" : {
+              "cacheDecisionReason" : "Maven Build Cache Extension decision",
+              "cacheDecisionSource" : "Build Cache Extension"
+            },
+            "parallelism" : true
           },
           "install" : {
             "executor" : "nx:run-commands",
@@ -54,6 +67,10 @@
               "cwd" : "{workspaceRoot}"
             },
             "cache" : false,
+            "metadata" : {
+              "cacheDecisionReason" : "Install phase - modifies local repository",
+              "cacheDecisionSource" : "Maven Build Cache Extension phase analysis"
+            },
             "parallelism" : false
           },
           "deploy" : {
@@ -63,21 +80,18 @@
               "cwd" : "{workspaceRoot}"
             },
             "cache" : false,
+            "metadata" : {
+              "cacheDecisionReason" : "Deploy phase - modifies remote repository",
+              "cacheDecisionSource" : "Maven Build Cache Extension phase analysis"
+            },
             "parallelism" : false
           }
-        },
-        "targetGroups" : {
-          "build" : [ "validate", "compile" ],
-          "package" : [ "package" ],
-          "deploy" : [ "install", "deploy" ],
-          "clean" : [ "clean" ],
-          "compiler" : [ "compile" ]
         },
         "tags" : [ "maven:dev.nx.maven", "maven:maven-plugin", "maven:plugin" ]
       }
     }
   } ] ],
-  "generatedAt" : 1755728315879,
+  "generatedAt" : 1755812450446,
   "workspaceRoot" : "/home/jason/projects/triage/java/maven/packages/maven/analyzer-plugin",
   "totalProjects" : 1
 }
