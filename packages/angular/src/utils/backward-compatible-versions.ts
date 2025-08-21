@@ -13,8 +13,14 @@ export type PackageVersionNames =
   | CompatPackageVersionNames;
 
 export type VersionMap = {
-  angularV18: Record<CompatPackageVersionNames, string>;
-  angularV19: Record<CompatPackageVersionNames, string>;
+  angularV18: Record<
+    Exclude<CompatPackageVersionNames, 'angularRspackVersion'>,
+    string
+  >;
+  angularV19: Record<
+    CompatPackageVersionNames | 'angularRspackVersion',
+    string
+  >;
 };
 
 export type PackageLatestVersions = Record<LatestPackageVersionNames, string>;
@@ -25,7 +31,6 @@ export const backwardCompatibleVersions: VersionMap = {
     angularVersion: '~18.2.0',
     angularDevkitVersion: '~18.2.0',
     ngPackagrVersion: '~18.2.0',
-    angularRspackVersion: '~20.6.1',
     ngrxVersion: '~18.0.2',
     rxjsVersion: '~7.8.0',
     zoneJsVersion: '~0.14.3',
