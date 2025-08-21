@@ -141,32 +141,21 @@ export class ParallelRunningTasks implements RunningTask {
             }
           });
 
-          // Create a promise that will resolve when the process exits
-          return new Promise<{
-            childProcess: RunningNodeProcess;
-            result: { code: number; terminalOutput: string };
-          }>((resolve) => {
-            childProcess.onExit(async (code, terminalOutput) => {
-              terminalOutputs.set(childProcess, terminalOutput);
+          const { code, terminalOutput } = await childProcess.getResults();
+          terminalOutputs.set(childProcess, terminalOutput);
 
-              if (code !== 0 && !hasFailure) {
-                hasFailure = true;
-                failureDetails = { childProcess, code, terminalOutput };
+          if (code !== 0 && !hasFailure) {
+            hasFailure = true;
+            failureDetails = { childProcess, code, terminalOutput };
 
-                // Immediately terminate all other running processes
-                await this.terminateRemainingProcesses(
-                  runningProcesses,
-                  childProcess
-                );
-              }
+            // Immediately terminate all other running processes
+            await this.terminateRemainingProcesses(
+              runningProcesses,
+              childProcess
+            );
+          }
 
-              runningProcesses.delete(childProcess);
-              resolve({
-                childProcess,
-                result: { code, terminalOutput },
-              });
-            });
-          });
+          runningProcesses.delete(childProcess);
         })
       );
 
