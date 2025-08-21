@@ -1,0 +1,133 @@
+{
+  "name": "preset",
+  "factory": "./src/generators/preset/preset#presetGenerator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxWorkspacePreset",
+    "cli": "nx",
+    "title": "Creates applications in a new workspace",
+    "description": "Creates applications in a new workspace.",
+    "type": "object",
+    "properties": {
+      "preset": { "description": "The name of the preset.", "type": "string" },
+      "name": {
+        "description": "The name of the application.",
+        "type": "string"
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "default": "eslint"
+      },
+      "routing": {
+        "description": "Add routing to the generated application.",
+        "type": "boolean",
+        "default": true
+      },
+      "useReactRouter": {
+        "description": "Use React Router for routing.",
+        "type": "boolean",
+        "default": false
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "default": "css",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)  [ https://sass-lang.com   ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS         [ https://lesscss.org     ]"
+            }
+          ]
+        }
+      },
+      "standaloneApi": {
+        "description": "Use Standalone Components if generating an Angular application.",
+        "type": "boolean",
+        "default": false
+      },
+      "standaloneConfig": {
+        "description": "Split the project configurations into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+        "type": "boolean",
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
+      },
+      "packageManager": {
+        "description": "The package manager used to install dependencies.",
+        "type": "string"
+      },
+      "framework": {
+        "description": "The framework which the application is using",
+        "type": "string"
+      },
+      "bundler": {
+        "description": "The bundler to use for building the application.",
+        "type": "string",
+        "default": "vite"
+      },
+      "docker": {
+        "description": "Generate a Dockerfile",
+        "type": "boolean",
+        "default": false
+      },
+      "nextAppDir": {
+        "description": "Enable the App Router for this project.",
+        "type": "boolean",
+        "default": true
+      },
+      "nextSrcDir": {
+        "description": "Generate a `src` directory for this project.",
+        "type": "boolean",
+        "default": true
+      },
+      "unitTestRunner": {
+        "description": "The tool to use for running unit tests.",
+        "type": "string"
+      },
+      "e2eTestRunner": {
+        "description": "The tool to use for running e2e tests.",
+        "type": "string"
+      },
+      "ssr": {
+        "description": "Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.",
+        "type": "boolean",
+        "default": false
+      },
+      "prefix": {
+        "description": "The prefix to use for Angular component and directive selectors.",
+        "type": "string"
+      },
+      "formatter": {
+        "description": "The tool to use for code formatting.",
+        "type": "string",
+        "default": "none"
+      },
+      "workspaces": {
+        "description": "Whether to use package manager workspaces.",
+        "type": "boolean",
+        "default": true
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+      }
+    },
+    "required": ["preset", "name"],
+    "presets": []
+  },
+  "description": "Create application in an empty workspace.",
+  "x-use-standalone-layout": true,
+  "hidden": true,
+  "implementation": "/packages/workspace/src/generators/preset/preset#presetGenerator.ts",
+  "aliases": [],
+  "path": "/packages/workspace/src/generators/preset/schema.json",
+  "type": "generator"
+}
