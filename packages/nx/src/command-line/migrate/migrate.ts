@@ -466,7 +466,9 @@ export class Migrator {
           filtered[packageName] = {
             version: packageUpdate.version,
             addToPackageJson: packageUpdate.alwaysAddToPackageJson
-              ? 'dependencies'
+              ? typeof packageUpdate.alwaysAddToPackageJson === 'string'
+                ? packageUpdate.alwaysAddToPackageJson
+                : 'dependencies'
               : packageUpdate.addToPackageJson || false,
           };
         }
