@@ -15,7 +15,7 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration), like this:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/angular:storybook-configuration project-name
 ```
 
@@ -23,55 +23,58 @@ nx g @nx/angular:storybook-configuration project-name
 
 The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
-```text frame="none"
-<some-folder>/
-├── my-component.ts
-└── my-component.stories.ts
-```
 
+{%filetree %}
+- <some-folder>/
+  - my-component.ts
+  - my-component.stories.ts
+
+{%/filetree %}
 If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/technologies/angular/api/generators/stories):
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/angular:stories --project=<project-name>
 ```
 
-{% aside type="note" title="Example" %}
+
+### Example library
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.
 
 The command to generate stories for that library would be:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/angular:stories --project=feature-ui
 ```
 
 and the result would be the following:
 
-```text frame="none"
-<workspace name>/
-├── apps/
-├── libs/
-│   ├── feature/
-│   │   ├── ui/
-|   |   |   ├── .storybook/
-|   |   |   ├── src/
-|   |   |   |   ├──lib
-|   |   |   |   |   ├──my-button
-|   |   |   |   |   |   ├── my-button.ts
-|   |   |   |   |   |   ├── my-button.stories.ts
-|   |   |   |   |   |   └── etc...
-|   |   |   |   |   └── etc...
-|   |   |   ├── README.md
-|   |   |   ├── tsconfig.json
-|   |   |   └── etc...
-|   |   └── etc...
-|   └── etc...
-├── nx.json
-├── package.json
-├── README.md
-└── etc...
-```
+{% filetree %}
 
-{% /aside %}
+- workspace name/
+  - apps/
+  - libs/
+    - feature/
+      - ui/
+        - .storybook/
+      - src/ 
+        - lib 
+          - my-button 
+            - my-button.ts 
+            - my-button.stories.ts 
+            - etc...
+        - etc...
+      - README.md
+      - tsconfig.json
+      - etc...
+    - etc...
+    - etc...
+  - nx.json
+  - package.json
+  - README.md
+  - etc...
+{% /filetree %}
+
+
 
 ## Example Files
 
@@ -79,7 +82,7 @@ Let's take for example a library in your workspace, under `libs/feature/ui`, cal
 
 Let's say that the template for that component looks like this:
 
-```html frame="none"
+```html 
 // libs/feature/ui/src/lib/my-button/my-button.html
 <button [disabled]="disabled" [ngStyle]="{ 'padding.px': padding }">
   {{ text }}
@@ -88,7 +91,7 @@ Let's say that the template for that component looks like this:
 
 and the component looks like this:
 
-```typescript frame="none"
+```typescript
 // libs/feature/ui/src/lib/my-button/my-button.ts
 import { Component, Input } from '@angular/core';
 
@@ -109,7 +112,7 @@ export class MyButton {
 
 The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) would generate a Story file that looks like this:
 
-```typescript frame="none"
+```typescript
 // libs/feature/ui/src/lib/my-button/my-button.stories.ts
 import type { Meta, StoryObj } from '@storybook/angular';
 import { MyButton } from './my-button';
@@ -156,7 +159,7 @@ You can read more about the `browserTarget` in the [official Angular documentati
 
 Your Storybook targets in your `project.json` (or if you run `nx show project my-project --web`) will look like this:
 
-```jsonc frame="none"
+```jsonc 
 // project.json
     "storybook": {
       "executor": "@storybook/angular:start-storybook",

@@ -17,15 +17,15 @@ What you'll learn:
 
 ## Prerequisite: Tutorial Setup
 
-{% callout type="note" title="Prerequisites" %}
+{% aside type="note" title="Prerequisites" %}
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
-{% /callout %}
+{% /aside %}
 
 ### Step 1: Creating a new Nx React workspace
 
 Let's create your workspace. The setup process takes about 2 minutes and will configure React, testing, and CI/CD automatically.
 
-{% call-to-action variant="inverted" title="Start Building React Apps 10x Faster →" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="Zero-config setup with caching, testing, and CI ready out of the box" /%}
+{% call_to_action variant="inverted" title="Start Building React Apps 10x Faster →" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="Zero-config setup with caching, testing, and CI ready out of the box" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -37,7 +37,7 @@ Please verify closely that you have the following setup:
 
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
-![](/src/assets/tutorials/connected-workspace.avif)
+![](../../../../assets/tutorials/connected-workspace.avif)
 
 If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=react).
 
@@ -47,23 +47,23 @@ This is important for using remote caching and self-healing in CI later in the t
 
 Let's take a look at the structure of our new Nx workspace:
 
-```plaintext
-acme
-├── .github
-│   └── workflows
-│       └── ci.yml
-├── apps
-│   └── demo
-├── README.md
-├── eslint.config.mjs
-├── nx.json
-├── package-lock.json
-├── package.json
-├── tsconfig.base.json
-├── tsconfig.json
-└── vitest.workspace.ts
-```
+{%filetree%}
+- acme/
+  - .github/
+    - workflows/
+      - ci.yml
+  - apps/
+    - demo/
+  - README.md
+  - eslint.config.mjs
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+  - tsconfig.json
+  - vitest.workspace.ts
 
+{%/filetree%}
 Here are some files that might jump to your eyes:
 
 - The `.nx` folder is where Nx stores local metadata about your workspaces using the [Nx Daemon](/concepts/nx-daemon).
@@ -76,7 +76,7 @@ Now, let's build some features and see how Nx helps get us to production faster.
 
 To serve your new React app, run:
 
-```shell
+```shell {% frame="none" %}
 npx nx serve demo
 ```
 
@@ -84,7 +84,7 @@ The app is served at [http://localhost:4200](http://localhost:4200).
 
 Nx uses the following syntax to run tasks:
 
-![Syntax for Running Tasks in Nx](/src/assets/getting-started/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](../../../../assets/getting-started/run-target-syntax.svg)
 
 ### Inferred Tasks
 
@@ -117,13 +117,12 @@ In `nx.json` there's already the `@nx/vite` plugin registered which automaticall
 
 To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
-```shell
+```shell {% frame="none" %}
 npx nx show project demo
 ```
 
-{% project-details title="Project Details View (Simplified)" %}
+{% project_details title="Project Details View (Simplified)" %}
 
-```json
 {
   "project": {
     "name": "@acme/demo",
@@ -179,9 +178,8 @@ npx nx show project demo
     "tags": ["apps/demo/project.json", "nx/core/project-json"]
   }
 }
-```
 
-{% /project-details %}
+{% /project_details %}
 
 If you expand the `build` task, you can see that it was created by the `@nx/vite` plugin by analyzing your `vite.config.ts` file. Notice the outputs are defined as `{projectRoot}/dist`. This value is being read from the `build.outDir` defined in your `vite.config.ts` file. Let's change that value in your `vite.config.ts` file:
 
@@ -198,26 +196,26 @@ export default defineConfig({
 
 Now if you look at the project details view, the outputs for the build target will say `{projectRoot}/build`. The `@nx/vite` plugin ensures that tasks and their options, such as outputs, are automatically and correctly configured.
 
-{% callout type="note" title="Overriding inferred task options" %}
+{% aside type="note" title="Overriding inferred task options" %}
 You can override the options for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`package.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
-{% /callout %}
+{% /aside %}
 
 ## Modularization with Local Libraries
 
 When you develop your React application, usually all your logic sits in the app's `src` folder. Ideally separated by various folder names which represent your domains or features. As your app grows, however, the app becomes more and more monolithic, which makes building and testing it harder and slower.
 
-```
-acme
-├── apps
-│   └── demo
-│        └── src
-│            ├── app
-│            ├── cart
-│            ├── products
-│            ├── orders
-│            └── ui
-└── ...
-```
+{%filetree%}
+- acme/
+  - apps/
+    - demo/
+      - src/
+        - app/
+        - cart/
+        - products/
+        - orders/
+        - ui/
+
+{%/filetree%}
 
 Nx allows you to separate this logic into "local libraries." The main benefits include
 
@@ -231,7 +229,7 @@ Nx allows you to separate this logic into "local libraries." The main benefits i
 
 Let's create a reusable design system library called `ui` that we can use across our workspace. This library will contain reusable components such as buttons, inputs, and other UI elements.
 
-```
+```shell {% frame="none" %}
 npx nx g @nx/react:library packages/ui --unitTestRunner=vitest --bundler=none
 ```
 
@@ -239,30 +237,30 @@ Note how we type out the full path in the `directory` flag to place the library 
 
 Running the above commands should lead to the following directory structure:
 
-```
-acme
-├── apps
-│   └── demo
-├── packages
-│   └── ui
-├── eslint.config.mjs
-├── nx.json
-├── package-lock.json
-├── package.json
-├── tsconfig.base.json
-├── tsconfig.json
-└── vitest.workspace.ts
-```
+{% filetree %}
+- acme/
+  - apps/
+    - demo/
+  - packages/
+    - ui/
+  - eslint.config.mjs
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+  - tsconfig.json
+  - vitest.workspace.ts
+{% /filetree %}
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 
-```shell
+```shell {% frame="none" %}
 npx nx show project ui
 ```
 
 In this case, we have the `lint` and `test` tasks available, among other inferred tasks.
 
-```shell
+```shell {% frame="none" %}
 npx nx lint ui
 npx nx test ui
 ```
@@ -375,7 +373,7 @@ export default App;
 
 Serve your app again (`npx nx serve demo`) and you should see the new Hero component from the `ui` library rendered on the home page.
 
-![](/src/assets/tutorials/react-demo-with-hero.avif)
+![](../../../../assets/tutorials/react-demo-with-hero.avif)
 
 If you have keen eyes, you may have noticed that there is a typo in the `App` component. This mistake is intentional, and we'll see later how Nx can fix this issue automatically in CI.
 
@@ -385,7 +383,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell
+```shell {% frame="none" %}
 npx nx graph
 ```
 
@@ -393,7 +391,6 @@ You should be able to see something similar to the following in your browser.
 
 {% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -421,13 +418,12 @@ You should be able to see something similar to the following in your browser.
   "focus": null,
   "groupByFolder": false
 }
-```
 
 {% /graph %}
 
 Let's create a git branch with the new hero component so we can open a pull request later:
 
-```shell
+```shell {% frame="none" %}
 git checkout -b add-hero-component
 git add .
 git commit -m 'add hero component'
@@ -437,14 +433,14 @@ git commit -m 'add hero component'
 
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for testing and linting. We can use the same syntax as before to run these tasks:
 
-```shell
+```shell {% frame="none" %}
 npx nx test demo # runs the tests for demo
 npx nx lint ui   # runs the linter on ui
 ```
 
 More conveniently, we can also run tasks in parallel using the following syntax:
 
-```shell
+```shell {% frame="none" %}
 npx nx run-many -t test lint
 ```
 
@@ -458,7 +454,7 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
-```{% command="npx nx run-many -t test lint" path="~/acme" %}
+```text {% title="npx nx run-many -t test lint" frame="terminal" %}
    ✔  nx run @acme/ui:lint
    ✔  nx run @acme/ui:test
    ✔  nx run @acme/demo:lint
@@ -523,24 +519,24 @@ jobs:
 
 You will also need to install the [Nx Console](/getting-started/editor-setup) editor extension for VS Code, Cursor, or IntelliJ. For the complete AI setup guide, see our [AI integration documentation](/getting-started/ai-integration).
 
-{% install-nx-console /%}
+{% install_nx_console /%}
 
 Now, let's push the `add-hero-component` branch to GitHub and open a new pull request.
 
-```shell
+```shell {% frame="none" %}
 git push origin add-hero-component
 # Don't forget to open a pull request on GitHub
 ```
 
 As expected, the CI check fails because of the test failure in the `demo` app. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and that it has a suggested fix for the failing test. This means that you don't have to waste time **babysitting your PRs**, and the fix can be applied directly from your editor.
 
-![Nx Console with failure notification](/src/assets/tutorials/react-ci-notification.avif)
+![Nx Console with failure notification](../../../../assets/tutorials/react-ci-notification.avif)
 
 ### Fix CI from Your Editor
 
 From the Nx Console notification, you can click `Show Suggested Fix` button. Review the suggested fix, which in this case is to change the typo `Welcmoe`to the correct `Welcome` spelling. Approve this fix by clicking `ApplyFix` and that's it!
 
-![Suggestion to fix the typo in the editor](/src/assets/tutorials/react-ci-suggestion.avif)
+![Suggestion to fix the typo in the editor](../../../../assets/tutorials/react-ci-suggestion.avif)
 
 You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
@@ -548,23 +544,23 @@ You didn't have to leave your editor or do any manual work to fix it. This is th
 
 After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
-![Tasks with remote cache hit](/src/assets/tutorials/react-remote-cache-notification.avif)
+![Tasks with remote cache hit](../../../../assets/tutorials/react-remote-cache-notification.avif)
 
 When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The lint and test tasks for the `ui` library were read from remote cache and did not have to run again, thus each taking less than a second to complete.
 
-![Nx Cloud run showing remote cache hits](/src/assets/tutorials/react-remote-cache-cloud.avif)
+![Nx Cloud run showing remote cache hits](../../../../assets/tutorials/react-remote-cache-cloud.avif)
 
 This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/ci/features/remote-cache). In this case, since the last fix was applied only to the `demo` app's source code, none of the tasks for `ui` library had to be run again.
 
 This significantly speeds up the time to green for your pull requests, because subsequent changes to them have a good chance to replay tasks from cache.
 
-{% callout type="note" title="Remote Cache Outputs" %}
+{% aside type="note" title="Remote Cache Outputs" %}
 Outputs from cached tasks, such as the `dist` folder for builds or `coverage` folder for tests, are also read from cache. Even though a task was not run again, its outputs are available. The [Cache Task Results](/features/cache-task-results) page provides more details on caching.
-{% /callout %}
+{% /aside %}
 
 This pull request is now ready to be merged with the help of Nx Cloud's self-healing CI and remote caching.
 
-![Pull request is green](/src/assets/tutorials/react-ci-green.avif)
+![Pull request is green](../../../../assets/tutorials/react-ci-green.avif)
 
 ## Next Steps
 

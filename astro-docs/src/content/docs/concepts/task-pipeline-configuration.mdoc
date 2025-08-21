@@ -62,7 +62,7 @@ While you could manage these relationships on your own and set up custom scripts
 
 This becomes even more evident when you run tasks in parallel. You cannot just naively run all of them at the same time. Instead, the task orchestrator needs to respect the order of the tasks so that it builds libraries first and then resumes building the apps that depend on those libraries in parallel.
 
-![task-graph-execution](/src/assets/concepts/mental-model/task-graph-execution.svg)
+![task-graph-execution](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
 Nx allows you to define task dependencies in the form of "rules", which are then followed when running tasks. There's a [detailed recipe](/recipes/running-tasks/defining-task-pipeline) but here's the high-level overview:
 

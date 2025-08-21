@@ -16,7 +16,7 @@ By default, the computation hash for something like `nx test remixapp` includes:
 - Runtime values provisioned by the user such as the version of Node
 - CLI Command flags
 
-![computation-hashing](/src/assets/concepts/caching/nx-hashing.svg)
+![computation-hashing](../../../assets/concepts/caching/nx-hashing.svg)
 
 > This behavior is customizable. For instance, lint checks may only depend on the source code of the project and global
 > configs. Builds can depend on the dts files of the compiled libs instead of their source.
@@ -25,7 +25,7 @@ After Nx computes the hash for a task, it then checks if it ran this exact compu
 
 Nx places the right files in the right folders and prints the terminal output. From the user's point of view, the command ran the same, just a lot faster.
 
-![cache](/src/assets/concepts/caching/cache.svg)
+![cache](../../../assets/concepts/caching/cache.svg)
 
 If Nx doesn't find a corresponding computation hash, Nx runs the task, and after it completes, it takes the outputs and the terminal logs and stores them locally (and, if configured, remotely as well). All of this happens transparently, so you don't have to worry about it.
 
@@ -40,7 +40,7 @@ Although conceptually this is fairly straightforward, Nx optimizes the experienc
 
 As your workspace grows, the task graph looks more like this:
 
-![cache](/src/assets/concepts/caching/task-graph-big.svg)
+![cache](../../../assets/concepts/caching/task-graph-big.svg)
 
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.
@@ -189,7 +189,7 @@ results.
 Note, only the flags passed to the npm scripts itself affect results of the computation. For instance, the following
 commands are identical from the caching perspective.
 
-```shell
+```shell {% frame="none" %}
 npx nx build remixapp
 npx nx run-many -t build -p remixapp
 ```
@@ -200,13 +200,13 @@ If you build/test/lint… multiple projects, each individual build has its own h
 from
 cache or run. This means that from the caching point of view, the following command:
 
-```shell
+```shell {% frame="none" %}
 npx nx run-many -t build -p header footer
 ```
 
 is identical to the following two commands:
 
-```shell
+```shell {% frame="none" %}
 npx nx build header
 npx nx build footer
 ```

@@ -43,7 +43,7 @@ to exist between host and remotes.
 For example, if you have a `shell` host application, with three remotes -- `about`, `cart`, `shop` -- and a shared
 `ui-button` library, then your project graph might look something like this.
 
-![MFE setup with independent projects](/src/assets/concepts/module-federation/mfe-dep-graph.png)
+![MFE setup with independent projects](../../../../assets/concepts/module-federation/mfe-dep-graph.png)
 
 Keeping the applications independent allows them to be deployed on different cadences, which is the whole point of MFEs.
 
@@ -55,7 +55,7 @@ application, and `nx g remote` for remote applications.
 {% tabs %}
 {% tabitem label="React" %}
 
-```shell
+```shell {% frame="none" %}
 nx g @nx/react:host apps/shell --remotes=shop,cart
 nx g @nx/react:remote apps/about --host=shell
 ```
@@ -63,7 +63,7 @@ nx g @nx/react:remote apps/about --host=shell
 {% /tabitem %}
 {% tabitem label="Angular" %}
 
-```shell
+```shell {% frame="none" %}
 nx g @nx/angular:host apps/shell --remotes=shop,cart
 nx g @nx/angular:remote apps/about --host=shell
 ```

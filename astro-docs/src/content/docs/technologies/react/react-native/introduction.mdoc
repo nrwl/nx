@@ -19,7 +19,7 @@ The Nx Plugin for React Native contains generators for managing React Native app
 
 To create a new workspace with React Native, run the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx create-nx-workspace@latest your-workspace-name --preset=react-native --appName=your-app-name
 ```
 
@@ -27,7 +27,7 @@ npx create-nx-workspace@latest your-workspace-name --preset=react-native --appNa
 You can also run the command without arguments to go through the interactive prompts.
 {% /aside %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx create-nx-workspace your-workspace-name
 ```
 
@@ -39,10 +39,10 @@ Make sure to install the `@nx/react-native` version that matches the version of 
 
 In any Nx workspace, you can install `@nx/react-native` by running the following command:
 
-{% tabs %}
+{% tabs syncKey="nx-version" %}
 {% tabitem label="Nx 18+" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx add @nx/react-native
 ```
 
@@ -53,7 +53,7 @@ This will install the correct version of `@nx/react-native`.
 
 Install the `@nx/react-native` package with your package manager.
 
-```shell frame="none"
+```shell {% frame="none" %}
 npm add -D @nx/react-native
 ```
 
@@ -79,8 +79,8 @@ To view inferred tasks for a project, open the [project details view](/concepts/
 
 The `@nx/react-native/plugin` is configured in the `plugins` array in `nx.json`.
 
-```json frame="none"
-// filename: nx.json
+```json
+// nx.json
 {
   "plugins": [
     {
@@ -105,7 +105,7 @@ Once a React Native configuration file has been identified, the targets are crea
 
 To create additional React Native apps run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react-native:app apps/<your-app-name>
 ```
 
@@ -113,7 +113,7 @@ nx g @nx/react-native:app apps/<your-app-name>
 
 To generate a new library run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react-native:lib libs/<your-lib-name>
 ```
 
@@ -121,7 +121,7 @@ nx g @nx/react-native:lib libs/<your-lib-name>
 
 To generate a new component inside library run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react-native:component <component-path> --export
 ```
 
@@ -135,7 +135,7 @@ The Nx CLI provides the [`migrate` command](/features/automate-updating-dependen
 
 To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/technologies/react/react-native/api/generators/upgrade-native) generator:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx generate @nx/react-native:upgrade-native apps/<your-app-name>
 ```
 
@@ -149,7 +149,7 @@ You can also upgrade React Native iOS and Android code using the [rn-diff-purge]
 
 To start the server that communicates with connected devices:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx start <your-app-name>
 ```
 
@@ -157,7 +157,7 @@ nx start <your-app-name>
 
 To build your app and start it on iOS simulator or device:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run-ios <your-app-name>
 ```
 
@@ -165,7 +165,7 @@ nx run-ios <your-app-name>
 
 To build your app and start it on a connected Android emulator or device:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx run-android <your-app-name>
 ```
 
@@ -173,7 +173,7 @@ nx run-android <your-app-name>
 
 To build an iOS app:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build-ios <your-app-name>
 ```
 
@@ -181,7 +181,7 @@ The build artifacts will be located under `<your app folder>/ios/build`.
 
 You can specify the build folder by setting the `buildFolder` option:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build-ios <your-app-name> --buildFolder="./build"
 ```
 
@@ -189,7 +189,7 @@ nx build-ios <your-app-name> --buildFolder="./build"
 
 To build an Android app, run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx build-android <your app name>
 ```
 

@@ -60,7 +60,7 @@ One way to manually distribute tasks is to use binning. Binning is a distributio
 ```
 
 Here's a visualization of how this approach works:
-![CI using binning](/src/assets/concepts/ci-concepts/binning.svg)
+![CI using binning](../../../../assets/concepts/ci-concepts/binning.svg)
 
 This is faster than the single machine approach, but you can see that there is still idle time where some agents have to wait for other agents to finish their tasks.
 
@@ -91,7 +91,7 @@ The setup looks like this:
 ```
 
 The visualization looks like this:
-![CI using Agents](/src/assets/concepts/ci-concepts/3agents.svg)
+![CI using Agents](../../../../assets/concepts/ci-concepts/3agents.svg)
 
 In the same way that Nx efficiently assigns tasks to parallel processes on a single machine so that pre-requisite tasks are executed first, Nx Cloud's distributed task execution efficiently assigns tasks to agent machines so that the idle time of each agent machine is kept to a minimum. Nx performs these calculations for each PR, so no matter which projects are affected or how your project structure changes, Nx will optimally assign tasks to the agents available.
 

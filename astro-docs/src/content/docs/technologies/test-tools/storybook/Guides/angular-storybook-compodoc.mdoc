@@ -25,7 +25,7 @@ You need to have Storybook already configured for your Angular project. If you h
 
 Install Compodoc as a dev dependency:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npm install --save-dev @compodoc/compodoc
 ```
 
@@ -33,7 +33,7 @@ npm install --save-dev @compodoc/compodoc
 
 Add Compodoc configuration to your Storybook's `main.ts` file:
 
-```typescript frame="none"
+```typescript 
 // .storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 
@@ -72,7 +72,7 @@ export default config;
 
 Add a script to your `package.json` to generate Compodoc documentation:
 
-```json frame="none"
+```json
 // package.json
 {
   "scripts": {
@@ -86,7 +86,7 @@ Add a script to your `package.json` to generate Compodoc documentation:
 
 Add JSDoc comments and use TypeScript interfaces for better documentation generation:
 
-```typescript frame="none"
+```typescript 
 // button.component.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 
@@ -146,7 +146,7 @@ export class ButtonComponent implements ButtonProps {
 
 Create a story that leverages the Compodoc-generated documentation:
 
-```typescript frame="none"
+```typescript 
 // button.stories.ts
 import type { Meta, StoryObj } from '@storybook/angular';
 import { ButtonComponent } from './button.component';
@@ -223,7 +223,7 @@ export const Disabled: Story = {
 
 With the setup complete, run your Storybook:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npm run storybook
 ```
 

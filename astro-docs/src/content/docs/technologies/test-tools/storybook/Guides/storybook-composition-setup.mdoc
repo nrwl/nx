@@ -21,13 +21,13 @@ First, you need a main Storybook instance that will serve as the host for other 
 
 ### Generate a host library
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/react:library storybook-host --bundler=none --unitTestRunner=none
 ```
 
 ### Configure Storybook for the host
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/storybook:configuration storybook-host --uiFramework=@storybook/react-vite
 ```
 
@@ -42,7 +42,7 @@ Each Storybook that you want to compose needs to be accessible via a URL. This m
 
 Update the `project.json` files of your composed Storybooks to use different ports:
 
-```json frame="none"
+```json
 // libs/ui-lib-1/project.json
 {
   "targets": {
@@ -55,7 +55,7 @@ Update the `project.json` files of your composed Storybooks to use different por
 }
 ```
 
-```json frame="none"
+```json
 // libs/ui-lib-2/project.json
 {
   "targets": {
@@ -72,7 +72,7 @@ Update the `project.json` files of your composed Storybooks to use different por
 
 In your main Storybook's configuration file, add references to the composed Storybooks:
 
-```typescript frame="none"
+```typescript
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
 
@@ -104,14 +104,14 @@ To see your composed Storybooks in action:
 
 1. Start each composed Storybook on its designated port:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx storybook ui-lib-1
 nx storybook ui-lib-2
 ```
 
 2. Start the main Storybook:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx storybook storybook-host
 ```
 
@@ -124,7 +124,7 @@ For production use, you'll need to:
 1. Build and deploy each composed Storybook to a URL
 2. Update the `refs` in your main Storybook configuration to point to these deployed URLs
 
-```typescript frame="none"
+```typescript
 // libs/storybook-host/.storybook/main.ts
 const config: StorybookConfig = {
   // ... other config

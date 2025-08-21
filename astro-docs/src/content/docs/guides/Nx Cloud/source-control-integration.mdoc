@@ -21,7 +21,7 @@ For the best experience, install the [Nx Cloud GitHub App](https://github.com/ma
 Once you have installed the Nx Cloud GitHub App, you must link your workspace to the installation. To do this, sign in to Nx Cloud and navigate to the VCS Integrations setup page. This page can be found in your workspace settings, you need to be admin of the organization in order to access it.
 Once on the VCS Integrations setup page, you can choose what VCS you want to connect to your workspace.
 
-![Access VCS Setup](/src/assets/nx-cloud/set-up/access-vcs-setup.webp)
+![Access VCS Setup](../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
 ### Choosing an Authentication Method
 
@@ -33,7 +33,7 @@ To use the Nx Cloud GitHub App for authentication, select the radio button and t
 This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved.
 Check the "_CI Platform Considerations_" section below and if there are no additional instructions for your platform of choice, setup is complete.
 
-![Use GitHub App for Authentication](/src/assets/nx-cloud/set-up/use-github-app-auth.webp)
+![Use GitHub App for Authentication](../../../../assets/nx-cloud/set-up/use-github-app-auth.webp)
 
 #### Using a Personal Access Token
 
@@ -42,11 +42,11 @@ Github supports two [Personal Access Token](https://docs.github.com/en/authentic
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
 ##### Classic Token personal access token
-![Minimum GitHub Personal Access Token Permissions](/src/assets/nx-cloud/set-up/minimal-github-access-token.webp)
+![Minimum GitHub Personal Access Token Permissions](../../../../assets/nx-cloud/set-up/minimal-github-access-token.webp)
 
 ##### Fine-grained personal access token
 
-![Minimum GitHub Fine-grained Personal Access Token Permissions](/src/assets/nx-cloud/set-up/fine-grained-gh-pat-permissions.avif)
+![Minimum GitHub Fine-grained Personal Access Token Permissions](../../../../assets/nx-cloud/set-up/fine-grained-gh-pat-permissions.avif)
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved. Check the "_CI Platform Considerations_" section below, and if there are no additional instructions for your platform of choice, setup is complete.
 
@@ -85,7 +85,7 @@ Ensure this step from the plugin instructions is followed:
 The Nx Cloud GitHub Integration updates your PR with commit statuses that reflect the real-time progress of your runs. These statuses are generated dynamically based on your running commands. Enforcing these dynamically-named checks within your branch protection rules is not recommended, as it can result in stuck checks displaying `Waiting for status to be reported`.
 
 From your repository, go to `Settings -> Branches -> Protect matching branches` and ensure that no Nx Cloud status checks are listed in the `Require status checks to pass before merging` list. Enforcing that status checks pass on your default branch is sufficient.
-![Ensure that any NxCloud status check is deselected from your branch protection rules](/src/assets/nx-cloud/set-up/do-not-enforce-nx-cloud-status-checks.webp)
+![Ensure that any NxCloud status check is deselected from your branch protection rules](../../../../assets/nx-cloud/set-up/do-not-enforce-nx-cloud-status-checks.webp)
 {% /tabitem %}
 
 {% tabitem label="Bitbucket" %}
@@ -98,11 +98,11 @@ If you are using BitBucket Cloud (bitbucket.org) and are not self-hosting it, yo
 
 The minimum required permissions are write access to PRs:
 
-![Create App Password](/src/assets/nx-cloud/set-up/minimal-bitbucket-cloud-app-password.webp)
+![Create App Password](../../../../assets/nx-cloud/set-up/minimal-bitbucket-cloud-app-password.webp)
 
 Once the app password is created, save it in a secure location and then head back to your workspace settings on NxCloud and let's set up a BitBucket integration:
 
-![Access VCS Setup](/src/assets/nx-cloud/set-up/access-vcs-setup.webp)
+![Access VCS Setup](../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
 1. Fill-in all the required fields for selecting your Bitbucket repository
 2. Username is found on the [account settings](https://bitbucket.org/account/settings/) screen (it is not your email address)
@@ -119,11 +119,11 @@ Due to the type of APIs NxCloud needs to call, we need to create an access [**at
 
 The minimum required permissions are write access to the repository:
 
-![Create an HTTP Access Token](/src/assets/nx-cloud/set-up/bitbucket-data-center-access-token.png)
+![Create an HTTP Access Token](../../../../assets/nx-cloud/set-up/bitbucket-data-center-access-token.png)
 
 Once the token is created, save it in a secure location and then head back to your workspace settings on NxCloud and let's set up a BitBucket integration:
 
-![Access VCS Setup](/src/assets/nx-cloud/set-up/access-vcs-setup.webp)
+![Access VCS Setup](../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
 1. Fill-in all the required fields for selecting your Bitbucket repository
 2. Username is found on the [account settings](https://your-bitbucket-instance.com/profile) screen (it is not your email address)
@@ -138,22 +138,22 @@ The Nx Cloud GitLab Integration lets you access the result of every runâ€”with a
 
 ### Connecting Your Workspace
 
-![Access VCS Setup](/src/assets/nx-cloud/set-up/access-vcs-setup.webp)
+![Access VCS Setup](../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
 Once on the VCS Integrations setup page, select "GitLab". You will be prompted to enter your project's ID.
 
-![Locate Gitlab Project ID](/src/assets/nx-cloud/set-up/find-gitlab-project-id.webp)
+![Locate Gitlab Project ID](../../../../assets/nx-cloud/set-up/find-gitlab-project-id.webp)
 
 To locate the ID for your project, visit the home page of your repository on GitLab. The value can be found underneath the name of your project, and has a clickable button to copy to your clipboard.
 
-![Add GitLab Repository](/src/assets/nx-cloud/set-up/add-gitlab-repository.webp)
+![Add GitLab Repository](../../../../assets/nx-cloud/set-up/add-gitlab-repository.webp)
 
 
 ### Using a Personal Access Token
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
-![Minimum GitLab Personal Access Token Permissions](/src/assets/nx-cloud/set-up/minimal-gitlab-access-token.webp)
+![Minimum GitLab Personal Access Token Permissions](../../../../assets/nx-cloud/set-up/minimal-gitlab-access-token.webp)
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect".
 
@@ -170,7 +170,7 @@ The Nx Cloud + Azure Devops Integration lets you access the result of every runâ
 
 ## Connecting Your Workspace
 
-![Access VCS Setup](/src/assets/nx-cloud/set-up/access-vcs-setup.webp)
+![Access VCS Setup](../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
 Once on the VCS Integrations setup page, select "Azure DevOps". You will be prompted to enter the name of your organization and project.
 
@@ -187,7 +187,7 @@ You will also need to provide the id of your Azure Git repository, this can eith
 
 For example, a URL of `https://dev.azure.com/nrwl/_git/large-monorepo` has the repository id of "large-monorepo".
 
-![Add Azure DevOps Repository](/src/assets/nx-cloud/set-up/add-azure-devops-repository.webp)
+![Add Azure DevOps Repository](../../../../assets/nx-cloud/set-up/add-azure-devops-repository.webp)
 
 ### Configuring Authentication
 
@@ -195,7 +195,7 @@ For example, a URL of `https://dev.azure.com/nrwl/_git/large-monorepo` has the r
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
-![Work Items - Read, Code - Read, Build - Read & execute, Release - Read, write, & execute](/src/assets/nx-cloud/set-up/minimal-ado-access-token.webp)
+![Work Items - Read, Code - Read, Build - Read & execute, Release - Read, write, & execute](../../../../assets/nx-cloud/set-up/minimal-ado-access-token.webp)
 
 Once this token is created paste the value and then click "Connect".
 

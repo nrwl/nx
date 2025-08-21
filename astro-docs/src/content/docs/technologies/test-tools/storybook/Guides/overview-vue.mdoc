@@ -18,14 +18,14 @@ You can generate Storybook configuration for an individual Vue or Nuxt project b
 {% tabs %}
 {% tabitem label="Vue" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/vue:storybook-configuration project-name
 ```
 
 {% /tabitem %}
 {% tabitem label="Nuxt" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/nuxt:storybook-configuration my-nuxt-app
 ```
 
@@ -37,7 +37,7 @@ nx g @nx/nuxt:storybook-configuration my-nuxt-app
 
 The [`@nx/vue:storybook-configuration` generator](/technologies/vue/api/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
-```text frame="none"
+```text {% frame="none" %}
 <some-folder>/
 ├── MyComponent.vue
 └── MyComponent.stories.ts
@@ -48,14 +48,14 @@ If you add more components to your project, and want to generate stories for all
 {% tabs %}
 {% tabitem label="Vue" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/vue:stories --project=<project-name>
 ```
 
 {% /tabitem %}
 {% tabitem label="Nuxt" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/nuxt:stories --project=<project-name>
 ```
 
@@ -63,43 +63,42 @@ nx g @nx/nuxt:stories --project=<project-name>
 
 {% /tabs %}
 
-{% aside type="note" title="Example" %}
+### Example library
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.
 
 The command to generate stories for that library would be:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/vue:stories --project=feature-ui
 ```
 
 and the result would be the following:
 
-```text frame="none"
-<workspace name>/
-├── apps/
-├── libs/
-│   ├── feature/
-│   │   ├── ui/
-|   |   |   ├── .storybook/
-|   |   |   ├── src/
-|   |   |   |   ├──lib
-|   |   |   |   |   ├──my-button
-|   |   |   |   |   |   ├── MyButton.vue
-|   |   |   |   |   |   ├── MyButton.stories.ts
-|   |   |   |   |   |   └── etc...
-|   |   |   |   |   └── etc...
-|   |   |   ├── README.md
-|   |   |   ├── tsconfig.json
-|   |   |   └── etc...
-|   |   └── etc...
-|   └── etc...
-├── nx.json
-├── package.json
-├── README.md
-└── etc...
-```
+{% filetree %}
+- workspace name/
+  - apps/
+  - libs/
+    - feature/
+      - ui/
+        - .storybook/
+      - src/ 
+        - lib/
+          - my-button/
+            - MyButton.vue 
+            - MyButton.stories.ts
+            - etc...
+        - etc...
+      - README.md
+      - tsconfig.json
+      - etc...
+    - etc...
+  - nx.json
+  - package.json
+  - README.md
+  - etc...
 
-{% /aside %}
+{% /filetree %}
+
 
 ## More Documentation
 
