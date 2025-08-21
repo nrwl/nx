@@ -1,24 +1,24 @@
 import {
-  useGraphContextMenu,
   NxGraphContextMenu,
+  useGraphContextMenu,
 } from '@nx/graph/context-menu';
-import { useProjectGraphClient } from '@nx/graph/projects';
+import { useTaskGraphClient } from '@nx/graph/tasks';
 import { useSelector } from '@xstate/react';
+import { Tag } from '@nx/graph-ui-common';
 import { useEffect } from 'react';
 import { Interpreter } from 'xstate';
 import {
-  ProjectGraphStateMachineContext,
-  ProjectGraphStateMachineEvents,
-} from './project-graph.machine';
-import { Tag } from '@nx/graph-ui-common';
+  TaskGraphStateMachineContext,
+  TaskGraphStateMachineEvents,
+} from './task-graph.machine';
 
-export function ProjectGraphApp({
+export function TaskGraphApp({
   service,
 }: {
   service: Interpreter<
-    ProjectGraphStateMachineContext,
+    TaskGraphStateMachineContext,
     any,
-    ProjectGraphStateMachineEvents
+    TaskGraphStateMachineEvents
   >;
 }) {
   const {
@@ -27,7 +27,7 @@ export function ProjectGraphApp({
     sendRenderConfigEvent,
     send,
     handleEventResult,
-  } = useProjectGraphClient({
+  } = useTaskGraphClient({
     renderPlatform: 'nx-console',
     styles: [],
   });
@@ -35,19 +35,16 @@ export function ProjectGraphApp({
     renderGraphEventBus: graphClient,
   });
 
-  const projectGraph = useSelector(
-    service,
-    (state) => state.context.projectGraph
-  );
+  const taskGraphs = useSelector(service, (state) => state.context.taskGraphs);
+  const projects = useSelector(service, (state) => state.context.projects);
 
   useEffect(() => {
     if (!graphClient) return;
 
     send({
       type: 'initGraph',
-      projects: Object.values(projectGraph.nodes),
-      dependencies: projectGraph.dependencies,
-      affectedProjects: [],
+      projects,
+      taskGraphs,
     });
     console.log('initGraph called');
 
@@ -81,45 +78,15 @@ export function ProjectGraphApp({
           menuItemsContainerClassName="dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           {{
-            project: ({ data }) => (
+            task: ({ data }) => (
               <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
                 <div className="flex items-center gap-2">
-                  <Tag>{data.projectType}</Tag>
-                  <span className="font-mono">{data.label}</span>
+                  <Tag>{data.executor || 'task'}</Tag>
+                  <span className="font-mono">{data.label || data.id}</span>
                 </div>
-                {data.tags.length > 0 ? (
-                  <p className="my-2 lowercase">
-                    <strong>tags</strong>
-                    <br></br>
-                    {data.tags.join(', ')}
-                  </p>
-                ) : null}
                 {data.description ? (
                   <p className="mt-4">{data.description}</p>
                 ) : null}
-              </div>
-            ),
-            compositeProject: ({ data }) => (
-              <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
-                <div className="flex items-center gap-2">
-                  <Tag>Composite</Tag>
-                  <span className="font-mono">{data.label}</span>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  {data.compositeSize > 0 && (
-                    <p>
-                      <strong>Nested directories: </strong>
-                      {data.compositeSize}
-                    </p>
-                  )}
-                  {data.projectSize > 0 && (
-                    <p>
-                      <strong>Projects: </strong>
-                      {data.projectSize}
-                    </p>
-                  )}
-                </div>
               </div>
             ),
           }}

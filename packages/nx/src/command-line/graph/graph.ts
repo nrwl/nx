@@ -47,7 +47,7 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph, NxJson } from '../../native';
+import { HashPlanner, transferProjectGraph } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -57,6 +57,10 @@ import { ConfigurationSourceMaps } from '../../project-graph/utils/project-confi
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import {
+  createTaskGraphsForTargetAndProjectsWithGraph,
+  clearTaskGraphCache as clearCache,
+} from './create-task-graphs-for-target-and-projects';
 
 export interface GraphError {
   message: string;
@@ -1112,14 +1116,9 @@ function createTaskId(
   }
 }
 
-// Performance optimized functions for lazy loading task graphs
-
-// In-memory cache for task graphs to avoid regeneration
-const taskGraphCache = new Map<string, TaskGraphClientResponse>();
-
 // Clear cache when project graph changes
 function clearTaskGraphCache() {
-  taskGraphCache.clear();
+  clearCache();
 }
 
 /**
@@ -1142,106 +1141,14 @@ async function createTaskGraphsForTargetAndProjects(
   }
   const nxJson = readNxJson();
 
-  // Determine which projects to process
-  let projectsToProcess: string[];
-  if (projectNames && projectNames.length > 0) {
-    // Use specified projects (filter to only those that have the target)
-    projectsToProcess = projectNames.filter(
-      (projectName) => graph.nodes[projectName]?.data.targets?.[targetName]
-    );
-  } else {
-    // Get all projects with the target
-    projectsToProcess = Object.entries(graph.nodes)
-      .filter(([_, project]) => project.data.targets?.[targetName])
-      .map(([projectName]) => projectName);
-  }
-
-  performance.mark(`target task graphs generation:start`);
-
-  // Create task graphs for each project
-  const taskGraphs: Record<string, TaskGraph> = {};
-  const taskGraphErrors: Record<string, string> = {};
-
-  for (const projectName of projectsToProcess) {
-    const taskId = createTaskId(projectName, targetName, configuration);
-
-    // Check cache first
-    const cached = taskGraphCache.get(taskId);
-    if (cached) {
-      Object.assign(taskGraphs, cached.taskGraphs);
-      Object.assign(taskGraphErrors, cached.errors);
-      continue;
-    }
-
-    // Create task graph
-    try {
-      taskGraphs[taskId] = createTaskGraph(
-        graph,
-        {},
-        [projectName],
-        [targetName],
-        configuration,
-        {}
-      );
-    } catch (err) {
-      taskGraphs[taskId] = {
-        tasks: {},
-        dependencies: {},
-        continuousDependencies: {},
-        roots: [],
-      };
-      taskGraphErrors[taskId] = err.message;
-    }
-  }
-
-  performance.mark(`target task graphs generation:end`);
-
-  // Generate hash plans
-  const planner = new HashPlanner(
-    nxJson,
-    transferProjectGraph(transformProjectGraphForRust(graph))
+  // Delegate to the extracted function
+  return createTaskGraphsForTargetAndProjectsWithGraph(
+    targetName,
+    projectNames,
+    configuration,
+    graph,
+    nxJson
   );
-  performance.mark('target task hash plan generation:start');
-  const plans: Record<string, string[]> = {};
-
-  for (const taskGraph of Object.values(taskGraphs)) {
-    const taskIds = Object.keys(taskGraph.tasks);
-    if (taskIds.length > 0) {
-      const taskPlans = planner.getPlans(taskIds, taskGraph);
-      Object.assign(plans, taskPlans);
-    }
-  }
-
-  performance.mark('target task hash plan generation:end');
-
-  // Cache individual results for future requests
-  for (const projectName of projectsToProcess) {
-    const taskId = createTaskId(projectName, targetName, configuration);
-    if (!taskGraphCache.has(taskId)) {
-      taskGraphCache.set(taskId, {
-        taskGraphs: { [taskId]: taskGraphs[taskId] },
-        plans: Object.fromEntries(
-          Object.entries(plans).filter(([key]) => key.startsWith(projectName))
-        ),
-        errors: taskGraphErrors[taskId]
-          ? { [taskId]: taskGraphErrors[taskId] }
-          : {},
-      });
-    }
-  }
-
-  performance.measure(
-    `target task graphs generation for ${targetName}`,
-    `target task graphs generation:start`,
-    `target task graphs generation:end`
-  );
-  performance.measure(
-    'target task hash plan generation',
-    'target task hash plan generation:start',
-    'target task hash plan generation:end'
-  );
-
-  return { taskGraphs, plans, errors: taskGraphErrors };
 }
 
 async function getExpandedTaskInputs(
