@@ -71,13 +71,16 @@ export async function vitestGeneratorInternal(
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
 
   const pkgJson = readJson(tree, 'package.json');
-  const useVite5 =
-    major(coerce(pkgJson.devDependencies['vite']) ?? '6.0.0') === 5;
+  const useViteV5 =
+    major(coerce(pkgJson.devDependencies['vite']) ?? '7.0.0') === 5;
+  const useViteV6 =
+    major(coerce(pkgJson.devDependencies['vite']) ?? '7.0.0') === 6;
   const initTask = await initGenerator(tree, {
     projectRoot: root,
     skipFormat: true,
     addPlugin: schema.addPlugin,
-    useViteV5: useVite5,
+    useViteV5,
+    useViteV6,
   });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { ...schema, uiFramework }));

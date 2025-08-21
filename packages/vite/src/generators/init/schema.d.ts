@@ -7,5 +7,6 @@ export interface InitGeneratorSchema {
   addPlugin?: boolean;
   vitestOnly?: boolean;
   useViteV5?: boolean;
+  useViteV6?: boolean;
   projectRoot?: string;
 }
