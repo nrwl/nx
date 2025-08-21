@@ -87,25 +87,24 @@ class MavenInputOutputAnalyzer(
     
     private fun analyzeInputs(phase: String, project: MavenProject): ArrayNode {
         val inputs = objectMapper.createArrayNode()
-        val projectRoot = getRelativeProjectRoot(project)
         
         when (phase.lowercase()) {
             "validate" -> {
                 // Validation typically checks POM structure
-                addInput(inputs, "$projectRoot/pom.xml")
+                addInput(inputs, "{projectRoot}/pom.xml")
             }
             
             "compile" -> {
                 // Source files
-                addDirectoryInput(inputs, "$projectRoot/src/main/java")
-                addDirectoryInput(inputs, "$projectRoot/src/main/kotlin")
-                addDirectoryInput(inputs, "$projectRoot/src/main/scala")
+                addDirectoryInput(inputs, "{projectRoot}/src/main/java", project)
+                addDirectoryInput(inputs, "{projectRoot}/src/main/kotlin", project)
+                addDirectoryInput(inputs, "{projectRoot}/src/main/scala", project)
                 
                 // Resources
-                addDirectoryInput(inputs, "$projectRoot/src/main/resources")
+                addDirectoryInput(inputs, "{projectRoot}/src/main/resources", project)
                 
                 // Project configuration
-                addInput(inputs, "$projectRoot/pom.xml")
+                addInput(inputs, "{projectRoot}/pom.xml")
                 
                 // Dependencies (represented by dependency list, not actual files)
                 addDependenciesInput(inputs, project.compileArtifacts)
@@ -113,18 +112,18 @@ class MavenInputOutputAnalyzer(
             
             "test-compile" -> {
                 // Test source files
-                addDirectoryInput(inputs, "$projectRoot/src/test/java")
-                addDirectoryInput(inputs, "$projectRoot/src/test/kotlin")
-                addDirectoryInput(inputs, "$projectRoot/src/test/scala")
+                addDirectoryInput(inputs, "{projectRoot}/src/test/java", project)
+                addDirectoryInput(inputs, "{projectRoot}/src/test/kotlin", project)
+                addDirectoryInput(inputs, "{projectRoot}/src/test/scala", project)
                 
                 // Test resources
-                addDirectoryInput(inputs, "$projectRoot/src/test/resources")
+                addDirectoryInput(inputs, "{projectRoot}/src/test/resources", project)
                 
                 // Main compiled classes (test compilation depends on main compilation)
-                addDirectoryInput(inputs, "$projectRoot/target/classes")
+                addDirectoryInput(inputs, "{projectRoot}/target/classes", project)
                 
                 // Project configuration
-                addInput(inputs, "$projectRoot/pom.xml")
+                addInput(inputs, "{projectRoot}/pom.xml")
                 
                 // Test dependencies
                 addDependenciesInput(inputs, project.testArtifacts)
@@ -132,16 +131,16 @@ class MavenInputOutputAnalyzer(
             
             "test" -> {
                 // Compiled test classes
-                addDirectoryInput(inputs, "$projectRoot/target/test-classes")
+                addDirectoryInput(inputs, "{projectRoot}/target/test-classes", project)
                 
                 // Compiled main classes
-                addDirectoryInput(inputs, "$projectRoot/target/classes")
+                addDirectoryInput(inputs, "{projectRoot}/target/classes", project)
                 
                 // Test resources (if not already compiled into test-classes)
-                addDirectoryInput(inputs, "$projectRoot/src/test/resources")
+                addDirectoryInput(inputs, "{projectRoot}/src/test/resources", project)
                 
                 // Project configuration (for test configuration)
-                addInput(inputs, "$projectRoot/pom.xml")
+                addInput(inputs, "{projectRoot}/pom.xml")
                 
                 // Runtime dependencies
                 addDependenciesInput(inputs, project.testArtifacts)
@@ -149,13 +148,13 @@ class MavenInputOutputAnalyzer(
             
             "package" -> {
                 // Compiled main classes
-                addDirectoryInput(inputs, "$projectRoot/target/classes")
+                addDirectoryInput(inputs, "{projectRoot}/target/classes", project)
                 
                 // Resources (if not already in classes)
-                addDirectoryInput(inputs, "$projectRoot/src/main/resources")
+                addDirectoryInput(inputs, "{projectRoot}/src/main/resources", project)
                 
                 // Project configuration (for packaging configuration)
-                addInput(inputs, "$projectRoot/pom.xml")
+                addInput(inputs, "{projectRoot}/pom.xml")
                 
                 // Runtime dependencies (for packaging)
                 addDependenciesInput(inputs, project.runtimeArtifacts)
@@ -163,14 +162,14 @@ class MavenInputOutputAnalyzer(
             
             "verify" -> {
                 // Packaged artifacts
-                addDirectoryInput(inputs, "$projectRoot/target")
+                addDirectoryInput(inputs, "{projectRoot}/target", project)
                 
                 // Project configuration
-                addInput(inputs, "$projectRoot/pom.xml")
+                addInput(inputs, "{projectRoot}/pom.xml")
                 
                 // Test results (if verification includes test results)
-                addDirectoryInput(inputs, "$projectRoot/target/surefire-reports")
-                addDirectoryInput(inputs, "$projectRoot/target/failsafe-reports")
+                addDirectoryInput(inputs, "{projectRoot}/target/surefire-reports", project)
+                addDirectoryInput(inputs, "{projectRoot}/target/failsafe-reports", project)
             }
         }
         
@@ -231,15 +230,16 @@ class MavenInputOutputAnalyzer(
         inputs.add(path)
     }
     
-    private fun addDirectoryInput(inputs: ArrayNode, directory: String) {
-        // Check if directory exists before adding
-        val fullPath = if (directory.startsWith(".")) {
-            File(workspaceRoot, directory.substring(2))
+    private fun addDirectoryInput(inputs: ArrayNode, directory: String, project: MavenProject) {
+        // Convert {projectRoot} token to actual path for existence checking
+        val actualPath = if (directory.startsWith("{projectRoot}")) {
+            val relativePath = directory.replace("{projectRoot}", "")
+            File(project.basedir, relativePath)
         } else {
             File(workspaceRoot, directory)
         }
         
-        if (fullPath.exists() && fullPath.isDirectory) {
+        if (actualPath.exists() && actualPath.isDirectory) {
             inputs.add("$directory/**/*")
         }
     }
