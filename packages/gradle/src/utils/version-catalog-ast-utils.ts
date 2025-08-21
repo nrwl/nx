@@ -282,7 +282,7 @@ export function updatePluginVersionInCatalogAst(
     }
 
     if (updates.length === 0) {
-      return null; // No updates needed or possible
+      return null;
     }
 
     return reconstructTomlWithUpdates(sourceText, updates);
