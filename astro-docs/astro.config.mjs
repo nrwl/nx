@@ -11,8 +11,9 @@ import { redirects } from './redirects.mts';
 
 // https://astro.build/config
 export default defineConfig({
+  base: '/docs',
   vite: { plugins: [tailwindcss()] },
-  site: 'https://docs.nx.dev',
+  site: 'https://nx.dev',
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp',
@@ -21,6 +22,7 @@ export default defineConfig({
       },
     },
   },
+  trailingSlash: 'never',
   // This adapter doesn't support local previews, so only load it on Netlify.
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
   redirects,
