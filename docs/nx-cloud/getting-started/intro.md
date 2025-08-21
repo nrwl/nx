@@ -5,7 +5,7 @@
 CI is challenging and it's **not be your fault**. It's a fundamental issue with how the current, traditional CI execution model works. Nx Cloud adopts a new **task-based** CI model which allows you to overcome slowness and unreliability of the current VM-based CI model.
 _(Dive deeper into the [task based CI execution model](/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness))_
 
-Nx Cloud improves many aspects of the CI/CI process:
+Nx Cloud improves many aspects of the CI/CD process:
 
 - **Speed** - 30% - 70% faster CI (based on reports from our clients)
 - **Cost** - 40% - 75% reduction in CI costs (observed on the Nx OSS monorepo)
@@ -15,7 +15,7 @@ Nx Cloud improves many aspects of the CI/CI process:
 
 ## How Nx Cloud improves CI
 
-In traditional CI models, the work required is statically assigned to a CI machines. Statically defining work to machines creates inefficiencies which many teams become familiar with at scale.
+In traditional CI models, the work required is statically assigned to CI machines. Statically defining work to machines creates inefficiencies which many teams become familiar with at scale.
 
 Nx Cloud addresses the inefficiencies of traditional CI models by using a **task-based approach to dynamically assign tasks** to agent machines.
 
@@ -24,7 +24,7 @@ CI becomes scaleable, maintainable, and more reliable because Nx Cloud can coord
 For example:
 
 - An agent machine fails in a setup step - Nx Cloud automatically reassigns the work to other agent machines.
-- More work is needs to run in CI - Add more agent machines, Nx Cloud automatically assigns available work to extra agent machines.
+- More work needs to run in CI - Add more agent machines, Nx Cloud automatically assigns available work to extra agent machines.
 - Known flaky tasks waste CI time on needed reruns - Nx Cloud automatically detects flaky tasks and reruns automatically in the current CI execution.
 
 See Nx Cloud in action with stories from our customers:
