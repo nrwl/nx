@@ -114,7 +114,8 @@ fun processTargetsForProject(
         tasksInGroup.add(task.name)
       }
 
-      // Set the target name that will be used with Nx if the override is set, else use the task name
+      // Set the target name that will be used with Nx if the override is set, else use the task
+      // name
       val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
       val target =
           processTask(

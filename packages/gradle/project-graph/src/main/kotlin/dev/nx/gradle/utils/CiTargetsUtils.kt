@@ -33,8 +33,7 @@ fun addTestCiTargets(
       projectRoot,
       workspaceRoot,
       ciTestTargetName,
-      ciDependsOn
-  )
+      ciDependsOn)
 
   ensureParentCiTarget(
       targets,
@@ -77,10 +76,10 @@ private fun processTestFiles(
 }
 
 private fun isTestFile(file: File, workspaceRoot: String): Boolean {
-  val content = file.takeIf { it.exists() }?.readText()
-  return content != null && containsEssentialTestAnnotations(content)
   // Additional check for test files that might not have obvious annotations
   // Could be extended with more sophisticated logic
+  val content = file.takeIf { it.exists() }?.readText()
+  return content != null && containsEssentialTestAnnotations(content)
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
@@ -104,7 +103,8 @@ private fun buildTestCiTarget(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
                   "testClassName" to testClassPackagePath),
           "metadata" to
-              getMetadata("Runs Gradle test $testClassPackagePath in CI", projectBuildPath, testTask.name),
+              getMetadata(
+                  "Runs Gradle test $testClassPackagePath in CI", projectBuildPath, testTask.name),
           "cache" to true,
           "inputs" to taskInputs)
 
@@ -134,7 +134,8 @@ private fun ensureParentCiTarget(
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(
             "executor" to "nx:noop",
-            "metadata" to getMetadata("Runs all Gradle tests in CI", projectBuildPath, testTask.name),
+            "metadata" to
+                getMetadata("Runs all Gradle tests in CI", projectBuildPath, testTask.name),
             "cache" to true,
             "inputs" to taskInputs,
             "dependsOn" to ciDependsOn)

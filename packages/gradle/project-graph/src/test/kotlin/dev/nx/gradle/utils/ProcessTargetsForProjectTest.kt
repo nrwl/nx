@@ -1,9 +1,9 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.*
-import org.gradle.api.tasks.SourceTask
 import java.io.File
 import kotlin.test.*
+import org.gradle.api.tasks.SourceTask
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -19,42 +19,44 @@ class ProcessTargetsForProjectTest {
     buildFile.writeText("// test build file")
 
     val testFile1 =
-      File(projectDir, "src/test/kotlin/MyFirstTest.kt").apply {
-        parentFile.mkdirs()
-        writeText("class MyFirstTest { @Test fun testMethod() {} }")
-      }
+        File(projectDir, "src/test/kotlin/MyFirstTest.kt").apply {
+          parentFile.mkdirs()
+          writeText("class MyFirstTest { @Test fun testMethod() {} }")
+        }
 
-    val testTask = project.tasks.register("apiTest").get().apply {
-        group = "verification"
-        description = "Runs the tests"
-        inputs.files(project.files(testFile1))
-      }
+    val testTask =
+        project.tasks.register("apiTest").get().apply {
+          group = "verification"
+          description = "Runs the tests"
+          inputs.files(project.files(testFile1))
+        }
 
     // Dummy test task that we do NOT want to atomize
-      project.tasks.register("test").get().apply {
-        group = "verification"
-        description = "Runs the tests"
-      }
+    project.tasks.register("test").get().apply {
+      group = "verification"
+      description = "Runs the tests"
+    }
 
     // Create a compile task with source files using SourceTask
     val compileTask = project.tasks.register("compileTestKotlin", SourceTask::class.java).get()
     compileTask.source(testFile1)
     compileTask.dependsOn(testTask)
 
-    val targetNameOverrides = mapOf(
-      "testTargetName" to "apiTest",
-      "ciTestTargetName" to "ciTest",
-    )
+    val targetNameOverrides =
+        mapOf(
+            "testTargetName" to "apiTest",
+            "ciTestTargetName" to "ciTest",
+        )
     val dependencies = mutableSetOf<Dependency>() // Empty for this test's scope
 
     // Act
     val gradleTargets =
-      processTargetsForProject(
-        project = project,
-        dependencies = dependencies,
-        targetNameOverrides = targetNameOverrides,
-        workspaceRoot = workspaceRoot,
-        atomized = true)
+        processTargetsForProject(
+            project = project,
+            dependencies = dependencies,
+            targetNameOverrides = targetNameOverrides,
+            workspaceRoot = workspaceRoot,
+            atomized = true)
 
     val apiTestTarget = gradleTargets.targets["apiTest"]
     assertNotNull(apiTestTarget)
@@ -69,7 +71,8 @@ class ProcessTargetsForProjectTest {
     assertEquals("self", (ciDependsOn.first() as Map<*, *>)["projects"])
     assertEquals("ciTest--MyFirstTest", (ciDependsOn.first() as Map<*, *>)["target"])
     val ciTargetMetadata = ciTestTarget["metadata"] as Map<*, *>
-    assertEquals("./gradlew help --task :apiTest", (ciTargetMetadata["help"] as Map<*, *>)["command"])
+    assertEquals(
+        "./gradlew help --task :apiTest", (ciTargetMetadata["help"] as Map<*, *>)["command"])
 
     val ciTestAtomizedTarget = gradleTargets.targets["ciTest--MyFirstTest"]
     assertNotNull(ciTestAtomizedTarget)
@@ -77,9 +80,10 @@ class ProcessTargetsForProjectTest {
     assertEquals(":apiTest", ciTestAtomizedTargetOptions["taskName"])
     assertEquals("MyFirstTest", ciTestAtomizedTargetOptions["testClassName"])
     val ciTestAtomizedTargetMetadata = ciTestAtomizedTarget["metadata"] as Map<*, *>
-    assertEquals("./gradlew help --task :apiTest", (ciTestAtomizedTargetMetadata["help"] as Map<*, *>)["command"])
+    assertEquals(
+        "./gradlew help --task :apiTest",
+        (ciTestAtomizedTargetMetadata["help"] as Map<*, *>)["command"])
   }
-
 
   @Test
   fun `should process targets correctly when atomized is true`(@TempDir workspaceDir: File) {

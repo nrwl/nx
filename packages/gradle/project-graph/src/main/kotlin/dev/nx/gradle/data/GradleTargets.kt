@@ -15,7 +15,7 @@ typealias GradleTaskGroup = MutableList<GradleTaskName>
 typealias TargetGroups = MutableMap<GradleGroupName, GradleTaskGroup>
 
 data class GradleTargets(
-  val targets: NxTargets,
-  val targetGroups: TargetGroups,
-  var externalNodes: MutableMap<String, ExternalNode>
+    val targets: NxTargets,
+    val targetGroups: TargetGroups,
+    var externalNodes: MutableMap<String, ExternalNode>
 ) : Serializable
