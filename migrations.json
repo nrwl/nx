@@ -1,0 +1,11 @@
+{
+  "migrations": [
+    {
+      "version": "21.5.0-beta.0",
+      "description": "Set the 'tsConfig' option to build and test targets to help with Angular migration issues.",
+      "factory": "./src/migrations/update-21-5-0/set-tsconfig-option",
+      "package": "@nx/angular",
+      "name": "set-tsconfig-option"
+    }
+  ]
+}
