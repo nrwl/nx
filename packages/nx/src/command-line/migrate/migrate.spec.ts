@@ -136,6 +136,52 @@ describe('Migration', () => {
       });
     });
 
+    it('should support "alwaysAddToPackageJson" with string values', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({ dependencies: { child1: '1.0.0' } }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: (p, _v) => {
+          if (p === 'mypackage') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child1: {
+                      version: '3.0.0',
+                      alwaysAddToPackageJson: 'dependencies',
+                    },
+                    child2: {
+                      version: '3.0.0',
+                      alwaysAddToPackageJson: 'devDependencies',
+                    },
+                  },
+                },
+              },
+            });
+          } else if (p === 'child1') {
+            return Promise.resolve({ version: '3.0.0' });
+          } else if (p === 'child2') {
+            return Promise.resolve({ version: '3.0.0' });
+          } else {
+            return Promise.resolve(null);
+          }
+        },
+        from: {},
+        to: {},
+      });
+
+      expect(await migrator.migrate('mypackage', '2.0.0')).toEqual({
+        migrations: [],
+        packageUpdates: {
+          mypackage: { version: '2.0.0', addToPackageJson: false },
+          child1: { version: '3.0.0', addToPackageJson: 'dependencies' },
+          child2: { version: '3.0.0', addToPackageJson: 'devDependencies' },
+        },
+      });
+    });
+
     it('should stop recursive calls when exact version', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
