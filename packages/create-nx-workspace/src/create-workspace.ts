@@ -9,7 +9,6 @@ import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
-import { addMcpToCodexConfig } from './utils/add-mcp-to-codex-config';
 import {
   initializeGitRepo,
   pushToGitHub,
