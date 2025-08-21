@@ -1,6 +1,5 @@
 import { formatFiles, generateFiles, Tree } from '@nx/devkit';
 import { exec } from 'child_process';
-import { appendFileSync, existsSync, writeFileSync } from 'fs';
 import {
   createTempNpmDirectory,
   detectPackageManager,
