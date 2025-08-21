@@ -25,10 +25,14 @@ export default async function (tree: Tree) {
     try {
       // we're only updating static project configurations, not inferred ones
       const projectConfig = readProjectConfiguration(tree, project.name);
+      let wasUpdated = false;
       for (const target of relevantTargets(projectConfig)) {
         updateTarget(tree, projectConfig, target);
+        wasUpdated = true;
       }
-      updateProjectConfiguration(tree, project.name, projectConfig);
+      if (wasUpdated) {
+        updateProjectConfiguration(tree, project.name, projectConfig);
+      }
     } catch {
       // ignore, it can happen if the project is fully inferred and there's no
       // `project.json` file or `nx` entry in `package.json`
