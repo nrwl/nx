@@ -44,11 +44,6 @@
             "output": "/"
           },
           {
-            "input": "packages/workspace",
-            "glob": "**/files-ai/**",
-            "output": "/"
-          },
-          {
             "glob": "**/files-packaged-based-repo/**/.gitkeep",
             "input": "packages/workspace",
             "output": "/"
