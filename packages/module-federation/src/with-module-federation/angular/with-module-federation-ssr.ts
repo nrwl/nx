@@ -78,7 +78,6 @@ export async function withModuleFederationForSSR(
                     ...(configOverride?.runtimePlugins ?? []),
                     require.resolve('@module-federation/node/runtimePlugin'),
                   ],
-            virtualRuntimeEntry: true,
           },
           {}
         ),

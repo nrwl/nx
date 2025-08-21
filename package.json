@@ -313,7 +313,7 @@
     "ts-loader": "^9.3.1",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
-    "tsconfig-paths-webpack-plugin": "4.0.0",
+    "tsconfig-paths-webpack-plugin": "4.2.0",
     "typedoc": "0.25.12",
     "typedoc-plugin-markdown": "3.17.1",
     "typescript": "~5.8.2",
@@ -323,8 +323,8 @@
     "verdaccio": "6.0.5",
     "vite": "6.2.0",
     "vitest": "3.0.5",
-    "webpack": "5.99.9",
-    "webpack-dev-server": "5.2.1",
+    "webpack": "5.101.3",
+    "webpack-dev-server": "5.2.2",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
@@ -414,7 +414,10 @@
     "onlyBuiltDependencies": [
       "@nestjs/core",
       "nx"
-    ]
+    ],
+    "overrides": {
+      "webpack": "5.101.3"
+    }
   },
   "nx": {
     "includedScripts": [

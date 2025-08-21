@@ -12,8 +12,7 @@ import {
 import { stripIndents } from 'nx/src/utils/strip-indents';
 import { readPort, runCLI } from './utils';
 
-// TODO(@Coly010): Please re-enable this when the test is fixed.
-xdescribe('Independent Deployability', () => {
+describe('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
