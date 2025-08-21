@@ -179,42 +179,41 @@ class MavenInputOutputAnalyzer(
     
     private fun analyzeOutputs(phase: String, project: MavenProject): ArrayNode {
         val outputs = objectMapper.createArrayNode()
-        val projectRoot = getRelativeProjectRoot(project)
         
         when (phase.lowercase()) {
             "validate" -> {
                 // Validation typically doesn't produce files, but may create reports
-                addOutput(outputs, "$projectRoot/target/validation-reports")
+                addOutput(outputs, "{projectRoot}/target/validation-reports")
             }
             
             "compile" -> {
-                addOutput(outputs, "$projectRoot/target/classes")
-                addOutput(outputs, "$projectRoot/target/generated-sources")
+                addOutput(outputs, "{projectRoot}/target/classes")
+                addOutput(outputs, "{projectRoot}/target/generated-sources")
             }
             
             "test-compile" -> {
-                addOutput(outputs, "$projectRoot/target/test-classes")
-                addOutput(outputs, "$projectRoot/target/generated-test-sources")
+                addOutput(outputs, "{projectRoot}/target/test-classes")
+                addOutput(outputs, "{projectRoot}/target/generated-test-sources")
             }
             
             "test" -> {
-                addOutput(outputs, "$projectRoot/target/surefire-reports")
-                addOutput(outputs, "$projectRoot/target/test-results")
+                addOutput(outputs, "{projectRoot}/target/surefire-reports")
+                addOutput(outputs, "{projectRoot}/target/test-results")
             }
             
             "package" -> {
                 // Main artifact
                 val packaging = project.packaging ?: "jar"
-                addOutput(outputs, "$projectRoot/target/${project.artifactId}-${project.version}.$packaging")
+                addOutput(outputs, "{projectRoot}/target/${project.artifactId}-${project.version}.$packaging")
                 
                 // Additional artifacts
-                addOutput(outputs, "$projectRoot/target/classes")
-                addOutput(outputs, "$projectRoot/target/maven-archiver")
+                addOutput(outputs, "{projectRoot}/target/classes")
+                addOutput(outputs, "{projectRoot}/target/maven-archiver")
             }
             
             "verify" -> {
-                addOutput(outputs, "$projectRoot/target/failsafe-reports")
-                addOutput(outputs, "$projectRoot/target/verification-reports")
+                addOutput(outputs, "{projectRoot}/target/failsafe-reports")
+                addOutput(outputs, "{projectRoot}/target/verification-reports")
             }
         }
         
