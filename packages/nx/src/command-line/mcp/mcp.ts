@@ -24,12 +24,12 @@ export async function mcpHandler(args: any) {
     dlxArgs = ['nx-mcp@latest', ...passthroughArgs];
   }
 
-  // spawnSync would break with a .dlx value with a space (like pnpm dlx is)
-  const spawnSyncArgs = `${packageManagerCommands.dlx} ${dlxArgs.join(
-    ' '
-  )}`.split(' ');
+  // For commands that might contain spaces like "pnpm dlx"
+  const dlxCommand = packageManagerCommands.dlx.split(' ');
+  const executable = dlxCommand[0];
+  const execArgs = [...dlxCommand.slice(1), ...dlxArgs];
 
-  spawnSync(spawnSyncArgs[0], spawnSyncArgs.slice(1), {
+  spawnSync(executable, execArgs, {
     stdio: 'inherit',
     cwd: workspaceRoot,
   });
@@ -50,7 +50,11 @@ export async function showHelp() {
     dlxArgs = ['nx-mcp@latest', '--help'];
   }
 
-  const helpOutput = spawnSync(packageManagerCommands.dlx, dlxArgs, {
+  const dlxCommand = packageManagerCommands.dlx.split(' ');
+  const executable = dlxCommand[0];
+  const execArgs = [...dlxCommand.slice(1), ...dlxArgs];
+
+  const helpOutput = spawnSync(executable, execArgs, {
     cwd: workspaceRoot,
     encoding: 'utf-8',
   });
