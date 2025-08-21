@@ -1,0 +1,38 @@
+name: PR Title Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr-title:
+    if: ${{ github.repository_owner == 'nrwl' }}
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # For pull_request_target, we need to checkout the base branch
+          ref: ${{ github.event.pull_request.base.ref }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Create PR message file
+        run: |
+          mkdir -p /tmp
+          cat > /tmp/pr-message.txt << 'EOF'
+          ${{ github.event.pull_request.title }}
+          
+          ${{ github.event.pull_request.body }}
+          EOF
+          
+      - name: Validate PR title
+        run: |
+          echo "Validating PR title: ${{ github.event.pull_request.title }}"
+          node ./scripts/commit-lint.js /tmp/pr-message.txt
