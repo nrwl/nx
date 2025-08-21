@@ -437,14 +437,8 @@ describe('project configuration', () => {
         },
       });
 
-      // Read the merged configuration (should include properties from both files)
+      // Read the merged configuration and update it
       const mergedConfig = readProjectConfiguration(tree, 'mixed-project');
-      expect(mergedConfig.tags).toEqual(['from-package-json']);
-      expect(mergedConfig.implicitDependencies).toEqual([
-        'package-implicit-dep',
-      ]);
-      expect(mergedConfig.namedInputs?.packageNamedInput).toEqual(['src/**/*']);
-      expect(mergedConfig.targets?.build).toBeDefined();
 
       // Update the project configuration with new values
       updateProjectConfiguration(tree, 'mixed-project', {
@@ -461,10 +455,8 @@ describe('project configuration', () => {
         },
       });
 
-      // Check that project.json only contains project.json-specific properties
-      // and doesn't include properties that came from package.json
+      // Verify project.json only contains project-specific properties (not package.json properties)
       const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
-
       expect(projectJsonContent).toEqual({
         name: 'mixed-project',
         $schema: '../../node_modules/nx/schemas/project-schema.json',
@@ -485,20 +477,19 @@ describe('project configuration', () => {
         },
       });
 
-      // Verify that properties from package.json are NOT in project.json
-      expect(projectJsonContent.tags).toBeUndefined();
-      expect(projectJsonContent.implicitDependencies).toBeUndefined();
-      expect(projectJsonContent.namedInputs).toBeUndefined();
-
-      // Verify that package.json is unchanged
+      // Verify package.json is unchanged
       const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
-      expect(packageJsonContent.nx.tags).toEqual(['from-package-json']);
-      expect(packageJsonContent.nx.implicitDependencies).toEqual([
-        'package-implicit-dep',
-      ]);
-      expect(packageJsonContent.nx.namedInputs?.packageNamedInput).toEqual([
-        'src/**/*',
-      ]);
+      expect(packageJsonContent).toEqual({
+        name: 'mixed-project',
+        version: '1.0.0',
+        nx: {
+          tags: ['from-package-json'],
+          implicitDependencies: ['package-implicit-dep'],
+          namedInputs: {
+            packageNamedInput: ['src/**/*'],
+          },
+        },
+      });
     });
 
     it('should handle nested properties correctly when both files exist', () => {
@@ -542,17 +533,8 @@ describe('project configuration', () => {
         },
       });
 
-      // Read merged config - this will include properties from both files merged together
+      // Read merged config and update it
       const mergedConfig = readProjectConfiguration(tree, 'nested-test');
-      expect(mergedConfig.targets?.lint).toBeDefined(); // from package.json
-      expect(mergedConfig.targets?.build).toBeDefined(); // from project.json
-
-      // Metadata arrays get merged, non-arrays get overridden
-      expect(mergedConfig.metadata?.description).toEqual('from-project'); // project.json overrides
-      expect(mergedConfig.metadata?.technologies).toEqual([
-        'from-package-tech',
-        'from-project-tech',
-      ]); // arrays get merged
 
       // Update configuration
       updateProjectConfiguration(tree, 'nested-test', {
@@ -567,18 +549,46 @@ describe('project configuration', () => {
 
       // Verify project.json only contains properties that should be there
       const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
+      expect(projectJsonContent).toEqual({
+        name: 'nested-test',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              outputPath: 'dist/nested-test',
+            },
+          },
+          test: {
+            executor: '@nx/jest:jest',
+          },
+        },
+        metadata: {
+          description: 'from-project',
+          technologies: ['from-package-tech', 'from-project-tech'], // merged array (acceptable)
+        },
+      });
 
-      // Should have targets that were originally in project.json plus new ones
-      expect(projectJsonContent.targets?.build).toBeDefined(); // was in original project.json
-      expect(projectJsonContent.targets?.test).toBeDefined(); // newly added
-      expect(projectJsonContent.targets?.lint).toBeUndefined(); // this came from package.json, shouldn't be copied
-
-      // Should have metadata that was originally in project.json (includes merged values)
-      expect(projectJsonContent.metadata?.description).toEqual('from-project'); // was in original project.json
-      expect(projectJsonContent.metadata?.technologies).toEqual([
-        'from-package-tech',
-        'from-project-tech',
-      ]); // merged array (acceptable for this approach)
+      // Verify package.json is unchanged
+      const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
+      expect(packageJsonContent).toEqual({
+        name: 'nested-test',
+        version: '1.0.0',
+        nx: {
+          targets: {
+            lint: {
+              executor: '@nx/eslint:lint',
+              options: {
+                lintFilePatterns: ['src/**/*.ts'],
+              },
+            },
+          },
+          metadata: {
+            description: 'from-package',
+            technologies: ['from-package-tech'],
+          },
+        },
+      });
     });
 
     it('should allow project.json to override properties from package.json', () => {
@@ -611,14 +621,11 @@ describe('project configuration', () => {
         },
       });
 
-      // Read merged config - project.json name should take precedence
+      // Read merged config and update it
       const mergedConfig = readProjectConfiguration(
         tree,
         'project-name-override'
       );
-      expect(mergedConfig.name).toEqual('project-name-override'); // project.json overrides package.json
-      expect(mergedConfig.targets?.build).toBeDefined(); // from package.json
-      expect(mergedConfig.targets?.test).toBeDefined(); // from project.json
 
       // Update configuration
       updateProjectConfiguration(tree, 'project-name-override', {
@@ -633,16 +640,35 @@ describe('project configuration', () => {
 
       // Verify project.json keeps the override name and only its targets
       const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
-
-      expect(projectJsonContent.name).toEqual('project-name-override'); // should keep the override
-      expect(projectJsonContent.targets?.test).toBeDefined(); // was in original project.json
-      expect(projectJsonContent.targets?.lint).toBeDefined(); // newly added
-      expect(projectJsonContent.targets?.build).toBeUndefined(); // came from package.json, shouldn't be copied
+      expect(projectJsonContent).toEqual({
+        name: 'project-name-override',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          test: {
+            executor: '@nx/jest:jest',
+          },
+          lint: {
+            executor: '@nx/eslint:lint',
+          },
+        },
+      });
 
       // Verify package.json is unchanged
       const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
-      expect(packageJsonContent.name).toEqual('package-name'); // unchanged
-      expect(packageJsonContent.nx.targets?.build).toBeDefined(); // unchanged
+      expect(packageJsonContent).toEqual({
+        name: 'package-name',
+        version: '1.0.0',
+        nx: {
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                outputPath: 'dist/package-name',
+              },
+            },
+          },
+        },
+      });
     });
 
     it('should write property to project.json when value differs from package.json', () => {
@@ -669,15 +695,13 @@ describe('project configuration', () => {
         },
       });
 
-      // Read merged config
+      // Read merged config and update with DIFFERENT values than what's in package.json
       const mergedConfig = readProjectConfiguration(
         tree,
         'override-value-test'
       );
-      expect(mergedConfig.tags).toEqual(['package-tag']); // from package.json
-      expect(mergedConfig.sourceRoot).toEqual('src-from-package'); // from package.json
 
-      // Update configuration with DIFFERENT values than what's in package.json
+      // Update configuration with different values
       updateProjectConfiguration(tree, 'override-value-test', {
         ...mergedConfig,
         tags: ['overridden-tag'], // different from package.json
@@ -686,14 +710,28 @@ describe('project configuration', () => {
 
       // Verify project.json now contains the overridden values
       const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
-
-      expect(projectJsonContent.tags).toEqual(['overridden-tag']); // should be written to project.json because it's different
-      expect(projectJsonContent.sourceRoot).toEqual('src-overridden'); // should be written to project.json because it's different
+      expect(projectJsonContent).toEqual({
+        name: 'override-value-test',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+          },
+        },
+        tags: ['overridden-tag'], // different from package.json, so written here
+        sourceRoot: 'src-overridden', // different from package.json, so written here
+      });
 
       // Verify package.json is unchanged
       const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
-      expect(packageJsonContent.nx.tags).toEqual(['package-tag']); // unchanged
-      expect(packageJsonContent.nx.sourceRoot).toEqual('src-from-package'); // unchanged
+      expect(packageJsonContent).toEqual({
+        name: 'override-value-test',
+        version: '1.0.0',
+        nx: {
+          tags: ['package-tag'],
+          sourceRoot: 'src-from-package',
+        },
+      });
     });
   });
 });
