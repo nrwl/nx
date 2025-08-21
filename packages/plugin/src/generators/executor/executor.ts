@@ -158,7 +158,7 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const {
     artifactName: name,
-    directory,
+    directory: initialDirectory,
     fileName,
     project,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
@@ -167,6 +167,23 @@ async function normalizeOptions(
     allowedFileExtensions: ['ts'],
     fileExtension: 'ts',
   });
+
+  // Check if the path looks like a directory path (doesn't end with a filename)
+  // If so, include the artifact name as a subdirectory
+  let directory = initialDirectory;
+  const normalizedPath = options.path.replace(/^\.?\//, '').replace(/\/$/, '');
+  const pathSegments = normalizedPath.split('/');
+  const lastSegment = pathSegments[pathSegments.length - 1];
+
+  // If the last segment doesn't end with a known file extension and matches the artifact name,
+  // it's likely a directory path, so we should create a subdirectory
+  const knownFileExtensions = ['.ts', '.js', '.jsx', '.tsx'];
+  const hasKnownFileExtension = knownFileExtensions.some((ext) =>
+    lastSegment.endsWith(ext)
+  );
+  if (!hasKnownFileExtension && lastSegment === name) {
+    directory = joinPathFragments(initialDirectory, name);
+  }
 
   const { className, propertyName } = names(name);
 
