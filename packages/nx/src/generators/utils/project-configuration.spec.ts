@@ -644,5 +644,56 @@ describe('project configuration', () => {
       expect(packageJsonContent.name).toEqual('package-name'); // unchanged
       expect(packageJsonContent.nx.targets?.build).toBeDefined(); // unchanged
     });
+
+    it('should write property to project.json when value differs from package.json', () => {
+      const projectRoot = 'libs/override-value-test';
+
+      // Create package.json with some properties
+      writeJson<PackageJson>(tree, `${projectRoot}/package.json`, {
+        name: 'override-value-test',
+        version: '1.0.0',
+        nx: {
+          tags: ['package-tag'],
+          sourceRoot: 'src-from-package',
+        },
+      });
+
+      // Create project.json with NO tags or sourceRoot initially
+      writeJson(tree, `${projectRoot}/project.json`, {
+        name: 'override-value-test',
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+          },
+        },
+      });
+
+      // Read merged config
+      const mergedConfig = readProjectConfiguration(
+        tree,
+        'override-value-test'
+      );
+      expect(mergedConfig.tags).toEqual(['package-tag']); // from package.json
+      expect(mergedConfig.sourceRoot).toEqual('src-from-package'); // from package.json
+
+      // Update configuration with DIFFERENT values than what's in package.json
+      updateProjectConfiguration(tree, 'override-value-test', {
+        ...mergedConfig,
+        tags: ['overridden-tag'], // different from package.json
+        sourceRoot: 'src-overridden', // different from package.json
+      });
+
+      // Verify project.json now contains the overridden values
+      const projectJsonContent = readJson(tree, `${projectRoot}/project.json`);
+
+      expect(projectJsonContent.tags).toEqual(['overridden-tag']); // should be written to project.json because it's different
+      expect(projectJsonContent.sourceRoot).toEqual('src-overridden'); // should be written to project.json because it's different
+
+      // Verify package.json is unchanged
+      const packageJsonContent = readJson(tree, `${projectRoot}/package.json`);
+      expect(packageJsonContent.nx.tags).toEqual(['package-tag']); // unchanged
+      expect(packageJsonContent.nx.sourceRoot).toEqual('src-from-package'); // unchanged
+    });
   });
 });

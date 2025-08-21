@@ -212,11 +212,15 @@ function updateProjectConfigurationInProjectJson(
         updatedProjectJson[key] = resultTargets;
       }
     } else {
-      // For other properties, include if: originally in project.json OR not in package.json
+      // For other properties, include if: originally in project.json OR not in package.json OR different from package.json value
       const wasInProjectJson = existingProjectJson.hasOwnProperty(key);
       const isInPackageJson = packageJsonNxConfig.hasOwnProperty(key);
+      const packageJsonValue = packageJsonNxConfig[key];
+      const isDifferentFromPackageJson =
+        !isInPackageJson ||
+        JSON.stringify(value) !== JSON.stringify(packageJsonValue);
 
-      if (wasInProjectJson || !isInPackageJson) {
+      if (wasInProjectJson || isDifferentFromPackageJson) {
         updatedProjectJson[key] = value;
       }
     }
