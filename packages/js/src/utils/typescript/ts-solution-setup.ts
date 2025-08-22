@@ -366,7 +366,10 @@ const customConditionNamePrefix = '@nx-source/';
  * yet defined, it returns the workspace package name or '@nx/source' in case
  * it's not defined.
  */
-export function getCustomConditionName(tree: Tree): string {
+export function getCustomConditionName(
+  tree: Tree,
+  options: { skipDevelopmentFallback?: boolean } = {}
+): string {
   let name: string | undefined;
   try {
     ({ name } = readJson<{ name?: string }>(tree, 'package.json'));
@@ -390,14 +393,16 @@ export function getCustomConditionName(tree: Tree): string {
 
   // Try to find a condition that matches the following (in order):
   // - a custom condition that starts with '@nx-source/'
-  // - the 'development' backward compatibility name
+  // - the 'development' backward compatibility name (if not skipped)
   const customCondition =
     definedCustomConditions.find((condition) =>
       condition.startsWith(customConditionNamePrefix)
     ) ??
-    definedCustomConditions.find(
-      (condition) => condition === backwardCompatibilityCustomConditionName
-    );
+    (!options.skipDevelopmentFallback
+      ? definedCustomConditions.find(
+          (condition) => condition === backwardCompatibilityCustomConditionName
+        )
+      : undefined);
 
   // If a custom condition matches, use it, otherwise use the name.
   return customCondition ?? name;
