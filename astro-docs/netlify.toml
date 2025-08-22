@@ -1,0 +1,98 @@
+# Permanent redirects (301 by default)
+[[redirects]]
+from = "/"
+to = "/docs/getting-started/intro"
+
+[[redirects]]
+from = "/showcase"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-express"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-lit"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-solid"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-qwik"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-rust"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-dotnet"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-astro"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-svelte"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/add-fastify"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/apollo-react"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/nestjs-prisma"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/mongo-fastify"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/redis-fastify"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/postgres-fastify"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/serverless-fastify-planetscale"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/mfe"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/benchmarks"
+to = "/docs/references/benchmarks"
+
+[[redirects]]
+from = "/showcase/benchmarks/tsc-batch-mode"
+to = "/docs/references/benchmarks/tsc-batch-mode"
+
+[[redirects]]
+from = "/showcase/benchmarks/caching"
+to = "/docs/references/benchmarks/caching"
+
+[[redirects]]
+from = "/showcase/benchmarks/nx-agents"
+to = "/docs/references/benchmarks/nx-agents"
+
+# Rewrite for base path handling (keeps URL the same)
+[[redirects]]
+from = "/docs/*"
+to = "/:splat"
+status = 200
