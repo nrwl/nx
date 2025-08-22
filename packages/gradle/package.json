@@ -37,7 +37,7 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "nx": "workspace:*",
-    "smol-toml": "^1.4.1"
+    "toml-eslint-parser": "^0.10.0"
   },
   "publishConfig": {
     "access": "public"
