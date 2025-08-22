@@ -1,0 +1,22 @@
+# Permanent redirects (301 by default)
+[[redirects]]
+from = "/"
+to = "/docs/getting-started/intro"
+
+[[redirects]]
+from = "/showcase"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/*"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/benchmarks/*"
+to = "/docs/reference/benchmarks/:splat"
+
+# Rewrite for base path handling (keeps URL the same)
+[[redirects]]
+from = "/docs/*"
+to = "/:splat"
+status = 200

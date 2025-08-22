@@ -876,8 +876,6 @@ const referenceUrls = {
 };
 
 const missingAndCatchAllRedirects = {
-  // missing
-  '/docs': '/getting-started/intro',
   // catch all
   '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
   '/(l|latest|p|previous)/:path*': '/:path*',
@@ -891,6 +889,14 @@ const missingAndCatchAllRedirects = {
   '/nx-console': '/using-nx/console',
   '/packages/:path*': '/nx-api/:path*',
 };
+
+if (process.env['NEXT_PUBLIC_ASTRO_URL']) {
+  missingAndCatchAllRedirects['/getting-started/:path*'] =
+    '/docs/getting-started/intro';
+} else {
+  // For new docs, we rewrite all docs URLs to astro site, so we can skip this redirect
+  missingAndCatchAllRedirects['/docs'] = '/getting-started/intro';
+}
 
 const marketing = {
   '/conf': 'https://monorepo.world',
