@@ -4000,6 +4000,9 @@ importers:
       picomatch:
         specifier: 4.0.2
         version: 4.0.2
+      semver:
+        specifier: ^7.6.3
+        version: 7.7.2
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
