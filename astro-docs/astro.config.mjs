@@ -42,7 +42,14 @@ export default defineConfig({
       plugins: [
         // linkValidator(),
       ],
-      routeMiddleware: ['./src/plugins/banner.middleware.ts'],
+      routeMiddleware: [
+        './src/plugins/banner.middleware.ts',
+        // NOTE: this is responsibile for populating the Reference section
+        // with generated routes from the nx-reference-packages content collection
+        // since the sidebar doesn't auto generate w/ dynamic routes from src/pages/reference
+        // only the src/content/docs/reference files
+        './src/plugins/sidebar-reference-updater.middleware.ts',
+      ],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
         // as to _why_ it has to normalize a path?
