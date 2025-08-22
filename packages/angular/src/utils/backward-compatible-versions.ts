@@ -13,10 +13,7 @@ export type PackageVersionNames =
   | CompatPackageVersionNames;
 
 export type VersionMap = {
-  angularV18: Record<
-    Exclude<CompatPackageVersionNames, 'angularRspackVersion'>,
-    string
-  >;
+  angularV18: Record<CompatPackageVersionNames, string>;
   angularV19: Record<
     CompatPackageVersionNames | 'angularRspackVersion',
     string
