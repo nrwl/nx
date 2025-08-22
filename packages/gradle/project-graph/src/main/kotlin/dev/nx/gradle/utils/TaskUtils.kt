@@ -60,20 +60,19 @@ fun processTask(
 
   target["executor"] = "@nx/gradle:gradle"
 
-  val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
   val metadata =
       getMetadata(
-          task.description ?: "Run ${projectBuildPath}.$taskName", projectBuildPath, taskName)
+          task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
   target["options"] =
       if (continuous) {
         mapOf(
-            "taskName" to "${projectBuildPath}:$taskName",
+            "taskName" to "${projectBuildPath}:${task.name}",
             "continuous" to true,
             "excludeDependsOn" to shouldExcludeDependsOn(task))
       } else {
-        mapOf("taskName" to "${projectBuildPath}:$taskName")
+        mapOf("taskName" to "${projectBuildPath}:${task.name}")
       }
 
   return target
