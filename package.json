@@ -415,10 +415,7 @@
     "onlyBuiltDependencies": [
       "@nestjs/core",
       "nx"
-    ],
-    "overrides": {
-      "webpack": "5.101.3"
-    }
+    ]
   },
   "nx": {
     "includedScripts": [
