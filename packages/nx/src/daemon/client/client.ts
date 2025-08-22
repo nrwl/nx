@@ -648,7 +648,8 @@ export class DaemonClient {
       if (parsedResult.error) {
         if (
           'message' in parsedResult.error &&
-          parsedResult.error.message === 'NX_VERSION_CHANGED'
+          (parsedResult.error.message === 'NX_VERSION_CHANGED' ||
+            parsedResult.error.message === 'LOCK_FILES_CHANGED')
         ) {
           this.retryMessageAfterNewDaemonStarts();
         } else {
