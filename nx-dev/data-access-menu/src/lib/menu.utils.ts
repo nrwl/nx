@@ -71,7 +71,7 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
     itemList: items
       .filter(
         (m) =>
-          m.id === 'intro' ||
+          m.id === 'getting-started' ||
           m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||

@@ -6782,6 +6782,23 @@
     "id": "ci",
     "menu": [
       {
+        "name": "Getting Started",
+        "path": "/ci/getting-started",
+        "id": "getting-started",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Intro",
+            "path": "/ci/getting-started/intro",
+            "id": "intro",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
         "name": "Features",
         "path": "/ci/features",
         "id": "features",
