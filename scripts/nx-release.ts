@@ -231,48 +231,44 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   // TODO(colum): Remove when we have a better way to handle this
-  if (options.local) {
-    console.log(
-      'Resetting angular-rspack package.json versions to previous versions'
-    );
-    const angularRspackPackageJson = JSON.parse(
-      readFileSync(
-        join(workspaceRoot, 'packages/angular-rspack/package.json'),
-        'utf-8'
-      )
-    );
-    angularRspackPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
-    angularRspackPackageJson.dependencies['@nx/angular-rspack-compiler'] =
-      'workspace:*';
-    angularRspackPackageJson.version = angularRspackPrevVersion;
-    writeFileSync(
+
+  console.log(
+    'Resetting angular-rspack package.json versions to previous versions'
+  );
+  const angularRspackPackageJson = JSON.parse(
+    readFileSync(
       join(workspaceRoot, 'packages/angular-rspack/package.json'),
-      JSON.stringify(angularRspackPackageJson)
-    );
+      'utf-8'
+    )
+  );
+  angularRspackPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
+  angularRspackPackageJson.dependencies['@nx/angular-rspack-compiler'] =
+    'workspace:*';
+  angularRspackPackageJson.version = angularRspackPrevVersion;
+  writeFileSync(
+    join(workspaceRoot, 'packages/angular-rspack/package.json'),
+    JSON.stringify(angularRspackPackageJson)
+  );
 
-    writeFileSync(
-      join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-      JSON.stringify({
-        ...JSON.parse(
-          readFileSync(
-            join(
-              workspaceRoot,
-              'packages/angular-rspack-compiler/package.json'
-            ),
-            'utf-8'
-          )
-        ),
-        version: angularRspackCompilerPrevVersion,
-      })
-    );
+  writeFileSync(
+    join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
+    JSON.stringify({
+      ...JSON.parse(
+        readFileSync(
+          join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
+          'utf-8'
+        )
+      ),
+      version: angularRspackCompilerPrevVersion,
+    })
+  );
 
-    execSync(
-      `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
-      {
-        cwd: workspaceRoot,
-      }
-    );
-  }
+  execSync(
+    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
+    {
+      cwd: workspaceRoot,
+    }
+  );
 
   process.exit(0);
 })();
