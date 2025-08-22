@@ -135,12 +135,6 @@ export const packageManagerLockFile = {
 };
 
 export function ensureCypressInstallation() {
-  // Skip Cypress installation on CI where it's pre-installed in agents.yaml
-  if (isCI && process.env.NX_NIGHTLY_TEST_RUN !== 'true') {
-    e2eConsoleLogger('Running on CI - Cypress pre-installed via agents.yaml');
-    return;
-  }
-
   let cypressVerified = true;
   try {
     const r = execSync('npx cypress verify', {
@@ -166,14 +160,6 @@ export function ensureCypressInstallation() {
 }
 
 export function ensurePlaywrightBrowsersInstallation() {
-  // Skip browser installation on CI where browsers are pre-installed in agents.yaml
-  if (isCI && process.env.NX_NIGHTLY_TEST_RUN !== 'true') {
-    e2eConsoleLogger(
-      'Running on CI - Playwright browsers pre-installed via agents.yaml'
-    );
-    return;
-  }
-
   // Lightweight check: try to get Playwright browser path
   try {
     const browserPath = execSync('npx playwright install --dry-run', {
