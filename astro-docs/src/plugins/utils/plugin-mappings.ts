@@ -1,8 +1,8 @@
-import type { StarlightUserConfig } from '@astrojs/starlight/types';
 import { workspaceRoot } from '@nx/devkit';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import frontMatter from 'front-matter';
+import type { SidebarSubItem } from 'astro-docs/src/utils/sidebar.types';
 
 /**
  * Map of plugins names to their technology grouping
@@ -79,9 +79,6 @@ export function getPluginsInTechnology(technologyCategory: string): string[] {
 export function getAllTechnologyCategories(): string[] {
   return Array.from(new Set(Object.values(pluginToTechnology))).sort();
 }
-
-type SidebarItem = NonNullable<StarlightUserConfig['sidebar']>[number];
-type SidebarSubItem = Extract<SidebarItem, { items: any[] }>;
 
 const pluginBasePath = join(workspaceRoot, 'packages');
 /**

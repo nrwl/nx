@@ -206,7 +206,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
   {
     label: 'Reference',
     collapsed: false,
-    autogenerate: { directory: 'references', collapsed: true },
+    autogenerate: { directory: 'reference', collapsed: true },
   },
   {
     label: 'Troubleshooting',

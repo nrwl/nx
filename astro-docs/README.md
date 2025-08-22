@@ -27,7 +27,7 @@ This documentation site leverages Astro's static site generation capabilities wi
 ```
 astro-docs/
 ├── src/
-│   ├── assets/          # Images and static assets
+│   ├── assets/          # Images and static assets to be optimized by Astro
 │   │   ├── nx/          # Nx branding assets
 │   │   ├── nx-cloud/    # Nx Cloud assets
 │   │   └── nx-console/  # Nx Console assets
@@ -39,12 +39,12 @@ astro-docs/
 │   │   ├── docs/        # Main documentation files (.mdoc, .mdx)
 │   │   ├── approved-community-plugins.json               # Powers plugin registry
 │   │   └── notifications.json                            # Notifications banners for docs site
-│   ├── pages/           # Dynamic pages and routes
+│   ├── pages/           # Dynamic pages and routes (e.g. devkit)
 │   ├── plugins/         # Content loaders and plugins
 │   │   ├── *.loader.ts  # Dynamic content loaders (e.g. CLI commands and API docs generation)
 │   │   └── utils/       # Plugin utilities
 │   └── styles/          # Global styles
-├── public/              # Static assets (fonts, images, robots.txt)
+├── public/              # Static assets not to be optimized by Astro (fonts, robots.txt)
 ├── astro.config.mjs     # Astro configuration
 ├── markdoc.config.mjs   # Markdoc tags configuration
 ├── sidebar.mts          # Sidebar structure definition
@@ -96,6 +96,9 @@ The site includes custom Markdoc tags for rich content.
 
 - `{% aside %}` - Highlighted information boxes
 - `{% cardgrid %}`, `{% card|linkcard %}` - Card layouts
+- `{% tabs %}`, `{% tabitem label="some-label" %}` - Tab layouts
+  - Use the `syncKey` so tabs are auto switched to the users preference if it makes sense.
+  - e.g. `{% tabs syncKey="package-manager" %}`
 
 #### Interactive Components
 
@@ -200,6 +203,8 @@ export const sidebar = [
   }
 ];
 ```
+
+> Note there is a special case for sidebar items appearing in the sidebar. Such as the `Reference` section which is handled via the `[sidebar-reference-updater](./src/plugins/sidebar-reference-updater.middleware.ts)` middleware.
 
 ## Styling and Theming
 

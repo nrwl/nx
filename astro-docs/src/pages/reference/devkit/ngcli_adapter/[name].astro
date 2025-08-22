@@ -1,21 +1,9 @@
 ---
 import { getCollection, render } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-
+import {ngcliAdapterPages } from '../../../../utils/devkit-content-queries'
 export async function getStaticPaths() {
-  const docs = await getCollection(
-    'nx-reference-packages',
-    // we don't want the overview page, this is custom handled via the index.astro page
-    (doc) => doc.id !== 'ngcli_adapter-overview' && doc.data.docType === 'ngcli_adapter' && doc.data.packageType === 'devkit'
-  );
-
-
-  return docs.map(doc => ({
-    params: { name: doc.id.split('ngcli_adapter_')[1] },
-    props: {
-      doc
-    }
-  }));
+return await ngcliAdapterPages()
 }
 
 const { doc, name } = Astro.props;
