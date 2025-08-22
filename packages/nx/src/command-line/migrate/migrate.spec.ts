@@ -1818,10 +1818,12 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: {
             parent: '1.0.0',
+            child: '1.0.0',
           },
         }),
         getInstalledPackageVersion: (pkg) => {
           if (pkg === 'parent') return '1.0.0';
+          if (pkg === 'child') return '1.0.0';
           return null; // incompatible-package is not installed
         },
         fetch: (p, _v) => {
@@ -1839,6 +1841,12 @@ describe('Migration', () => {
                   },
                 },
               },
+              schematics: {},
+            });
+          }
+          if (p === 'child') {
+            return Promise.resolve({
+              version: '2.0.0',
               schematics: {},
             });
           }
