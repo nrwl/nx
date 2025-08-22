@@ -7,7 +7,6 @@ import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import { sidebar } from './sidebar.mts';
-import { redirects } from './redirects.mts';
 
 // https://astro.build/config
 export default defineConfig({
@@ -25,7 +24,6 @@ export default defineConfig({
   trailingSlash: 'never',
   // This adapter doesn't support local previews, so only load it on Netlify.
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
-  redirects,
   integrations: [
     markdoc(),
     starlight({
