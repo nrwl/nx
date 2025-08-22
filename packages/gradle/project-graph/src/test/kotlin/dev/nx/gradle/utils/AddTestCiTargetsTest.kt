@@ -51,7 +51,6 @@ class AddTestCiTargetsTest {
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
@@ -65,7 +64,7 @@ class AddTestCiTargetsTest {
     // Assert test group contains individual targets and parent ci task
     val group = targetGroups[testCiTargetGroup]
     assertTrue(group != null)
-    assertTrue(group!!.contains("ci--MyFirstTest"))
+    assertTrue(group.contains("ci--MyFirstTest"))
     assertTrue(group.contains("ci--AnotherTest"))
     assertTrue(group.contains("ci"))
 
@@ -111,7 +110,6 @@ class AddTestCiTargetsTest {
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
@@ -166,7 +164,6 @@ class AddTestCiTargetsTest {
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
