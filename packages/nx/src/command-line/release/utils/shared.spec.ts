@@ -1,5 +1,5 @@
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { createCommitMessageValues, createGitTagValues } from './shared';
+import { createCommitMessageValues, createGitTagValues, VersionData } from './shared';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -223,6 +223,126 @@ describe('shared', () => {
         expect(result).toMatchInlineSnapshot(`
           [
             "chore(release): Release core v1.0.0-canary.2 [skip ci]",
+          ]
+        `);
+      });
+
+      it('should include dependent projects when a single independent project is passed', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            projectsRelationship: 'independent',
+            projects: ['a', 'b'],
+            version: undefined,
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            releaseTagPatternCheckAllBranchesWhen: undefined,
+            releaseTagPatternRequireSemver: true,
+            releaseTagPatternStrictPreid: false,
+            name: 'one',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+
+        // We only filter to project 'a', but project 'b' depends on 'a' and is bumped as a result
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['a'])
+        );
+
+        const versionData: VersionData = {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [
+              {
+                source: 'b',
+                target: 'a',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.1',
+              },
+            ],
+            newVersion: '1.0.1',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.0.1',
+          },
+        };
+
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish {projectName} v{version}'
+        );
+
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: a 1.0.1",
+            "- project: b 1.0.2",
+          ]
+        `);
+      });
+
+      it('should include both projects and dependents when two independent projects are passed and one depends on the other', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            projectsRelationship: 'independent',
+            projects: ['a', 'b'],
+            version: undefined,
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            releaseTagPatternCheckAllBranchesWhen: undefined,
+            releaseTagPatternRequireSemver: true,
+            releaseTagPatternStrictPreid: false,
+            name: 'one',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+
+        // Filter both projects
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['a', 'b'])
+        );
+
+        const versionData = {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.0.1',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [
+              {
+                source: 'a',
+                target: 'b',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.1',
+              },
+            ],
+            newVersion: '1.0.2',
+          },
+        } as any;
+
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish v{version}'
+        );
+
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: a 1.0.1",
+            "- project: b 1.0.2",
           ]
         `);
       });

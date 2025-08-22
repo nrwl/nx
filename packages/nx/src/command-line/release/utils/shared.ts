@@ -166,6 +166,23 @@ export function createCommitMessageValues(
         version: releaseVersion.rawVersion,
         projectName: releaseGroupProjectNames[0],
       }).trim();
+
+      // Also include any dependent projects which were bumped as a result of this project's release.
+      const pushed = new Set<string>();
+      pushed.add(releaseGroupProjectNames[0]);
+      for (const dep of projectVersionData.dependentProjects || []) {
+        const depName = dep.source;
+        if (!pushed.has(depName) && versionData[depName]?.newVersion) {
+          const depReleaseVersion = new ReleaseVersion({
+            version: versionData[depName].newVersion,
+            releaseTagPattern: releaseGroup.releaseTagPattern,
+            projectName: depName,
+          });
+          commitMessageValues.push(`- project: ${depName} ${depReleaseVersion.rawVersion}`);
+          pushed.add(depName);
+        }
+      }
+
       return commitMessageValues;
     }
   }
@@ -188,8 +205,11 @@ export function createCommitMessageValues(
       releaseGroupToFilteredProjects.get(releaseGroup)
     );
 
-    // One entry per project for independent groups
+    // One entry per project for independent groups. Also include any dependent projects
+    // which were bumped as a result of the selected projects being released.
     if (releaseGroup.projectsRelationship === 'independent') {
+      const pushed = new Set<string>();
+
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
         if (projectVersionData.newVersion !== null) {
@@ -201,6 +221,22 @@ export function createCommitMessageValues(
           commitMessageValues.push(
             `- project: ${project} ${releaseVersion.rawVersion}`
           );
+          pushed.add(project);
+        }
+
+        // Add any dependent projects that were bumped as a result of this project's release.
+        for (const dep of projectVersionData?.dependentProjects || []) {
+          const depName = dep.source;
+          // Only list dependents which actually received a new version and avoid duplicates
+          if (!pushed.has(depName) && versionData[depName]?.newVersion) {
+            const depReleaseVersion = new ReleaseVersion({
+              version: versionData[depName].newVersion,
+              releaseTagPattern: releaseGroup.releaseTagPattern,
+              projectName: depName,
+            });
+            commitMessageValues.push(`- project: ${depName} ${depReleaseVersion.rawVersion}`);
+            pushed.add(depName);
+          }
         }
       }
       continue;
