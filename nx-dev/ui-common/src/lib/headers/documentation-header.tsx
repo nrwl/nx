@@ -91,8 +91,13 @@ export function DocumentationHeader({
     }
   };
 
+  // Use the new docs URL when Astro docs are enabled
+  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
+    ? '/docs/getting-started/intro'
+    : '/getting-started/intro';
+
   const sections = [
-    { name: 'Nx', href: '/getting-started/intro', current: isNx },
+    { name: 'Nx', href: docsUrl, current: isNx },
     {
       name: 'CI',
       href: '/ci/features',
@@ -254,7 +259,7 @@ export function DocumentationHeader({
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
-            href="/getting-started/intro"
+            href={docsUrl}
             className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
             prefetch={false}
             onClick={() =>

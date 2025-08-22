@@ -310,7 +310,13 @@ export function SidebarMobile({
       },
     ],
     documentation: [
-      { name: 'Nx', href: '/getting-started/intro', current: isNx },
+      {
+        name: 'Nx',
+        href: process.env.NEXT_PUBLIC_ASTRO_URL
+          ? '/docs/getting-started/intro'
+          : '/getting-started/intro',
+        current: isNx,
+      },
       {
         name: 'CI',
         href: '/ci/features',

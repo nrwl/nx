@@ -48,6 +48,11 @@ export function Header({
   scrollCtaButtons,
 }: HeaderProps): ReactElement {
   let [isOpen, setIsOpen] = useState(false);
+
+  // Use the new docs URL when Astro docs are enabled
+  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
+    ? '/docs/getting-started/intro'
+    : '/getting-started/intro';
   let [isScrolled, setIsScrolled] = useState(false);
 
   const router = useRouter();
@@ -151,7 +156,7 @@ export function Header({
           >
             <h2 className="sr-only">Main navigation</h2>
             <Link
-              href="/getting-started/intro"
+              href={docsUrl}
               title="Documentation"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
@@ -491,7 +496,7 @@ export function Header({
 
                         <div className="mt-4 divide-y divide-slate-200 border-b border-slate-200 dark:divide-slate-800 dark:border-slate-800">
                           <Link
-                            href="/getting-started/intro"
+                            href={docsUrl}
                             title="Documentation"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
