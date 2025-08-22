@@ -145,7 +145,7 @@ function getTargets(options: NormalizedSchema) {
     outputs: ['{options.outputDir}'],
     options: {
       platform: 'all',
-      outputDir: `dist/${options.appProjectRoot}`,
+      outputDir: `${options.appProjectRoot}/dist`,
     },
   };
 
