@@ -346,8 +346,15 @@ export function printFinalMessage({
 export function isMonorepo(packageJson: PackageJson) {
   if (!!packageJson.workspaces) return true;
 
-  if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))
-    return true;
+  try {
+    const content = readFileSync('pnpm-workspace.yaml', 'utf-8');
+    const { load } = require('@zkochan/js-yaml');
+    const { packages } = load(content) ?? {};
+
+    if (packages) {
+      return true;
+    }
+  } catch {}
 
   if (existsSync('lerna.json')) return true;
 
