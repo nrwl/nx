@@ -35,6 +35,7 @@
     "preview": {
       "dependsOn": ["build"],
       "command": "astro preview",
+      "continuous": true,
       "options": {
         "cwd": "astro-docs"
       }

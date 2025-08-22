@@ -1,4 +1,9 @@
+# *
 User-agent: *
 Allow: /
 
-Sitemap: https://<YOUR SITE>/sitemap-index.xml
+# Host
+Host: https://nx.dev
+
+# Sitemaps
+Sitemap: https://nx.dev/sitemap-index.xml
