@@ -1,5 +1,5 @@
 {
-  "name": "@nx/graph-internal-ui-theme",
+  "name": "@nx/graph-internal-ui-render-config",
   "version": "0.0.1",
   "type": "commonjs",
   "private": true,

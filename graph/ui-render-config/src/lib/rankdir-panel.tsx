@@ -2,26 +2,22 @@ import {
   ArrowsRightLeftIcon,
   ArrowsUpDownIcon,
 } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { RenderRankDir } from '@nx/graph';
-
-export const localStorageRankDirKey = 'nx-dep-graph-rankdir';
+import { useRankDir } from './rankdir-context';
 
 export function RankdirPanel({
   onRankDirChange,
 }: {
   onRankDirChange?: (rankDir: RenderRankDir) => void;
 }): JSX.Element {
-  const [rankDir, setRankDir] = useState(
-    (localStorage.getItem(localStorageRankDirKey) as RenderRankDir) || 'TB'
-  );
+  const { rankDir, setRankDir } = useRankDir();
 
   useEffect(() => {
-    localStorage.setItem(localStorageRankDirKey, rankDir);
     if (onRankDirChange) {
       onRankDirChange(rankDir);
     }
-  }, [rankDir]);
+  }, [rankDir, onRankDirChange]);
 
   return (
     <div className="relative inline-block text-left">

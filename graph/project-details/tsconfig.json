@@ -19,7 +19,7 @@
       "path": "../ui-common"
     },
     {
-      "path": "../ui-theme"
+      "path": "../ui-render-config"
     },
     {
       "path": "./tsconfig.lib.json"
