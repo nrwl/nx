@@ -72,7 +72,9 @@ export async function affected(
               open: true,
               view: 'tasks',
               targets: nxArgs.targets,
-              all: nxArgs.all && !nxArgs.projects,
+              all:
+                nxArgs.all &&
+                (!nxArgs.projects || nxArgs.projects.length === 0),
               projects: projectNames,
               file,
             },
