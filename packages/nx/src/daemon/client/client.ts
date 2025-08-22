@@ -740,7 +740,10 @@ export class DaemonClient {
 
   async stop(): Promise<void> {
     try {
-      process.kill(getDaemonProcessIdSync(), 'SIGTERM');
+      const pid = getDaemonProcessIdSync();
+      if (pid) {
+        process.kill(pid, 'SIGTERM');
+      }
     } catch (err) {
       output.error({
         title:
