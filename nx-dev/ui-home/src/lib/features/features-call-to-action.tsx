@@ -25,7 +25,7 @@ export function FeaturesCallToAction(): ReactElement {
           merge-ready PR—relies on having intelligent tooling and seamless
           automation.
         </p>
-        <div className="divide-2 mt-12 grid grid-cols-2 justify-stretch divide-white/20 rounded-lg bg-slate-950/90 ring-8 ring-slate-950/50 md:grid-cols-4 md:divide-x md:divide-solid dark:divide-slate-950/20 dark:bg-white/90 dark:ring-white/50">
+        <div className="divide-2 mt-12 grid grid-cols-2 justify-stretch divide-white/20 rounded-lg bg-slate-950/90 ring-8 ring-slate-950/50 md:grid-cols-4 md:divide-x md:divide-solid dark:divide-slate-950/20 dark:bg-white dark:ring-white/20">
           <FeaturedStat
             stat="50%"
             description="reduction in Time to Green"
@@ -88,7 +88,7 @@ export function FeaturedStat({
       <div className="mb-1 text-5xl font-extrabold text-white dark:text-slate-800">
         {stat}
       </div>
-      <div className="grow text-base text-slate-200 dark:text-slate-600">
+      <div className="text-base text-slate-200 dark:text-slate-600">
         {description}
       </div>
     </div>
