@@ -1,5 +1,5 @@
 import { exec, execSync } from 'child_process';
-import { copyFileSync, existsSync, writeFileSync } from 'fs';
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import {
   Pair,
   ParsedNode,
@@ -80,7 +80,18 @@ export function isWorkspacesEnabled(
   root: string = workspaceRoot
 ): boolean {
   if (packageManager === 'pnpm') {
-    return existsSync(join(root, 'pnpm-workspace.yaml'));
+    if (!existsSync(join(root, 'pnpm-workspace.yaml'))) {
+      return false;
+    }
+
+    try {
+      const content = readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      const { packages } = load(content) ?? {};
+      return packages !== undefined;
+    } catch {
+      return false;
+    }
   }
 
   // yarn and npm both use the same 'workspaces' property in package.json

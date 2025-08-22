@@ -37,7 +37,18 @@ export function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
 export function isWorkspacesEnabled(tree: Tree): boolean {
   const packageManager = detectPackageManager(tree.root);
   if (packageManager === 'pnpm') {
-    return tree.exists('pnpm-workspace.yaml');
+    if (!tree.exists('pnpm-workspace.yaml')) {
+      return false;
+    }
+
+    try {
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      const { packages } = load(content) ?? {};
+      return packages !== undefined;
+    } catch {
+      return false;
+    }
   }
 
   // yarn and npm both use the same 'workspaces' property in package.json
