@@ -20,10 +20,10 @@ describe('@nx/react-native', () => {
   let componentName: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react-native'] });
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
+      `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`
     );
     libName = uniq('lib');
     runCLI(
