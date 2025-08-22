@@ -503,17 +503,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
         }
         title.push(Span::styled(
             format!("{}  ", state.task_name),
-            Style::default()
-                .fg(if state.is_focused {
-                    THEME.primary_fg
-                } else {
-                    THEME.secondary_fg
-                })
-                .add_modifier(if state.is_focused {
-                    Modifier::BOLD
-                } else {
-                    Modifier::empty()
-                }),
+            match state.is_focused {
+                true => Style::default()
+                    .fg(THEME.primary_fg)
+                    .add_modifier(Modifier::BOLD),
+                false => Style::default()
+                    .fg(THEME.secondary_fg),
+            },
         ));
 
         // Calculate all layout values once to avoid redundant calculations
