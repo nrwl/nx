@@ -178,7 +178,9 @@ export function createCommitMessageValues(
             releaseTagPattern: releaseGroup.releaseTagPattern,
             projectName: depName,
           });
-          commitMessageValues.push(`- project: ${depName} ${depReleaseVersion.rawVersion}`);
+          commitMessageValues.push(
+            `- project: ${depName} ${depReleaseVersion.rawVersion}`
+          );
           pushed.add(depName);
         }
       }
@@ -234,7 +236,9 @@ export function createCommitMessageValues(
               releaseTagPattern: releaseGroup.releaseTagPattern,
               projectName: depName,
             });
-            commitMessageValues.push(`- project: ${depName} ${depReleaseVersion.rawVersion}`);
+            commitMessageValues.push(
+              `- project: ${depName} ${depReleaseVersion.rawVersion}`
+            );
             pushed.add(depName);
           }
         }

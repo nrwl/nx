@@ -1,5 +1,9 @@
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { createCommitMessageValues, createGitTagValues, VersionData } from './shared';
+import {
+  createCommitMessageValues,
+  createGitTagValues,
+  VersionData,
+} from './shared';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
