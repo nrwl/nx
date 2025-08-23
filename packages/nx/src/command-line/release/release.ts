@@ -403,8 +403,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     if (shouldPublish) {
+      const projectsToPublish = Object.entries(
+        versionResult.projectsVersionData
+      )
+        .filter(([, versionDataEntry]) => versionDataEntry.newVersion !== null)
+        .map(([name]) => name);
+
       const publishResults = await releasePublish({
         ...args,
+        projects: projectsToPublish,
         versionData: versionResult.projectsVersionData,
       });
       const allExitOk = Object.values(publishResults).every(
