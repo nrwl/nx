@@ -50,24 +50,24 @@ describe('shared', () => {
         const releaseGroupToFilteredProjects = new Map()
           .set(releaseGroups[0], new Set(['foo']))
           .set(releaseGroups[1], new Set(['bar', 'baz']));
-        const versionData = {
+        const versionData: VersionData = {
           foo: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: null,
+            dockerVersion: undefined,
           },
           bar: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: null,
+            dockerVersion: undefined,
           },
           baz: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: null,
+            dockerVersion: undefined,
           },
         };
         const userCommitMessage =
@@ -271,7 +271,7 @@ describe('shared', () => {
           b: {
             currentVersion: '1.0.0',
             dependentProjects: [],
-            newVersion: '1.0.1',
+            newVersion: '1.0.2',
           },
         };
 
@@ -286,7 +286,7 @@ describe('shared', () => {
           [
             "chore(release): publish",
             "- project: a 1.0.1",
-            "- project: b 1.0.2",
+            "- project: b 1.0.1",
           ]
         `);
       });

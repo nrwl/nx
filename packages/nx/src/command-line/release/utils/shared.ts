@@ -162,26 +162,50 @@ export function createCommitMessageValues(
         releaseTagPattern: releaseGroup.releaseTagPattern,
         projectName: releaseGroupProjectNames[0],
       });
-      commitMessageValues[0] = interpolate(commitMessageValues[0], {
-        version: releaseVersion.rawVersion,
-        projectName: releaseGroupProjectNames[0],
-      }).trim();
 
-      // Also include any dependent projects which were bumped as a result of this project's release.
-      const pushed = new Set<string>();
-      pushed.add(releaseGroupProjectNames[0]);
-      for (const dep of projectVersionData.dependentProjects || []) {
-        const depName = dep.source;
-        if (!pushed.has(depName) && versionData[depName]?.newVersion) {
-          const depReleaseVersion = new ReleaseVersion({
-            version: versionData[depName].newVersion,
-            releaseTagPattern: releaseGroup.releaseTagPattern,
-            projectName: depName,
-          });
+      // Only consider dependents that actually received a newVersion
+      const bumpedDependents = (
+        projectVersionData.dependentProjects || []
+      ).filter((d) => !!versionData[d.source]?.newVersion);
+
+      if (bumpedDependents.length === 0) {
+        // No dependents were bumped - keep normal templating behavior
+        commitMessageValues[0] = interpolate(commitMessageValues[0], {
+          version: releaseVersion.rawVersion,
+          projectName: releaseGroupProjectNames[0],
+        }).trim();
+      } else {
+        // Dependents were bumped - present a stripped header and one bullet per project (primary + bumped dependents)
+        commitMessageValues[0] = stripPlaceholders(commitMessageValues[0], [
+          'v{version}',
+          '{version}',
+          '{projectName}',
+        ]);
+
+        const pushed = new Set<string>();
+
+        // Add primary project bullet if it has a newVersion
+        if (projectVersionData.newVersion) {
           commitMessageValues.push(
-            `- project: ${depName} ${depReleaseVersion.rawVersion}`
+            `- project: ${releaseGroupProjectNames[0]} ${releaseVersion.rawVersion}`
           );
-          pushed.add(depName);
+          pushed.add(releaseGroupProjectNames[0]);
+        }
+
+        // Add each bumped dependent
+        for (const dep of bumpedDependents) {
+          const depName = dep.source;
+          if (!pushed.has(depName) && versionData[depName]?.newVersion) {
+            const depReleaseVersion = new ReleaseVersion({
+              version: versionData[depName].newVersion,
+              releaseTagPattern: releaseGroup.releaseTagPattern,
+              projectName: depName,
+            });
+            commitMessageValues.push(
+              `- project: ${depName} ${depReleaseVersion.rawVersion}`
+            );
+            pushed.add(depName);
+          }
         }
       }
 
