@@ -124,7 +124,10 @@ export class HubspotForm extends Component<
     };
 
     // Check if Cookiebot is loaded and consent is given
-    if (window.Cookiebot && window.Cookiebot.consent?.marketing) {
+    if (
+      process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE === 'true' ||
+      (window.Cookiebot && window.Cookiebot.consent?.marketing)
+    ) {
       initialize();
     } else {
       // Listen for consent acceptance
