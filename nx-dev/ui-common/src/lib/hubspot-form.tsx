@@ -43,7 +43,7 @@ export class HubspotForm extends Component<
     if (typeof window === 'undefined') return;
 
     // Check if user has consented to marketing cookies
-    if (window.Cookiebot && !window.Cookiebot.consent.marketing) {
+    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
       // Don't create form if marketing consent is not given
       return;
     }
@@ -81,7 +81,7 @@ export class HubspotForm extends Component<
 
   loadScript() {
     // Check if user has consented to marketing cookies
-    if (window.Cookiebot && !window.Cookiebot.consent.marketing) {
+    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
       // Don't load script if marketing consent is not given
       return;
     }
@@ -124,7 +124,10 @@ export class HubspotForm extends Component<
     };
 
     // Check if Cookiebot is loaded and consent is given
-    if (window.Cookiebot && window.Cookiebot.consent?.marketing) {
+    if (
+      process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE === 'true' ||
+      (window.Cookiebot && window.Cookiebot.consent?.marketing)
+    ) {
       initialize();
     } else {
       // Listen for consent acceptance
