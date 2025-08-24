@@ -193,8 +193,11 @@ export function createCommitMessageValues(
         }
 
         // Add each bumped dependent
-        for (const dep of bumpedDependents) {
-          const depName = dep.source;
+        const bumpedDependentNames = collectChangedDependents(
+          versionData,
+          releaseGroupProjectNames[0]
+        );
+        for (const depName of bumpedDependentNames) {
           if (!pushed.has(depName) && versionData[depName]?.newVersion) {
             const depReleaseVersion = new ReleaseVersion({
               version: versionData[depName].newVersion,
@@ -250,10 +253,12 @@ export function createCommitMessageValues(
           pushed.add(project);
         }
 
-        // Add any dependent projects that were bumped as a result of this project's release.
-        for (const dep of projectVersionData?.dependentProjects || []) {
-          const depName = dep.source;
-          // Only list dependents which actually received a new version and avoid duplicates
+        // Add any dependent projects that were bumped as a result of this project's release (recursively)
+        const bumpedDependentNames = collectChangedDependents(
+          versionData,
+          project
+        );
+        for (const depName of bumpedDependentNames) {
           if (!pushed.has(depName) && versionData[depName]?.newVersion) {
             const depReleaseVersion = new ReleaseVersion({
               version: versionData[depName].newVersion,
@@ -284,6 +289,32 @@ export function createCommitMessageValues(
   }
 
   return commitMessageValues;
+}
+
+/**
+ * Recursively collect names of dependent projects that received a newVersion
+ * starting from the given projectName. Only projects with a truthy newVersion
+ * are included (matching previous inline behavior) and traversal continues
+ * only through dependents that themselves have a newVersion.
+ */
+function collectChangedDependents(
+  versionData: VersionData,
+  projectName: string
+): string[] {
+  const collected = new Set<string>();
+
+  function visit(current: string) {
+    for (const dep of versionData[current]?.dependentProjects || []) {
+      const name = dep.source;
+      if (!collected.has(name) && versionData[name]?.newVersion) {
+        collected.add(name);
+        visit(name);
+      }
+    }
+  }
+
+  visit(projectName);
+  return Array.from(collected);
 }
 
 function stripPlaceholders(str: string, placeholders: string[]): string {
