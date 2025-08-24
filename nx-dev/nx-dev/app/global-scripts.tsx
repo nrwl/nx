@@ -133,9 +133,6 @@ export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
         loadGoogleAnalytics();
         loadGTM();
         loadHubSpot();
-        loadApollo();
-        loadHotjar();
-        loadTwitterPixel();
       } else if (window.Cookiebot && window.Cookiebot.consent) {
         // Statistics cookies (Google Analytics, GTM)
         if (window.Cookiebot.consent.statistics) {
