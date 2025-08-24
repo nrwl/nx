@@ -231,11 +231,11 @@ describe('shared', () => {
         `);
       });
 
-      it('should include dependent projects when a single independent project is passed', () => {
+      it('should include dependent projects when a single independent project is passed with a linear dependency chain', () => {
         const releaseGroups: ReleaseGroupWithName[] = [
           {
             projectsRelationship: 'independent',
-            projects: ['a', 'b'],
+            projects: ['a', 'b', 'c'],
             version: undefined,
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
@@ -263,15 +263,28 @@ describe('shared', () => {
                 target: 'a',
                 type: 'static',
                 dependencyCollection: 'dependencies',
-                rawVersionSpec: '1.0.1',
+                rawVersionSpec: '1.0.0',
               },
             ],
             newVersion: '1.0.1',
           },
           b: {
-            currentVersion: '1.0.0',
-            dependentProjects: [],
+            currentVersion: '1.0.1',
+            dependentProjects: [
+              {
+                source: 'c',
+                target: 'b',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.1',
+              },
+            ],
             newVersion: '1.0.2',
+          },
+          c: {
+            currentVersion: '1.1.0',
+            dependentProjects: [],
+            newVersion: '1.1.1',
           },
         };
 
@@ -286,7 +299,89 @@ describe('shared', () => {
           [
             "chore(release): publish",
             "- project: a 1.0.1",
-            "- project: b 1.0.1",
+            "- project: b 1.0.2",
+            "- project: c 1.1.1",
+          ]
+        `);
+      });
+
+      it('should include dependent projects when a single independent project is passed with a non-linear dependency chain', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            projectsRelationship: 'independent',
+            projects: ['a', 'b', 'c'],
+            version: undefined,
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            releaseTagPatternCheckAllBranchesWhen: undefined,
+            releaseTagPatternRequireSemver: true,
+            releaseTagPatternStrictPreid: false,
+            name: 'one',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+
+        // We only filter to project 'a', but project 'b' depends on 'a' and is bumped as a result
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['a'])
+        );
+
+        const versionData: VersionData = {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [
+              {
+                source: 'b',
+                target: 'a',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.0',
+              },
+              {
+                source: 'c',
+                target: 'a',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.0',
+              },
+            ],
+            newVersion: '1.0.1',
+          },
+          b: {
+            currentVersion: '1.0.1',
+            dependentProjects: [],
+            newVersion: '1.0.2',
+          },
+          c: {
+            currentVersion: '1.1.0',
+            dependentProjects: [
+              {
+                source: 'b',
+                target: 'c',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.1.0',
+              },
+            ],
+            newVersion: '1.1.1',
+          },
+        };
+
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          'chore(release): publish {projectName} v{version}'
+        );
+
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: a 1.0.1",
+            "- project: b 1.0.2",
+            "- project: c 1.1.1",
           ]
         `);
       });
@@ -321,19 +416,19 @@ describe('shared', () => {
             newVersion: '1.0.1',
           },
           b: {
-            currentVersion: '1.0.0',
+            currentVersion: '1.0.2',
             dependentProjects: [
               {
                 source: 'a',
                 target: 'b',
                 type: 'static',
                 dependencyCollection: 'dependencies',
-                rawVersionSpec: '1.0.1',
+                rawVersionSpec: '1.0.2',
               },
             ],
-            newVersion: '1.0.2',
+            newVersion: '1.0.3',
           },
-        } as any;
+        };
 
         const result = createCommitMessageValues(
           releaseGroups,
@@ -346,7 +441,7 @@ describe('shared', () => {
           [
             "chore(release): publish",
             "- project: a 1.0.1",
-            "- project: b 1.0.2",
+            "- project: b 1.0.3",
           ]
         `);
       });
