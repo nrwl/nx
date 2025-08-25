@@ -215,10 +215,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             projectConfig.put("projects", projects)
             projectTuple.add(projectConfig)
             
-            val result = objectMapper.createArrayNode()
-            result.add(projectTuple)
-            
-            return result
+            return projectTuple
             
         } catch (e: Exception) {
             log.error("Failed to generate Nx config for project ${mavenProject.artifactId}: ${e.message}", e)
