@@ -35,7 +35,7 @@ class MojoParameterAnalyzer(
         val defaultValue = param.defaultValue
         val expression = param.expression
         
-        log.debug("Analyzing parameter: name=$name, type=$type, defaultValue=$defaultValue, expression=$expression")
+        log.info("Analyzing parameter: name=$name, type=$type, defaultValue=$defaultValue, expression=$expression")
         
         when {
             isInputParameter(name, type, param) -> {
