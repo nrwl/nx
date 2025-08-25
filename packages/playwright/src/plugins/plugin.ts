@@ -31,17 +31,12 @@ const pmc = getPackageManagerCommand();
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
-  mergeReports?: boolean;
-  mergeReportsTargetName?: string;
-  atomizedBlobReportOutputDir?: string;
 }
 
 interface NormalizedOptions {
   targetName: string;
   ciTargetName: string;
-  mergeReports: boolean;
   mergeReportsTargetName: string;
-  atomizedBlobReportOutputDir: string;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -218,6 +213,14 @@ async function buildPlaywrightTargets(
   };
 
   if (options.ciTargetName) {
+    // ensure the blob reporter output is the directory containing the blob
+    // report files
+    const ciReporterOutputs = reporterOutputs.map<ReporterOutput>(
+      ([reporter, output]) =>
+        reporter === 'blob' && parse(output).ext !== ''
+          ? [reporter, dirname(output)]
+          : [reporter, output]
+    );
     const ciBaseTargetConfig: TargetConfiguration = {
       ...baseTargetConfig,
       cache: true,
@@ -229,7 +232,7 @@ async function buildPlaywrightTargets(
       ],
       outputs: getTargetOutputs(
         testOutput,
-        reporterOutputs,
+        ciReporterOutputs,
         context.workspaceRoot,
         projectRoot
       ),
@@ -285,20 +288,13 @@ async function buildPlaywrightTargets(
         ...ciBaseTargetConfig,
         options: {
           ...ciBaseTargetConfig.options,
-          env: getAtomizedTaskOutputEnvVars(
-            reporterOutputs,
-            outputSubfolder,
-            options.mergeReports,
-            options.atomizedBlobReportOutputDir
-          ),
+          env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
         },
         outputs: getAtomizedTaskOutputs(
           testOutput,
           reporterOutputs,
           context.workspaceRoot,
           projectRoot,
-          options.mergeReports,
-          options.atomizedBlobReportOutputDir,
           outputSubfolder
         ),
         command: `${
@@ -306,7 +302,7 @@ async function buildPlaywrightTargets(
         } ${relativeSpecFilePath} --output=${join(
           testOutput,
           outputSubfolder
-        )}${options.mergeReports ? ` --reporter=blob` : ''}`,
+        )}`,
         metadata: {
           technologies: ['playwright'],
           description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
@@ -356,22 +352,19 @@ async function buildPlaywrightTargets(
     }
     ciTargetGroup.push(options.ciTargetName);
 
-    if (options.mergeReports) {
-      targets[options.mergeReportsTargetName] = {
-        executor: '@nx/playwright:merge-reports',
-        options: {
-          blobReportsDir: options.atomizedBlobReportOutputDir,
-          config: posix.relative(projectRoot, configFilePath),
-          expectedSuites: dependsOn.length,
-        },
-        metadata: {
-          technologies: ['playwright'],
-          description:
-            'Merges Playwright blob reports and aggregate the results.',
-        },
-      };
-      ciTargetGroup.push(options.mergeReportsTargetName);
-    }
+    targets[options.mergeReportsTargetName] = {
+      executor: '@nx/playwright:merge-reports',
+      options: {
+        config: posix.relative(projectRoot, configFilePath),
+        expectedSuites: dependsOn.length,
+      },
+      metadata: {
+        technologies: ['playwright'],
+        description:
+          'Merges Playwright blob reports and aggregate the results.',
+      },
+    };
+    ciTargetGroup.push(options.mergeReportsTargetName);
   }
 
   return { targets, metadata };
@@ -411,15 +404,13 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
 }
 
 function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
+  const ciTargetName = options?.ciTargetName ?? 'e2e-ci';
+
   return {
     ...options,
     targetName: options?.targetName ?? 'e2e',
-    ciTargetName: options?.ciTargetName ?? 'e2e-ci',
-    mergeReports: options?.mergeReports ?? false,
-    mergeReportsTargetName:
-      options?.mergeReportsTargetName ?? 'e2e-ci--merge-reports',
-    atomizedBlobReportOutputDir:
-      options?.atomizedBlobReportOutputDir ?? '.nx-atomized-blob-reports',
+    ciTargetName,
+    mergeReportsTargetName: `${ciTargetName}--merge-reports`,
   };
 }
 
@@ -498,9 +489,7 @@ function getAtomizedTaskOutputs(
   reporterOutputs: Array<ReporterOutput>,
   workspaceRoot: string,
   projectRoot: string,
-  mergeOutputs: boolean,
-  atomizedBlobReportOutputDir: string,
-  subFolder?: string
+  subFolder: string
 ): string[] {
   const outputs = new Set<string>();
   outputs.add(
@@ -511,35 +500,30 @@ function getAtomizedTaskOutputs(
     )
   );
 
-  if (mergeOutputs) {
+  for (const [reporter, output] of reporterOutputs) {
+    if (!output) {
+      continue;
+    }
+
+    if (reporter === 'blob') {
+      const blobOutput = normalizeBlobReportOutput(output, subFolder);
+      outputs.add(normalizeOutput(blobOutput, workspaceRoot, projectRoot));
+      continue;
+    }
+
     outputs.add(
       normalizeOutput(
-        getAtomizedBlobReportOutputFile(atomizedBlobReportOutputDir, subFolder),
+        addSubfolderToOutput(output, subFolder),
         workspaceRoot,
         projectRoot
       )
     );
-  } else {
-    for (const [, output] of reporterOutputs) {
-      if (!output) {
-        continue;
-      }
-
-      outputs.add(
-        normalizeOutput(
-          addSubfolderToOutput(output, subFolder),
-          workspaceRoot,
-          projectRoot
-        )
-      );
-    }
   }
 
   return Array.from(outputs);
 }
 
-function addSubfolderToOutput(output: string, subfolder?: string): string {
-  if (!subfolder) return output;
+function addSubfolderToOutput(output: string, subfolder: string): string {
   const parts = parse(output);
   if (parts.ext !== '') {
     return join(parts.dir, subfolder, parts.base);
@@ -634,34 +618,9 @@ function normalizeOutput(
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 
-function getAtomizedTaskOutputEnvVars(
+function getAtomizedTaskEnvVars(
   reporterOutputs: Array<ReporterOutput>,
-  outputSubfolder: string,
-  mergeOutputs: boolean,
-  atomizedBlobReportOutputDir: string
-): Record<string, string> {
-  if (mergeOutputs) {
-    return {
-      PLAYWRIGHT_BLOB_OUTPUT_FILE: getAtomizedBlobReportOutputFile(
-        atomizedBlobReportOutputDir,
-        outputSubfolder
-      ),
-    };
-  }
-
-  return getReporterEnvVars(reporterOutputs, outputSubfolder);
-}
-
-function getAtomizedBlobReportOutputFile(
-  atomizedBlobReportOutputDir: string,
   outputSubfolder: string
-): string {
-  return join(atomizedBlobReportOutputDir, `${outputSubfolder}.zip`);
-}
-
-function getReporterEnvVars(
-  reporterOutputs: Array<ReporterOutput>,
-  outputSubfolder?: string
 ): Record<string, string> {
   const env: Record<string, string> = {};
   for (let [reporter, output] of reporterOutputs) {
@@ -669,14 +628,21 @@ function getReporterEnvVars(
       continue;
     }
 
-    const isFile = parse(output).ext !== '';
+    const outputExtname = parse(output).ext;
+    const isFile = outputExtname !== '';
     let envVarName: string;
     envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
       isFile ? 'FILE' : 'DIR'
     }`;
-    env[envVarName] = outputSubfolder
-      ? addSubfolderToOutput(output, outputSubfolder)
-      : output;
+
+    if (reporter === 'blob') {
+      output = normalizeBlobReportOutput(output, outputSubfolder);
+    } else {
+      // add subfolder to the output to make them unique
+      output = addSubfolderToOutput(output, outputSubfolder);
+    }
+
+    env[envVarName] = output;
     // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
     // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
     if (reporter === 'html') {
@@ -684,4 +650,16 @@ function getReporterEnvVars(
     }
   }
   return env;
+}
+
+function normalizeBlobReportOutput(output: string, subfolder: string): string {
+  const outputExtname = parse(output).ext;
+
+  if (outputExtname !== '') {
+    // to merge reports the blob reports need to be in the same common
+    // directory, so set unique name for the blob report file
+    output = join(dirname(output), `${subfolder}${outputExtname}`);
+  }
+
+  return output;
 }

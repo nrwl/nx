@@ -61,6 +61,7 @@ describe('@nx/playwright/plugin', () => {
                   "targetGroups": {
                     "E2E (CI)": [
                       "e2e-ci",
+                      "e2e-ci--merge-reports",
                     ],
                   },
                 },
@@ -132,6 +133,19 @@ describe('@nx/playwright/plugin', () => {
                       "{projectRoot}/test-results",
                     ],
                     "parallelism": false,
+                  },
+                  "e2e-ci--merge-reports": {
+                    "executor": "@nx/playwright:merge-reports",
+                    "metadata": {
+                      "description": "Merges Playwright blob reports and aggregate the results.",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "config": "playwright.config.js",
+                      "expectedSuites": 0,
+                    },
                   },
                 },
               },
@@ -174,6 +188,7 @@ describe('@nx/playwright/plugin', () => {
                   "targetGroups": {
                     "E2E (CI)": [
                       "e2e-ci",
+                      "e2e-ci--merge-reports",
                     ],
                   },
                 },
@@ -249,6 +264,19 @@ describe('@nx/playwright/plugin', () => {
                       "{projectRoot}/test-results/html",
                     ],
                     "parallelism": false,
+                  },
+                  "e2e-ci--merge-reports": {
+                    "executor": "@nx/playwright:merge-reports",
+                    "metadata": {
+                      "description": "Merges Playwright blob reports and aggregate the results.",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "config": "playwright.config.js",
+                      "expectedSuites": 0,
+                    },
                   },
                 },
               },
@@ -295,6 +323,7 @@ describe('@nx/playwright/plugin', () => {
           "e2e-ci--tests/run-me-2.spec.ts",
           "e2e-ci--tests/run-me.spec.ts",
           "e2e-ci",
+          "e2e-ci--merge-reports",
         ],
       }
     `);
@@ -445,6 +474,7 @@ describe('@nx/playwright/plugin', () => {
       reporter: [
         ['html', { outputFolder: 'test-results/html' }],
         ['junit', { outputFile: 'test-results/report.xml' }],
+        ['blob', { outputFile: 'blob-report/blob.json' }],
       ],
     }`
     );
@@ -458,7 +488,6 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
-        mergeReports: true,
       },
       context
     );
@@ -518,6 +547,7 @@ describe('@nx/playwright/plugin', () => {
           "{projectRoot}/test-results",
           "{projectRoot}/test-results/html",
           "{projectRoot}/test-results/report.xml",
+          "{projectRoot}/blob-report",
         ],
         "parallelism": false,
       }
@@ -525,7 +555,7 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
-        "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts --reporter=blob",
+        "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
         "inputs": [
           "default",
           "^production",
@@ -552,12 +582,17 @@ describe('@nx/playwright/plugin', () => {
         "options": {
           "cwd": "{projectRoot}",
           "env": {
-            "PLAYWRIGHT_BLOB_OUTPUT_FILE": ".nx-atomized-blob-reports/tests-run-me-spec-ts.zip",
+            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-spec-ts.json",
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-spec-ts/report.xml",
           },
         },
         "outputs": [
           "{projectRoot}/test-results/tests-run-me-spec-ts",
-          "{projectRoot}/.nx-atomized-blob-reports/tests-run-me-spec-ts.zip",
+          "{projectRoot}/test-results/html/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-spec-ts/report.xml",
+          "{projectRoot}/blob-report/tests-run-me-spec-ts.json",
         ],
         "parallelism": false,
       }
@@ -565,7 +600,7 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--tests/run-me-2.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
-        "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts --reporter=blob",
+        "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
         "inputs": [
           "default",
           "^production",
@@ -592,12 +627,17 @@ describe('@nx/playwright/plugin', () => {
         "options": {
           "cwd": "{projectRoot}",
           "env": {
-            "PLAYWRIGHT_BLOB_OUTPUT_FILE": ".nx-atomized-blob-reports/tests-run-me-2-spec-ts.zip",
+            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-2-spec-ts.json",
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-2-spec-ts/report.xml",
           },
         },
         "outputs": [
           "{projectRoot}/test-results/tests-run-me-2-spec-ts",
-          "{projectRoot}/.nx-atomized-blob-reports/tests-run-me-2-spec-ts.zip",
+          "{projectRoot}/test-results/html/tests-run-me-2-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-2-spec-ts/report.xml",
+          "{projectRoot}/blob-report/tests-run-me-2-spec-ts.json",
         ],
         "parallelism": false,
       }
@@ -612,7 +652,6 @@ describe('@nx/playwright/plugin', () => {
           ],
         },
         "options": {
-          "blobReportsDir": ".nx-atomized-blob-reports",
           "config": "playwright.config.js",
           "expectedSuites": 2,
         },
@@ -737,6 +776,7 @@ describe('@nx/playwright/plugin', () => {
           "e2e-ci--tests/run-me-2.spec.ts",
           "e2e-ci--tests/run-me.spec.ts",
           "e2e-ci",
+          "e2e-ci--merge-reports",
         ],
       }
     `);
@@ -956,6 +996,7 @@ describe('@nx/playwright/plugin', () => {
           "e2e-ci--tests/run-me-2.spec.ts",
           "e2e-ci--tests/run-me.spec.ts",
           "e2e-ci",
+          "e2e-ci--merge-reports",
         ],
       }
     `);
