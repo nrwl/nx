@@ -12,15 +12,13 @@ import org.apache.maven.plugin.MavenPluginManager
  */
 class MavenInputOutputAnalyzer(
     private val objectMapper: ObjectMapper,
-    workspaceRoot: String,
+    private val workspaceRoot: String,
     private val log: Log,
-    session: MavenSession,
-    pluginManager: MavenPluginManager
+    private val session: MavenSession,
+    private val pluginManager: MavenPluginManager
 ) {
     
-    // Simple components using existing classes
-    private val pathResolver = PathResolver(workspaceRoot)
-    private val preloadedAnalyzer = PreloadedPluginAnalyzer(log, session, pathResolver)
+    // Components will be created per-project to ensure correct path resolution
     
     /**
      * Result of cacheability analysis
@@ -38,6 +36,10 @@ class MavenInputOutputAnalyzer(
     fun analyzeCacheability(phase: String, project: MavenProject): CacheabilityDecision {
         log.info("Analyzing phase '$phase' for project ${project.artifactId}")
         log.info("Project coordinates: ${project.groupId}:${project.artifactId}:${project.version}")
+        
+        // Create project-specific path resolver to ensure {projectRoot} refers to project directory
+        val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath)
+        val preloadedAnalyzer = PreloadedPluginAnalyzer(log, session, pathResolver)
         
         val inputs = objectMapper.createArrayNode()
         val outputs = objectMapper.createArrayNode()
