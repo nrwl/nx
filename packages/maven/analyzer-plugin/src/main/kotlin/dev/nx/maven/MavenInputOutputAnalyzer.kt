@@ -72,19 +72,24 @@ class MavenInputOutputAnalyzer(
         
         log.info("Analyzed phase '$phase': ${inputs.size()} inputs, ${outputs.size()} outputs")
         
-        // Use plugin-based cacheability check
-        val hasSideEffects = !pluginAnalyzer.isPhaseCacheable(phase, project)
+        // Use enhanced plugin-based cacheability assessment
+        val assessment = pluginAnalyzer.getCacheabilityAssessment(phase, project)
+        log.debug("Cacheability assessment for phase '$phase': ${assessment.reason}")
+        assessment.details.forEach { detail -> log.debug("  - $detail") }
         
-        // Final cacheability decision
+        // Final cacheability decision with enhanced reasoning
         return when {
-            hasSideEffects -> {
-                CacheabilityDecision(false, "Has side effects", inputs, outputs)
+            !assessment.cacheable -> {
+                CacheabilityDecision(false, assessment.reason, inputs, outputs)
             }
             inputs.size() <= 1 -> {
-                CacheabilityDecision(false, "No meaningful inputs", inputs, outputs)
+                CacheabilityDecision(false, "No meaningful inputs detected (only ${inputs.size()} inputs)", inputs, outputs)
+            }
+            outputs.isEmpty() -> {
+                CacheabilityDecision(false, "No outputs detected for caching", inputs, outputs)
             }
             else -> {
-                CacheabilityDecision(true, "Deterministic based on plugin parameters", inputs, outputs)
+                CacheabilityDecision(true, "Cacheable: ${assessment.reason}", inputs, outputs)
             }
         }
     }
