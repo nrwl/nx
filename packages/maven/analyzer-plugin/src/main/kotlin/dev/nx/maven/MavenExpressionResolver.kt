@@ -40,7 +40,7 @@ class MavenExpressionResolver(
         }
         
         // Try known parameter mappings
-        return when (name) {
+        val result = when (name) {
             "sourceDirectory" -> project.compileSourceRoots.firstOrNull()
             "testSourceDirectory" -> project.testCompileSourceRoots.firstOrNull()
             "outputDirectory" -> project.build.outputDirectory
@@ -55,6 +55,9 @@ class MavenExpressionResolver(
             }
             else -> null
         }
+        
+        log.debug("Parameter mapping for '$name': $result")
+        return result
     }
     
     /**
