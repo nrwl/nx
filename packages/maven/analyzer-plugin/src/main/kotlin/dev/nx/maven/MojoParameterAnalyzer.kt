@@ -35,6 +35,25 @@ class MojoParameterAnalyzer(
         val defaultValue = param.defaultValue
         val expression = param.expression
         
+        if (name == "sourceDirectory" || name == "compileSourceRoots") {
+            log.info("*** DEBUGGING $name parameter ***")
+            log.info("  name=$name, type=$type, defaultValue=$defaultValue, expression=$expression")
+            val isInput = isInputParameter(name, type, param)
+            log.info("  isInputParameter result: $isInput")
+            if (isInput) {
+                val path = expressionResolver.resolveParameterValue(name, defaultValue, expression, project)
+                log.info("  resolved path: $path")
+                if (path != null) {
+                    log.info("  ADDING as input path: $path")
+                } else {
+                    log.info("  NOT ADDING - path resolved to null")
+                }
+            } else {
+                log.info("  NOT ADDING - not classified as input parameter")
+            }
+            log.info("*** END $name debug ***")
+        }
+        
         log.info("Analyzing parameter: name=$name, type=$type, defaultValue=$defaultValue, expression=$expression")
         
         when {
