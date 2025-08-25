@@ -15,7 +15,12 @@ export const createNodesV2: CreateNodesV2 = [
     const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
     
     // Check for verbose logging from multiple sources  
-    const isVerbose = false; // Disable all verbose logging for cleaner output
+    const isVerbose = opts.verbose || 
+                     process.env.NX_VERBOSE_LOGGING === 'true';
+
+    if (isVerbose) {
+      console.error(`Maven plugin running in verbose mode (NX_VERBOSE_LOGGING=${process.env.NX_VERBOSE_LOGGING})`);
+    }
 
     // Only process if we have the root pom.xml in the workspace root
     const rootPomExists = configFiles.some(file => file === 'pom.xml');

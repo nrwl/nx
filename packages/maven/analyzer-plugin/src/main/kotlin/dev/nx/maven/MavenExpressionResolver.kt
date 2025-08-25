@@ -34,6 +34,13 @@ class MavenExpressionResolver(
             "outputDirectory" -> project.build.outputDirectory
             "testOutputDirectory" -> project.build.testOutputDirectory
             "buildDirectory" -> project.build.directory
+            "classpathElements", "compileClasspathElements" -> {
+                // Return classpath as colon-separated string of JAR paths
+                project.compileClasspathElements?.joinToString(System.getProperty("path.separator"))
+            }
+            "testClasspathElements" -> {
+                project.testClasspathElements?.joinToString(System.getProperty("path.separator"))
+            }
             else -> null
         }
     }
@@ -60,6 +67,16 @@ class MavenExpressionResolver(
         result = result.replace("\${project.version}", project.version ?: "unknown")
         result = result.replace("\${project.name}", project.name ?: project.artifactId ?: "unknown")
         result = result.replace("\${project.packaging}", project.packaging ?: "jar")
+        
+        // Classpath properties
+        result = result.replace("\${project.compileClasspathElements}", 
+            project.compileClasspathElements?.joinToString(System.getProperty("path.separator")) ?: "")
+        result = result.replace("\${project.testClasspathElements}", 
+            project.testClasspathElements?.joinToString(System.getProperty("path.separator")) ?: "")
+        result = result.replace("\${project.compileSourceRoots}",
+            project.compileSourceRoots?.joinToString(System.getProperty("path.separator")) ?: "")
+        result = result.replace("\${project.testCompileSourceRoots}",
+            project.testCompileSourceRoots?.joinToString(System.getProperty("path.separator")) ?: "")
         
         // Maven session properties
         result = result.replace("\${session.executionRootDirectory}", session.executionRootDirectory ?: ".")
