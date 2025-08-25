@@ -19,6 +19,8 @@ class MojoParameterAnalyzer(
      * Analyzes a mojo's parameters to find inputs and outputs
      */
     fun analyzeMojo(mojo: MojoDescriptor, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode) {
+        log.debug("Analyzing mojo: ${mojo.pluginDescriptor.artifactId}:${mojo.goal}")
+        
         // Analyze mojo parameters to find inputs and outputs
         for (param in mojo.parameters ?: emptyList()) {
             analyzeParameter(param, project, inputs, outputs)
@@ -34,16 +36,20 @@ class MojoParameterAnalyzer(
         val defaultValue = param.defaultValue
         val expression = param.expression
         
+        log.debug("Analyzing parameter: $name (type: $type, default: $defaultValue, expression: $expression)")
+        
         when {
             isInputParameter(name, type, param) -> {
                 val path = expressionResolver.resolveParameterValue(name, defaultValue, expression, project)
                 if (path != null) {
+                    log.debug("Adding input path from parameter '$name': $path")
                     pathResolver.addInputPath(path, inputs)
                 }
             }
             isOutputParameter(name, type, param) -> {
                 val path = expressionResolver.resolveParameterValue(name, defaultValue, expression, project)
                 if (path != null) {
+                    log.debug("Adding output path from parameter '$name': $path")
                     pathResolver.addOutputPath(path, outputs)
                 }
             }
@@ -51,122 +57,163 @@ class MojoParameterAnalyzer(
     }
     
     /**
-     * Determines if a parameter represents an input to the mojo
+     * Determines if a parameter represents an input (source files, resources, dependencies, etc.)
      */
     private fun isInputParameter(name: String, type: String, param: Parameter): Boolean {
-        // Check for exact input parameter names
-        val exactInputNames = setOf(
-            "sourceDirectory", "testSourceDirectory", "sources", "sourceRoot", "sourceRoots",
-            "compileSourceRoots", "testCompileSourceRoots", "resources", "testResources",
-            "classesDirectory", "testClassesDirectory", "inputDirectory", "workingDirectory",
-            "basedir", "projectDirectory", "includes", "excludes", "additionalClasspathElements",
-            "classpathElements", "testClasspathElements", "dependencyClasspathElements"
+        // Check parameter name patterns for inputs
+        val inputNamePatterns = listOf(
+            // Source directories
+            "sourceDirectory", "sourceDirs", "sourceRoots", "compileSourceRoots",
+            "testSourceDirectory", "testSourceRoots", "testCompileSourceRoots",
+            
+            // Resource directories
+            "resourceDirectory", "resources", "testResources", "webappDirectory",
+            
+            // Classpath elements
+            "classpathElements", "compileClasspathElements", "testClasspathElements",
+            "runtimeClasspathElements", "systemPath", "compileClasspath", "runtimeClasspath",
+            
+            // Input files
+            "inputFile", "inputFiles", "sourceFile", "sourceFiles", "includes", "include",
+            "configLocation", "configFile", "rulesFile", "suppressionsFile",
+            
+            // Maven coordinates for dependencies
+            "groupId", "artifactId", "classifier", "scope",
+            
+            // Web application sources
+            "warSourceDirectory", "webXml", "containerConfigXML",
+            
+            // Other common input patterns
+            "basedir", "workingDirectory", "projectDirectory"
         )
         
-        if (exactInputNames.contains(name)) return true
+        // Check if parameter name matches input patterns
+        val nameMatch = inputNamePatterns.any { pattern ->
+            name.contains(pattern, ignoreCase = true)
+        }
         
-        // Check for input parameter name patterns
-        val inputPatterns = listOf(
-            "source", "input", "classpath", "classes", "resource", "config", "properties", 
-            "descriptor", "manifest", "template", "schema", "definition"
+        // Check parameter type for input types
+        val inputTypePatterns = listOf(
+            "java.io.File", "java.util.List", "java.util.Set", 
+            "java.lang.String", "java.nio.file.Path"
         )
         
-        val nameIsInput = inputPatterns.any { pattern -> 
-            name.contains(pattern, ignoreCase = true) && 
-            (name.contains("directory", ignoreCase = true) || name.contains("file", ignoreCase = true) || name.contains("path", ignoreCase = true))
+        val typeMatch = inputTypePatterns.any { pattern ->
+            type.contains(pattern, ignoreCase = true)
         }
         
-        if (nameIsInput) return true
+        // Additional checks based on parameter characteristics
+        val isReadable = param.description?.contains("read", ignoreCase = true) == true ||
+                        param.description?.contains("source", ignoreCase = true) == true ||
+                        param.description?.contains("input", ignoreCase = true) == true
         
-        // Check type patterns for Files and Lists that suggest inputs
-        when {
-            type.contains("java.io.File") && inputPatterns.any { name.contains(it, ignoreCase = true) } -> return true
-            type.contains("java.nio.file.Path") && inputPatterns.any { name.contains(it, ignoreCase = true) } -> return true
-            type.contains("List<File>") || type.contains("List<String>") -> {
-                if (inputPatterns.any { name.contains(it, ignoreCase = true) }) return true
-            }
-            type.contains("Set<File>") || type.contains("Set<String>") -> {
-                if (inputPatterns.any { name.contains(it, ignoreCase = true) }) return true
-            }
+        // Parameters that are clearly not inputs
+        val excludePatterns = listOf(
+            "outputDirectory", "targetDirectory", "buildDirectory", "destinationFile",
+            "outputFile", "target", "destination", "finalName"
+        )
+        
+        val isExcluded = excludePatterns.any { pattern ->
+            name.contains(pattern, ignoreCase = true)
         }
         
-        // Exclude common output patterns to avoid false positives
-        val outputPatterns = listOf("output", "target", "destination", "report", "artifact", "deploy", "install")
-        if (outputPatterns.any { name.contains(it, ignoreCase = true) }) return false
+        val result = (nameMatch || isReadable) && typeMatch && !isExcluded
         
-        return false
+        if (result) {
+            log.debug("Parameter '$name' identified as INPUT (nameMatch=$nameMatch, typeMatch=$typeMatch, isReadable=$isReadable)")
+        }
+        
+        return result
     }
     
     /**
-     * Determines if a parameter represents an output from the mojo
+     * Determines if a parameter represents an output (target directories, generated files, etc.)
      */
     private fun isOutputParameter(name: String, type: String, param: Parameter): Boolean {
-        // Check for exact output parameter names
-        val exactOutputNames = setOf(
-            "outputDirectory", "testOutputDirectory", "targetDirectory", "buildDirectory",
-            "outputFile", "targetFile", "reportsDirectory", "reportOutputDirectory",
-            "artifactFile", "finalName", "jarFile", "warFile", "destinationDir",
-            "reportOutputFile", "destinationFile", "archiveFile"
+        // Check parameter name patterns for outputs
+        val outputNamePatterns = listOf(
+            // Output directories
+            "outputDirectory", "targetDirectory", "buildDirectory", "destinationDir",
+            "testOutputDirectory", "generatedSourcesDirectory",
+            
+            // Output files
+            "outputFile", "destinationFile", "targetFile", "finalName",
+            "jarName", "warName", "earName",
+            
+            // Report directories
+            "reportOutputDirectory", "reportsDirectory", "outputFormat",
+            
+            // Generated content
+            "generatedSources", "generatedResources", "generatedClasses",
+            
+            // Archive outputs
+            "archiveFile", "archiveName", "packagedFile"
         )
         
-        if (exactOutputNames.contains(name)) return true
+        // Check if parameter name matches output patterns
+        val nameMatch = outputNamePatterns.any { pattern ->
+            name.contains(pattern, ignoreCase = true)
+        }
         
-        // Check for output parameter name patterns
-        val outputPatterns = listOf(
-            "output", "target", "destination", "build", "artifact", "archive", 
-            "report", "generated", "compiled", "packaged", "deploy", "install"
+        // Check parameter type for output types
+        val outputTypePatterns = listOf(
+            "java.io.File", "java.lang.String", "java.nio.file.Path"
         )
         
-        val nameIsOutput = outputPatterns.any { pattern -> 
-            name.contains(pattern, ignoreCase = true) && 
-            (name.contains("directory", ignoreCase = true) || 
-             name.contains("file", ignoreCase = true) || 
-             name.contains("path", ignoreCase = true) ||
-             name.endsWith("Dir") ||
-             name.endsWith("File"))
+        val typeMatch = outputTypePatterns.any { pattern ->
+            type.contains(pattern, ignoreCase = true)
         }
         
-        if (nameIsOutput) return true
+        // Additional checks based on parameter characteristics
+        val isWritable = param.description?.contains("output", ignoreCase = true) == true ||
+                        param.description?.contains("target", ignoreCase = true) == true ||
+                        param.description?.contains("destination", ignoreCase = true) == true ||
+                        param.description?.contains("generate", ignoreCase = true) == true
         
-        // Check type patterns for Files that suggest outputs
-        when {
-            type.contains("java.io.File") && outputPatterns.any { name.contains(it, ignoreCase = true) } -> return true
-            type.contains("java.nio.file.Path") && outputPatterns.any { name.contains(it, ignoreCase = true) } -> return true
+        val result = (nameMatch || isWritable) && typeMatch
+        
+        if (result) {
+            log.debug("Parameter '$name' identified as OUTPUT (nameMatch=$nameMatch, typeMatch=$typeMatch, isWritable=$isWritable)")
         }
         
-        // Special cases for common Maven plugin patterns
-        when {
-            // JAR plugin patterns
-            name.equals("jarFile", ignoreCase = true) || name.equals("outputFile", ignoreCase = true) -> return true
-            // Surefire/Failsafe report patterns  
-            name.contains("reportsDirectory", ignoreCase = true) -> return true
-            // Compiler plugin output
-            name.equals("outputDirectory", ignoreCase = true) -> return true
-            // Site plugin
-            name.contains("siteDirectory", ignoreCase = true) -> return true
-        }
-        
-        // Exclude common input patterns to avoid false positives
-        val inputPatterns = listOf("source", "input", "classpath", "resource")
-        if (inputPatterns.any { name.contains(it, ignoreCase = true) }) return false
-        
-        return false
+        return result
     }
     
     /**
-     * Determines if a mojo has side effects that prevent caching
+     * Determines if a mojo has side effects that would make it non-cacheable
      */
     fun isSideEffectMojo(mojo: MojoDescriptor): Boolean {
-        val goal = mojo.goal?.lowercase() ?: ""
-        val description = mojo.description?.lowercase() ?: ""
+        val goal = mojo.goal
+        val artifactId = mojo.pluginDescriptor.artifactId
         
-        val sideEffectKeywords = setOf(
-            "install", "deploy", "clean", "delete", "remove", "publish", "upload",
-            "commit", "push", "modify", "write", "create", "execute"
+        // Known side-effect goals
+        val sideEffectGoals = setOf(
+            // Deployment and installation
+            "deploy", "install", "release",
+            
+            // External system interactions
+            "exec", "run", "start", "stop",
+            
+            // Network operations
+            "upload", "download", "push", "pull",
+            
+            // Database operations
+            "migrate", "create", "drop", "update"
         )
         
-        return sideEffectKeywords.any { keyword ->
-            goal.contains(keyword) || description.contains(keyword)
-        }
+        val sideEffectPlugins = setOf(
+            "maven-deploy-plugin",
+            "maven-install-plugin", 
+            "maven-release-plugin",
+            "exec-maven-plugin",
+            "spring-boot-maven-plugin",
+            "docker-maven-plugin"
+        )
+        
+        return sideEffectGoals.contains(goal) || 
+               sideEffectPlugins.contains(artifactId) ||
+               goal.contains("deploy", ignoreCase = true) ||
+               goal.contains("install", ignoreCase = true) ||
+               goal.contains("release", ignoreCase = true)
     }
 }

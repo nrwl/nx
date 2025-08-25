@@ -7,6 +7,7 @@ import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MavenPluginManager
+import org.apache.maven.lifecycle.LifecycleExecutor
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -25,6 +26,7 @@ class MavenInputOutputAnalyzerTest {
     private lateinit var mockBuild: Build
     private lateinit var mockSession: MavenSession
     private lateinit var mockPluginManager: MavenPluginManager
+    private lateinit var mockLifecycleExecutor: LifecycleExecutor
     private lateinit var objectMapper: ObjectMapper
     
     @TempDir
@@ -38,6 +40,7 @@ class MavenInputOutputAnalyzerTest {
         mockBuild = mock<Build>()
         mockSession = mock<MavenSession>()
         mockPluginManager = mock<MavenPluginManager>()
+        mockLifecycleExecutor = mock<LifecycleExecutor>()
         
         // Setup default project mocks
         whenever(mockProject.build).thenReturn(mockBuild)
@@ -55,7 +58,14 @@ class MavenInputOutputAnalyzerTest {
         whenever(mockBuild.testOutputDirectory).thenReturn(tempDir.resolve("target/test-classes").toString())
         whenever(mockBuild.finalName).thenReturn("test-project-1.0.0")
         
-        analyzer = MavenInputOutputAnalyzer(objectMapper, tempDir.toString(), mockLog, mockSession, mockPluginManager)
+        // Setup project basedir for path resolution
+        val projectDir = tempDir.toFile()
+        whenever(mockProject.basedir).thenReturn(projectDir)
+        whenever(mockProject.artifactId).thenReturn("test-project")
+        whenever(mockProject.groupId).thenReturn("com.example")
+        whenever(mockProject.version).thenReturn("1.0.0")
+        
+        analyzer = MavenInputOutputAnalyzer(objectMapper, tempDir.toString(), mockLog, mockSession, mockPluginManager, mockLifecycleExecutor)
     }
     
     @Test

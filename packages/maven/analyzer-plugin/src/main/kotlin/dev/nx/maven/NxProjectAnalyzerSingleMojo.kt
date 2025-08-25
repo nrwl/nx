@@ -158,9 +158,9 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
             projectNode.put("parent", parentNode)
         }
         
-        // Generate Nx project configuration using simplified analyzer
+        // Generate Nx project configuration using plugin parameter analyzer
         val inputOutputAnalyzer = MavenInputOutputAnalyzer(
-            objectMapper, workspaceRoot, log, session, pluginManager
+            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
         )
         
         // Dynamically discover available phases using Maven's lifecycle APIs
