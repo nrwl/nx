@@ -56,7 +56,6 @@ class MavenExpressionResolver(
             else -> null
         }
         
-        log.debug("Parameter mapping for '$name': $result")
         return result
     }
     
