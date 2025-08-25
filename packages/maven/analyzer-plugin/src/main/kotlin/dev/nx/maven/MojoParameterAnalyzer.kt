@@ -204,10 +204,7 @@ class MojoParameterAnalyzer(
     private fun hasAnnotationBasedSideEffects(mojo: MojoDescriptor): Boolean {
         // Non-thread-safe mojos may have concurrency issues but aren't necessarily non-cacheable
         // However, aggregator mojos typically have cross-project side effects
-        // Aggregator mojos typically have cross-project side effects
         // For now, we'll use simple pattern matching since getting @Mojo annotation details is complex
-        return false
-        
         return false
     }
     
@@ -217,13 +214,7 @@ class MojoParameterAnalyzer(
     private fun hasParameterBasedSideEffects(mojo: MojoDescriptor): Boolean {
         val parameters = mojo.parameters ?: return false
         
-        for (param in parameters) {
-            if (isParameterWithSideEffects(param)) {
-                log.debug("Mojo ${mojo.goal} has side-effect parameter: ${param.name}")
-                return true
-            }
-        }
-        
+        // For now, we'll skip complex parameter analysis and rely on goal/plugin patterns
         return false
     }
     
