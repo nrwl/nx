@@ -29,7 +29,6 @@ class PluginBasedAnalyzer(
      * Analyzes a Maven phase by examining which plugins execute and their parameters
      */
     fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
-        println("DEBUG PluginAnalyzer: analyzing phase '$phase' for project ${project.artifactId}")
         
         try {
             // Find all plugin executions that will run during this phase
@@ -72,7 +71,6 @@ class PluginBasedAnalyzer(
         val plugin = execution.plugin
         val goal = execution.goal
         
-        println("DEBUG PluginAnalyzer: analyzing plugin execution: ${plugin.artifactId}:${goal}")
         
         try {
             // Load plugin descriptor to get mojo information
@@ -203,14 +201,11 @@ class PluginBasedAnalyzer(
         inputs: com.fasterxml.jackson.databind.node.ArrayNode,
         phase: String
     ) {
-        println("DEBUG: Adding compiler plugin source directories for phase '$phase'")
-        
         when (execution.goal) {
             "compile" -> {
                 // Add main source directories for compile goal
                 project.compileSourceRoots?.forEach { sourceRoot ->
                     if (sourceRoot.isNotBlank()) {
-                        println("DEBUG: Adding compile source root: $sourceRoot")
                         pathResolver.addInputPath(sourceRoot, inputs)
                     }
                 }
@@ -219,7 +214,6 @@ class PluginBasedAnalyzer(
                 // Add test source directories for testCompile goal
                 project.testCompileSourceRoots?.forEach { testSourceRoot ->
                     if (testSourceRoot.isNotBlank()) {
-                        println("DEBUG: Adding test source root: $testSourceRoot")
                         pathResolver.addInputPath(testSourceRoot, inputs)
                     }
                 }
