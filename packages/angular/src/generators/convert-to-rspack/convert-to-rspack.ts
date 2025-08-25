@@ -22,12 +22,8 @@ import type { RspackPluginOptions } from '@nx/rspack/plugin';
 import { prompt } from 'enquirer';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
-import {
-  angularRspackVersion,
-  nxVersion,
-  tsNodeVersion,
-  webpackMergeVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
+import { getAngularRspackVersion, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -354,6 +350,13 @@ export async function convertToRspack(
   let customWebpackConfigPath: string | undefined;
 
   validateSupportedBuildExecutor(Object.values(project.targets));
+
+  const angularRspackVersion = getAngularRspackVersion(tree);
+  if (!angularRspackVersion) {
+    throw new Error(
+      'Angular Rspack requires Angular 19 or higher. Please upgrade your Angular version before converting to Rspack.'
+    );
+  }
 
   let projectServePort = DEFAULT_PORT;
 
@@ -701,6 +704,7 @@ export async function convertToRspack(
   }
 
   if (!schema.skipInstall) {
+    const { webpackMergeVersion, tsNodeVersion } = versions(tree);
     const installTask = addDependenciesToPackageJson(
       tree,
       {},
