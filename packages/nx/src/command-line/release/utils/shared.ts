@@ -162,10 +162,56 @@ export function createCommitMessageValues(
         releaseTagPattern: releaseGroup.releaseTagPattern,
         projectName: releaseGroupProjectNames[0],
       });
-      commitMessageValues[0] = interpolate(commitMessageValues[0], {
-        version: releaseVersion.rawVersion,
-        projectName: releaseGroupProjectNames[0],
-      }).trim();
+
+      // Only consider dependents that actually received a newVersion
+      const bumpedDependents = (
+        projectVersionData.dependentProjects || []
+      ).filter((d) => !!versionData[d.source]?.newVersion);
+
+      if (bumpedDependents.length === 0) {
+        // No dependents were bumped - keep normal templating behavior
+        commitMessageValues[0] = interpolate(commitMessageValues[0], {
+          version: releaseVersion.rawVersion,
+          projectName: releaseGroupProjectNames[0],
+        }).trim();
+      } else {
+        // Dependents were bumped - present a stripped header and one bullet per project (primary + bumped dependents)
+        commitMessageValues[0] = stripPlaceholders(commitMessageValues[0], [
+          'v{version}',
+          '{version}',
+          '{projectName}',
+        ]);
+
+        const pushed = new Set<string>();
+
+        // Add primary project bullet if it has a newVersion
+        if (projectVersionData.newVersion) {
+          commitMessageValues.push(
+            `- project: ${releaseGroupProjectNames[0]} ${releaseVersion.rawVersion}`
+          );
+          pushed.add(releaseGroupProjectNames[0]);
+        }
+
+        // Add each bumped dependent
+        const bumpedDependentNames = collectChangedDependents(
+          versionData,
+          releaseGroupProjectNames[0]
+        );
+        for (const depName of bumpedDependentNames) {
+          if (!pushed.has(depName) && versionData[depName]?.newVersion) {
+            const depReleaseVersion = new ReleaseVersion({
+              version: versionData[depName].newVersion,
+              releaseTagPattern: releaseGroup.releaseTagPattern,
+              projectName: depName,
+            });
+            commitMessageValues.push(
+              `- project: ${depName} ${depReleaseVersion.rawVersion}`
+            );
+            pushed.add(depName);
+          }
+        }
+      }
+
       return commitMessageValues;
     }
   }
@@ -188,8 +234,11 @@ export function createCommitMessageValues(
       releaseGroupToFilteredProjects.get(releaseGroup)
     );
 
-    // One entry per project for independent groups
+    // One entry per project for independent groups. Also include any dependent projects
+    // which were bumped as a result of the selected projects being released.
     if (releaseGroup.projectsRelationship === 'independent') {
+      const pushed = new Set<string>();
+
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
         if (projectVersionData.newVersion !== null) {
@@ -201,6 +250,26 @@ export function createCommitMessageValues(
           commitMessageValues.push(
             `- project: ${project} ${releaseVersion.rawVersion}`
           );
+          pushed.add(project);
+        }
+
+        // Add any dependent projects that were bumped as a result of this project's release (recursively)
+        const bumpedDependentNames = collectChangedDependents(
+          versionData,
+          project
+        );
+        for (const depName of bumpedDependentNames) {
+          if (!pushed.has(depName) && versionData[depName]?.newVersion) {
+            const depReleaseVersion = new ReleaseVersion({
+              version: versionData[depName].newVersion,
+              releaseTagPattern: releaseGroup.releaseTagPattern,
+              projectName: depName,
+            });
+            commitMessageValues.push(
+              `- project: ${depName} ${depReleaseVersion.rawVersion}`
+            );
+            pushed.add(depName);
+          }
         }
       }
       continue;
@@ -220,6 +289,32 @@ export function createCommitMessageValues(
   }
 
   return commitMessageValues;
+}
+
+/**
+ * Recursively collect names of dependent projects that received a newVersion
+ * starting from the given projectName. Only projects with a truthy newVersion
+ * are included (matching previous inline behavior) and traversal continues
+ * only through dependents that themselves have a newVersion.
+ */
+function collectChangedDependents(
+  versionData: VersionData,
+  projectName: string
+): string[] {
+  const collected = new Set<string>();
+
+  function visit(current: string) {
+    for (const dep of versionData[current]?.dependentProjects || []) {
+      const name = dep.source;
+      if (!collected.has(name) && versionData[name]?.newVersion) {
+        collected.add(name);
+        visit(name);
+      }
+    }
+  }
+
+  visit(projectName);
+  return Array.from(collected);
 }
 
 function stripPlaceholders(str: string, placeholders: string[]): string {
