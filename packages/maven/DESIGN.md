@@ -10,248 +10,264 @@ The Nx Maven Plugin enables seamless integration between Maven projects and Nx, 
 
 The plugin consists of two main components that work together:
 
-1. **TypeScript Plugin (`packages/maven/src/plugin.ts`)** - Nx plugin interface
-2. **Kotlin Analyzer (`packages/maven/analyzer-plugin/`)** - Maven project analysis
+1. **TypeScript Plugin (`packages/maven/src/`)** - Nx plugin interface
+2. **Kotlin Maven Analyzer Plugin** - External Maven plugin for project analysis
 
 ```
 ┌─────────────────┐    spawns    ┌─────────────────────┐
 │   Nx Plugin     │─────────────▶│  Maven Analyzer    │
-│  (TypeScript)   │              │    (Kotlin)         │
+│  (TypeScript)   │              │   Plugin (Kotlin)  │
 │                 │              │                     │
-│ - Creates nodes │              │ - Reads Maven POMs  │
-│ - Maps targets  │              │ - Analyzes deps     │
-│ - Handles deps  │◀─────────────│ - Outputs JSON      │
+│ - Plugin entry  │              │ - Reads Maven POMs  │
+│ - Node creation │              │ - Analyzes deps     │
+│ - Dep resolution│◀─────────────│ - Outputs JSON      │
 └─────────────────┘   JSON data  └─────────────────────┘
 ```
 
 ### Core Workflow
 
-1. **Discovery**: Nx discovers `pom.xml` files in the workspace
-2. **Analysis**: TypeScript plugin spawns Kotlin analyzer via Maven
-3. **Processing**: Analyzer scans all Maven projects and generates structured data
-4. **Integration**: Plugin converts Maven data to Nx project configurations
+1. **Discovery**: Nx discovers `pom.xml` files using the `**/pom.xml` glob pattern
+2. **Root Check**: Plugin only processes if a root `pom.xml` exists in workspace root
+3. **Analysis**: TypeScript plugin spawns external Kotlin analyzer via Maven execution
+4. **Caching**: Results are cached and reused until POMs change or verbose mode is enabled
+5. **Integration**: Pre-computed Nx project configurations are returned directly
 
-## Key Features
+## Key Components
 
-### 1. Project Detection and Mapping
+### 1. Entry Point (`src/index.ts`)
 
-The plugin automatically discovers Maven projects by scanning for `pom.xml` files and creates corresponding Nx project configurations:
+Exports the main plugin functions:
+- `createNodesV2` - Project discovery and configuration
+- `createDependencies` - Inter-project dependency resolution
+- `getCachedMavenData` / `clearMavenDataCache` - Cache management
+
+### 2. Node Creation (`src/plugins/nodes.ts`)
+
+Implements Nx's `CreateNodesV2` interface:
 
 ```typescript
 export const createNodesV2: CreateNodesV2 = [
-  '**/pom.xml',  // Pattern to match Maven projects
+  '**/pom.xml',  // Discovers all Maven projects
   async (configFiles, options, context) => {
-    // Run Maven analysis and convert to Nx format
+    // Only process if root pom.xml exists
+    const rootPomExists = configFiles.some(file => file === 'pom.xml');
+    if (!rootPomExists) return [];
+    
+    // Get cached data or run fresh analysis
+    let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
+    if (!mavenData) {
+      mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
+    }
+    
+    // Return pre-computed Nx configurations
+    return mavenData.createNodesResults || [];
   }
 ];
 ```
 
-### 2. Complete Lifecycle Support
+**Key Features:**
+- **Root POM Guard**: Only analyzes when root `pom.xml` present to avoid partial processing
+- **Verbose Mode Support**: Bypasses cache when `NX_VERBOSE_LOGGING=true` or `verbose` option set
+- **Error Resilience**: Returns empty array on analysis failure with warning message
+- **Direct Passthrough**: Returns analyzer's pre-computed `createNodesResults` without modification
 
-The analyzer detects all Maven lifecycles, not just the default one:
+### 3. Maven Analysis (`src/plugins/maven-analyzer.ts`)
 
-- **Default Lifecycle**: compile, test, package, install, deploy
-- **Clean Lifecycle**: clean
-- **Site Lifecycle**: site, site-deploy
-
-This ensures all Maven targets are available in Nx, including clean operations.
-
-### 3. Smart Dependency Resolution
-
-The plugin implements intelligent phase fallback logic to handle dependencies between projects that may not have all lifecycle phases:
-
-```kotlin
-// Find best available phase for dependency resolution
-val availablePhases = depProject.lifecycle.phases
-val requestedPhaseIndex = mavenPhases.indexOf(requestedPhase)
-
-// Fallback to highest available phase before requested phase
-for (i in requestedPhaseIndex - 1 downTo 0) {
-    if (availablePhases.contains(mavenPhases[i])) {
-        return mavenPhases[i]
-    }
-}
-```
-
-### 4. Multi-Module Project Support
-
-The plugin properly handles Maven's multi-module project structure:
-
-- Parent POM relationships
-- Module dependencies
-- Inheritance of configuration
-- Proper build ordering
-
-### 5. Target Mapping
-
-Maven phases/goals are mapped to Nx targets with proper dependency chains:
-
-| Maven Phase | Nx Target | Dependencies |
-|-------------|-----------|-------------|
-| clean | clean | - |
-| compile | compile | process-resources of dependencies |
-| test | test | compile + test dependencies |
-| package | package | compile |
-| install | install | package |
-| verify | verify | test (with fallback logic) |
-
-## Technical Implementation
-
-### Kotlin Analyzer Deep Dive
-
-The `NxProjectAnalyzerMojo` performs comprehensive Maven project analysis:
-
-```kotlin
-@Mojo(
-    name = "analyze",
-    defaultPhase = LifecyclePhase.VALIDATE,
-    aggregator = true,  // Process all projects in one execution
-    requiresDependencyResolution = ResolutionScope.NONE
-)
-class NxProjectAnalyzerMojo : AbstractMojo() {
-    // Analyzes all projects in the reactor
-}
-```
-
-#### Lifecycle Detection Strategy
-
-The analyzer uses Maven's `LifecycleExecutor` to calculate execution plans for all major lifecycles:
-
-```kotlin
-val lifecyclePhases = listOf("deploy", "clean", "site")
-val allExecutionPlans = lifecyclePhases.mapNotNull { phase ->
-    try {
-        lifecycleExecutor.calculateExecutionPlan(session, phase)
-    } catch (e: Exception) {
-        null // Skip phases that aren't applicable
-    }
-}
-```
-
-This approach ensures comprehensive phase detection while gracefully handling projects that don't support certain phases.
-
-#### Dependency Analysis
-
-The analyzer extracts several types of dependencies:
-
-1. **Compile Dependencies**: Required for compilation
-2. **Test Dependencies**: Required for testing  
-3. **Parent Dependencies**: POM inheritance relationships
-4. **Module Dependencies**: Multi-module relationships
-
-### TypeScript Plugin Integration
-
-The TypeScript plugin orchestrates the analysis and converts results to Nx format:
+Orchestrates external Kotlin analyzer execution:
 
 ```typescript
-async function runMavenAnalysis(options: MavenPluginOptions) {
-    // Spawn Maven with our analyzer plugin
-    const result = spawn('mvn', [
-        'com.nx.maven:nx-maven-analyzer:analyze',
-        '-Dnx.outputFile=nx-maven-projects.json'
-    ], { stdio: 'pipe' });
-    
-    // Parse JSON output and convert to Nx format
-    const mavenData = JSON.parse(jsonOutput);
-    return convertToNxFormat(mavenData);
+export async function runMavenAnalysis(options: MavenPluginOptions): Promise<MavenAnalysisData> {
+  // Detect Maven wrapper or fallback to 'mvn'
+  const mavenExecutable = detectMavenWrapper();
+  
+  // Configure Maven command
+  const mavenArgs = [
+    'dev.nx.maven:nx-maven-analyzer-plugin:1.0.1:analyze',
+    `-Dnx.outputFile=${outputFile}`,
+    '--batch-mode',
+    '--no-transfer-progress'
+  ];
+  
+  // Execute and parse JSON output
+  const result = JSON.parse(jsonContent) as MavenAnalysisData;
+  return result;
 }
 ```
 
-## Caching Strategy
+**Key Features:**
+- **Maven Wrapper Detection**: Automatically uses `./mvnw` or `mvnw.cmd` if present
+- **External Plugin Execution**: Runs `dev.nx.maven:nx-maven-analyzer-plugin:1.0.1:analyze`
+- **Output File Management**: Writes analysis to workspace data directory
+- **Verbose Mode**: Forwards Maven output in real-time when verbose enabled
+- **Error Handling**: Comprehensive logging and error reporting
 
-The plugin is designed for optimal caching:
+### 4. Caching System (`src/plugins/maven-data-cache.ts`)
 
-- **Nx Caching**: All Maven targets benefit from Nx's computation caching
-- **Incremental Analysis**: Only re-analyzes when POMs change
-- **Dependency Tracking**: Proper cache invalidation based on dependency changes
+Manages analysis result caching to improve performance:
 
-## Error Handling and Resilience
+```typescript
+export function getCachedMavenData(workspaceRoot: string, ignoreCache?: boolean): MavenAnalysisData | null {
+  if (ignoreCache) return null;
+  
+  // Check if cache exists and is newer than any POM files
+  // Return cached data if valid, null if stale
+}
+```
 
-### Graceful Degradation
+**Cache Strategy:**
+- **File-based**: Stores JSON analysis in workspace data directory
+- **Staleness Detection**: Invalidates when any POM file is newer than cache
+- **Verbose Override**: Bypasses cache entirely in verbose mode
+- **Performance**: Eliminates repeated Maven analysis on unchanged projects
 
-The plugin handles various edge cases gracefully:
+### 5. Dependency Resolution (`src/plugins/dependencies.ts`)
 
-- Missing lifecycle phases (e.g., POM projects without `verify`)
-- Circular dependencies in parent relationships
-- Invalid or incomplete POM files
-- Maven execution failures
+Creates Nx dependency graph from Maven analysis:
 
-### Fallback Mechanisms
+```typescript
+export const createDependencies: CreateDependencies = (_options, context) => {
+  const mavenData = getCachedMavenData(context.workspaceRoot);
+  
+  // Extract dependencies from compile target's dependsOn
+  for (const [projectRoot, projectsWrapper] of mavenData.createNodesResults) {
+    const compileTarget = projectConfig.targets?.compile;
+    if (compileTarget && compileTarget.dependsOn) {
+      // Process project:phase dependencies
+    }
+  }
+  
+  return dependencies;
+};
+```
 
-- **Phase Fallback**: Falls back to earlier phases when requested phase unavailable
-- **Dependency Fallback**: Uses process-resources when compile unavailable
-- **Analysis Fallback**: Continues processing other projects when one fails
+**Dependency Sources:**
+- **Compile Dependencies**: Extracted from `compile` target's `dependsOn` array
+- **Format Handling**: Supports both string (`"projectName:phase"`) and object formats
+- **Static Type**: All dependencies marked as `DependencyType.static`
+- **Source Tracking**: Links dependencies to source POM files
+
+## Data Flow
+
+### Analysis Pipeline
+
+1. **Trigger**: Nx calls `createNodesV2` when discovering projects
+2. **Guard Check**: Ensures root `pom.xml` exists in workspace
+3. **Cache Check**: Looks for existing analysis results (unless verbose mode)
+4. **External Analysis**: Spawns Maven with Kotlin analyzer plugin if needed
+5. **JSON Output**: Kotlin analyzer writes complete Nx configuration to JSON file
+6. **Direct Return**: TypeScript plugin returns pre-computed results without transformation
+
+### Data Format
+
+The Kotlin analyzer produces a complete `MavenAnalysisData` structure:
+
+```typescript
+export interface MavenAnalysisData {
+  createNodesResults: CreateNodesResult[];  // Complete Nx project configurations
+  generatedAt?: number;
+  workspaceRoot?: string;
+  totalProjects?: number;
+}
+
+export type CreateNodesResult = [string, ProjectsWrapper];
+
+export interface ProjectsWrapper {
+  projects: Record<string, ProjectConfiguration>;  // Full Nx ProjectConfiguration
+}
+```
+
+**Key Aspects:**
+- **Complete Configuration**: Each project includes full target definitions with executors, options, and dependencies
+- **Maven Command Generation**: Targets use `nx:run-commands` executor with proper Maven commands
+- **Dependency Chains**: Inter-project dependencies pre-computed in `dependsOn` arrays
+- **Caching Configuration**: Targets include cache and parallelism settings
+
+### Target Structure
+
+Each Maven phase becomes an Nx target:
+
+```json
+{
+  "compile": {
+    "executor": "nx:run-commands",
+    "options": {
+      "command": "mvn compile -pl org.apache.maven:project-name",
+      "cwd": "{workspaceRoot}"
+    },
+    "dependsOn": ["dependent-project:process-resources"],
+    "cache": false,
+    "parallelism": true
+  }
+}
+```
 
 ## Performance Optimizations
 
-### Parallel Execution
+### Efficient Analysis Strategy
 
-The plugin supports Nx's parallel execution:
+- **Single Execution**: One Maven command analyzes entire workspace
+- **External Processing**: Heavy lifting done by Kotlin analyzer, not in Nx process
+- **Pre-computation**: All Nx configurations generated by analyzer, no runtime transformation
+- **Smart Caching**: Results cached until POM files change
 
-```bash
-# Configured via .env
-NX_PARALLEL=50%
-```
+### Selective Processing
 
-### Efficient Analysis
+- **Root Guard**: Only processes workspaces with root `pom.xml`
+- **Cache Bypass**: Verbose mode forces fresh analysis for debugging
+- **Incremental**: Cache invalidation based on POM modification times
 
-- Single Maven execution analyzes all projects
-- Minimal filesystem operations
-- Cached dependency resolution
+## Error Handling
 
-## Testing Strategy
+### Graceful Degradation
 
-The plugin includes comprehensive testing:
+The plugin handles various failure scenarios:
 
-### E2E Tests (`plugin.e2e.spec.ts`)
+- **Maven Execution Failure**: Logs warning and returns empty project list
+- **Missing Output**: Throws error if analyzer doesn't produce expected JSON
+- **Parse Errors**: Logs JSON content and re-throws parse exceptions
+- **Spawn Errors**: Catches process spawn failures with descriptive messages
 
-- **Project Detection**: Verifies all Maven projects are discovered
-- **Target Creation**: Ensures all Maven phases become Nx targets
-- **Dependency Resolution**: Tests complex dependency chains
-- **Command Execution**: Validates actual Maven command execution
-- **Parent POM Handling**: Tests inheritance scenarios
+### Debugging Support
 
-### Test Coverage
-
-- Simple JAR projects
-- Multi-module projects  
-- POM-only projects
-- Projects with complex dependencies
-- Parent-child relationships
+- **Verbose Logging**: Extensive console output when `NX_VERBOSE_LOGGING=true`
+- **Process Tracking**: Logs Maven command, working directory, and process IDs
+- **Output Forwarding**: Real-time Maven output in verbose mode
+- **Error Context**: Includes Maven stderr/stdout in error messages
 
 ## Integration Points
 
 ### With Nx Core
 
-- Implements `CreateNodesV2` interface for project discovery
-- Uses Nx's dependency graph for build optimization
-- Integrates with Nx's caching system
-- Supports Nx's task scheduling
+- **CreateNodesV2**: Implements official Nx project discovery interface
+- **CreateDependencies**: Provides inter-project dependency information
+- **Official Types**: Uses `@nx/devkit` types throughout for compatibility
+- **Cache Integration**: Works with Nx's caching system via target configuration
 
-### With Maven
+### With Maven Ecosystem
 
-- Leverages Maven's project model and lifecycle
-- Uses Maven's dependency resolution
-- Integrates with Maven's plugin system
-- Respects Maven's configuration inheritance
+- **Maven Wrapper**: Automatic detection and use of project's Maven wrapper
+- **External Plugin**: Uses published `dev.nx.maven:nx-maven-analyzer-plugin:1.0.1`
+- **Batch Mode**: Non-interactive Maven execution with proper progress reporting
+- **Multi-module**: Handles complex Maven multi-module project structures
 
-## Future Enhancements
+### External Dependencies
 
-### Planned Features
+- **Kotlin Analyzer**: Relies on external Maven plugin for heavy analysis work
+- **Maven Installation**: Requires Maven or Maven wrapper in workspace
+- **Java Runtime**: Needs Java to execute Maven and Kotlin analyzer
 
-- **Advanced Caching**: More granular cache keys based on source changes
-- **Plugin Configuration**: Support for custom Maven plugin configurations  
-- **Profile Support**: Handle Maven profiles and conditional builds
-- **Test Integration**: Better integration with Maven Surefire/Failsafe
-- **IDE Integration**: Enhanced support for IDE features
+## Current Limitations
 
-### Extensibility
+### Scope
 
-The plugin is designed to be extensible:
+- **Root POM Required**: Only processes workspaces with root `pom.xml` file
+- **Cache Strategy**: Simple file modification time-based cache invalidation
+- **Static Dependencies**: All dependencies marked as static type
 
-- Plugin options for customization
-- Configurable target naming
-- Pluggable dependency resolution strategies
-- Support for custom Maven goals
+### External Dependencies
 
-This design enables Maven projects to fully participate in Nx's ecosystem while maintaining Maven's familiar build semantics and respecting existing Maven configurations.
+- **Maven Plugin Version**: Hardcoded to `1.0.1` version of analyzer plugin
+- **Network Access**: Requires network to download analyzer plugin on first use
+- **Java Environment**: Depends on proper Java/Maven setup in environment
+
+This design enables Maven projects to fully participate in Nx's ecosystem while leveraging external tooling for the complex Maven project model analysis, resulting in a clean separation of concerns and optimal performance.

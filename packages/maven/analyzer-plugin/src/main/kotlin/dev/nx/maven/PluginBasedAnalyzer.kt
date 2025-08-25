@@ -29,33 +29,27 @@ class PluginBasedAnalyzer(
      * Analyzes a Maven phase by examining which plugins execute and their parameters
      */
     fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
-        log.debug("Analyzing phase '$phase' using plugin parameter analysis for project ${project.artifactId}")
         
         try {
             // Find all plugin executions that will run during this phase
             val executions = pluginExecutionFinder.findExecutionsForPhase(phase, project)
             
             if (executions.isEmpty()) {
-                log.debug("No plugin executions found for phase '$phase'")
                 return false
             }
-            
-            log.debug("Found ${executions.size} plugin executions for phase '$phase'")
             
             // Analyze each plugin execution
             for (execution in executions) {
                 try {
                     analyzePluginExecution(execution, project, inputs, outputs)
                 } catch (e: Exception) {
-                    log.debug("Failed to analyze plugin execution ${execution.plugin.artifactId}:${execution.goal}: ${e.message}")
+                    // Silently skip failed executions
                 }
             }
             
-            log.debug("Completed plugin parameter analysis for phase '$phase': ${inputs.size()} inputs, ${outputs.size()} outputs")
             return true
             
         } catch (e: Exception) {
-            log.debug("Failed to analyze phase '$phase' using plugin parameters: ${e.message}")
             return false
         }
     }
@@ -72,30 +66,25 @@ class PluginBasedAnalyzer(
         val plugin = execution.plugin
         val goal = execution.goal
         
-        log.debug("Analyzing plugin execution: ${plugin.groupId}:${plugin.artifactId}:${plugin.version}:$goal")
         
         try {
             // Load plugin descriptor to get mojo information
             val pluginDescriptor = loadPluginDescriptor(plugin, project)
             if (pluginDescriptor == null) {
-                log.debug("Could not load plugin descriptor for ${plugin.artifactId}")
                 return
             }
             
             // Find the specific mojo for this goal
             val mojo = pluginDescriptor.getMojo(goal)
             if (mojo == null) {
-                log.debug("Could not find mojo '$goal' in plugin ${plugin.artifactId}")
                 return
             }
-            
-            log.debug("Found mojo: ${mojo.implementation} with ${mojo.parameters?.size ?: 0} parameters")
             
             // Analyze the mojo's parameters to find inputs and outputs
             mojoParameterAnalyzer.analyzeMojo(mojo, project, inputs, outputs)
             
         } catch (e: Exception) {
-            log.debug("Failed to analyze plugin execution ${plugin.artifactId}:$goal: ${e.message}")
+            // Silently skip failed plugin executions
         }
     }
     
@@ -104,21 +93,14 @@ class PluginBasedAnalyzer(
      */
     private fun loadPluginDescriptor(plugin: org.apache.maven.model.Plugin, project: MavenProject): PluginDescriptor? {
         return try {
-            log.debug("Loading plugin descriptor for ${plugin.groupId}:${plugin.artifactId}:${plugin.version}")
             
             // Use Maven's plugin manager to load the plugin descriptor
             val descriptor = pluginManager.getPluginDescriptor(plugin, project.remotePluginRepositories, session.repositorySession)
             
-            if (descriptor != null) {
-                log.debug("Successfully loaded plugin descriptor for ${plugin.artifactId} with ${descriptor.mojos?.size ?: 0} mojos")
-            } else {
-                log.debug("Plugin descriptor was null for ${plugin.artifactId}")
-            }
             
             descriptor
             
         } catch (e: Exception) {
-            log.debug("Failed to load plugin descriptor for ${plugin.artifactId}: ${e.message}")
             null
         }
     }
@@ -142,7 +124,6 @@ class PluginBasedAnalyzer(
                 val mojo = pluginDescriptor?.getMojo(execution.goal)
                 
                 if (mojo != null && mojoParameterAnalyzer.isSideEffectMojo(mojo)) {
-                    log.debug("Phase '$phase' is not cacheable due to side-effect mojo: ${execution.plugin.artifactId}:${execution.goal}")
                     return false
                 }
             }
@@ -150,7 +131,6 @@ class PluginBasedAnalyzer(
             return true
             
         } catch (e: Exception) {
-            log.debug("Failed to determine cacheability for phase '$phase': ${e.message}")
             return false
         }
     }

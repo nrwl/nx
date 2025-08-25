@@ -7,7 +7,7 @@ import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 
 /**
- * Analyzes Maven mojo parameters to determine inputs and outputs
+ * Analyzes Maven mojo parameters to determine inputs, outputs, and cacheability
  */
 class MojoParameterAnalyzer(
     private val log: Log,
@@ -19,7 +19,6 @@ class MojoParameterAnalyzer(
      * Analyzes a mojo's parameters to find inputs and outputs
      */
     fun analyzeMojo(mojo: MojoDescriptor, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode) {
-        log.debug("Analyzing mojo: ${mojo.pluginDescriptor.artifactId}:${mojo.goal}")
         
         // Analyze mojo parameters to find inputs and outputs
         for (param in mojo.parameters ?: emptyList()) {
@@ -36,22 +35,29 @@ class MojoParameterAnalyzer(
         val defaultValue = param.defaultValue
         val expression = param.expression
         
-        log.debug("Analyzing parameter: $name (type: $type, default: $defaultValue, expression: $expression)")
+        log.debug("Analyzing parameter: name=$name, type=$type, defaultValue=$defaultValue, expression=$expression")
         
         when {
             isInputParameter(name, type, param) -> {
                 val path = expressionResolver.resolveParameterValue(name, defaultValue, expression, project)
                 if (path != null) {
-                    log.debug("Adding input path from parameter '$name': $path")
+                    log.debug("Adding input path: $path (from parameter $name)")
                     pathResolver.addInputPath(path, inputs)
+                } else {
+                    log.debug("Parameter $name resolved to null path")
                 }
             }
             isOutputParameter(name, type, param) -> {
                 val path = expressionResolver.resolveParameterValue(name, defaultValue, expression, project)
                 if (path != null) {
-                    log.debug("Adding output path from parameter '$name': $path")
+                    log.debug("Adding output path: $path (from parameter $name)")
                     pathResolver.addOutputPath(path, outputs)
+                } else {
+                    log.debug("Parameter $name resolved to null path")
                 }
+            }
+            else -> {
+                log.debug("Parameter $name is neither input nor output")
             }
         }
     }
@@ -83,8 +89,8 @@ class MojoParameterAnalyzer(
             // Web application sources
             "warSourceDirectory", "webXml", "containerConfigXML",
             
-            // Other common input patterns
-            "basedir", "workingDirectory", "projectDirectory"
+            // Other specific input patterns (removed overly broad basedir/workingDirectory/projectDirectory)
+            "generatedSourcesDirectory", "generatedTestSourcesDirectory"
         )
         
         // Check if parameter name matches input patterns
@@ -119,9 +125,6 @@ class MojoParameterAnalyzer(
         
         val result = (nameMatch || isReadable) && typeMatch && !isExcluded
         
-        if (result) {
-            log.debug("Parameter '$name' identified as INPUT (nameMatch=$nameMatch, typeMatch=$typeMatch, isReadable=$isReadable)")
-        }
         
         return result
     }
@@ -172,17 +175,63 @@ class MojoParameterAnalyzer(
         
         val result = (nameMatch || isWritable) && typeMatch
         
-        if (result) {
-            log.debug("Parameter '$name' identified as OUTPUT (nameMatch=$nameMatch, typeMatch=$typeMatch, isWritable=$isWritable)")
-        }
         
         return result
     }
     
     /**
      * Determines if a mojo has side effects that would make it non-cacheable
+     * Uses comprehensive analysis of mojo metadata, annotations, and parameters
      */
     fun isSideEffectMojo(mojo: MojoDescriptor): Boolean {
+        // Check Maven @Mojo annotation properties
+        if (hasAnnotationBasedSideEffects(mojo)) {
+            return true
+        }
+        
+        // Check parameter-level side effects
+        if (hasParameterBasedSideEffects(mojo)) {
+            return true
+        }
+        
+        // Fallback to goal and plugin pattern matching
+        return hasPatternBasedSideEffects(mojo)
+    }
+    
+    /**
+     * Checks for side effects based on Maven @Mojo annotation properties
+     */
+    private fun hasAnnotationBasedSideEffects(mojo: MojoDescriptor): Boolean {
+        // Non-thread-safe mojos may have concurrency issues but aren't necessarily non-cacheable
+        // However, aggregator mojos typically have cross-project side effects
+        if (isMojoAggregator(mojo)) {
+            log.debug("Mojo ${mojo.goal} is aggregator - potential side effects")
+            return true
+        }
+        
+        return false
+    }
+    
+    /**
+     * Checks for side effects based on mojo parameters
+     */
+    private fun hasParameterBasedSideEffects(mojo: MojoDescriptor): Boolean {
+        val parameters = mojo.parameters ?: return false
+        
+        for (param in parameters) {
+            if (isParameterWithSideEffects(param)) {
+                log.debug("Mojo ${mojo.goal} has side-effect parameter: ${param.name}")
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    /**
+     * Fallback pattern-based side effect detection
+     */
+    private fun hasPatternBasedSideEffects(mojo: MojoDescriptor): Boolean {
         val goal = mojo.goal
         val artifactId = mojo.pluginDescriptor.artifactId
         
