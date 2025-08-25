@@ -16,38 +16,31 @@ let cachedData: CacheEntry | null = null;
  * Get cached Maven analysis data or read from file if cache is stale
  */
 export function getCachedMavenData(workspaceRoot: string): MavenAnalysisData | null {
-  // Check both possible locations for the analysis file
   const analysisFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
-  const fallbackAnalysisFile = join(workspaceRoot, 'nx-maven-projects.json');
   
-  let actualAnalysisFile = analysisFile;
   if (!existsSync(analysisFile)) {
-    if (existsSync(fallbackAnalysisFile)) {
-      actualAnalysisFile = fallbackAnalysisFile;
-    } else {
-      return null;
-    }
+    return null;
   }
 
   try {
-    const fileStats = statSync(actualAnalysisFile);
+    const fileStats = statSync(analysisFile);
     const lastModified = fileStats.mtime.getTime();
 
     // Check if we have cached data and if it's still fresh
     if (cachedData && 
-        cachedData.filePath === actualAnalysisFile && 
+        cachedData.filePath === analysisFile && 
         cachedData.lastModified === lastModified) {
       return cachedData.data;
     }
 
     // Read and cache the data
-    const fileContent = readFileSync(actualAnalysisFile, 'utf8');
+    const fileContent = readFileSync(analysisFile, 'utf8');
     const data = JSON.parse(fileContent) as MavenAnalysisData;
 
     cachedData = {
       data,
       lastModified,
-      filePath: actualAnalysisFile
+      filePath: analysisFile
     };
 
     return data;
