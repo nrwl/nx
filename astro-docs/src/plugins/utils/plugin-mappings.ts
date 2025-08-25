@@ -2,7 +2,7 @@ import { workspaceRoot } from '@nx/devkit';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import frontMatter from 'front-matter';
-import type { SidebarSubItem } from 'astro-docs/src/utils/sidebar.types';
+import type { SidebarItem, SidebarSubItem } from '../../utils/sidebar.types';
 
 /**
  * Map of plugins names to their technology grouping
@@ -14,6 +14,7 @@ export const pluginToTechnology: Record<string, string> = {
   angular: 'angular',
   'angular-rspack': 'angular',
   'angular-rsbuild': 'angular',
+  'angular-rspack-compiler': 'angular',
 
   react: 'react',
   next: 'react',
@@ -88,56 +89,55 @@ export function getPluginItems(
   plugin: string,
   technologyCategory?: string
 ): SidebarSubItem[] {
-  const pluginPath = join(pluginBasePath, plugin);
-  if (!existsSync(pluginPath)) {
-    throw new Error(
-      `Plugin base path does not exist: ${pluginBasePath} for plugin ${plugin} in category ${technologyCategory}`
-    );
-  }
-
-  if (!lstatSync(pluginPath).isDirectory()) {
-    throw new Error(`Plugin base path is not a directory: ${pluginBasePath}`);
-  }
-
-  const packageJsonPath = join(pluginPath, 'package.json');
-
-  if (!existsSync(packageJsonPath)) {
-    throw new Error(`package.json does not exist: ${packageJsonPath}`);
-  }
-
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-  if (!packageJson.name) {
-    throw new Error(`package.json does not have a name: ${packageJsonPath}`);
-  }
   const items: SidebarItem[] = [];
-
-  // JS plugin is refed as typescript, so for now we remap it, but might be others we need to do this for
-  // down the road
-  const remappedPluginName = plugin === 'js' ? 'typescript' : plugin;
+  const pluginPath = join(pluginBasePath, plugin);
+  const remappedPluginName = pluginSpecialCasePluginRemapping(plugin);
   // NOTE: some docs are at the top level of a category, so the route needs to reflect that
-  const baseUrl = technologyCategory
-    ? `/technologies/${technologyCategory}/${remappedPluginName}`
-    : `/technologies/${remappedPluginName}`;
+  const baseUrl =
+    technologyCategory && technologyCategory !== remappedPluginName
+      ? `/technologies/${technologyCategory}/${remappedPluginName}`
+      : `/technologies/${remappedPluginName}`;
 
-  if (hasValidConfig(pluginPath, 'generators')) {
-    items.push({
-      label: 'Generators',
-      link: `${baseUrl}/generators`,
-    });
-  }
+  if (existsSync(pluginPath)) {
+    if (!lstatSync(pluginPath).isDirectory()) {
+      throw new Error(`Plugin base path is not a directory: ${pluginBasePath}`);
+    }
 
-  if (hasValidConfig(pluginPath, 'executors')) {
-    items.push({
-      label: 'Executors',
-      link: `${baseUrl}/executors`,
-    });
-  }
+    const packageJsonPath = join(pluginPath, 'package.json');
 
-  if (hasValidConfig(pluginPath, 'migrations')) {
-    items.push({
-      label: 'Migrations',
-      link: `${baseUrl}/migrations`,
-    });
+    if (!existsSync(packageJsonPath)) {
+      throw new Error(`package.json does not exist: ${packageJsonPath}`);
+    }
+
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+    if (!packageJson.name) {
+      throw new Error(`package.json does not have a name: ${packageJsonPath}`);
+    }
+
+    if (hasValidConfig(pluginPath, 'generators')) {
+      items.push({
+        label: 'Generators',
+        link: `${baseUrl}/generators`,
+      });
+    }
+
+    if (hasValidConfig(pluginPath, 'executors')) {
+      items.push({
+        label: 'Executors',
+        link: `${baseUrl}/executors`,
+      });
+    }
+
+    if (hasValidConfig(pluginPath, 'migrations')) {
+      items.push({
+        label: 'Migrations',
+        link: `${baseUrl}/migrations`,
+      });
+    }
+  } else {
+    console.warn(
+      `Plugin path does not exist: ${pluginPath}. Only attempting to load static files.`
+    );
   }
 
   // TODO: when moving from `astro-docs` this path will need to also be updated
@@ -352,4 +352,23 @@ function getStaticPluginFiles(pluginContentDir: string): SidebarItem[] {
   }
 
   return staticFiles;
+}
+
+/*
+ * Apply the same remapping logic used in sidebar generation
+ * TODO: caleb, this is bad and I hate it but it is what is is
+ **/
+export function pluginSpecialCasePluginRemapping(pluginName: string) {
+  switch (pluginName) {
+    // we call the js plugin `typescript` in the URLs technologies
+    case 'js':
+      return 'typescript';
+    // we make the default java pages be the gradle impl atm.
+    // this will probs change with maven
+    case 'gradle':
+    case 'java':
+      return 'java';
+    default:
+      return pluginName;
+  }
 }

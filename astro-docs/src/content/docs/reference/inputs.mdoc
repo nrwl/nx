@@ -6,7 +6,7 @@ sidebar:
 ---
 
 
-When Nx [computes the hash for a given operation](/concepts/how-caching-works), it takes into account the `inputs` of the target.
+When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 
@@ -61,7 +61,7 @@ Prefixing a source file input with `^` means this entry applies to the project d
 By default, Nx will use all files in a project as well as all files in the project's dependencies when computing a hash for tasks belonging to the project.
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
 
-To get a better idea of how to use inputs, you can browse some [common input sets](/recipes/running-tasks/configure-inputs#common-inputs).
+To get a better idea of how to use inputs, you can browse some [common input sets](/docs/guides/tasks--caching/configure-inputs#common-inputs).
 
 ### Environment Variables
 
@@ -152,7 +152,7 @@ When a task depends on another task, it is possible that the outputs of the depe
 }
 ```
 
-The pattern will be matched with outputs of tasks which this task depends on. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/concepts/task-pipeline-configuration).
+The pattern will be matched with outputs of tasks which this task depends on. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration).
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
@@ -278,7 +278,7 @@ nx test myreactapp
 ```
 
 {% cardgrid %}
-{% linkcard title="nx.json reference"  description="namedInputs can be defined in nx.json" href="/reference/nx-json#inputs-namedinputs" /%}
-{% linkcard title="Project configuration reference"  description="inputs and namedInputs can be defined in project configuration" href="/reference/project-configuration#inputs-and-named-inputs" /%}
-{% linkcard title="Configure Inputs for Task Caching"  description="This recipes walks you through a few examples of how to configure inputs and namedInputs" href="/recipes/running-tasks/configure-inputs" /%}
+{% linkcard title="nx.json reference"  description="namedInputs can be defined in nx.json" href="/docs/reference/nx-json#inputs-namedinputs" /%}
+{% linkcard title="Project configuration reference"  description="inputs and namedInputs can be defined in project configuration" href="/docs/reference/project-configuration#inputs-and-named-inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching"  description="This recipes walks you through a few examples of how to configure inputs and namedInputs" href="/docs/guides/tasks--caching/configure-inputs" /%}
 {% /cardgrid %}

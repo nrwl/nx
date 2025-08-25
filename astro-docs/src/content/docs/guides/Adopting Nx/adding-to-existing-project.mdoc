@@ -18,13 +18,13 @@ scripts. Each project usually has a set of scripts in the `package.json`:
 }
 ```
 
-You can make these scripts faster by leveraging Nx's [caching capabilities](/features/cache-task-results). For example:
+You can make these scripts faster by leveraging Nx's [caching capabilities](/docs/features/cache-task-results). For example:
 
 - You change some spec files: in that case the `build` task can be cached and doesn't have to re-run.
 - You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on
   your CI. All you might want to do is trigger the Docusaurus build.
 
-Additionally, Nx also [speeds up your CI ⚡](#fast-ci) with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
+Additionally, Nx also [speeds up your CI ⚡](#fast-ci) with [remote caching](/docs/features/ci-features/remote-cache) and [distributed task execution](/docs/features/ci-features/distribute-task-execution).
 
 ## Install Nx on a Non-Monorepo Project
 
@@ -38,7 +38,7 @@ Running this command will ask you a few questions about your workspace and then 
 process detects tools which are used in your workspace and suggests installing Nx plugins to integrate the tools you use
 with Nx. Running those tools through Nx will have caching enabled when possible, providing you with a faster alternative
 for running those tools. You can start with a few to see how it works and then add more with
-the [`nx add`](/reference/core-api/nx/documents/add) command later. You can also decide to add them all and get the full experience
+the [`nx add`](/docs/reference/nx-commands#add) command later. You can also decide to add them all and get the full experience
 right
 away because adding plugins will not break your existing workflow.
 
@@ -108,7 +108,7 @@ the Nx Plugins in `nx.json`:
 ```
 
 Each plugin can accept options to customize the projects which they create. You can see more information about
-configuring the plugins on the [`@nx/next/plugin`](/technologies/react/next/introduction) and [`@nx/eslint/plugin`](/technologies/eslint/introduction) plugin pages.
+configuring the plugins on the [`@nx/next/plugin`](/docs/technologies/react/next/introduction) and [`@nx/eslint/plugin`](/docs/technologies/eslint/introduction) plugin pages.
 
 To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project
 details in a browser window.
@@ -291,16 +291,16 @@ from the example above to run with Nx would look something like this:
 
 Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in
 this example are as cautious as possible, so you can significantly improve the value of the cache
-by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each task.
+by [customizing Nx Inputs](/docs/guides/tasks--caching/configure-inputs) for each task.
 
 ## Fast CI ⚡ 
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+- Nx reduces wasted time in CI with the [`affected` command](/docs/features/ci-features/affected).
+- Nx Replay's [remote caching](/docs/features/ci-features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+- Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Atomizer [automatically splits](/docs/features/ci-features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/features/ci-features/flaky-tasks).
 
 ### Connect to Nx Cloud
 
@@ -392,22 +392,17 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Run details](../../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
-For more information about how Nx can improve your CI pipeline, check out one of these guides:
+For more information about how Nx can improve your CI pipeline, check out our [CI setup guides](/docs/guides/nx-cloud/setup-ci).
 
-- [GitHub Actions with Nx](/ci/recipes/set-up/monorepo-ci-github-actions)
-- [Circle CI with Nx](/ci/recipes/set-up/monorepo-ci-circle-ci)
-- [Azure Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-azure)
-- [Bitbucket Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
-- [GitLab with Nx](/ci/recipes/set-up/monorepo-ci-gitlab)
 
 ## Learn More
 
 {% cardgrid %}
 
-{% linkcard title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" href="/recipes/running-tasks/configure-inputs" /%}
+{% linkcard title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" href="/docs/guides/tasks--caching/configure-inputs" /%}
 
-{% linkcard title="Cache Task Results" description="Learn more about how caching works" href="/features/cache-task-results" /%}
+{% linkcard title="Cache Task Results" description="Learn more about how caching works" href="/docs/features/cache-task-results" /%}
 
-{% linkcard title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing monorepo" href="/recipes/adopting-nx/adding-to-monorepo" /%}
+{% linkcard title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing monorepo" href="/docs/guides/adopting-nx/adding-to-monorepo" /%}
 
 {% /cardgrid %}

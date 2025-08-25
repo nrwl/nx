@@ -8,10 +8,10 @@ sidebar:
 
 Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**. This:
 
-- drastically **speeds up your task execution times** while developing locally and even more [in CI](/ci/features/remote-cache)
+- drastically **speeds up your task execution times** while developing locally and even more [in CI](/docs/features/ci-features/remote-cache)
 - **saves you money on CI/CD costs** by reducing the number of tasks that need to be executed
 
-Nx **restores both the terminal output and the files** created from running the task (e.g., your build or dist directory). If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
+Nx **restores both the terminal output and the files** created from running the task (e.g., your build or dist directory). If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/docs/concepts/how-caching-works).
 
 ## Define Cacheable Tasks
 
@@ -66,13 +66,13 @@ the result of the test run.
 
 By default, Nx caches task results locally. The biggest benefit of caching comes from using remote caching in CI, where you can **share the cache between different runs**. Nx comes with a managed remote caching solution built on top of Nx Cloud.
 
-To enable remote caching, connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
+To enable remote caching, connect your workspace to [Nx Cloud](https://nx.dev/nx-cloud) by running the following command:
 
 ```shell {% frame="none" %}
 npx nx@latest connect
 ```
 
-Learn more about [remote caching with Nx Cloud](/ci/features/remote-cache).
+Learn more about [remote caching with Nx Cloud](/docs/features/ci-features/remote-cache).
 
 ## Fine-tune Caching with Inputs and Outputs
 
@@ -147,11 +147,11 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 
 Note that you only need to define output locations if they differ from the usual `dist` or `build` directory, which Nx automatically recognizes.
 
-Learn more [about configuring inputs including `namedInputs`](/recipes/running-tasks/configure-inputs).
+Learn more [about configuring inputs including `namedInputs`](/docs/guides/tasks--caching/configure-inputs).
 
 ## Configure Caching Automatically
 
-When using [Nx plugins](/concepts/nx-plugins), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/concepts/inferred-tasks) and configure caching** based on your underlying tooling configuration files.
+When using [Nx plugins](/docs/concepts/nx-plugins), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/docs/concepts/inferred-tasks) and configure caching** based on your underlying tooling configuration files.
 
 For example, if you add the `@nx/vite` plugin using the following command...
 
@@ -159,7 +159,7 @@ For example, if you add the `@nx/vite` plugin using the following command...
 npx nx add @nx/vite
 ```
 
-...it automatically detects your `vite.config.ts` file, infers the tasks you'd be able to run, such as `build`, and **automatically configures the cache settings** for these tasks as well as the [task pipeline](/concepts/task-pipeline-configuration) (e.g., triggering dependent builds).
+...it automatically detects your `vite.config.ts` file, infers the tasks you'd be able to run, such as `build`, and **automatically configures the cache settings** for these tasks as well as the [task pipeline](/docs/concepts/task-pipeline-configuration) (e.g., triggering dependent builds).
 
 This means **you don't need to manually specify cacheable operations for Vite tasks** and the cache setting such as inputs and outputs are always in sync with the `vite.config.ts` file.
 
@@ -169,15 +169,15 @@ To view the task settings that have been automatically configured by a plugin, u
 nx show project <project-name> --web
 ```
 
-Alternatively, you can view these directly in your editor by installing [Nx Console](/getting-started/editor-setup).
+Alternatively, you can view these directly in your editor by installing [Nx Console](/docs/getting-started/editor-setup).
 
-Learn more details about [Nx plugins](/concepts/nx-plugins) and [inferred tasks](/concepts/inferred-tasks).
+Learn more details about [Nx plugins](/docs/concepts/nx-plugins) and [inferred tasks](/docs/concepts/inferred-tasks).
 
 ## Troubleshoot Cache Settings
 
 Caching is hard. If you run into issues, check out the following resources:
 
-- [Debug cache misses](/troubleshooting/troubleshoot-cache-misses)
-- [Turn off or skip the cache](/recipes/running-tasks/skipping-cache)
-- [Change the cache location](/recipes/running-tasks/change-cache-location)
-- [Clear the local or remote cache](/reference/core-api/nx/documents/reset)
+- [Debug cache misses](/docs/troubleshooting/troubleshoot-cache-misses)
+- [Turn off or skip the cache](/docs/guides/tasks--caching/skipping-cache)
+- [Change the cache location](/docs/guides/tasks--caching/change-cache-location)
+- [Clear the local or remote cache](/docs/reference/nx-commands#nx-reset)

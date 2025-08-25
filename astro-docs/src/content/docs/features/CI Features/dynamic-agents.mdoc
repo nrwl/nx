@@ -4,7 +4,7 @@ sidebar:
   order: 14
 ---
 
-By default, when you set up [Nx Agents](/ci/features/distribute-task-execution) you specify the number and type of agents to use.
+By default, when you set up [Nx Agents](/docs/features/ci-features/distribute-task-execution) you specify the number and type of agents to use.
 
 ```yaml {% meta="{9}" %}
 // .github/workflows/main.yaml" 
@@ -50,7 +50,7 @@ distribute-on:
 You can have as many changesets as you want. Based on the number of changesets specified, each changeset is assigned an equal percentage out of 100. Nx Cloud can determine the percentage of affected projects in your PR and use that value to evaluate which changeset to use.
 
 {% callout type="deepdive" title="How is the size of the PR determined?" %}
-Nx Cloud calculates the relationship between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace to determine the size of a PR.
+Nx Cloud calculates the relationship between the number of [affected projects](/docs/features/ci-features/affected) and the total number of projects in the workspace to determine the size of a PR.
 {% /callout %}
 
 ## Setting up Dynamic Agents in your CI Pipeline

@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+
+# | xargs -0 sed -i '' 's/<match>/<replace>/g'
+
+# replace links that start with /concepts to /docs/concepts
+rg "\(/concepts" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/concepts|](/docs/concepts|g'
+# usage in link card aka href="/concepts/..."
+rg "=\"/concepts" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/concepts|="/docs/concepts|g'
+
+# /recipes -> /docs/guides
+rg "\(/recipes" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/recipes|](/docs/guides|g'
+rg "=\"/recipes" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/recipes|="/docs/guides|g'
+
+# /deprecated -> /docs/reference/deprecated
+rg "\(/deprecated" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/deprecated|](/docs/reference/deprecated|g'
+rg "=\"/deprecated" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/deprecated|="/docs/reference/deprecated|g'
+
+# /troubleshooting -> /docs/troublshooting
+rg "\(/troubleshooting" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/troubleshooting|](/docs/troubleshooting|g'
+rg "=\"/troubleshooting" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/troubleshooting|="/docs/troubleshooting|g'
+
+# /plugin-registry -> /docs/plugin-registry
+rg "\(/plugin-registry" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/plugin-registry|](/docs/plugin-registry|g'
+rg "=\"/plugin-registry" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/plugin-registry|="/docs/plugin-registry|g'
+
+# /features -> /docs/features
+rg "\(/features" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/features|](/docs/features|g'
+rg "=\"/features" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/features|="/docs/features|g'
+
+# /extending-nx -> /docs/extending-nx
+rg "\(/extending-nx" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/extending-nx|](/docs/extending-nx|g'
+rg "=\"/extending-nx" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/extending-nx|="/docs/extending-nx|g'
+rg "/extending-nx/recipes" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|/extending-nx/recipes|/extending-nx|g'
+
+# /tech -> /docs/tech
+rg "\(/tech" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/tech|](/docs/tech|g'
+rg "=\"/tech" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/tech|="/docs/tech|g'
+
+## /recipes/running-tasks -> /docs/guides/tasks--caching
+rg "\(/recipes/running-tasks" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/recipes/running-tasks|](/docs/guides/tasks--caching|g'
+rg "=\"/recipes/running-tasks" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/recipes/running-tasks|="/docs/guides/tasks--caching|g'
+
+# /ci/features -> /docs/features/ci-features
+rg "\(/ci/features" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/features|](/docs/features/ci-features|g'
+rg "=\"/ci/features" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/features|="/docs/features/ci-features|g'
+
+# /ci/concepts -> /docs/concepts/ci-concepts
+rg "\(/ci/concepts" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/concepts|](/docs/concepts/ci-concepts|g'
+rg "=\"/ci/concepts" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/concepts|="/docs/concepts/ci-concepts|g'
+
+# /ci/guides/security -> /docs/guides/nx-cloud
+rg "\(/ci/guides/security" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/guides/security|](/docs/guides/nx-cloud|g'
+rg "=\"/ci/guides/security" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/guides/security|="/docs/guides/nx-cloud|g'
+rg "\(/ci/recipes/security" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/recipes/security|](/docs/guides/nx-cloud|g'
+rg "=\"/ci/recipes/security" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/recipes/security|="/docs/guides/nx-cloud|g'
+
+# /ci/recipes/enterprise -> /docs/enterprise
+rg "\(/ci/recipes/enterprise" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/recipes/enterprise|](/docs/enterprise|g'
+rg "=\"/ci/recipes/enterprise" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/recipes/enterprise|="/docs/enterprise|g'
+
+# /ci/recipes -> /docs/guides/nx-cloud
+rg "\(/ci/guides" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/guides|](/docs/guides/nx-cloud|g'
+rg "=\"/ci/guides" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/guides|="/docs/guides/nx-cloud|g'
+rg "\(/ci/recipes" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/recipes|](/docs/guides/nx-cloud|g'
+rg "=\"/ci/recipes" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/recipes|="/docs/guides/nx-cloud|g'
+
+# /getting-started -> /docs/getting-started
+rg "\(/getting" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/getting|](/docs/getting|g'
+rg "=\"/getting" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/getting|="/docs/getting|g'
+
+# /ci/recipes/set-up -> /docs/guides/nx-cloud/setup-ci
+rg "\(/ci/recipes/set-up" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/recipes/set-up|](/docs/guides/nx-cloud/setup-ci|g'
+rg "=\"/ci/recipes/set-up" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/recipes/set-up|="/docs/guides/nx-cloud/setup-ci|g'
+# I merged all the set-up ci guides into 1 page with tabs so we need to remove any links that go to specific guides
+rg "/monorepo-ci-" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|\(/[^)]*\)/monorepo-ci-[^)]*\()\)|\1\2|g'
+
+# /ci/reference/nx-cloud-cli -> /docs/reference/nx-cloud-cli
+rg "\(/ci/reference/nx-cloud-cli" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/ci/reference/nx-cloud-cli|](/docs/reference/nx-cloud-cli|g'
+rg "=\"/ci/reference/nx-cloud-cli" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/ci/reference/nx-cloud-cli|="/docs/reference/nx-cloud-cli|g'
+
+# /blog -> https://nx.dev/blog
+rg "\(/blog" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/blog|](https://nx.dev/blog|g'
+rg "=\"/blog" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/blog|="https://nx.dev/blog|g'
+
+# /enterprise -> https://nx.dev/enterprise
+rg "\(/enterprise" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/enterprise|](https://nx.dev/enterprise|g'
+rg "=\"/enterprise" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/enterprise|="https://nx.dev/enterprise|g'
+
+# /pricing -> https://nx.dev/pricing
+rg "\(/pricing" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/pricing|](https://nx.dev/pricing|g'
+rg "=\"/pricing" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/pricing|="https://nx.dev/pricing|g'
+
+# /contact -> https://nx.dev/contact
+rg "\(/contact" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/contact|](https://nx.dev/contact|g'
+rg "=\"/contact" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/contact|="https://nx.dev/contact|g'
+
+# /nx-cloud -> https://nx.dev/nx-cloud
+rg "\(/nx-cloud" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/nx-cloud|](https://nx.dev/nx-cloud|g'
+rg "=\"/nx-cloud" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/nx-cloud|="https://nx.dev/nx-cloud|g'
+
+# /courses -> https://nx.dev/courses
+rg "\(/courses" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/courses|](https://nx.dev/courses|g'
+rg "=\"/courses" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/courses|="https://nx.dev/courses|g'
+# /community -> https://nx.dev/community
+rg "\(/community" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/community|](https://nx.dev/community|g'
+rg "=\"/community" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/community|="https://nx.dev/community|g'
+
+# though these URLS that have `core-api` in them need to be special handled
+# but we can search for 'core-api' later and do a different replace mechinism
+# /reference -> /docs/reference
+rg "\(/reference" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/reference|](/docs/reference|g'
+rg "=\"/reference" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/reference|="/docs/reference|g'
+
+# /docs/reference/core-api/nx/documents/:command -> /docs/reference/nx-commands#:command
+rg "\(/docs/reference/core-api/nx/documents/" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|](/docs/reference/core-api/nx/documents/|](/docs/reference/nx-commands#|g'
+rg "=\"/docs/reference/core-api/nx/documents/" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|="/docs/reference/core-api/nx/documents/|="/docs/reference/nx-commands#|g'
+
+# /docs/reference/core-api/:remote-cache-plugin/overview -> /docs/reference/remote-cache-plugins/:remote-cache-plugin/overview
+# For s3-cache
+rg "/docs/reference/core-api/s3-cache" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|/docs/reference/core-api/s3-cache|/docs/reference/remote-cache-plugins/s3-cache|g'
+
+# For azure-cache
+rg "/docs/reference/core-api/azure-cache" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|/docs/reference/core-api/azure-cache|/docs/reference/remote-cache-plugins/azure-cache|g'
+
+# For gcs-cache
+rg "/docs/reference/core-api/gcs-cache" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|/docs/reference/core-api/gcs-cache|/docs/reference/remote-cache-plugins/gcs-cache|g'
+
+# For shared-fs-cache
+rg "/docs/reference/core-api/shared-fs-cache" --type-add "mdoc:*mdoc" -t mdoc -l --null | xargs -0 sed -i '' 's|/docs/reference/core-api/shared-fs-cache|/docs/reference/remote-cache-plugins/shared-fs-cache|g'

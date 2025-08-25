@@ -37,17 +37,14 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         collapsed: true,
         items: [
           ...getPluginItems('angular'),
-          // TODO: angular rspack and rsbuild are special cases
-          //
-          //   label: 'Angular Rspack',
-          //   link: '/technologies/angular/angular-rspack/',
-          //   items: getPluginItems('angular-rspack', 'angular'),
-          // },
-          // {
-          //   label: 'Angular Rsbuild',
-          //   link: '/technologies/angular/angular-rsbuild/',
-          //   items: getPluginItems('angular-rsbuild', 'angular'),
-          // },
+          {
+            label: 'Angular Rspack',
+            items: getPluginItems('angular-rspack', 'angular'),
+          },
+          {
+            label: 'Angular Rsbuild',
+            items: getPluginItems('angular-rsbuild', 'angular'),
+          },
         ],
       },
       {
@@ -202,6 +199,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     label: 'Enterprise',
     collapsed: true,
     autogenerate: { directory: 'enterprise', collapsed: true },
+  },
+  {
+    label: 'Extending Nx',
+    collapsed: true,
+    autogenerate: { directory: 'extending-nx', collapsed: true },
   },
   {
     label: 'Reference',

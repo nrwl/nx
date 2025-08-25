@@ -37,9 +37,9 @@ Now that you have visualized how the tasks were run, you can try tweaking things
 
 {% youtube src="https://youtu.be/olkVyoc2MAQ" title="Performance Profiling Nx" /%}
 
-Nx offloads much of the heavy lifting to the [Nx Daemon](/concepts/nx-daemon), which helps speed up task execution. However, you might still encounter slowdowns, not during the task execution itself, but in the moments leading up to it when invoking tasks through Nx. This can often happen when you're using a large number of [Nx Plugins](/plugin-registry), whether they come from the core team or the community.
+Nx offloads much of the heavy lifting to the [Nx Daemon](/docs/concepts/nx-daemon), which helps speed up task execution. However, you might still encounter slowdowns, not during the task execution itself, but in the moments leading up to it when invoking tasks through Nx. This can often happen when you're using a large number of [Nx Plugins](/docs/plugin-registry), whether they come from the core team or the community.
 
-To investigate and optimize these slowdowns, you can use the `NX_PERF_LOGGING` [environment variable](/reference/environment-variables). This will give you detailed performance logs and more precise timings, allowing you to pinpoint where the delays occur.
+To investigate and optimize these slowdowns, you can use the `NX_PERF_LOGGING` [environment variable](/docs/reference/environment-variables). This will give you detailed performance logs and more precise timings, allowing you to pinpoint where the delays occur.
 
 Here's an example of running the `build` of the `admin` project with performance logging enabled:
 

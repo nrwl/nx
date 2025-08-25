@@ -78,11 +78,11 @@ The following is an expanded example showing all options. Your `nx.json` will li
 
 ## Plugins
 
-Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/concepts/inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
+Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/docs/concepts/inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
 
-Every plugin behaves differently, so consult the plugin's own documentation for information about what it does. You can browse the [plugin registry](/plugin-registry) for available plugins.
+Every plugin behaves differently, so consult the plugin's own documentation for information about what it does. You can browse the [plugin registry](/docs/plugin-registry) for available plugins.
 
-To learn about creating your own plugin read about [extending Nx](/extending-nx/intro/getting-started).
+To learn about creating your own plugin read about [extending Nx](/docs/extending-nx/intro).
 
 ```json
 // nx.json
@@ -151,14 +151,14 @@ Additionally, if there is not a match for either of the above, we look for other
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
 {% aside type="caution" title="Beware" %}
-When using a target name as the key of a target default, make sure all the targets with that name use the same executor or that the target defaults you're setting make sense to all targets regardless of the executor they use. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/concepts/inferred-tasks).
+When using a target name as the key of a target default, make sure all the targets with that name use the same executor or that the target defaults you're setting make sense to all targets regardless of the executor they use. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 Some common scenarios for this follow.
 
 ### inputs & namedInputs
 
-Named inputs defined in `nx.json` are merged with the named inputs defined in [project level configuration](/reference/project-configuration). In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
+Named inputs defined in `nx.json` are merged with the named inputs defined in [project level configuration](/docs/reference/project-configuration). In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
 
 Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
 Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
@@ -190,8 +190,8 @@ And projects can define their `production` inputs, without having to redefine th
 In this case Nx will use the right `production` input for each project.
 
 {% cardgrid %}
-{% linkcard title="Inputs and Named Inputs Reference" description="Learn about all the possible settings for `inputs` and `namedInputs`" href="/reference/inputs" /%}
-{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/recipes/running-tasks/configure-inputs" /%}
+{% linkcard title="Inputs and Named Inputs Reference" description="Learn about all the possible settings for `inputs` and `namedInputs`" href="/docs/reference/inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/docs/guides/tasks--caching/configure-inputs" /%}
 {% /cardgrid %}
 
 ### Task Pipelines
@@ -217,8 +217,8 @@ defining `targetDefaults` in `nx.json` is helpful.
 The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every `build` target of every project.
 
 {% cardgrid %}
-{% linkcard title="Project Configuration reference" description="For full documentation of the `dependsOn` property, see the project configuration reference" href="/reference/project-configuration#dependson" /%}
-{% linkcard title="What is a Task Pipeline" description="This guide describes how to think about task pipelines" href="/concepts/task-pipeline-configuration" /%}
+{% linkcard title="Project Configuration reference" description="For full documentation of the `dependsOn` property, see the project configuration reference" href="/docs/reference/project-configuration#dependson" /%}
+{% linkcard title="What is a Task Pipeline" description="This guide describes how to think about task pipelines" href="/docs/concepts/task-pipeline-configuration" /%}
 {% /cardgrid %}
 
 ### Outputs
@@ -266,7 +266,7 @@ When defining any options or configurations inside of a target default, you may 
 Note that the inputs and outputs are specified on both the `@nx/js:tsc` and `build` default configurations. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for `build` uses the `@nx/js:tsc executor`. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 
 {% cardgrid %}
-{% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/recipes/running-tasks/configure-outputs" /%}
+{% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/guides/tasks--caching/configure-outputs" /%}
 {% /cardgrid %}
 
 ### Cache
@@ -307,7 +307,7 @@ You can configure options specific to a target's executor. As an example, if you
 }
 ```
 
-You can also provide defaults for [inferred targets](/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
+You can also provide defaults for [inferred targets](/docs/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
 
 ```json
 // nx.json
@@ -327,7 +327,7 @@ You can also provide defaults for [inferred targets](/concepts/inferred-tasks) o
 If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
 {% /aside %}
 
-For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/docs/guides/tasks--caching/pass-args-to-commands).
 
 ### Task Atomizer Configuration
 
@@ -354,7 +354,7 @@ Nx uses glob patterns to match against the target name. This means that the `**/
 
 The `release` property in `nx.json` configures the `nx release` command. It is an optional property, as `nx release` is capable of working with zero config, but when present it is used to configure the versioning, changelog, and publishing phases of the release process.
 
-For more information on how `nx release` works, see [manage releases](/features/manage-releases).
+For more information on how `nx release` works, see [manage releases](/docs/features/manage-releases).
 
 The full list of configuration options available for `"release"` can be found here: [https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts) under `NxReleaseConfiguration`.
 
@@ -458,7 +458,7 @@ Some important changes in Nx 21:
 - `packageRoot` has been replaced by the more flexible `manifestRootsToUpdate` array
 - Ecosystem-specific options like `skipLockFileUpdate` are now under `versionActionsOptions`
 - `preserveLocalDependencyProtocols` (also now at the top level) now defaults to `true` (previously `false` when it was a generatorOption)
-- `tui` object has been added to control the new [Terminal UI](/recipes/running-tasks/terminal-ui)
+- `tui` object has been added to control the new [Terminal UI](/docs/guides/tasks--caching/terminal-ui)
 
 ### Changelog
 
@@ -606,7 +606,7 @@ The `docker` property configures Docker image versioning and publishing when usi
 }
 ```
 
-Read more about it in the [Release Docker Images guide](/recipes/nx-release/release-docker-images).
+Read more about it in the [Release Docker Images guide](/docs/guides/nx-release/release-docker-images).
 
 #### Version Scheme Syntax
 
@@ -633,7 +633,7 @@ Example patterns:
 
 #### Group-Level Docker Configuration
 
-You can configure [Docker release](/recipes/nx-release/release-docker-images) settings at the release group level:
+You can configure [Docker release](/docs/guides/nx-release/release-docker-images) settings at the release group level:
 
 ```jsonc
 // nx.json
@@ -657,11 +657,11 @@ You can configure [Docker release](/recipes/nx-release/release-docker-images) se
 }
 ```
 
-This allows you to have other releases such as [NPM](/recipes/nx-release/release-npm-packages) or [Rust crates](/recipes/nx-release/publish-rust-crates) in the same workspace.
+This allows you to have other releases such as [NPM](/docs/guides/nx-release/release-npm-packages) or [Rust crates](/docs/guides/nx-release/publish-rust-crates) in the same workspace.
 
 ## Sync
 
-These are global configuration options for the [`nx sync`](/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
+These are global configuration options for the [`nx sync`](/docs/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/docs/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
 
 ```jsonc
 // nx.json
@@ -717,7 +717,7 @@ There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.js
 }
 ```
 
-For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).
+For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/docs/reference/nx-cloud-cli).
 
 ## Max Cache Size
 
@@ -754,7 +754,7 @@ Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have
 
 ## TUI
 
-The `tui` property in `nx.json` configures the [Terminal UI](/recipes/running-tasks/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
+The `tui` property in `nx.json` configures the [Terminal UI](/docs/guides/tasks--caching/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
 
 ```json
 // nx.json

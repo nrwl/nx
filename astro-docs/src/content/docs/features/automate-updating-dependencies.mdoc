@@ -24,14 +24,14 @@ npx nx@latest migrate latest
 ```
 
 {% aside type="note" title="Visual migration tool from Nx Console" %}
-Want a more visual and guided way to migrate? Check out the [Migrate UI](/recipes/nx-console/console-migrate-ui) that comes with the [Nx Console extension](/getting-started/editor-setup).
+Want a more visual and guided way to migrate? Check out the [Migrate UI](/docs/guides/nx-console/console-migrate-ui) that comes with the [Nx Console extension](/docs/getting-started/editor-setup).
 {% /aside %}
 
 ## How Does It Work?
 
-Nx knows where its configuration files are located and ensures they match the expected format. This automated update process, commonly referred to as "migration," becomes even **more powerful when you leverage [Nx plugins](/plugin-registry)**. Each plugin can provide migrations for its area of competency.
+Nx knows where its configuration files are located and ensures they match the expected format. This automated update process, commonly referred to as "migration," becomes even **more powerful when you leverage [Nx plugins](/docs/plugin-registry)**. Each plugin can provide migrations for its area of competency.
 
-For example, the [Nx React plugin](/technologies/react/introduction) knows where to look for React and Nx specific configuration files and knows how to apply certain changes when updating to a given version of React.
+For example, the [Nx React plugin](/docs/technologies/react/introduction) knows where to look for React and Nx specific configuration files and knows how to apply certain changes when updating to a given version of React.
 
 In the example below, the React plugin defines a migration script (`./src/migrations/.../add-babel-core`) that runs when upgrading to Nx `16.7.0-beta.2` (or higher).
 
@@ -72,7 +72,7 @@ nx migrate latest
 Note you can also specify an exact version by replacing `latest` with `nx@<version>`.
 
 {% aside title="Update One Major Version at a Time" %}
-To avoid potential issues, it is [recommended to update one major version of Nx at a time](/recipes/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps).
+To avoid potential issues, it is [recommended to update one major version of Nx at a time](/docs/guides/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps).
 {% /aside %}
 
 This results in:
@@ -106,7 +106,7 @@ Note: You may want to keep the `migrations.json` until every branch that was cre
 
 ### Step 4: Update Community Plugins (Optional)
 
-If you have any [Nx community plugins](/plugin-registry) installed you need to migrate them individually (assuming they provide migration scripts) by using the following command:
+If you have any [Nx community plugins](/docs/plugin-registry) installed you need to migrate them individually (assuming they provide migration scripts) by using the following command:
 
 ```shell {% frame="none" %}
 nx migrate my-plugin
@@ -120,7 +120,7 @@ nx report
 
 ## Keep Nx Packages on the Same Version
 
-When you run `nx migrate`, the `nx` package and all the `@nx/` packages get updated to the same version. It is important to [keep these versions in sync](/recipes/tips-n-tricks/keep-nx-versions-in-sync) to have Nx work properly.
+When you run `nx migrate`, the `nx` package and all the `@nx/` packages get updated to the same version. It is important to [keep these versions in sync](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync) to have Nx work properly.
 
 As long as you run `nx migrate` instead of manually changing the version numbers, you shouldn't have to worry about it. Also, when you add a new plugin, use `nx add <plugin>` to automatically install the version that matches your repository's version of Nx.
 
@@ -128,4 +128,4 @@ As long as you run `nx migrate` instead of manually changing the version numbers
 
 Sometimes you need to temporarily opt-out from some migrations because your workspace is not ready yet. You can manually adjust the `migrations.json` or run the update with the `--interactive` flag to choose which migrations you accept.
 
-Find more details in our [Advanced Update Process](/recipes/tips-n-tricks/advanced-update) guide.
+Find more details in our [Advanced Update Process](/docs/guides/tips-n-tricks/advanced-update) guide.

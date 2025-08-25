@@ -12,7 +12,7 @@ The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. It allows yo
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/eslint` by running the following command:
@@ -44,7 +44,7 @@ Even if a project has an ESLint configuration file, it will only have an inferre
 
 ### View Inferred Tasks
 
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/eslint Configuration
 
@@ -76,8 +76,8 @@ nx lint my-project
 
 ## Utils
 
-- [convert-to-flat-config](/technologies/eslint/api/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
+- [convert-to-flat-config](/docs/technologies/eslint/generators#convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
 
 ## ESLint plugin
 
-Read about our dedicated ESLint plugin - [eslint-plugin-nx](/technologies/eslint/eslint-plugin).
+Read about our dedicated ESLint plugin - [eslint-plugin-nx](/docs/technologies/eslint/eslint-plugin).

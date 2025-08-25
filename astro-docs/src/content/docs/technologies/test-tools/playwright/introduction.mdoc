@@ -18,7 +18,7 @@ Playwright is a modern web test runner. With included features such as:
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/playwright` by running the following command:
@@ -42,7 +42,7 @@ The `@nx/playwright` plugin will create a task for any project that has a Playwr
 
 ### View Inferred Tasks
 
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/playwright Configuration
 
@@ -67,7 +67,7 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 ### Splitting E2E Tests
 
-`@nx/playwright/plugin` leverages Nx Atomizer to split your e2e tests into smaller tasks in a fully automated way. This allows for a much more efficient distribution of tasks in CI. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
+`@nx/playwright/plugin` leverages Nx Atomizer to split your e2e tests into smaller tasks in a fully automated way. This allows for a much more efficient distribution of tasks in CI. You can read more about the Atomizer feature [here](/docs/features/ci-features/split-e2e-tasks).
 
 If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
 
@@ -116,7 +116,7 @@ By default, Playwright will run in headless mode. You will have the result of al
 terminal. Test output such as reports, screenshots and videos, will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
 
 {% aside type="note" title="Output Caching" %}
-If changing the output directory or report output, make sure to update the [target outputs](/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
+If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
 {% /aside %}
 
 ### Watching for Changes
@@ -193,7 +193,7 @@ export default defineConfig({
 });
 ```
 
-In order to set different `baseURL` values for different environments you can pass them via the [environment variables and nx configurations](/recipes/tips-n-tricks/define-environment-variables) or optionally via setting them per the environment they are needed in such as `CI`
+In order to set different `baseURL` values for different environments you can pass them via the [environment variables and nx configurations](/docs/guides/tips-n-tricks/define-environment-variables) or optionally via setting them per the environment they are needed in such as `CI`
 
 ```ts frame="none"
 import { defineConfig } from '@playwright/test';

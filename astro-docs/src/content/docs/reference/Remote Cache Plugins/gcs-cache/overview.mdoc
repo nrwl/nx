@@ -9,7 +9,7 @@ The `@nx/gcs-cache` plugin enables you to self-host your remote cache on [Google
 
 {% aside type="caution" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
 
-CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches that allows anyone with PR access to poison production builds. Many organizations are unaware of this security risk. [Learn more](/blog/creep-vulnerability-build-cache-security)
+CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches that allows anyone with PR access to poison production builds. Many organizations are unaware of this security risk. [Learn more](https://nx.dev/blog/creep-vulnerability-build-cache-security)
 
 `@nx/gcs-cache` (along with other bucket-based remote cache implementations) is listed in the CVE, and is not allowed in many organizations.
 
@@ -19,16 +19,16 @@ CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted r
 
 Recommended for everyone.
 
-- [Fully managed multi-tier remote caching with Nx Replay](/ci/features/remote-cache)
-- [Both secure and fast](/enterprise/security)
+- [Fully managed multi-tier remote caching with Nx Replay](/docs/features/ci-features/remote-cache)
+- [Both secure and fast](https://nx.dev/enterprise/security)
 - Generous free plan
 
 You'll also get access to advanced CI features:
 
-- [Automated distribution of tasks across machines with Nx Agents](/ci/features/distribute-task-execution)
-- [Automated splitting of tasks (including e2e tests) with Nx Atomizer](/ci/features/split-e2e-tasks)
-- [Detection and re-running of flaky tasks](/ci/features/flaky-tasks)
-- [Self-healing CI and other AI features](/ai)
+- [Automated distribution of tasks across machines with Nx Agents](/docs/features/ci-features/distribute-task-execution)
+- [Automated splitting of tasks (including e2e tests) with Nx Atomizer](/docs/features/ci-features/split-e2e-tasks)
+- [Detection and re-running of flaky tasks](/docs/features/ci-features/flaky-tasks)
+- [Self-healing CI and other AI features](https://nx.dev/ai)
 
 [Get Started](https://cloud.nx.app)
 {% /aside %}
@@ -43,7 +43,7 @@ Includes everything from Nx Cloud, plus:
 - Run on the Nx Cloud servers in any region or run fully self-contained, on-prem
 - SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise
 
-[Reach out for an Enterprise trial](/enterprise/trial)
+[Reach out for an Enterprise trial](https://nx.dev/enterprise/trial)
 
 {% /aside %}
 
@@ -66,7 +66,7 @@ The key will be saved in your repository (`.nx/key/key.ini`) and should be commi
 NX_KEY=YOUR_ACTIVATION_KEY
 ```
 
-> Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also build your own cache server. [Learn more.](/recipes/running-tasks/self-hosted-caching)
+> Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also build your own cache server. [Learn more.](/docs/guides/tasks--caching/self-hosted-caching)
 
 ### 2. Authenticate with Google Cloud
 
@@ -129,7 +129,7 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `bucket`
 
 Many people who are interested in Nx Powerpack have previously used custom task runners. Nx offers a new and simpler extension API designed to meet the same use cases as the now-deprecated custom task runners.
 
-To learn more about migrating from custom task runners, [please refer to this detailed guide](/deprecated/custom-tasks-runner).
+To learn more about migrating from custom task runners, [please refer to this detailed guide](/docs/reference/deprecated/custom-tasks-runner).
 
 By default, Nx will try to write and read from the remote cache while running locally. This means that permissions must be set for users who are expected to access the remote cache.
 

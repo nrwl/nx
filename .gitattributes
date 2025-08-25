@@ -7,4 +7,4 @@
 *.bat           text eol=crlf
 # Exclude files from Graphite reviews
 docs/generated/* linguist-generated=true
-*.gif,*.mp4,*.webp,*.avif,*.png,*.jpeg,*.jpg,*.tiff filter=lfs diff=lfs merge=lfs -text
+*.pdf,*.gif,*.mp4,*.webp,*.avif,*.png,*.jpeg,*.jpg,*.tiff filter=lfs diff=lfs merge=lfs -text

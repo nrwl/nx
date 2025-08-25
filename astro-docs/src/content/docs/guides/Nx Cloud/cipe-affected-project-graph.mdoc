@@ -63,7 +63,7 @@ At this point, we can ask ourselves that "Should a change to the `tooltip` compo
 
 To achieve our goal, we can break up the `ui` library into 2 separate libraries: `button` and `tooltip`.
 
-> Check out our [blog post](/blog/improve-architecture-and-ci-times-with-projects) about splitting large projects into smaller ones.
+> Check out our [blog post](https://nx.dev/blog/improve-architecture-and-ci-times-with-projects) about splitting large projects into smaller ones.
 
 Once we have done this, we will end up with the following project graph:
 
@@ -83,6 +83,6 @@ And the affected project graph also reflects that change properly.
 **Does your Affected Project Graph only show affected projects and not touched?**
 
 - If your commit has changes to one of the global inputs, your projects will be affected but no specific project is touched directly.
-- Make sure you are calling `start-ci-run` to start using Nx Agents for touched projects to be recorded. Learn more about [Nx Agents](/features/CI Features/distribute-task-execution)
+- Make sure you are calling `start-ci-run` to start using Nx Agents for touched projects to be recorded. Learn more about [Nx Agents](/docs/features/CI Features/distribute-task-execution)
 
 {% /aside %}

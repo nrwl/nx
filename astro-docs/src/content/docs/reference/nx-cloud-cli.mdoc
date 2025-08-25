@@ -98,7 +98,7 @@ npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=ht
 
 ### `nx-cloud convert-to-nx-cloud-id`
 
-When logging into Nx Cloud with a [Personal Access Token](/ci/recipes/security/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
+When logging into Nx Cloud with a [Personal Access Token](/docs/guides/nx-cloud/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
 
 If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower, this command will also install the latest version of the Nx Cloud npm package and add it into your `package.json`. Only Nx versions 19.7 and higher natively support the `nxCloudId` property in the `nx.json` file; for versions 19.6 and lower, the Nx Cloud npm package will be needed to use that property.
 
@@ -141,13 +141,13 @@ If you accidentally run this command locally, remove all generated marker files 
 
 ##### --distribute-on
 
-By default, `npx nx-cloud start-ci-run` is intended for use with [Nx Agents](/ci/features/distribute-task-execution) and expects `--distribute-on` to be configured. It will output a warning if this flag is not set. If you are running a distributed execution with a legacy setup without Nx Agents, you can pass `--distribute-on=manual` to disable this warning.
+By default, `npx nx-cloud start-ci-run` is intended for use with [Nx Agents](/docs/features/ci-features/distribute-task-execution) and expects `--distribute-on` to be configured. It will output a warning if this flag is not set. If you are running a distributed execution with a legacy setup without Nx Agents, you can pass `--distribute-on=manual` to disable this warning.
 
 This command tells Nx Cloud how many agents to use (and what launch templates to use) to distribute tasks. E.g.,
 `npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"` will distribute CI using 8 agents that are initialized
 using the `linux-medium-js` launch template.
 
-You can also [define the configuration in a file](/ci/features/dynamic-agents) and reference it as follows:
+You can also [define the configuration in a file](/docs/features/ci-features/dynamic-agents) and reference it as follows:
 `npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"`.
 
 ```yaml 
