@@ -31,31 +31,29 @@
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
-      "roots": ["app1:test", "app2:test", "lib:test"],
-      "tasks": {
-        "app1:test": {
-          "id": "app1:test",
-          "target": { "project": "app1", "target": "test" },
-          "projectRoot": "apps/app1",
-          "overrides": {}
-        },
-        "app2:test": {
-          "id": "app2:test",
-          "target": { "project": "app2", "target": "test" },
-          "projectRoot": "apps/app2",
-          "overrides": {}
-        },
-        "lib:test": {
-          "id": "lib:test",
-          "target": { "project": "lib", "target": "test" },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
+  "taskIds": ["app1:test", "app2:test", "lib:test"],
+  "taskGraph": {
+    "roots": ["app1:test", "app2:test", "lib:test"],
+    "tasks": {
+      "app1:test": {
+        "id": "app1:test",
+        "target": { "project": "app1", "target": "test" },
+        "projectRoot": "apps/app1",
+        "overrides": {}
       },
-      "dependencies": {}
-    }
+      "app2:test": {
+        "id": "app2:test",
+        "target": { "project": "app2", "target": "test" },
+        "projectRoot": "apps/app2",
+        "overrides": {}
+      },
+      "lib:test": {
+        "id": "lib:test",
+        "target": { "project": "lib", "target": "test" },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }

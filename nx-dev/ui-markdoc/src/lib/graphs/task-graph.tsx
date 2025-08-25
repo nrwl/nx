@@ -18,15 +18,17 @@ import { resolveTheme } from './resolve-theme';
 interface NxDevTaskGraphProps {
   theme: RenderTheme | 'system';
   projects: ProjectGraphProjectNode[];
-  taskGraphs: Record<string, TaskGraph>;
+  taskGraph: TaskGraph;
   taskId: string;
+  taskIds?: string[];
   enableContextMenu?: boolean;
 }
 
 export function NxDevTaskGraph({
   projects,
-  taskGraphs,
+  taskGraph,
   taskId,
+  taskIds = [],
   theme = 'system',
   enableContextMenu = false,
 }: NxDevTaskGraphProps) {
@@ -44,9 +46,16 @@ export function NxDevTaskGraph({
   useEffect(() => {
     if (!graphClient) return;
 
+    const showTaskIds = taskIds.length ? taskIds : [taskId];
+
     send(
-      { type: 'initGraph', projects, taskGraphs },
-      { type: 'show', taskIds: [taskId] }
+      { type: 'initGraph', projects, taskGraph },
+      {
+        type: 'show',
+        taskIds: showTaskIds.map((id) =>
+          id.startsWith('task-') ? id : `task-${id}`
+        ),
+      }
     );
   }, [graphClient]);
 

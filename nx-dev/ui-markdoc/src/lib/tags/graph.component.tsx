@@ -116,8 +116,9 @@ export function Graph({
       <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
         {title}
       </div>
-      {type === 'project' ? (
-        <div style={{ height }}>
+
+      <div style={{ height }}>
+        {type === 'project' ? (
           <NxDevProjectGraph
             theme={theme}
             projects={parsedProps.projects}
@@ -126,16 +127,17 @@ export function Graph({
             enableContextMenu={parsedProps.enableTooltips}
             composite={parsedProps.composite}
           />
-        </div>
-      ) : (
-        <NxDevTaskGraph
-          theme={theme}
-          projects={parsedProps.projects}
-          taskGraphs={parsedProps.taskGraphs}
-          taskId={parsedProps.taskId}
-          enableContextMenu={parsedProps.enableTooltips}
-        />
-      )}
+        ) : (
+          <NxDevTaskGraph
+            theme={theme}
+            projects={parsedProps.projects}
+            taskGraph={parsedProps.taskGraph}
+            taskId={parsedProps.taskId}
+            taskIds={parsedProps.taskIds}
+            enableContextMenu={parsedProps.enableTooltips}
+          />
+        )}
+      </div>
     </div>
   ) : (
     <Loading />

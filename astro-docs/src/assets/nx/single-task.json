@@ -5,25 +5,21 @@
       "type": "lib",
       "data": {
         "tags": [],
-        "targets": {
-          "test": {}
-        }
+        "targets": { "test": {} }
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
-      "roots": ["lib:test"],
-      "tasks": {
-        "lib:test": {
-          "id": "lib:test",
-          "target": { "project": "lib", "target": "test" },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {}
-    }
+  "taskIds": ["lib:test"],
+  "taskGraph": {
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": { "project": "lib", "target": "test" },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }
