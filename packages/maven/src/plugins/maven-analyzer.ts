@@ -36,17 +36,34 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
     mavenArgs.push('-q');
   }
 
+  // Debug logging for verbose mode
+  if (isVerbose) {
+    console.error(`Running Maven analyzer with verbose logging: ${mavenExecutable} ${mavenArgs.join(' ')}`);
+  }
+
   // Run Maven plugin
   await new Promise<void>((resolve, reject) => {
     const child = spawn(mavenExecutable, mavenArgs, {
       cwd: workspaceRoot,
-      stdio: isVerbose ? 'inherit' : 'pipe'
+      stdio: 'pipe' // Always use pipe so we can control output
     });
 
     let stdout = '';
     let stderr = '';
 
-    if (!isVerbose) {
+    // In verbose mode, forward output to console in real-time
+    if (isVerbose) {
+      child.stdout?.on('data', (data) => {
+        const text = data.toString();
+        stdout += text;
+        process.stdout.write(text); // Forward to stdout
+      });
+      child.stderr?.on('data', (data) => {
+        const text = data.toString();
+        stderr += text;
+        process.stderr.write(text); // Forward to stderr
+      });
+    } else {
       child.stdout?.on('data', (data) => {
         stdout += data.toString();
       });
