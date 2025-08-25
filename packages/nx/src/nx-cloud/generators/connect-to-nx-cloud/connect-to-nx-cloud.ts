@@ -23,10 +23,11 @@ function printCloudConnectionDisabledMessage() {
   });
 }
 
-function getRootPackageName(tree: Tree): string {
+function getRootPackageName(tree: Tree, directory: string): string {
   let packageJson;
   try {
-    packageJson = readJson(tree, 'package.json');
+    const packageJsonPath = join(directory, 'package.json');
+    packageJson = readJson(tree, packageJsonPath);
   } catch (e) {}
   return packageJson?.name ?? 'my-workspace';
 }
@@ -205,14 +206,14 @@ export async function connectToNxCloud(
 
   try {
     responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
-      getRootPackageName(tree),
+      getRootPackageName(tree, schema.directory),
       schema.installationSource,
       getNxInitDate()
     );
   } catch (e) {
     if (e.response?.status === 404) {
       responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
-        getRootPackageName(tree),
+        getRootPackageName(tree, schema.directory),
         schema.installationSource,
         getNxInitDate()
       );
