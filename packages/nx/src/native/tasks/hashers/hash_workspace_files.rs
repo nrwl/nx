@@ -147,7 +147,7 @@ mod test {
             file: "packages/project/project.json".into(),
             hash: "abc".into(),
         };
-        for i in 0..1000 {
+        for _i in 0..1000 {
             let result = hash_workspace_files(
                 &["{workspaceRoot}/**/*".to_string()],
                 &[
