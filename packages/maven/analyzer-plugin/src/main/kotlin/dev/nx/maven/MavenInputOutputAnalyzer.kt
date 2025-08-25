@@ -8,7 +8,7 @@ import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MavenPluginManager
 
 /**
- * Modular Maven input/output analyzer using composition of focused components
+ * Simple Maven input/output analyzer using preloaded Maven data
  */
 class MavenInputOutputAnalyzer(
     private val objectMapper: ObjectMapper,
@@ -18,12 +18,9 @@ class MavenInputOutputAnalyzer(
     pluginManager: MavenPluginManager
 ) {
     
-    // Modular components
-    private val pluginDescriptorLoader = PluginDescriptorLoader(log, session, pluginManager)
-    private val expressionResolver = MavenExpressionResolver(session, log)
+    // Simple components using existing classes
     private val pathResolver = PathResolver(workspaceRoot)
-    private val parameterAnalyzer = MojoParameterAnalyzer(log, expressionResolver, pathResolver)
-    private val executionFinder = PluginExecutionFinder(log)
+    private val preloadedAnalyzer = PreloadedPluginAnalyzer(log, session, pathResolver)
     
     /**
      * Result of cacheability analysis
@@ -39,60 +36,45 @@ class MavenInputOutputAnalyzer(
      * Analyzes the cacheability of a Maven phase for the given project
      */
     fun analyzeCacheability(phase: String, project: MavenProject): CacheabilityDecision {
-        log.debug("Analyzing phase '$phase' for project ${project.artifactId}")
+        log.info("Analyzing phase '$phase' for project ${project.artifactId}")
+        log.info("Project coordinates: ${project.groupId}:${project.artifactId}:${project.version}")
         
         val inputs = objectMapper.createArrayNode()
         val outputs = objectMapper.createArrayNode()
-        var hasSideEffects = false
         
         // Always include POM as input
         inputs.add("{projectRoot}/pom.xml")
         
-        // Find all plugin executions for this phase
-        val executions = executionFinder.findExecutionsForPhase(phase, project)
+        // Use Maven's preloaded data directly - much simpler and more reliable!
+        val analyzed = preloadedAnalyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs)
         
-        if (executions.isEmpty()) {
-            return CacheabilityDecision(false, "No plugin executions found for phase '$phase'", inputs, outputs)
+        if (!analyzed) {
+            log.info("No preloaded analysis available for phase: $phase")
+            return CacheabilityDecision(false, "No analysis available for phase '$phase'", inputs, outputs)
         }
         
-        // Analyze each execution
-        for ((plugin, goals) in executions) {
-            try {
-                val pluginDescriptor = pluginDescriptorLoader.loadPluginDescriptor(plugin, project)
-                if (pluginDescriptor != null) {
-                    for (goal in goals) {
-                        val mojo = pluginDescriptor.getMojo(goal)
-                        if (mojo != null) {
-                            log.debug("Analyzing mojo ${plugin.artifactId}:$goal")
-                            
-                            // Check for side effects
-                            if (parameterAnalyzer.isSideEffectMojo(mojo)) {
-                                log.debug("Mojo ${plugin.artifactId}:$goal has side effects")
-                                hasSideEffects = true
-                            }
-                            
-                            // Analyze mojo parameters
-                            parameterAnalyzer.analyzeMojo(mojo, project, inputs, outputs)
-                        } else {
-                            log.warn("Could not find mojo descriptor for goal: $goal in plugin: ${plugin.artifactId}")
-                        }
-                    }
-                } else {
-                    log.warn("Could not load plugin descriptor for ${plugin.artifactId}")
-                    // Without mojo descriptor, we can't analyze properly
-                    return CacheabilityDecision(false, "Plugin descriptor unavailable for ${plugin.artifactId}", inputs, outputs)
-                }
-            } catch (e: Exception) {
-                log.warn("Failed to analyze plugin ${plugin.artifactId}: ${e.message}")
-                return CacheabilityDecision(false, "Failed to analyze plugin ${plugin.artifactId}", inputs, outputs)
+        log.info("Successfully analyzed phase '$phase' with ${inputs.size()} inputs and ${outputs.size()} outputs")
+        
+        // Check for side effects based on phase
+        val hasSideEffects = when (phase) {
+            "install", "deploy", "clean" -> {
+                log.info("Phase '$phase' has side effects - not cacheable")
+                true
             }
+            else -> false
         }
         
         // Final cacheability decision
         return when {
             hasSideEffects -> CacheabilityDecision(false, "Has side effects", inputs, outputs)
-            inputs.size() <= 1 -> CacheabilityDecision(false, "No meaningful inputs", inputs, outputs) // Only pom.xml
-            else -> CacheabilityDecision(true, "Deterministic", inputs, outputs)
+            inputs.size() <= 1 -> {
+                log.info("Phase '$phase' has no meaningful inputs (only pom.xml) - not cacheable")
+                CacheabilityDecision(false, "No meaningful inputs", inputs, outputs)
+            }
+            else -> {
+                log.info("Phase '$phase' is cacheable with ${inputs.size()} inputs and ${outputs.size()} outputs")
+                CacheabilityDecision(true, "Deterministic", inputs, outputs)
+            }
         }
     }
 }
