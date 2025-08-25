@@ -39,6 +39,23 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
     private lateinit var workspaceRoot: String
 
     private val objectMapper = ObjectMapper()
+    
+    // Setters for orchestrated execution
+    fun setProject(project: MavenProject) {
+        this.project = project
+    }
+    
+    fun setSession(session: MavenSession) {
+        this.session = session
+    }
+    
+    fun setPluginManager(pluginManager: org.apache.maven.plugin.MavenPluginManager) {
+        this.pluginManager = pluginManager
+    }
+    
+    fun setWorkspaceRoot(workspaceRoot: String) {
+        this.workspaceRoot = workspaceRoot
+    }
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
