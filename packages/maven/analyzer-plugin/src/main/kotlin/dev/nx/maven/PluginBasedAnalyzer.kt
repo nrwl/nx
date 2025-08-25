@@ -107,31 +107,92 @@ class PluginBasedAnalyzer(
     
     /**
      * Determines if a phase is cacheable based on the plugins that execute during it
+     * Returns a detailed cacheability assessment with reasoning
      */
     fun isPhaseCacheable(phase: String, project: MavenProject): Boolean {
+        return getCacheabilityAssessment(phase, project).cacheable
+    }
+    
+    /**
+     * Provides detailed cacheability assessment with reasoning
+     */
+    fun getCacheabilityAssessment(phase: String, project: MavenProject): CacheabilityAssessment {
         // Phases that have side effects are never cacheable
         val nonCacheablePhases = setOf("install", "deploy", "clean")
         if (nonCacheablePhases.contains(phase)) {
-            return false
+            return CacheabilityAssessment(
+                cacheable = false,
+                reason = "Phase '$phase' has inherent side effects",
+                details = listOf("Phase involves installation or deployment operations")
+            )
         }
         
         try {
             val executions = pluginExecutionFinder.findExecutionsForPhase(phase, project)
             
-            // Check if any of the executing mojos have side effects
+            if (executions.isEmpty()) {
+                return CacheabilityAssessment(
+                    cacheable = false,
+                    reason = "No plugin executions found for phase '$phase'",
+                    details = listOf("Cannot determine inputs/outputs without plugin executions")
+                )
+            }
+            
+            val details = mutableListOf<String>()
+            var hasThreadSafetyIssues = false
+            var hasAggregatorMojos = false
+            
+            // Check each mojo execution for cacheability factors
             for (execution in executions) {
                 val pluginDescriptor = loadPluginDescriptor(execution.plugin, project)
                 val mojo = pluginDescriptor?.getMojo(execution.goal)
                 
-                if (mojo != null && mojoParameterAnalyzer.isSideEffectMojo(mojo)) {
-                    return false
+                if (mojo != null) {
+                    // Check for side effects
+                    if (mojoParameterAnalyzer.isSideEffectMojo(mojo)) {
+                        return CacheabilityAssessment(
+                            cacheable = false,
+                            reason = "Mojo ${mojo.goal} has side effects",
+                            details = details + "Goal '${mojo.goal}' interacts with external systems or has non-deterministic behavior"
+                        )
+                    }
+                    
+                    // For now, we'll assume all mojos are thread-safe and non-aggregator
+                    // These checks can be enhanced later if needed
+                    
+                    details.add("Analyzed goal '${mojo.goal}' - appears cacheable based on parameters")
                 }
             }
             
-            return true
+            // Make final cacheability decision based on all factors
+            val cacheable = !hasThreadSafetyIssues && !hasAggregatorMojos
+            val reason = when {
+                hasAggregatorMojos -> "Contains aggregator mojos with cross-project effects"
+                hasThreadSafetyIssues -> "Contains non-thread-safe mojos"
+                else -> "All mojos are cacheable based on parameter analysis"
+            }
+            
+            return CacheabilityAssessment(
+                cacheable = cacheable,
+                reason = reason,
+                details = details
+            )
             
         } catch (e: Exception) {
-            return false
+            return CacheabilityAssessment(
+                cacheable = false,
+                reason = "Error analyzing phase cacheability: ${e.message}",
+                details = listOf("Exception occurred during plugin analysis")
+            )
         }
     }
+    
+    /**
+     * Data class for detailed cacheability assessment
+     */
+    data class CacheabilityAssessment(
+        val cacheable: Boolean,
+        val reason: String,
+        val details: List<String>
+    )
 }
