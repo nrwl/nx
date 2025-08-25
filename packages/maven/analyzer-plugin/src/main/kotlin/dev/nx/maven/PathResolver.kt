@@ -34,9 +34,17 @@ class PathResolver(
     private fun addSingleInputPath(path: String, inputs: ArrayNode) {
         val file = File(path)
         if (file.exists()) {
-            // External dependencies (like JARs from .m2/repository) should remain as absolute paths
+            // TODO: External dependencies (like JARs from .m2/repository) are not yet supported by Nx
+            // as cache inputs. For now, we exclude them to avoid Nx errors. When Nx supports external
+            // file dependencies, we should include them as: inputs.add(path)
+            // This is important for proper cache invalidation when external dependencies change.
             if (isExternalDependency(path)) {
-                inputs.add(path)
+                // Skip external dependencies for now - Nx doesn't support them yet
+                return
+            } else if (isInterProjectDependency(path)) {
+                // Inter-project dependency JAR - include as workspace input
+                val projectPath = toProjectPath(path)
+                inputs.add(projectPath)
             } else {
                 val projectPath = toProjectPath(path)
                 if (file.isDirectory) {
@@ -55,6 +63,20 @@ class PathResolver(
         val file = File(path)
         return (file.name.endsWith(".jar") || file.name.endsWith(".war") || file.name.endsWith(".ear")) &&
                !path.startsWith(workspaceRoot)
+    }
+    
+    /**
+     * Checks if a path is an inter-project dependency (output directory or JAR within the workspace)
+     */
+    private fun isInterProjectDependency(path: String): Boolean {
+        if (!path.startsWith(workspaceRoot)) return false
+        
+        val file = File(path)
+        // Inter-project dependencies can be:
+        // 1. JAR files within workspace (built artifacts)
+        // 2. target/classes directories (direct classpath references)
+        return (file.name.endsWith(".jar") || file.name.endsWith(".war") || file.name.endsWith(".ear")) ||
+               (path.contains("/target/classes") || path.contains("/target/test-classes"))
     }
     
     /**
