@@ -41,14 +41,14 @@ Each executor definition has an `executor` property and, optionally, an `options
 - `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
 - `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. In the example, there is a `production` configuration that overrides the default options to set `sourceMap` to `false`.
 
-Once configured, you can run an executor the same way you would [run any target](/features/run-tasks):
+Once configured, you can run an executor the same way you would [run any target](/docs/features/run-tasks):
 
 ```shell {% frame="none" %}
 nx [command] [project]
 nx build cart
 ```
 
-Browse the executors that are available in the [plugin registry](/plugin-registry).
+Browse the executors that are available in the [plugin registry](/docs/plugin-registry).
 
 ## Run a Terminal Command from an Executor
 
@@ -68,11 +68,11 @@ If defining a new target that needs to run a single shell command, there is a sh
 }
 ```
 
-For more info, see the [run-commands documentation](/reference/core-api/nx/executors/run-commands)
+For more info, see the [run-commands documentation](/docs/reference/core-api/nx/executors/run-commands)
 
 ## Build your own Executor
 
-Nx comes with a Devkit that allows you to build your own executor to automate your Nx workspace. Learn more about it in the [docs page about creating a local executor](/extending-nx/recipes/local-executors).
+Nx comes with a Devkit that allows you to build your own executor to automate your Nx workspace. Learn more about it in the [docs page about creating a local executor](/docs/extending-nx/local-executors).
 
 ## Running executors with a configuration
 

@@ -298,7 +298,7 @@ To analyze the size of your bundles, run build with `--statsJson` and use a tool
 like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer).
 
 If you have any feedback regarding this feature, we'd love to hear from you--check
-our [community page](/community) for links to our Discord and Twitter.
+our [community page](https://nx.dev/community) for links to our Discord and Twitter.
 {% /aside %}
 
 ## Remote computation caching with Nx Cloud
@@ -392,7 +392,7 @@ export default withModuleFederation({
 Now you can run `nx build host` to build all the `host` and all the implicit dependencies in production mode.
 
 {% aside type="note" title="Remote caching" %}
-Again, if you don't use [Nx Cloud's Distributed Tasks Execution](/ci/features/distribute-task-execution) using Module Federation will be slower
+Again, if you don't use [Nx Cloud's Distributed Tasks Execution](/docs/features/ci-features/distribute-task-execution) using Module Federation will be slower
 than building everything in a single process. It's only if you enable Distributed Tasks Execution, your CI will be able
 to build each remote on a separate machine, in parallel, (or not build it at all and retrieve it from cache), which will
 reduce the CI time.
@@ -460,7 +460,7 @@ first before building the remotes.
 
 ## Summary
 
-You could use Module Federation to implement [micro frontends](/technologies/module-federation/concepts/micro-frontend-architecture),
+You could use Module Federation to implement [micro frontends](/docs/technologies/module-federation/concepts/micro-frontend-architecture),
 but this
 guide showed how to use it to speed up your builds.
 

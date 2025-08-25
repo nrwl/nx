@@ -26,7 +26,7 @@ In summary, for 99% of cases, you will never have to think about the heartbeat o
 
 ### Caveats
 
-In some specific cases, though, the heartbeat process will not work properly. In that case, you will need to [manage completion yourself](/ci/reference/nx-cloud-cli#requireexplicitcompletion):
+In some specific cases, though, the heartbeat process will not work properly. In that case, you will need to [manage completion yourself](/docs/reference/nx-cloud-cli#requireexplicitcompletion):
 
 ```yaml
 - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --require-explicit-completion # this option disables the heartbeat
@@ -87,7 +87,7 @@ While both the heartbeat and `--stop-agents-after` tell Nx Cloud when it can shu
 1.  `--stop-agents-after` is useful purely to avoid wasting unnecessary compute.
     - So, while you might still have agents actively running tasks, Nx Cloud can tell that you won't be sending it any more tasks in the future because of how you configured `--stop-agents-after`.
     - So, it can turn off any agents that are no longer running tasks.
-    - [Read more about configuring `--stop-agents-after`](/ci/reference/nx-cloud-cli#stopagentsafter).
+    - [Read more about configuring `--stop-agents-after`](/docs/reference/nx-cloud-cli#stopagentsafter).
 2.  The heartbeat, on the other hand, marks the completion of the main job.
     - It makes sure Nx Cloud instantly knows when the main job exited so it can update the status of its CI run.
     - In case of errors, it makes sure that it can instantly abandon any in-progress tasks.

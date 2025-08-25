@@ -23,6 +23,7 @@ import {
 } from './utils/plugin-stats';
 import {
   getTechnologyCategory,
+  pluginSpecialCasePluginRemapping,
   pluginToTechnology,
 } from './utils/plugin-mappings';
 
@@ -44,14 +45,12 @@ function getPluginSlug(pluginName: string, docType: string) {
 
   const category = getTechnologyCategory(pluginName);
 
-  // Apply the same remapping logic used in sidebar generation
-  // JS plugin is referenced as typescript, so we remap it to match the URL structure
-  const remappedPluginName = pluginName === 'js' ? 'typescript' : pluginName;
-
+  const remappedPluginName = pluginSpecialCasePluginRemapping(pluginName);
   // plugin is the top level tech, then we make the docs on the top level too
-  if (remappedPluginName === category) {
+  if (category === remappedPluginName) {
     return `technologies/${remappedPluginName}/${docType}`;
   }
+
   return `technologies/${category}/${remappedPluginName}/${docType}`;
 }
 
@@ -133,7 +132,8 @@ export async function generateAllPluginDocs(
       };
       const npmDownloads = await getNpmDownloads(npmPackage);
       const npmMeta = await getNpmData(npmPackage);
-      const slug = (pluginOverview = {
+      const slug = getPluginSlug(pluginName, 'introduction');
+      pluginOverview = {
         id: `${pluginName}-overview`,
         collection: 'plugin-docs',
         data: {
@@ -148,10 +148,10 @@ export async function generateAllPluginDocs(
           npmDownloads: npmDownloads,
           lastPublishedDate: npmMeta.lastPublishedDate,
           lastFetched: new Date(),
-          title: '',
-          slug: getPluginSlug(pluginName, 'introduction'),
+          title: pluginName,
+          slug,
         },
-      });
+      };
     } else {
       pluginOverview = existingOverviewEntry as DocEntry;
     }

@@ -8,12 +8,12 @@ sidebar:
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.
 
 {% aside type="caution" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/introduction) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/docs/technologies/test-tools/storybook/introduction) to get started.
 {% /aside %}
 
 ## Generate Storybook Configuration for an Angular project
 
-You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/docs/technologies/angular/generators#storybook-configuration), like this:
 
 ```shell {% frame="none" %}
 nx g @nx/angular:storybook-configuration project-name
@@ -21,7 +21,7 @@ nx g @nx/angular:storybook-configuration project-name
 
 ## Auto-generate Stories
 
-The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nx/angular:storybook-configuration` generator](/docs/technologies/angular/generators#storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 
 {%filetree %}
@@ -30,7 +30,7 @@ The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/
   - my-component.stories.ts
 
 {%/filetree %}
-If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/technologies/angular/api/generators/stories):
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/docs/technologies/angular/generators#stories):
 
 ```shell {% frame="none" %}
 nx g @nx/angular:stories --project=<project-name>
@@ -110,7 +110,7 @@ export class MyButton {
 
 ### Story file
 
-The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) would generate a Story file that looks like this:
+The [`@nx/angular:storybook-configuration` generator](/docs/technologies/angular/generators#storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript
 // libs/feature/ui/src/lib/my-button/my-button.stories.ts
@@ -184,10 +184,10 @@ This setup instructs Nx to use the configuration under the `build` target of `my
 
 ## More Documentation
 
-- [Set up Compodoc for Storybook on Nx](/technologies/test-tools/storybook/guides/angular-storybook-compodoc)
-- [Configuring styles and preprocessor options](/technologies/test-tools/storybook/guides/angular-configuring-styles)
+- [Set up Compodoc for Storybook on Nx](/docs/technologies/test-tools/storybook/guides/angular-storybook-compodoc)
+- [Configuring styles and preprocessor options](/docs/technologies/test-tools/storybook/guides/angular-configuring-styles)
 
-You can find all Storybook-related Nx topics [here](/technologies/test-tools/storybook/introduction).
+You can find all Storybook-related Nx topics [here](/docs/technologies/test-tools/storybook/introduction).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/angular/get-started/introduction).
 
@@ -195,5 +195,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Set up Storybook version 9](/technologies/test-tools/storybook/guides/storybook-9-setup)
-- [Migrate to Storybook version 9](/technologies/test-tools/storybook/api/generators/migrate-9)
+- [Set up Storybook version 9](/docs/technologies/test-tools/storybook/guides/storybook-9-setup)
+- [Migrate to Storybook version 9](/docs/technologies/test-tools/storybook/generators#migrate-9)
