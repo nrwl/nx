@@ -19,7 +19,6 @@ class PreloadedPluginAnalyzer(
      * Analyzes a phase using Maven's already-loaded plugin information
      */
     fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
-        log.debug("Analyzing phase '$phase' using preloaded Maven plugin data")
         
         try {
             // Use project's compile/test classpath elements directly - Maven has already resolved these!
@@ -47,7 +46,7 @@ class PreloadedPluginAnalyzer(
             }
             
         } catch (e: Exception) {
-            log.debug("Failed to analyze phase using preloaded data: ${e.message}")
+            // Silently handle failures
         }
         
         return false
@@ -69,25 +68,15 @@ class PreloadedPluginAnalyzer(
         val projectOutputDir = project.build?.outputDirectory
         val projectTestOutputDir = project.build?.testOutputDirectory
         
-        log.debug("Total project.compileClasspathElements: ${project.compileClasspathElements?.size ?: 0}")
         project.compileClasspathElements?.forEach { classpathElement ->
-            log.debug("Processing classpath element: $classpathElement")
-            
             // Skip the project's own output directories - they should be outputs, not inputs
             if (classpathElement == projectOutputDir || classpathElement == projectTestOutputDir) {
-                log.debug("Skipping project's own output directory as input: $classpathElement")
+                // Skip own output directories
             } else {
                 pathResolver.addInputPath(classpathElement, inputs)
             }
         }
         
-        // Also try project artifacts for debugging
-        log.debug("Project compile artifacts: ${project.compileArtifacts?.size ?: 0}")
-        project.compileArtifacts?.forEach { artifact ->
-            log.debug("Compile artifact: ${artifact.groupId}:${artifact.artifactId}:${artifact.version} -> ${artifact.file}")
-        }
-        
-        log.debug("Added ${project.compileClasspathElements?.size ?: 0} compile classpath elements")
     }
     
     private fun addCompileOutputs(project: MavenProject, outputs: ArrayNode) {
@@ -123,13 +112,11 @@ class PreloadedPluginAnalyzer(
         project.testClasspathElements?.forEach { classpathElement ->
             // Skip the project's own output directories to avoid circular dependencies
             if (classpathElement == projectOutputDir || classpathElement == projectTestOutputDir) {
-                log.debug("Skipping project's own output directory as test input: $classpathElement")
+                // Skip own output directories
             } else {
                 pathResolver.addInputPath(classpathElement, inputs)
             }
         }
-        
-        log.debug("Added ${project.testClasspathElements?.size ?: 0} test classpath elements")
     }
     
     private fun addTestCompileOutputs(project: MavenProject, outputs: ArrayNode) {
@@ -161,7 +148,7 @@ class PreloadedPluginAnalyzer(
         project.testClasspathElements?.forEach { classpathElement ->
             // Skip the project's own output directories to avoid circular dependencies
             if (classpathElement == projectOutputDir || classpathElement == projectTestOutputDir) {
-                log.debug("Skipping project's own output directory as test runtime input: $classpathElement")
+                // Skip own output directories
             } else {
                 pathResolver.addInputPath(classpathElement, inputs)
             }

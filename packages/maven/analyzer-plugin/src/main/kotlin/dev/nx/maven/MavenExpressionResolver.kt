@@ -19,12 +19,24 @@ class MavenExpressionResolver(
         // Try expression first
         expression?.let { expr ->
             val resolved = resolveExpression(expr, project)
-            if (resolved != expr) return resolved
+            if (resolved != expr) {
+                // Filter out values that look like version numbers, not paths
+                if (isValidPath(resolved)) {
+                    return resolved
+                } else {
+                    return null
+                }
+            }
         }
         
         // Try default value
         defaultValue?.let { default ->
-            return resolveExpression(default, project)
+            val resolved = resolveExpression(default, project)
+            if (isValidPath(resolved)) {
+                return resolved
+            } else {
+                return null
+            }
         }
         
         // Try known parameter mappings
@@ -43,6 +55,26 @@ class MavenExpressionResolver(
             }
             else -> null
         }
+    }
+    
+    /**
+     * Checks if a resolved value looks like a valid file path rather than a version number or other non-path value
+     */
+    private fun isValidPath(value: String?): Boolean {
+        if (value.isNullOrBlank()) return false
+        
+        // Filter out values that look like version numbers (e.g., "1.8", "11", "17")
+        if (value.matches(Regex("^\\d+(\\.\\d+)*$"))) {
+            return false
+        }
+        
+        // Filter out other common non-path values
+        if (value in setOf("true", "false", "UTF-8", "jar", "war", "ear", "pom", "test-jar")) {
+            return false
+        }
+        
+        // Must contain at least one path separator or be an absolute path
+        return value.contains("/") || value.contains("\\") || value.startsWith(".") || java.io.File(value).isAbsolute
     }
     
     /**
