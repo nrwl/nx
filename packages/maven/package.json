@@ -1,6 +1,6 @@
 {
   "name": "@nx/maven",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Nx plugin for Maven integration",
   "main": "./src/index.js",
   "types": "./dist/index.d.ts",

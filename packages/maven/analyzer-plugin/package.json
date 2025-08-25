@@ -1,6 +1,6 @@
 {
   "name": "nx-maven-analyzer-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Maven plugin to analyze project structure for Nx integration",
   "private": true,
   "scripts": {
