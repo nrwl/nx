@@ -1765,5 +1765,104 @@ describe('Migration', () => {
         },
       });
     });
+
+    it('should skip packageJsonUpdates when incompatible packages are present', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            parent: '1.0.0',
+            'incompatible-package': '1.0.0',
+          },
+        }),
+        getInstalledPackageVersion: (pkg) => {
+          if (pkg === 'parent') return '1.0.0';
+          if (pkg === 'incompatible-package') return '1.0.0';
+          return null;
+        },
+        fetch: (p, _v) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child: { version: '2.0.0' },
+                  },
+                  incompatibleWith: {
+                    'incompatible-package': '*',
+                  },
+                },
+              },
+              schematics: {},
+            });
+          }
+          return Promise.resolve(null);
+        },
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('parent', '2.0.0');
+
+      // The packageJsonUpdate should be skipped due to incompatibleWith
+      expect(result.packageUpdates).toEqual({
+        parent: { version: '2.0.0', addToPackageJson: false },
+      });
+      // 'child' should not be in packageUpdates because the update was skipped
+      expect(result.packageUpdates.child).toBeUndefined();
+    });
+
+    it('should apply packageJsonUpdates when incompatible packages are not present', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            parent: '1.0.0',
+            child: '1.0.0',
+          },
+        }),
+        getInstalledPackageVersion: (pkg) => {
+          if (pkg === 'parent') return '1.0.0';
+          if (pkg === 'child') return '1.0.0';
+          return null; // incompatible-package is not installed
+        },
+        fetch: (p, _v) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child: { version: '2.0.0' },
+                  },
+                  incompatibleWith: {
+                    'incompatible-package': '*',
+                  },
+                },
+              },
+              schematics: {},
+            });
+          }
+          if (p === 'child') {
+            return Promise.resolve({
+              version: '2.0.0',
+              schematics: {},
+            });
+          }
+          return Promise.resolve(null);
+        },
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('parent', '2.0.0');
+
+      // The packageJsonUpdate should be applied since incompatible package is not present
+      expect(result.packageUpdates).toEqual({
+        parent: { version: '2.0.0', addToPackageJson: false },
+        child: { version: '2.0.0', addToPackageJson: false },
+      });
+    });
   });
 });
