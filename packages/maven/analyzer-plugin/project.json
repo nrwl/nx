@@ -1,0 +1,30 @@
+{
+  "name": "maven-analyzer-plugin",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/maven/analyzer-plugin/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn clean package",
+        "cwd": "packages/maven/analyzer-plugin"
+      }
+    },
+    "install": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn clean install",
+        "cwd": "packages/maven/analyzer-plugin"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn test",
+        "cwd": "packages/maven/analyzer-plugin"
+      }
+    }
+  },
+  "tags": ["maven", "plugin"]
+}
