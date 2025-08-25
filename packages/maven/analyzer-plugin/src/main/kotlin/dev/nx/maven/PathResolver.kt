@@ -34,26 +34,34 @@ class PathResolver(
      */
     private fun addSingleInputPath(path: String, inputs: ArrayNode) {
         val file = File(path)
+        println("DEBUG PathResolver: checking path '$path', exists=${file.exists()}")
         if (file.exists()) {
+            println("DEBUG PathResolver: path exists, checking dependency type...")
             // TODO: External dependencies (like JARs from .m2/repository) are not yet supported by Nx
             // as cache inputs. For now, we exclude them to avoid Nx errors. When Nx supports external
             // file dependencies, we should include them as: inputs.add(path)
             // This is important for proper cache invalidation when external dependencies change.
             if (isExternalDependency(path)) {
+                println("DEBUG PathResolver: skipping external dependency: $path")
                 // Skip external dependencies for now - Nx doesn't support them yet
                 return
             } else if (isInterProjectDependency(path)) {
+                println("DEBUG PathResolver: adding inter-project dependency: $path")
                 // Inter-project dependency JAR - include as workspace input
                 val projectPath = toProjectPath(path)
                 inputs.add(projectPath)
             } else {
                 val projectPath = toProjectPath(path)
                 if (file.isDirectory) {
+                    println("DEBUG PathResolver: adding directory input: $projectPath/**/*")
                     inputs.add("$projectPath/**/*")
                 } else {
+                    println("DEBUG PathResolver: adding file input: $projectPath")
                     inputs.add(projectPath)
                 }
             }
+        } else {
+            println("DEBUG PathResolver: path does NOT exist, skipping: $path")
         }
     }
     

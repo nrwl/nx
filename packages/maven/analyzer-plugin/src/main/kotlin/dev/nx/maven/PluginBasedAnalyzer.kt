@@ -29,6 +29,7 @@ class PluginBasedAnalyzer(
      * Analyzes a Maven phase by examining which plugins execute and their parameters
      */
     fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
+        println("DEBUG PluginAnalyzer: analyzing phase '$phase' for project ${project.artifactId}")
         
         try {
             // Find all plugin executions that will run during this phase
@@ -42,6 +43,11 @@ class PluginBasedAnalyzer(
             for (execution in executions) {
                 try {
                     analyzePluginExecution(execution, project, inputs, outputs)
+                    
+                    // Special handling for maven-compiler-plugin - explicitly add source directories
+                    if (execution.plugin.artifactId == "maven-compiler-plugin") {
+                        addCompilerPluginSourceDirectories(execution, project, inputs, phase)
+                    }
                 } catch (e: Exception) {
                     // Silently skip failed executions
                 }
@@ -66,6 +72,7 @@ class PluginBasedAnalyzer(
         val plugin = execution.plugin
         val goal = execution.goal
         
+        println("DEBUG PluginAnalyzer: analyzing plugin execution: ${plugin.artifactId}:${goal}")
         
         try {
             // Load plugin descriptor to get mojo information
@@ -184,6 +191,39 @@ class PluginBasedAnalyzer(
                 reason = "Error analyzing phase cacheability: ${e.message}",
                 details = listOf("Exception occurred during plugin analysis")
             )
+        }
+    }
+    
+    /**
+     * Special handling for maven-compiler-plugin to ensure source directories are included as inputs
+     */
+    private fun addCompilerPluginSourceDirectories(
+        execution: org.apache.maven.plugin.MojoExecution, 
+        project: MavenProject, 
+        inputs: com.fasterxml.jackson.databind.node.ArrayNode,
+        phase: String
+    ) {
+        println("DEBUG: Adding compiler plugin source directories for phase '$phase'")
+        
+        when (execution.goal) {
+            "compile" -> {
+                // Add main source directories for compile goal
+                project.compileSourceRoots?.forEach { sourceRoot ->
+                    if (sourceRoot.isNotBlank()) {
+                        println("DEBUG: Adding compile source root: $sourceRoot")
+                        pathResolver.addInputPath(sourceRoot, inputs)
+                    }
+                }
+            }
+            "testCompile" -> {
+                // Add test source directories for testCompile goal
+                project.testCompileSourceRoots?.forEach { testSourceRoot ->
+                    if (testSourceRoot.isNotBlank()) {
+                        println("DEBUG: Adding test source root: $testSourceRoot")
+                        pathResolver.addInputPath(testSourceRoot, inputs)
+                    }
+                }
+            }
         }
     }
     
