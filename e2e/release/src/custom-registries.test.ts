@@ -29,7 +29,6 @@ describe('nx release - custom npm registries', () => {
     });
   }, 60000);
   afterAll(() => {
-    cleanupProject();
     process.env.SELECTED_PM = previousPackageManager;
   });
 
@@ -44,6 +43,13 @@ describe('nx release - custom npm registries', () => {
     const e2eRegistryUrl = execSync('npm config get registry')
       .toString()
       .trim();
+
+    // Node 24 / NPM 11 needs this to work
+    execSync(
+      `npm config set ${
+        e2eRegistryUrl.split(':')[1]
+      }:_authToken "example-token"`
+    );
 
     const npmrcEntries = [
       `@${scope}:registry=http://scoped-registry.com`,
