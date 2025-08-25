@@ -25,7 +25,7 @@ import java.nio.file.Paths
     name = "analyze",
     defaultPhase = LifecyclePhase.VALIDATE,
     aggregator = true,
-    requiresDependencyResolution = ResolutionScope.NONE
+    requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
 )
 class NxProjectAnalyzerMojo : AbstractMojo() {
 
@@ -201,7 +201,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             // val dependencyRelationships = dependencyResolver.computeDependencyRelationships(...)
             // projectNode.put("dependencyRelationships", dependencyRelationships)
             
-            log.debug("Analyzed project: ${mavenProject.artifactId} at $relativePath")
+            log.info("Analyzed project: ${mavenProject.artifactId} at $relativePath")
             
             projectNode
             
