@@ -58,17 +58,23 @@ export function nxE2EPreset(
     : join(offset, 'dist', '.playwright', projectPath, 'test-output');
 
   const reporters = [];
-  reporters.push('html', {
-    outputFolder: isTsSolutionSetup
-      ? 'test-output/playwright/report'
-      : join(offset, 'dist', '.playwright', projectPath, 'playwright-report'),
-  });
-  if (options?.generateBlobReports) {
-    reporters.push('blob', {
+  reporters.push([
+    'html',
+    {
       outputFolder: isTsSolutionSetup
-        ? 'test-output/playwright/blob-report'
-        : join(offset, 'dist', '.playwright', projectPath, 'blob-report'),
-    });
+        ? 'test-output/playwright/report'
+        : join(offset, 'dist', '.playwright', projectPath, 'playwright-report'),
+    },
+  ]);
+  if (options?.generateBlobReports) {
+    reporters.push([
+      'blob',
+      {
+        outputFolder: isTsSolutionSetup
+          ? 'test-output/playwright/blob-report'
+          : join(offset, 'dist', '.playwright', projectPath, 'blob-report'),
+      },
+    ]);
   }
 
   return defineConfig({
