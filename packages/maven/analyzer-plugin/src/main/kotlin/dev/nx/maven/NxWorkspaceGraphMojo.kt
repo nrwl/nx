@@ -35,6 +35,19 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
 
     private val objectMapper = ObjectMapper()
     private val dependencyResolver = MavenDependencyResolver()
+    
+    // Setters for orchestrated execution
+    fun setSession(session: MavenSession) {
+        this.session = session
+    }
+    
+    fun setOutputFile(outputFile: String) {
+        this.outputFile = outputFile
+    }
+    
+    fun setWorkspaceRoot(workspaceRoot: String) {
+        this.workspaceRoot = workspaceRoot
+    }
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
