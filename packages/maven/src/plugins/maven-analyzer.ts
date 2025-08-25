@@ -134,7 +134,8 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
     console.log(`[Maven Analyzer] Successfully parsed analysis data with ${Object.keys(result).length} top-level keys`);
     return result;
   } catch (error) {
-    console.error(`[Maven Analyzer] Failed to parse JSON: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[Maven Analyzer] Failed to parse JSON: ${errorMessage}`);
     console.error(`[Maven Analyzer] JSON content preview: ${jsonContent.substring(0, 200)}...`);
     throw error;
   }
