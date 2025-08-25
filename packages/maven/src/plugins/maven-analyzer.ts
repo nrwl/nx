@@ -16,7 +16,148 @@ function detectMavenWrapper(): string {
 }
 
 /**
- * Run Maven analysis using our Kotlin analyzer plugin
+ * Run Maven analysis using two-tier approach: individual project analysis + workspace graph
+ */
+export async function runMavenAnalysisTwoTier(options: MavenPluginOptions): Promise<MavenAnalysisData> {
+  const outputFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
+  const isVerbose = options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
+
+  // Detect Maven wrapper or fallback to 'mvn'
+  const mavenExecutable = detectMavenWrapper();
+  
+  // Step 1: Run individual project analyses
+  const projectAnalysisArgs = [
+    'dev.nx.maven:nx-maven-analyzer-plugin:1.0-SNAPSHOT:analyze-project',
+    '--batch-mode',
+    '--no-transfer-progress'
+  ];
+
+  if (!isVerbose) {
+    projectAnalysisArgs.push('-q');
+  }
+
+  if (isVerbose) {
+    console.error(`Running per-project Maven analysis: ${mavenExecutable} ${projectAnalysisArgs.join(' ')}`);
+  }
+
+  // Run per-project analysis for all projects
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(mavenExecutable, projectAnalysisArgs, {
+      cwd: workspaceRoot,
+      stdio: 'pipe'
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    if (isVerbose) {
+      child.stdout?.on('data', (data) => {
+        const text = data.toString();
+        stdout += text;
+        process.stdout.write(text);
+      });
+      child.stderr?.on('data', (data) => {
+        const text = data.toString();
+        stderr += text;
+        process.stderr.write(text);
+      });
+    } else {
+      child.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+      child.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        let errorMsg = `Maven per-project analysis failed with code ${code}`;
+        if (stderr) errorMsg += `\nStderr: ${stderr}`;
+        if (stdout && !isVerbose) errorMsg += `\nStdout: ${stdout}`;
+        reject(new Error(errorMsg));
+      }
+    });
+
+    child.on('error', (error) => {
+      reject(new Error(`Failed to spawn Maven per-project analysis: ${error.message}`));
+    });
+  });
+
+  // Step 2: Run workspace graph generation
+  const graphArgs = [
+    'dev.nx.maven:nx-maven-analyzer-plugin:1.0-SNAPSHOT:analyze-graph',
+    `-Dnx.outputFile=${outputFile}`,
+    '--batch-mode',
+    '--no-transfer-progress'
+  ];
+
+  if (!isVerbose) {
+    graphArgs.push('-q');
+  }
+
+  if (isVerbose) {
+    console.error(`Running workspace graph generation: ${mavenExecutable} ${graphArgs.join(' ')}`);
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(mavenExecutable, graphArgs, {
+      cwd: workspaceRoot,
+      stdio: 'pipe'
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    if (isVerbose) {
+      child.stdout?.on('data', (data) => {
+        const text = data.toString();
+        stdout += text;
+        process.stdout.write(text);
+      });
+      child.stderr?.on('data', (data) => {
+        const text = data.toString();
+        stderr += text;
+        process.stderr.write(text);
+      });
+    } else {
+      child.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+      child.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        let errorMsg = `Maven workspace graph generation failed with code ${code}`;
+        if (stderr) errorMsg += `\nStderr: ${stderr}`;
+        if (stdout && !isVerbose) errorMsg += `\nStdout: ${stdout}`;
+        reject(new Error(errorMsg));
+      }
+    });
+
+    child.on('error', (error) => {
+      reject(new Error(`Failed to spawn Maven workspace graph generation: ${error.message}`));
+    });
+  });
+
+  // Read and parse the JSON output
+  if (!existsSync(outputFile)) {
+    throw new Error(`Maven workspace graph output file not found: ${outputFile}`);
+  }
+
+  const jsonContent = readFileSync(outputFile, 'utf8');
+  return JSON.parse(jsonContent) as MavenAnalysisData;
+}
+
+/**
+ * Run Maven analysis using legacy single-tier approach (for backwards compatibility)
  */
 export async function runMavenAnalysis(options: MavenPluginOptions): Promise<MavenAnalysisData> {
   const outputFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
