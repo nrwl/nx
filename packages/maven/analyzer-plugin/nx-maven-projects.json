@@ -1,16 +1,98 @@
 {
-  "createNodesResults" : [ [ ".", {
+  "createNodesResults" : [ [ "", {
     "projects" : {
-      "." : {
+      "" : {
         "name" : "dev.nx.maven.nx-maven-analyzer-plugin",
-        "root" : ".",
+        "root" : "",
         "projectType" : "library",
-        "sourceRoot" : "./src/main/java",
+        "sourceRoot" : "/src/main/java",
         "targets" : {
+          "process-resources" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn process-resources -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "compile" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn compile -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : true,
+            "inputs" : [ {
+              "dependentTasksOutputFiles" : "**/*",
+              "transitive" : true
+            }, "{projectRoot}/target/generated-sources/annotations/**/*" ],
+            "outputs" : [ "{projectRoot}/target", "{projectRoot}/target/classes" ],
+            "parallelism" : true
+          },
+          "process-classes" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn process-classes -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "process-test-resources" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn process-test-resources -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "package" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn package -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : true,
+            "inputs" : [ {
+              "dependentTasksOutputFiles" : "**/*",
+              "transitive" : true
+            }, "{projectRoot}/target/classes" ],
+            "outputs" : [ "{projectRoot}/target" ],
+            "parallelism" : true
+          },
+          "install" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn install -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "deploy" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn deploy -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
           "clean" : {
             "executor" : "nx:run-commands",
             "options" : {
               "command" : "mvn clean -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "site" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn site -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
             "cache" : false,
@@ -24,53 +106,15 @@
             },
             "cache" : false,
             "parallelism" : true
-          },
-          "compile" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn compile -pl dev.nx.maven:nx-maven-analyzer-plugin",
-              "cwd" : "{workspaceRoot}"
-            },
-            "cache" : true,
-            "inputs" : [ "{projectRoot}/pom.xml", "{projectRoot}/src/main/kotlin/**/*", "{projectRoot}/target/classes/**/*", "/home/jason/.m2/repository/org/apache/maven/maven-plugin-api/3.9.6/maven-plugin-api-3.9.6.jar", "/home/jason/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.plexus/0.9.0.M2/org.eclipse.sisu.plexus-0.9.0.M2.jar", "/home/jason/.m2/repository/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.jar", "/home/jason/.m2/repository/org/codehaus/plexus/plexus-classworlds/2.7.0/plexus-classworlds-2.7.0.jar", "/home/jason/.m2/repository/org/apache/maven/maven-core/3.9.6/maven-core-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/maven-settings/3.9.6/maven-settings-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/maven-settings-builder/3.9.6/maven-settings-builder-3.9.6.jar", "/home/jason/.m2/repository/org/codehaus/plexus/plexus-sec-dispatcher/2.0/plexus-sec-dispatcher-2.0.jar", "/home/jason/.m2/repository/org/codehaus/plexus/plexus-cipher/2.0/plexus-cipher-2.0.jar", "/home/jason/.m2/repository/org/apache/maven/maven-builder-support/3.9.6/maven-builder-support-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/maven-repository-metadata/3.9.6/maven-repository-metadata-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/maven-model-builder/3.9.6/maven-model-builder-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/maven-resolver-provider/3.9.6/maven-resolver-provider-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/resolver/maven-resolver-impl/1.9.18/maven-resolver-impl-1.9.18.jar", "/home/jason/.m2/repository/org/apache/maven/resolver/maven-resolver-named-locks/1.9.18/maven-resolver-named-locks-1.9.18.jar", "/home/jason/.m2/repository/org/apache/maven/resolver/maven-resolver-api/1.9.18/maven-resolver-api-1.9.18.jar", "/home/jason/.m2/repository/org/apache/maven/resolver/maven-resolver-spi/1.9.18/maven-resolver-spi-1.9.18.jar", "/home/jason/.m2/repository/org/apache/maven/resolver/maven-resolver-util/1.9.18/maven-resolver-util-1.9.18.jar", "/home/jason/.m2/repository/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.jar", "/home/jason/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.inject/0.9.0.M2/org.eclipse.sisu.inject-0.9.0.M2.jar", "/home/jason/.m2/repository/com/google/inject/guice/5.1.0/guice-5.1.0.jar", "/home/jason/.m2/repository/aopalliance/aopalliance/1.0/aopalliance-1.0.jar", "/home/jason/.m2/repository/com/google/guava/guava/32.0.1-jre/guava-32.0.1-jre.jar", "/home/jason/.m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar", "/home/jason/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar", "/home/jason/.m2/repository/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar", "/home/jason/.m2/repository/org/codehaus/plexus/plexus-component-annotations/2.1.0/plexus-component-annotations-2.1.0.jar", "/home/jason/.m2/repository/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar", "/home/jason/.m2/repository/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar", "/home/jason/.m2/repository/org/apache/maven/plugin-tools/maven-plugin-annotations/3.11.0/maven-plugin-annotations-3.11.0.jar", "/home/jason/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.16.1/jackson-databind-2.16.1.jar", "/home/jason/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.16.1/jackson-annotations-2.16.1.jar", "/home/jason/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1.jar", "/home/jason/.m2/repository/commons-io/commons-io/2.11.0/commons-io-2.11.0.jar", "/home/jason/.m2/repository/org/apache/maven/maven-model/3.9.6/maven-model-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/maven-project/2.2.1/maven-project-2.2.1.jar", "/home/jason/.m2/repository/org/apache/maven/maven-profile/2.2.1/maven-profile-2.2.1.jar", "/home/jason/.m2/repository/org/apache/maven/maven-artifact-manager/2.2.1/maven-artifact-manager-2.2.1.jar", "/home/jason/.m2/repository/backport-util-concurrent/backport-util-concurrent/3.1/backport-util-concurrent-3.1.jar", "/home/jason/.m2/repository/org/apache/maven/maven-plugin-registry/2.2.1/maven-plugin-registry-2.2.1.jar", "/home/jason/.m2/repository/org/codehaus/plexus/plexus-container-default/1.0-alpha-9-stable-1/plexus-container-default-1.0-alpha-9-stable-1.jar", "/home/jason/.m2/repository/junit/junit/3.8.1/junit-3.8.1.jar", "/home/jason/.m2/repository/classworlds/classworlds/1.1-alpha-2/classworlds-1.1-alpha-2.jar", "/home/jason/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.9.22/kotlin-stdlib-1.9.22.jar", "/home/jason/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar", "/home/jason/.m2/repository/org/apache/maven/maven-compat/3.9.6/maven-compat-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/wagon/wagon-provider-api/3.5.3/wagon-provider-api-3.5.3.jar", "/home/jason/.m2/repository/org/apache/maven/maven-artifact/3.9.6/maven-artifact-3.9.6.jar", "/home/jason/.m2/repository/org/apache/maven/extensions/maven-build-cache-extension/1.2.0/maven-build-cache-extension-1.2.0.jar", "/home/jason/.m2/repository/net/openhft/zero-allocation-hashing/0.16/zero-allocation-hashing-0.16.jar", "/home/jason/.m2/repository/com/github/albfernandez/juniversalchardet/2.4.0/juniversalchardet-2.4.0.jar", "/home/jason/.m2/repository/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar", "/home/jason/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar", "/home/jason/.m2/repository/org/apache/maven/wagon/wagon-webdav-jackrabbit/3.5.3/wagon-webdav-jackrabbit-3.5.3.jar", "/home/jason/.m2/repository/org/apache/maven/wagon/wagon-http-shared/3.5.3/wagon-http-shared-3.5.3.jar", "/home/jason/.m2/repository/org/apache/jackrabbit/jackrabbit-webdav/2.14.4/jackrabbit-webdav-2.14.4.jar", "/home/jason/.m2/repository/commons-codec/commons-codec/1.10/commons-codec-1.10.jar", "/home/jason/.m2/repository/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36.jar", "/home/jason/.m2/repository/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar", "/home/jason/.m2/repository/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar" ],
-            "outputs" : [ "{projectRoot}/target/classes", "{projectRoot}/target/generated-sources" ],
-            "parallelism" : true
-          },
-          "package" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn package -pl dev.nx.maven:nx-maven-analyzer-plugin",
-              "cwd" : "{workspaceRoot}"
-            },
-            "cache" : true,
-            "inputs" : [ "{projectRoot}/pom.xml", "{projectRoot}/target/classes/**/*" ],
-            "outputs" : [ "{projectRoot}/target/nx-maven-analyzer-plugin-1.0.1.jar", "{projectRoot}/target/classes", "{projectRoot}/target/maven-archiver" ],
-            "parallelism" : true
-          },
-          "install" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn install -pl dev.nx.maven:nx-maven-analyzer-plugin",
-              "cwd" : "{workspaceRoot}"
-            },
-            "cache" : false,
-            "parallelism" : false
-          },
-          "deploy" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn deploy -pl dev.nx.maven:nx-maven-analyzer-plugin",
-              "cwd" : "{workspaceRoot}"
-            },
-            "cache" : false,
-            "parallelism" : false
           }
         },
-        "tags" : [ "maven:dev.nx.maven", "maven:maven-plugin", "maven:plugin" ]
+        "tags" : [ "maven:dev.nx.maven", "maven:maven-plugin" ]
       }
     }
   } ] ],
-  "generatedAt" : 1756149870187,
+  "generatedAt" : 1756162497664,
   "workspaceRoot" : "/home/jason/projects/triage/java/maven/packages/maven/analyzer-plugin",
-  "totalProjects" : 1
+  "totalProjects" : 1,
+  "analyzedProjects" : 1,
+  "analysisMethod" : "two-tier"
 }
