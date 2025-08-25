@@ -1,6 +1,7 @@
 package dev.nx.maven
 
 import org.apache.maven.execution.MavenSession
+import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
@@ -25,6 +26,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
     @Component
     private lateinit var pluginManager: org.apache.maven.plugin.MavenPluginManager
+
+    @Component
+    private lateinit var lifecycleExecutor: LifecycleExecutor
 
     @Parameter(property = "nx.outputFile", defaultValue = "nx-maven-projects.json")
     private lateinit var outputFile: String
@@ -66,6 +70,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 singleAnalyzer.setProject(mavenProject)
                 singleAnalyzer.setSession(session)
                 singleAnalyzer.setPluginManager(pluginManager)
+                singleAnalyzer.setLifecycleExecutor(lifecycleExecutor)
                 singleAnalyzer.setWorkspaceRoot(workspaceRoot)
                 singleAnalyzer.setLog(log)
                 
