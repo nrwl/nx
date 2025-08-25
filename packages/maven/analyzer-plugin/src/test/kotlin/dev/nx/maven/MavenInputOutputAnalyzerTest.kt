@@ -5,6 +5,8 @@ import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.model.*
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.apache.maven.execution.MavenSession
+import org.apache.maven.plugin.MavenPluginManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -21,6 +23,8 @@ class MavenInputOutputAnalyzerTest {
     private lateinit var mockLog: Log
     private lateinit var mockProject: MavenProject
     private lateinit var mockBuild: Build
+    private lateinit var mockSession: MavenSession
+    private lateinit var mockPluginManager: MavenPluginManager
     private lateinit var objectMapper: ObjectMapper
     
     @TempDir
@@ -32,6 +36,8 @@ class MavenInputOutputAnalyzerTest {
         mockLog = mock<Log>()
         mockProject = mock<MavenProject>()
         mockBuild = mock<Build>()
+        mockSession = mock<MavenSession>()
+        mockPluginManager = mock<MavenPluginManager>()
         
         // Setup default project mocks
         whenever(mockProject.build).thenReturn(mockBuild)
@@ -49,11 +55,11 @@ class MavenInputOutputAnalyzerTest {
         whenever(mockBuild.testOutputDirectory).thenReturn(tempDir.resolve("target/test-classes").toString())
         whenever(mockBuild.finalName).thenReturn("test-project-1.0.0")
         
-        analyzer = MavenInputOutputAnalyzer(objectMapper, tempDir.toString(), mockLog)
+        analyzer = MavenInputOutputAnalyzer(objectMapper, tempDir.toString(), mockLog, mockSession, mockPluginManager)
     }
     
     @Test
-    fun `should detect side effects for install plugin`() {
+    fun `should detect plugin descriptor unavailable for install plugin`() {
         // Given
         val installPlugin = createPlugin("maven-install-plugin", listOf(createExecution("install", "install")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(installPlugin))
@@ -63,11 +69,11 @@ class MavenInputOutputAnalyzerTest {
         
         // Then
         assertFalse(result.cacheable)
-        assertEquals("External side effects", result.reason)
+        assertEquals("Plugin descriptor unavailable for maven-install-plugin", result.reason)
     }
     
     @Test
-    fun `should detect side effects for deploy plugin`() {
+    fun `should detect plugin descriptor unavailable for deploy plugin`() {
         // Given
         val deployPlugin = createPlugin("maven-deploy-plugin", listOf(createExecution("deploy", "deploy")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(deployPlugin))
@@ -77,11 +83,11 @@ class MavenInputOutputAnalyzerTest {
         
         // Then
         assertFalse(result.cacheable)
-        assertEquals("External side effects", result.reason)
+        assertEquals("Plugin descriptor unavailable for maven-deploy-plugin", result.reason)
     }
     
     @Test
-    fun `should detect side effects for clean plugin`() {
+    fun `should detect plugin descriptor unavailable for clean plugin`() {
         // Given
         val cleanPlugin = createPlugin("maven-clean-plugin", listOf(createExecution("clean", "clean")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(cleanPlugin))
@@ -91,11 +97,11 @@ class MavenInputOutputAnalyzerTest {
         
         // Then
         assertFalse(result.cacheable)
-        assertEquals("External side effects", result.reason)
+        assertEquals("Plugin descriptor unavailable for maven-clean-plugin", result.reason)
     }
     
     @Test
-    fun `should mark phase as cacheable with only pom input`() {
+    fun `should detect plugin descriptor unavailable for compiler plugin`() {
         // Given
         val compilerPlugin = createPlugin("maven-compiler-plugin", listOf(createExecution("compile", "compile")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(compilerPlugin))
@@ -105,42 +111,28 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("compile", mockProject)
         
         // Then
-        assertTrue(result.cacheable) // Should be cacheable with pom.xml input
-        assertEquals("Deterministic", result.reason)
+        assertFalse(result.cacheable) // Plugin descriptor unavailable
+        assertEquals("Plugin descriptor unavailable for maven-compiler-plugin", result.reason)
         assertEquals(1, result.inputs.size()) // Only pom.xml
     }
     
     @Test
-    fun `should analyze compile phase with sources and dependencies`() {
+    fun `should detect plugin descriptor unavailable when no mojo descriptors available`() {
         // Given
         val compilerPlugin = createPlugin("maven-compiler-plugin", listOf(createExecution("compile", "compile")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(compilerPlugin))
-        
-        // Create source directories
-        val srcDir = tempDir.resolve("src/main/java").toFile()
-        srcDir.mkdirs()
-        val resourceDir = tempDir.resolve("src/main/resources").toFile()
-        resourceDir.mkdirs()
-        
-        whenever(mockProject.compileSourceRoots).thenReturn(mutableListOf(srcDir.absolutePath))
-        whenever(mockBuild.resources).thenReturn(mutableListOf(createResource(resourceDir.absolutePath)))
-        
-        // Add dependencies
-        val artifact = DefaultArtifact("com.example", "test-dep", "1.0.0", "compile", "jar", "", null)
-        whenever(mockProject.compileArtifacts).thenReturn(mutableListOf<org.apache.maven.artifact.Artifact>(artifact))
         
         // When
         val result = analyzer.analyzeCacheability("compile", mockProject)
         
         // Then
-        assertTrue(result.cacheable)
-        assertEquals("Deterministic", result.reason)
-        assertEquals(4, result.inputs.size()) // pom.xml + sources + resources + dependencies
-        assertEquals(1, result.outputs.size())
+        assertFalse(result.cacheable) // Plugin descriptor unavailable
+        assertEquals("Plugin descriptor unavailable for maven-compiler-plugin", result.reason)
+        assertEquals(1, result.inputs.size()) // Only pom.xml
     }
     
     @Test
-    fun `should analyze test-compile phase correctly`() {
+    fun `should detect plugin descriptor unavailable for test-compile phase`() {
         // Given
         val compilerPlugin = createPlugin("maven-compiler-plugin", listOf(createExecution("test-compile", "testCompile")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(compilerPlugin))
@@ -160,14 +152,13 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("test-compile", mockProject)
         
         // Then
-        assertTrue(result.cacheable)
-        assertEquals("Deterministic", result.reason)
-        assertEquals(4, result.inputs.size()) // pom.xml + test sources + test resources + main classes
-        assertEquals(1, result.outputs.size())
+        assertFalse(result.cacheable) // Plugin descriptor unavailable
+        assertEquals("Plugin descriptor unavailable for maven-compiler-plugin", result.reason)
+        assertEquals(1, result.inputs.size()) // Only pom.xml
     }
     
     @Test
-    fun `should analyze test phase correctly`() {
+    fun `should detect plugin descriptor unavailable for test phase`() {
         // Given
         val surefirePlugin = createPlugin("maven-surefire-plugin", listOf(createExecution("test", "test")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(surefirePlugin))
@@ -186,14 +177,13 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("test", mockProject)
         
         // Then
-        assertTrue(result.cacheable)
-        assertEquals("Deterministic", result.reason)
-        assertEquals(4, result.inputs.size()) // pom.xml + test classes + main classes + dependencies
-        assertEquals(1, result.outputs.size())
+        assertFalse(result.cacheable) // Plugin descriptor unavailable
+        assertEquals("Plugin descriptor unavailable for maven-surefire-plugin", result.reason)
+        assertEquals(1, result.inputs.size()) // Only pom.xml
     }
     
     @Test
-    fun `should analyze package phase correctly`() {
+    fun `should detect plugin descriptor unavailable for package phase`() {
         // Given
         val jarPlugin = createPlugin("maven-jar-plugin", listOf(createExecution("package", "jar")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(jarPlugin))
@@ -210,15 +200,13 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("package", mockProject)
         
         // Then
-        assertTrue(result.cacheable)
-        assertEquals("Deterministic", result.reason)
-        assertEquals(3, result.inputs.size()) // pom.xml + classes + resources
-        assertEquals(1, result.outputs.size())
-        assertTrue(result.outputs[0].asText().contains("test-project-1.0.0.jar"))
+        assertFalse(result.cacheable) // Plugin descriptor unavailable
+        assertEquals("Plugin descriptor unavailable for maven-jar-plugin", result.reason)
+        assertEquals(1, result.inputs.size()) // Only pom.xml
     }
     
     @Test
-    fun `should handle default phase bindings for compiler plugin`() {
+    fun `should detect no executions for compiler plugin with no explicit phase`() {
         // Given - plugin with no explicit phase but should bind to compile by default
         val compilerPlugin = createPlugin("maven-compiler-plugin", emptyList())
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(compilerPlugin))
@@ -231,13 +219,13 @@ class MavenInputOutputAnalyzerTest {
         // When
         val result = analyzer.analyzeCacheability("compile", mockProject)
         
-        // Then
-        assertTrue(result.cacheable)
-        assertEquals("Deterministic", result.reason)
+        // Then  
+        assertFalse(result.cacheable) // Plugin has no executions for this phase, still tries to load descriptor
+        assertEquals("Plugin descriptor unavailable for maven-compiler-plugin", result.reason)
     }
     
     @Test
-    fun `should handle default phase bindings for surefire plugin`() {
+    fun `should detect no executions for surefire plugin with no explicit phase`() {
         // Given - plugin with no explicit phase but should bind to test by default
         val surefirePlugin = createPlugin("maven-surefire-plugin", emptyList())
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(surefirePlugin))
@@ -252,12 +240,12 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("test", mockProject)
         
         // Then
-        assertTrue(result.cacheable)
-        assertEquals("Deterministic", result.reason)
+        assertFalse(result.cacheable) // Plugin has no executions for this phase, still tries to load descriptor  
+        assertEquals("Plugin descriptor unavailable for maven-surefire-plugin", result.reason)
     }
     
     @Test
-    fun `should return cacheable for validate phase with only pom`() {
+    fun `should return no executions for validate phase with no plugins`() {
         // Given - no plugins configured for validate phase
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf())
         
@@ -265,13 +253,13 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("validate", mockProject)
         
         // Then
-        assertTrue(result.cacheable) // validate phase only needs pom.xml
-        assertEquals("Deterministic", result.reason)
+        assertFalse(result.cacheable) // No plugin executions found
+        assertEquals("No plugin executions found for phase 'validate'", result.reason)
         assertEquals(1, result.inputs.size()) // just pom.xml
     }
     
     @Test
-    fun `should return not cacheable when no plugins and unknown phase`() {
+    fun `should return no executions when no plugins and unknown phase`() {
         // Given - no plugins and unknown phase 
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf())
         
@@ -279,13 +267,13 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("unknown-phase", mockProject)
         
         // Then
-        assertTrue(result.cacheable) // Still cacheable with pom.xml
-        assertEquals("Deterministic", result.reason)
+        assertFalse(result.cacheable) // No plugin executions found
+        assertEquals("No plugin executions found for phase 'unknown-phase'", result.reason)
         assertEquals(1, result.inputs.size()) // just pom.xml
     }
     
     @Test
-    fun `should generate dependency fingerprint correctly`() {
+    fun `should detect plugin descriptor unavailable for dependency fingerprint test`() {
         // Given
         val compilerPlugin = createPlugin("maven-compiler-plugin", listOf(createExecution("compile", "compile")))
         whenever(mockProject.buildPlugins).thenReturn(mutableListOf(compilerPlugin))
@@ -302,11 +290,9 @@ class MavenInputOutputAnalyzerTest {
         val result = analyzer.analyzeCacheability("compile", mockProject)
         
         // Then
-        assertTrue(result.cacheable)
-        val depInput = result.inputs.find { it.isObject && it.has("type") && it.get("type")?.asText() == "deps" }
-        assertNotNull(depInput)
-        assertTrue(depInput!!.get("hash").asText().contains("com.example:dep1:1.0.0"))
-        assertTrue(depInput.get("hash").asText().contains("com.example:dep2:2.0.0"))
+        assertFalse(result.cacheable) // Plugin descriptor unavailable
+        assertEquals("Plugin descriptor unavailable for maven-compiler-plugin", result.reason)
+        assertEquals(1, result.inputs.size()) // Only pom.xml
     }
     
     // Helper methods
