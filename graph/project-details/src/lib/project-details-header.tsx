@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useRouteConstructor } from '@nx/graph-shared';
-import { ThemePanel } from '@nx/graph-internal-ui-theme';
+import { ThemePanel } from '@nx/graph-internal-ui-render-config';
 
 export function ProjectDetailsHeader() {
   const routeConstructor = useRouteConstructor();

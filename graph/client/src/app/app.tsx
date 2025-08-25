@@ -1,11 +1,16 @@
 import { RouterProvider } from 'react-router-dom';
 import { getRouter } from './get-router';
-import { ThemeProvider } from '@nx/graph-internal-ui-theme';
+import {
+  ThemeProvider,
+  RankDirProvider,
+} from '@nx/graph-internal-ui-render-config';
 
 export function App() {
   return (
     <ThemeProvider>
-      <RouterProvider router={getRouter()} />
+      <RankDirProvider>
+        <RouterProvider router={getRouter()} />
+      </RankDirProvider>
     </ThemeProvider>
   );
 }

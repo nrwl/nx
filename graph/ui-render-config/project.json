@@ -1,7 +1,7 @@
 {
-  "name": "ui-theme",
+  "name": "ui-render-config",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "graph/ui-theme/src",
+  "sourceRoot": "graph/ui-render-config/src",
   "projectType": "library",
   "tags": [],
   "targets": {
@@ -9,7 +9,7 @@
       "executor": "@nx/storybook:storybook",
       "options": {
         "port": 4400,
-        "configDir": "graph/ui-theme/.storybook"
+        "configDir": "graph/ui-render-config/.storybook"
       },
       "configurations": {
         "ci": {
@@ -21,8 +21,8 @@
       "executor": "@nx/storybook:build",
       "outputs": ["{options.outputDir}"],
       "options": {
-        "outputDir": "dist/storybook/ui-theme",
-        "configDir": "graph/ui-theme/.storybook"
+        "outputDir": "dist/storybook/ui-render-config",
+        "configDir": "graph/ui-render-config/.storybook"
       },
       "configurations": {
         "ci": {
