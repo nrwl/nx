@@ -37,8 +37,7 @@ class MavenInputOutputAnalyzer(
      * Analyzes the cacheability of a Maven phase for the given project
      */
     fun analyzeCacheability(phase: String, project: MavenProject): CacheabilityDecision {
-        log.debug("Analyzing phase '$phase' for project ${project.artifactId} using plugin parameter analysis")
-        log.debug("Project coordinates: ${project.groupId}:${project.artifactId}:${project.version}")
+        log.info("Analyzing phase '$phase' for project ${project.artifactId}")
         
         // Create project-specific path resolver to ensure {projectRoot} refers to project directory
         val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath)
@@ -61,9 +60,8 @@ class MavenInputOutputAnalyzer(
         val analyzed = pluginAnalyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs)
         
         if (!analyzed) {
-            log.debug("No plugin parameter analysis available for phase: $phase")
             // Fall back to preloaded analysis as backup
-            log.debug("Falling back to preloaded analysis for phase: $phase")
+            log.info("Using fallback analysis for phase: $phase")
             val preloadedAnalyzer = PreloadedPluginAnalyzer(log, session, pathResolver)
             val fallbackAnalyzed = preloadedAnalyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs)
             
@@ -72,10 +70,7 @@ class MavenInputOutputAnalyzer(
             }
         }
         
-        log.debug("Successfully analyzed phase '$phase' with ${inputs.size()} inputs and ${outputs.size()} outputs")
-        
-        // DEBUG: Log final inputs to see what's actually in the array
-        log.debug("Final inputs for ${project.artifactId}:$phase = ${inputs.toString()}")
+        log.info("Analyzed phase '$phase': ${inputs.size()} inputs, ${outputs.size()} outputs")
         
         // Use plugin-based cacheability check
         val hasSideEffects = !pluginAnalyzer.isPhaseCacheable(phase, project)
@@ -83,15 +78,12 @@ class MavenInputOutputAnalyzer(
         // Final cacheability decision
         return when {
             hasSideEffects -> {
-                log.debug("Phase '$phase' has side effects - not cacheable")
                 CacheabilityDecision(false, "Has side effects", inputs, outputs)
             }
             inputs.size() <= 1 -> {
-                log.debug("Phase '$phase' has no meaningful inputs (only dependentTasksOutputFiles) - not cacheable")
                 CacheabilityDecision(false, "No meaningful inputs", inputs, outputs)
             }
             else -> {
-                log.debug("Phase '$phase' is cacheable with ${inputs.size()} inputs and ${outputs.size()} outputs")
                 CacheabilityDecision(true, "Deterministic based on plugin parameters", inputs, outputs)
             }
         }

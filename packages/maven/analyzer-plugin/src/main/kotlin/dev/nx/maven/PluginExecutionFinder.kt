@@ -22,7 +22,6 @@ class PluginExecutionFinder(
         val executions = mutableListOf<org.apache.maven.plugin.MojoExecution>()
         
         try {
-            log.debug("Finding plugin executions for phase '$phase' in project ${project.artifactId}")
             
             // Use Maven's LifecycleExecutor to calculate what would actually run
             val originalProject = session.currentProject
@@ -34,7 +33,6 @@ class PluginExecutionFinder(
                 for (execution in executionPlan.mojoExecutions) {
                     if (execution.lifecyclePhase == phase) {
                         executions.add(execution)
-                        log.debug("Found execution: ${execution.plugin.groupId}:${execution.plugin.artifactId}:${execution.goal} in phase $phase")
                     }
                 }
                 
@@ -43,16 +41,14 @@ class PluginExecutionFinder(
             }
             
         } catch (e: Exception) {
-            log.warn("Failed to calculate execution plan for phase '$phase': ${e.message}")
+            // Failed to calculate execution plan, will use fallback
         }
         
         // If we couldn't get the execution plan, fall back to analyzing project plugins
         if (executions.isEmpty()) {
-            log.debug("No executions found via execution plan, falling back to project plugin analysis")
             executions.addAll(findExecutionsFromProjectPlugins(phase, project))
         }
         
-        log.debug("Found ${executions.size} executions for phase '$phase' in project ${project.artifactId}")
         return executions
     }
     
@@ -70,9 +66,9 @@ class PluginExecutionFinder(
                         try {
                             // Create a mock MojoExecution for analysis
                             // Note: This is a simplified approach - in real usage, we'd need proper plugin resolution
-                            log.debug("Found configured execution: ${plugin.artifactId}:$goal in phase $phase")
+                            // Found configured execution
                         } catch (e: Exception) {
-                            log.debug("Failed to create execution for ${plugin.artifactId}:$goal: ${e.message}")
+                            // Failed to create execution
                         }
                     }
                 }
@@ -81,7 +77,7 @@ class PluginExecutionFinder(
             // Check for default phase bindings
             val defaultGoals = getDefaultGoalsForPhase(plugin.artifactId, phase)
             if (defaultGoals.isNotEmpty() && plugin.executions.none { it.phase == phase }) {
-                log.debug("Found default goals for ${plugin.artifactId} in phase $phase: $defaultGoals")
+                // Found default goals for plugin
             }
         }
         
