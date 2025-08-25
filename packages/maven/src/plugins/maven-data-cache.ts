@@ -15,7 +15,11 @@ let cachedData: CacheEntry | null = null;
 /**
  * Get cached Maven analysis data or read from file if cache is stale
  */
-export function getCachedMavenData(workspaceRoot: string): MavenAnalysisData | null {
+export function getCachedMavenData(workspaceRoot: string, skipCache = false): MavenAnalysisData | null {
+  // Skip cache if requested (e.g., in verbose mode)
+  if (skipCache) {
+    return null;
+  }
   const analysisFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
   
   if (!existsSync(analysisFile)) {
