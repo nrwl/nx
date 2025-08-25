@@ -39,7 +39,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     private lateinit var lifecycleExecutor: LifecycleExecutor
 
     @Component
-    private lateinit var pluginManager: org.apache.maven.plugin.PluginManager
+    private lateinit var pluginManager: org.apache.maven.plugin.MavenPluginManager
 
     @Parameter(property = "nx.outputFile", defaultValue = "nx-maven-projects.json")
     private lateinit var outputFile: String
