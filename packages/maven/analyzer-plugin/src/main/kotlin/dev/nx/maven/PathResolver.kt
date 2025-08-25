@@ -7,7 +7,8 @@ import java.io.File
  * Handles path resolution and input/output path formatting for Nx
  */
 class PathResolver(
-    private val workspaceRoot: String
+    private val workspaceRoot: String,
+    private val projectBaseDir: String? = null
 ) {
     
     /**
@@ -90,9 +91,17 @@ class PathResolver(
      * Converts an absolute path to a project-relative path using Nx token format
      */
     fun toProjectPath(path: String): String = try {
-        val workspaceRootPath = java.nio.file.Paths.get(workspaceRoot)
         val filePath = java.nio.file.Paths.get(path)
-        val relativePath = workspaceRootPath.relativize(filePath)
+        
+        // If we have a project base directory, make paths relative to the project root
+        // This ensures {projectRoot} refers to the individual project's directory, not workspace root
+        val baseDirPath = if (projectBaseDir != null) {
+            java.nio.file.Paths.get(projectBaseDir)
+        } else {
+            java.nio.file.Paths.get(workspaceRoot)
+        }
+        
+        val relativePath = baseDirPath.relativize(filePath)
         "{projectRoot}/$relativePath".replace("\\", "/")
     } catch (e: Exception) {
         "{projectRoot}/$path"
