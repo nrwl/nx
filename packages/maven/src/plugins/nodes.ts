@@ -29,8 +29,8 @@ export const createNodesV2: CreateNodesV2 = [
     }
 
     try {
-      // Try to get cached data first
-      let mavenData = getCachedMavenData(context.workspaceRoot);
+      // Try to get cached data first (skip cache if in verbose mode)
+      let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
       
       // If no cached data or cache is stale, run fresh Maven analysis
       if (!mavenData) {
