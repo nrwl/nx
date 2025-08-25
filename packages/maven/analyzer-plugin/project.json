@@ -24,6 +24,13 @@
         "command": "mvn test",
         "cwd": "packages/maven/analyzer-plugin"
       }
+    },
+    "sync-maven-version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "VERSION=$(jq -r '.version' packages/maven/analyzer-plugin/package.json) && mvn versions:set -DnewVersion=$VERSION -f packages/maven/analyzer-plugin/pom.xml && mvn versions:commit -f packages/maven/analyzer-plugin/pom.xml",
+        "forwardAllArgs": false
+      }
     }
   },
   "tags": ["maven", "plugin"]
