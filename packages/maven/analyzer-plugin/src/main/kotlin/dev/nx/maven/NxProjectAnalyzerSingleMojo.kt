@@ -3,6 +3,7 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.execution.MavenSession
+import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
@@ -17,7 +18,6 @@ import java.nio.file.Paths
  */
 @Mojo(
     name = "analyze-project",
-    defaultPhase = LifecyclePhase.VALIDATE,
     aggregator = false,
     requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
 )
@@ -31,6 +31,9 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
 
     @Component
     private lateinit var pluginManager: org.apache.maven.plugin.MavenPluginManager
+
+    @Component
+    private lateinit var lifecycleExecutor: LifecycleExecutor
 
     @Parameter(property = "nx.outputFile")
     private var outputFile: String? = null
@@ -51,6 +54,10 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
     
     fun setPluginManager(pluginManager: org.apache.maven.plugin.MavenPluginManager) {
         this.pluginManager = pluginManager
+    }
+    
+    fun setLifecycleExecutor(lifecycleExecutor: LifecycleExecutor) {
+        this.lifecycleExecutor = lifecycleExecutor
     }
     
     fun setWorkspaceRoot(workspaceRoot: String) {
@@ -156,19 +163,47 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
             objectMapper, workspaceRoot, log, session, pluginManager
         )
         
-        // Analyze common phases
+        // Dynamically discover available phases using Maven's lifecycle APIs
         val phases = objectMapper.createObjectNode()
-        listOf("compile", "test-compile", "test", "package").forEach { phase ->
+        val lifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log)
+        val lifecycleData = lifecycleAnalyzer.extractLifecycleData(mavenProject)
+        
+        // Extract discovered phases from lifecycle analysis
+        val discoveredPhases = mutableSetOf<String>()
+        lifecycleData.get("phases")?.forEach { phaseNode ->
+            discoveredPhases.add(phaseNode.asText())
+        }
+        lifecycleData.get("commonPhases")?.forEach { phaseNode ->
+            discoveredPhases.add(phaseNode.asText())
+        }
+        
+        // If no phases discovered, fall back to essential phases
+        val phasesToAnalyze = if (discoveredPhases.isNotEmpty()) {
+            discoveredPhases.toList()
+        } else {
+            listOf("validate", "compile", "test-compile", "test", "package", "clean")
+        }
+        
+        log.info("Analyzing ${phasesToAnalyze.size} phases for ${mavenProject.artifactId}: ${phasesToAnalyze.joinToString(", ")}")
+        
+        phasesToAnalyze.forEach { phase ->
             try {
                 val analysis = inputOutputAnalyzer.analyzeCacheability(phase, mavenProject)
+                val phaseNode = objectMapper.createObjectNode()
+                phaseNode.put("cacheable", analysis.cacheable)
+                phaseNode.put("reason", analysis.reason)
+                
                 if (analysis.cacheable) {
-                    val phaseNode = objectMapper.createObjectNode()
-                    phaseNode.put("cacheable", analysis.cacheable)
-                    phaseNode.put("reason", analysis.reason)
                     phaseNode.put("inputs", analysis.inputs)
                     phaseNode.put("outputs", analysis.outputs)
-                    phases.put(phase, phaseNode)
+                } else {
+                    // For non-cacheable phases, still include them as targets but mark as non-cacheable
+                    log.debug("Phase '$phase' is not cacheable: ${analysis.reason}")
                 }
+                
+                // Always include the phase, regardless of cacheability
+                phases.put(phase, phaseNode)
+                
             } catch (e: Exception) {
                 log.debug("Failed to analyze phase '$phase' for project ${mavenProject.artifactId}: ${e.message}")
             }
