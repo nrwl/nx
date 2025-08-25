@@ -45,6 +45,12 @@ class MavenInputOutputAnalyzer(
         // Always include POM as input
         inputs.add("{projectRoot}/pom.xml")
         
+        // Add dependentTasksOutputFiles to automatically include outputs from dependsOn tasks as inputs
+        val dependentTasksOutputFiles = objectMapper.createObjectNode()
+        dependentTasksOutputFiles.put("dependentTasksOutputFiles", "**/*")
+        dependentTasksOutputFiles.put("transitive", true)
+        inputs.add(dependentTasksOutputFiles)
+        
         // Use Maven's preloaded data directly - much simpler and more reliable!
         val analyzed = preloadedAnalyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs)
         
@@ -54,6 +60,9 @@ class MavenInputOutputAnalyzer(
         }
         
         log.info("Successfully analyzed phase '$phase' with ${inputs.size()} inputs and ${outputs.size()} outputs")
+        
+        // DEBUG: Log final inputs to see what's actually in the array
+        log.info("Final inputs for ${project.artifactId}:$phase = ${inputs.toString()}")
         
         // Check for side effects based on phase
         val hasSideEffects = when (phase) {
