@@ -27,7 +27,7 @@ class MavenLifecycleAnalyzer(
                 try {
                     lifecycleExecutor.calculateExecutionPlan(session, phase)
                 } catch (e: Exception) {
-                    log.debug("Could not calculate execution plan for phase: $phase", e)
+                    // Could not calculate execution plan for phase
                     null
                 }
             }
