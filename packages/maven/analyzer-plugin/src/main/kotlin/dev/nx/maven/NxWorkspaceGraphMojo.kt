@@ -192,6 +192,13 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                 }
             }
             
+            // Remove test-related targets if project has no tests
+            val hasTests = analysis.get("hasTests")?.asBoolean() ?: false
+            if (!hasTests) {
+                targets.remove("test")
+                targets.remove("test-compile")
+            }
+            
             // Add clean target (always uncached)
             val cleanTarget = objectMapper.createObjectNode()
             cleanTarget.put("executor", "nx:run-commands")
