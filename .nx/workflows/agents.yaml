@@ -17,7 +17,7 @@ launch-templates:
       - name: Install Node
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
         inputs:
-          node_version: '24.3'
+          node_version: '24.6'
 
       - name: Check Node Version
         script: node --version
@@ -107,7 +107,7 @@ launch-templates:
       - name: Install Node
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
         inputs:
-          node_version: '24.3'
+          node_version: '24.6'
 
       - name: Check Node Version
         script: node --version

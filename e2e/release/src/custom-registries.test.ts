@@ -29,7 +29,6 @@ describe('nx release - custom npm registries', () => {
     });
   }, 60000);
   afterAll(() => {
-    cleanupProject();
     process.env.SELECTED_PM = previousPackageManager;
   });
 
@@ -52,6 +51,19 @@ describe('nx release - custom npm registries', () => {
       // Instead, we'll just assert that the e2e registry is used anytime we expect the default registry
     ];
     createFile('.npmrc', npmrcEntries.join('\n'));
+
+    // Node 24 / NPM 11 needs these to work
+    [
+      e2eRegistryUrl.split(':').slice(1).join(':'),
+      '//publish-config-registry.com',
+      '//default-override-registy.com',
+      '//scope-override-registry.com',
+      '//scope-override-arg-registry.com',
+      '//default-override-arg-registry.com',
+      '//ignored-registry.com',
+    ].forEach((r) => {
+      execSync(`npm config set ${r}/:_authToken "example-token"`);
+    });
 
     const scopedWithPublishConfig = newPackage('pkg-scoped-publish-config', {
       scoped: true,
@@ -339,7 +351,7 @@ describe('nx release - custom npm registries', () => {
         )
       ).length
     ).toBe(1);
-  }, 600000);
+  }, 600_000);
 
   function newPackage(
     name: string,
