@@ -8,10 +8,20 @@ import { MavenPluginOptions, MavenAnalysisData } from './types';
  * Detect Maven wrapper in workspace root, fallback to 'mvn'
  */
 function detectMavenWrapper(): string {
+  console.log(`[Maven Analyzer] Detecting Maven wrapper in workspace: ${workspaceRoot}`);
+  
   if (process.platform === 'win32') {
-    return existsSync(join(workspaceRoot, 'mvnw.cmd')) ? 'mvnw.cmd' : 'mvn';
+    const wrapperPath = join(workspaceRoot, 'mvnw.cmd');
+    const hasWrapper = existsSync(wrapperPath);
+    const executable = hasWrapper ? 'mvnw.cmd' : 'mvn';
+    console.log(`[Maven Analyzer] Platform: Windows, wrapper exists: ${hasWrapper}, using: ${executable}`);
+    return executable;
   } else {
-    return existsSync(join(workspaceRoot, 'mvnw')) ? './mvnw' : 'mvn';
+    const wrapperPath = join(workspaceRoot, 'mvnw');
+    const hasWrapper = existsSync(wrapperPath);
+    const executable = hasWrapper ? './mvnw' : 'mvn';
+    console.log(`[Maven Analyzer] Platform: Unix, wrapper exists: ${hasWrapper}, using: ${executable}`);
+    return executable;
   }
 }
 
@@ -19,8 +29,14 @@ function detectMavenWrapper(): string {
  * Run Maven analysis using our Kotlin analyzer plugin
  */
 export async function runMavenAnalysis(options: MavenPluginOptions): Promise<MavenAnalysisData> {
+  console.log(`[Maven Analyzer] Starting analysis with options:`, options);
+  
   const outputFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
   const isVerbose = options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
+  
+  console.log(`[Maven Analyzer] Output file: ${outputFile}`);
+  console.log(`[Maven Analyzer] Verbose mode: ${isVerbose}`);
+  console.log(`[Maven Analyzer] Workspace data directory: ${workspaceDataDirectory}`);
 
   // Detect Maven wrapper or fallback to 'mvn'
   const mavenExecutable = detectMavenWrapper();
@@ -36,17 +52,23 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
     mavenArgs.push('-q');
   }
 
+  console.log(`[Maven Analyzer] Maven command: ${mavenExecutable} ${mavenArgs.join(' ')}`);
+  console.log(`[Maven Analyzer] Working directory: ${workspaceRoot}`);
+
   // Debug logging for verbose mode
   if (isVerbose) {
     console.error(`Running Maven analyzer with verbose logging: ${mavenExecutable} ${mavenArgs.join(' ')}`);
   }
 
   // Run Maven plugin
+  console.log(`[Maven Analyzer] Spawning Maven process...`);
   await new Promise<void>((resolve, reject) => {
     const child = spawn(mavenExecutable, mavenArgs, {
       cwd: workspaceRoot,
       stdio: 'pipe' // Always use pipe so we can control output
     });
+
+    console.log(`[Maven Analyzer] Process spawned with PID: ${child.pid}`);
 
     let stdout = '';
     let stderr = '';
@@ -65,35 +87,56 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
       });
     } else {
       child.stdout?.on('data', (data) => {
-        stdout += data.toString();
+        const text = data.toString();
+        stdout += text;
+        console.log(`[Maven Analyzer] Stdout chunk: ${text.trim()}`);
       });
       child.stderr?.on('data', (data) => {
-        stderr += data.toString();
+        const text = data.toString();
+        stderr += text;
+        console.log(`[Maven Analyzer] Stderr chunk: ${text.trim()}`);
       });
     }
 
     child.on('close', (code) => {
+      console.log(`[Maven Analyzer] Process closed with code: ${code}`);
       if (code === 0) {
+        console.log(`[Maven Analyzer] Maven analysis completed successfully`);
         resolve();
       } else {
         let errorMsg = `Maven analysis failed with code ${code}`;
         if (stderr) errorMsg += `\nStderr: ${stderr}`;
         if (stdout && !isVerbose) errorMsg += `\nStdout: ${stdout}`;
+        console.error(`[Maven Analyzer] Error: ${errorMsg}`);
         reject(new Error(errorMsg));
       }
     });
 
     child.on('error', (error) => {
+      console.error(`[Maven Analyzer] Process error: ${error.message}`);
       reject(new Error(`Failed to spawn Maven process: ${error.message}`));
     });
   });
 
   // Read and parse the JSON output
+  console.log(`[Maven Analyzer] Checking for output file: ${outputFile}`);
   if (!existsSync(outputFile)) {
+    console.error(`[Maven Analyzer] Output file not found: ${outputFile}`);
     throw new Error(`Maven analysis output file not found: ${outputFile}`);
   }
 
+  console.log(`[Maven Analyzer] Reading output file...`);
   const jsonContent = readFileSync(outputFile, 'utf8');
-  return JSON.parse(jsonContent) as MavenAnalysisData;
+  console.log(`[Maven Analyzer] Output file size: ${jsonContent.length} characters`);
+  
+  try {
+    const result = JSON.parse(jsonContent) as MavenAnalysisData;
+    console.log(`[Maven Analyzer] Successfully parsed analysis data with ${Object.keys(result).length} top-level keys`);
+    return result;
+  } catch (error) {
+    console.error(`[Maven Analyzer] Failed to parse JSON: ${error.message}`);
+    console.error(`[Maven Analyzer] JSON content preview: ${jsonContent.substring(0, 200)}...`);
+    throw error;
+  }
 }
 

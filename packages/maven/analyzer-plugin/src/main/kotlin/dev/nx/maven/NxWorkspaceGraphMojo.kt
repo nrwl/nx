@@ -69,16 +69,29 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                 
                 // Try to load individual project analysis
                 val analysisFile = File(mavenProject.build.directory, "nx-project-analysis.json")
+                log.debug("Looking for Maven analysis data for project '$projectName' at: ${analysisFile.absolutePath}")
+                
                 if (analysisFile.exists()) {
                     try {
                         val analysis = objectMapper.readTree(analysisFile)
                         projectAnalyses[projectName] = analysis
-                        log.debug("Loaded analysis for project: $projectName")
+                        log.debug("✅ Successfully loaded analysis for project '$projectName' from: ${analysisFile.absolutePath}")
+                        log.debug("   - Analysis contains phases: ${analysis.get("phases")?.fieldNames()?.asSequence()?.toList()}")
+                        log.debug("   - File size: ${analysisFile.length()} bytes, last modified: ${java.util.Date(analysisFile.lastModified())}")
                     } catch (e: Exception) {
-                        log.warn("Failed to load analysis for project $projectName: ${e.message}")
+                        log.warn("❌ Failed to parse analysis file for project '$projectName' at ${analysisFile.absolutePath}: ${e.message}")
                     }
                 } else {
-                    log.warn("No analysis file found for project $projectName at ${analysisFile.absolutePath}")
+                    log.debug("❌ No analysis file found for project '$projectName' at ${analysisFile.absolutePath}")
+                    log.debug("   - Project build directory: ${mavenProject.build.directory}")
+                    log.debug("   - Build directory exists: ${File(mavenProject.build.directory).exists()}")
+                    
+                    // List files in build directory for debugging
+                    val buildDir = File(mavenProject.build.directory)
+                    if (buildDir.exists()) {
+                        val files = buildDir.listFiles()?.map { it.name }?.sorted() ?: emptyList()
+                        log.debug("   - Files in build directory: $files")
+                    }
                 }
             }
             
@@ -112,6 +125,12 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             rootNode.put("analyzedProjects", projectAnalyses.size)
             rootNode.put("analysisMethod", "two-tier")
             
+            log.debug("📊 Workspace graph generation summary:")
+            log.debug("   - Total Maven projects found: ${allProjects.size}")
+            log.debug("   - Successfully loaded analyses: ${projectAnalyses.size}")
+            log.debug("   - Generated Nx configurations: ${createNodesResults.size()}")
+            log.debug("   - Workspace root: $workspaceRoot")
+            
             // Write workspace graph
             val outputPath = if (outputFile.startsWith("/")) {
                 File(outputFile)
@@ -119,7 +138,9 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                 File(workspaceRoot, outputFile)
             }
             
+            log.debug("📝 Writing consolidated workspace graph to: ${outputPath.absolutePath}")
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath, rootNode)
+            log.debug("   - Output file size: ${outputPath.length()} bytes")
             
             log.info("Generated workspace graph: ${outputPath.absolutePath}")
             log.info("Merged ${projectAnalyses.size}/${allProjects.size} project analyses")
