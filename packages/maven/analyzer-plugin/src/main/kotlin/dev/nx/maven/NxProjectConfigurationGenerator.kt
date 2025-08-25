@@ -20,10 +20,10 @@ class NxProjectConfigurationGenerator(
     private val log: Log,
     private val session: MavenSession,
     private val lifecycleExecutor: LifecycleExecutor,
-    private val pluginManager: org.apache.maven.plugin.PluginManager
+    private val pluginManager: org.apache.maven.plugin.MavenPluginManager
 ) {
     
-    private val inputOutputAnalyzer = MavenInputOutputAnalyzer(objectMapper, workspaceRoot, log)
+    private val inputOutputAnalyzer = MavenInputOutputAnalyzer(objectMapper, workspaceRoot, log, session, pluginManager)
     
     fun generateNxProjectConfiguration(
         mavenProject: MavenProject,
