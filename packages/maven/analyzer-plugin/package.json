@@ -1,0 +1,19 @@
+{
+  "name": "nx-maven-analyzer-plugin",
+  "version": "1.0.0",
+  "description": "Maven plugin to analyze project structure for Nx integration",
+  "private": true,
+  "scripts": {
+    "build": "mvn clean package",
+    "install": "mvn clean install",
+    "test": "mvn test"
+  },
+  "keywords": [
+    "nx",
+    "maven",
+    "plugin",
+    "java",
+    "analyzer"
+  ],
+  "license": "MIT"
+}
