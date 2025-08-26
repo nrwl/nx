@@ -5,24 +5,29 @@ import { workspaceRoot } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenPluginOptions, MavenAnalysisData } from './types';
 /**
- * Detect Maven wrapper in workspace root, fallback to 'mvn'
+ * Detect Maven executable: mvnw > mvn
  */
-function detectMavenWrapper(): string {
-  console.log(`[Maven Analyzer] Detecting Maven wrapper in workspace: ${workspaceRoot}`);
+function detectMavenExecutable(): string {
+  console.log(`[Maven Analyzer] Detecting Maven executable in workspace: ${workspaceRoot}`);
   
+  // First priority: Check for Maven wrapper
   if (process.platform === 'win32') {
     const wrapperPath = join(workspaceRoot, 'mvnw.cmd');
-    const hasWrapper = existsSync(wrapperPath);
-    const executable = hasWrapper ? 'mvnw.cmd' : 'mvn';
-    console.log(`[Maven Analyzer] Platform: Windows, wrapper exists: ${hasWrapper}, using: ${executable}`);
-    return executable;
+    if (existsSync(wrapperPath)) {
+      console.log(`[Maven Analyzer] Found Maven wrapper, using: mvnw.cmd`);
+      return 'mvnw.cmd';
+    }
   } else {
     const wrapperPath = join(workspaceRoot, 'mvnw');
-    const hasWrapper = existsSync(wrapperPath);
-    const executable = hasWrapper ? './mvnw' : 'mvn';
-    console.log(`[Maven Analyzer] Platform: Unix, wrapper exists: ${hasWrapper}, using: ${executable}`);
-    return executable;
+    if (existsSync(wrapperPath)) {
+      console.log(`[Maven Analyzer] Found Maven wrapper, using: ./mvnw`);
+      return './mvnw';
+    }
   }
+  
+  // Fallback: Use regular Maven
+  console.log(`[Maven Analyzer] Using fallback: mvn`);
+  return 'mvn';
 }
 
 /**
@@ -38,8 +43,8 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
   console.log(`[Maven Analyzer] Verbose mode: ${isVerbose}`);
   console.log(`[Maven Analyzer] Workspace data directory: ${workspaceDataDirectory}`);
 
-  // Detect Maven wrapper or fallback to 'mvn'
-  const mavenExecutable = detectMavenWrapper();
+  // Detect Maven executable (mvnw > mvn)
+  const mavenExecutable = detectMavenExecutable();
   
   const mavenArgs = [
     'dev.nx.maven:nx-maven-analyzer-plugin:0.0.1-SNAPSHOT:analyze',

@@ -137,9 +137,9 @@ class PluginBasedAnalyzer(
             
             if (executions.isEmpty()) {
                 return CacheabilityAssessment(
-                    cacheable = false,
-                    reason = "No plugin executions found for phase '$phase'",
-                    details = listOf("Cannot determine inputs/outputs without plugin executions")
+                    cacheable = true,
+                    reason = "No plugin executions to analyze - phase is safe to cache",
+                    details = listOf("Phase '$phase' has no plugin executions, making it inherently cacheable")
                 )
             }
             
