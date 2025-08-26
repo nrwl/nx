@@ -16,7 +16,7 @@ sidebar:
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/jest` by running the following command:
@@ -56,11 +56,11 @@ within the same workspace. In this case, you can configure the `@nx/jest/plugin`
 }
 ```
 
-If you experience slowness from `@nx/jest/plugin`, then set `disableJestRuntime` to `true` to skip creating the Jest runtime. By disabling the Jest runtime, Nx will use its own utilities to find `inputs`, `outputs`, and test files for [Atomized targets](/ci/features/split-e2e-tasks). This can reduce computation time by as much as 80%.
+If you experience slowness from `@nx/jest/plugin`, then set `disableJestRuntime` to `true` to skip creating the Jest runtime. By disabling the Jest runtime, Nx will use its own utilities to find `inputs`, `outputs`, and test files for [Atomized targets](/docs/features/ci-features/split-e2e-tasks). This can reduce computation time by as much as 80%.
 
 ### Splitting E2E Tests
 
-If Jest is used to run E2E tests, you can enable [splitting the tasks](/ci/features/split-e2e-tasks) by file to get
+If Jest is used to run E2E tests, you can enable [splitting the tasks](/docs/features/ci-features/split-e2e-tasks) by file to get
 improved caching, distribution, and retrying flaky tests. Enable this Atomizer feature by providing a `ciTargetName`. This will create a
 target with that name which can be used in CI to run the tests for each file in a distributed fashion.
 
@@ -105,7 +105,7 @@ You can customize that name by explicitly providing the optional `ciGroupName` p
 ### How @nx/jest Infers Tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/jest` plugin will create a task for any project that has an Jest configuration file present. Any of the following files will be recognized as an Jest configuration file:
@@ -119,7 +119,7 @@ The `@nx/jest` plugin will create a task for any project that has an Jest config
 
 ### View Inferred Tasks
 
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/jest Configuration
 
@@ -275,15 +275,15 @@ export default {
 
 ### Nx
 
-The Nx task options can be configured via the [project config file](/reference/project-configuration) or via the command line flags.
+The Nx task options can be configured via the [project config file](/docs/reference/project-configuration) or via the command line flags.
 
-If you're using [inferred tasks](/concepts/inferred-tasks), or running Jest directly with the `nx:run-commands` executor, you can [provide the Jest args](/recipes/running-tasks/pass-args-to-commands) for the command you're running.
+If you're using [inferred tasks](/docs/concepts/inferred-tasks), or running Jest directly with the `nx:run-commands` executor, you can [provide the Jest args](/docs/guides/tasks--caching/pass-args-to-commands) for the command you're running.
 
-If you're using the `@nx/jest:jest` executor, you can provide [the options the executor accepts](/technologies/test-tools/jest/api/executors/jest#options).
+If you're using the `@nx/jest:jest` executor, you can provide [the options the executor accepts](/docs/technologies/test-tools/jest/executors#jest).
 
 ### Code Coverage
 
-Enable code coverage with the `--coverage` flag or by adding it to the executor options in the [project configuration file](/reference/project-configuration).
+Enable code coverage with the `--coverage` flag or by adding it to the executor options in the [project configuration file](/docs/reference/project-configuration).
 
 By default, coverage reports will be generated in the `coverage/` directory under projects name. i.e. `coverage/apps/frontend`. Modify this directory with the `--coverageDirectory` flag. Coverage reporters can also be customized with the `--coverageReporters` flag.
 

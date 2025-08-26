@@ -38,7 +38,7 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
           </div>
 
           <div class="flex flex-wrap align-center justify-between gap-1 font-medium capitalize text-center">
-            <a href={`/api/plugins/${plugin.data.pluginName}`} >
+            <a href={`/docs/${plugin.data.slug}`} >
               View Plugin
             </a>
 

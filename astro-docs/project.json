@@ -1,7 +1,8 @@
 {
   "name": "astro-docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
   "targets": {
-    "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
     "serve": {
       "continuous": true,
       "dependsOn": [
@@ -42,6 +43,25 @@
     },
     "astro": {
       "command": "astro",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "test": {
+      "dependsOn": ["validate-links"],
+      "command": "echo done"
+    },
+    "validate-links": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/astro.config.mjs",
+        "{projectRoot}/sidebar.mts",
+        "{projectRoot}/markdoc.config.mjs",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/package.json"
+      ],
+      "command": "npx tsx validate-links.ts",
       "options": {
         "cwd": "astro-docs"
       }

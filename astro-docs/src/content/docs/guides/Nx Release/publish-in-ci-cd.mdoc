@@ -231,12 +231,12 @@ Docker support in Nx is currently experimental and may undergo breaking changes 
 {% aside type="note" title="Nx Cloud Agents Compatibility" %}
 Docker operations in `nx release` are currently supported in standard CI/CD environments like GitHub Actions, GitLab CI, and Jenkins.
 
-For Nx Cloud Agents compatibility, please contact [Nx Enterprise support](/contact/sales) to explore available options for your team.
+For Nx Cloud Agents compatibility, please contact [Nx Enterprise support](https://nx.dev/contact/sales) to explore available options for your team.
 {% /aside %}
 
 When using Nx Release with Docker images, the publishing process differs from npm packages.
 
-Docker images are built with the `npx nx run-many -t docker:build` command, which is the default for [`preVersionCommand`](/recipes/nx-release/build-before-versioning#build-before-docker-versioning) in `nx.json`.
+Docker images are built with the `npx nx run-many -t docker:build` command, which is the default for [`preVersionCommand`](/docs/guides/nx-release/build-before-versioning#build-before-docker-versioning) in `nx.json`.
 
 You may also run the build command manually before running `nx release`. After the images are built, they are tagged during the versioning phase, then pushed to a registry during the publish phase.
 

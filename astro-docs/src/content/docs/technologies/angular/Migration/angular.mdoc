@@ -117,10 +117,10 @@ Your workspace is now powered by Nx! You can verify that your application still 
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+- Nx reduces wasted time in CI with the [`affected` command](/docs/features/ci-features/affected).
+- Nx Replay's [remote caching](/docs/features/ci-features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+- Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Atomizer [automatically splits](/docs/features/ci-features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/features/ci-features/flaky-tasks).
 
 ### Connect to Nx Cloud
 
@@ -212,24 +212,18 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Run details](../../../../../assets/tutorials/nx-cloud-run-details.avif)
 
-For more information about how Nx can improve your CI pipeline, check out one of these guides:
-
-- [GitHub Actions with Nx](/ci/recipes/set-up/monorepo-ci-github-actions)
-- [Circle CI with Nx](/ci/recipes/set-up/monorepo-ci-circle-ci)
-- [Azure Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-azure)
-- [Bitbucket Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
-- [GitLab with Nx](/ci/recipes/set-up/monorepo-ci-gitlab)
+For more information about how Nx can improve your CI pipeline, [check out our details CI guides](/docs/guides/nx-cloud/setup-ci).
 
 ## Learn More
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/technologies/test-tools/cypress/introduction)
-- [Using Jest for unit tests](/technologies/test-tools/jest/introduction)
-- [Computation Caching](/concepts/how-caching-works)
-- [Rebuilding and Retesting What is Affected](/ci/features/affected)
-- [Integrate with Editors](/getting-started/editor-setup)
-- [Advanced Angular Micro Frontends with Dynamic Module Federation](/technologies/angular/guides/dynamic-module-federation-with-angular)
+- [Using Cypress for e2e tests](/docs/technologies/test-tools/cypress/introduction)
+- [Using Jest for unit tests](/docs/technologies/test-tools/jest/introduction)
+- [Computation Caching](/docs/concepts/how-caching-works)
+- [Rebuilding and Retesting What is Affected](/docs/features/ci-features/affected)
+- [Integrate with Editors](/docs/getting-started/editor-setup)
+- [Advanced Angular Micro Frontends with Dynamic Module Federation](/docs/technologies/angular/guides/dynamic-module-federation-with-angular)
 
 ## From Nx Console
 
@@ -244,8 +238,8 @@ Once the script has run, commit the changes. Reverting this commit will effectiv
 
 {% cardgrid %} 
 
-{% linkcard title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" href="/technologies/angular/guides/nx-and-angular" /%}
+{% linkcard title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" href="/docs/technologies/angular/guides/nx-and-angular" /%}
 
-{% linkcard title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" href="technologies/angular/migration/angular-multiple" /%}
+{% linkcard title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" href="/docs/technologies/angular/migration/angular-multiple" /%}
 
 {% /cardgrid %}

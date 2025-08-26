@@ -8,7 +8,7 @@ sidebar:
 
 {% aside type="note" title="Automatically import with 'nx import'" %}
 
-In Nx 19.8 we introduced `nx import` which helps you import projects into your Nx workspace, including preserving the Git history. [Read more in the according doc](/recipes/adopting-nx/import-project).
+In Nx 19.8 we introduced `nx import` which helps you import projects into your Nx workspace, including preserving the Git history. [Read more in the according doc](/docs/guides/adopting-nx/import-project).
 
 {% /aside %}
 
@@ -22,7 +22,7 @@ Git has some helpful tools for this, and we'll walk through some of the common p
 
 To merge in another project, we'll essentially use the standard `git merge` command, but with a few lesser known options/caveats.
 
-If your standalone project was not an Nx workspace, it's likely that your migration work will also entail moving directories to match a typical Nx Workspace structure. You can find more information in the [Manual migration](/recipes/adopting-nx/manual) page, but when migrating an existing project, you'll want to ensure that you use [`git mv`](https://git-scm.com/docs/git-mv) when moving a file or directory to ensure that file history from the old standalone repo is not lost!
+If your standalone project was not an Nx workspace, it's likely that your migration work will also entail moving directories to match a typical Nx Workspace structure. You can find more information in the [Manual migration](/docs/guides/adopting-nx/manual) page, but when migrating an existing project, you'll want to ensure that you use [`git mv`](https://git-scm.com/docs/git-mv) when moving a file or directory to ensure that file history from the old standalone repo is not lost!
 
 In order to avoid merge conflicts later, it's best to first do the folder reorganization in the _standalone project repo_. For example, assuming you want the standalone app to end up at `apps/my-standalone-app` in the monorepo and your main branch is called `master`:
 

@@ -60,7 +60,8 @@ const processedPages = sortedPages.map(page => {
   return {
     title,
     description: page.data.description || '',
-    href
+    // all routes are prefixed with /docs
+    href:  href.startsWith('/') ? `/docs${href}` : `/docs/${href}`
   };
 }).filter(page => page.href !== '#'); // Filter out any pages with invalid hrefs
 ---

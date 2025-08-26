@@ -6,7 +6,7 @@ sidebar:
   order: 1
 ---
 
-The tasks that are [inferred by plugins](/concepts/inferred-tasks) or that you define in your [project configuration](/reference/project-configuration) can have any name that you want, but it is helpful for developers if you keep your task naming convention consistent across the projects in your repository. This way, if a developer moves from one project to another, they already know how to launch tasks for the new project. Here are some common task names that you can define for your projects.
+The tasks that are [inferred by plugins](/docs/concepts/inferred-tasks) or that you define in your [project configuration](/docs/reference/project-configuration) can have any name that you want, but it is helpful for developers if you keep your task naming convention consistent across the projects in your repository. This way, if a developer moves from one project to another, they already know how to launch tasks for the new project. Here are some common task names that you can define for your projects.
 
 ## `build`
 
@@ -22,12 +22,12 @@ This task should produce the compiled output of this project. Typically, you'll 
 }
 ```
 
-The task might use the [@nx/vite](/technologies/build-tools/vite/introduction), [@nx/webpack](/technologies/build-tools/webpack/introduction) or [@nx/rspack](/technologies/build-tools/rspack/introduction) plugins. Or you could have the task launch your own custom script.
+The task might use the [@nx/vite](/docs/technologies/build-tools/vite/introduction), [@nx/webpack](/docs/technologies/build-tools/webpack/introduction) or [@nx/rspack](/docs/technologies/build-tools/rspack/introduction) plugins. Or you could have the task launch your own custom script.
 
 {% tabs %}
 {% tabitem label="Vite" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `build` task for every project that has a Vite configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `build` task for every project that has a Vite configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -42,12 +42,12 @@ Set up an [inferred](/concepts/inferred-tasks) `build` task for every project th
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="Webpack" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `build` task for every project that has a Webpack configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `build` task for every project that has a Webpack configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -62,12 +62,12 @@ Set up an [inferred](/concepts/inferred-tasks) `build` task for every project th
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="rspack" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `build` task for every project that has an rspack configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `build` task for every project that has an rspack configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -82,7 +82,7 @@ Set up an [inferred](/concepts/inferred-tasks) `build` task for every project th
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="Custom Script" %}
@@ -102,12 +102,12 @@ You can define your own `build` task in your project configuration. Here is an e
 
 ## `serve`
 
-This task should run your project in a developer preview mode. The task might use the [@nx/vite](/technologies/build-tools/vite/introduction), [@nx/webpack](/technologies/build-tools/webpack/introduction) or [@nx/rspack](/technologies/build-tools/rspack/introduction) plugins. Or you could have the task launch your own custom script.
+This task should run your project in a developer preview mode. The task might use the [@nx/vite](/docs/technologies/build-tools/vite/introduction), [@nx/webpack](/docs/technologies/build-tools/webpack/introduction) or [@nx/rspack](/docs/technologies/build-tools/rspack/introduction) plugins. Or you could have the task launch your own custom script.
 
 {% tabs %}
 {% tabitem label="Vite" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `serve` task for every project that has a Vite configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `serve` task for every project that has a Vite configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -122,12 +122,12 @@ Set up an [inferred](/concepts/inferred-tasks) `serve` task for every project th
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="Webpack" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `serve` task for every project that has a Webpack configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `serve` task for every project that has a Webpack configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -142,12 +142,12 @@ Set up an [inferred](/concepts/inferred-tasks) `serve` task for every project th
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="rspack" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `serve` task for every project that has an rspack configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `serve` task for every project that has an rspack configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -162,7 +162,7 @@ Set up an [inferred](/concepts/inferred-tasks) `serve` task for every project th
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="Custom Script" %}
@@ -182,12 +182,12 @@ You can define your own `serve` task in your project configuration. Here is an e
 
 ## `test`
 
-This task typically runs unit tests for a project. The task might use the [@nx/vite](/technologies/build-tools/vite/introduction) or [@nx/jest](/technologies/test-tools/jest/introduction) plugins. Or you could have the task launch your own custom script.
+This task typically runs unit tests for a project. The task might use the [@nx/vite](/docs/technologies/build-tools/vite/introduction) or [@nx/jest](/docs/technologies/test-tools/jest/introduction) plugins. Or you could have the task launch your own custom script.
 
 {% tabs %}
 {% tabitem label="Vitest" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `test` task for every project that has a Vitest configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `test` task for every project that has a Vitest configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -202,12 +202,12 @@ Set up an [inferred](/concepts/inferred-tasks) `test` task for every project tha
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="Jest" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `test` task for every project that has a Jest configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `test` task for every project that has a Jest configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -222,7 +222,7 @@ Set up an [inferred](/concepts/inferred-tasks) `test` task for every project tha
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="Custom Script" %}
@@ -242,12 +242,12 @@ You can define your own `test` task in your project configuration. Here is an ex
 
 ## `lint`
 
-This task should run lint rules for a project. The task might use the [@nx/eslint](/technologies/eslint/introduction) plugin or run your own custom script.
+This task should run lint rules for a project. The task might use the [@nx/eslint](/docs/technologies/eslint/introduction) plugin or run your own custom script.
 
 {% tabs %}
 {% tabitem label="ESLint" %}
 
-Set up an [inferred](/concepts/inferred-tasks) `lint` task for every project that has an ESLint configuration file with this configuration in `nx.json`:
+Set up an [inferred](/docs/concepts/inferred-tasks) `lint` task for every project that has an ESLint configuration file with this configuration in `nx.json`:
 
 ```json title="nx.json"
 {
@@ -262,7 +262,7 @@ Set up an [inferred](/concepts/inferred-tasks) `lint` task for every project tha
 }
 ```
 
-You can also [override the inferred task configuration](/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
+You can also [override the inferred task configuration](/docs/concepts/inferred-tasks#overriding-inferred-task-configuration) as needed.
 
 {% /tabitem %}
 {% tabitem label="Custom Script" %}

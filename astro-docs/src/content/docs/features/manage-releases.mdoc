@@ -22,7 +22,7 @@ nx release --dry-run
 A release can be thought about in three main phases:
 
 1. **Versioning** - The process of determining the next version of your projects, and updating any projects that depend on them to use the new version.
-2. **Changelog** - The process of deriving a changelog from your commit messages or [version plan](/recipes/nx-release/file-based-versioning-version-plans) files, which can be used to communicate the changes to your users.
+2. **Changelog** - The process of deriving a changelog from your commit messages or [version plan](/docs/guides/nx-release/file-based-versioning-version-plans) files, which can be used to communicate the changes to your users.
 3. **Publishing** - The process of publishing your projects to a registry, such as npm for TypeScript/JavaScript libraries, crates.io for Rust, or Docker registries for container images.
 
 ## Running Releases
@@ -47,11 +47,11 @@ Follow our guides to set up Nx Release for your workspace.
 
 {% cardgrid %}
 
-{% linkcard title="TypeScript/JavaScript to NPM" description="Publish TypeScript and JavaScript packages to NPM or private registries with semantic versioning." href="/recipes/nx-release/release-npm-packages" /%}
+{% linkcard title="TypeScript/JavaScript to NPM" description="Publish TypeScript and JavaScript packages to NPM or private registries with semantic versioning." href="/docs/guides/nx-release/release-npm-packages" /%}
 
-{% linkcard title="Docker Images" description="Version and publish Docker images with calendar-based versioning for continuous deployment."  href="/recipes/nx-release/release-docker-images" /%}
+{% linkcard title="Docker Images" description="Version and publish Docker images with calendar-based versioning for continuous deployment."  href="/docs/guides/nx-release/release-docker-images" /%}
 
-{% linkcard title="Rust Crates" description="Publish Rust packages to crates.io with cargo integration." href="/recipes/nx-release/publish-rust-crates" /%}
+{% linkcard title="Rust Crates" description="Publish Rust packages to crates.io with cargo integration." href="/docs/guides/nx-release/publish-rust-crates" /%}
 
 {% /cardgrid %}
 
@@ -70,7 +70,7 @@ Configure Nx Release in your `nx.json` file:
 
 The nx release command is customizable. You can customize the versioning, changelog, and publishing phases of the release process independently through a mixture of configuration and CLI arguments.
 
-See the [configuration reference](/reference/nx-json#release) for all available options.
+See the [configuration reference](/docs/reference/nx-json#release) for all available options.
 
 ## Using the Programmatic API for Nx Release
 
@@ -137,21 +137,21 @@ import * as yargs from 'yargs';
 
 ### Configuration & Customization
 
-- **[Release Groups](/recipes/nx-release/release-projects-independently)** - Version projects independently or together
-- **[Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)** - Automate versioning based on commit messages
-- **[Custom Registries](/recipes/nx-release/configure-custom-registries)** - Publish to private or alternative registries
-- **[CI/CD Integration](/recipes/nx-release/publish-in-ci-cd)** - Automate releases in your pipeline
-- **[Changelog Customization](/recipes/nx-release/configure-changelog-format)** - Control changelog generation and formatting
-- **[Custom Commit Types](/recipes/nx-release/customize-conventional-commit-types)** - Define custom conventional commit types
-- **[Version Prefixes](/recipes/nx-release/configuration-version-prefix)** - Configure version prefix patterns
+- **[Release Groups](/docs/guides/nx-release/release-projects-independently)** - Version projects independently or together
+- **[Conventional Commits](/docs/guides/nx-release/automatically-version-with-conventional-commits)** - Automate versioning based on commit messages
+- **[Custom Registries](/docs/guides/nx-release/configure-custom-registries)** - Publish to private or alternative registries
+- **[CI/CD Integration](/docs/guides/nx-release/publish-in-ci-cd)** - Automate releases in your pipeline
+- **[Changelog Customization](/docs/guides/nx-release/configure-changelog-format)** - Control changelog generation and formatting
+- **[Custom Commit Types](/docs/guides/nx-release/customize-conventional-commit-types)** - Define custom conventional commit types
+- **[Version Prefixes](/docs/guides/nx-release/configuration-version-prefix)** - Configure version prefix patterns
 
 ### Workflows
 
-- **[Automate with GitHub Actions](/recipes/nx-release/automate-github-releases)** - Set up automated releases in GitHub workflows
-- **[Release Projects Independently](/recipes/nx-release/release-projects-independently)** - Manage independent versioning for projects
-- **[Use Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)** - Enable automatic versioning from commits
-- **[Build Before Versioning](/recipes/nx-release/build-before-versioning)** - Run builds before version updates
+- **[Automate with GitHub Actions](/docs/guides/nx-release/automate-github-releases)** - Set up automated releases in GitHub workflows
+- **[Release Projects Independently](/docs/guides/nx-release/release-projects-independently)** - Manage independent versioning for projects
+- **[Use Conventional Commits](/docs/guides/nx-release/automatically-version-with-conventional-commits)** - Enable automatic versioning from commits
+- **[Build Before Versioning](/docs/guides/nx-release/build-before-versioning)** - Run builds before version updates
 
 ### References
 
-- **[Configuration in `nx.json`](/reference/nx-json#release)** - All available options for configuring `nx release`
+- **[Configuration in `nx.json`](/docs/reference/nx-json#release)** - All available options for configuring `nx release`

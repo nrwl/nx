@@ -11,7 +11,6 @@ As you can see in the graph visualization below, the `myreactapp` project depend
 
 {% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -54,7 +53,6 @@ As you can see in the graph visualization below, the `myreactapp` project depend
   "focus": null,
   "groupByFolder": false
 }
-```
 
 {% /graph %}
 
@@ -64,7 +62,7 @@ This becomes even more evident when you run tasks in parallel. You cannot just n
 
 ![task-graph-execution](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
-Nx allows you to define task dependencies in the form of "rules", which are then followed when running tasks. There's a [detailed recipe](/recipes/running-tasks/defining-task-pipeline) but here's the high-level overview:
+Nx allows you to define task dependencies in the form of "rules", which are then followed when running tasks. There's a [detailed recipe](/docs/guides/tasks--caching/defining-task-pipeline) but here's the high-level overview:
 
 ```jsonc title="nx.json"
 {
@@ -96,4 +94,4 @@ These rules can be defined globally in the `nx.json` file or locally per project
 
 ## Configure It for Your Own Project
 
-Learn about all the details of how to configure [task pipelines in the according recipe section](/recipes/running-tasks/defining-task-pipeline).
+Learn about all the details of how to configure [task pipelines in the according recipe section](/docs/guides/tasks--caching/defining-task-pipeline).

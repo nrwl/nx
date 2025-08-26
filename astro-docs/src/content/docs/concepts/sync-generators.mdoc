@@ -53,7 +53,7 @@ Use the project details view to **find registered sync generators** for a given 
 nx show project <name>
 ```
 
-The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` generator on `build` and `typecheck` targets.
+The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/docs/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` generator on `build` and `typecheck` targets.
 
 {% project_details title="Project Details View" expandedTargets=["build"] %}
 {
@@ -90,15 +90,15 @@ The above command opens up the project details view, and the registered sync gen
 
 Task sync generators can be thought of like the `dependsOn` property, but for generators instead of task dependencies.
 
-To [register a generator](/extending-nx/recipes/create-sync-generator) as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
+To [register a generator](/docs/extending-nx/create-sync-generator) as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
 
 ## Global Sync Generators
 
-Global sync generators are not associated with a particular task and are executed only when the `nx sync` or `nx sync:check` command is explicitly run. They are [registered](/extending-nx/recipes/create-sync-generator) in the `nx.json` file with the `sync.globalGenerators` property.
+Global sync generators are not associated with a particular task and are executed only when the `nx sync` or `nx sync:check` command is explicitly run. They are [registered](/docs/extending-nx/create-sync-generator) in the `nx.json` file with the `sync.globalGenerators` property.
 
 ## Sync the Project Graph and the File System
 
-Nx processes the file system in order to [create the project graph](/features/explore-graph) which is used to run tasks in the correct order and determine project dependencies. Sync generators allow you to also go the other direction and use the project graph to update the file system.
+Nx processes the file system in order to [create the project graph](/docs/features/explore-graph) which is used to run tasks in the correct order and determine project dependencies. Sync generators allow you to also go the other direction and use the project graph to update the file system.
 
 {% side_by_side %}
 

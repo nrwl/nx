@@ -13,7 +13,7 @@ const shouldRenderSearch =
 
 // Version options
 const versions = [
-	{ version: 'v21', href: '/', current: true },
+  { version: 'v21', href: '/docs/getting-started/intro', current: true },
 	{ version: 'v20', href: 'https://20.nx.dev/docs' },
 	{ version: 'v19', href: 'https://19.nx.dev/docs' },
 ];
@@ -24,7 +24,7 @@ const currentVersion = versions.find(v => v.current);
 <div class="flex items-center justify-between h-full gap-4 px-4">
 	<div class="flex items-center gap-2 flex-shrink-0">
 		<SiteTitle />
-		<a href="/getting-started/intro" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+    <a href="/docs/getting-started/intro" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
 			Docs
 		</a>
 		<!-- Version Switcher -->

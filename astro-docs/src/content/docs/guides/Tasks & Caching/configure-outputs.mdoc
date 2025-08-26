@@ -5,7 +5,7 @@ description: 'Learn how to optimize what Nx restores from the cache'
 
 
 Whenever Nx runs a cacheable task, it will store the results of that task in the cache.
-When Nx runs the task again, if the [inputs for that task](/recipes/running-tasks/configure-inputs) have not changed, it will restore the results from the cache instead of spending the time to run the task again.
+When Nx runs the task again, if the [inputs for that task](/docs/guides/tasks--caching/configure-inputs) have not changed, it will restore the results from the cache instead of spending the time to run the task again.
 
 ## Types of Outputs
 
@@ -55,7 +55,7 @@ View the project's configuration to see a list of the outputs which are defined 
 The tasks you run in your workspace will likely already have `outputs` defined.
 Be sure to [view the existing outputs](#viewing-outputs-of-a-task) and start from there.
 
-As of Nx 18, Nx Plugins often [infer outputs for tasks](/concepts/inferred-tasks) which run other tools.
+As of Nx 18, Nx Plugins often [infer outputs for tasks](/docs/concepts/inferred-tasks) which run other tools.
 Nx Plugins will look at the configuration files and/or command-line-arguments of the tools in your workspace to understand the outputs of running those tools.
 In most cases, this inference will be inline with the outputs of the tool.
 Nx will reflect changes to the configuration or command-line arguments of your tools without any additional changes.
@@ -73,7 +73,7 @@ As you configure `outputs`, keep the project details screen open and it will ref
 
 ### Workspace Level Outputs
 
-[Target Defaults](/reference/nx-json#target-defaults) defined in `nx.json` apply to a set of targets. Defining `outputs` here one time will apply to a set of similar targets.
+[Target Defaults](/docs/reference/nx-json#target-defaults) defined in `nx.json` apply to a set of targets. Defining `outputs` here one time will apply to a set of similar targets.
 
 ```jsonc {% meta="{5}" %}
 // nx.json
@@ -141,5 +141,5 @@ The `package.json` file may include configuration for a specific Nx project. Def
 {% /tabs %}
 
 The above specifies that the `build` target of the `myreactapp` project will use the `outputs` specified.
-This configuration will override any `outputs` inferred by Nx Plugins as well as any `outputs` defined in the [Target Defaults](/reference/nx-json#target-defaults) in the `nx.json` file as this is more specific than those other methods of configuring `outputs`.
+This configuration will override any `outputs` inferred by Nx Plugins as well as any `outputs` defined in the [Target Defaults](/docs/reference/nx-json#target-defaults) in the `nx.json` file as this is more specific than those other methods of configuring `outputs`.
 The configuration defined here completely overwrites any `outputs` inferred by Nx Plugins or in target defaults and is not merged in any way.
