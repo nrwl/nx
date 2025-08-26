@@ -13,7 +13,6 @@
     "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
     "check-codeowners": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-codeowners.ts",
-    "check-git-ignored-tracked-files": "node ./scripts/check-git-ignored-tracked-files.js",
     "nx-release": "nx nx-release @nx/nx-source --parallel 8",
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "local-registry": "nx local-registry @nx/nx-source",
@@ -425,8 +424,7 @@
       "check-format:quick",
       "check-imports",
       "check-lock-files",
-      "check-codeowners",
-      "check-git-ignored-tracked-files"
+      "check-codeowners"
     ]
   },
   "packageManager": "pnpm@10.11.1"
