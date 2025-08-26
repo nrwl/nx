@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/nx/schemas/generators-schema.json",
   "generators": {
     "init": {
-      "implementation": "./src/generators/init/generator",
+      "implementation": "./dist/generators/init/generator.js",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize Maven support in an Nx workspace"
     }
