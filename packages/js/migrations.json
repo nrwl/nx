@@ -1,5 +1,11 @@
 {
-  "generators": {},
+  "generators": {
+    "migrate-development-custom-condition": {
+      "version": "21.5.0-beta.2",
+      "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
+      "factory": "./src/migrations/update-21-5-0/migrate-development-custom-condition"
+    }
+  },
   "packageJsonUpdates": {
     "19.0.0": {
       "version": "19.0.0-beta.0",

@@ -16,6 +16,7 @@ import {
 } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
+  getDefinedCustomConditionName,
   getProjectType,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -220,10 +221,6 @@ function updatePackageJson(
     const rootDir = join(project.root, 'src');
     const outputPath = joinPathFragments(project.root, 'dist');
 
-    // the file must exist in the TS solution setup, which is the only case this
-    // function is called
-    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
-
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,
       outputPath,
@@ -232,10 +229,7 @@ function updatePackageJson(
       generateExportsField: true,
       packageJsonPath,
       format: ['esm'],
-      skipDevelopmentExports:
-        !tsconfigBase.compilerOptions?.customConditions?.includes(
-          'development'
-        ),
+      developmentConditionName: getDefinedCustomConditionName(tree),
     });
   }
 

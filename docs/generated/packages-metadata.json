@@ -2904,6 +2904,16 @@
     ],
     "migrations": [
       {
+        "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
+        "file": "generated/packages/js/migrations/migrate-development-custom-condition.json",
+        "hidden": false,
+        "name": "migrate-development-custom-condition",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/js",
+        "path": "js/migrations/migrate-development-custom-condition",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/js/migrations/21.5.0-package-updates.json",
         "hidden": false,
