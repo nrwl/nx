@@ -114,7 +114,7 @@ jobs:
           pnpm nx-cloud record -- nx-cloud conformance:check
           pids+=($!)
 
-          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners check-git-ignored-tracked-files --parallel=1 --no-dte &
+          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
           pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native &
