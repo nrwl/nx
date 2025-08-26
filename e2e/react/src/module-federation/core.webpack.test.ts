@@ -15,8 +15,7 @@ import {
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
-// TODO(@Coly010): Re-enable when fixed
-xdescribe('React Module Federation', () => {
+describe('debugthis React Module Federation', () => {
   describe('Default Configuration', () => {
     beforeAll(() => {
       newProject({ packages: ['@nx/react', '@nx/webpack'] });

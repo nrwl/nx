@@ -16,9 +16,13 @@ export async function withModuleFederationForSSR(
   const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options, {
-      isServer: true,
-    });
+    await getModuleFederationConfig(
+      options,
+      {
+        isServer: true,
+      },
+      'webpack'
+    );
 
   return (config) => {
     config.target = 'async-node';
