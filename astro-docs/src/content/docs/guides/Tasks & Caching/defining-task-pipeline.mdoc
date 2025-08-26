@@ -6,7 +6,7 @@ description: This recipe shows how to define task dependencies in your Nx worksp
 
 Running a specific task like `build` in a monorepo usually involves running multiple commands.
 
-If you want to learn more about the concept of a task pipeline and its importance in a monorepo, have a look at [the What is a Task Pipeline page](/concepts/task-pipeline-configuration).
+If you want to learn more about the concept of a task pipeline and its importance in a monorepo, have a look at [the What is a Task Pipeline page](/docs/concepts/task-pipeline-configuration).
 
 {% youtube src="https://youtu.be/_U4hu6SuBaY?si=rSclPBdRh7P_xZ_f" title="Define a task pipeline" /%}
 
@@ -28,7 +28,7 @@ You can define dependencies among tasks by using the `dependsOn` property:
 
 ## Per Project vs Global
 
-Task dependencies can be [defined globally](/reference/nx-json#target-defaults) for all projects in `nx.json` file:
+Task dependencies can be [defined globally](/docs/reference/nx-json#target-defaults) for all projects in `nx.json` file:
 
 ```json 
 // nx.json
@@ -42,7 +42,7 @@ Task dependencies can be [defined globally](/reference/nx-json#target-defaults) 
 }
 ```
 
-Or they can be [defined per-project](/reference/project-configuration#dependson) in the `project.json` or `package.json` files. If for example you have a `prebuild` step for a given project, you can define that relationship as follows:
+Or they can be [defined per-project](/docs/reference/project-configuration#dependson) in the `project.json` or `package.json` files. If for example you have a `prebuild` step for a given project, you can define that relationship as follows:
 
 {% tabs %}
 {% tabitem label="package.json" %}
@@ -91,7 +91,7 @@ Or they can be [defined per-project](/reference/project-configuration#dependson)
 
 ## Continuous Task Dependencies
 
-If a task has a dependency that never exits, then the task will never start. To support this scenario, you can mark the dependency as a [continuous task](/reference/project-configuration#continuous). Labeling a task as continuous tells Nx to not wait for the process to exit, and it will be run alongside its dependents.
+If a task has a dependency that never exits, then the task will never start. To support this scenario, you can mark the dependency as a [continuous task](/docs/reference/project-configuration#continuous). Labeling a task as continuous tells Nx to not wait for the process to exit, and it will be run alongside its dependents.
 
 ```json
 // apps/myapp/project.json
@@ -108,7 +108,7 @@ The `continuous` option is most useful for running development servers. For exam
 
 ## Visualize Task Dependencies
 
-You can also visualize the actual task graph (alongside the projects) using [Nx graph](/features/explore-graph). This can be useful for debugging purposes.
+You can also visualize the actual task graph (alongside the projects) using [Nx graph](/docs/features/explore-graph). This can be useful for debugging purposes.
 
 To view the task graph in your browser, run:
 
@@ -120,7 +120,7 @@ And then select "Tasks" from the top-left dropdown, choose the target (e.g. `bui
 
 ![Task graph of the Playwright Nx plugin in the nx repo being rendered in the browser](../../../../assets/guides/running-tasks/task-graph-playwright-nx.webp)
 
-Alternatively you can use the [Nx Console](/getting-started/editor-setup) extension in VSCode or IntelliJ, right-click on the project and select:
+Alternatively you can use the [Nx Console](/docs/getting-started/editor-setup) extension in VSCode or IntelliJ, right-click on the project and select:
 
 ![Selecting "Focus task in Nx Graph" from the context menu in VS Code](../../../../assets/guides/running-tasks/task-graph-context-menu.webp)
 

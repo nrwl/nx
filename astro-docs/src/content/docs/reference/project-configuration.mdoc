@@ -9,11 +9,11 @@ sidebar:
 
 A project's configuration is constructed by Nx from three sources:
 
-1. [Tasks inferred by Nx plugins](/concepts/inferred-tasks) from tooling configuration
-2. [Workspace `targetDefaults`](/reference/nx-json#target-defaults) defined in the `nx.json` file
+1. [Tasks inferred by Nx plugins](/docs/concepts/inferred-tasks) from tooling configuration
+2. [Workspace `targetDefaults`](/docs/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
-Each source will [overwrite the previous source](/recipes/running-tasks/pass-args-to-commands). That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/getting-started/editor-setup) in your IDE or by running:
+Each source will [overwrite the previous source](/docs/guides/tasks--caching/pass-args-to-commands). That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/docs/getting-started/editor-setup) in your IDE or by running:
 
 ```shell {% frame="none" %}
 nx show project myproject --web
@@ -128,7 +128,7 @@ The following configuration creates `build` and `test` targets for Nx.
 
 You can invoke `nx build mylib` or `nx test mylib` without any extra configuration.
 
-Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories. Orchestration settings control the way [Nx runs tasks](/features/run-tasks). Execution settings control the actual task that is run. Caching settings control when [Nx caches a task](/features/cache-task-results) and what is actually cached.
+Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories. Orchestration settings control the way [Nx runs tasks](/docs/features/run-tasks). Execution settings control the actual task that is run. Caching settings control when [Nx caches a task](/docs/features/cache-task-results) and what is actually cached.
 
 {% tabs syncKey="project-config-file" %}
 {% tabitem label="package.json" %}
@@ -271,8 +271,8 @@ A typical set of inputs may look like this:
 ```
 
 {% cardgrid %}
-{% linkcard title="Inputs and Named Inputs Reference" description="Learn about all the possible settings for `inputs` and `namedInputs`" href="/reference/inputs" /%}
-{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/recipes/running-tasks/configure-inputs" /%}
+{% linkcard title="Inputs and Named Inputs Reference" description="Learn about all the possible settings for `inputs` and `namedInputs`" href="/docs/reference/inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/docs/guides/tasks--caching/configure-inputs" /%}
 {% /cardgrid %}
 
 ### Outputs
@@ -289,10 +289,10 @@ Specifically, by default, the following locations are cached for builds:
 - `{projectRoot}/public`
 
 {% cardgrid %}
-{% linkcard title="Configure Outputs for Task Caching" description="This recipes walks gives helpful tips to configure `outputs` for tasks" href="/recipes/running-tasks/configure-outputs" /%}
+{% linkcard title="Configure Outputs for Task Caching" description="This recipes walks gives helpful tips to configure `outputs` for tasks" href="/docs/guides/tasks--caching/configure-outputs" /%}
 {% /cardgrid  %}
 
-Read the [configure outputs for task caching](/recipes/running-tasks/configure-outputs) recipe for helpful tips for setting outputs.
+Read the [configure outputs for task caching](/docs/guides/tasks--caching/configure-outputs) recipe for helpful tips for setting outputs.
 
 #### Basic Example
 
@@ -583,7 +583,7 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 
 ### Sync Generators
 
-In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
 
 ```json
 {
@@ -597,7 +597,7 @@ In the same way that `dependsOn` tells Nx to run another task before running thi
 
 ### Executor/command options
 
-To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
+To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/docs/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
 
 ```json
 {
@@ -612,7 +612,7 @@ To define what a task does, you must configure which command or executor will ru
 }
 ```
 
-For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/docs/guides/tasks--caching/pass-args-to-commands).
 
 In the case of an explicit target using an executor, you can specify the executor and the options specific to that executor as follows:
 
@@ -682,7 +682,7 @@ You can annotate your projects with `tags` as follows:
 {% /tabitem %}
 {% /tabs %}
 
-You can [configure lint rules using these tags](/features/enforce-module-boundaries) to, for instance, ensure that libraries
+You can [configure lint rules using these tags](/docs/features/enforce-module-boundaries) to, for instance, ensure that libraries
 belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
@@ -776,7 +776,7 @@ An implicit dependency could also be a glob pattern:
 
 ### Release
 
-The `release` property allows project-level overrides for the [nx release](/features/manage-releases) command. This is particularly useful for configuring Docker image publishing.
+The `release` property allows project-level overrides for the [nx release](/docs/features/manage-releases) command. This is particularly useful for configuring Docker image publishing.
 
 #### Docker Configuration {% badge text="experimental" /%}
 

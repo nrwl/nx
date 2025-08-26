@@ -15,7 +15,7 @@ const shouldRenderSearch =
 
 // Version options
 const versions = [
-	{ version: 'v21', href: '/', current: true },
+  { version: 'v21', href: '/docs/getting-started/intro', current: true },
 	{ version: 'v20', href: 'https://20.nx.dev/docs' },
 	{ version: 'v19', href: 'https://19.nx.dev/docs' },
 ];
@@ -29,7 +29,7 @@ const currentVersion = versions.find(v => v.current);
 			<Image src={nxLogoDark} alt="Nx" class="h-12 w-auto dark:hidden" />
 			<Image src={nxLogoLight} alt="Nx" class="h-12 w-auto hidden dark:block" />
 		</a>
-		<a href="/getting-started/intro" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+		<a href="/docs/getting-started/intro" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
 			Docs
 		</a>
 		<!-- Version Switcher -->

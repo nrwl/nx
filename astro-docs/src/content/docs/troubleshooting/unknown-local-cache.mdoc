@@ -47,7 +47,7 @@ error.
 
 ## You Share Cache with Another Machine Using a Network Drive
 
-When using the legacy file system cache ([deprecated in Nx 20](/deprecated/legacy-cache)), you can prefix any Nx command with `NX_REJECT_UNKNOWN_LOCAL_CACHE=0` to ignore the errors (
+When using the legacy file system cache ([deprecated in Nx 20](/docs/reference/deprecated/legacy-cache)), you can prefix any Nx command with `NX_REJECT_UNKNOWN_LOCAL_CACHE=0` to ignore the errors (
 e.g., `NX_REJECT_UNKNOWN_LOCAL_CACHE=0 nx run-many -t build test`). This is similar to
 setting `NODE_TLS_REJECT_UNAUTHORIZED=0` to ignore any errors stemming form self-signed certificates. Even though it
 will make it work, this approach is discouraged.
@@ -58,7 +58,7 @@ allow overwrites.
 
 ## How Nx Replay Makes Sure Sharing Cache is Safe
 
-[Nx Replay](/ci/features/remote-cache), the Nx Cloud hosted remote cache, does the following things to make sharing the cache safe:
+[Nx Replay](/docs/features/ci-features/remote-cache), the Nx Cloud hosted remote cache, does the following things to make sharing the cache safe:
 
 1. **Immutable Artifacts:** Nx Cloud allows you to create and store new artifacts without the ability to override the
    existing ones. This prevents any possibility of poisoning an existing artifact. This is achieved by managing the

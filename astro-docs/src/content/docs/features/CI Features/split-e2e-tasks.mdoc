@@ -16,8 +16,8 @@ End-to-end (e2e) tests are often large, monolithic tasks that can take a conside
 
 Manually splitting large e2e test projects can be complex and require ongoing maintenance. Nx's Atomizer solves this by **automatically generating runnable targets for e2e tests for each spec file**. Instead of one large e2e task, you get multiple smaller e2e tasks that can be run individually. This allows for:
 
-- parallelization across multiple machines with [Nx Agents](/ci/features/distribute-task-execution)
-- faster [flakiness detection & retries](/ci/features/flaky-tasks) by isolating and re-running only the failed tests
+- parallelization across multiple machines with [Nx Agents](/docs/features/ci-features/distribute-task-execution)
+- faster [flakiness detection & retries](/docs/features/ci-features/flaky-tasks) by isolating and re-running only the failed tests
 
 ## Enable Automated e2e Task Splitting
 
@@ -29,7 +29,7 @@ To use **automated e2e task splitting**, you need to connect your workspace to N
 npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
+See the [connect to Nx Cloud recipe](/docs/guides/nx-cloud/setup-ci) for all the details.
 
 ### Step 2: Add the Appropriate Plugin
 
@@ -68,7 +68,7 @@ nx add @nx/gradle
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
 
-If you upgraded Nx from an older version, ensure that [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) are enabled in `nx.json`:
+If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/concepts/inferred-tasks#existing-nx-workspaces) are enabled in `nx.json`:
 
 ```json
 // nx.json
@@ -83,10 +83,10 @@ If you upgraded Nx from an older version, ensure that [inferred tasks](/concepts
 
 If you are already using the `@nx/cypress`, `@nx/playwright`, or `@nx/jest` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
-- [Configure Cypress Task Splitting](/technologies/test-tools/cypress/introduction#nxcypress-configuration)
-- [Configure Playwright Task Splitting](/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
-- [Configure Jest Task Splitting](/technologies/test-tools/jest/introduction#splitting-e2e-tests)
-- [Configure Gradle Testing Task Splitting](/technologies/java/introduction#splitting-tests)
+- [Configure Cypress Task Splitting](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration)
+- [Configure Playwright Task Splitting](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
+- [Configure Jest Task Splitting](/docs/technologies/test-tools/jest/introduction#splitting-e2e-tests)
+- [Configure Gradle Testing Task Splitting](/docs/technologies/java/introduction#splitting-tests)
 
 ## Verify Automated Task Splitting Works
 
@@ -457,4 +457,4 @@ jobs:
       - run: pnpm exec nx affected -t lint test build e2e-ci
 ```
 
-Learn more about configuring your [CI provider by following these detailed recipes](/ci/recipes/set-up).
+Learn more about configuring your [CI provider by following these detailed recipes](/docs/guides/nx-cloud/setup-ci).

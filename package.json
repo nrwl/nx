@@ -397,7 +397,6 @@
     "regenerator-runtime": "0.13.7",
     "shadergradient": "^1.2.14",
     "sharp": "^0.33.3",
-    "starlight-links-validator": "^0.17.0",
     "starlight-typedoc": "^0.21.3",
     "string-width": "^4.2.3",
     "tailwind-merge": "^2.4.0",

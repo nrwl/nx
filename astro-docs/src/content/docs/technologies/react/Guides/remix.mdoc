@@ -8,7 +8,7 @@ sidebar:
 {% aside type="caution" title="The future of Remix is React Router" %}
 Remix has announced its transition to React Router. The `@nx/remix` plugin is based on Remix v2 and is incompatible with the latest version of React Router unless you [upgrade](https://reactrouter.com/upgrading/remix) your Remix application. In the future, the `@nx/remix` plugin will be deprecated in favor of the `@nx/react/router` plugin. If you are starting a new project, we recommend using the `@nx/react/router` plugin instead.
 
-For an example of how to use React Router with Nx, see the [React Router with Nx](/technologies/react/recipes/react-router) recipe.
+For an example of how to use React Router with Nx, see the [React Router with Nx](/docs/technologies/react/guides/react-router) recipe.
 {% /aside %}
 
 In this recipe, we'll show you how to create a [Remix](https://remix.run) application with Nx.
@@ -26,7 +26,7 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ## Install Nx Remix Plugin
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 ```shell {% frame="none" %}
@@ -234,4 +234,4 @@ export const loader = adminLoader;
 
 You can see an example of an Nx Workspace using Remix by clicking below.
 
-{% github_repository url="https://github.com/nrwl/nx-recipes/tree/main/remix" /%}
+{% github_repository url="https://github.com/nrwl/nx-guides/tree/main/remix" /%}

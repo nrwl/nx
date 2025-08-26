@@ -34,7 +34,7 @@ yarn create nx-workspace my-workspace --preset=nest
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/nest` by running the following command:
@@ -81,7 +81,7 @@ To make the library `publishable`, use the following command:
 nx g @nx/nest:lib libs/my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
-> Read more about [building and publishing libraries here](/concepts/buildable-and-publishable-libraries).
+> Read more about [building and publishing libraries here](/docs/concepts/buildable-and-publishable-libraries).
 
 ### Nest Generators
 
@@ -216,13 +216,13 @@ Ensuring a smooth and reliable deployment of a Nest.js application in a producti
    Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process.
 
 2. **Installing Dependencies on the Server:**
-   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
+   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/docs/technologies/build-tools/webpack/guides/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
 
 3. **Transferring Pre-installed Dependencies:**
    Install dependencies during the build process, and transfer the build artifacts along with the `node_modules` directory to the server. Typically, the artifacts are archived for faster transfer and then unarchived on the server.
 
 4. **Bundling Dependencies:**
-   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
+   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/docs/technologies/build-tools/webpack/guides/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
 
 {% aside type="note" title="Bundling Dependencies" %}
 Bundling dependencies is typically not recommended for Node applications.
@@ -230,4 +230,4 @@ Bundling dependencies is typically not recommended for Node applications.
 
 ## More Documentation
 
-- [Using Jest](/technologies/test-tools/jest/introduction)
+- [Using Jest](/docs/technologies/test-tools/jest/introduction)
