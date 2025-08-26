@@ -17,15 +17,19 @@ export async function mavenInitGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  // Add Maven-related dependencies if needed
-  const installTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      '@nx/maven': 'latest',
-    }
-  );
-  tasks.push(installTask);
+  // Add Maven-related dependencies if package.json exists
+  if (tree.exists('package.json')) {
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@nx/maven': 'latest',
+      }
+    );
+    tasks.push(installTask);
+  } else {
+    logger.info('No package.json found, skipping dependency installation');
+  }
 
   // Add nx-maven-analyzer plugin to root pom.xml if it exists
   addNxMavenAnalyzerPlugin(tree);
