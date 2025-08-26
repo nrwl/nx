@@ -78,17 +78,14 @@ class MavenInputOutputAnalyzer(
         assessment.details.forEach { detail -> log.debug("  - $detail") }
         
         // Final cacheability decision with enhanced reasoning
+        // Terminal output and status are always cacheable benefits, regardless of file outputs
         return when {
             !assessment.cacheable -> {
                 CacheabilityDecision(false, assessment.reason, inputs, outputs)
             }
-            inputs.size() <= 1 -> {
-                CacheabilityDecision(false, "No meaningful inputs detected (only ${inputs.size()} inputs)", inputs, outputs)
-            }
-            outputs.isEmpty() -> {
-                CacheabilityDecision(false, "No outputs detected for caching", inputs, outputs)
-            }
             else -> {
+                // If the plugin assessment says it's cacheable, then it's cacheable
+                // Terminal output and exit status caching is valuable even without file outputs
                 CacheabilityDecision(true, "Cacheable: ${assessment.reason}", inputs, outputs)
             }
         }
