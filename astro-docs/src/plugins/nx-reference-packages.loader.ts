@@ -396,7 +396,7 @@ async function loadNxCliPackage(context: LoaderContext): Promise<DocEntry[]> {
         join(workspaceRoot, 'packages/nx/src/command-line/nx-commands.ts')
       ),
       data: {
-        title: 'Nx CLI Reference',
+        title: 'Nx Commands',
         packageType: 'nx-cli',
         docType: 'cli',
         description: 'Complete reference for Nx CLI commands',
@@ -546,7 +546,7 @@ function parseComment(comment: typedoc.CommentDisplayPart[], baseSlug: string) {
           case '@linkcode':
           case '@linkplain': {
             if (part.target) {
-              const baseUrl = `/api/plugins/devkit${
+              const baseUrl = `/docs/reference/devkit${
                 baseSlug === 'ngcli_adapter' ? `/${baseSlug}` : ''
               }`;
               const url =
@@ -766,7 +766,7 @@ async function createDevkitOverview(
   const categories = Object.values(categoryMap).sort((a, b) =>
     a.localeCompare(b)
   );
-  const baseUrl = `/api/plugins/devkit${
+  const baseUrl = `/docs/reference/devkit${
     packageType === 'ngcli_adapter' ? `/${packageType}` : ''
   }`;
 
@@ -821,7 +821,7 @@ async function loadDevkitPackage(context: LoaderContext): Promise<DocEntry[]> {
           tsconfig: join(buildDir, 'tsconfig.lib.json'),
           out: outDir,
           excludePrivate: true,
-          publicPath: '/reference/core-api/devkit/',
+          publicPath: '/docs/reference/devkit/',
         },
         // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
         renderMarkdown,
@@ -854,7 +854,7 @@ async function loadDevkitPackage(context: LoaderContext): Promise<DocEntry[]> {
           entryPoints: [ngcliEntryPoint],
           tsconfig: join(buildDir, 'tsconfig.lib.json'),
           out: join(outDir, 'ngcli_adapter'),
-          publicPath: '/reference/core-api/devkit/ngcli_adapter/',
+          publicPath: '/docs/reference/devkit/ngcli_adapter/',
         },
         // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
         renderMarkdown,

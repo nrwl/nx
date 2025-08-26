@@ -357,3 +357,95 @@ export function getProjectSourceRoot(
       : project.root)
   );
 }
+
+const defaultCustomConditionName = '@nx/source';
+const backwardCompatibilityCustomConditionName = 'development';
+const customConditionNamePrefix = '@nx-source/';
+/**
+ * Get the already defined or expected custom condition name. In case it's not
+ * yet defined, it returns the workspace package name or '@nx/source' in case
+ * it's not defined.
+ */
+export function getCustomConditionName(
+  tree: Tree,
+  options: { skipDevelopmentFallback?: boolean } = {}
+): string {
+  let name: string | undefined;
+  try {
+    ({ name } = readJson<{ name?: string }>(tree, 'package.json'));
+  } catch {}
+
+  if (!name) {
+    // Most workspaces should have a name, but let's default to something if not.
+    name = defaultCustomConditionName;
+  }
+
+  let definedCustomConditions: string[] = [];
+  if (tree.exists('tsconfig.base.json')) {
+    const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+    definedCustomConditions =
+      tsconfigJson.compilerOptions?.customConditions ?? [];
+  }
+
+  if (!definedCustomConditions.length) {
+    return name;
+  }
+
+  // Try to find a condition that matches the following (in order):
+  // - a custom condition that starts with '@nx-source/'
+  // - the 'development' backward compatibility name (if not skipped)
+  const customCondition =
+    definedCustomConditions.find((condition) =>
+      condition.startsWith(customConditionNamePrefix)
+    ) ??
+    (!options.skipDevelopmentFallback
+      ? definedCustomConditions.find(
+          (condition) => condition === backwardCompatibilityCustomConditionName
+        )
+      : undefined);
+
+  // If a custom condition matches, use it, otherwise use the name.
+  return customCondition ?? name;
+}
+
+/**
+ * Get the already defined custom condition name or null if none is defined.
+ */
+export function getDefinedCustomConditionName(tree: Tree): string | null {
+  if (!tree.exists('tsconfig.base.json')) {
+    return null;
+  }
+
+  const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+  const definedCustomConditions: string[] | undefined =
+    tsconfigJson.compilerOptions?.customConditions;
+
+  if (!definedCustomConditions?.length) {
+    return null;
+  }
+
+  let name: string | undefined;
+  try {
+    ({ name } = readJson<{ name?: string }>(tree, 'package.json'));
+  } catch {}
+
+  if (!name) {
+    // Most workspaces should have a name, but let's default to something if not.
+    name = defaultCustomConditionName;
+  }
+
+  // Try to find a condition that matches the following (in order):
+  // - the workspace package name or '@nx/source'
+  // - a custom condition that starts with '@nx-source/'
+  // - the 'development' backward compatibility name
+  const conditionName =
+    definedCustomConditions.find((condition) => condition === name) ??
+    definedCustomConditions.find((condition) =>
+      condition.startsWith(customConditionNamePrefix)
+    ) ??
+    definedCustomConditions.find(
+      (condition) => condition === backwardCompatibilityCustomConditionName
+    );
+
+  return conditionName ?? null;
+}

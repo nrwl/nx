@@ -58,9 +58,8 @@ For instance `nx test lib` creates a task graph with a single node:
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
+  "taskIds": ["lib:test"],
+  "taskGraph": {
       "roots": [
         "lib:test"
       ],
@@ -76,7 +75,6 @@ For instance `nx test lib` creates a task graph with a single node:
         }
       },
       "dependencies": {}
-    }
   }
 }
 
@@ -111,9 +109,8 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
+  "taskIds": ["lib:test"],
+  "taskGraph": {
       "roots": [
         "lib:test"
       ],
@@ -129,7 +126,6 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
         }
       },
       "dependencies": {}
-    }
   }
 }
 
@@ -150,9 +146,8 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
+  "taskIds": ["lib:test"],
+  "taskGraph": {
       "roots": [
         "lib:test"
       ],
@@ -168,7 +163,6 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
         }
       },
       "dependencies": {}
-    }
   }
 }
 
@@ -221,9 +215,8 @@ With this, running the same test command creates the following task graph:
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
+  "taskIds": ["lib:test"],
+  "taskGraph": {
       "roots": [
         "lib:test"
       ],
@@ -239,7 +232,6 @@ With this, running the same test command creates the following task graph:
         }
       },
       "dependencies": {}
-    }
   }
 }
 
@@ -260,9 +252,8 @@ With this, running the same test command creates the following task graph:
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
+  "taskIds": ["lib:test"],
+  "taskGraph": {
       "roots": [
         "lib:test"
       ],
@@ -278,7 +269,6 @@ With this, running the same test command creates the following task graph:
         }
       },
       "dependencies": {}
-    }
   }
 }
 
@@ -379,9 +369,8 @@ As your workspace grows, the task graph looks more like this:
       }
     }
   ],
-  "taskId": "lib:test",
-  "taskGraphs": {
-    "lib:test": {
+  "taskIds": ["lib:test"],
+  "taskGraph": {
       "roots": [
         "lib:test"
       ],
@@ -397,7 +386,6 @@ As your workspace grows, the task graph looks more like this:
         }
       },
       "dependencies": {}
-    }
   }
 }
 

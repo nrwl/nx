@@ -215,7 +215,7 @@ describe('syncGenerator()', () => {
     const result = await syncGenerator(tree);
 
     expect((result as any).outOfSyncMessage).toBe(
-      'Some TypeScript configuration files are missing project references to the projects they depend on or contain stale project references.'
+      'Some TypeScript configuration files are missing project references to the projects they depend on, contain stale project references, or have duplicate project references.'
     );
     expect((result as any).outOfSyncDetails).toStrictEqual([
       'tsconfig.json:',
@@ -345,6 +345,35 @@ describe('syncGenerator()', () => {
         }
         "
       `);
+    });
+
+    it('should detect and report duplicate references in root tsconfig.json', async () => {
+      updateJson(tree, 'tsconfig.json', (json) => ({
+        ...json,
+        references: [
+          { path: './packages/a' },
+          { path: './packages/b' },
+          { path: './packages/a' }, // duplicate
+          { path: './packages/b' }, // duplicate
+        ],
+      }));
+
+      const result = await syncGenerator(tree);
+
+      expect((result as any).outOfSyncMessage).toBe(
+        'Some TypeScript configuration files are missing project references to the projects they depend on, contain stale project references, or have duplicate project references.'
+      );
+      expect((result as any).outOfSyncDetails).toStrictEqual([
+        'tsconfig.json:',
+        '  - Duplicate references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+        'packages/b/tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json',
+      ]);
+      const { references } = readJson(tree, 'tsconfig.json');
+      expect(references).toStrictEqual([
+        { path: './packages/a' },
+        { path: './packages/b' },
+      ]);
     });
   });
 
@@ -726,6 +755,126 @@ describe('syncGenerator()', () => {
         }
         "
       `);
+    });
+
+    it('should detect and report duplicate references in project tsconfig files', async () => {
+      updateJson(tree, 'packages/b/tsconfig.json', (json) => ({
+        ...json,
+        references: [
+          { path: '../a' },
+          { path: '../a' }, // duplicate
+        ],
+      }));
+
+      const result = await syncGenerator(tree);
+
+      expect((result as any).outOfSyncMessage).toBe(
+        'Some TypeScript configuration files are missing project references to the projects they depend on, contain stale project references, or have duplicate project references.'
+      );
+      expect((result as any).outOfSyncDetails).toStrictEqual([
+        'tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+        'packages/b/tsconfig.json:',
+        '  - Stale references: packages/a/tsconfig.json',
+        '  - Duplicate references: packages/a/tsconfig.json',
+      ]);
+      const { references } = readJson(tree, 'packages/b/tsconfig.json');
+      expect(references).toStrictEqual([{ path: '../a' }]);
+    });
+
+    it('should detect duplicates in runtime tsconfig files', async () => {
+      writeJson(tree, 'packages/a/tsconfig.lib.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
+      writeJson(tree, 'packages/b/tsconfig.lib.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
+      updateJson(tree, 'packages/b/tsconfig.lib.json', (json) => ({
+        ...json,
+        references: [
+          { path: '../a/tsconfig.lib.json' },
+          { path: '../a/tsconfig.lib.json' }, // duplicate
+        ],
+      }));
+
+      const result = await syncGenerator(tree);
+
+      expect((result as any).outOfSyncMessage).toBe(
+        'Some TypeScript configuration files are missing project references to the projects they depend on, contain stale project references, or have duplicate project references.'
+      );
+      expect((result as any).outOfSyncDetails).toStrictEqual([
+        'tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+        'packages/b/tsconfig.lib.json:',
+        '  - Stale references: packages/a/tsconfig.lib.json',
+        '  - Duplicate references: packages/a/tsconfig.lib.json',
+        'packages/b/tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json',
+      ]);
+      const { references } = readJson(tree, 'packages/b/tsconfig.lib.json');
+      expect(references).toStrictEqual([{ path: '../a/tsconfig.lib.json' }]);
+    });
+
+    it('should handle mixed scenarios with duplicates, missing, and stale references', async () => {
+      // Add a third project for more complex testing
+      addProject('c', ['a']);
+      // Setup complex scenario with duplicates, missing, and stale
+      updateJson(tree, 'tsconfig.json', (json) => ({
+        ...json,
+        references: [
+          { path: './packages/a' },
+          { path: './packages/b' },
+          { path: './packages/a' }, // duplicate
+          { path: './packages/nonexistent' }, // stale
+        ],
+      }));
+
+      const result = await syncGenerator(tree);
+
+      expect((result as any).outOfSyncMessage).toBe(
+        'Some TypeScript configuration files are missing project references to the projects they depend on, contain stale project references, or have duplicate project references.'
+      );
+      expect((result as any).outOfSyncDetails).toStrictEqual([
+        'tsconfig.json:',
+        '  - Missing references: packages/c/tsconfig.json',
+        '  - Stale references: packages/nonexistent/tsconfig.json',
+        '  - Duplicate references: packages/a/tsconfig.json',
+        'packages/b/tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json',
+        'packages/c/tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json',
+      ]);
+    });
+
+    it('should normalize paths before detecting duplicates', async () => {
+      // Setup duplicates with different path formats
+      updateJson(tree, 'packages/b/tsconfig.json', (json) => ({
+        ...json,
+        references: [
+          { path: '../a' },
+          { path: '../a/tsconfig.json' },
+          { path: './../../packages/a' }, // equivalent but different format
+        ],
+      }));
+
+      const result = await syncGenerator(tree);
+
+      expect((result as any).outOfSyncMessage).toBe(
+        'Some TypeScript configuration files are missing project references to the projects they depend on, contain stale project references, or have duplicate project references.'
+      );
+      expect((result as any).outOfSyncDetails).toStrictEqual([
+        'tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+        'packages/b/tsconfig.json:',
+        '  - Stale references: packages/a/tsconfig.json',
+        '  - Duplicate references: packages/a/tsconfig.json',
+      ]);
+      const { references } = readJson(tree, 'packages/b/tsconfig.json');
+      expect(references).toStrictEqual([{ path: '../a' }]);
     });
 
     describe('without custom sync generator options', () => {

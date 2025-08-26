@@ -224,8 +224,18 @@ function ProjectsSidebarInner() {
   }
 
   function resetTraceEnd() {
+    if (!tracingInfo.start) {
+      console.warn('[Nx Graph] no tracing start set.');
+      return;
+    }
+
     projectGraphService.send({ type: 'clearTraceEnd' });
-    navigate(routeConstructor('/projects', true));
+    navigate(
+      routeConstructor(
+        `/projects/trace/${encodeURIComponent(tracingInfo.start)}`,
+        true
+      )
+    );
   }
 
   function setAlgorithm(algorithm: TracingAlgorithmType) {

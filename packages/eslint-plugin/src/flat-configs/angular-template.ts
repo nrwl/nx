@@ -1,5 +1,5 @@
 import angular from 'angular-eslint';
-import tseslint from 'typescript-eslint';
+import tseslint, { type ConfigArray } from 'typescript-eslint';
 
 /**
  * This configuration is intended to be applied to ALL .html files in Angular
@@ -15,7 +15,7 @@ import tseslint from 'typescript-eslint';
  * This configuration is intended to be combined with other configs from this
  * package.
  */
-export default tseslint.config({
+const config: ConfigArray = tseslint.config({
   files: ['**/*.html'],
   extends: [
     ...angular.configs.templateRecommended,
@@ -23,3 +23,5 @@ export default tseslint.config({
   ],
   rules: {},
 });
+
+export default config;

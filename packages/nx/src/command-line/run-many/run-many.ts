@@ -58,7 +58,7 @@ export async function runMany(
         watch: true,
         open: true,
         view: 'tasks',
-        all: nxArgs.all && !nxArgs.projects,
+        all: nxArgs.all && (!nxArgs.projects || nxArgs.projects.length === 0),
         targets: nxArgs.targets,
         projects: projectNames,
         file,

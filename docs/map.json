@@ -1415,6 +1415,17 @@
               "id": "build-tools",
               "itemList": [
                 {
+                  "name": "Docker",
+                  "id": "docker",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/docker/docker-plugin"
+                    }
+                  ]
+                },
+                {
                   "name": "Webpack",
                   "id": "webpack",
                   "itemList": [

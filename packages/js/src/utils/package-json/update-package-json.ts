@@ -48,7 +48,7 @@ export interface UpdatePackageJsonOption {
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   generateLockfile?: boolean;
   packageJsonPath?: string;
-  skipDevelopmentExports?: boolean;
+  developmentConditionName?: string | null;
 }
 
 export function updatePackageJson(
@@ -114,10 +114,7 @@ export function updatePackageJson(
   }
 
   // update package specific settings
-  packageJson = getUpdatedPackageJsonContent(packageJson, {
-    skipDevelopmentExports: true,
-    ...options,
-  });
+  packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
   // save files
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
@@ -290,7 +287,7 @@ export function getUpdatedPackageJsonContent(
       typeof packageJson.exports === 'string' ? {} : { ...packageJson.exports };
     packageJson.exports['./package.json'] ??= './package.json';
 
-    if (!options.skipDevelopmentExports && (hasCjsFormat || hasEsmFormat)) {
+    if (options.developmentConditionName && (hasCjsFormat || hasEsmFormat)) {
       packageJson.exports['.'] ??= {};
       const developmentExports = getDevelopmentExports(options);
       for (const [exportEntry, filePath] of Object.entries(
@@ -298,9 +295,11 @@ export function getUpdatedPackageJsonContent(
       )) {
         if (!packageJson.exports[exportEntry]) {
           packageJson.exports[exportEntry] ??= {};
-          packageJson.exports[exportEntry]['development'] ??= filePath;
+          packageJson.exports[exportEntry][options.developmentConditionName] ??=
+            filePath;
         } else if (typeof packageJson.exports[exportEntry] === 'object') {
-          packageJson.exports[exportEntry].development ??= filePath;
+          packageJson.exports[exportEntry][options.developmentConditionName] ??=
+            filePath;
         }
       }
     }

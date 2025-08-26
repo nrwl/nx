@@ -18,7 +18,10 @@ import { satisfies, valid } from 'semver';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
-import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
+import {
+  getCustomConditionName,
+  isUsingTsSolutionSetup,
+} from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
   prettierVersion,
@@ -131,8 +134,10 @@ export async function initGeneratorInternal(
   if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
     if (schema.addTsPlugin) {
       const platform = schema.platform ?? 'node';
+      const customCondition = getCustomConditionName(tree);
       generateFiles(tree, join(__dirname, './files/ts-solution'), '.', {
         platform,
+        customCondition,
         tmpl: '',
       });
     } else {

@@ -26,7 +26,7 @@
       "path": "../project-details"
     },
     {
-      "path": "../ui-theme"
+      "path": "../ui-render-config"
     },
     {
       "path": "./tsconfig.app.json"

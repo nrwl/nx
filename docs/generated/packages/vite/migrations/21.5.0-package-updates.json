@@ -4,6 +4,7 @@
   "packages": {
     "vite": { "version": "^7.1.3", "alwaysAddToPackageJson": false }
   },
+  "incompatibleWith": { "@remix-run/dev": "*" },
   "aliases": [],
   "description": "",
   "hidden": false,

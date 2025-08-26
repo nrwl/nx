@@ -25,6 +25,7 @@ fun processTask(
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
+
   val target = mutableMapOf<String, Any?>()
   target["cache"] = isCacheable(task)
 

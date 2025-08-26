@@ -64,6 +64,7 @@ export type PackageJsonUpdates = {
     };
     'x-prompt'?: string;
     requires?: Record<string, string>;
+    incompatibleWith?: Record<string, string>;
   };
 };
 

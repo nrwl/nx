@@ -17,16 +17,16 @@ import { resolveTheme } from './resolve-theme';
 interface NxDevProjectGraphProps {
   theme: RenderTheme | 'system';
   projects: ProjectGraphProjectNode[];
-  dependencies: Record<string, ProjectGraphDependency[]>;
-  affectedProjects: string[];
+  dependencies?: Record<string, ProjectGraphDependency[]>;
+  affectedProjects?: string[];
   enableContextMenu?: boolean;
   composite?: boolean;
 }
 
 export function NxDevProjectGraph({
   projects,
-  dependencies,
-  affectedProjects,
+  dependencies = {},
+  affectedProjects = [],
   theme = 'system',
   composite = false,
   enableContextMenu = false,

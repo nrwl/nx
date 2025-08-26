@@ -48,7 +48,7 @@
       "path": "../project-details/tsconfig.lib.json"
     },
     {
-      "path": "../ui-theme/tsconfig.lib.json"
+      "path": "../ui-render-config/tsconfig.lib.json"
     }
   ]
 }

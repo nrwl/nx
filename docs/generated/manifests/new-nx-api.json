@@ -399,6 +399,56 @@
       }
     },
     "migrations": {
+      "/technologies/angular/api/migrations/update-angular-cli-version-20-2-0": {
+        "description": "Update the @angular/cli package version to ~20.2.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-2-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-2-0",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-2-0",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/remove-default-karma-configuration-files": {
+        "description": "Remove any Karma configuration files that only contain the default content. The default configuration is automatically available without a specific project configurationfile.",
+        "file": "generated/packages/angular/migrations/remove-default-karma-configuration-files.json",
+        "hidden": false,
+        "name": "remove-default-karma-configuration-files",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/remove-default-karma-configuration-files",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.5.0-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.5.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.5.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.5.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-angular-eslint-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.5.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.5.0-@angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.5.0-@angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-@angular-eslint-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.5.0-@angular-eslint-package-updates",
+        "type": "migration"
+      },
       "/technologies/angular/api/migrations/set-tsconfig-option": {
         "description": "Set the 'tsConfig' option to build and test targets to help with Angular migration issues.",
         "file": "generated/packages/angular/migrations/set-tsconfig-option.json",
@@ -1718,6 +1768,26 @@
       }
     },
     "migrations": {
+      "/technologies/eslint/api/migrations/21.5.0-typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.5.0-typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-typescript-eslint-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/eslint",
+        "path": "/technologies/eslint/api/migrations/21.5.0-typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      "/technologies/eslint/api/migrations/21.5.0-@typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.5.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-@typescript-eslint-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/eslint",
+        "path": "/technologies/eslint/api/migrations/21.5.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
       "/technologies/eslint/api/migrations/21.2.0-typescript-eslint-package-updates": {
         "description": "",
         "file": "generated/packages/eslint/migrations/21.2.0-typescript-eslint-package-updates.json",
@@ -2559,6 +2629,26 @@
       }
     },
     "migrations": {
+      "/technologies/typescript/api/migrations/migrate-development-custom-condition": {
+        "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
+        "file": "generated/packages/js/migrations/migrate-development-custom-condition.json",
+        "hidden": false,
+        "name": "migrate-development-custom-condition",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/js",
+        "path": "/technologies/typescript/api/migrations/migrate-development-custom-condition",
+        "type": "migration"
+      },
+      "/technologies/typescript/api/migrations/21.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/21.5.0-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/js",
+        "path": "/technologies/typescript/api/migrations/21.5.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/typescript/api/migrations/21.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/js/migrations/21.2.0-package-updates.json",
@@ -5794,6 +5884,16 @@
       }
     },
     "migrations": {
+      "/reference/core-api/workspace/migrations/21.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/21.5.0-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/workspace",
+        "path": "/reference/core-api/workspace/migrations/21.5.0-package-updates",
+        "type": "migration"
+      },
       "/reference/core-api/workspace/migrations/21.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/workspace/migrations/21.2.0-package-updates.json",
