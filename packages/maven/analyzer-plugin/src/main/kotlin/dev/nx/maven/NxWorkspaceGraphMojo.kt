@@ -138,11 +138,14 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
         try {
             val projectName = analysis.get("projectName")?.asText() 
                 ?: "${mavenProject.groupId}.${mavenProject.artifactId}"
-            val root = analysis.get("root")?.asText() ?: ""
+            val rawRoot = analysis.get("root")?.asText() ?: ""
+            // Normalize empty root to '.'
+            val root = if (rawRoot.isEmpty()) "." else rawRoot
             
-            // Create project tuple [root, config]
+            // Create project tuple [pom.xml path, config]  
             val projectTuple = objectMapper.createArrayNode()
-            projectTuple.add(root)
+            val pomPath = File(root, "pom.xml").path
+            projectTuple.add(pomPath)
             
             val projectConfig = objectMapper.createObjectNode()
             val projects = objectMapper.createObjectNode()
