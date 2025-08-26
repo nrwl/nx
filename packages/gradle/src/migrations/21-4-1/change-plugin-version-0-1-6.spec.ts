@@ -253,7 +253,6 @@ junit-base = ["junit"]
 
     const catalogContent = tree.read('proj/gradle/libs.versions.toml', 'utf-8');
 
-    // Verify the nx-gradle-project-graph version was updated from 0.1.3 to 0.1.5
     expect(catalogContent).toContain('nx-gradle-project-graph = "0.1.6"');
     expect(catalogContent).not.toContain('nx-gradle-project-graph = "0.1.3"');
   });
