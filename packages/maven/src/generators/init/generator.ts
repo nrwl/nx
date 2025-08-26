@@ -4,6 +4,8 @@ import {
   GeneratorCallback,
   Tree,
   logger,
+  readNxJson,
+  updateNxJson,
 } from '@nx/devkit';
 import { DOMParser, XMLSerializer } from 'xmldom';
 
@@ -33,6 +35,9 @@ export async function mavenInitGenerator(
 
   // Add nx-maven-analyzer plugin to root pom.xml if it exists
   addNxMavenAnalyzerPlugin(tree);
+
+  // Add @nx/maven to plugins array in nx.json
+  addPluginToNxJson(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -70,6 +75,39 @@ function addNxMavenAnalyzerPlugin(tree: Tree) {
     tree.write(rootPomPath, updatedPomContent);
     logger.info('Added nx-maven-analyzer plugin to root pom.xml');
   }
+}
+
+function addPluginToNxJson(tree: Tree) {
+  if (!tree.exists('nx.json')) {
+    logger.warn('nx.json not found, skipping plugin registration');
+    return;
+  }
+
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    logger.warn('Unable to read nx.json content');
+    return;
+  }
+
+  // Initialize plugins array if it doesn't exist
+  if (!nxJson.plugins) {
+    nxJson.plugins = [];
+  }
+
+  // Check if @nx/maven is already in plugins
+  const pluginExists = nxJson.plugins.some(plugin => 
+    typeof plugin === 'string' ? plugin === '@nx/maven' : plugin?.plugin === '@nx/maven'
+  );
+
+  if (pluginExists) {
+    logger.info('@nx/maven plugin already registered in nx.json');
+    return;
+  }
+
+  // Add @nx/maven to plugins array
+  nxJson.plugins.push('@nx/maven');
+  updateNxJson(tree, nxJson);
+  logger.info('Added @nx/maven to plugins array in nx.json');
 }
 
 function addPluginToPom(pomContent: string): string {
