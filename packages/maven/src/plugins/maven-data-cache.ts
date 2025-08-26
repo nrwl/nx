@@ -20,11 +20,14 @@ export function getCachedMavenData(workspaceRoot: string, skipCache = false): Ma
   if (skipCache) {
     return null;
   }
-  const analysisFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
+  const analysisFile = join(workspaceRoot, '.nx', 'workspace-data', 'nx-maven-projects.json');
   
   if (!existsSync(analysisFile)) {
+    console.log('[Maven Cache] Analysis file not found:', analysisFile);
     return null;
   }
+  
+  console.log('[Maven Cache] Found analysis file:', analysisFile);
 
   try {
     const fileStats = statSync(analysisFile);
