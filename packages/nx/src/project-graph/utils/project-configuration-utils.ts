@@ -53,6 +53,7 @@ export function mergeProjectConfigurationIntoRootMap(
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean
 ): void {
+  project.root = project.root === '' ? '.' : project.root;
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
   }
