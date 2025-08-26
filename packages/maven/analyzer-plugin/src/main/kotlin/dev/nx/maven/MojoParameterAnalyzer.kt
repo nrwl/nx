@@ -226,6 +226,8 @@ class MojoParameterAnalyzer(
         val goal = mojo.goal
         val artifactId = mojo.pluginDescriptor.artifactId
         
+        log.debug("Checking pattern-based side effects for ${artifactId}:${goal}")
+        
         // Known side-effect goals
         val sideEffectGoals = setOf(
             // Deployment and installation
@@ -250,10 +252,32 @@ class MojoParameterAnalyzer(
             "docker-maven-plugin"
         )
         
-        return sideEffectGoals.contains(goal) || 
-               sideEffectPlugins.contains(artifactId) ||
-               goal.contains("deploy", ignoreCase = true) ||
-               goal.contains("install", ignoreCase = true) ||
-               goal.contains("release", ignoreCase = true)
+        if (sideEffectGoals.contains(goal)) {
+            log.debug("${artifactId}:${goal} flagged - goal '${goal}' is in side-effect goals")
+            return true
+        }
+        
+        if (sideEffectPlugins.contains(artifactId)) {
+            log.debug("${artifactId}:${goal} flagged - plugin '${artifactId}' is in side-effect plugins")
+            return true
+        }
+        
+        if (goal.contains("deploy", ignoreCase = true)) {
+            log.debug("${artifactId}:${goal} flagged - goal contains 'deploy'")
+            return true
+        }
+        
+        if (goal.contains("install", ignoreCase = true)) {
+            log.debug("${artifactId}:${goal} flagged - goal contains 'install'")
+            return true
+        }
+        
+        if (goal.contains("release", ignoreCase = true)) {
+            log.debug("${artifactId}:${goal} flagged - goal contains 'release'")
+            return true
+        }
+        
+        log.debug("${artifactId}:${goal} passed all side-effect checks")
+        return false
     }
 }

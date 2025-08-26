@@ -189,6 +189,7 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         phasesToAnalyze.forEach { phase ->
             try {
                 val analysis = inputOutputAnalyzer.analyzeCacheability(phase, mavenProject)
+                log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
                 val phaseNode = objectMapper.createObjectNode()
                 phaseNode.put("cacheable", analysis.cacheable)
                 phaseNode.put("reason", analysis.reason)
