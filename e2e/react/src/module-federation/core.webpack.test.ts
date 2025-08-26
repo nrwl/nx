@@ -15,7 +15,7 @@ import {
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
-describe('debugthis React Module Federation', () => {
+describe('React Module Federation', () => {
   describe('Default Configuration', () => {
     beforeAll(() => {
       newProject({ packages: ['@nx/react', '@nx/webpack'] });

@@ -14,8 +14,7 @@ import {
 } from '@nx/e2e-utils';
 import { runCLI } from './utils';
 
-// TODO(@Coly010): Re-enable when fixed
-xdescribe('Dynamic Module Federation', () => {
+describe('Dynamic Module Federation', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/react'] });
   });
