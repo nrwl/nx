@@ -60,6 +60,8 @@ class PluginBasedAnalyzer(
             return true
             
         } catch (e: Exception) {
+            log.warn("Exception analyzing phase '$phase': ${e.message}")
+            e.printStackTrace()
             return false
         }
     }
