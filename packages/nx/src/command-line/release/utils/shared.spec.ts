@@ -50,24 +50,24 @@ describe('shared', () => {
         const releaseGroupToFilteredProjects = new Map()
           .set(releaseGroups[0], new Set(['foo']))
           .set(releaseGroups[1], new Set(['bar', 'baz']));
-        const versionData: VersionData = {
+        const versionData = {
           foo: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: undefined,
+            dockerVersion: null,
           },
           bar: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: undefined,
+            dockerVersion: null,
           },
           baz: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
-            dockerVersion: undefined,
+            dockerVersion: null,
           },
         };
         const userCommitMessage =
