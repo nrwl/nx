@@ -291,17 +291,17 @@ function collectAndPushChangedProjects(
       (name) => name !== projectName && !!versionData[name]?.newVersion
     );
 
-  for (const projectName of updatedProjectsLocal) {
-    if (!pushed.has(projectName) && versionData[projectName]?.newVersion) {
+  for (const updatedProject of updatedProjectsLocal) {
+    if (!pushed.has(updatedProject) && versionData[updatedProject]?.newVersion) {
       const depReleaseVersion = new ReleaseVersion({
-        version: versionData[projectName].newVersion,
+        version: versionData[updatedProject].newVersion,
         releaseTagPattern: releaseTagPattern,
-        projectName: projectName,
+        projectName: updatedProject,
       });
       commitMessageValues.push(
-        `- project: ${projectName} ${depReleaseVersion.rawVersion}`
+        `- project: ${updatedProject} ${depReleaseVersion.rawVersion}`
       );
-      pushed.add(projectName);
+      pushed.add(updatedProject);
     }
   }
 }
