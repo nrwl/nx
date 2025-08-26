@@ -15,6 +15,71 @@ class PluginExecutionFinder(
 ) {
     
     /**
+     * Get effective plugins by accessing Maven's resolved model including inherited plugins
+     */
+    private fun getEffectivePlugins(project: MavenProject): List<org.apache.maven.model.Plugin> {
+        try {
+            log.info("Getting effective plugins for ${project.artifactId}")
+            log.info("  Direct buildPlugins: ${project.buildPlugins.size}")
+            log.info("  Model build plugins: ${project.model.build?.plugins?.size ?: 0}")
+            
+            // First try to get the project's effective model which includes inherited plugins
+            val effectiveModel = project.model
+            if (effectiveModel.build?.pluginManagement?.plugins != null) {
+                val managedPlugins = effectiveModel.build.pluginManagement.plugins
+                log.info("  Found ${managedPlugins.size} plugins in pluginManagement")
+                
+                // Look for japicmp in pluginManagement
+                for (plugin in managedPlugins) {
+                    if (plugin.artifactId.contains("japicmp")) {
+                        log.warn("  Found japicmp in pluginManagement: ${plugin.groupId}:${plugin.artifactId}")
+                        
+                        // Check if it has executions bound to verify phase
+                        for (execution in plugin.executions) {
+                            log.warn("    Execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}")
+                        }
+                    }
+                }
+                
+                // Combine managed plugins with direct build plugins
+                val allPlugins = mutableListOf<org.apache.maven.model.Plugin>()
+                allPlugins.addAll(project.buildPlugins)
+                
+                // Add managed plugins that have executions bound to phases
+                for (managedPlugin in managedPlugins) {
+                    if (managedPlugin.executions.isNotEmpty()) {
+                        // Check if this plugin is already in buildPlugins
+                        val existing = project.buildPlugins.find { 
+                            it.artifactId == managedPlugin.artifactId && it.groupId == managedPlugin.groupId
+                        }
+                        if (existing == null) {
+                            log.info("  Adding managed plugin with executions: ${managedPlugin.artifactId}")
+                            allPlugins.add(managedPlugin)
+                        }
+                    }
+                }
+                
+                log.info("  Total effective plugins: ${allPlugins.size}")
+                return allPlugins
+            }
+            
+            // Try the session projects
+            val projectFromSession = session.projects.find { it.artifactId == project.artifactId }
+            if (projectFromSession != null && projectFromSession != project) {
+                log.info("  Using session project with ${projectFromSession.buildPlugins.size} plugins")
+                return projectFromSession.buildPlugins
+            }
+            
+        } catch (e: Exception) {
+            log.warn("Failed to get effective plugins: ${e.message}")
+            e.printStackTrace()
+        }
+        
+        log.info("  Falling back to direct buildPlugins: ${project.buildPlugins.size}")
+        return project.buildPlugins
+    }
+    
+    /**
      * Finds all plugin executions that will run during the specified phase
      * Returns a list of MojoExecutions that Maven would actually execute
      */
@@ -44,11 +109,13 @@ class PluginExecutionFinder(
             }
             
         } catch (e: Exception) {
-            log.warn("Failed to calculate execution plan for phase '$phase': ${e.message}")
+            log.warn("Failed to calculate execution plan for phase '$phase': ${e.javaClass.simpleName} - ${e.message}")
+            e.printStackTrace()
         }
         
         // If we couldn't get the execution plan, fall back to analyzing project plugins
         if (executions.isEmpty()) {
+            log.warn("No executions found via calculateExecutionPlan, trying fallback analysis for phase '$phase'")
             executions.addAll(findExecutionsFromProjectPlugins(phase, project))
         }
         
@@ -61,19 +128,29 @@ class PluginExecutionFinder(
     private fun findExecutionsFromProjectPlugins(phase: String, project: MavenProject): List<org.apache.maven.plugin.MojoExecution> {
         val executions = mutableListOf<org.apache.maven.plugin.MojoExecution>()
         
-        log.warn("Fallback: analyzing project plugins for phase '$phase'")
-        log.warn("Project has ${project.buildPlugins.size} build plugins:")
-        for (p in project.buildPlugins) {
-            log.warn("  - ${p.groupId}:${p.artifactId}:${p.version}")
+        log.info("Fallback: analyzing project plugins for phase '$phase'")
+        
+        // Use the effective plugins method
+        val effectivePlugins = getEffectivePlugins(project)
+        log.info("Using ${effectivePlugins.size} effective plugins for analysis")
+        
+        // Log all plugins for debugging
+        for (p in effectivePlugins) {
+            val groupId = p.groupId ?: "org.apache.maven"
+            log.info("  Plugin: $groupId:${p.artifactId}:${p.version ?: "unknown"}")
+            if (p.artifactId.contains("japicmp")) {
+                log.info("    *** FOUND JAPICMP PLUGIN ***")
+            }
         }
         
-        // Check build plugins for explicit executions
-        for (plugin in project.buildPlugins) {
+        val allPluginsToCheck = effectivePlugins
+        
+        for (plugin in allPluginsToCheck) {
             log.debug("Checking plugin: ${plugin.artifactId}")
             
             for (execution in plugin.executions) {
                 if (execution.phase == phase) {
-                    log.debug("  Found execution '${execution.id}' bound to phase '$phase'")
+                    log.warn("  Found execution '${execution.id}' bound to phase '$phase' in plugin ${plugin.artifactId}")
                     for (goal in execution.goals) {
                         try {
                             // Create a simplified MojoExecution for analysis
@@ -84,7 +161,7 @@ class PluginExecutionFinder(
                             )
                             mojoExecution.lifecyclePhase = phase
                             executions.add(mojoExecution)
-                            log.debug("    Added goal: ${plugin.artifactId}:$goal")
+                            log.warn("    Added goal: ${plugin.artifactId}:$goal")
                         } catch (e: Exception) {
                             log.debug("    Failed to create execution for ${plugin.artifactId}:$goal: ${e.message}")
                         }
