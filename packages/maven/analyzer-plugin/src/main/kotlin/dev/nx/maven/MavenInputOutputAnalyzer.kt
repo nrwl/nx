@@ -38,6 +38,9 @@ class MavenInputOutputAnalyzer(
      */
     fun analyzeCacheability(phase: String, project: MavenProject): CacheabilityDecision {
         log.info("Analyzing phase '$phase' for project ${project.artifactId}")
+        if (phase == "verify") {
+            log.info("*** VERIFY PHASE ANALYSIS STARTING ***")
+        }
         
         // Create project-specific path resolver to ensure {projectRoot} refers to project directory
         val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath)
