@@ -6982,6 +6982,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Setting up Buildkite",
+                "path": "/ci/recipes/set-up/monorepo-ci-buildkite",
+                "id": "monorepo-ci-buildkite",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Setting up CircleCI",
                 "path": "/ci/recipes/set-up/monorepo-ci-circle-ci",
                 "id": "monorepo-ci-circle-ci",
