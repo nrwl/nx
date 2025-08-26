@@ -10,6 +10,16 @@ assignment-rules:
       - agent: linux-large
         parallelism: 1
 
+  - projects:
+      - e2e-gradle
+    targets:
+      - e2e-ci**
+    run-on:
+        - agent: linux-large
+          parallelism: 1
+        - agent: linux-extra-large
+          parallelism: 1
+
   # All other e2e tests can run in parallel
   - targets:
       - e2e-ci**
