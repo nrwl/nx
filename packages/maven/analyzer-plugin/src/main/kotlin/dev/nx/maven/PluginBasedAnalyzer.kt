@@ -33,8 +33,13 @@ class PluginBasedAnalyzer(
         try {
             // Find all plugin executions that will run during this phase
             val executions = pluginExecutionFinder.findExecutionsForPhase(phase, project)
+            log.debug("Found ${executions.size} executions for phase '$phase'")
+            executions.forEach { execution ->
+                log.debug("  - ${execution.plugin.artifactId}:${execution.goal}")
+            }
             
             if (executions.isEmpty()) {
+                log.debug("No executions found for phase '$phase', marking as unanalyzable")
                 return false
             }
             
@@ -153,19 +158,24 @@ class PluginBasedAnalyzer(
                 val mojo = pluginDescriptor?.getMojo(execution.goal)
                 
                 if (mojo != null) {
+                    val pluginArtifactId = execution.plugin.artifactId
+                    log.debug("Analyzing mojo: ${pluginArtifactId}:${mojo.goal}")
+                    
                     // Check for side effects
                     if (mojoParameterAnalyzer.isSideEffectMojo(mojo)) {
+                        log.warn("Mojo ${pluginArtifactId}:${mojo.goal} detected as having side effects")
                         return CacheabilityAssessment(
                             cacheable = false,
-                            reason = "Mojo ${mojo.goal} has side effects",
-                            details = details + "Goal '${mojo.goal}' interacts with external systems or has non-deterministic behavior"
+                            reason = "Mojo ${pluginArtifactId}:${mojo.goal} has side effects",
+                            details = details + "Goal '${mojo.goal}' from plugin '${pluginArtifactId}' interacts with external systems or has non-deterministic behavior"
                         )
                     }
                     
                     // For now, we'll assume all mojos are thread-safe and non-aggregator
                     // These checks can be enhanced later if needed
                     
-                    details.add("Analyzed goal '${mojo.goal}' - appears cacheable based on parameters")
+                    log.debug("Mojo ${pluginArtifactId}:${mojo.goal} appears cacheable")
+                    details.add("Analyzed goal '${mojo.goal}' from '${pluginArtifactId}' - appears cacheable based on parameters")
                 }
             }
             
