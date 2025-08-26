@@ -178,9 +178,9 @@ function validateLinks() {
 
   console.log('✅ Validating links...\n');
 
-  // @ts-expect-error - new set methods, they're real
-  const brokenLinks: Set<string> = actualLinksUsed.difference(
-    availableInternalRoutes
+  // Find links that exist in actualLinksUsed but not in availableInternalRoutes
+  const brokenLinks: Set<string> = new Set(
+    [...actualLinksUsed].filter((link) => !availableInternalRoutes.has(link))
   );
 
   if (brokenLinks.size > 0) {
