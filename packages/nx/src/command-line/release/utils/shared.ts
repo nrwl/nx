@@ -163,19 +163,20 @@ export function createCommitMessageValues(
         projectName: releaseGroupProjectNames[0],
       });
 
-      // Only consider dependents that actually received a newVersion
-      const bumpedDependents = (
-        projectVersionData.dependentProjects || []
-      ).filter((d) => !!versionData[d.source]?.newVersion);
+      const otherProjectsUpdated = Object.keys(versionData).filter(
+        (name) =>
+          name !== releaseGroupProjectNames[0] &&
+          !!versionData[name]?.newVersion
+      );
 
-      if (bumpedDependents.length === 0) {
-        // No dependents were bumped - keep normal templating behavior
+      if (otherProjectsUpdated.length === 0) {
+        // No other projects were updated - keep normal templating behavior
         commitMessageValues[0] = interpolate(commitMessageValues[0], {
           version: releaseVersion.rawVersion,
           projectName: releaseGroupProjectNames[0],
         }).trim();
       } else {
-        // Dependents were bumped - present a stripped header and one bullet per project (primary + bumped dependents)
+        // Projects were updated - present a stripped header and one bullet per project
         commitMessageValues[0] = stripPlaceholders(commitMessageValues[0], [
           'v{version}',
           '{version}',
@@ -192,24 +193,16 @@ export function createCommitMessageValues(
           pushed.add(releaseGroupProjectNames[0]);
         }
 
-        // Add each bumped dependent
-        const bumpedDependentNames = collectChangedDependents(
+        // Add each updated project by collecting them and pushing directly
+        // into `commitMessageValues`.
+        collectAndPushChangedProjects(
           versionData,
-          releaseGroupProjectNames[0]
+          releaseGroupProjectNames[0],
+          commitMessageValues,
+          pushed,
+          releaseGroup.releaseTagPattern,
+          otherProjectsUpdated
         );
-        for (const depName of bumpedDependentNames) {
-          if (!pushed.has(depName) && versionData[depName]?.newVersion) {
-            const depReleaseVersion = new ReleaseVersion({
-              version: versionData[depName].newVersion,
-              releaseTagPattern: releaseGroup.releaseTagPattern,
-              projectName: depName,
-            });
-            commitMessageValues.push(
-              `- project: ${depName} ${depReleaseVersion.rawVersion}`
-            );
-            pushed.add(depName);
-          }
-        }
       }
 
       return commitMessageValues;
@@ -234,8 +227,8 @@ export function createCommitMessageValues(
       releaseGroupToFilteredProjects.get(releaseGroup)
     );
 
-    // One entry per project for independent groups. Also include any dependent projects
-    // which were bumped as a result of the selected projects being released.
+    // One entry per project for independent groups. Also include any other projects
+    // which were updated
     if (releaseGroup.projectsRelationship === 'independent') {
       const pushed = new Set<string>();
 
@@ -253,24 +246,14 @@ export function createCommitMessageValues(
           pushed.add(project);
         }
 
-        // Add any dependent projects that were bumped as a result of this project's release (recursively)
-        const bumpedDependentNames = collectChangedDependents(
+        // Add any other projects that were updated
+        collectAndPushChangedProjects(
           versionData,
-          project
+          project,
+          commitMessageValues,
+          pushed,
+          releaseGroup.releaseTagPattern
         );
-        for (const depName of bumpedDependentNames) {
-          if (!pushed.has(depName) && versionData[depName]?.newVersion) {
-            const depReleaseVersion = new ReleaseVersion({
-              version: versionData[depName].newVersion,
-              releaseTagPattern: releaseGroup.releaseTagPattern,
-              projectName: depName,
-            });
-            commitMessageValues.push(
-              `- project: ${depName} ${depReleaseVersion.rawVersion}`
-            );
-            pushed.add(depName);
-          }
-        }
       }
       continue;
     }
@@ -290,31 +273,37 @@ export function createCommitMessageValues(
 
   return commitMessageValues;
 }
-
 /**
- * Recursively collect names of dependent projects that received a newVersion
- * starting from the given projectName. Only projects with a truthy newVersion
- * are included (matching previous inline behavior) and traversal continues
- * only through dependents that themselves have a newVersion.
+ * Collect names of projects which received a newVersion by scanning the
+ * provided versionData object, excluding the provided `projectName` itself.
  */
-function collectChangedDependents(
+function collectAndPushChangedProjects(
   versionData: VersionData,
-  projectName: string
-): string[] {
-  const collected = new Set<string>();
+  projectName: string,
+  commitMessageValues: string[],
+  pushed: Set<string>,
+  releaseTagPattern: string,
+  updatedProjects?: string[]
+): void {
+  const updatedProjectsLocal =
+    updatedProjects ??
+    Object.keys(versionData).filter(
+      (name) => name !== projectName && !!versionData[name]?.newVersion
+    );
 
-  function visit(current: string) {
-    for (const dep of versionData[current]?.dependentProjects || []) {
-      const name = dep.source;
-      if (!collected.has(name) && versionData[name]?.newVersion) {
-        collected.add(name);
-        visit(name);
-      }
+  for (const projectName of updatedProjectsLocal) {
+    if (!pushed.has(projectName) && versionData[projectName]?.newVersion) {
+      const depReleaseVersion = new ReleaseVersion({
+        version: versionData[projectName].newVersion,
+        releaseTagPattern: releaseTagPattern,
+        projectName: projectName,
+      });
+      commitMessageValues.push(
+        `- project: ${projectName} ${depReleaseVersion.rawVersion}`
+      );
+      pushed.add(projectName);
     }
   }
-
-  visit(projectName);
-  return Array.from(collected);
 }
 
 function stripPlaceholders(str: string, placeholders: string[]): string {
