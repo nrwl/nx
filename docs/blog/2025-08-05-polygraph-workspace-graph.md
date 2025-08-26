@@ -6,6 +6,7 @@ tags: ['nx-cloud', 'polygraph', 'enterprise']
 cover_image: /blog/images/2025-08-05/header.avif
 description: 'Discover how Workspace Graph in Nx Cloud reveals dependencies across your entire organization. See code structure and connections between repositories without cloning, installing, or switching contexts.'
 youtubeUrl: https://www.youtube.com/watch?v=raNYaIpHLOg
+pinned: true
 ---
 
 How well do you understand the structure of your code?

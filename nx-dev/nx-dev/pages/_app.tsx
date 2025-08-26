@@ -7,7 +7,6 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { WebinarNotifier } from '@nx/nx-dev-ui-common';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
 
@@ -98,7 +97,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      <WebinarNotifier />
+      {/* <WebinarNotifier /> */}
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

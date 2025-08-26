@@ -1,7 +1,6 @@
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
-import { WebinarSection } from './webinar-section';
 
 export function Hero(): ReactElement {
   return (
@@ -25,7 +24,7 @@ export function Hero(): ReactElement {
       <div className="absolute inset-0">
         <div className="mx-auto max-w-7xl lg:flex">
           <div className="mx-auto max-w-3xl px-6 pb-24 pt-36 lg:mx-0 lg:shrink-0 lg:px-8">
-            <WebinarSection />
+            {/* <WebinarSection /> */}
             <SectionHeading
               id="get-speed-and-scale"
               as="h1"
