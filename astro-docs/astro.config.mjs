@@ -11,7 +11,9 @@ import { sidebar } from './sidebar.mts';
 export default defineConfig({
   base: '/docs',
   vite: { plugins: [tailwindcss()] },
-  site: 'https://nx.dev',
+  // Allow this to be configured per environment
+  // Note: this happens during build time so we don't use `import.meta.env`
+  site: process.env.NX_DEV_URL ?? 'https://nx.dev',
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp',

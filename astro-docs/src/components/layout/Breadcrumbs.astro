@@ -34,13 +34,15 @@ const crumbs: Crumb[] = pathSegments.map((segment, index) => {
   const docPath = pathSegments.slice(0, index + 1).join('/');
   const doc = findDocByPath(docPath);
   const name = doc?.data?.sidebar?.label || doc?.data?.title || createNameFromSegment(segment);
+  // If `base` is set in config, don't include it in breadcrumbs
+  if (index === 0 && import.meta.env.BASE_URL) return null;
   return {
     id: segment,
     name,
     href: `/${docPath}`,
     current: index === pathSegments.length - 1,
   };
-});
+}).filter(Boolean);
 ---
 
 
