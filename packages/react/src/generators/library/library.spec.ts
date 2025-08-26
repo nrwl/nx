@@ -196,6 +196,17 @@ describe('lib', () => {
     ]);
   });
 
+  it('should generate library using --routing', async () => {
+    await libraryGenerator(tree, {
+      ...defaultSchema,
+      routing: true,
+      skipFormat: false,
+    });
+    const content = tree.read('my-lib/src/lib/my-lib.tsx').toString();
+    expect(content).toMatch(/<Route\s*path="\/"/);
+    expect(content).toMatch(/<Link\s*to="\/"/);
+  });
+
   it('should generate files', async () => {
     await libraryGenerator(tree, { ...defaultSchema, skipFormat: false });
     expect(tree.exists('my-lib/package.json')).toBeFalsy();
