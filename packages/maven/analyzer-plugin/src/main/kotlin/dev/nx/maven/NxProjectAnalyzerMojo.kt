@@ -14,7 +14,7 @@ import org.apache.maven.project.MavenProject
     name = "analyze",
     defaultPhase = LifecyclePhase.VALIDATE,
     aggregator = true,
-    requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
+    requiresDependencyResolution = ResolutionScope.NONE
 )
 class NxProjectAnalyzerMojo : AbstractMojo() {
 
