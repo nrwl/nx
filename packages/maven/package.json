@@ -2,7 +2,7 @@
   "name": "@nx/maven",
   "version": "0.1.1",
   "description": "Nx plugin for Maven integration",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
