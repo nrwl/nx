@@ -42,7 +42,7 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
   const mavenExecutable = detectMavenWrapper();
   
   const mavenArgs = [
-    'dev.nx.maven:nx-maven-analyzer-plugin:1.0.1:analyze',
+    'dev.nx.maven:nx-maven-analyzer-plugin:0.0.1-SNAPSHOT:analyze',
     `-Dnx.outputFile=${outputFile}`,
     '--batch-mode',
     '--no-transfer-progress'
