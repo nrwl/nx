@@ -165,13 +165,29 @@ This will:
 
 ### Understanding Calendar Versioning
 
-Calendar versions follow the pattern `YYMM.DD.SHA`:
+There are many different implementations of Calendar versioning but they consist of four main segments:
+
+- **Major**: The first number in the version and the most common calendar-based component.
+- **Minor**: The second number in the version, also usually calendar-based.
+- **Micro**: The third and usually final number in the version, sometimes referred to as a "patch" or "build" number.
+- **Modifier**: An optional text tag, such as "alpha", "dev", "hotfix"
+
+By default, Nx Release uses the following patterns by default for calendar versioning
+
+- **Production**: `YYMM.DD.SHA`
+- **Hotfix**: `YYMM.DD.SHA-hotfix`
+
+Where the following tokens are replaced:
 
 - `YYMM`: Year and month
 - `DD`: Day of the month
 - `SHA`: Short commit hash
 
 Note: The timezone is UTC to ensure consistency across different environments.
+
+{% callout title="Default Versioning Schemes" type="note" %}
+Using `SHA` for the micro version may not be the best choice for your workflow. If you are using a CI/CD pipeline, you may want to use a build number instead. See the [Customizing Version Schemes](#customizing-version-schemes) section for more details.
+{% /callout %}
 
 ## Future Releases
 
@@ -203,10 +219,12 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
 ```json {% fileName="nx.json" %}
 {
   "release": {
-    "dockerVersionScheme": {
-      "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
-      "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
-      "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
+    "docker": {
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{env.BUILD_NUMBER}",
+        "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
+        "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
+      }
     }
   }
 }
