@@ -29,7 +29,9 @@ export function getRemotes(
   const knownDynamicRemotes = normalizedDynamicRemotes.filter(
     (r) => projectGraph.nodes[r]
   );
-
+  knownDynamicRemotes.forEach((r) =>
+    collectRemoteProjects(r, collectedRemotes, projectGraph)
+  );
   const remotePorts = [...collectedRemotes, ...knownDynamicRemotes].map(
     (r) => projectGraph.nodes[r].data.targets['serve'].options.port
   );
