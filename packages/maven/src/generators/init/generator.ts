@@ -124,7 +124,7 @@ function addPluginToPom(pomContent: string): string {
 
     return serializer.serializeToString(doc);
   } catch (error) {
-    logger.error('Failed to parse or modify pom.xml:', error instanceof Error ? error.message : error);
+    logger.error(`Failed to parse or modify pom.xml: ${error instanceof Error ? error.message : error}`);
     return pomContent;
   }
 }
