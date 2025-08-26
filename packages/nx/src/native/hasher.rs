@@ -46,7 +46,6 @@ pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use crate::native::hasher::{hash_array, hash_file};
-    use assert_fs::TempDir;
     use assert_fs::prelude::*;
 
     ///
