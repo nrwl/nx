@@ -19,7 +19,7 @@ import java.nio.file.Paths
 @Mojo(
     name = "analyze-project",
     aggregator = false,
-    requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
+    requiresDependencyResolution = ResolutionScope.NONE
 )
 class NxProjectAnalyzerSingleMojo : AbstractMojo() {
 
