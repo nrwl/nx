@@ -152,8 +152,8 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /packages/devkit/public-api.ts @FrozenPandaz @vsavkin
 
 # Gradle
-/packages/gradle/** @FrozenPandaz @MaxKless
-/e2e/gradle/** @FrozenPandaz @MaxKless
+/packages/gradle/** @FrozenPandaz @MaxKless @lourw
+/e2e/gradle/** @FrozenPandaz @MaxKless @lourw
 
 # Nx-Plugin
 /docs/generated/packages/plugin/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers
