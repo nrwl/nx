@@ -3,6 +3,7 @@ name: PR Title Validation
 on:
   pull_request_target:
     types: [opened, edited, synchronize, reopened]
+    branches: [master]
 
 jobs:
   validate-pr-title:
