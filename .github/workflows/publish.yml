@@ -13,6 +13,8 @@ on:
         type: number
   release:
     types: [ published ]
+  pull_request:
+    types: [ opened, synchronize, reopened ]
 
 # Dynamically generate the display name for the GitHub UI based on the event type and inputs
 run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.event.inputs.pr) || github.event_name == 'schedule' && 'Canary Release' || github.event_name == 'workflow_dispatch' && !github.event.inputs.pr && 'Release Dry-Run' || github.ref_name }}
