@@ -827,21 +827,6 @@ export class ReleaseGroupProcessor {
       const projectLogger = this.getProjectLoggerForProject(project);
       projectLogger.flush();
     }
-
-    if (bumped) {
-      await this.propagateChangesToDependentGroups(releaseGroupName);
-    }
-  }
-
-  private async propagateChangesToDependentGroups(
-    changedReleaseGroupName: string
-  ): Promise<void> {
-    const changedGroupNode = this.groupGraph.get(changedReleaseGroupName)!;
-    for (const depGroupName of changedGroupNode.dependents) {
-      if (!this.processedGroups.has(depGroupName)) {
-        await this.propagateChanges(depGroupName, changedReleaseGroupName);
-      }
-    }
   }
 
   private async bumpVersions(
@@ -1592,73 +1577,6 @@ Valid values are: ${validReleaseVersionPrefixes
     project: string
   ): VersionDataEntry['dependentProjects'] {
     return this.originalDependentProjectsPerProject.get(project) || [];
-  }
-
-  private async propagateChanges(
-    releaseGroupName: string,
-    changedDependencyGroup: string
-  ): Promise<void> {
-    const releaseGroup = this.groupGraph.get(releaseGroupName)!.group;
-    const releaseGroupFilteredProjects =
-      this.releaseGroupToFilteredProjects.get(releaseGroup);
-
-    // Get updateDependents from the release group level config
-    const releaseGroupVersionConfig =
-      releaseGroup.version as NxReleaseVersionConfiguration;
-    const updateDependents =
-      (releaseGroupVersionConfig?.updateDependents as 'auto' | 'never') ||
-      'auto';
-
-    // If updateDependents is not 'auto', skip propagating changes to this group
-    if (updateDependents !== 'auto') {
-      const projectLogger = this.getProjectLoggerForProject(
-        releaseGroupFilteredProjects.values().next().value
-      );
-      projectLogger.buffer(
-        `⏩ Skipping dependency updates for release group "${releaseGroupName}" as "updateDependents" is not "auto"`
-      );
-      return;
-    }
-
-    let groupBumped = false;
-    let bumpType: SemverBumpType = 'none';
-
-    if (releaseGroup.projectsRelationship === 'fixed') {
-      // For fixed groups, we only need to check one project
-      const project = releaseGroupFilteredProjects.values().next().value;
-      const dependencies = this.projectGraph.dependencies[project] || [];
-      const hasDependencyInChangedGroup = dependencies.some(
-        (dep) =>
-          this.getReleaseGroupNameForProject(dep.target) ===
-          changedDependencyGroup
-      );
-
-      if (hasDependencyInChangedGroup) {
-        const dependencyBumpType = await this.getFixedReleaseGroupBumpType(
-          changedDependencyGroup
-        );
-
-        bumpType = this.determineSideEffectBump(
-          releaseGroup,
-          dependencyBumpType as SemverBumpType
-        );
-        groupBumped = bumpType !== 'none';
-      }
-    }
-
-    if (groupBumped) {
-      for (const project of releaseGroupFilteredProjects) {
-        if (!this.bumpedProjects.has(project)) {
-          await this.bumpVersionForProject(
-            project,
-            bumpType,
-            'DEPENDENCY_ACROSS_GROUPS_WAS_BUMPED',
-            {}
-          );
-          this.bumpedProjects.add(project);
-        }
-      }
-    }
   }
 
   private async getFixedReleaseGroupBumpType(
