@@ -1,9 +1,10 @@
 name: PR Title Validation
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, edited, synchronize, reopened]
-    branches: [master]
+
+permissions: read-all
 
 jobs:
   validate-pr-title:
@@ -13,8 +14,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # For pull_request_target, we need to checkout the base branch
-          ref: ${{ github.event.pull_request.base.ref }}
+          # Ensure's validate-pr-title.js is the copy from master
+          ref: master
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
