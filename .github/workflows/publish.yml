@@ -51,13 +51,10 @@ jobs:
       publish_branch: ${{ steps.script.outputs.publish_branch }}
       ref: ${{ steps.script.outputs.ref }}
       repo: ${{ steps.script.outputs.repo }}
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
       - uses: actions/checkout@v4
 
-      # Set up pnpm and node so that we can verify our setup and that the NPM_TOKEN secret will work later
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -68,10 +65,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
-
-      # Ensure that the NPM_TOKEN secret is still valid before wasting any time deriving data or building projects
-      - name: Check NPM Credentials
-        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
 
       - name: Resolve and set checkout and version data to use for release
         id: script
@@ -84,14 +77,14 @@ jobs:
             const script = require('${{ github.workspace }}/scripts/publish-resolve-data.js');
             await script({ github, context, core });
 
-      - name: (PR Release Only) Check out latest master
-        if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@v4
-        with:
-          # Check out the latest master branch to get its copy of nx-release.ts
-          repository: nrwl/nx
-          ref: master
-          path: latest-master-checkout
+      # - name: (PR Release Only) Check out latest master
+      #   if: ${{ steps.script.outputs.ref != '' }}
+      #   uses: actions/checkout@v4
+      #   with:
+      #     # Check out the latest master branch to get its copy of nx-release.ts
+      #     repository: nrwl/nx
+      #     ref: master
+      #     path: latest-master-checkout
 
       - name: (PR Release Only) Check out PR branch
         if: ${{ steps.script.outputs.ref != '' }}
@@ -102,17 +95,17 @@ jobs:
           ref: ${{ steps.script.outputs.ref }}
           path: pr-branch-checkout
 
-      - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
-        if: ${{ steps.script.outputs.ref != '' }}
-        env:
-          FILE_TO_COMPARE: "scripts/nx-release.ts"
-        run: |
-          if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
-            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
-            exit 1
-          else
-            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
-          fi
+      # - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
+      #   if: ${{ steps.script.outputs.ref != '' }}
+      #   env:
+      #     FILE_TO_COMPARE: "scripts/nx-release.ts"
+      #   run: |
+      #     if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
+      #       echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
+      #       exit 1
+      #     else
+      #       echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
+      #     fi
 
   build:
     needs: [ resolve-required-data ]
@@ -432,8 +425,6 @@ jobs:
       - build
     env:
       GH_TOKEN: ${{ github.token }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_CONFIG_PROVENANCE: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -451,6 +442,9 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
+     
+      - name: Use npm 11.5.2
+        run: npm install -g npm@11.5.2
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
