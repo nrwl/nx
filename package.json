@@ -170,7 +170,6 @@
     "@xstate/inspect": "0.7.0",
     "@xstate/react": "3.0.1",
     "@zkochan/js-yaml": "0.0.7",
-    "ai": "^2.2.10",
     "ajv": "^8.12.0",
     "angular-eslint": "20.2.0",
     "autoprefixer": "10.4.13",
