@@ -4,13 +4,6 @@ on:
   # Automated schedule - canary releases from master
   schedule:
     - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
-  # Manual trigger - PR releases or dry-runs (based on workflow inputs)
-  workflow_dispatch:
-    inputs:
-      pr:
-        description: "PR Number - If set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
-        required: false
-        type: number
   release:
     types: [ published ]
 
