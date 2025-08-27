@@ -135,9 +135,19 @@ describe('@nx/playwright/plugin', () => {
                     "parallelism": false,
                   },
                   "e2e-ci--merge-reports": {
+                    "cache": true,
                     "executor": "@nx/playwright:merge-reports",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
                     "metadata": {
-                      "description": "Merges Playwright blob reports and aggregate the results.",
+                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters (excluding the "blob" reporter).",
                       "technologies": [
                         "playwright",
                       ],
@@ -146,6 +156,7 @@ describe('@nx/playwright/plugin', () => {
                       "config": "playwright.config.js",
                       "expectedSuites": 0,
                     },
+                    "outputs": [],
                   },
                 },
               },
@@ -266,9 +277,19 @@ describe('@nx/playwright/plugin', () => {
                     "parallelism": false,
                   },
                   "e2e-ci--merge-reports": {
+                    "cache": true,
                     "executor": "@nx/playwright:merge-reports",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
                     "metadata": {
-                      "description": "Merges Playwright blob reports and aggregate the results.",
+                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters (excluding the "blob" reporter).",
                       "technologies": [
                         "playwright",
                       ],
@@ -277,6 +298,10 @@ describe('@nx/playwright/plugin', () => {
                       "config": "playwright.config.js",
                       "expectedSuites": 0,
                     },
+                    "outputs": [
+                      "{projectRoot}/test-results/report.json",
+                      "{projectRoot}/test-results/html",
+                    ],
                   },
                 },
               },
@@ -644,9 +669,19 @@ describe('@nx/playwright/plugin', () => {
     `);
     expect(targets['e2e-ci--merge-reports']).toMatchInlineSnapshot(`
       {
+        "cache": true,
         "executor": "@nx/playwright:merge-reports",
+        "inputs": [
+          "default",
+          "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
+        ],
         "metadata": {
-          "description": "Merges Playwright blob reports and aggregate the results.",
+          "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters (excluding the "blob" reporter).",
           "technologies": [
             "playwright",
           ],
@@ -655,6 +690,10 @@ describe('@nx/playwright/plugin', () => {
           "config": "playwright.config.js",
           "expectedSuites": 2,
         },
+        "outputs": [
+          "{projectRoot}/test-results/html",
+          "{projectRoot}/test-results/report.xml",
+        ],
       }
     `);
   });

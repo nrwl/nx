@@ -25,6 +25,7 @@ import { dirname, join, parse, posix, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
+import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
 const pmc = getPackageManagerCommand();
 
@@ -40,7 +41,6 @@ interface NormalizedOptions {
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-type ReporterOutput = [reporter: string, output?: string];
 
 function readTargetsCache(
   cachePath: string
@@ -352,8 +352,20 @@ async function buildPlaywrightTargets(
     }
     ciTargetGroup.push(options.ciTargetName);
 
+    // infer the task to merge the reports from the atomized tasks
+    const mergeReportsTargetOutputs = new Set<string>();
+    for (const [reporter, output] of reporterOutputs) {
+      if (reporter !== 'blob' && output) {
+        mergeReportsTargetOutputs.add(
+          normalizeOutput(output, context.workspaceRoot, projectRoot)
+        );
+      }
+    }
     targets[options.mergeReportsTargetName] = {
       executor: '@nx/playwright:merge-reports',
+      cache: true,
+      inputs: ciBaseTargetConfig.inputs,
+      outputs: Array.from(mergeReportsTargetOutputs),
       options: {
         config: posix.relative(projectRoot, configFilePath),
         expectedSuites: dependsOn.length,
@@ -361,7 +373,7 @@ async function buildPlaywrightTargets(
       metadata: {
         technologies: ['playwright'],
         description:
-          'Merges Playwright blob reports and aggregate the results.',
+          'Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters (excluding the "blob" reporter).',
       },
     };
     ciTargetGroup.push(options.mergeReportsTargetName);
@@ -423,49 +435,6 @@ function getTestOutput(playwrightConfig: PlaywrightTestConfig): string {
   }
 }
 
-function getReporterOutputs(
-  playwrightConfig: PlaywrightTestConfig
-): Array<ReporterOutput> {
-  const reporters: Array<ReporterOutput> = [];
-
-  const reporterConfig = playwrightConfig.reporter;
-  if (!reporterConfig) {
-    // `list` is the default reporter except in CI where `dot` is the default.
-    // https://playwright.dev/docs/test-reporters#list-reporter
-    return [[process.env.CI ? 'dot' : 'list']];
-  }
-
-  const defaultHtmlOutputDir = 'playwright-report';
-  const defaultBlobOutputDir = 'blob-report';
-  if (reporterConfig === 'html') {
-    reporters.push([reporterConfig, defaultHtmlOutputDir]);
-  } else if (reporterConfig === 'blob') {
-    reporters.push([reporterConfig, defaultBlobOutputDir]);
-  } else if (typeof reporterConfig === 'string') {
-    reporters.push([reporterConfig]);
-  } else if (Array.isArray(reporterConfig)) {
-    for (const [reporter, opts] of reporterConfig) {
-      // There are a few different ways to specify an output file or directory
-      // depending on the reporter. This is a best effort to find the output.
-      if (opts?.outputFile) {
-        reporters.push([reporter, opts.outputFile]);
-      } else if (opts?.outputDir) {
-        reporters.push([reporter, opts.outputDir]);
-      } else if (opts?.outputFolder) {
-        reporters.push([reporter, opts.outputFolder]);
-      } else if (reporter === 'html') {
-        reporters.push([reporter, defaultHtmlOutputDir]);
-      } else if (reporter === 'blob') {
-        reporters.push([reporter, defaultBlobOutputDir]);
-      } else {
-        reporters.push([reporter]);
-      }
-    }
-  }
-
-  return reporters;
-}
-
 function getTargetOutputs(
   testOutput: string,
   reporterOutputs: Array<ReporterOutput>,
@@ -506,7 +475,10 @@ function getAtomizedTaskOutputs(
     }
 
     if (reporter === 'blob') {
-      const blobOutput = normalizeBlobReportOutput(output, subFolder);
+      const blobOutput = normalizeAtomizedTaskBlobReportOutput(
+        output,
+        subFolder
+      );
       outputs.add(normalizeOutput(blobOutput, workspaceRoot, projectRoot));
       continue;
     }
@@ -628,19 +600,19 @@ function getAtomizedTaskEnvVars(
       continue;
     }
 
+    if (reporter === 'blob') {
+      output = normalizeAtomizedTaskBlobReportOutput(output, outputSubfolder);
+    } else {
+      // add subfolder to the output to make them unique
+      output = addSubfolderToOutput(output, outputSubfolder);
+    }
+
     const outputExtname = parse(output).ext;
     const isFile = outputExtname !== '';
     let envVarName: string;
     envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
       isFile ? 'FILE' : 'DIR'
     }`;
-
-    if (reporter === 'blob') {
-      output = normalizeBlobReportOutput(output, outputSubfolder);
-    } else {
-      // add subfolder to the output to make them unique
-      output = addSubfolderToOutput(output, outputSubfolder);
-    }
 
     env[envVarName] = output;
     // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
@@ -652,14 +624,14 @@ function getAtomizedTaskEnvVars(
   return env;
 }
 
-function normalizeBlobReportOutput(output: string, subfolder: string): string {
+function normalizeAtomizedTaskBlobReportOutput(
+  output: string,
+  subfolder: string
+): string {
   const outputExtname = parse(output).ext;
 
-  if (outputExtname !== '') {
-    // to merge reports the blob reports need to be in the same common
-    // directory, so set unique name for the blob report file
-    output = join(dirname(output), `${subfolder}${outputExtname}`);
-  }
-
-  return output;
+  // set unique name for the blob report file
+  return outputExtname !== ''
+    ? join(dirname(output), `${subfolder}${outputExtname}`)
+    : join(output, `${subfolder}.zip`);
 }

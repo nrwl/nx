@@ -7,14 +7,15 @@ import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { PlaywrightTestConfig, TestStatus } from '@playwright/test';
 import { execSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { extname, join } from 'node:path';
+import { getReporterOutputs, type ReporterOutput } from '../../utils/reporters';
 import type { Schema } from './schema';
 
 export async function mergeReportsExecutor(
   options: Schema,
   context: ExecutorContext
 ) {
-  const { config, expectedSuites, skipBlobReporter = true } = options;
+  const { config, expectedSuites } = options;
 
   const projectRoot = join(
     context.root,
@@ -24,47 +25,66 @@ export async function mergeReportsExecutor(
   const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
     configPath
   );
-  const reporters = getReporters(playwrightConfig);
+  const reporterOutputs = getReporterOutputs(playwrightConfig);
+  const blobReporterOutput = reporterOutputs.find(
+    ([reporter]) => reporter === 'blob'
+  );
 
-  if (!reporters.includes('blob')) {
+  if (!blobReporterOutput) {
     output.warn({
       title: 'The blob reporter is not configured',
       bodyLines: [
-        'The "blob" reporter is not configured in the Playwright configuration file. Skipping the merge reports step.',
-        'To merge reports from different tasks, configure the "blob" reporter in the Playwright configuration file.',
-        'If you are using the Nx preset from "@nx/playwright/preset", you can set `generateBlobReports` to `true` in the preset options to generate blob reports.',
-        'See https://playwright.dev/docs/test-reporters#blob-reporter and https://playwright.dev/docs/test-cli#merge-reports for more details.',
+        'The "blob" reporter is not configured in the Playwright configuration. Skipping merging the reports.',
+        '',
+        'To merge reports across tasks, enable the "blob" reporter in your Playwright configuration.',
+        'If using the preset from "@nx/playwright/preset", you can do this by setting `generateBlobReports: true` in the preset options.',
+        '',
+        'For more information see:',
+        '- Blob reporter: https://playwright.dev/docs/test-reporters#blob-reporter',
+        '- Merging reports: https://playwright.dev/docs/test-cli#merge-reports',
       ],
     });
 
     return { success: true };
   }
 
-  const pmc = getPackageManagerCommand();
-  const blobReportDir = getBlobReportDir(playwrightConfig, projectRoot);
-  let command = `${pmc.exec} playwright merge-reports "${blobReportDir}"`;
+  if (reporterOutputs.length === 1) {
+    output.error({
+      title: 'No additional reporters are configured',
+      bodyLines: [
+        'Only the "blob" reporter is configured in your Playwright configuration.',
+        'To produce a merged report, add at least one additional reporter alongside the "blob" reporter.',
+      ],
+    });
 
-  if (skipBlobReporter) {
-    command += ` --reporter=${reporters.filter((r) => r !== 'blob').join(',')}`;
-    if (reporters.length === 1) {
-      output.warn({
-        title: 'Cannot skip the "blob" reporter',
-        bodyLines: [
-          'Cannot skip the "blob" reporter when it is the only reporter configured.',
-          'Please add another reporter to produce the merged report, or set `skipBlobReporter` to `false` to produce the merged report with the "blob" reporter.',
-        ],
-      });
-    }
-  } else {
-    command += ` --config="${configPath}"`;
+    return { success: false };
   }
 
+  const reporters = reporterOutputs
+    .filter(([reporter]) => reporter !== 'blob')
+    .map(([reporter]) => reporter);
+  const blobReportDir = blobReporterOutput[1];
+  const pmc = getPackageManagerCommand();
+
   try {
-    execSync(command, {
-      cwd: projectRoot,
-      stdio: 'inherit',
-      windowsHide: false,
-    });
+    execSync(
+      `${
+        pmc.exec
+      } playwright merge-reports "${blobReportDir}" --reporter=${reporters.join(
+        ','
+      )}`,
+      {
+        cwd: projectRoot,
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          // when specifying reporters directly, we need to set the relevant env
+          // vars for all reporter with their output dirs/files
+          ...getEnvVarsForReporters(reporterOutputs),
+        },
+        windowsHide: false,
+      }
+    );
   } catch (error) {
     output.error({
       title: 'Merging the blob reports failed',
@@ -206,49 +226,28 @@ function parseBlobReportEvents(
   return events;
 }
 
-function getReporters(playwrightConfig: PlaywrightTestConfig): string[] {
-  if (!playwrightConfig.reporter) {
-    // `list` is the default reporter except in CI where `dot` is the default
-    // https://playwright.dev/docs/test-reporters#list-reporter
-    return process.env.CI !== 'true' ? ['list'] : ['dot'];
-  }
-
-  if (typeof playwrightConfig.reporter === 'string') {
-    return [playwrightConfig.reporter];
-  }
-
-  if (Array.isArray(playwrightConfig.reporter)) {
-    return playwrightConfig.reporter.map((reporter) => reporter[0]);
-  }
-
-  return [];
-}
-
-// https://playwright.dev/docs/test-reporters#blob-reporter
-const defaultBlobReportDir = 'blob-report';
-function getBlobReportDir(
-  playwrightConfig: PlaywrightTestConfig,
-  projectRoot: string
-): string {
-  // must be defined and there must be a blob reporter, otherwise the executor
-  // would have bailed out by now
-  const reporter = playwrightConfig.reporter!;
-  if (reporter === 'blob') {
-    return join(projectRoot, defaultBlobReportDir);
-  }
-
-  if (Array.isArray(reporter)) {
-    const blobReporter = reporter.find((r) => r[0] === 'blob')!;
-
-    const options = blobReporter[1];
-    if (options?.outputFile) {
-      return join(projectRoot, dirname(options.outputFile));
+function getEnvVarsForReporters(
+  reporterOutputs: ReporterOutput[]
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (let [reporter, output] of reporterOutputs) {
+    if (!output) {
+      continue;
     }
 
-    return (
-      options?.outputDir ??
-      join(projectRoot, options.outputDir) ??
-      join(projectRoot, defaultBlobReportDir)
-    );
+    const isFile = extname(output) !== '';
+    let envVarName: string;
+    envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
+      isFile ? 'FILE' : 'DIR'
+    }`;
+
+    env[envVarName] = output;
+    // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
+    // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
+    if (reporter === 'html') {
+      env['PLAYWRIGHT_HTML_REPORT'] = env[envVarName];
+    }
   }
+
+  return env;
 }

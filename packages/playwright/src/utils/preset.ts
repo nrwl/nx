@@ -70,7 +70,7 @@ export function nxE2EPreset(
     reporters.push([
       'blob',
       {
-        outputFolder: isTsSolutionSetup
+        outputDir: isTsSolutionSetup
           ? 'test-output/playwright/blob-report'
           : join(offset, 'dist', '.playwright', projectPath, 'blob-report'),
       },

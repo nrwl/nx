@@ -5,7 +5,7 @@
     "$schema": "https://json-schema.org/schema",
     "version": 2,
     "title": "Schema for Playwright Merge Reports Executor",
-    "description": "THIS IS AN INTERNAL EXECUTOR USED BY ATOMIZED TASKS. DO NOT USE IT DIRECTLY. Merge Playwright blob reports and aggregate the results.",
+    "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
     "type": "object",
     "properties": {
       "config": {
@@ -19,17 +19,12 @@
         "description": "The expected number of test suites to produce a report.",
         "type": "number",
         "x-priority": "important"
-      },
-      "skipBlobReporter": {
-        "description": "Whether to skip generating the blob reporter output.",
-        "type": "boolean",
-        "default": true
       }
     },
     "required": ["config", "expectedSuites"],
     "presets": []
   },
-  "description": "Merge Playwright blob reports and aggregate the results.",
+  "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
   "hidden": true,
   "aliases": [],
   "path": "/packages/playwright/src/executors/merge-reports/schema.json",
