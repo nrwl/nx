@@ -3825,7 +3825,7 @@
         "type": "executor"
       },
       "/technologies/test-tools/playwright/api/executors/merge-reports": {
-        "description": "Merge Playwright blob reports and aggregate the results.",
+        "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
         "file": "generated/packages/playwright/executors/merge-reports.json",
         "hidden": true,
         "name": "merge-reports",

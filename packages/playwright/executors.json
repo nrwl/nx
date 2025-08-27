@@ -8,7 +8,7 @@
     "merge-reports": {
       "implementation": "./src/executors/merge-reports/merge-reports.impl",
       "schema": "./src/executors/merge-reports/schema.json",
-      "description": "Merge Playwright blob reports and aggregate the results.",
+      "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
       "hidden": true
     }
   }
