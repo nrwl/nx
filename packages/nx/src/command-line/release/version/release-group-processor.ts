@@ -1670,12 +1670,17 @@ Valid values are: ${validReleaseVersionPrefixes
     if (releaseGroupFilteredProjects.size === 0) {
       return 'none';
     }
-    const { newVersionInput } = await this.determineVersionBumpForProject(
-      releaseGroup,
-      // It's a fixed release group, so we can just pick any project in the group
-      releaseGroupFilteredProjects.values().next().value
-    );
-    return newVersionInput;
+
+    // It's a fixed release group, so we can just pick any project in the group
+    const anyProject = releaseGroupFilteredProjects.values().next().value;
+    // If already bumped, no need to re-calculate it
+    const { currentVersion, newVersion } = this.versionData.get(anyProject);
+    if (newVersion) {
+      return semver.diff(currentVersion, newVersion);
+    }
+
+    return (await this.determineVersionBumpForProject(releaseGroup, anyProject))
+      .newVersionInput;
   }
 
   // TODO: Support influencing the side effect bump in a future version, always patch for now like in legacy versioning
