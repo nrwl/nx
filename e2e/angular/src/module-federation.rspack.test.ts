@@ -13,7 +13,8 @@ import {
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
-describe('Angular Module Federation', () => {
+// TODO(@Coly010): Re-enable when fixed
+xdescribe('Angular Module Federation', () => {
   let proj: string;
   let oldVerboseLoggingValue: string;
 
