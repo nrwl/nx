@@ -24,6 +24,16 @@ export interface WithWebOptions {
    * Use the legacy WriteIndexHtmlPlugin instead of the built-in HtmlRspackPlugin.
    */
   useLegacyHtmlPlugin?: boolean;
+  /**
+   * Requires useLegacyHtmlPlugin to be false.
+   * Allows to overwrite the parameters used in the template. When using a function, pass in the original template parameters and use the returned object as the final template parameters.
+   */
+  templateParameters?:
+    | Record<string, string>
+    | boolean
+    | ((
+        params: Record<string, any>
+      ) => Record<string, any> | Promise<Record<string, any>>);
 }
 
 const processed = new Set();
