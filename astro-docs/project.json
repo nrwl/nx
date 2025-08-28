@@ -51,6 +51,17 @@
       "dependsOn": ["validate-links"],
       "command": "echo done"
     },
+    "pw-e2e": {
+      "dependsOn": ["serve"],
+      "parallelism": true
+    },
+    "e2e-ci--**/*": {
+      "dependsOn": ["preview"],
+      "parallelism": true
+    },
+    "show-report": {
+      "command": "playwright show-report dist/astro-docs/playwright-report"
+    },
     "validate-links": {
       "dependsOn": ["build"],
       "inputs": [
