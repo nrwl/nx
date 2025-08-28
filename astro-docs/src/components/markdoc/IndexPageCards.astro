@@ -7,7 +7,10 @@ export interface Props {
   path: string;
 }
 
-const { path } = Astro.props;
+const { path: rawPath } = Astro.props;
+// make sure paths are normalized to url slugs 
+// i.e. features/CI Features -> features/ci-features
+const path = rawPath.replace(/\s/, '-').toLowerCase();
 
 const allDocs = await getCollection('docs');
 
