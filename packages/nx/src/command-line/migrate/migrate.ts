@@ -1103,6 +1103,16 @@ async function getPackageMigrationsUsingInstall(
 
   let result: ResolvedMigrationConfiguration;
 
+  if (packageName.startsWith('@nx/') || packageName === 'nx') {
+    const hasProvenance = await checkPackageHasProvenance(
+      packageName,
+      packageVersion
+    );
+    if (!hasProvenance) {
+      throw new Error(noProvenanceError(packageName, packageVersion));
+    }
+  }
+
   try {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
@@ -1792,14 +1802,14 @@ export async function migrate(
   });
 }
 
-export function runMigration() {
+export async function runMigration() {
   const runLocalMigrate = () => {
     runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
   if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-    const p = nxCliPath();
+    const p = await nxCliPath();
     if (p === null) {
       runLocalMigrate();
     } else {
@@ -1867,9 +1877,14 @@ export function getImplementationPath(
   return { path: implPath, fnSymbol };
 }
 
-export function nxCliPath(nxWorkspaceRoot?: string) {
+export async function nxCliPath(nxWorkspaceRoot?: string) {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
+  const hasProvenance = await checkPackageHasProvenance('nx', version);
+  if (!hasProvenance) {
+    throw new Error(noProvenanceError('nx', version));
+  }
 
   try {
     const packageManager = detectPackageManager();
@@ -1972,3 +1987,25 @@ function isStringArray(value: unknown): value is string[] {
   }
   return value.every((v) => typeof v === 'string');
 }
+
+async function checkPackageHasProvenance(
+  packageName: string,
+  packageVersion: string
+): Promise<boolean> {
+  const npmView = (
+    await execAsync(
+      `npm view ${packageName}@${packageVersion} dist.attestations.provenance --json`,
+      {
+        encoding: 'utf-8',
+      }
+    )
+  ).stdout.trim();
+
+  return npmView !== '';
+}
+
+export const noProvenanceError = (
+  packageName: string,
+  packageVersion: string
+) =>
+  `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. The migration has been aborted. Please file an issue at https://github.com/nrwl/nx/issues`;
