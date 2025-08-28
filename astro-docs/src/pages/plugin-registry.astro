@@ -14,71 +14,97 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
   tableOfContents: false
 }}
 >
-  <CardGrid>
+  <style>
+    .plugin-grid .card .title {
+      font-size: 1rem !important;
+      font-weight: 500 !important;
+      line-height: 1.5 !important;
+    }
+    .plugin-grid .card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .plugin-grid .card .body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .plugin-grid a:hover {
+      text-decoration: none !important;
+    }
+  </style>
+  <CardGrid class="plugin-grid [&_.card]:min-h-[200px]">
     {plugins.map(plugin => (
-      <Card title={plugin.data.packageName} icon="open-book">
-        <div class="flex justify-between flex-col gap-2 min-h-40">
-
-        <div class="line-clamp-3">
-          {plugin.data.description}
-        </div>
-          <div class="grow content-end">
-          <div class="flex flex-wrap align-center justify-between gap-1 text-xs font-medium capitalize text-center">
-
-            {plugin.data.lastPublishedDate && <div class="inline-flex gap-1 items-end">
-                <Icon name="seti:clock" class="w-4 h-4 align-bottom inline-block" />
-                {dateFormatter(plugin.data.lastPublishedDate!)}</div>}
-
-            <div class="inline-flex gap-1">
-              <Icon name="star" class="w-4 h-4 inline-block align-bottom" />
-              {largeNumberFormatter(plugin.data.githubStars!)}</div>
-            <div class="inline-flex gap-1">
-              <Icon name="cloud-download" class="w-4 h-4 inline-block align-bottom" />
-              {largeNumberFormatter(plugin.data.npmDownloads!)}</div>
-          </div>
-
-          <div class="flex flex-wrap align-center justify-between gap-1 font-medium capitalize text-center">
-            <a href={`/docs/${plugin.data.slug}`} >
-              View Plugin
-            </a>
-
-              <div>
-            <Badge size="small" variant="success" text="Nx Open Source" />
+      <a href={`/docs/${plugin.data.slug}`} class="no-underline [&_.title]:!text-base [&_.title]:!font-medium [&_.title]:!text-current [&:hover]:!no-underline">
+        <Card title={plugin.data.packageName} icon="github">
+          <div class="flex flex-col h-full">
+            <div class="line-clamp-3 mb-4 text-sm text-gray-600 dark:text-gray-400">
+              {plugin.data.description}
             </div>
+            
+            <div class="flex items-center justify-between mt-auto text-xs text-gray-500 dark:text-gray-400">
+              <div class="flex items-center gap-3">
+                {plugin.data.lastPublishedDate && (
+                  <div class="flex items-center gap-1">
+                    <Icon name="seti:clock" class="w-3.5 h-3.5" />
+                    <span>{dateFormatter(plugin.data.lastPublishedDate!)}</span>
+                  </div>
+                )}
+                
+                <div class="flex items-center gap-1">
+                  <Icon name="star" class="w-3.5 h-3.5" />
+                  <span>{largeNumberFormatter(plugin.data.githubStars!)}</span>
+                </div>
+                
+                <div class="flex items-center gap-1">
+                  <Icon name="cloud-download" class="w-3.5 h-3.5" />
+                  <span>{largeNumberFormatter(plugin.data.npmDownloads!)}</span>
+                </div>
+              </div>
+              
+              <Badge size="small" variant="success" text="Nx Open Source" />
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </a>
     ))}
     {communityPlugins.map(plugin => (
-      <Card title={plugin.id} icon="open-book">
-        <div class="flex flex-col gap-2 min-h-40">
-          <p class="line-clamp-3">
-            {plugin.data.description}
-          </p>
-
-          <div class="grow content-end">
-          <div class="flex flex-wrap align-center justify-between gap-1 text-xs font-medium capitalize text-center">
-            {plugin.data.lastPublishedDate &&
-              <div class="inline-flex gap-1 items-end">
-                <Icon name="seti:clock" class="w-4 h-4 align-bottom inline-block" />
-                {dateFormatter(plugin.data.lastPublishedDate!)}</div>}
-            <div class="inline-flex gap-1">
-              <Icon name="star" class="w-4 h-4 inline-block align-bottom" />
-              {plugin.data.githubStars}</div>
-            <div class="inline-flex gap-1">
-              <Icon name="cloud-download" class="w-4 h-4 inline-block align-bottom" />
-              {plugin.data.npmDownloads}</div>
-            {plugin.data.nxVersion &&
-              <div class="inline-flex gap-1">
-                <Icon name="information" class="w-4 h-4 inline-block align-bottom" />
-                {plugin.data.nxVersion}</div>}
+      <a href={plugin.data.url} class="no-underline [&_.title]:!text-base [&_.title]:!font-medium [&_.title]:!text-current [&:hover]:!no-underline" target="_blank" rel="noopener noreferrer">
+        <Card title={plugin.id} icon="github">
+          <div class="flex flex-col h-full">
+            <div class="line-clamp-3 mb-4 text-sm text-gray-600 dark:text-gray-400">
+              {plugin.data.description}
+            </div>
+            
+            <div class="flex items-center justify-between mt-auto text-xs text-gray-500 dark:text-gray-400">
+              <div class="flex items-center gap-3">
+                {plugin.data.lastPublishedDate && (
+                  <div class="flex items-center gap-1">
+                    <Icon name="seti:clock" class="w-3.5 h-3.5" />
+                    <span>{dateFormatter(plugin.data.lastPublishedDate!)}</span>
+                  </div>
+                )}
+                
+                <div class="flex items-center gap-1">
+                  <Icon name="star" class="w-3.5 h-3.5" />
+                  <span>{plugin.data.githubStars}</span>
+                </div>
+                
+                <div class="flex items-center gap-1">
+                  <Icon name="cloud-download" class="w-3.5 h-3.5" />
+                  <span>{plugin.data.npmDownloads}</span>
+                </div>
+              </div>
+              
+              {plugin.data.nxVersion && (
+                <Badge size="small" variant="caution" text={`Nx ${plugin.data.nxVersion}`} />
+              )}
+            </div>
           </div>
-
-          <a href={plugin.data.url}>View Plugin</a>
-          </div>
-        </div>
-      </Card>))}
+        </Card>
+      </a>
+    ))}
   </CardGrid>
 
 
