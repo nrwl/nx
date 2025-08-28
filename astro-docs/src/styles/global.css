@@ -169,9 +169,40 @@ pre {
   aside {
     border-radius: var(--radius-lg);
   }
-}
+
+  /* Align TOC with sidebar styling */
+  starlight-toc ul {
+    line-height: var(--leading-relaxed);
+  }
+
+  starlight-toc li {
+    margin-bottom: var(--spacing);
+  }
+
+  starlight-toc a {
+    color: var(--sl-color-gray-4);
+    font-size: var(--text-sm);
+    display: block;
+  }
+
+  starlight-toc a[aria-current='true'] {
+    color: var(--sl-color-text-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+} /* end component layer */
 
 /* Additional custom styles can be added here */
+
+/* For deepdive callouts that are still used, need to space out content */
+.callout div:not(:last-child),
+.callout p:not(:last-child) {
+  @apply mb-4;
+}
+
+/* Align top with breadcrumbs */
+.right-sidebar-panel {
+  @apply pt-6;
+}
 
 /* Anchor link styles for headings */
 .anchor-link {

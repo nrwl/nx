@@ -55,11 +55,11 @@ const crumbs: Crumb[] = pathSegments.map((segment, index) => {
         )}
         <a
           href={crumb.href}
-          class={`no-underline text-sm font-medium${
+          class={`no-underline text-sm${
             crumb.current 
-              ? 'hover:text-slate-600 text-slate-600'
-          : 'hover:text-slate-600 text-slate-400'
-          } font-medium transition-colors`}
+              ? ' text-slate-900 dark:text-slate-100 font-semibold'
+          : ' text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700 dark:hover:text-slate-200'
+          } transition-colors`}
           aria-current={crumb.current ? 'page' : undefined}
         >
           {crumb.name}
