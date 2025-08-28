@@ -1943,6 +1943,43 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
   await ensurePackageHasProvenance('nx', version);
 
   try {
+    // Check provenance before installing to ensure package security
+    if (isVerbose) {
+      console.log(`Checking provenance for nx@${version}...`);
+    }
+
+    try {
+      const attestationsResult = execSync(
+        `npm view nx@${version} dist.attestations --json`,
+        { encoding: 'utf-8', stdio: 'pipe' }
+      );
+
+      const attestations = JSON.parse(attestationsResult);
+
+      if (!attestations?.provenance) {
+        console.error(
+          `Error: Package nx@${version} does not have provenance attestations.\n` +
+            `This could indicate a security risk. The migration has been aborted.\n` +
+            `Please verify the package source or use a specific version with provenance.`
+        );
+        process.exit(1);
+      }
+
+      if (isVerbose) {
+        console.log(
+          `✓ Package nx@${version} has valid provenance attestations.`
+        );
+      }
+    } catch (error) {
+      // If npm view fails, we should not proceed with installation
+      console.error(
+        `Failed to verify provenance for nx@${version}.\n` +
+          `The migration has been aborted for security reasons.\n` +
+          `Error: ${error.message || error}`
+      );
+      process.exit(1);
+    }
+
     const packageManager = detectPackageManager();
     const pmc = getPackageManagerCommand(packageManager);
 
