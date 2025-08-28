@@ -29,12 +29,12 @@ export default function CustomApp({
       <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Repos · Fast Builds"
-        description="An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things."
+        description="Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Repos · Fast Builds',
           description:
-            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+            'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
