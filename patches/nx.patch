@@ -1,0 +1,151 @@
+diff --git a/src/project-graph/build-project-graph.js b/src/project-graph/build-project-graph.js
+index da9a217b3180a21926fd3b877e57b5f88dc37dbc..44d8a4ff21080126687b316ef478017f302cafde 100644
+--- a/src/project-graph/build-project-graph.js
++++ b/src/project-graph/build-project-graph.js
+@@ -129,6 +129,9 @@ async function buildProjectGraphUsingContext(knownExternalNodes, ctx, cachedFile
+     const builder = new project_graph_builder_1.ProjectGraphBuilder(null, ctx.fileMap.projectFileMap);
+     builder.setVersion(projectGraphVersion);
+     for (const node in knownExternalNodes) {
++        if (node.includes('@typescript-eslint/type-utils')) {
++          console.log(`[DEBUG] Adding external node: ${node}`, knownExternalNodes[node]);
++        }
+         builder.addExternalNode(knownExternalNodes[node]);
+     }
+     await (0, normalize_project_nodes_1.normalizeProjectNodes)(ctx, builder);
+@@ -147,11 +150,24 @@ async function buildProjectGraphUsingContext(knownExternalNodes, ctx, cachedFile
+             throw e;
+         }
+     }
++    const typeUtilsNode = 'npm:@typescript-eslint/type-utils@8.36.0';
++    const nodeExistsAfterPlugins = !!updatedGraph.externalNodes[typeUtilsNode];
++    console.log(`[DEBUG] After plugins ran, @typescript-eslint/type-utils node exists: ${nodeExistsAfterPlugins}`);
++    if (!nodeExistsAfterPlugins) {
++      console.log(`[DEBUG] Available typescript-eslint external nodes after plugins:`, 
++        Object.keys(updatedGraph.externalNodes).filter(n => n.includes('typescript-eslint')));
++    }
+     const updatedBuilder = new project_graph_builder_1.ProjectGraphBuilder(updatedGraph, ctx.fileMap.projectFileMap);
+     for (const proj of Object.keys(cachedFileData.projectFileMap)) {
+         for (const f of ctx.fileMap.projectFileMap[proj] || []) {
+             const cached = cachedFileData.projectFileMap[proj][f.file];
+             if (cached && cached.deps) {
++                if (proj === 'angular' && cached.deps.some(dep => 
++                  (typeof dep === 'string' && dep.includes('@typescript-eslint/type-utils')) ||
++                  (Array.isArray(dep) && dep.some(d => typeof d === 'string' && d.includes('@typescript-eslint/type-utils')))
++                )) {
++                  console.log(`[DEBUG] Restoring cached deps for Angular file ${f.file}:`, cached.deps);
++                }
+                 f.deps = [...cached.deps];
+             }
+         }
+@@ -164,6 +180,18 @@ async function buildProjectGraphUsingContext(knownExternalNodes, ctx, cachedFile
+     }
+     (0, implicit_project_dependencies_1.applyImplicitDependencies)(ctx.projects, updatedBuilder);
+     const finalGraph = updatedBuilder.getUpdatedProjectGraph();
++    if (finalGraph.dependencies['angular']) {
++      const angularDeps = finalGraph.dependencies['angular'];
++      const typeUtilsDeps = angularDeps.filter(d => d.target.includes('@typescript-eslint/type-utils'));
++      console.log(`[DEBUG] Final Angular dependencies:`, {
++        totalDeps: angularDeps.length,
++        typeUtilsDepsCount: typeUtilsDeps.length,
++        typeUtilsDeps: typeUtilsDeps.map(d => ({ target: d.target, type: d.type })),
++        sampleDeps: angularDeps.slice(0, 5).map(d => ({ target: d.target, type: d.type }))
++      });
++    } else {
++      console.log(`[DEBUG] No dependencies found for Angular project in final graph`);
++    }
+     if (!error) {
+         return finalGraph;
+     }
+diff --git a/src/project-graph/nx-deps-cache.js b/src/project-graph/nx-deps-cache.js
+index 468b2699c8ecd42592b68a38a912e6fdd94f8408..1e828508ceef5eec9dd315f811ae43d4435b146c 100644
+--- a/src/project-graph/nx-deps-cache.js
++++ b/src/project-graph/nx-deps-cache.js
+@@ -231,6 +231,16 @@ function extractCachedFileData(fileMap, c) {
+         nonProjectFiles: {},
+         projectFileMap: {},
+     };
++    console.log(`[DEBUG] Extracting cached file data. Angular files in cache:`, 
++      c.fileMap.projectFileMap['angular']?.length || 0);
++    const angularFilesWithTypeUtils = c.fileMap.projectFileMap['angular']?.filter(f => 
++      f.deps?.some(dep => 
++        (typeof dep === 'string' && dep.includes('@typescript-eslint/type-utils')) ||
++        (Array.isArray(dep) && dep.some(d => typeof d === 'string' && d.includes('@typescript-eslint/type-utils')))
++      )
++    ) || [];
++    console.log(`[DEBUG] Angular files with @typescript-eslint/type-utils in cache:`, 
++      angularFilesWithTypeUtils.map(f => ({ file: f.file, deps: f.deps })));
+     const currentProjects = Object.keys(fileMap.projectFileMap).filter((name) => fileMap.projectFileMap[name].length > 0);
+     currentProjects.forEach((p) => {
+         processProjectNode(p, c.fileMap.projectFileMap, cachedFileData.projectFileMap, filesToProcess.projectFileMap, fileMap);
+diff --git a/src/project-graph/project-graph-builder.js b/src/project-graph/project-graph-builder.js
+index 622ab186b8a271679d49859aa3574a63b911fabb..1ba0993eca5b0d3a68f9000510296ddc58494f46 100644
+--- a/src/project-graph/project-graph-builder.js
++++ b/src/project-graph/project-graph-builder.js
+@@ -143,10 +143,34 @@ class ProjectGraphBuilder {
+                 ...alreadySetTargetProjects.values(),
+             ].flatMap((depsMap) => [...depsMap.values()]);
+             const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
++            if (sourceProject === 'angular') {
++              const typeUtilsDep = 'npm:@typescript-eslint/type-utils@8.36.0';
++              const hasTypeUtilsInFiles = fileDeps.has(typeUtilsDep);
++              const typeUtilsExternalNodeExists = !!this.graph.externalNodes[typeUtilsDep];
++              console.log(`[DEBUG] Angular project dependency check:`);
++              console.log(`  - File deps has @typescript-eslint/type-utils: ${hasTypeUtilsInFiles}`);
++              console.log(`  - External node exists: ${typeUtilsExternalNodeExists}`);
++              console.log(`  - Total file deps for angular: ${fileDeps.size}`);
++              if (hasTypeUtilsInFiles) {
++                console.log(`  - Types for @typescript-eslint/type-utils:`, Array.from(fileDeps.get(typeUtilsDep) || []));
++              }
++              console.log(`  - External nodes count: ${Object.keys(this.graph.externalNodes).length}`);
++              console.log(`  - Sample external nodes:`, Object.keys(this.graph.externalNodes).filter(n => n.includes('typescript-eslint')).slice(0, 5));
++            }
+             for (const [targetProject, types] of fileDeps.entries()) {
++                if (sourceProject === 'angular' && targetProject.includes('@typescript-eslint/type-utils')) {
++                  console.log(`[DEBUG] Processing ${targetProject} dependency for Angular:`, {
++                    nodeExists: !!this.graph.nodes[targetProject],
++                    externalNodeExists: !!this.graph.externalNodes[targetProject],
++                    types: Array.from(types)
++                  });
++                }
+                 // only add known nodes
+                 if (!this.graph.nodes[targetProject] &&
+                     !this.graph.externalNodes[targetProject]) {
++                    if (sourceProject === 'angular' && targetProject.includes('@typescript-eslint/type-utils')) {
++                      console.log(`[DEBUG] SKIPPING ${targetProject} for Angular - node not found in graph`);
++                    }
+                     continue;
+                 }
+                 for (const type of types.values()) {
+@@ -260,10 +284,32 @@ class ProjectGraphBuilder {
+         if (!files) {
+             return fileDeps;
+         }
++        if (sourceProject === 'angular') {
++          const filesWithDeps = files.filter(f => f.deps && f.deps.length > 0);
++          console.log(`[DEBUG] calculateTargetDepsFromFiles for Angular: ${files.length} total files, ${filesWithDeps.length} with deps`);
++          
++          // Check specifically for the file that should have @typescript-eslint/type-utils
++          const insertNgModuleFile = files.find(f => f.file.includes('insert-ngmodule-import.ts'));
++          if (insertNgModuleFile) {
++            console.log(`[DEBUG] Found insert-ngmodule-import.ts file:`, {
++              file: insertNgModuleFile.file,
++              hasDeps: !!insertNgModuleFile.deps,
++              depsCount: insertNgModuleFile.deps?.length || 0,
++              deps: insertNgModuleFile.deps
++            });
++          }
++        }
+         for (let f of files) {
+             if (f.deps) {
+                 for (let d of f.deps) {
+                     const target = (0, project_graph_1.fileDataDepTarget)(d);
++                    if (sourceProject === 'angular' && target.includes('@typescript-eslint/type-utils')) {
++                      console.log(`[DEBUG] Found @typescript-eslint/type-utils dependency in Angular file ${f.file}:`, {
++                        target,
++                        type: (0, project_graph_1.fileDataDepType)(d),
++                        rawDep: d
++                      });
++                    }
+                     if (!fileDeps.has(target)) {
+                         fileDeps.set(target, new Set([(0, project_graph_1.fileDataDepType)(d)]));
+                     }

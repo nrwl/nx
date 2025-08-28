@@ -413,7 +413,10 @@
     "onlyBuiltDependencies": [
       "@nestjs/core",
       "nx"
-    ]
+    ],
+    "patchedDependencies": {
+      "nx": "patches/nx.patch"
+    }
   },
   "nx": {
     "includedScripts": [
