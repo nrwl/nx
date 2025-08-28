@@ -11,7 +11,7 @@
 
 # Nx: Smart Repos · Fast Builds
 
-An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
+Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
 ## What is It?
 
