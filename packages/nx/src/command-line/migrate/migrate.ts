@@ -79,12 +79,14 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { execFile } from 'node:child_process';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
 }
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export function normalizeVersion(version: string) {
   const [semver, ...prereleaseTagParts] = version.split('-');
@@ -1992,11 +1994,23 @@ async function checkPackageHasProvenance(
   packageName: string,
   packageVersion: string
 ): Promise<boolean> {
+  // this is used for locally released versions without provenance
+  // do not set this for other reasons or you might be exposed to security risks
+  if (process.env.NX_MIGRATE_SKIP_PROVENANCE_CHECK) {
+    return true;
+  }
+
   const npmView = (
-    await execAsync(
-      `npm view ${packageName}@${packageVersion} dist.attestations.provenance --json`,
+    await execFileAsync(
+      'npm',
+      [
+        'view',
+        `${packageName}@${packageVersion}`,
+        'dist.attestations.provenance',
+        '--json',
+      ],
       {
-        encoding: 'utf-8',
+        timeout: 20000,
       }
     )
   ).stdout.trim();
