@@ -14,6 +14,7 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
+import { isRange, satisfiesRange } from './utils/semver';
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,
@@ -231,6 +232,20 @@ export default class JsVersionActions extends VersionActions {
                   // Reduce the count appropriately to avoid confusing user-facing logs
                   numDependenciesToUpdate--;
                   continue;
+                } else if (
+                  depType === 'peerDependencies' &&
+                  !this.isLocalDependencyProtocol(currentVersion) &&
+                  isRange(currentVersion)
+                ) {
+                  // If peerDependency with a range, do some additional processing to determine whether to update the version
+                  if (satisfiesRange(version, currentVersion)) {
+                    // If the current version is a valid range, then we should not update it
+                    continue;
+                  } else {
+                    throw new Error(
+                      `The version "${version}" is not a valid range for peerDependency "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update to a valid range.`
+                    );
+                  }
                 }
                 json[depType][packageName] = version;
               }
