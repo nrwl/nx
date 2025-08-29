@@ -11,8 +11,7 @@ import {
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
 
-// TODO(@Coly010): Re-enable when fixed
-xdescribe('React Rspack Module Federation Misc', () => {
+describe('React Rspack Module Federation Misc', () => {
   describe('Convert To Rspack', () => {
     beforeAll(() => {
       process.env.NX_ADD_PLUGINS = 'false';

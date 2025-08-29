@@ -20,7 +20,7 @@ export async function withModuleFederation(
   const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options);
+    await getModuleFederationConfig(options, undefined, 'webpack');
 
   return (config) => {
     const updatedConfig = {

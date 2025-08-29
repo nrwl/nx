@@ -15,8 +15,7 @@ import {
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
-// TODO(@Coly010): Re-enable when fixed
-xdescribe('Angular Module Federation', () => {
+describe('Angular Module Federation', () => {
   let proj: string;
   let oldVerboseLoggingValue: string;
 

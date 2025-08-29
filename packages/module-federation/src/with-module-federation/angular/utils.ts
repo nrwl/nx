@@ -109,7 +109,8 @@ export async function getModuleFederationConfig(
   options: {
     isServer: boolean;
     determineRemoteUrl?: (remote: string) => string;
-  } = { isServer: false }
+  } = { isServer: false },
+  bundler: 'rspack' | 'webpack' = 'rspack'
 ) {
   let projectGraph: ProjectGraph;
   try {
@@ -139,7 +140,9 @@ export async function getModuleFederationConfig(
   }
 
   const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries
+    dependencies.workspaceLibraries,
+    undefined,
+    bundler
   );
 
   const npmPackages = sharePackages(

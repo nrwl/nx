@@ -10,8 +10,7 @@ import {
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
-// TODO(@Coly010): Re-enable when fixed
-xdescribe('Federate Module', () => {
+describe('Federate Module', () => {
   let proj: string;
 
   beforeAll(() => {
