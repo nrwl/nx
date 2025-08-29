@@ -77,12 +77,17 @@ function TasksSidebarInner() {
     [projects, selectedTargets, error]
   );
 
-  const selectedProjects = useMemo(
-    () =>
-      isAllRoute
-        ? allProjectsWithTargetsAndNoErrors.map(({ name }) => name)
-        : searchParams.get('projects')?.split(' ') ?? [],
-    [allProjectsWithTargetsAndNoErrors, searchParams, isAllRoute]
+  const selectedProjects = useMemo(() => {
+    return isAllRoute
+      ? allProjectsWithTargetsAndNoErrors
+      : projects.filter((project) =>
+          (searchParams.get('projects') ?? '').split(' ').includes(project.name)
+        );
+  }, [allProjectsWithTargetsAndNoErrors, searchParams, isAllRoute]);
+
+  const selectedProjectNames = useMemo(
+    () => selectedProjects.map((project) => project.name),
+    [selectedProjects]
   );
 
   function updateSelectedTargets(newTargets: string[]) {
@@ -104,7 +109,7 @@ function TasksSidebarInner() {
   }
 
   function toggleProject(project: string) {
-    if (selectedProjects.includes(project)) {
+    if (selectedProjectNames.includes(project)) {
       deselectProject(project);
     } else {
       selectProject(project);
@@ -112,7 +117,7 @@ function TasksSidebarInner() {
   }
 
   function selectProject(project: string) {
-    const newSelectedProjects = [...selectedProjects, project];
+    const newSelectedProjects = [...selectedProjectNames, project];
     const allProjectsSelected =
       newSelectedProjects.length === allProjectsWithTargetsAndNoErrors.length;
 
@@ -135,7 +140,7 @@ function TasksSidebarInner() {
   }
 
   function deselectProject(project: string) {
-    const newSelectedProjects = selectedProjects.filter(
+    const newSelectedProjects = selectedProjectNames.filter(
       (selectedProject) => selectedProject !== project
     );
 
@@ -201,7 +206,11 @@ function TasksSidebarInner() {
 
   useEffect(() => {
     const taskIds = selectedProjects.flatMap((project) =>
-      selectedTargets.map((target) => createTaskName(project, target))
+      selectedTargets.map((target) => {
+        const resolvedConfiguration =
+          project.data.targets?.[target]?.defaultConfiguration;
+        return createTaskName(project.name, target, resolvedConfiguration);
+      })
     );
 
     send({ type: 'show', taskIds });
@@ -243,7 +252,7 @@ function TasksSidebarInner() {
 
       <TaskList
         projects={projects}
-        selectedProjects={selectedProjects}
+        selectedProjects={selectedProjectNames}
         workspaceLayout={workspaceLayout}
         selectedTargets={selectedTargets}
         toggleProject={toggleProject}

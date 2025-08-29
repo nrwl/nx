@@ -77,8 +77,10 @@ export function ProjectDetailsWrapper({
         navigate(
           routeConstructor(
             {
-              pathname: `/tasks/${encodeURIComponent(data.targetName)}`,
-              search: `?projects=${encodeURIComponent(data.projectName)}`,
+              pathname: `/tasks`,
+              search: `?targets=${encodeURIComponent(
+                data.targetName
+              )}&projects=${encodeURIComponent(data.projectName)}`,
             },
             true,
             ['expanded'] // omit expanded targets from search params
