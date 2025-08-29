@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { PlaywrightTestConfig } from '@playwright/test';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { getReporterOutputs, type ReporterOutput } from '../../utils/reporters';
@@ -66,29 +66,44 @@ export async function mergeReportsExecutor(
   const blobReportDir = blobReporterOutput[1];
   const pmc = getPackageManagerCommand();
 
-  try {
-    execSync(
-      `${
-        pmc.exec
-      } playwright merge-reports "${blobReportDir}" --reporter=${reporters.join(
-        ','
-      )}`,
-      {
-        cwd: projectRoot,
-        stdio: 'inherit',
-        env: {
-          ...process.env,
-          // when specifying reporters directly, we need to set the relevant env
-          // vars for all reporter with their output dirs/files
-          ...getEnvVarsForReporters(reporterOutputs),
-        },
-        windowsHide: false,
-      }
-    );
-  } catch (error) {
+  const result = spawnSync(
+    pmc.exec,
+    [
+      'playwright',
+      'merge-reports',
+      blobReportDir,
+      `--reporter=${reporters.join(',')}`,
+    ],
+    {
+      cwd: projectRoot,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        // when specifying reporters directly, we need to set the relevant env
+        // vars for all reporter with their output dirs/files
+        ...getEnvVarsForReporters(reporterOutputs),
+      },
+      shell: true,
+      windowsHide: false,
+    }
+  );
+
+  if (result.error) {
     output.error({
       title: 'Merging the blob reports failed',
-      bodyLines: [error.message ?? error, 'See above for more details.'],
+      bodyLines: [result.error.message, 'See above for more details.'],
+    });
+
+    return { success: false };
+  }
+
+  if (result.status !== 0) {
+    output.error({
+      title: 'Merging the blob reports failed',
+      bodyLines: [
+        `Process exited with code ${result.status}`,
+        'See above for more details.',
+      ],
     });
 
     return { success: false };
