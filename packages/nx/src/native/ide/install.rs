@@ -149,6 +149,18 @@ pub fn get_install_command() -> Option<&'static str> {
         return None;
     }
 
+    // Check for dev container environment variables
+    let dev_container_vars = ["CODESPACES", "DEVCONTAINER", "REMOTE_CONTAINERS"];
+    for var in &dev_container_vars {
+        if std::env::var(var).is_ok() {
+            debug!(
+                "Nx Console extension installation skipped - detected dev container environment variable: {}",
+                var
+            );
+            return None;
+        }
+    }
+
     // Use the sophisticated editor detection from nx_console
     let current_editor = get_current_editor();
     debug!("Detected editor: {:?}", current_editor);
