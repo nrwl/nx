@@ -9,6 +9,7 @@ jobs:
     name: Validate PR Title
     runs-on: ubuntu-latest
     steps:
+      - run: echo "test"
       - name: Checkout code
         uses: actions/checkout@v4
         with:
