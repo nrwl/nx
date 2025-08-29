@@ -761,4 +761,62 @@ describe('native task hasher', () => {
   //   );
   //   console.dir(hashes, { depth: null });
   // });
+
+  it('should provide NX_PROJECT_ROOT environment variable to runtime commands', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [
+              // Use a runtime command that outputs the NX_PROJECT_ROOT
+              { runtime: 'echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"' },
+            ],
+          },
+        },
+      },
+    });
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    const hash = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
+
+    // The runtime command should have access to NX_PROJECT_ROOT
+    // and the hash should include that output
+    expect(hash.details).toHaveProperty(
+      'runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'
+    );
+
+    // Verify the hash is deterministic and non-empty, proving NX_PROJECT_ROOT was available
+    const runtimeHash =
+      hash.details['runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'];
+    expect(runtimeHash).toBeDefined();
+    expect(runtimeHash).not.toBe('3244421341483603138'); // Should not be empty hash
+    expect(runtimeHash).toBe('17104739612706417536'); // Should be consistent hash for "libs/parent"
+  });
 });
