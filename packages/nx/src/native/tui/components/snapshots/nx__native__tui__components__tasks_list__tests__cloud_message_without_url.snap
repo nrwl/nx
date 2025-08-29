@@ -16,4 +16,4 @@ expression: terminal.backend()
 "                                                                                          "
 "                                                                                          "
 "                                                                                          "
-"  ← 1/1 →   This is some warning from Nx Cloud                            quit: q  help: ?"
+"This is some warning from Nx Cloud                                        quit: q  help: ?"
