@@ -21,8 +21,6 @@ pub enum Action {
     UnpinTask(String, usize),
     UnpinAllTasks,
     SortTasks,
-    NextPage,
-    PreviousPage,
     NextTask,
     PreviousTask,
     SetSpacebarMode(bool),
