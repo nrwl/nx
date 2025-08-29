@@ -153,7 +153,10 @@ pub fn get_install_command() -> Option<&'static str> {
     let dev_container_vars = ["CODESPACES", "DEVCONTAINER", "REMOTE_CONTAINERS"];
     for var in &dev_container_vars {
         if std::env::var(var).is_ok() {
-            debug!("Nx Console extension installation skipped - detected dev container environment variable: {}", var);
+            debug!(
+                "Nx Console extension installation skipped - detected dev container environment variable: {}",
+                var
+            );
             return None;
         }
     }
