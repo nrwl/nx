@@ -64,6 +64,7 @@
     },
     "validate-links": {
       "dependsOn": ["build"],
+      "cache": true,
       "inputs": [
         "{projectRoot}/src/**/*",
         "{projectRoot}/astro.config.mjs",
