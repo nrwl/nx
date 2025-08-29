@@ -3,7 +3,7 @@ name: publish
 on:
   # Automated schedule - canary releases from master
   schedule:
-    - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
+    - cron: "0 20 * * 1-5" # Monday - Friday, at 20:00 UTC (8pm UTC)
   release:
     types: [ published ]
 
