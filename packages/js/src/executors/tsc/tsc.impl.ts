@@ -17,7 +17,7 @@ import {
   isInlineGraphEmpty,
   postProcessInlinedDependencies,
 } from '../../utils/inline';
-import { updatePackageJson } from '../../utils/package-json/update-package-json';
+import { updatePackageJson, type SupportedFormat } from '../../utils/package-json/update-package-json';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
@@ -27,18 +27,27 @@ import { createEntryPoints } from '../../utils/package-json/create-entry-points'
 
 export function determineModuleFormatFromTsConfig(
   absolutePathToTsConfig: string
-): 'cjs' | 'esm' {
+): SupportedFormat | undefined {
   const tsConfig = readTsConfig(absolutePathToTsConfig);
-  if (
-    tsConfig.options.module === ts.ModuleKind.ES2015 ||
-    tsConfig.options.module === ts.ModuleKind.ES2020 ||
-    tsConfig.options.module === ts.ModuleKind.ES2022 ||
-    tsConfig.options.module === ts.ModuleKind.ESNext ||
-    tsConfig.options.module === ts.ModuleKind.NodeNext
-  ) {
-    return 'esm';
-  } else {
-    return 'cjs';
+  switch (tsConfig.options.module) {
+    case ts.ModuleKind.ES2015:
+    case ts.ModuleKind.ES2020:
+    case ts.ModuleKind.ES2022:
+    case ts.ModuleKind.ESNext:
+      return 'esm';
+    case ts.ModuleKind.CommonJS:
+    case ts.ModuleKind.AMD:
+    case ts.ModuleKind.UMD:
+    case ts.ModuleKind.System:
+    case ts.ModuleKind.None:
+    case ts.ModuleKind.Preserve:
+        return 'cjs';
+    case ts.ModuleKind.Node16:
+    case ts.ModuleKind.Node18:
+    case ts.ModuleKind.NodeNext:
+      return undefined;
+    default:
+      return tsConfig.options.module satisfies never;
   }
 }
 
