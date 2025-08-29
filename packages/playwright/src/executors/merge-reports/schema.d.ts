@@ -1,4 +1,4 @@
 export type Schema = {
   config: string;
-  expectedSuites: number;
+  expectedSuites?: number;
 };

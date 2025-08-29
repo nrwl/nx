@@ -21,7 +21,7 @@
         "x-priority": "important"
       }
     },
-    "required": ["config", "expectedSuites"],
+    "required": ["config"],
     "presets": []
   },
   "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
