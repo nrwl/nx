@@ -1,5 +1,5 @@
 import { exec, execSync } from 'child_process';
-import { copyFileSync, existsSync, writeFileSync } from 'fs';
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import {
   Pair,
   ParsedNode,
@@ -23,6 +23,7 @@ import {
   readYamlFile,
   writeJsonFile,
 } from './fileutils';
+import { getNxInstallationPath } from './installation-directory';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
@@ -79,7 +80,18 @@ export function isWorkspacesEnabled(
   root: string = workspaceRoot
 ): boolean {
   if (packageManager === 'pnpm') {
-    return existsSync(join(root, 'pnpm-workspace.yaml'));
+    if (!existsSync(join(root, 'pnpm-workspace.yaml'))) {
+      return false;
+    }
+
+    try {
+      const content = readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      const { packages } = load(content) ?? {};
+      return packages !== undefined;
+    } catch {
+      return false;
+    }
   }
 
   // yarn and npm both use the same 'workspaces' property in package.json
@@ -296,6 +308,10 @@ export function findFileInPackageJsonDirectory(
   directory: string = process.cwd()
 ): string | null {
   while (!existsSync(join(directory, 'package.json'))) {
+    if (directory === workspaceRoot) {
+      // we reached the workspace root and we didn't find a package.json file
+      return null;
+    }
     directory = dirname(directory);
   }
   const path = join(directory, file);
@@ -406,7 +422,11 @@ export function createTempNpmDirectory() {
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
-  copyPackageManagerConfigurationFiles(workspaceRoot, dir);
+  const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
+  copyPackageManagerConfigurationFiles(
+    isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
+    dir
+  );
 
   const cleanup = async () => {
     try {

@@ -2363,6 +2363,92 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should create deterministic task graphs regardless of target order', () => {
+    // This test addresses an issue where dummy tasks (created when a dependency project
+    // doesn't have the required target) would have different dependency structures
+    // depending on the order targets were processed. Previously, these dummy tasks would
+    // improperly inherit different configurations based on which source task (test vs lint)
+    // created them first, leading to non-deterministic task graphs.
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^test', '^lint'],
+              },
+              lint: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^lint'],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              // No targets - will create dummy tasks
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^test', '^lint'],
+              },
+              lint: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^lint'],
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [],
+      },
+    };
+
+    // Create task graphs with different target orders
+    const taskGraph1 = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['test', 'lint'], // test first
+      undefined,
+      { __overrides_unparsed__: [] }
+    );
+
+    const taskGraph2 = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['lint', 'test'], // lint first
+      undefined,
+      { __overrides_unparsed__: [] }
+    );
+
+    taskGraph1.roots.sort();
+    taskGraph2.roots.sort();
+
+    // Both task graphs should be identical
+    expect(taskGraph1).toEqual(taskGraph2);
+  });
+
   it('should exclude task dependencies', () => {
     projectGraph = {
       nodes: {

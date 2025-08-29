@@ -5,11 +5,9 @@ sidebar:
   order: 6
 ---
 
-# Maintain TypeScript Monorepos
-
 Keeping all the industry-standard tools involved in a large TypeScript monorepo correctly configured and working well together is a difficult task. And the more tools you add, the more opportunity there is for tools to conflict with each other in some way.
 
-In addition to [generating default configuration files](/features/generate-code) and [automatically updating dependencies](/features/automate-updating-dependencies) to versions that we know work together, Nx makes managing all the tools in your monorepo easier in two ways:
+In addition to [generating default configuration files](/docs/features/generate-code) and [automatically updating dependencies](/docs/features/automate-updating-dependencies) to versions that we know work together, Nx makes managing all the tools in your monorepo easier in two ways:
 
 - Rather than adding another tool that you have to configure, Nx configures itself to match the existing configuration of other tools.
 - Nx also enhances certain tools to be more usable in a monorepo context.
@@ -20,9 +18,9 @@ Whenever possible, Nx will detect the existing configuration settings of other t
 
 ### Project Detection with Workspaces
 
-If your repository is using package manager workspaces, Nx will use those settings to find all the [projects](/reference/project-configuration) in your repository. So you don't need to define a project for your package manager and separately identify the project for Nx. The `workspaces` configuration on the left allows Nx to detect the project graph on the right.
+If your repository is using package manager workspaces, Nx will use those settings to find all the [projects](/docs/reference/project-configuration) in your repository. So you don't need to define a project for your package manager and separately identify the project for Nx. The `workspaces` configuration on the left allows Nx to detect the project graph on the right.
 
-\{% side-by-side align="top" %}
+{% side_by_side align="top" %}
 
 ```json
 // package.json
@@ -31,9 +29,8 @@ If your repository is using package manager workspaces, Nx will use those settin
 }
 ```
 
-\{% graph height="200px" title="Project View" %}
+{% graph height="200px" title="Project View" %}
 
-```json
 {
   "composite": false,
   "projects": [
@@ -80,21 +77,20 @@ If your repository is using package manager workspaces, Nx will use those settin
   "exclude": [],
   "enableTooltips": false
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
-\{% /side-by-side %}
+{% /side_by_side %}
 
 ### Inferred Tasks with Tooling Plugins
 
-Nx provides [plugins](/concepts/nx-plugins) for tools that run tasks, like Vite, TypeScript, Playwright or Jest. These plugins can automatically [infer the Nx-specific task configuration](/concepts/inferred-tasks) based on the tooling configuration files that already exist.
+Nx provides [plugins](/docs/concepts/nx-plugins) for tools that run tasks, like Vite, TypeScript, Playwright or Jest. These plugins can automatically [infer the Nx-specific task configuration](/docs/concepts/inferred-tasks) based on the tooling configuration files that already exist.
 
-In the example below, because the `/apps/cart/vite.config.ts` file exists, Nx knows that the `cart` project can run a `build` task using Vite. If you expand the `build` task on the right, you can also see that Nx configured the output directory for the [cache](/features/cache-task-results) to match the `build.outDir` provided in the Vite configuration file.
+In the example below, because the `/apps/cart/vite.config.ts` file exists, Nx knows that the `cart` project can run a `build` task using Vite. If you expand the `build` task on the right, you can also see that Nx configured the output directory for the [cache](/docs/features/cache-task-results) to match the `build.outDir` provided in the Vite configuration file.
 
 With inferred tasks, you can keep your tooling configuration file as the one source of truth for that tool's configuration, instead of adding an extra layer of configuration on top.
 
-\{% side-by-side align="top" %}
+{% side_by_side align="top" %}
 
 ```ts
 // /apps/cart/vite.config.ts
@@ -117,9 +113,8 @@ export default defineConfig({
 });
 ```
 
-\{% project-details %}
+{% project_details %}
 
-```json
 {
   "project": {
     "name": "cart",
@@ -181,11 +176,10 @@ export default defineConfig({
     "tags": ["apps/cart/project.json", "nx/core/project-json"]
   }
 }
-```
 
-\{% /project-details %}
+{% /project_details %}
 
-\{% /side-by-side %}
+{% /side_by_side %}
 
 ## Enhance Tools for Monorepos
 
@@ -193,15 +187,14 @@ Nx does not just reduce its own configuration burden, it also improves the funct
 
 ### Keep TypeScript Project References in Sync
 
-TypeScript provides a feature called [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) that allows the TypeScript compiler to build and typecheck each project independently. When each project is typechecked, the TypeScript compiler will output an intermediate `*.tsbuildinfo` file that can be used by other projects instead of re-typechecking all dependencies. This feature can provide [significant performance improvements](/concepts/typescript-project-linking#typescript-project-references-performance-benefits), particularly in a large monorepo.
+TypeScript provides a feature called [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) that allows the TypeScript compiler to build and typecheck each project independently. When each project is typechecked, the TypeScript compiler will output an intermediate `*.tsbuildinfo` file that can be used by other projects instead of re-typechecking all dependencies. This feature can provide [significant performance improvements](/docs/concepts/typescript-project-linking#typescript-project-references-performance-benefits), particularly in a large monorepo.
 
-The main downside of this feature is that you have to manually define each project's references (dependencies) in the appropriate `tsconfig.*.json` file. This process is tedious to set up and very difficult to maintain as the repository changes over time. Nx can help by using a [sync generator](/concepts/sync-generators) to automatically update the references defined in the `tsconfig.json` files based on the project graph it already knows about.
+The main downside of this feature is that you have to manually define each project's references (dependencies) in the appropriate `tsconfig.*.json` file. This process is tedious to set up and very difficult to maintain as the repository changes over time. Nx can help by using a [sync generator](/docs/concepts/sync-generators) to automatically update the references defined in the `tsconfig.json` files based on the project graph it already knows about.
 
-\{% side-by-side align="top" %}
+{% side_by_side align="top" %}
 
-\{% graph height="200px" title="Project View" %}
+{% graph height="200px" title="Project View" %}
 
-```json
 {
   "composite": false,
   "projects": [
@@ -248,9 +241,8 @@ The main downside of this feature is that you have to manually define each proje
   "exclude": [],
   "enableTooltips": false
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
 ```jsonc
 // apps/cart/tsconfig.json
@@ -277,7 +269,7 @@ The main downside of this feature is that you have to manually define each proje
 }
 ```
 
-\{% /side-by-side %}
+{% /side_by_side %}
 
 Later, if someone adds another dependency to the `cart` app and then runs the `build` task, Nx will detect that the project references are out of sync and ask if the references should be updated.
 

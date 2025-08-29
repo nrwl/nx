@@ -1,9 +1,11 @@
 ---
 import config from 'virtual:starlight/user-config';
 import Search from 'virtual:starlight/components/Search';
-import SiteTitle from 'virtual:starlight/components/SiteTitle';
 import SocialIcons from 'virtual:starlight/components/SocialIcons';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import { Image } from 'astro:assets';
+import nxLogoDark from '../../assets/nx/Nx-dark.svg';
+import nxLogoLight from '../../assets/nx/Nx-light.svg';
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -13,7 +15,7 @@ const shouldRenderSearch =
 
 // Version options
 const versions = [
-	{ version: 'v21', href: '/', current: true },
+  { version: 'v21', href: '/docs/getting-started/intro', current: true },
 	{ version: 'v20', href: 'https://20.nx.dev/docs' },
 	{ version: 'v19', href: 'https://19.nx.dev/docs' },
 ];
@@ -21,10 +23,13 @@ const versions = [
 const currentVersion = versions.find(v => v.current);
 ---
 
-<div class="flex items-center justify-between h-full gap-4 px-4">
+<div class="flex items-center justify-between h-full gap-4">
 	<div class="flex items-center gap-2 flex-shrink-0">
-		<SiteTitle />
-		<a href="/getting-started/intro" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
+    <a href={import.meta.env.SITE} class="flex items-center no-underline">
+			<Image src={nxLogoDark} alt="Nx" class="h-12 w-auto dark:hidden" />
+			<Image src={nxLogoLight} alt="Nx" class="h-12 w-auto hidden dark:block" />
+		</a>
+		<a href="/docs/getting-started/intro" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500">
 			Docs
 		</a>
 		<!-- Version Switcher -->

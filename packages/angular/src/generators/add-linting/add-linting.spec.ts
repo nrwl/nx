@@ -65,9 +65,7 @@ describe('addLinting generator', () => {
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['@typescript-eslint/utils']).toMatchInlineSnapshot(
-      `"^8.29.0"`
-    );
+    expect(devDependencies['@typescript-eslint/utils']).toBe('^8.40.0');
     delete process.env.ESLINT_USE_FLAT_CONFIG;
   });
 

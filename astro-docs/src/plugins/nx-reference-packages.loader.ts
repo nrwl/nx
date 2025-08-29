@@ -396,7 +396,7 @@ async function loadNxCliPackage(context: LoaderContext): Promise<DocEntry[]> {
         join(workspaceRoot, 'packages/nx/src/command-line/nx-commands.ts')
       ),
       data: {
-        title: 'Nx CLI Reference',
+        title: 'Nx Commands',
         packageType: 'nx-cli',
         docType: 'cli',
         description: 'Complete reference for Nx CLI commands',
@@ -546,13 +546,13 @@ function parseComment(comment: typedoc.CommentDisplayPart[], baseSlug: string) {
           case '@linkcode':
           case '@linkplain': {
             if (part.target) {
-              const baseUrl = `/api/plugins/devkit${
+              const baseUrl = `/docs/reference/devkit${
                 baseSlug === 'ngcli_adapter' ? `/${baseSlug}` : ''
               }`;
               const url =
                 typeof part.target === 'string'
                   ? part.target
-                  : `${baseUrl}/${part.text.toLowerCase().replace(/\s/g, '')}`;
+                  : `${baseUrl}/${normalizeDevkitUrl(part.text)}`;
               const wrap = part.tag === '@linkcode' ? '`' : '';
               result.push(
                 url ? `[${wrap}${part.text}${wrap}](${url})` : part.text
@@ -582,7 +582,7 @@ function parseComment(comment: typedoc.CommentDisplayPart[], baseSlug: string) {
 function generateMarkdownForReflection(
   reflection: typedoc.DeclarationReflection,
   baseSlug: string
-): string | null {
+) {
   let content = '';
 
   if (reflection.comment) {
@@ -648,7 +648,7 @@ function generateMarkdownForReflection(
     }
   }
 
-  return content || null;
+  return content || '**No documentation available**';
 }
 
 function formatParameters(parameters?: typedoc.ParameterReflection[]): string {
@@ -707,38 +707,34 @@ async function generateDocsForEntry(
       !reflection.name ||
       reflection.flags.isPrivate ||
       !allowedReflections.includes(reflection.kind)
-    )
+    ) {
       continue;
-
+    }
     const markdownContent = generateMarkdownForReflection(
       reflection as typedoc.DeclarationReflection,
       packageType
     );
 
-    if (markdownContent) {
-      const rendered = await renderMarkdown(markdownContent);
+    const rendered = await renderMarkdown(markdownContent);
 
-      const documentRecord: DocEntry = {
-        id: `${packageType}_${reflection.name
-          .toLowerCase()
-          .replace(/\s/g, '')}`,
-        body: markdownContent,
-        rendered,
-        collection: 'nx-reference-packages',
-        data: {
-          title: reflection.name,
-          packageType: 'devkit',
-          docType: packageType,
-          description: reflection.comment?.summary
-            ? parseComment(reflection.comment.summary, packageType)
-            : 'No description available',
-          kind: typedoc.ReflectionKind[reflection.kind],
-          category: categoryMap[reflection.kind] || 'Other',
-        },
-      };
+    const documentRecord: DocEntry = {
+      id: `${packageType}_${normalizeDevkitUrl(reflection.name)}`,
+      body: markdownContent,
+      rendered,
+      collection: 'nx-reference-packages',
+      data: {
+        title: reflection.name,
+        packageType: 'devkit',
+        docType: packageType,
+        description: reflection.comment?.summary
+          ? parseComment(reflection.comment.summary, packageType)
+          : 'No description available',
+        kind: typedoc.ReflectionKind[reflection.kind],
+        category: categoryMap[reflection.kind] || 'Other',
+      },
+    };
 
-      records.push(documentRecord);
-    }
+    records.push(documentRecord);
   }
 
   return records;
@@ -751,7 +747,11 @@ async function createDevkitOverview(
 ): Promise<DocEntry> {
   const record: DocEntry = {
     id: `${packageType}-overview`,
-    body: '',
+    body: `
+The Nx Devkit is the underlying technology used to customize Nx to support different technologies and custom use-cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.
+
+As with most things in Nx, the core of Nx Devkit is very simple. It only uses language primitives and immutable objects (the tree being the only exception).
+`,
     collection: 'nx-reference-packages',
     data: {
       kind: 'Project',
@@ -766,7 +766,7 @@ async function createDevkitOverview(
   const categories = Object.values(categoryMap).sort((a, b) =>
     a.localeCompare(b)
   );
-  const baseUrl = `/api/plugins/devkit${
+  const baseUrl = `/docs/reference/devkit${
     packageType === 'ngcli_adapter' ? `/${packageType}` : ''
   }`;
 
@@ -785,9 +785,7 @@ async function createDevkitOverview(
       ofKind
         .map(
           (r) =>
-            `[${r.data.title}](${baseUrl}/${r.data.title
-              .toLowerCase()
-              .replace(/\s/g, '')})`
+            `[${r.data.title}](${baseUrl}/${normalizeDevkitUrl(r.data.title)})`
         )
         .join('\n- ');
   }
@@ -821,7 +819,7 @@ async function loadDevkitPackage(context: LoaderContext): Promise<DocEntry[]> {
           tsconfig: join(buildDir, 'tsconfig.lib.json'),
           out: outDir,
           excludePrivate: true,
-          publicPath: '/reference/core-api/devkit/',
+          publicPath: '/docs/reference/devkit/',
         },
         // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
         renderMarkdown,
@@ -854,7 +852,7 @@ async function loadDevkitPackage(context: LoaderContext): Promise<DocEntry[]> {
           entryPoints: [ngcliEntryPoint],
           tsconfig: join(buildDir, 'tsconfig.lib.json'),
           out: join(outDir, 'ngcli_adapter'),
-          publicPath: '/reference/core-api/devkit/ngcli_adapter/',
+          publicPath: '/docs/reference/devkit/ngcli_adapter/',
         },
         // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
         renderMarkdown,
@@ -1079,4 +1077,9 @@ export function NxReferencePackagesLoader(): Loader {
       await generate();
     },
   };
+}
+
+function normalizeDevkitUrl(text: string) {
+  // we want to keep the specific casing bc it makes URL more readable
+  return text ? text.replace(/\s/g, '') : text;
 }

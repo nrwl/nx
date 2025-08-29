@@ -27,6 +27,7 @@ import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
 import { VersionPicker } from '../version-picker';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
@@ -90,8 +91,13 @@ export function DocumentationHeader({
     }
   };
 
+  // Use the new docs URL when Astro docs are enabled
+  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
+    ? '/docs/getting-started/intro'
+    : '/getting-started/intro';
+
   const sections = [
-    { name: 'Nx', href: '/getting-started/intro', current: isNx },
+    { name: 'Nx', href: docsUrl, current: isNx },
     {
       name: 'CI',
       href: '/ci/features',
@@ -235,7 +241,7 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-auto">
+          <div className="mx-4 w-auto flex-grow">
             <AlgoliaSearch />
           </div>
         </div>
@@ -253,9 +259,16 @@ export function DocumentationHeader({
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
-            href="/getting-started/intro"
+            href={docsUrl}
             className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
             prefetch={false}
+            onClick={() =>
+              sendCustomEvent(
+                'documentation-click',
+                'header-navigation',
+                'documentation-header'
+              )
+            }
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -268,7 +281,7 @@ export function DocumentationHeader({
           <AlgoliaSearch />
         </div>
         {/*NAVIGATION*/}
-        <div className="hidden flex-shrink-0 xl:flex">
+        <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
             className="hidden items-center justify-center space-x-2 text-sm lg:flex"
@@ -354,15 +367,37 @@ export function DocumentationHeader({
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-4 lg:flex"
+            className="items-justified hidden justify-center space-x-2 lg:flex"
           >
             <ButtonLink
-              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
-              title="Get started"
+              href="/contact"
+              title="Contact"
+              variant="secondary"
+              size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'contact-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
+            >
+              Contact
+            </ButtonLink>
+            <ButtonLink
+              href="https://cloud.nx.app/?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
+              title="Login"
               variant="primary"
               size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'login-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
             >
-              Get started
+              Login
             </ButtonLink>
           </nav>
         </div>

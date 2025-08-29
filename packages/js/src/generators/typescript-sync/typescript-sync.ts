@@ -51,7 +51,11 @@ type TsconfigInfoCaches = {
   content: Map<string, string>;
   exists: Map<string, boolean>;
 };
-type ChangedFileDetails = { missing: Set<string>; stale: Set<string> };
+type ChangedFileDetails = {
+  duplicates: Set<string>;
+  missing: Set<string>;
+  stale: Set<string>;
+};
 type ChangeType = keyof ChangedFileDetails;
 
 export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
@@ -119,15 +123,35 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
   if (tsconfigProjectNodeValues.length > 0) {
     const referencesSet = new Set<string>();
+    const rootPathCounts = new Map<string, number>();
     for (const ref of rootTsconfig.references ?? []) {
       // reference path is relative to the tsconfig file
       const resolvedRefPath = getTsConfigPathFromReferencePath(
         rootTsconfigPath,
         ref.path
       );
+      const normalizedPath = normalizeReferencePath(ref.path);
+
+      // Track duplicates
+      const currentCount = (rootPathCounts.get(normalizedPath) || 0) + 1;
+      rootPathCounts.set(normalizedPath, currentCount);
+      if (currentCount === 2) {
+        addChangedFile(
+          changedFiles,
+          rootTsconfigPath,
+          resolvedRefPath,
+          'duplicates'
+        );
+      }
+
+      if (currentCount > 1) {
+        // Skip duplicate processing - only process first occurrence
+        continue;
+      }
+
       if (tsconfigExists(tree, tsconfigInfoCaches, resolvedRefPath)) {
         // we only keep the references that still exist
-        referencesSet.add(normalizeReferencePath(ref.path));
+        referencesSet.add(normalizedPath);
       } else {
         addChangedFile(
           changedFiles,
@@ -270,11 +294,18 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
           `  - Stale references: ${Array.from(details.stale).join(', ')}`
         );
       }
+      if (details.duplicates.size > 0) {
+        outOfSyncDetails.push(
+          `  - Duplicate references: ${Array.from(details.duplicates).join(
+            ', '
+          )}`
+        );
+      }
     }
 
     return {
       outOfSyncMessage:
-        'Some TypeScript configuration files are missing project references to the projects they depend on or contain stale project references.',
+        'Some TypeScript configuration files are missing project references to the projects they depend on, contain stale project references, or have duplicate project references.',
       outOfSyncDetails,
     };
   }
@@ -341,10 +372,30 @@ function updateTsConfigReferences(
   const references = [];
   const originalReferencesSet = new Set();
   const newReferencesSet = new Set();
+  const pathCounts = new Map<string, number>();
+  let hasChanges = false;
 
   for (const ref of tsConfig.references ?? []) {
     const normalizedPath = normalizeReferencePath(ref.path);
     originalReferencesSet.add(normalizedPath);
+
+    // Track duplicates
+    const currentCount = (pathCounts.get(normalizedPath) || 0) + 1;
+    pathCounts.set(normalizedPath, currentCount);
+    if (currentCount === 2) {
+      const resolvedRefPath = getTsConfigPathFromReferencePath(
+        tsConfigPath,
+        normalizedPath
+      );
+      addChangedFile(changedFiles, tsConfigPath, resolvedRefPath, 'duplicates');
+      hasChanges = true;
+    }
+
+    if (currentCount > 1) {
+      // Skip duplicate processing - only process first occurrence
+      continue;
+    }
+
     if (ignoredReferences.has(ref.path)) {
       // we keep the user-defined ignored references
       references.push(ref);
@@ -375,7 +426,6 @@ function updateTsConfigReferences(
     }
   }
 
-  let hasChanges = false;
   for (const dep of dependencies) {
     // Ensure the project reference for the target is set if we can find the
     // relevant tsconfig file
@@ -667,7 +717,11 @@ function addChangedFile(
   type: ChangeType
 ) {
   if (!changedFiles.has(filePath)) {
-    changedFiles.set(filePath, { missing: new Set(), stale: new Set() });
+    changedFiles.set(filePath, {
+      duplicates: new Set(),
+      missing: new Set(),
+      stale: new Set(),
+    });
   }
 
   changedFiles.get(filePath)[type].add(referencePath);

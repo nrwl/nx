@@ -7,6 +7,40 @@ module.exports = withNx({
   typescript: {
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
+    const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL;
+
+    if (!astroDocsUrl) {
+      // Skip rewrites if env var is not set
+      return [];
+    }
+
+    const entries = [
+      {
+        source: '/docs',
+        destination: `${astroDocsUrl}/docs`,
+      },
+      {
+        source: '/docs/:path*',
+        destination: `${astroDocsUrl}/docs/:path*`,
+      },
+      {
+        source: '/.netlify/:path*',
+        destination: `${astroDocsUrl}/.netlify/:path*`,
+      },
+    ];
+
+    // For Vite assets only in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      entries.push({
+        source: '/@fs/:path*',
+        destination: `${astroDocsUrl}/@fs/:path*`,
+      });
+    }
+
+    return entries;
+  },
   // Transpile nx-dev packages
   transpilePackages: [
     '@nx/nx-dev-data-access-documents',

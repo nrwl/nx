@@ -7,7 +7,6 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { WebinarNotifier } from '@nx/nx-dev-ui-common';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
 
@@ -38,11 +37,11 @@ export default function CustomApp({
             'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
               alt: 'Nx: Smart Repos · Fast Builds',
-              type: 'image/jpeg',
+              type: 'image/png',
             },
           ],
           siteName: 'Nx',
@@ -77,7 +76,8 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
         <Script
           id="Cookiebot"
           src="https://consent.cookiebot.com/uc.js"
@@ -97,7 +97,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      <WebinarNotifier />
+      {/* <WebinarNotifier /> */}
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

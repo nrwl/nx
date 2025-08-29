@@ -18,6 +18,8 @@ declare global {
 export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
   // Don't load analytics scripts in development
   const isProduction = process.env.NODE_ENV === 'production';
+  const isCookiebotDisabled =
+    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE === 'true';
 
   useEffect(() => {
     if (!isProduction) return;
@@ -127,7 +129,11 @@ export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
     };
 
     const checkAndLoadScripts = () => {
-      if (window.Cookiebot && window.Cookiebot.consent) {
+      if (isCookiebotDisabled) {
+        loadGoogleAnalytics();
+        loadGTM();
+        loadHubSpot();
+      } else if (window.Cookiebot && window.Cookiebot.consent) {
         // Statistics cookies (Google Analytics, GTM)
         if (window.Cookiebot.consent.statistics) {
           loadGoogleAnalytics();

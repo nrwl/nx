@@ -268,7 +268,9 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   const globbedFiles = globWithWorkspaceContextSync(tree.root, patterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
-  const projectFiles = [...globbedFiles, ...createdFiles].filter(
+  // Ensure we don't duplicate files that are both globbed and in tree changes
+  const allProjectFiles = new Set([...globbedFiles, ...createdFiles]);
+  const projectFiles = Array.from(allProjectFiles).filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
@@ -326,7 +328,10 @@ function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
   const createdProjectFiles = [];
 
   for (const change of tree.listChanges()) {
-    if (change.type === 'CREATE') {
+    // Include both CREATE and UPDATE changes to handle project files
+    // created during generator callbacks (which are marked as UPDATE
+    // since the tree has already been flushed to disk)
+    if (change.type === 'CREATE' || change.type === 'UPDATE') {
       const fileName = basename(change.path);
       if (
         globPatterns.some((pattern) =>

@@ -1,12 +1,12 @@
+// nx-ignore-next-line
 import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '@nx/devkit';
-import type {
-  ProjectGraphClientResponse,
-  TaskGraphClientResponse,
-} from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
+import type { TaskGraphClientResponse } from '../task-graph-client-response';
 
 export class MockProjectGraphService implements ProjectGraphService {
   private projectGraphsResponse: ProjectGraphClientResponse = {
@@ -61,8 +61,14 @@ export class MockProjectGraphService implements ProjectGraphService {
   };
 
   private taskGraphsResponse: TaskGraphClientResponse = {
-    taskGraphs: {},
-    errors: {},
+    taskGraph: {
+      roots: [],
+      tasks: {},
+      dependencies: {},
+      continuousDependencies: {},
+    },
+    plans: {},
+    error: null,
   };
 
   constructor(updateFrequency = 5000) {
@@ -84,7 +90,7 @@ export class MockProjectGraphService implements ProjectGraphService {
   getSpecificTaskGraph(
     _url: string,
     projects: string | string[] | null,
-    target: string,
+    targets: string[],
     configuration?: string
   ): Promise<TaskGraphClientResponse> {
     // In mock mode, return the full task graph
@@ -95,6 +101,19 @@ export class MockProjectGraphService implements ProjectGraphService {
     _url: string
   ): Promise<Record<string, Record<string, string[]>>> {
     return new Promise((resolve) => resolve({}));
+  }
+
+  async getExpandedTaskInputs(
+    taskId: string
+  ): Promise<Record<string, string[]>> {
+    // Generate mock data for the task
+    const mockInputs: Record<string, string[]> = {
+      general: ['src/**/*.ts', 'package.json'],
+      [taskId.split(':')[0]]: [`${taskId.split(':')[0]}/src/**/*.ts`],
+      external: ['node_modules/**/*'],
+    };
+
+    return new Promise((resolve) => resolve(mockInputs));
   }
 
   private createNewProject(): ProjectGraphProjectNode {

@@ -19,6 +19,7 @@ import {
 
 // axios types and values don't seem to match
 import _axios = require('axios');
+
 const axios = _axios as any as (typeof _axios)['default'];
 
 export interface GithubRepoData extends RemoteRepoData {}
@@ -118,10 +119,11 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         if (ghCLIConfig[hostname].oauth_token) {
           return ghCLIConfig[hostname].oauth_token;
         }
-        // SSH based session (we need to dynamically resolve a token using the CLI)
+        // SSH/HTTPS based session (we need to dynamically resolve a token using the CLI)
         if (
           ghCLIConfig[hostname].user &&
-          ghCLIConfig[hostname].git_protocol === 'ssh'
+          (ghCLIConfig[hostname].git_protocol === 'ssh' ||
+            ghCLIConfig[hostname].git_protocol === 'https')
         ) {
           const token = execSync(`gh auth token`, {
             encoding: 'utf8',

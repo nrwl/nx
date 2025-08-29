@@ -6,9 +6,9 @@ sidebar:
 ---
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/guides/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
+[Using Storybook in a Nx workspace - Best practices](/docs/technologies/test-tools/storybook/guides/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
 
-Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/concepts/decisions/project-dependency-rules) documentation page.
+Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/docs/concepts/decisions/project-dependency-rules) documentation page.
 
 In this case, you can have one Storybook instance per scope. If you follow the folder organization convention described above, it is easy to configure Storybook to import all the stories under a specific folder, for example, which are associated with a specific app or scope.
 
@@ -18,55 +18,58 @@ In this case, you can have one Storybook instance per scope. If you follow the f
 
 Say, for example, that you have a client app, an admin app, and a number of UI libraries, organized under the name of each app. So you would have a folder structure that looks like this:
 
-```text frame="none"
-happynrwl/
-├── apps/
-│   ├── client/
-│   ├── admin/
-├── libs/
-│   ├── client/
-│   │   ├── feature/
-│   │   ├── ui/
-|   │   │   ├── header/
-|   |   |   |   ├── .storybook/
-|   |   |   |   ├── src/
-|   |   |   |   |   ├──lib
-|   |   |   |   |   |   ├──my-header
-|   |   |   |   |   |   |   ├── my-header.ts
-|   |   |   |   |   |   |   ├── my-header.stories.ts
-|   |   |   |   |   |   |   └── etc...
-|   |   |   |   |   |   └── etc...
-|   |   |   |   |   └── etc...
-|   |   |   |   ├── README.md
-|   |   |   |   ├── tsconfig.json
-|   |   |   |   └── etc...
-│   │   └── utils/
-│   ├── admin/
-│   │   ├── feature/
-│   │   ├── ui/
-|   │   │   ├── dashboard/
-|   |   |   |   ├── .storybook/
-|   |   |   |   ├── src/
-|   |   |   |   |   ├── etc..
-|   |   |   |   ├── README.md
-|   |   |   |   ├── tsconfig.json
-|   |   |   |   └── etc...
-│   │   └── utils/
-│   └── shared/
-│       ├── ui/
-|       │   ├── cta/
-|       |   |   ├── .storybook/
-|       |   |   ├── src/
-|       |   |   |   ├── etc..
-|       |   |   ├── README.md
-|       |   |   ├── tsconfig.json
-|       |   |   └── etc...
-│       └── utils/
-├── tools/
-├── nx.json
-├── package.json
-└── tsconfig.base.json
-```
+{%filetree %}
+
+
+- happynrwl/
+  - apps/
+    - client/
+    - admin/
+  - libs/
+    - client/
+      - feature/
+    - ui/ 
+      - header/ 
+        - .storybook/
+      - src/ 
+        - lib/
+          - my-header/
+            - my-header.ts 
+            - my-header.stories.ts 
+            - etc...
+        - etc...
+      - README.md
+      - tsconfig.json
+      - etc...
+    - utils/
+    - admin/ 
+      - feature/
+      - ui/ 
+        - dashboard/ 
+          - .storybook/
+        - src/ 
+          - etc..
+        - README.md
+        - tsconfig.json
+        - etc...
+      - utils/
+    - shared/ 
+      - ui/ 
+        - cta/ 
+        - .storybook/ 
+        - src/ 
+          - etc.. 
+        - README.md 
+        - tsconfig.json 
+        - etc...
+      - utils/
+  - tools/
+  - nx.json
+  - package.json
+  - tsconfig.base.json
+
+{% /filetree %}
+
 
 In this case you can see that we have two deployable applications, `client` and `admin`, and we have a number of UI libraries, each associated with a specific app. For example, `client-ui-header` is a UI library associated with the `client` app, and `admin-ui-dashboard` is a UI library associated with the `admin` app. We also have one more library, the `shared-ui-cta` library, which is shared between the two apps. The way we have structured our folders is such that any new library that is related to the `client` app will go in the `libs/client` folder, and in that folder we have a sub-folder to determine if the new library is related to `ui` or anything else. The same applies to the `admin` app. Any library shared between the two apps will live under a subfolder of the `libs/shared` folder.
 
@@ -86,15 +89,15 @@ Let's assume in this case that all our libraries are using Angular.
 
 Let's generate three Angular libraries, one for each scope, and let's call them `storybook-host-client`, `storybook-host-admin`, and `storybook-host-shared`. We can do this by running the following commands:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/angular:lib libs/storybook-host-client
 ```
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/angular:lib libs/storybook-host-admin
 ```
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/angular:lib libs/storybook-host-shared
 ```
 
@@ -102,15 +105,15 @@ nx g @nx/angular:lib libs/storybook-host-shared
 
 Now, we need to generate Storybook configuration for all these new libraries. We don't want to generate `stories` for these libraries, so we can run the following commands:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/storybook:configuration storybook-host-client --uiFramework=@storybook/angular --interactionTests=true
 ```
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular --interactionTests=true
 ```
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx g @nx/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular --interactionTests=true
 ```
 
@@ -122,7 +125,7 @@ Thanks to our folder structure, we can easily configure Storybook to import all 
 
 For example, `libs/storybook-host-admin/.storybook/main.ts`:
 
-```javascript frame="none"
+```javascript
 // libs/storybook-host-admin/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 
@@ -140,7 +143,7 @@ export default config;
 
 And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
 
-```json frame="none"
+```json 
 // libs/storybook-host-admin/.storybook/tsconfig.json
 {
   "extends": "../tsconfig.json",

@@ -1,4 +1,9 @@
 /**
+ * Import docs to Astro redirects (added 2025-08-21 for DOC-107)
+ */
+const docsToAstroRedirects = require('./redirect-rules-docs-to-astro.js');
+
+/**
  * Executors & Generators old url schemes to package schema viewer url schemes (added 2022-03-16)
  */
 const schemaUrls = {
@@ -413,7 +418,7 @@ const nxCloudUrls = {
   '/recipes/ci/monorepo-ci-bitbucket-pipelines':
     '/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines',
   '/recipes/ci/ci-deployment': '/ci/recipes/other/ci-deployment',
-  '/nx-cloud/intro/what-is-nx-cloud': '/ci/features',
+  '/nx-cloud/intro/what-is-nx-cloud': '/ci/getting-started/intro',
   '/nx-cloud/set-up': '/ci/recipes/set-up',
   '/nx-cloud/set-up/record-commands': '/ci/recipes/other/record-commands',
   '/nx-cloud/set-up/github': '/ci/recipes/source-control-integration/github',
@@ -497,7 +502,7 @@ const nxCloudUrls = {
   '/nx-cloud/features/nx-cloud-workflows':
     '/ci/features/distribute-task-execution',
   '/ci/features/nx-agents': '/ci/features/distribute-task-execution',
-  '/ci': '/ci/features',
+  '/ci': '/ci/getting-started/intro',
   '/concepts/more-concepts/illustrated-dte':
     '/ci/concepts/parallelization-distribution',
   '/core-features/:path*': '/features/:path*',
@@ -505,7 +510,7 @@ const nxCloudUrls = {
   '/ci/intro/connect-to-cloud': '/ci/recipes/set-up',
   '/pricing/special-offer': 'https://forms.gle/FBzvsspz1o63fDAz6',
   '/powerpack/special-offer': 'https://forms.gle/mWjQo6Vrv5Kt6WYh9',
-  '/ci/intro/why-nx-cloud': '/ci/features',
+  '/ci/intro/why-nx-cloud': '/ci/getting-started/intro',
   '/ci/intro/ci-with-nx': '/ci/recipes/set-up',
   '/ci/intro/connect-to-nx-cloud': '/ci/recipes/set-up',
 };
@@ -876,8 +881,6 @@ const referenceUrls = {
 };
 
 const missingAndCatchAllRedirects = {
-  // missing
-  '/docs': '/getting-started/intro',
   // catch all
   '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
   '/(l|latest|p|previous)/:path*': '/:path*',
@@ -891,6 +894,14 @@ const missingAndCatchAllRedirects = {
   '/nx-console': '/using-nx/console',
   '/packages/:path*': '/nx-api/:path*',
 };
+
+if (process.env['NEXT_PUBLIC_ASTRO_URL']) {
+  missingAndCatchAllRedirects['/getting-started/:path*'] =
+    '/docs/getting-started/intro';
+} else {
+  // For new docs, we rewrite all docs URLs to astro site, so we can skip this redirect
+  missingAndCatchAllRedirects['/docs'] = '/getting-started/intro';
+}
 
 const marketing = {
   '/conf': 'https://monorepo.world',
@@ -1533,4 +1544,8 @@ module.exports = {
   pricingRedirects,
   ciTutorialRedirects,
   dockerReleaseRedirect,
+  // Only enable these redirects if the new docs are enabled
+  docsToAstroRedirects: process.env['NEXT_PUBLIC_ASTRO_URL']
+    ? docsToAstroRedirects
+    : {},
 };

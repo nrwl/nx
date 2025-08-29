@@ -7,7 +7,7 @@ sidebar:
 
 Configurations are handled slightly differently compared to the Angular CLI. Rsbuild and Rspack use `mode` instead of configurations to handle different environments by default. This means that a different solution is needed to handle different build configurations you may have to match the behavior of Angular's configuration handling.
 
-The [`createConfig`](/technologies/angular/angular-rspack/api/create-config) function helps you to handle this. It uses the `NGRS_CONFIG` environment variable to determine which configuration to use. The default configuration is `production`.
+The [`createConfig`](/docs/technologies/angular/angular-rspack/create-config) function helps you to handle this. It uses the `NGRS_CONFIG` environment variable to determine which configuration to use. The default configuration is `production`.
 
 {% aside type="tip" title="Roll your own" %}
 You can handle configurations by yourself if you prefer, all you need is some manner of detecting the environment and then merging the options passed to `createConfig`.
@@ -17,8 +17,8 @@ You can handle configurations by yourself if you prefer, all you need is some ma
 
 The `createConfig` function takes two arguments, the first is the default options, and the second is an object of configurations. The configurations object is keyed by the name of the configuration, and the value is an object with the options and `rspackConfigOverrides | rsbuildConfigOverrides` to be used for that configuration.
 
-```ts frame="none"
-// filename: myapp/rspack.config.ts
+```ts
+// myapp/rspack.config.ts
 import { createConfig } from '@nx/angular-rspack';
 export default createConfig(
   {
@@ -53,6 +53,6 @@ If a production configuration is not provided, the default configuration is used
 
 To run the build with the `production` configuration:
 
-```shell frame="none"
+```shell {% frame="none" %}
 NGRS_CONFIG=production npx myapp build
 ```

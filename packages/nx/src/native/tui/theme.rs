@@ -2,7 +2,7 @@
 #![allow(clippy::disallowed_types)]
 
 // This is the only file we should use the `ratatui::style::Color` type in
-use ratatui::style::Color;
+use ratatui::style::{Color, Style};
 use std::sync::LazyLock;
 use terminal_colorsaurus::{ColorScheme, QueryOptions, color_scheme};
 use tracing::debug;
@@ -36,7 +36,8 @@ impl Theme {
     fn dark() -> Self {
         Self {
             is_dark_mode: true,
-            primary_fg: Color::White,
+            // reset => default foreground color
+            primary_fg: Color::Reset,
             secondary_fg: Color::Gray,
             error: Color::Red,
             success: Color::Green,
@@ -49,7 +50,8 @@ impl Theme {
     fn light() -> Self {
         Self {
             is_dark_mode: false,
-            primary_fg: Color::Black,
+            // reset => default foreground color
+            primary_fg: Color::Reset,
             secondary_fg: Color::DarkGray,
             error: Color::Red,
             success: Color::Green,

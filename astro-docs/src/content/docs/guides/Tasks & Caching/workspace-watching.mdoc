@@ -9,9 +9,8 @@ Nx can watch your workspace and execute commands based on project or files chang
 
 Imagine the following project graph with these projects:
 
-\{% graph height="450px" %}
+{% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -75,9 +74,8 @@ Imagine the following project graph with these projects:
   "groupByFolder": false,
   "exclude": []
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
 Traditionally, if you want to rebuild your projects whenever they change, you would have to set up an ad-hoc watching system to watch each project. Rather than setting up a watch manually, Nx can be used to watch projects and execute a command whenever they change.
 
@@ -164,7 +162,7 @@ nx watch --projects=app1 --includeDependentProjects -- echo \$NX_PROJECT_NAME
 
 ### Rebuilding dependent projects while developing an application
 
-In a monorepo setup, your application might rely on several libraries that need to be built before they can be used in the application. While the [task pipeline](/recipes/running-tasks/defining-task-pipeline) automatically handles this during builds, you'd want the same behavior during development when serving your application with a dev server.
+In a monorepo setup, your application might rely on several libraries that need to be built before they can be used in the application. While the [task pipeline](/docs/guides/tasks--caching/defining-task-pipeline) automatically handles this during builds, you'd want the same behavior during development when serving your application with a dev server.
 
 To watch and rebuild the dependent libraries of an application, use the following command:
 

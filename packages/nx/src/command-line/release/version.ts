@@ -43,6 +43,7 @@ import { releaseVersionLegacy } from './version-legacy';
 import { ReleaseGroupProcessor } from './version/release-group-processor';
 import { SemverBumpType } from './version/version-actions';
 import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
+import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -170,6 +171,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         Object.keys(projectGraph.nodes),
         args.verbose
       );
+
+      // Validate version plans against the filter after resolution
+      const versionPlanValidationError =
+        validateResolvedVersionPlansAgainstFilter(
+          releaseGroups,
+          releaseGroupToFilteredProjects
+        );
+      if (versionPlanValidationError) {
+        output.error(versionPlanValidationError);
+        process.exit(1);
+      }
     } else {
       if (args.verbose && releaseGroups.some((g) => !!g.versionPlans)) {
         console.log(

@@ -2,6 +2,7 @@ import { readJsonFile, type TargetConfiguration } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { extname, isAbsolute, relative, resolve } from 'node:path';
 import { type PackageManagerCommands } from 'nx/src/utils/package-manager';
+import type { PackageJson } from 'packages/nx/src/utils/package-json';
 import { join } from 'path';
 import { type ParsedCommandLine } from 'typescript';
 import picomatch = require('picomatch');
@@ -63,181 +64,277 @@ export function isValidPackageJsonBuildConfig(
   const resolvedProjectPath = isAbsolute(projectRoot)
     ? relative(workspaceRoot, projectRoot)
     : projectRoot;
-  const packageJsonPath = join(
-    workspaceRoot,
-    resolvedProjectPath,
-    'package.json'
-  );
+  const projectAbsolutePath = resolve(workspaceRoot, resolvedProjectPath);
+  const packageJsonPath = join(projectAbsolutePath, 'package.json');
+
   if (!existsSync(packageJsonPath)) {
     // If the package.json file does not exist.
     // Assume it's valid because it would be using `project.json` instead.
     return true;
   }
-  const packageJson = readJsonFile(packageJsonPath);
 
-  const projectAbsolutePath = resolve(workspaceRoot, resolvedProjectPath);
+  const packageJson = readJsonFile<PackageJson>(packageJsonPath);
 
-  // Handle outFile first (has precedence over outDir)
+  // Check entry points against outFile (has precedence over outDir)
   if (tsConfig.options.outFile) {
-    const outFile = resolve(
-      workspaceRoot,
-      resolvedProjectPath,
-      tsConfig.options.outFile
+    return isAnyEntryPointPointingToOutFile(
+      packageJson,
+      tsConfig,
+      projectAbsolutePath,
+      workspaceRoot
     );
-    const relativeToProject = relative(projectAbsolutePath, outFile);
+  }
 
-    // If outFile is outside project root: buildable
-    if (relativeToProject.startsWith('..')) {
-      return true;
-    }
-    // If outFile is inside project root: check if entry points point to outFile
+  // Check entry points against outDir
+  const outDir = tsConfig.options.outDir;
+  if (outDir) {
+    return isAnyEntryPointPointingToOutDir(
+      packageJson,
+      outDir,
+      workspaceRoot,
+      projectAbsolutePath
+    );
+  }
 
-    const isPathSourceFile = (path: string): boolean => {
-      const normalizedPath = isAbsolute(path)
-        ? resolve(workspaceRoot, path.startsWith('/') ? path.slice(1) : path)
-        : resolve(workspaceRoot, resolvedProjectPath, path);
+  // Check entry points against include patterns
+  return isAnyEntryPointPointingToNonIncludedFiles(
+    packageJson,
+    tsConfig,
+    workspaceRoot,
+    projectAbsolutePath
+  );
+}
 
-      // For outFile case, check if path points to the specific outFile
-      return normalizedPath === outFile;
-    };
+const packageJsonLegacyEntryPoints = ['main', 'module'];
 
-    // Check if any entry points match the outFile
-    const exports = packageJson?.exports;
-    if (exports) {
-      if (typeof exports === 'string') {
-        return !isPathSourceFile(exports);
-      }
-      if (typeof exports === 'object' && '.' in exports) {
-        const dotExport = exports['.'];
-        if (typeof dotExport === 'string') {
-          return !isPathSourceFile(dotExport);
-        } else if (typeof dotExport === 'object') {
-          const hasMatch = Object.entries(dotExport).some(([key, value]) => {
-            if (key === 'types' || key === 'development' || key.startsWith('@'))
-              return false;
-            return typeof value === 'string' && isPathSourceFile(value);
-          });
-          return !hasMatch;
-        }
-      }
-    }
+function isAnyEntryPointPointingToOutFile(
+  packageJson: PackageJson,
+  tsConfig: ParsedTsconfigData,
+  projectAbsolutePath: string,
+  workspaceRoot: string
+): boolean {
+  const outFile = resolve(projectAbsolutePath, tsConfig.options.outFile);
+  const relativeToProject = relative(projectAbsolutePath, outFile);
 
-    const buildPaths = ['main', 'module'];
-    for (const field of buildPaths) {
-      if (packageJson[field] && isPathSourceFile(packageJson[field])) {
-        return false;
-      }
-    }
+  // If outFile is outside project root: buildable
+  if (relativeToProject.startsWith('..')) {
     return true;
   }
 
-  // Handle outDir
-  const outDir = tsConfig.options.outDir;
-  let resolvedOutDir: string | undefined;
-  if (outDir) {
-    const potentialOutDir = resolve(workspaceRoot, resolvedProjectPath, outDir);
-    const relativePath = relative(projectAbsolutePath, potentialOutDir);
+  // If outFile is inside project root: check if entry points point to outFile
+  const isPathPointingToOutputFile = (path: string): boolean => {
+    return normalizePath(path, workspaceRoot, projectAbsolutePath) === outFile;
+  };
 
-    // If outDir is outside project root: buildable
-    if (relativePath.startsWith('..')) {
-      return true;
-    }
-
-    // If outDir is inside project root, then we should check entry points
-    if (!relativePath.startsWith('..')) {
-      resolvedOutDir = potentialOutDir;
-    }
+  const exports = packageJson.exports;
+  if (!exports) {
+    // If any entry point points to the outFile, or if no entry points are
+    // defined (Node.js falls back to `./index.js`), then it's buildable
+    return (
+      packageJsonLegacyEntryPoints.some(
+        (field) =>
+          packageJson[field] && isPathPointingToOutputFile(packageJson[field])
+      ) || packageJsonLegacyEntryPoints.every((field) => !packageJson[field])
+    );
   }
 
-  const isPathSourceFile = (path: string): boolean => {
-    const normalizedPath = isAbsolute(path)
-      ? resolve(workspaceRoot, path.startsWith('/') ? path.slice(1) : path)
-      : resolve(workspaceRoot, resolvedProjectPath, path);
+  if (typeof exports === 'string') {
+    return isPathPointingToOutputFile(exports);
+  }
 
-    if (resolvedOutDir) {
-      // If the path is within the outDir, we assume it's not a source file.
-      const relativePath = relative(resolvedOutDir, normalizedPath);
-      if (!relativePath.startsWith('..')) {
-        return false;
-      }
+  const isExportsEntryPointingToOutFile = (
+    value: string | Record<string, string>
+  ): boolean => {
+    if (typeof value === 'string') {
+      return isPathPointingToOutputFile(value);
     }
 
-    // If no include patterns, TypeScript includes all TS files by default
-    const include = tsConfig.raw?.include;
-    if (!include || !Array.isArray(include)) {
-      const ext = extname(path);
-      const tsExtensions = ['.ts', '.tsx', '.cts', '.mts'];
-      if (tsExtensions.includes(ext)) {
-        return true;
-      }
-      // If include is not defined and it's not a TS file, assume it's not a source file
-      return false;
-    }
-
-    const projectAbsolutePath = resolve(workspaceRoot, resolvedProjectPath);
-    const relativeToProject = relative(projectAbsolutePath, normalizedPath);
-
-    for (const pattern of include) {
-      if (picomatch(pattern)(relativeToProject)) {
-        return true;
-      }
+    if (typeof value === 'object') {
+      return Object.values(value).some(
+        (subValue) =>
+          typeof subValue === 'string' && isPathPointingToOutputFile(subValue)
+      );
     }
 
     return false;
   };
 
-  const containsInvalidPath = (
+  if ('.' in exports && exports['.'] !== null) {
+    return isExportsEntryPointingToOutFile(exports['.']);
+  }
+
+  // If any export is pointing to a path inside the outDir, then it's buildable
+  return Object.keys(exports).some(
+    (key) => key !== '.' && isExportsEntryPointingToOutFile(exports[key])
+  );
+}
+
+function isAnyEntryPointPointingToOutDir(
+  packageJson: PackageJson,
+  outDir: string,
+  workspaceRoot: string,
+  projectAbsolutePath: string
+): boolean {
+  const resolvedOutDir = resolve(projectAbsolutePath, outDir);
+  const relativePath = relative(projectAbsolutePath, resolvedOutDir);
+
+  // If outDir is outside project root: buildable
+  if (relativePath.startsWith('..')) {
+    return true;
+  }
+
+  const isPathInsideOutDir = (path: string): boolean => {
+    const normalizedPath = normalizePath(
+      path,
+      workspaceRoot,
+      projectAbsolutePath
+    );
+
+    return !relative(resolvedOutDir, normalizedPath).startsWith('..');
+  };
+
+  const exports = packageJson.exports;
+  if (!exports) {
+    // If any entry point points to a path inside the outDir, or if no entry points
+    // are defined (Node.js falls back to `./index.js`), then it's buildable
+    return (
+      packageJsonLegacyEntryPoints.some(
+        (field) =>
+          packageJson[field] &&
+          packageJson[field] !== './package.json' &&
+          isPathInsideOutDir(packageJson[field])
+      ) || packageJsonLegacyEntryPoints.every((field) => !packageJson[field])
+    );
+  }
+
+  if (typeof exports === 'string') {
+    return isPathInsideOutDir(exports);
+  }
+
+  const isExportsEntryPointingToPathInsideOutDir = (
+    value: string | Record<string, string>
+  ): boolean => {
+    if (typeof value === 'string') {
+      return isPathInsideOutDir(value);
+    }
+
+    if (typeof value === 'object') {
+      return Object.values(value).some(
+        (subValue) =>
+          typeof subValue === 'string' && isPathInsideOutDir(subValue)
+      );
+    }
+
+    return false;
+  };
+
+  if ('.' in exports && exports['.'] !== null) {
+    return isExportsEntryPointingToPathInsideOutDir(exports['.']);
+  }
+
+  // If any export is pointing to a path inside the outDir, then it's buildable
+  return Object.keys(exports).some(
+    (key) =>
+      key !== '.' &&
+      key !== './package.json' &&
+      isExportsEntryPointingToPathInsideOutDir(exports[key])
+  );
+}
+
+function isAnyEntryPointPointingToNonIncludedFiles(
+  packageJson: PackageJson,
+  tsConfig: ParsedTsconfigData,
+  workspaceRoot: string,
+  projectAbsolutePath: string
+): boolean {
+  const isPathSourceFile = (path: string): boolean => {
+    const normalizedPath = normalizePath(
+      path,
+      workspaceRoot,
+      projectAbsolutePath
+    );
+
+    const files = tsConfig.raw?.files;
+    const include = tsConfig.raw?.include;
+
+    if (Array.isArray(files)) {
+      const match = files.find(
+        (file) =>
+          normalizePath(file, workspaceRoot, projectAbsolutePath) ===
+          normalizedPath
+      );
+
+      if (match) {
+        return true;
+      }
+    }
+
+    // If not matched by `files`, check `include` patterns
+    if (!Array.isArray(include)) {
+      // If no include patterns, TypeScript includes all TS files by default
+      const ext = extname(path);
+      const tsExtensions = ['.ts', '.tsx', '.cts', '.mts'];
+      return tsExtensions.includes(ext);
+    }
+
+    const relativeToProject = relative(projectAbsolutePath, normalizedPath);
+
+    return include.some((pattern) => picomatch(pattern)(relativeToProject));
+  };
+
+  // Check the `.` export if `exports` is defined.
+  const exports = packageJson.exports;
+  if (!exports) {
+    // If any entry point doesn't point to a source file, or if no entry points
+    // are defined (Node.js falls back to `./index.js`), then it's buildable
+    return (
+      packageJsonLegacyEntryPoints.some(
+        (field) => packageJson[field] && !isPathSourceFile(packageJson[field])
+      ) || packageJsonLegacyEntryPoints.every((field) => !packageJson[field])
+    );
+  }
+
+  if (typeof exports === 'string') {
+    return !isPathSourceFile(exports);
+  }
+
+  const isExportsEntryPointingToSource = (
     value: string | Record<string, string>
   ): boolean => {
     if (typeof value === 'string') {
       return isPathSourceFile(value);
-    } else if (typeof value === 'object') {
-      return Object.entries(value).some(([currentKey, subValue]) => {
-        // Skip types and development conditions
-        if (
-          currentKey === 'types' ||
-          currentKey === 'development' ||
-          currentKey.startsWith('@')
-        ) {
-          return false;
-        }
-        if (typeof subValue === 'string') {
-          return isPathSourceFile(subValue);
-        }
-        return false;
-      });
     }
+
+    if (typeof value === 'object') {
+      // entry point point to a source file if all conditions that are not set
+      // to `null` point to a source file
+      return Object.values(value).every(
+        (subValue) => typeof subValue !== 'string' || isPathSourceFile(subValue)
+      );
+    }
+
     return false;
   };
 
-  const exports = packageJson?.exports;
-
-  // Check the `.` export if `exports` is defined.
-  if (exports) {
-    if (typeof exports === 'string') {
-      return !isPathSourceFile(exports);
-    }
-    if (typeof exports === 'object' && '.' in exports) {
-      return !containsInvalidPath(exports['.']);
-    }
-
-    // Check other exports if `.` is not defined or valid.
-    for (const key in exports) {
-      if (key !== '.' && containsInvalidPath(exports[key])) {
-        return false;
-      }
-    }
-
-    return true;
+  if ('.' in exports && exports['.'] !== null) {
+    return !isExportsEntryPointingToSource(exports['.']);
   }
 
-  // If `exports` is not defined, fallback to `main` and `module` fields.
-  const buildPaths = ['main', 'module'];
-  for (const field of buildPaths) {
-    if (packageJson[field] && isPathSourceFile(packageJson[field])) {
-      return false;
-    }
-  }
+  // If any export is not pointing to a source file, then it's buildable
+  return Object.keys(exports).some(
+    (key) =>
+      key !== '.' &&
+      key !== './package.json' &&
+      !isExportsEntryPointingToSource(exports[key])
+  );
+}
 
-  return true;
+function normalizePath(
+  path: string,
+  workspaceRoot: string,
+  projectAbsolutePath: string
+): string {
+  return isAbsolute(path)
+    ? resolve(workspaceRoot, path.startsWith('/') ? path.slice(1) : path)
+    : resolve(projectAbsolutePath, path);
 }

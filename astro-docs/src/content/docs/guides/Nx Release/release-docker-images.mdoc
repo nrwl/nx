@@ -4,9 +4,6 @@ description: Learn how to use Nx Release to version and publish Docker images fr
 ---
 
 
-{% aside type="caution" title="Docker is Experimental" %}
-Docker support in Nx Release is currently experimental and only available in the `next`/`beta` version. It may undergo breaking changes without following semantic versioning.
-{% /aside %}
 
 This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo using calendar-based versioning.
 
@@ -18,12 +15,10 @@ Before starting, ensure you have:
 
 1. Docker installed and running locally
 2. Run `docker login` to authenticate with your Docker registry (e.g., `docker login docker.io` for Docker Hub)
-3. Make sure that you are on the `next`/beta version of Nx and Nx plugins (e.g. `npx create-nx-workspace@next` for new workspaces)
-
 ## Install Nx Docker Plugin
 
 ```shell {% frame="none" %}
-nx add @nx/docker@next
+nx add @nx/docker
 ```
 
 This command adds the `@nx/docker` plugin to your `nx.json` so that projects with a `Dockerfile` is automatically configured with Docker targets (e.g. `docker:build` and `docker:run`).
@@ -173,13 +168,28 @@ This will:
 
 ### Understanding Calendar Versioning
 
-Calendar versions follow the pattern `YYMM.DD.SHA`:
+There are many different implementations of Calendar versioning but they consist of four main segments:
 
+- **Major**: The first number in the version and the most common calendar-based component.
+- **Minor**: The second number in the version, also usually calendar-based.
+- **Micro**: The third and usually final number in the version, sometimes referred to as a "patch" or "build" number.
+- **Modifier**: An optional text tag, such as "alpha", "dev", "hotfix"
+
+By default, Nx Release uses the following patterns for calendar versioning
+
+- **Production**: `YYMM.DD.SHA`
+- **Hotfix**: `YYMM.DD.SHA-hotfix`
+
+Where the following tokens are replaced:
 - `YYMM`: Year and month
 - `DD`: Day of the month
 - `SHA`: Short commit hash
 
 Note: The timezone is UTC to ensure consistency across different environments.
+
+{% aside title="Default Versioning Schemes" type="note" %}
+Using `SHA` for the micro version may not be the best choice for your workflow. If you are using a CI/CD pipeline, you may want to use a build number instead. See the [Customizing Version Schemes](#customizing-version-schemes) section for more details.
+{% /aside %}
 
 ## Future Releases
 
@@ -190,6 +200,21 @@ After the first release, you can run `nx release` without the `--first-release` 
 
 These are the default schemes that come with Nx Release. These schemes support workflows where you have a stable branch that developers continuously integrate with, and a hotfix branch reserved for urgent production fixes.
 
+### Using Explicit Docker Versions
+
+If you need to specify an exact Docker version instead of using version schemes, you can use the `--dockerVersion` flag:
+
+```shell {% frame="none" %}
+nx release --dockerVersion=1.2.3
+```
+
+This will bypass the version scheme logic entirely and tag your Docker images with the exact version you specify. This is useful when you need to:
+
+- Align Docker versions with external versioning systems
+- Override the calendar-based versioning for specific releases
+- Set custom version tags that don't follow the standard patterns
+
+
 ### Customizing Version Schemes
 
 You can customize Docker version schemes in your `nx.json` to match your deployment workflow. The version patterns support several interpolation tokens:
@@ -198,10 +223,12 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
 // nx.json
 {
   "release": {
-    "dockerVersionScheme": {
-      "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
-      "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
-      "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
+    "docker": {
+        "versionSchemes": {
+            "production": "{currentDate|YYMM.DD}.{env.BUILD_NUMBER}",
+            "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
+            "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
+        }
     }
   }
 }
@@ -211,4 +238,4 @@ The above configuration swaps `hotfix` scheme for `staging` and adds a `ci` sche
 
 Version patterns can include environment variables using the `{env.VAR_NAME}` syntax, allowing you to inject CI/CD pipeline information like build numbers or deployment environments directly into your Docker tags.
 
-See the [`docker.versionScheme` documentation](/reference/nx-json#version-scheme-syntax) for more details on how to customize the tag pattern.
+See the [`docker.versionScheme` documentation](/docs/reference/nx-json#version-scheme-syntax) for more details on how to customize the tag pattern.

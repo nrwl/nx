@@ -32,7 +32,7 @@ Next, check the Nx Cloud workspace settings in the Nx Cloud web application to e
 
 ### Configure your CI pipeline
 
-**Using [Nx Agents](/ci/features/distribute-task-execution):** There's nothing to be done. You're already good to go.
+**Using [Nx Agents](/docs/features/ci-features/distribute-task-execution):** There's nothing to be done. You're already good to go.
 
 **Not using Nx Agents:** Add the `fix-ci` step to your pipeline. Important: this step must run at the end with `if: always()` to ensure it executes even when previous steps fail:
 
@@ -55,7 +55,7 @@ jobs:
 
 Here's what happens when you push a PR with Self-Healing CI enabled:
 
-![Self-Healing CI Workflow](/src/assets/features/self-healing-flow.avif)
+![Self-Healing CI Workflow](../../../../assets/features/self-healing-flow.avif)
 
 ### 1. Failure Detection
 
@@ -66,23 +66,23 @@ When you push your PR and tasks fail, Nx Cloud automatically detects the failure
 Nx Cloud starts an AI agent that analyzes the failed tasks and creates an appropriate fix, leveraging the context from Nx and Nx Cloud:
 
 - It has the complete failure context with the exact tasks that ran, including error logs
-- Thanks to the [Nx graph](/features/explore-graph), it has vast context about the codebase, including project structure, dependencies, configuration, and runnable tasks
+- Thanks to the [Nx graph](/docs/features/explore-graph), it has vast context about the codebase, including project structure, dependencies, configuration, and runnable tasks
 
 ### 3. Notification
 
 Once the fix is available, you'll be notified immediately based on where you're currently working:
 
-**In your editor:** If you have [Nx Console](/getting-started/editor-setup) installed, you'll get a notification directly in your editor:
+**In your editor:** If you have [Nx Console](/docs/getting-started/editor-setup) installed, you'll get a notification directly in your editor:
 
-![Notification in your editor about an AI fix](/src/assets/features/notification-self-healing-ci.avif)
+![Notification in your editor about an AI fix](../../../../assets/features/notification-self-healing-ci.avif)
 
 Clicking the notification will open a dedicated view showing the failed task log, the status of the fix as well as the actual git diff.
 
-![Nx Console view of the automated fix that has been applied to your PR](/src/assets/features/nx-console-self-healing-fix-applied.avif)
+![Nx Console view of the automated fix that has been applied to your PR](../../../../assets/features/nx-console-self-healing-fix-applied.avif)
 
 **In your browser:** If you're not currently working in your editor, you will also see the notification about an available fix from Nx Cloud directly in your GitHub PR comments:
 
-![Self-healing CI fix showing up in GitHub comments](/src/assets/features/self-healing-fix-gh-comment.avif)
+![Self-healing CI fix showing up in GitHub comments](../../../../assets/features/self-healing-fix-gh-comment.avif)
 
 ### 4. Verification
 
@@ -95,10 +95,10 @@ You can review the fix and decide whether to apply or reject it:
 - **From Nx Console:** Review the git diff directly in your editor
 - **From GitHub:** Click "View Fix" to be redirected to the Nx Cloud web application, showing the git diff of the fix that is about to be applied
 
-![Self-healing CI fix showing up in GitHub comments](/src/assets/features/self-healing-fix-nx-cloud.avif)
+![Self-healing CI fix showing up in GitHub comments](../../../../assets/features/self-healing-fix-nx-cloud.avif)
 
 If you apply the fix, **Nx Cloud automatically pushes a commit to your original PR**.
 
 ## Learn more
 
-Self-Healing CI represents the next evolution in CI automation, moving beyond just speeding up builds to actually fixing them automatically. Learn more about this feature in our blog post: [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci).
+Self-Healing CI represents the next evolution in CI automation, moving beyond just speeding up builds to actually fixing them automatically. Learn more about this feature in our blog post: [Introducing Self-Healing CI for Nx and Nx Cloud](https://nx.dev/blog/nx-self-healing-ci).

@@ -36,7 +36,7 @@ In order to achieve this, Module Federation introduces three terms for the appli
 A `remote` is an application that exposes a federated module that can be fetched over the network at runtime. The federated module can be any valid JavaScript module, and therefore grows to include things such as a React Component, an Angular Routing File, a plain old JavaScript object (POJO) and more.
 
 {% aside type="note" title="Creating a Remote" %}
-Follow our [How to Create a Remote Application Recipe](/technologies/module-federation/recipes/create-a-remote) to learn more.
+Follow our [How to Create a Remote Application guide](/docs/technologies/module-federation/guides/create-a-remote) to learn more.
 {% /aside %}
 
 ### What is a Host?
@@ -48,7 +48,7 @@ When you write your host application, you import the module from your remote as 
 The federated module will then be executed as though it was always part of the `host` application.
 
 {% aside type="note" title="Creating a Host" %}
-Follow our [How to Create a Host Application Recipe](/technologies/module-federation/recipes/create-a-host) to learn more.
+Follow our [How to Create a Host Application guide](/docs/technologies/module-federation/guides/create-a-host) to learn more.
 {% /aside %}
 
 ### What is a Federated Module?
@@ -58,7 +58,7 @@ A `federated module` is any valid JavaScript module that is exposed by a `remote
 This means that React Components, Angular Components, Services, Application State, Functions, UI Components and more can be shared between applications and updated without the need to redeploy everything.
 
 {% aside type="note" title="Federating a Module" %}
-Follow our [How to Federate a Module Recipe](/technologies/module-federation/recipes/federate-a-module) to learn more.
+Follow our [How to Federate a Module guide](/docs/technologies/module-federation/guides/federate-a-module) to learn more.
 {% /aside %}
 
 ### Common Pitfalls
@@ -82,7 +82,7 @@ Versioned packages and libraries can cause further issues if they store internal
 Having multiple versions of a package would then break the package's Singleton nature as there will now be multiple instances of it running.
 
 {% aside type="note" title="Managing Versions" %}
-Follow our [Manage Library Versions Guide](/technologies/module-federation/concepts/manage-library-versions-with-module-federation) to learn more.
+Follow our [Manage Library Versions Guide](/docs/technologies/module-federation/concepts/manage-library-versions-with-module-federation) to learn more.
 {% /aside %}
 
 ## Nx Support for Module Federation
@@ -101,7 +101,7 @@ For both the best DX (Development Experience) and most accurate development of a
 
 The `host` is the entry point and the `remotes` are modules used by the application. It just happens that the `remotes` are fetched over-the-wire at runtime rather than being bundled into the application.
 
-To support this, as well as to ensure a great local DX, we built our Module Federation support in such a way that when developing locally you should always run `serve` on your `host` application. This will start up your full Module Federation architecture; serving your `host` with `webpack-dev-server` and each `remote` via a single `http-server`. You can learn more about this on our [Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview).
+To support this, as well as to ensure a great local DX, we built our Module Federation support in such a way that when developing locally you should always run `serve` on your `host` application. This will start up your full Module Federation architecture; serving your `host` with `webpack-dev-server` and each `remote` via a single `http-server`. You can learn more about this on our [Nx Module Federation Technical Overview](/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview).
 
 With the introduction of Continuous Tasks in Nx 21 when you're working on a specific `remote` application, you now only need to run `nx serve remote` and it will serve the application along with your `host` application.
 
@@ -109,7 +109,7 @@ With the introduction of Continuous Tasks in Nx 21 when you're working on a spec
 This is currently only supported for Rspack Module Federation using the `@nx/rspack/plugin` Inference Plugin.
 {% /aside %}
 
-If you are using Webpack Module Federation, or are not using [Inferred Tasks](/concepts/inferred-tasks), you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
+If you are using Webpack Module Federation, or are not using [Inferred Tasks](/docs/concepts/inferred-tasks), you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
 
 ## Use Cases
 
@@ -124,7 +124,7 @@ You can run the builds of multiple smaller applications in parallel and deploy a
 If you add [Nx Cloud](https://nx.app) to your Nx Workspace, then you can even get cache hits from some of the builds from other team members and CI, reducing the build time further.
 
 {% aside type="note" title="Faster Builds with Module Federation" %}
-Follow our [Faster Builds with Module Federation Guide](/technologies/module-federation/concepts/faster-builds-with-module-federation) to learn more.
+Follow our [Faster Builds with Module Federation Guide](/docs/technologies/module-federation/concepts/faster-builds-with-module-federation) to learn more.
 {% /aside %}
 
 ### Independent Deployability
@@ -135,9 +135,9 @@ With Module Federation, each team can own a `remote` that can be deployed when n
 This lends itself to more of a Micro Frontend approach.
 
 {% aside type="note" title="Micro Frontend Architecture" %}
-Follow our [Micro Frontend Architecture Guide](/technologies/module-federation/concepts/micro-frontend-architecture) to learn more.
+Follow our [Micro Frontend Architecture Guide](/docs/technologies/module-federation/concepts/micro-frontend-architecture) to learn more.
 {% /aside %}
 
 You can also check out our example repository for Independent Deployability with Module Federation and Nx below:
 
-\{% github-repository url="https://github.com/jaysoo/module-federation-example/tree/main" /%\}
+{% github_repository url="https://github.com/jaysoo/module-federation-example/tree/main" /%}

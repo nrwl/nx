@@ -8,7 +8,7 @@ sidebar:
 
 In many situations, you have an existing codebase and want to improve it with Nx using an **incremental adoption approach**.
 
-Thanks to [Nx's modular architecture](/getting-started/intro), you can start with just **Nx Core** and then gradually add [technology-specific plugins](/technologies), [CI integrations](/ci), or other capabilities as your requirements evolve.
+Thanks to [Nx's modular architecture](/docs/getting-started/intro), you can start with just **Nx Core** and then gradually add [technology-specific plugins](/docs/technologies), [CI integrations](/docs/getting-started/nx-cloud), or other capabilities as your requirements evolve.
 
 Getting started is remarkably simple. You can add Nx to any existing project with a single command:
 
@@ -17,7 +17,7 @@ nx@latest init
 ```
 
 {% aside type="note" title="Global Installs" %}
-Make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment
+Make sure you have [Nx installed globally](/docs/getting-started/installation) or use `npx` if you're in a JavaScript environment
 {% /aside %}
 
 Whether a monorepo, single project or something in between, `nx init` walks you through adding and configuring Nx. You can pick a minimal approach or detailed guided setup. At the end you'll have an Nx workspace ready for anything!
@@ -54,7 +54,7 @@ You can directly invoke `package.json` scripts with `nx` as well
 +     - run: npx nx test
 ```
 
-[View CI provider specific setups](/ci/recipes/set-up) to learn more.
+[View CI provider specific setups](/docs/guides/nx-cloud/setup-ci) to learn more.
 
 ### Nx Cloud
 
@@ -81,7 +81,7 @@ To leverage Self Healing CI, you'll need to add the following to your CI configu
 
 Enhance your developer experience by using the Nx Console editor extension.
 
-\{% install-nx-console /%}
+{% install_nx_console /%}
 
 ## In-depth Guides
 
@@ -90,14 +90,14 @@ Here are some guides that give you more details based on the technology stack yo
 {% cardgrid %}
 
 {% linkcard title="Add to Existing Monorepo" 
-href="/recipes/adopting-nx/adding-to-monorepo" %}
+href="/docs/guides/adopting-nx/adding-to-monorepo" %}
 {% /linkcard %}
-{% linkcard title="Add to Any Project"  href="/recipes/adopting-nx/adding-to-existing-project" /%}
+{% linkcard title="Add to Any Project"  href="/docs/guides/adopting-nx/adding-to-existing-project" /%}
 
-{% linkcard title="Migrate from Angular CLI" href="/technologies/angular/migration/angular" /%}
+{% linkcard title="Migrate from Angular CLI" href="/docs/technologies/angular/migration/angular" /%}
 
-{% linkcard title="Import Projects into Your Nx Workspace" href="/recipes/adopting-nx/import-project" /%}
+{% linkcard title="Import Projects into Your Nx Workspace" href="/docs/guides/adopting-nx/import-project" /%}
 
 {% /cardgrid %}
 
-{% linkcard title="See more options" href="/recipes/adopting-nx" /%}
+{% linkcard title="See more options" href="/docs/guides/adopting-nx" /%}

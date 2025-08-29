@@ -69,7 +69,7 @@ export function CustomerMetrics(): ReactElement {
                   prefetch={false}
                   onClick={() =>
                     sendCustomEvent(
-                      'request-trial-click',
+                      'contact-sales-click',
                       'enterprise-customer-metrics',
                       'enterprise'
                     )

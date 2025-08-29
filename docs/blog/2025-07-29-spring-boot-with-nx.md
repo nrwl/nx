@@ -12,7 +12,7 @@ youtubeUrl: https://youtu.be/FM2kAw-NNsQ
 
 This article is part of the Java Week series:
 
-- [The Journey of Nx Gradle](/blog/journey-of-nx-gradle)
+- [The Journey of the Nx Plugin for Gradle](/blog/journey-of-the-nx-plugin-for-gradle)
 - **Polyglot Projects Made Easy**
 - [Getting Mobile Into Your Monorepo](/blog/android-and-nx)
 - [Seamless Deploys With Docker](/blog/seamless-deploys-with-docker)
@@ -43,7 +43,7 @@ For our Java project, it's going to suggest that we include the `@nx/gradle` plu
 
 ![](/blog/images/2025-07-29/java-tasks.png)
 
-Here we can see all of the available tasks from Gradle that we could run for our Java project. But how does Nx know about these tasks? We actually include a Gradle plugin for Nx that we use under the hood to inspect the Java project. When we call any `nx` command for our java project, we actually invoke Gradle in the background to get all of tasks that Gradle could run directly.
+Here we can see all of the available tasks from Gradle that we could run for our Java project. But how does Nx know about these tasks? We actually include an Nx plugin for Gradle that we use under the hood to inspect the Java project. When we call any `nx` command for our java project, we actually invoke Gradle in the background to get all of tasks that Gradle could run directly.
 
 ```groovy
 plugins {
@@ -142,8 +142,8 @@ With this, we have the beginnings of a great polyglot experience for teams that 
 
 Learn more:
 
-- 🌌 [Nx Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
-- 📖 [Nx Gradle API](/technologies/java/api)
+- 🌌 [Nx Plugin for Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
+- 📖 [API for the Nx plugin for Gradle](/technologies/java/api)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)

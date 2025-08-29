@@ -1,35 +1,11 @@
-import {
-  detectPackageManager,
-  globAsync,
-  readJson,
-  type Tree,
-  workspaceRoot,
-} from '@nx/devkit';
+import { globAsync, readJson, type Tree, workspaceRoot } from '@nx/devkit';
 import { dirname } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
-import { type PackageJson } from 'nx/src/utils/package-json';
 import {
   getPackageManagerWorkspacesPatterns,
   isProjectIncludedInPackageManagerWorkspaces,
+  isUsingPackageManagerWorkspaces,
 } from '../package-manager-workspaces';
-
-function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
-  return isWorkspacesEnabled(tree);
-}
-
-function isWorkspacesEnabled(tree: Tree): boolean {
-  const packageManager = detectPackageManager(tree.root);
-  if (packageManager === 'pnpm') {
-    return tree.exists('pnpm-workspace.yaml');
-  }
-
-  // yarn and npm both use the same 'workspaces' property in package.json
-  if (tree.exists('package.json')) {
-    const packageJson = readJson<PackageJson>(tree, 'package.json');
-    return !!packageJson?.workspaces;
-  }
-  return false;
-}
 
 /**
  * The TS solution setup requires:

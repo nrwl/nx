@@ -30,7 +30,7 @@ const variantClasses: Record<
     container:
       'bg-gradient-to-r from-blue-500 via-sky-400 to-blue-500 dark:from-sky-600 dark:via-blue-500 dark:to-sky-600',
     accent: 'dark:bg-white bg-blue-500',
-    hoverText: 'hover:text-sky-100 dark:hover:text-slate-900  text-white',
+    hoverText: 'hover:text-sky-100 dark:hover:text-slate-900 text-white',
     expandBg: 'group-hover:w-full',
   },
   inverted: {
@@ -99,7 +99,7 @@ export function CallToAction({
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="block text-sm font-medium text-white no-underline opacity-80"
+              className="block text-sm font-medium text-inherit no-underline opacity-80"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
               {description || ''}

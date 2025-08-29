@@ -13,7 +13,6 @@ on:
 
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
-  NX_NIGHTLY_TEST_RUN: 'true'
 
 permissions: { }
 jobs:

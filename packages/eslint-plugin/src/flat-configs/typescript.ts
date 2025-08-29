@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import { workspaceRoot } from '@nx/devkit';
-import tseslint from 'typescript-eslint';
+import tseslint, { type ConfigArray } from 'typescript-eslint';
 import { packageExists } from '../utils/config-utils';
 
 const isPrettierAvailable =
@@ -13,7 +13,7 @@ const isPrettierAvailable =
  * It should therefore NOT contain any rules or plugins which are specific
  * to one ecosystem, such as React, Angular, Node etc.
  */
-export default tseslint.config(
+const config: ConfigArray = tseslint.config(
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
@@ -69,3 +69,5 @@ export default tseslint.config(
    */
   ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );
+
+export default config;

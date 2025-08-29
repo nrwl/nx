@@ -173,6 +173,70 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "21.5.0-typescript-eslint": {
+      "version": "21.5.0-beta.2",
+      "requires": {
+        "typescript-eslint": ">8.0.0 <8.40.0"
+      },
+      "packages": {
+        "typescript-eslint": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.5.0-@typescript-eslint": {
+      "version": "21.5.0-beta.2",
+      "requires": {
+        "@typescript-eslint/eslint-plugin": ">8.0.0 <8.40.0"
+      },
+      "packages": {
+        "typescript-eslint": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.40.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

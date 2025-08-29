@@ -32,6 +32,10 @@ import {
   handleDuplicateGitTags,
 } from './utils/shared';
 import {
+  areAllVersionPlanProjectsFiltered,
+  validateResolvedVersionPlansAgainstFilter,
+} from './utils/version-plan-utils';
+import {
   NxReleaseVersionResult,
   createAPI as createReleaseVersionAPI,
 } from './version';
@@ -174,31 +178,60 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       args.verbose
     );
 
+    // Validate version plans against the filter after resolution
+    const versionPlanValidationError =
+      validateResolvedVersionPlansAgainstFilter(
+        releaseGroups,
+        releaseGroupToFilteredProjects
+      );
+    if (versionPlanValidationError) {
+      output.error(versionPlanValidationError);
+      process.exit(1);
+    }
+
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
+      const filteredProjects = releaseGroupToFilteredProjects.get(group);
+
       if (group.resolvedVersionPlans) {
-        if (group.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
-          output.logSingleLine(`Removing version plan files`);
-        } else {
-          output.logSingleLine(
-            `Removing version plan files for group ${group.name}`
-          );
-        }
-        group.resolvedVersionPlans.forEach((plan) => {
-          if (!args.dryRun) {
-            rmSync(plan.absolutePath, { recursive: true, force: true });
-            if (args.verbose) {
-              console.log(`Removing ${plan.relativePath}`);
-            }
-          } else {
-            if (args.verbose) {
-              console.log(
-                `Would remove ${plan.relativePath}, but --dry-run was set`
-              );
-            }
+        // Check each version plan individually to see if it should be deleted
+        const plansToDelete = [];
+
+        for (const plan of group.resolvedVersionPlans) {
+          // Only delete if ALL projects in the version plan are being filtered/released
+          if (
+            areAllVersionPlanProjectsFiltered(plan, group, filteredProjects)
+          ) {
+            plansToDelete.push(plan);
           }
-          planFiles.add(plan.relativePath);
-        });
+        }
+
+        // Only log and delete if we have plans to delete
+        if (plansToDelete.length > 0) {
+          if (group.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
+            output.logSingleLine(`Removing version plan files`);
+          } else {
+            output.logSingleLine(
+              `Removing version plan files for group ${group.name}`
+            );
+          }
+
+          plansToDelete.forEach((plan) => {
+            if (!args.dryRun) {
+              rmSync(plan.absolutePath, { recursive: true, force: true });
+              if (args.verbose) {
+                console.log(`Removing ${plan.relativePath}`);
+              }
+            } else {
+              if (args.verbose) {
+                console.log(
+                  `Would remove ${plan.relativePath}, but --dry-run was set`
+                );
+              }
+            }
+            planFiles.add(plan.relativePath);
+          });
+        }
       }
     });
     const deletedFiles = Array.from(planFiles);

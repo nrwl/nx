@@ -1859,7 +1859,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -1996,8 +1996,8 @@ describe('lib', () => {
           },
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -2030,8 +2030,8 @@ describe('lib', () => {
           },
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -2456,7 +2456,7 @@ describe('lib', () => {
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;
@@ -2474,7 +2474,7 @@ describe('lib', () => {
 
       expect(
         readJson(tree, 'my-lib/package.json').exports['.']
-      ).not.toHaveProperty('development');
+      ).not.toHaveProperty('@proj/source');
     });
   });
 });

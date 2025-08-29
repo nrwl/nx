@@ -13,7 +13,7 @@ When working with Angular and Storybook in an Nx workspace, you may need to conf
 
 You can add global styles to your Storybook by creating a `preview.ts` file in your `.storybook` directory:
 
-```typescript frame="none"
+```typescript
 // .storybook/preview.ts
 import type { Preview } from '@storybook/angular';
 
@@ -40,7 +40,7 @@ export default preview;
 
 If you're using Angular Material, you can include the theme in your Storybook:
 
-```typescript frame="none"
+```typescript
 // .storybook/preview.ts
 import '@angular/material/prebuilt-themes/indigo-pink.css';
 // or your custom theme
@@ -53,7 +53,7 @@ import '../src/styles/material-theme.scss';
 
 If your Angular project uses SCSS, you can configure Storybook to handle SCSS files properly:
 
-```typescript frame="none"
+```typescript
 // .storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 
@@ -88,7 +88,7 @@ export default config;
 
 To use SCSS variables and mixins in your stories, you may need to configure additional include paths:
 
-```typescript frame="none"
+```typescript 
 // .storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 
@@ -130,13 +130,13 @@ If your Angular project uses Tailwind CSS, configure it in your Storybook:
 
 1. Install Tailwind CSS for Storybook:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npm install -D @storybook/addon-postcss
 ```
 
 2. Add the addon to your Storybook configuration:
 
-```typescript frame="none"
+```typescript 
 // .storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 
@@ -160,7 +160,7 @@ export default config;
 
 3. Import Tailwind in your preview file:
 
-```typescript frame="none"
+```typescript
 // .storybook/preview.ts
 import '../src/styles.css'; // This should include Tailwind CSS imports
 ```
@@ -171,7 +171,7 @@ import '../src/styles.css'; // This should include Tailwind CSS imports
 
 Component styles defined in Angular components should work automatically in Storybook. However, if you need to override styles for stories, you can do so in individual story files:
 
-```typescript frame="none"
+```typescript
 // button.stories.ts
 import type { Meta, StoryObj } from '@storybook/angular';
 import { ButtonComponent } from './button.component';

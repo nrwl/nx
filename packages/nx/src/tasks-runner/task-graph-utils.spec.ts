@@ -1,11 +1,13 @@
 import '../internal-testing-utils/mock-fs';
 
 import {
+  assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
   findCycles,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
+import { TaskGraph } from '../config/task-graph';
 
 describe('task graph utils', () => {
   describe('findCycle', () => {
@@ -308,6 +310,75 @@ describe('task graph utils', () => {
       };
       validateNoAtomizedTasks(taskGraph as any, projectGraph as any);
       expect(mockProcessExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('assertTaskGraphDoesNotContainInvalidTargets', () => {
+    it('should throw if a task has parallelism set to false and has continuous dependencies', () => {
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            parallelism: false,
+            overrides: {},
+            outputs: [],
+          },
+          'b:watch': {
+            id: 'b:watch',
+            target: { project: 'b', target: 'watch' },
+            parallelism: false,
+            overrides: {},
+            outputs: [],
+          },
+        },
+        continuousDependencies: {
+          'a:build': ['b:watch'],
+          'b:watch': [],
+        },
+        roots: ['a:build'],
+        dependencies: {
+          'a:build': [],
+          'b:watch': [],
+        },
+      };
+      expect(() => {
+        assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
+      }).toThrowErrorMatchingInlineSnapshot(`
+        "The following tasks do not support parallelism but depend on continuous tasks:
+         - a:build -> b:watch"
+      `);
+    });
+
+    it('should throw if a task that is depended on and is continuous has parallelism set to false', () => {
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+          'b:watch': {
+            id: 'b:watch',
+            target: { project: 'b', target: 'watch' },
+            parallelism: false,
+            overrides: {},
+            outputs: [],
+          },
+        },
+        continuousDependencies: { 'a:build': ['b:watch'], 'b:watch': [] },
+        dependencies: { 'a:build': [], 'b:watch': [] },
+        roots: ['a:build'],
+      };
+      expect(() => {
+        assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
+      }).toThrowErrorMatchingInlineSnapshot(`
+        "The following continuous tasks do not support parallelism but are depended on:
+         - b:watch <- a:build
+        Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it."
+      `);
     });
   });
 });

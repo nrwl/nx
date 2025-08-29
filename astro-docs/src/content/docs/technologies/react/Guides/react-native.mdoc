@@ -5,7 +5,7 @@ sidebar:
   label: 'React Native with Nx'
 ---
 
-Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/technologies/test-tools/detox/introduction), Storybook, Jest, and more.
+Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/docs/technologies/test-tools/detox/introduction), Storybook, Jest, and more.
 
 In this guide we will show you how to develop [React Native](https://reactnative.dev/) applications with Nx.
 
@@ -13,7 +13,7 @@ In this guide we will show you how to develop [React Native](https://reactnative
 
 The easiest way to create your workspace is via `npx`.
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx create-nx-workspace happynrwl \
 --preset=react-native \
 --appName=mobile
@@ -23,79 +23,80 @@ npx create-nx-workspace happynrwl \
 You can also run the command without arguments to go through the interactive prompts.
 {% /aside %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx create-nx-workspace happynrwl
 ```
 
 Once the command completes, the workspace will look as follows:
 
-```text frame="none"
-happynrwl/
-├── apps/
-│   ├── mobile/
-│   │   ├── app.json
-│   │   ├── metro.config.js
-│   │   ├── android/
-│   │   │   ├── app/
-│   │   │   ├── gradle/
-│   │   │   ├── build.gradle
-│   │   │   ├── gradle.properties
-│   │   │   ├── gradlew
-│   │   │   ├── settings.gradle
-│   │   ├── ios/
-│   │   │   ├── Mobile/
-│   │   │   ├── Mobile.xcodeproj/
-│   │   │   ├── Mobile.xcworkspace/
-│   │   │   ├── Podfile
-│   │   │   ├── Podfile.lock
-│   │   ├── src/
-│   │   │   ├── main.tsx
-│   │   │   └── app/
-│   │   │       ├── App.tsx
-│   │   │       └── App.spec.tsx
-│   │   ├── .babelrc
-│   │   ├── jest.config.ts
-│   │   ├── test-setup.ts
-│   │   ├── package.json
-│   │   ├── project.json
-│   │   ├── tsconfig.json
-│   │   ├── tsconfig.app.json
-│   │   └── tsconfig.spec.json
-│   └── mobile-e2e/
-│       ├── .detoxrc.json
-│       ├── src/
-│       │   └── app.spec.ts
-│       ├── .babelrc
-│       ├── jest.config.json
-│       ├── project.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
-├── libs/
-├── tools/
-├── babel.config.json
-├── jest.config.ts
-├── jest.preset.js
-├── nx.json
-├── package-lock.json
-├── package.json
-└── tsconfig.base.json
-```
+{% filetree %}
+- happynrwl/
+  - apps/
+    - mobile/
+      - app.json
+    - metro.config.js
+    - android/ 
+      - app/
+      - gradle/
+      - build.gradle
+      - gradle.properties
+      - gradlew
+      - settings.gradle
+    - ios/ 
+      - Mobile/
+      - Mobile.xcodeproj/
+      - Mobile.xcworkspace/
+      - Podfile
+      - Podfile.lock
+    - src/ 
+      - main.tsx
+      - app/ 
+        - App.tsx
+        - App.spec.tsx
+    - .babelrc
+    - jest.config.ts
+    - test-setup.ts
+    - package.json
+    - project.json
+    - tsconfig.json
+    - tsconfig.app.json
+    - tsconfig.spec.json
+    - mobile-e2e/ 
+      - .detoxrc.json
+      - src/ 
+        - app.spec.ts
+      - .babelrc
+      - jest.config.json
+      - project.json
+      - tsconfig.e2e.json
+      - tsconfig.json
+  - libs/
+  - tools/
+  - babel.config.json
+  - jest.config.ts
+  - jest.preset.js
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+{% /filetree %}
+
 
 To run the application in development mode:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx start mobile
 ```
 
 On Android simulator/device:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx run-android mobile
 ```
 
 iOS simulator/device:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx run-ios mobile
 ```
 
@@ -109,13 +110,13 @@ Try out other commands as well.
 
 **Android:**
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx build-android mobile
 ```
 
 **iOS:** (Mac only)
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx build-ios mobile
 ```
 
@@ -127,17 +128,17 @@ npx nx build-ios mobile
 {% tabitem label="Using inferred tasks" %}
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx test mobile-e2e -- --configuration="android.emu.debug"
 ```
 
 {% /tabitem %}
 {% tabitem label="Using explicit targets with executors" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx test-android mobile-e2e
 ```
 
@@ -149,14 +150,14 @@ npx nx test-android mobile-e2e
 {% tabs %}
 {% tabitem label="Using inferred tasks" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx test mobile-e2e -- --configuration="ios.sim.debug"
 ```
 
 {% /tabitem %}
 {% tabitem label="Using explicit targets with executors" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx test-ios mobile-e2e
 ```
 
@@ -169,7 +170,7 @@ When using React Native in Nx, you get the out-of-the-box support for TypeScript
 
 For existing Nx workspaces, install the `@nx/react-native` package to add React Native capabilities to it.
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx add @nx/react-native
 ```
 
@@ -177,7 +178,7 @@ nx add @nx/react-native
 
 To create additional React Native apps run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/react-native:app apps/mobile
 ```
 
@@ -191,39 +192,38 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 
 To generate a new library run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/react-native:lib libs/shared-ui-layout
 ```
 
 And you will see the following:
 
-```text frame="none"
-happynrwl/
-├── apps/
-│   └── mobile/
-│   └── mobile-e2e/
-├── libs/
-│   └── shared-ui-layout/
-│       ├── src/
-│       │   └── index.ts
-│       ├── .babelrc
-│       ├── jest.config.js
-│       ├── project.json
-│       ├── README.md
-│       ├── test-setup.ts
-│       ├── tsconfig.json
-│       ├── tsconfig.lib.json
-│       └── tsconfig.spec.json
-├── tools/
-├── babel.config.json
-├── jest.config.js
-├── jest.preset.js
-├── nx.json
-├── package-lock.json
-├── package.json
-└── tsconfig.base.json
-```
-
+{% filetree %}
+- happynrwl/
+  - apps/
+    - mobile/
+      - mobile-e2e/
+  - libs/
+    - shared-ui-layout/
+      - src/
+        - index.ts
+      - .babelrc
+      - jest.config.js
+      - project.json
+      - README.md
+      - test-setup.ts
+      - tsconfig.json
+      - tsconfig.lib.json
+      - tsconfig.spec.json
+  - tools/
+  - babel.config.json
+  - jest.config.js
+  - jest.preset.js
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+{% /filetree %}
 Run:
 
 - `npx nx test shared-ui-layout` to test the library
@@ -231,30 +231,30 @@ Run:
 
 To generate a new component inside `shared-ui-layout` run:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/react-native:component libs/shared-ui-layout/src/lib/layout/layout --export
 ```
 
 And you will see the following updated for `shared-ui-layout`:
 
-```treeview frame="none"
-happynrwl/
-└── libs/
-    └── shared-ui-layout/
-        └── src/
-            ├── index.ts
-            └── lib/
-                 └── layout/
-                     ├── layout.tsx
-                     └── layout.spec.tsx
-```
+{% filetree %}
+- happynrwl/
+    - libs/
+      - shared-ui-layout/
+        - src/
+          - index.ts
+          - lib/
+            - layout/
+              - layout.tsx
+              - layout.spec.tsx
+{% /filetree %}
 
 ### Using Nx Library in your Application
 
 You can import the `shared-ui-layout` library in your application as follows.
 
-```typescript frame="none"
-// filename: apps/mobile/src/app/App.tsx
+```typescript
+// apps/mobile/src/app/App.tsx
 import React from 'react';
 import { SafeAreaView } from 'react-native';
 
@@ -277,23 +277,22 @@ That's it! There is no need to build the library prior to using it. When you upd
 
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/react-native:lib libs/shared-ui-layout --publishable --importPath=@happynrwl/ui-components
 npx nx g @nx/react-native:component libs/shared-ui-layout/src/lib/layout/layout --export
 ```
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:
 
-```text frame="none"
-dist/libs/shared-ui-layout/
-├── README.md
-├── index.d.ts
-├── lib/
-│   └── layout/
-│       └── layout.d.ts
-└── package.json
-```
-
+{% filetree %}
+- dist/libs/shared-ui-layout/
+  - README.md
+  - index.d.ts
+    - lib/
+      - layout/
+        - layout.d.ts
+  - package.json
+{% /filetree %}
 This dist folder is ready to be published to a registry.
 
 ## Code Sharing

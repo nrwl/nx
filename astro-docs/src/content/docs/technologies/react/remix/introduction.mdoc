@@ -22,12 +22,12 @@ within an Nx workspace. It provides:
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/remix` by running the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 nx add @nx/remix
 ```
 
@@ -43,14 +43,14 @@ The `@nx/remix` plugin will create a task for any project that has a Remix confi
 
 ### View Inferred Tasks
 
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/remix Configuration
 
 The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 
-```json frame="none"
-// filename: nx.json
+```json
+// nx.json
 {
   "plugins": [
     {
@@ -72,8 +72,7 @@ The `buildTargetName`, `devTargetName`, `startTargetName` and `typecheckTargetNa
 
 ## Generate a Remix Application
 
-```shell frame="terminal" title="nx g @nx/remix:app apps/myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx g @nx/remix:app apps/myapp" %}
 NX  Generating @nx/remix:application
 
 ✔ What unit test runner should be used? · vitest
@@ -110,8 +109,7 @@ CREATE apps/myapp-e2e/.eslintrc.json
 
 1. To build your application run:
 
-```shell frame="terminal" title="nx build myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx build myapp" %}
 > nx run myapp:build
 
 Building Remix app in production mode...
@@ -125,8 +123,7 @@ NX   Successfully ran target build for project myapp (3s)
 
 2. To serve your application for use during development run:
 
-```shell frame="terminal" title="nx dev myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx dev myapp" %}
 > nx run myapp:dev
 
 > remix dev --manual
@@ -140,8 +137,7 @@ info  built (388ms)
 
 3. To test the application using vitest run:
 
-```shell frame="terminal" title="nx test myapp"
-// filename: ~/acme
+```text {% frame="terminal" title="nx test myapp" %}
 > nx run myapp:test
 
 > vitest
@@ -169,8 +165,7 @@ When developing your application, it often makes sense to split your codebase in
 
 To generate a library to use in your Remix application run:
 
-```shell frame="terminal" title="nx g @nx/remix:lib libs/login"
-// filename: ~/acme
+```text {% frame="terminal" title="nx g @nx/remix:lib libs/login" %}
 NX  Generating @nx/remix:library
 
 ✔ What test runner should be used? · vitest
@@ -197,7 +192,8 @@ You can then use the library by importing one of the exports into your applicati
 
 `apps/myapp/app/routes/index.tsx`
 
-```tsx frame="none"
+```tsx
+// apps/myapp/app/routes/index.tsx
 import { Login } from '@acme/login';
 
 export default function Index() {
@@ -217,8 +213,7 @@ You can also run test on your library:
 
 To generate a route for your application:
 
-```shell frame="terminal" title="nx g @nx/remix:route apps/myapp/app/routes/admin"
-// filename: ~/acme
+```text {% frame="terminal" title="nx g @nx/remix:route apps/myapp/app/routes/admin" %}
 NX  Generating @nx/remix:route
 
 CREATE apps/myapp/app/routes/admin.tsx
@@ -231,8 +226,7 @@ To use a Route Loader where the logic lives in your library, follow the steps be
 
 1. Generate a loader for your route:
 
-```shell frame="terminal" title="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx"
-// filename: ~/acme
+```text {% frame="terminal" title="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx" %}
 NX  Generating @nx/remix:loader
 
 UPDATE apps/myapp/app/routes/admin.tsx
@@ -242,7 +236,8 @@ UPDATE apps/myapp/app/routes/admin.tsx
 
 `libs/login/src/lib/admin/admin.loader.ts`
 
-```ts frame="none"
+```ts
+// libs/login/src/lib/admin/admin.loader.ts
 import { json, LoaderFunctionArgs } from '@remix-run/node';
 
 export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
@@ -254,7 +249,8 @@ export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
 
 Export the function from the `libs/login/src/server.ts` file:
 
-```ts frame="none"
+```ts
+// libs/login/src/server.ts
 export * from './lib/admin/admin.loader';
 ```
 
@@ -262,7 +258,8 @@ export * from './lib/admin/admin.loader';
 
 Replace the default loader code:
 
-```tsx frame="none"
+```tsx
+// apps/myapp/app/routes/admin.tsx
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({
     message: 'Hello, world!',
@@ -272,7 +269,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 with
 
-```tsx frame="none"
+```tsx
 import { adminLoader } from '@acme/login/server';
 
 export const loader = adminLoader;

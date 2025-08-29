@@ -6,6 +6,7 @@ tags: ['nx-cloud', 'polygraph', 'enterprise']
 cover_image: /blog/images/2025-07-17/header.avif
 description: 'Learn how Conformance with Nx Cloud eliminates manual compliance tracking and enforces coding standards across your entire organization. See how to solve real problems like inconsistent code review processes with technology-agnostic rules.'
 youtubeUrl: https://www.youtube.com/watch?v=F645Elxy1dw
+pinned: true
 ---
 
 If you've got consistency problems in your organization, we've got the solution for you. **Conformance** is a powerful new tool within Nx Cloud's [Polygraph](/blog/nx-cloud-introducing-polygraph) suite that brings automated consistency and maintainability to your entire organization—regardless of what technology stack you're using.

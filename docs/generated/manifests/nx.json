@@ -4794,6 +4794,29 @@
         "file": "",
         "itemList": [
           {
+            "id": "docker",
+            "name": "Docker",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "introduction",
+                "name": "Introduction",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/docker/docker-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/build-tools/docker/introduction",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/technologies/build-tools/docker",
+            "tags": []
+          },
+          {
             "id": "webpack",
             "name": "Webpack",
             "description": "",
@@ -9157,6 +9180,29 @@
     "file": "",
     "itemList": [
       {
+        "id": "docker",
+        "name": "Docker",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "introduction",
+            "name": "Introduction",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/docker/docker-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/build-tools/docker/introduction",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/technologies/build-tools/docker",
+        "tags": []
+      },
+      {
         "id": "webpack",
         "name": "Webpack",
         "description": "",
@@ -9464,6 +9510,40 @@
     ],
     "isExternal": false,
     "path": "/technologies/build-tools",
+    "tags": []
+  },
+  "/technologies/build-tools/docker": {
+    "id": "docker",
+    "name": "Docker",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "introduction",
+        "name": "Introduction",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/docker/docker-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/build-tools/docker/introduction",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/technologies/build-tools/docker",
+    "tags": []
+  },
+  "/technologies/build-tools/docker/introduction": {
+    "id": "introduction",
+    "name": "Introduction",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/docker/docker-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/build-tools/docker/introduction",
     "tags": []
   },
   "/technologies/build-tools/webpack": {

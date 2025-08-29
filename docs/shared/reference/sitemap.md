@@ -453,6 +453,8 @@
         - [API](/technologies/eslint/eslint-plugin/api)
           - [migrations](/technologies/eslint/eslint-plugin/api/migrations)
     - [Build Tools](/technologies/build-tools)
+      - [Docker](/technologies/build-tools/docker)
+        - [Introduction](/technologies/build-tools/docker/introduction)
       - [Webpack](/technologies/build-tools/webpack)
         - [Introduction](/technologies/build-tools/webpack/introduction)
         - [Guides](/technologies/build-tools/webpack/recipes)
@@ -815,6 +817,8 @@
       - [Overview](/extending-nx/api/plugin/overview)
 
 - Ci
+  - [Getting Started](/ci/getting-started)
+    - [Intro](/ci/getting-started/intro)
   - [Features](/ci/features)
     - [AI-Powered Self-Healing CI](/ci/features/self-healing-ci)
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
@@ -833,6 +837,7 @@
     - [Heartbeat](/ci/concepts/heartbeat)
     - [Nx Cloud AI](/ci/concepts/nx-cloud-ai)
   - [Guides](/ci/recipes)
+    - [Improving your Time to Green (TTG)](/ci/recipes/improving-ttg)
     - [Set Up CI](/ci/recipes/set-up)
       - [Setting up Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure)
       - [Setting up CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci)

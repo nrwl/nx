@@ -11,7 +11,8 @@ function getCompilerSetup(rootDir: string) {
   const tsConfigPath =
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.spec.json') ||
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.test.json') ||
-    ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.jest.json');
+    ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.jest.json') ||
+    ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.json');
 
   if (!tsConfigPath) {
     console.error(

@@ -106,7 +106,7 @@ export function TaskNodeContextMenu({
   }, [inputs, data.name]);
 
   return (
-    <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+    <div className="flex w-[32rem] max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Tag>{data.executor}</Tag>
@@ -129,19 +129,21 @@ export function TaskNodeContextMenu({
               <DocumentMagnifyingGlassIcon className="h-5 w-5" />
             )}
           </button>
-          <button
-            className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
-            title="Run Task"
-            onClick={onRunTaskClick}
-          >
-            <PlayIcon className="h-5 w-5" />
-          </button>
+          {renderPlatform === 'nx-console' ? (
+            <button
+              className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+              title="Run Task"
+              onClick={onRunTaskClick}
+            >
+              <PlayIcon className="h-5 w-5" />
+            </button>
+          ) : null}
         </div>
       </div>
 
       {data.description ? <p>{data.description}</p> : null}
 
-      {inputSections.length > 0 && <ContextMenuList sections={inputSections} />}
+      <ContextMenuList sections={inputSections} isLoading={!inputs} />
     </div>
   );
 }

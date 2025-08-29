@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import {
+import type {
   GraphError,
   ProjectGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
@@ -21,9 +21,19 @@ import {
   useRouteConstructor,
 } from '@nx/graph-shared';
 import { Tooltip, ErrorToast, Dropdown } from '@nx/graph-ui-common';
-import { ThemePanel, useTheme } from '@nx/graph-internal-ui-theme';
+import {
+  ThemePanel,
+  useTheme,
+  RankdirPanel,
+} from '@nx/graph-internal-ui-render-config';
 import classNames from 'classnames';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   Outlet,
   useNavigate,
@@ -31,11 +41,9 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { useCurrentPath } from './hooks/use-current-path';
 import { getProjectGraphService } from './machines/get-services';
 import { DebuggerPanel } from './ui-components/debugger-panel';
-import { ExperimentalFeature } from './ui-components/experimental-feature';
 import {
   NxGraphProjectGraphProvider,
   useProjectGraphContext,
@@ -248,9 +256,12 @@ function InnerShell({
     return count > 0;
   }, [handleEventResult]);
 
-  function onRankDirChange(rankDir: RenderRankDir) {
-    sendRenderConfigEvent({ type: 'RankDirChange', rankDir });
-  }
+  const onRankDirChange = useCallback(
+    (rankDir: RenderRankDir) => {
+      sendRenderConfigEvent({ type: 'RankDirChange', rankDir });
+    },
+    [sendRenderConfigEvent]
+  );
 
   function projectChange(projectGraphId: string) {
     navigate(`/${encodeURIComponent(projectGraphId)}${topLevelRoute}`);
@@ -411,10 +422,7 @@ function InnerShell({
                     ))}
                   </Dropdown>
 
-                  <ExperimentalFeature>
-                    <RankdirPanel onRankDirChange={onRankDirChange} />
-                  </ExperimentalFeature>
-
+                  <RankdirPanel onRankDirChange={onRankDirChange} />
                   <ThemePanel />
                 </div>
               </div>
@@ -493,7 +501,15 @@ function InnerShell({
                       onAction={(action) => {
                         if (action.type === 'focus-node') {
                           navigate(
-                            routeConstructor(`/projects/${data.name}`, true)
+                            routeConstructor(
+                              `/projects/${encodeURIComponent(data.name)}`,
+                              (searchParams) => {
+                                if (searchParams.has('composite')) {
+                                  searchParams.delete('composite');
+                                }
+                                return searchParams;
+                              }
+                            )
                           );
                           return;
                         }
@@ -509,7 +525,9 @@ function InnerShell({
                         if (action.type === 'start-trace') {
                           navigate(
                             routeConstructor(
-                              `/projects/trace/${data.name}`,
+                              `/projects/trace/${encodeURIComponent(
+                                data.name
+                              )}`,
                               (searchParams) => {
                                 // when we start tracing, we will get out of composite mode
                                 if (searchParams.has('composite')) {
@@ -530,7 +548,9 @@ function InnerShell({
                           if (!start) return;
                           navigate(
                             routeConstructor(
-                              `/projects/trace/${start}/${data.name}`,
+                              `/projects/trace/${encodeURIComponent(
+                                start
+                              )}/${encodeURIComponent(data.name)}`,
                               true
                             )
                           );

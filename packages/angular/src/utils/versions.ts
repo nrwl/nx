@@ -1,9 +1,8 @@
 export const nxVersion = require('../../package.json').version;
 
-export const angularVersion = '~20.1.0';
-export const angularDevkitVersion = '~20.1.0';
-export const ngPackagrVersion = '~20.1.0';
-export const angularRspackVersion = '^21.1.0';
+export const angularVersion = '~20.2.0';
+export const angularDevkitVersion = '~20.2.0';
+export const ngPackagrVersion = '~20.2.0';
 export const ngrxVersion = '^20.0.0';
 export const rxjsVersion = '~7.8.0';
 export const zoneJsVersion = '~0.15.0';
@@ -19,7 +18,7 @@ export const moduleFederationNodeVersion = '^2.7.11';
 export const moduleFederationEnhancedVersion = '^0.18.0';
 export const webpackMergeVersion = '^5.8.0';
 
-export const angularEslintVersion = '^20.0.0';
+export const angularEslintVersion = '^20.2.0';
 export const typescriptEslintVersion = '^7.16.0';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
@@ -29,7 +28,7 @@ export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
 export const jestPresetAngularVersion = '~15.0.0';
-export const typesNodeVersion = '18.16.9';
+export const typesNodeVersion = '20.19.9';
 export const jasmineMarblesVersion = '^0.9.2';
 
 export const jsoncEslintParserVersion = '^2.1.0';

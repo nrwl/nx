@@ -125,9 +125,6 @@
       "path": "./graph/ui-project-details"
     },
     {
-      "path": "./graph/ui-theme"
-    },
-    {
       "path": "./typedoc-theme"
     },
     {
@@ -402,6 +399,12 @@
     },
     {
       "path": "./packages/angular-rspack"
+    },
+    {
+      "path": "./tools/update-repos"
+    },
+    {
+      "path": "./graph/ui-render-config"
     }
   ],
   "extends": "./tsconfig.base.json"

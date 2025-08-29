@@ -36,13 +36,24 @@ import { SectionsMenu } from './sections-menu';
 import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import { GitHubIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import { useRouter } from 'next/navigation';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 interface HeaderProps {
   ctaButtons?: ButtonLinkProps[];
+  scrollCtaButtons?: ButtonLinkProps[];
 }
 
-export function Header({ ctaButtons }: HeaderProps): ReactElement {
+export function Header({
+  ctaButtons,
+  scrollCtaButtons,
+}: HeaderProps): ReactElement {
   let [isOpen, setIsOpen] = useState(false);
+
+  // Use the new docs URL when Astro docs are enabled
+  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
+    ? '/docs/getting-started/intro'
+    : '/getting-started/intro';
+  let [isScrolled, setIsScrolled] = useState(false);
 
   const router = useRouter();
 
@@ -66,18 +77,53 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
     };
   }, []);
 
+  // Scroll detection for CTA button transition
+  useEffect(() => {
+    const shouldTrackScroll = scrollCtaButtons && scrollCtaButtons.length > 0;
+
+    if (!shouldTrackScroll) return undefined;
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      setIsScrolled(scrollPosition > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrollCtaButtons?.length]);
+
   const defaultCtaButtons: ButtonLinkProps[] = [
     {
-      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header&utm_campaign=try-nx-cloud',
+      href: '/contact',
+      variant: 'secondary',
+      size: 'small',
+      title: 'Contact Us',
+      children: <span>Contact</span>,
+      onClick: () =>
+        sendCustomEvent('contact-click', 'header-cta', 'page-header'),
+    },
+    {
+      href: 'https://cloud.nx.app?utm_source=nx-dev&utm_medium=header',
       variant: 'primary',
       size: 'small',
       target: '_blank',
-      title: 'Get started',
-      children: 'Get started',
+      title: 'Login to Nx Cloud',
+      children: 'Login',
+      onClick: () =>
+        sendCustomEvent('login-click', 'header-cta', 'page-header'),
     },
   ];
 
-  const buttonsToRender = ctaButtons || defaultCtaButtons;
+  const getButtonsToRender = () => {
+    if (ctaButtons && ctaButtons.length > 0) return ctaButtons;
+    if (scrollCtaButtons && scrollCtaButtons.length > 0 && isScrolled)
+      return scrollCtaButtons;
+    return defaultCtaButtons;
+  };
+
+  const buttonsToRender = getButtonsToRender();
 
   return (
     <div className="fixed inset-x-0 top-0 isolate z-[5] flex px-4 print:hidden">
@@ -110,10 +156,17 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
           >
             <h2 className="sr-only">Main navigation</h2>
             <Link
-              href="/getting-started/intro"
+              href={docsUrl}
               title="Documentation"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent(
+                  'documentation-click',
+                  'header-navigation',
+                  'page-header'
+                )
+              }
             >
               Docs
             </Link>
@@ -247,10 +300,39 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
         {/*SECONDARY NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
           <nav className="flex items-center justify-center space-x-1">
-            <div className="hidden xl:block">
-              {buttonsToRender.map((buttonProps, index) => (
-                <ButtonLink key={index} {...buttonProps} />
-              ))}
+            <div className="hidden md:block">
+              <div className="relative flex justify-end">
+                {/* Default buttons */}
+                <div
+                  className={`flex space-x-2 transition-all duration-700 ease-in-out ${
+                    scrollCtaButtons &&
+                    scrollCtaButtons.length > 0 &&
+                    isScrolled
+                      ? 'opacity-0 blur-sm'
+                      : 'opacity-100 blur-0'
+                  }`}
+                >
+                  {(ctaButtons && ctaButtons.length > 0
+                    ? ctaButtons
+                    : defaultCtaButtons
+                  ).map((buttonProps, index) => (
+                    <ButtonLink key={`default-${index}`} {...buttonProps} />
+                  ))}
+                </div>
+
+                {/* Scroll CTA buttons */}
+                {scrollCtaButtons && scrollCtaButtons.length > 0 && (
+                  <div
+                    className={`absolute inset-0 flex justify-end space-x-2 transition-all duration-700 ease-in-out ${
+                      isScrolled ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'
+                    }`}
+                  >
+                    {scrollCtaButtons.map((buttonProps, index) => (
+                      <ButtonLink key={`scroll-${index}`} {...buttonProps} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <a
               title="Nx is open source, check the code on GitHub"
@@ -362,23 +444,69 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                         </div>
                       </div>
                       <div className="relative mt-6 flex-1 px-4 sm:px-6">
-                        <ButtonLink
-                          href="https://cloud.nx.app/get-started"
-                          variant="primary"
-                          size="small"
-                          target="_blank"
-                          title="Try Nx Cloud for free"
-                          className="w-full"
-                        >
-                          Get started
-                        </ButtonLink>
+                        <div className="relative">
+                          {/* Default mobile button */}
+                          <div
+                            className={`space-y-2 transition-all duration-500 ease-in-out ${
+                              scrollCtaButtons &&
+                              scrollCtaButtons.length > 0 &&
+                              isScrolled
+                                ? 'opacity-0 blur-sm'
+                                : 'opacity-100 blur-0'
+                            }`}
+                          >
+                            <ButtonLink
+                              href="https://cloud.nx.app/get-started"
+                              variant="primary"
+                              size="small"
+                              target="_blank"
+                              title="Try Nx Cloud for free"
+                              className="w-full"
+                              onClick={() =>
+                                sendCustomEvent(
+                                  'get-started-click',
+                                  'mobile-header-cta',
+                                  'mobile-navigation'
+                                )
+                              }
+                            >
+                              Get started
+                            </ButtonLink>
+                          </div>
+
+                          {/* Scroll CTA mobile buttons */}
+                          {scrollCtaButtons && scrollCtaButtons.length > 0 && (
+                            <div
+                              className={`absolute inset-0 space-y-2 transition-all duration-500 ease-in-out ${
+                                isScrolled
+                                  ? 'opacity-100 blur-0'
+                                  : 'opacity-0 blur-sm'
+                              }`}
+                            >
+                              {scrollCtaButtons.map((buttonProps, index) => (
+                                <ButtonLink
+                                  key={`mobile-scroll-${index}`}
+                                  {...buttonProps}
+                                  className="w-full"
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
 
                         <div className="mt-4 divide-y divide-slate-200 border-b border-slate-200 dark:divide-slate-800 dark:border-slate-800">
                           <Link
-                            href="/getting-started/intro"
+                            href={docsUrl}
                             title="Documentation"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'documentation-click',
+                                'mobile-header-navigation',
+                                'page-header'
+                              )
+                            }
                           >
                             Docs
                           </Link>
@@ -531,6 +659,13 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             title="Contact"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'contact-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
                           >
                             Contact
                           </Link>

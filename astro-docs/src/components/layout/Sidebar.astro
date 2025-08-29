@@ -2,18 +2,32 @@
 import Default from '@astrojs/starlight/components/Sidebar.astro';
 ---
 
-<div class="sidebar-wrapper">
+<div class="sidebar-wrapper" data-testid="sidebar-wrapper">
   <Default {...Astro.props} />
 </div>
 
 <style>
+.sidebar-wrapper :global(a) {
+  color: var(--sl-color-gray-4);
+}
+
 .sidebar-wrapper :global(a[aria-current=page]) {
   background-color: transparent;
-  color: var(--color-blue-500);
-  font-weight: var(--font-weight-medium);
+  color: var(--sl-color-text-accent);
+  font-weight: var(--font-weight-semibold);
 }
 .sidebar-wrapper :global(ul ul .large) {
+  color: var(--sl-color-gray-3);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
+}
+
+.sidebar-wrapper :global(details summary .group-label) {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sidebar-wrapper :global(details[open] summary .group-label) {
+  color: var(--sl-color-gray-2);
 }
 </style>

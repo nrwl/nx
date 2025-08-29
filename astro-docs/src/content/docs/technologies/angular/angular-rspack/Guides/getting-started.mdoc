@@ -70,21 +70,21 @@ To add an existing Angular Rspack application to an Nx Workspace, run the follow
 The minimum Nx version required to add an Angular Rspack application to an Nx Workspace is `20.6.1`.
 If you are using an older version of Nx, run `npx nx migrate` to migrate your workspace to the latest version.
 
-You can learn more about Nx migrations [here](/features/automate-updating-dependencies).
+You can learn more about Nx migrations [here](/docs/features/automate-updating-dependencies).
 
 {% /aside %}
 
 {% tabs %}
 {% tabitem label="Client-Side Rendering (CSR)" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/angular:app myapp --bundler=rspack
 ```
 
 {% /tabitem %}
 {% tabitem label="Server-Side Rendering (SSR)" %}
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx g @nx/angular:app myapp --bundler=rspack --ssr
 ```
 
@@ -100,16 +100,16 @@ After generating the application, you will notice the following:
 - A `rspack.config.ts` file in the root of the project
 - The `project.json` file does not have a `targets.build` or `targets.serve` target
 
-The `rspack.config.ts` file is a configuration file for Rspack. It contains the configuration options for Rspack and for Angular Rspack a helper [createConfig](/technologies/angular/angular-rspack/api/create-config)
+The `rspack.config.ts` file is a configuration file for Rspack. It contains the configuration options for Rspack and for Angular Rspack a helper [createConfig](/docs/technologies/angular/angular-rspack/create-config)
 function is used to map the options you would expect to set in the `project.json` or `angular.json` files to the Rspack configuration.
 
-The `project.json` file does not contain the `targets.build` or `targets.serve` targets because Angular Rspack uses Nx's [Inferred Tasks](concepts/inferred-tasks) to build and serve your application with Rspack.
+The `project.json` file does not contain the `targets.build` or `targets.serve` targets because Angular Rspack uses Nx's [Inferred Tasks](/docs/concepts/inferred-tasks) to build and serve your application with Rspack.
 
 ## Building your Angular Rspack application
 
 To build your Angular Rspack application, run the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx build myapp
 ```
 
@@ -120,7 +120,7 @@ If you are using the Angular Rspack application with Server-Side Rendering (SSR)
 
 To serve your Angular Rspack application, run the following command:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx serve myapp
 ```
 

@@ -223,7 +223,13 @@ export class AngularRspackPlugin implements RspackPluginInstance {
 
       compiler.hooks.done.tap(PLUGIN_NAME, (statsValue) => {
         const stats = statsValue.toJson();
-        if (budgets?.length) {
+        const isPlatformServer = Array.isArray(compiler.options.target)
+          ? compiler.options.target.some(
+              (target) => target === 'node' || target == 'async-node'
+            )
+          : compiler.options.target === 'node' ||
+            compiler.options.target === 'async-node';
+        if (budgets?.length && !isPlatformServer) {
           budgetFailures = [...checkBudgets(budgets, stats)];
           for (const { severity, message } of budgetFailures) {
             switch (severity) {

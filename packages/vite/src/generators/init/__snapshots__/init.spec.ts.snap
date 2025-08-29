@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/vite:init dependencies for package.json should add required packages 1`] = `
 {
@@ -11,7 +11,7 @@ exports[`@nx/vite:init dependencies for package.json should add required package
     "@vitest/ui": "^3.0.0",
     "existing": "1.0.0",
     "jiti": "2.4.2",
-    "vite": "^6.0.0",
+    "vite": "^7.0.0",
     "vitest": "^3.0.0",
   },
   "name": "@proj/source",

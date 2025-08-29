@@ -14,7 +14,6 @@ fun addTestCiTargets(
     testFiles: FileCollection,
     projectBuildPath: String,
     testTask: Task,
-    testTargetName: String,
     targets: NxTargets,
     targetGroups: TargetGroups,
     projectRoot: String,
@@ -76,37 +75,11 @@ private fun processTestFiles(
       }
 }
 
-internal fun processTestClasses(
-    testClassNames: Map<String, String>,
-    ciTestTargetName: String,
-    projectBuildPath: String,
-    testTask: Task,
-    projectRoot: String,
-    workspaceRoot: String,
-    targets: NxTargets,
-    targetGroups: TargetGroups,
-    ciDependsOn: MutableList<Map<String, String>>
-) {
-  testClassNames.forEach { (className, testClassPackagePath) ->
-    val targetName = "$ciTestTargetName--$className"
-    targets[targetName] =
-        buildTestCiTarget(
-            projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
-    targetGroups[testCiTargetGroup]?.add(targetName)
-
-    ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
-  }
-}
-
 private fun isTestFile(file: File, workspaceRoot: String): Boolean {
+  // Additional check for test files that might not have obvious annotations
+  // Could be extended with more sophisticated logic
   val content = file.takeIf { it.exists() }?.readText()
-  return if (content != null && containsEssentialTestAnnotations(content)) {
-    true
-  } else {
-    // Additional check for test files that might not have obvious annotations
-    // Could be extended with more sophisticated logic
-    false
-  }
+  return content != null && containsEssentialTestAnnotations(content)
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
@@ -130,7 +103,8 @@ private fun buildTestCiTarget(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
                   "testClassName" to testClassPackagePath),
           "metadata" to
-              getMetadata("Runs Gradle test $testClassPackagePath in CI", projectBuildPath, "test"),
+              getMetadata(
+                  "Runs Gradle test $testClassPackagePath in CI", projectBuildPath, testTask.name),
           "cache" to true,
           "inputs" to taskInputs)
 
@@ -160,7 +134,8 @@ private fun ensureParentCiTarget(
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(
             "executor" to "nx:noop",
-            "metadata" to getMetadata("Runs all Gradle tests in CI", projectBuildPath, "test"),
+            "metadata" to
+                getMetadata("Runs all Gradle tests in CI", projectBuildPath, testTask.name),
             "cache" to true,
             "inputs" to taskInputs,
             "dependsOn" to ciDependsOn)

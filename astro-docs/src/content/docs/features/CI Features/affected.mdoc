@@ -14,9 +14,8 @@ As your workspace grows, re-testing, re-building, and re-linting **all projects 
 
 This drastically improves the speed of your CI and reduces the amount of compute needed. This advantage is further enhanced when [paired with remote caching and distribution](#best-paired-with-remote-caching-and-distribution).
 
-\{% graph title="Making a change in lib10 only affects a sub-part of the project graph (shown in purple)" height="400px" %}
+{% graph title="Making a change in lib10 only affects a sub-part of the project graph (shown in purple)" height="400px" %}
 
-```json
 {
   "projects": [
     {
@@ -201,9 +200,8 @@ This drastically improves the speed of your CI and reduces the amount of compute
   },
   "affectedProjectIds": ["lib10", "lib4", "lib5", "app2"]
 }
-```
 
-\{% /graph %}
+{% /graph %}
 
 ## Using Nx Affected Commands
 
@@ -216,12 +214,12 @@ nx affected -t <task>
 When you run `nx affected -t test`, Nx will:
 
 - Use Git to determine the files you changed in your PR.
-- Use the [project graph](/features/explore-graph) to determine which projects the files belong to.
+- Use the [project graph](/docs/features/explore-graph) to determine which projects the files belong to.
 - Determine which projects depend on the projects you modified.
 
 Once the projects are identified, Nx runs the tasks you specified on that subset of projects.
 
-You can also visualize the affected projects using the [Nx graph](/features/explore-graph). Simply run:
+You can also visualize the affected projects using the [Nx graph](/docs/features/explore-graph). Simply run:
 
 ```shell {% frame="none" %}
 nx graph --affected
@@ -234,11 +232,11 @@ Using `nx affected` is a powerful tool to reduce the amount of compute that need
 - If you're modifying a **project that is used by a large portion** of your monorepo projects, you might end up running tasks for almost all the projects in the workspace.
 - If you have a set of 10 projects affected by a PR and you continue making changes, you will **always end up running tasks for those 10 projects**. The set of affected projects doesn't change but is always calculated with respect to your last successful run on the main branch.
 
-This is why Nx Affected is best paired with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
+This is why Nx Affected is best paired with [remote caching](/docs/features/ci-features/remote-cache) and [distributed task execution](/docs/features/ci-features/distribute-task-execution).
 
 ## Configure Affected on CI
 
-To understand which projects are affected, Nx uses the Git history and the [project graph](/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
+To understand which projects are affected, Nx uses the Git history and the [project graph](/docs/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
 The affected command takes a `base` and `head` commit. The default `base` is your `main` branch, and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
@@ -256,13 +254,7 @@ NX_HEAD=origin/main
 
 **The recommended approach is to set the base SHA to the latest successful commit** on the `main` branch. This ensures that all changes since the last successful CI run are accounted for.
 
-Depending on your CI provider, this might differ:
-
-- [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab)
-- [Get last successful commit for Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#get-the-commit-of-the-last-successful-build)
+See our guides to get the [last successful CI run for your CI provider](/docs/guides/nx-cloud/setup-ci#get-the-commit-of-the-last-successful-build).
 
 ## Ignoring Files from Affected Commands
 

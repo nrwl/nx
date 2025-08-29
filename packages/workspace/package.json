@@ -43,6 +43,7 @@
     "chalk": "^4.1.0",
     "enquirer": "~2.3.6",
     "picomatch": "4.0.2",
+    "semver": "^7.6.3",
     "tslib": "^2.3.0",
     "yargs-parser": "21.1.1"
   },

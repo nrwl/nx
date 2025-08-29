@@ -21,16 +21,6 @@ export function EnterpriseSecurity(): ReactElement {
     setCurrentPath(router.asPath);
   }, [router.asPath]);
 
-  const headerCTAConfig: ButtonLinkProps[] = [
-    {
-      href: '/contact',
-      variant: 'secondary',
-      size: 'small',
-      title: 'Contact us',
-      children: 'Contact us',
-    },
-  ];
-
   return (
     <>
       <NextSeo
@@ -55,7 +45,7 @@ export function EnterpriseSecurity(): ReactElement {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={headerCTAConfig}>
+      <DefaultLayout>
         <SecurityHero />
         <div className="mt-32 scroll-mt-32 lg:mt-56">
           <WhyCiSecurityMatters />

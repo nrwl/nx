@@ -31,7 +31,7 @@ There are two different methods that Nx supports for linking TypeScript projects
 
 Create a new Nx workspace that links projects with package manager workspaces:
 
-```shell
+```shell {% frame="none" %}
 npx create-nx-workspace
 ```
 
@@ -230,11 +230,11 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 
 ### TypeScript Project References Performance Benefits
 
-\{% youtube src="https://youtu.be/O2xBQJMTs9E" title="Why TypeScript Project References Make Your CI Faster!" /%\}
+{% youtube src="https://youtu.be/O2xBQJMTs9E" title="Why TypeScript Project References Make Your CI Faster!" /%}
 
 Using TypeScript project references improves both the speed and memory usage of build and typecheck tasks. The repository below contains benchmarks showing the difference between running typecheck with and without using TypeScript project references.
 
-\{% github-repository title="TypeScript Project References Benchmark" url="https://github.com/jaysoo/typecheck-timings" /%\}
+{% github_repository title="TypeScript Project References Benchmark" url="https://github.com/jaysoo/typecheck-timings" /%}
 
 Here are the baseline typecheck task performance results.
 

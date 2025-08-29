@@ -37,17 +37,14 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         collapsed: true,
         items: [
           ...getPluginItems('angular'),
-          // TODO: angular rspack and rsbuild are special cases
-          //
-          //   label: 'Angular Rspack',
-          //   link: '/technologies/angular/angular-rspack/',
-          //   items: getPluginItems('angular-rspack', 'angular'),
-          // },
-          // {
-          //   label: 'Angular Rsbuild',
-          //   link: '/technologies/angular/angular-rsbuild/',
-          //   items: getPluginItems('angular-rsbuild', 'angular'),
-          // },
+          {
+            label: 'Angular Rspack',
+            items: getPluginItems('angular-rspack', 'angular'),
+          },
+          {
+            label: 'Angular Rsbuild',
+            items: getPluginItems('angular-rsbuild', 'angular'),
+          },
         ],
       },
       {
@@ -57,18 +54,22 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           ...getPluginItems('react'),
           {
             label: 'Next',
+            collapsed: true,
             items: getPluginItems('next', 'react'),
           },
           {
             label: 'Remix',
+            collapsed: true,
             items: getPluginItems('remix', 'react'),
           },
           {
             label: 'React Native',
+            collapsed: true,
             items: getPluginItems('react-native', 'react'),
           },
           {
             label: 'Expo',
+            collapsed: true,
             items: getPluginItems('expo', 'react'),
           },
         ],
@@ -80,6 +81,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           ...getPluginItems('vue'),
           {
             label: 'Nuxt',
+            collapsed: true,
             items: getPluginItems('nuxt', 'vue'),
           },
         ],
@@ -91,10 +93,12 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           ...getPluginItems('node'),
           {
             label: 'Express',
+            collapsed: true,
             items: getPluginItems('express', 'node'),
           },
           {
             label: 'Nest',
+            collapsed: true,
             items: getPluginItems('nest', 'node'),
           },
         ],
@@ -117,6 +121,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           ...getPluginItems('eslint'),
           {
             label: 'ESLint Plugin',
+            collapsed: true,
             items: getPluginItems('eslint-plugin', 'eslint'),
           },
         ],
@@ -127,26 +132,32 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         items: [
           {
             label: 'Webpack',
+            collapsed: true,
             items: getPluginItems('webpack', 'build-tools'),
           },
           {
             label: 'Vite',
+            collapsed: true,
             items: getPluginItems('vite', 'build-tools'),
           },
           {
             label: 'Rollup',
+            collapsed: true,
             items: getPluginItems('rollup', 'build-tools'),
           },
           {
             label: 'ESBuild',
+            collapsed: true,
             items: getPluginItems('esbuild', 'build-tools'),
           },
           {
             label: 'Rspack',
+            collapsed: true,
             items: getPluginItems('rspack', 'build-tools'),
           },
           {
             label: 'Rsbuild',
+            collapsed: true,
             items: getPluginItems('rsbuild', 'build-tools'),
           },
         ],
@@ -157,22 +168,27 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         items: [
           {
             label: 'Cypress',
+            collapsed: true,
             items: getPluginItems('cypress', 'test-tools'),
           },
           {
             label: 'Jest',
+            collapsed: true,
             items: getPluginItems('jest', 'test-tools'),
           },
           {
             label: 'Playwright',
+            collapsed: true,
             items: getPluginItems('playwright', 'test-tools'),
           },
           {
             label: 'Storybook',
+            collapsed: true,
             items: getPluginItems('storybook', 'test-tools'),
           },
           {
             label: 'Detox',
+            collapsed: true,
             items: getPluginItems('detox', 'test-tools'),
           },
         ],
@@ -185,9 +201,14 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     autogenerate: { directory: 'enterprise', collapsed: true },
   },
   {
+    label: 'Extending Nx',
+    collapsed: true,
+    autogenerate: { directory: 'extending-nx', collapsed: true },
+  },
+  {
     label: 'Reference',
     collapsed: false,
-    autogenerate: { directory: 'references', collapsed: true },
+    autogenerate: { directory: 'reference', collapsed: true },
   },
   {
     label: 'Troubleshooting',

@@ -39,7 +39,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   });
 
   // Expected to run as part of the Github `publish` workflow
-  if (!options.local && process.env.NODE_AUTH_TOKEN) {
+  if (!options.local && process.env.GITHUB_ACTIONS) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync('find ./dist -name "*.node" -delete', {
@@ -200,6 +200,8 @@ const VALID_AUTHORS_FOR_LATEST = [
     windowsHide: false,
   });
 
+  hackFixForDevkitPeerDependencies();
+
   // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
   let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
   if (options.dryRun) {
@@ -229,48 +231,44 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   // TODO(colum): Remove when we have a better way to handle this
-  if (options.local) {
-    console.log(
-      'Resetting angular-rspack package.json versions to previous versions'
-    );
-    const angularRspackPackageJson = JSON.parse(
-      readFileSync(
-        join(workspaceRoot, 'packages/angular-rspack/package.json'),
-        'utf-8'
-      )
-    );
-    angularRspackPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
-    angularRspackPackageJson.dependencies['@nx/angular-rspack-compiler'] =
-      'workspace:*';
-    angularRspackPackageJson.version = angularRspackPrevVersion;
-    writeFileSync(
+
+  console.log(
+    'Resetting angular-rspack package.json versions to previous versions'
+  );
+  const angularRspackPackageJson = JSON.parse(
+    readFileSync(
       join(workspaceRoot, 'packages/angular-rspack/package.json'),
-      JSON.stringify(angularRspackPackageJson)
-    );
+      'utf-8'
+    )
+  );
+  angularRspackPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
+  angularRspackPackageJson.dependencies['@nx/angular-rspack-compiler'] =
+    'workspace:*';
+  angularRspackPackageJson.version = angularRspackPrevVersion;
+  writeFileSync(
+    join(workspaceRoot, 'packages/angular-rspack/package.json'),
+    JSON.stringify(angularRspackPackageJson)
+  );
 
-    writeFileSync(
-      join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-      JSON.stringify({
-        ...JSON.parse(
-          readFileSync(
-            join(
-              workspaceRoot,
-              'packages/angular-rspack-compiler/package.json'
-            ),
-            'utf-8'
-          )
-        ),
-        version: angularRspackCompilerPrevVersion,
-      })
-    );
+  writeFileSync(
+    join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
+    JSON.stringify({
+      ...JSON.parse(
+        readFileSync(
+          join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
+          'utf-8'
+        )
+      ),
+      version: angularRspackCompilerPrevVersion,
+    })
+  );
 
-    execSync(
-      `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
-      {
-        cwd: workspaceRoot,
-      }
-    );
-  }
+  execSync(
+    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
+    {
+      cwd: workspaceRoot,
+    }
+  );
 
   process.exit(0);
 })();
@@ -510,4 +508,27 @@ function determineDistTag(
       : 'latest';
 
   return distTag;
+}
+
+//TODO(@Coly010): Remove this after fixing up the release peer dep handling
+function hackFixForDevkitPeerDependencies() {
+  const { readFileSync, writeFileSync } = require('fs');
+  const devkitPackageJson = JSON.parse(
+    readFileSync('./dist/packages/devkit/package.json', 'utf-8')
+  );
+
+  const beforeVersion = devkitPackageJson.peerDependencies['nx'];
+  if (!beforeVersion.includes('<')) {
+    console.log(
+      '@nx/devkit peer dependencies range is broken - needs release fix. Patching it to avoid broken publishes.'
+    );
+    const majorVersion = major(beforeVersion);
+    devkitPackageJson.peerDependencies['nx'] = `>= ${majorVersion - 1} <= ${
+      majorVersion + 1
+    }`;
+    writeFileSync(
+      './dist/packages/devkit/package.json',
+      JSON.stringify(devkitPackageJson, null, 2)
+    );
+  }
 }

@@ -1,4 +1,38 @@
 {
+  "/ci/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started",
+    "description": "Nx Cloud introduction",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "intro",
+        "name": "Intro",
+        "description": "Nx Cloud introduction",
+        "mediaImage": "",
+        "file": "nx-cloud/getting-started/intro",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/getting-started/intro",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/getting-started",
+    "tags": []
+  },
+  "/ci/getting-started/intro": {
+    "id": "intro",
+    "name": "Intro",
+    "description": "Nx Cloud introduction",
+    "mediaImage": "",
+    "file": "nx-cloud/getting-started/intro",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/getting-started/intro",
+    "tags": []
+  },
   "/ci/features": {
     "id": "features",
     "name": "Features",
@@ -360,6 +394,17 @@
     "mediaImage": "",
     "file": "",
     "itemList": [
+      {
+        "id": "improving-ttg",
+        "name": "Improving your Time to Green (TTG)",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/optimize-your-ttg",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/improving-ttg",
+        "tags": []
+      },
       {
         "id": "set-up",
         "name": "Set Up CI",
@@ -844,6 +889,17 @@
     ],
     "isExternal": false,
     "path": "/ci/recipes",
+    "tags": []
+  },
+  "/ci/recipes/improving-ttg": {
+    "id": "improving-ttg",
+    "name": "Improving your Time to Green (TTG)",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/optimize-your-ttg",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/improving-ttg",
     "tags": []
   },
   "/ci/recipes/set-up": {

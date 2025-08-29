@@ -3764,6 +3764,23 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Docker",
+                "path": "/technologies/build-tools/docker",
+                "id": "docker",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Introduction",
+                    "path": "/technologies/build-tools/docker/introduction",
+                    "id": "introduction",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Webpack",
                 "path": "/technologies/build-tools/webpack",
                 "id": "webpack",
@@ -6782,6 +6799,23 @@
     "id": "ci",
     "menu": [
       {
+        "name": "Getting Started",
+        "path": "/ci/getting-started",
+        "id": "getting-started",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Intro",
+            "path": "/ci/getting-started/intro",
+            "id": "intro",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
         "name": "Features",
         "path": "/ci/features",
         "id": "features",
@@ -6925,6 +6959,14 @@
         "id": "recipes",
         "isExternal": false,
         "children": [
+          {
+            "name": "Improving your Time to Green (TTG)",
+            "path": "/ci/recipes/improving-ttg",
+            "id": "improving-ttg",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
           {
             "name": "Set Up CI",
             "path": "/ci/recipes/set-up",

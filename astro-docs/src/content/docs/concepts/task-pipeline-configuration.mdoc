@@ -9,9 +9,8 @@ If you have a monorepo workspace (or modularized app), you rarely just run one t
 
 As you can see in the graph visualization below, the `myreactapp` project depends on other projects. Therefore, when running the build for `myreactapp`, these dependencies need to be built first so that `myreactapp` can use the resulting build artifacts.
 
-\{% graph height="450px" %\}
+{% graph height="450px" %}
 
-```json
 {
   "projects": [
     {
@@ -54,17 +53,16 @@ As you can see in the graph visualization below, the `myreactapp` project depend
   "focus": null,
   "groupByFolder": false
 }
-```
 
-\{% /graph %\}
+{% /graph %}
 
 While you could manage these relationships on your own and set up custom scripts to build all projects in the proper order (e.g. first build `shared-ui`, then `feat-products` and finally `myreactapp`), that kind of approach is not scalable and would need constant maintenance as you keep changing and adding projects to your workspace.
 
 This becomes even more evident when you run tasks in parallel. You cannot just naively run all of them at the same time. Instead, the task orchestrator needs to respect the order of the tasks so that it builds libraries first and then resumes building the apps that depend on those libraries in parallel.
 
-![task-graph-execution](/src/assets/concepts/mental-model/task-graph-execution.svg)
+![task-graph-execution](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
-Nx allows you to define task dependencies in the form of "rules", which are then followed when running tasks. There's a [detailed recipe](/recipes/running-tasks/defining-task-pipeline) but here's the high-level overview:
+Nx allows you to define task dependencies in the form of "rules", which are then followed when running tasks. There's a [detailed recipe](/docs/guides/tasks--caching/defining-task-pipeline) but here's the high-level overview:
 
 ```jsonc title="nx.json"
 {
@@ -96,4 +94,4 @@ These rules can be defined globally in the `nx.json` file or locally per project
 
 ## Configure It for Your Own Project
 
-Learn about all the details of how to configure [task pipelines in the according recipe section](/recipes/running-tasks/defining-task-pipeline).
+Learn about all the details of how to configure [task pipelines in the according recipe section](/docs/guides/tasks--caching/defining-task-pipeline).

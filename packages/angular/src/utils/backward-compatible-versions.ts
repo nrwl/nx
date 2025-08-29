@@ -14,7 +14,10 @@ export type PackageVersionNames =
 
 export type VersionMap = {
   angularV18: Record<CompatPackageVersionNames, string>;
-  angularV19: Record<CompatPackageVersionNames, string>;
+  angularV19: Record<
+    CompatPackageVersionNames | 'angularRspackVersion',
+    string
+  >;
 };
 
 export type PackageLatestVersions = Record<LatestPackageVersionNames, string>;
@@ -25,7 +28,6 @@ export const backwardCompatibleVersions: VersionMap = {
     angularVersion: '~18.2.0',
     angularDevkitVersion: '~18.2.0',
     ngPackagrVersion: '~18.2.0',
-    angularRspackVersion: '~20.6.1',
     ngrxVersion: '~18.0.2',
     rxjsVersion: '~7.8.0',
     zoneJsVersion: '~0.14.3',
@@ -47,7 +49,7 @@ export const backwardCompatibleVersions: VersionMap = {
     tsNodeVersion: '10.9.1',
     lessVersion: '^4.3.0',
     jestPresetAngularVersion: '~14.1.0',
-    typesNodeVersion: '18.16.9',
+    typesNodeVersion: '20.19.9',
     jasmineMarblesVersion: '^0.9.2',
     jsoncEslintParserVersion: '^2.1.0',
     webpackMergeVersion: '^5.8.0',
@@ -78,7 +80,7 @@ export const backwardCompatibleVersions: VersionMap = {
     tsNodeVersion: '10.9.1',
     lessVersion: '^4.3.0',
     jestPresetAngularVersion: '~14.4.0',
-    typesNodeVersion: '18.16.9',
+    typesNodeVersion: '20.19.9',
     jasmineMarblesVersion: '^0.9.2',
     jsoncEslintParserVersion: '^2.1.0',
     webpackMergeVersion: '^5.8.0',

@@ -1,5 +1,5 @@
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve as resolvePath } from 'path';
 import type { Schema } from 'nx/src/utils/params';
 
 export type PluginSchemaWithExamples = Schema & {
@@ -124,6 +124,13 @@ export function parseMigrations(pluginPath: string): Map<string, any> | null {
   for (const [name, config] of Object.entries(
     migrationsJson.generators || {}
   ) as [string, any][]) {
+    if (config.implementation || config.factory) {
+      config['fullPath'] = resolvePath(
+        pluginPath,
+        config.implementation || config.factory
+      );
+    }
+
     migrations.set(name, { config, type: 'generator' });
   }
 
@@ -131,7 +138,7 @@ export function parseMigrations(pluginPath: string): Map<string, any> | null {
   for (const [version, config] of Object.entries(
     migrationsJson.packageJsonUpdates || {}
   ) as [string, any][]) {
-    migrations.set(`packageJsonUpdates-${version}`, {
+    migrations.set(`${version}-package-updates`, {
       config: { ...config, name: version },
       type: 'packageJsonUpdate',
     });

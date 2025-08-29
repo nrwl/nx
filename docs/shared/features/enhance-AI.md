@@ -42,15 +42,24 @@ These are some of the available tools which the Nx MCP server exposes:
 
 The Nx MCP server is part of Nx Console and can be easily configured in supported editors:
 
-### VS Code / Cursor Setup
+### VS Code Setup
+
+For VS Code users, the MCP is configured **completely automatically** via the Nx Console extension:
+
+1. Install [Nx Console](/getting-started/editor-setup) from the marketplace
+2. The MCP server is automatically configured - no additional setup needed!
+
+### Cursor / JetBrains Setup
+
+For Cursor and JetBrains IDE users:
 
 1. Install [Nx Console](/getting-started/editor-setup) from the marketplace
 2. You'll receive a notification to "Improve Copilot/AI agent with Nx-specific context"
-3. Click "Yes" to automatically configure the MCP server
-
-If you miss the notification, run the `nx.configureMcpServer` command from the command palette (`Ctrl/Cmd + Shift + P`).
+3. Click "Yes" to configure the MCP server
 
 ![VS Code showing the Nx MCP installation prompt](/blog/images/articles/copilot-mcp-install.avif)
+
+If you miss the notification, run the `nx.configureMcpServer` (`Nx: Setup MCP Server` in JetBrains) command from the command palette (Cursor: `Ctrl/Cmd + Shift + P`, JetBrains IDEs: `Ctrl/Cmd + Shift + A`).
 
 ### Other MCP-Compatible Clients
 

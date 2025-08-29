@@ -62,6 +62,10 @@ import { createRemoteReleaseClient } from './utils/remote-release-clients/remote
 import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
+  areAllVersionPlanProjectsFiltered,
+  validateResolvedVersionPlansAgainstFilter,
+} from './utils/version-plan-utils';
+import {
   ReleaseVersion,
   VersionData,
   commitChanges,
@@ -196,6 +200,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       Object.keys(projectGraph.nodes),
       args.verbose
     );
+
+    // Validate version plans against the filter after resolution
+    const versionPlanValidationError =
+      validateResolvedVersionPlansAgainstFilter(
+        releaseGroups,
+        releaseGroupToFilteredProjects
+      );
+    if (versionPlanValidationError) {
+      output.error(versionPlanValidationError);
+      process.exit(1);
+    }
 
     if (args.deleteVersionPlans === undefined) {
       // default to deleting version plans in this command instead of after versioning
@@ -799,7 +814,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       postGitTasks,
       commitMessageValues,
       gitTagValues,
-      releaseGroups
+      releaseGroups,
+      releaseGroupToFilteredProjects
     );
 
     return {
@@ -881,7 +897,8 @@ async function applyChangesAndExit(
   postGitTasks: PostGitTask[],
   commitMessageValues: string[],
   gitTagValues: string[],
-  releaseGroups: ReleaseGroupWithName[]
+  releaseGroups: ReleaseGroupWithName[],
+  releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>
 ) {
   let latestCommit = toSHA;
 
@@ -937,8 +954,23 @@ async function applyChangesAndExit(
   if (args.deleteVersionPlans) {
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
+      const filteredProjects = releaseGroupToFilteredProjects.get(group);
+
       if (group.resolvedVersionPlans) {
-        group.resolvedVersionPlans.forEach((plan) => {
+        // Check each version plan individually to see if it should be deleted
+        const plansToDelete = [];
+
+        for (const plan of group.resolvedVersionPlans) {
+          // Only delete if ALL projects in the version plan are being filtered/released
+          if (
+            areAllVersionPlanProjectsFiltered(plan, group, filteredProjects)
+          ) {
+            plansToDelete.push(plan);
+          }
+        }
+
+        // Delete the plans that only affect filtered projects
+        plansToDelete.forEach((plan) => {
           if (!args.dryRun) {
             rmSync(plan.absolutePath, { recursive: true, force: true });
             if (args.verbose) {

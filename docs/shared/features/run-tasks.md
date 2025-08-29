@@ -3,7 +3,7 @@ title: 'Run Tasks'
 description: 'Learn how to use Nx task runner to efficiently manage and execute tasks across multiple projects in your monorepo, including parallel execution and caching.'
 ---
 
-# Tasks
+# Run Tasks
 
 {% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
 

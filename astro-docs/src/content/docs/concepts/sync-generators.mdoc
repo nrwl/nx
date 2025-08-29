@@ -49,15 +49,13 @@ In CI, the sync generator is run in `--dry-run` mode and if files would be chang
 
 Use the project details view to **find registered sync generators** for a given task.
 
-```shell
+```shell {% frame="none" %}
 nx show project <name>
 ```
 
-The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` generator on `build` and `typecheck` targets.
+The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/docs/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` generator on `build` and `typecheck` targets.
 
-\{% project-details title="Project Details View" expandedTargets="build" %\}
-
-```json
+{% project_details title="Project Details View" expandedTargets=["build"] %}
 {
   "project": {
     "name": "foo",
@@ -88,23 +86,21 @@ The above command opens up the project details view, and the registered sync gen
     "targets.build": ["packages/foo/tsconfig.ts", "@nx/js/typescript"]
   }
 }
-```
-
-\{% /project-details %\}
+{% /project_details %}
 
 Task sync generators can be thought of like the `dependsOn` property, but for generators instead of task dependencies.
 
-To [register a generator](/extending-nx/recipes/create-sync-generator) as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
+To [register a generator](/docs/extending-nx/create-sync-generator) as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
 
 ## Global Sync Generators
 
-Global sync generators are not associated with a particular task and are executed only when the `nx sync` or `nx sync:check` command is explicitly run. They are [registered](/extending-nx/recipes/create-sync-generator) in the `nx.json` file with the `sync.globalGenerators` property.
+Global sync generators are not associated with a particular task and are executed only when the `nx sync` or `nx sync:check` command is explicitly run. They are [registered](/docs/extending-nx/create-sync-generator) in the `nx.json` file with the `sync.globalGenerators` property.
 
 ## Sync the Project Graph and the File System
 
-Nx processes the file system in order to [create the project graph](/features/explore-graph) which is used to run tasks in the correct order and determine project dependencies. Sync generators allow you to also go the other direction and use the project graph to update the file system.
+Nx processes the file system in order to [create the project graph](/docs/features/explore-graph) which is used to run tasks in the correct order and determine project dependencies. Sync generators allow you to also go the other direction and use the project graph to update the file system.
 
-\{% side-by-side %\}
+{% side_by_side %}
 
 ```text title="File System"
 └─ myorg
@@ -117,9 +113,70 @@ Nx processes the file system in order to [create the project graph](/features/ex
    └─ package.json
 ```
 
-\{% graph title="Project Graph" height="200px" type="project" jsonFile="shared/mental-model/three-projects.json" %\}
-\{% /graph %\}
-\{% /side-by-side %\}
+{% graph title="Project Graph" height="200px" type="project" %}
+
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "app1": [
+      {
+        "source": "app1",
+        "target": "lib",
+        "type": "static"
+      }
+    ],
+    "app2": [
+      {
+        "source": "app2",
+        "target": "lib",
+        "type": "static"
+      }
+    ],
+    "lib": []
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}
+
+{% /graph %}
+{% /side_by_side %}
 
 The ability to update the file system from the project graph makes it possible to use the Nx project graph to change the behavior of other tools that are not part of the Nx ecosystem.
 

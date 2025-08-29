@@ -63,7 +63,7 @@ fun createNodeForProject(
 }
 
 /**
- * Process targets for project
+ * Process gradle targets and convert them to Nx targets
  *
  * @return targets and targetGroups
  */
@@ -92,8 +92,8 @@ fun processTargetsForProject(
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
   val intTestTargetName = targetNameOverrides.getOrDefault("intTestTargetName", "intTest")
 
-  val testTasks = project.getTasksByName("test", false)
-  val intTestTasks = project.getTasksByName("intTest", false)
+  val testTasks = project.getTasksByName(testTargetName, false)
+  val intTestTasks = project.getTasksByName(intTestTargetName, false)
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
   val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
 
@@ -107,12 +107,12 @@ fun processTargetsForProject(
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
-      val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
-
-      // Group task under its group if available
-      task.group
-          ?.takeIf { it.isNotBlank() }
-          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(taskName) }
+      // Add task to its Gradle group (e.g., "build", "verification") if it has one
+      val gradleGroup = task.group
+      if (!gradleGroup.isNullOrBlank()) {
+        val tasksInGroup = targetGroups.getOrPut(gradleGroup) { mutableListOf() }
+        tasksInGroup.add(task.name)
+      }
 
       val target =
           processTask(
@@ -124,14 +124,13 @@ fun processTargetsForProject(
               dependencies,
               targetNameOverrides)
 
-      targets[taskName] = target
+      targets[task.name] = target
 
       if (hasCiTestTarget && task.name.startsWith("compileTest")) {
         addTestCiTargets(
             task.inputs.sourceFiles,
             projectBuildPath,
             testTasks.first(),
-            testTargetName,
             targets,
             targetGroups,
             projectRoot,
@@ -144,7 +143,6 @@ fun processTargetsForProject(
             task.inputs.sourceFiles,
             projectBuildPath,
             intTestTasks.first(),
-            intTestTargetName,
             targets,
             targetGroups,
             projectRoot,
@@ -173,7 +171,7 @@ fun processTargetsForProject(
                   "dependsOn" to replacedDependencies,
                   "executor" to "nx:noop",
                   "cache" to true,
-                  "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"))
+                  "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, task.name))
 
           targets[ciCheckTargetName] = newTarget
           ensureTargetGroupExists(targetGroups, testCiTargetGroup)

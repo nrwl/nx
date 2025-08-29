@@ -14,8 +14,20 @@ import {
   Security,
   TimeToGreen,
 } from '@nx/nx-dev-ui-cloud';
+import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
 
 export function NxCloud(): ReactElement {
+  const scrollCTAConfig: ButtonLinkProps[] = [
+    {
+      href: 'https://cloud.nx.app/get-started',
+      variant: 'primary',
+      size: 'small',
+      target: '_blank',
+      title: 'Try Nx Cloud for free',
+      children: 'Try Nx Cloud',
+    },
+  ];
+
   return (
     <>
       <NextSeo
@@ -40,7 +52,7 @@ export function NxCloud(): ReactElement {
         }}
         canonical="https://nx.dev/ai"
       />
-      <DefaultLayout hideBackground={true}>
+      <DefaultLayout hideBackground={true} scrollCTAConfig={scrollCTAConfig}>
         <NxCloudHero />
 
         <div className="">

@@ -1,3 +1,4 @@
+'use client';
 import { ComponentProps, ReactElement, useState } from 'react';
 import {
   Button,
@@ -182,6 +183,13 @@ export function HetznerCloudTestimonial(): ReactElement {
                   title="Learn about Nx Enterprise"
                   variant="secondary"
                   size="small"
+                  onClick={() =>
+                    sendCustomEvent(
+                      'enterprise-click',
+                      'hetzner-cloud-testimonial',
+                      'homepage'
+                    )
+                  }
                 >
                   Learn about Nx Enterprise
                 </ButtonLink>
@@ -189,6 +197,13 @@ export function HetznerCloudTestimonial(): ReactElement {
                   href="/customers"
                   prefetch={false}
                   className="text-sm/6 font-semibold"
+                  onClick={() =>
+                    sendCustomEvent(
+                      'customers-click',
+                      'hetzner-cloud-testimonial',
+                      'homepage'
+                    )
+                  }
                 >
                   See our customers <span aria-hidden="true">→</span>
                 </Link>

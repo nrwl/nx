@@ -14,17 +14,24 @@ import {
   SolutionsTopCallToAction,
 } from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function EnterpriseSolutionsPlatform(): ReactElement {
   const router = useRouter();
 
-  const headerCTAConfig: ButtonLinkProps[] = [
+  const scrollCTAConfig: ButtonLinkProps[] = [
     {
-      href: '/contact',
-      variant: 'secondary',
+      href: '/contact/sales',
+      variant: 'primary',
       size: 'small',
-      title: 'Contact us',
-      children: 'Contact us',
+      title: 'Talk to our team',
+      children: 'Talk to our team',
+      onClick: () =>
+        sendCustomEvent(
+          'contact-sales-click',
+          'scrolling-header-cta',
+          'solutions-platform'
+        ),
     },
   ];
 
@@ -52,7 +59,7 @@ export function EnterpriseSolutionsPlatform(): ReactElement {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={headerCTAConfig}>
+      <DefaultLayout scrollCTAConfig={scrollCTAConfig}>
         <SolutionsPlatformHero />
         <CustomerLogos />
         <SolutionsTopCallToAction />

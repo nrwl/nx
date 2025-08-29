@@ -3,10 +3,6 @@ import { blogApi } from '../../lib/blog.api';
 import { BlogContainer } from '@nx/nx-dev-ui-blog';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Suspense } from 'react';
-import {
-  requestFreeTrial,
-  tryNxCloudForFree,
-} from '../../lib/header-cta.configs';
 
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
@@ -41,13 +37,11 @@ async function getBlogTags() {
 }
 
 export default async function BlogIndex() {
-  const ctaHeaderConfig = [tryNxCloudForFree];
-
   const blogs = await getBlogs();
   const tags = await getBlogTags();
   return (
     <Suspense>
-      <DefaultLayout headerCTAConfig={ctaHeaderConfig}>
+      <DefaultLayout>
         <BlogContainer blogPosts={blogs} tags={tags} />
       </DefaultLayout>
     </Suspense>

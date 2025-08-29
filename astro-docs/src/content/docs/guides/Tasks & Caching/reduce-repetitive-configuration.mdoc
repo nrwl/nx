@@ -7,21 +7,21 @@ Nx can help you dramatically reduce the lines of configuration code that you nee
 
 Lets say you have three libraries in your repository - `lib1`, `lib2` and `lib3`. The folder structure looks like this:
 
-```treeview
-repo/
-├── libs/
-│   └── lib1/
-│   │   ├── tsconfig.lib.json
-│   │   └── project.json
-│   └── lib2/
-│   │   ├── tsconfig.lib.json
-│   │   └── project.json
-│   └── lib3/
-│       ├── tsconfig.lib.json
-│       └── project.json
-└── nx.json
-```
+{% filetree %}
+- repo/
+    - libs/
+      - lib1/
+        - tsconfig.lib.json
+        - project.json
+      - lib2/
+        - tsconfig.lib.json
+        - project.json
+      - lib3/
+        - tsconfig.lib.json
+        - project.json
+  - nx.json
 
+{% /filetree %}
 ## Initial Configuration Settings
 
 All three libraries have a similar project configuration. Here is what their `project.json` files look like:
@@ -175,7 +175,7 @@ If you scan through these three files, they look very similar. The only differen
 
 ## Reduce Configuration with targetDefaults
 
-Let's use [the `targetDefaults` property](/reference/nx-json#target-defaults) in `nx.json` to reduce some of this duplicate configuration code.
+Let's use [the `targetDefaults` property](/docs/reference/nx-json#target-defaults) in `nx.json` to reduce some of this duplicate configuration code.
 
 ```json
 // nx.json

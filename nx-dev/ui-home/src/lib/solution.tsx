@@ -87,7 +87,7 @@ function StatsSection(): ReactElement {
         title="Instant"
         description="builds with unified codebase across web and mobile"
         company="UKG"
-        link="https://youtu.be/rSC8wihnfP4"
+        link="/blog/ukg-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
         color="sky"
       />
       <StatCard

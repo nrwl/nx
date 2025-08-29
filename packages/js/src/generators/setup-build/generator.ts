@@ -28,6 +28,7 @@ import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import { readTsConfig } from '../../utils/typescript/ts-config';
 import {
+  getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
 } from '../../utils/typescript/ts-solution-setup';
@@ -329,10 +330,6 @@ function updatePackageJson(
     };
   }
 
-  // the file must exist in the TS solution setup, which is the only case this
-  // function is called
-  const tsconfigBase = readJson(tree, 'tsconfig.base.json');
-
   packageJson = getUpdatedPackageJsonContent(packageJson, {
     main,
     outputPath,
@@ -341,8 +338,7 @@ function updatePackageJson(
     packageJsonPath,
     rootDir,
     format,
-    skipDevelopmentExports:
-      !tsconfigBase.compilerOptions?.customConditions?.includes('development'),
+    developmentConditionName: getDefinedCustomConditionName(tree),
   });
   writeJson(tree, packageJsonPath, packageJson);
 }

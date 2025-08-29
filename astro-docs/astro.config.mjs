@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import netlify from '@astrojs/netlify';
-import linkValidator from 'starlight-links-validator';
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
@@ -10,11 +9,25 @@ import { sidebar } from './sidebar.mts';
 
 // https://astro.build/config
 export default defineConfig({
+  base: '/docs',
   vite: { plugins: [tailwindcss()] },
-  site: 'https://docs.nx.dev',
-  adapter: netlify(),
+  // Allow this to be configured per environment
+  // Note: this happens during build time so we don't use `import.meta.env`
+  site: process.env.NX_DEV_URL ?? 'https://nx.dev',
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+      config: {
+        limitInputPixels: false, // Disable pixel limit
+      },
+    },
+  },
+  trailingSlash: 'never',
+  // This adapter doesn't support local previews, so only load it on Netlify.
+  adapter: process.env['NETLIFY'] ? netlify() : undefined,
   integrations: [
     markdoc(),
+    // https://starlight.astro.build/reference/configuration/
     starlight({
       title: 'Nx',
       tagline:
@@ -26,10 +39,15 @@ export default defineConfig({
         dark: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
-      plugins: [
-        // linkValidator(),
+      plugins: [],
+      routeMiddleware: [
+        './src/plugins/banner.middleware.ts',
+        // NOTE: this is responsibile for populating the Reference section
+        // with generated routes from the nx-reference-packages content collection
+        // since the sidebar doesn't auto generate w/ dynamic routes from src/pages/reference
+        // only the src/content/docs/reference files
+        './src/plugins/sidebar-reference-updater.middleware.ts',
       ],
-      routeMiddleware: ['./src/plugins/banner.middleware.ts'],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
         // as to _why_ it has to normalize a path?
@@ -64,6 +82,7 @@ export default defineConfig({
         PageFrame: './src/components/layout/PageFrame.astro',
         Sidebar: './src/components/layout/Sidebar.astro',
         TwoColumnContent: './src/components/layout/TwoColumnContent.astro',
+        PageTitle: './src/components/layout/PageTitle.astro',
       },
     }),
     react(),

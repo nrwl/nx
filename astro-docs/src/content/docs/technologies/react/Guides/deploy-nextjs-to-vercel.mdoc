@@ -15,19 +15,19 @@ Starting from Nx 11, your Next.js application should already be ready for deploy
 2. Ensure the Next.js "Framework Preset" is selected
 3. Expand the "Build and Output Settings" and toggle the override switch for the build command. For example, for an application named `tuskdesk` the value will look like this:
 
-```shell frame="none"
+```shell {% frame="none" %}
 npx nx build tuskdesk --prod
 ```
 
 4. Toggle the override switch for the output directory. Point it to the `.next` directory inside the built app:
 
-```shell frame="none"
+```text {% frame="none" %}
 apps/tuskdesk/.next
 ```
 
 Therefore, our full configuration (based on a repo called "nx-workspace" and a project called "tuskdesk") will look like this:
 
-![New Vercel Project](/src/assets/guides/next/next-deploy-vercel-1.png)
+![New Vercel Project](../../../../../assets/guides/next/next-deploy-vercel-1.png)
 
 ### Existing Vercel project
 
@@ -35,7 +35,7 @@ If you have an existing project on Vercel then the exact same guidance applies a
 
 When everything is updated appropriately, for our `tuskdesk` example we would see the following in our "General" settings UI:
 
-![Existing Vercel Project](/src/assets/guides/next/next-deploy-vercel-2.png)
+![Existing Vercel Project](../../../../../assets/guides/next/next-deploy-vercel-2.png)
 
 ## Skipping build if the application is not affected
 
@@ -43,7 +43,7 @@ One of the core features of Nx is to run code quality checks and builds only for
 
 To build only what's affected, use the `npx nx-ignore <app-name>` command under `Project Settings > Git` on Vercel.
 
-![Ignore build step](/src/assets/guides/next/next-deploy-vercel-3-2.png)
+![Ignore build step](../../../../../assets/guides/next/next-deploy-vercel-3-2.png)
 
 The `nx-ignore` command uses Nx to detect whether the current commit affects the specified app, and will skip the build if it is not affected.
 
