@@ -149,28 +149,26 @@ async function generateDocsForEntry(
       packageType
     );
 
-    if (content) {
-      const rendered = await renderMarkdown(content);
-      // todo: look for deprecation notices in the metadata
-      const documentRecord: CollectionEntry<'nx-reference-packages'> = {
-        id: `${packageType}_${reflection.name.replace(/\s/g, '')}`,
-        body: content,
-        rendered,
-        collection: 'nx-reference-packages',
-        data: {
-          title: reflection.name,
-          packageType: 'devkit',
-          docType: packageType,
-          description: reflection.comment?.summary
-            ? formatComment(reflection.comment.summary, packageType)
-            : 'No description available',
-          kind: ReflectionKind[reflection.kind],
-          category: categoryMap[reflection.kind] || 'Other',
-        },
-      };
+    const rendered = content ? await renderMarkdown(content) : undefined;
+    // todo: look for deprecation notices in the metadata
+    const documentRecord: CollectionEntry<'nx-reference-packages'> = {
+      id: `${packageType}_${reflection.name.replace(/\s/g, '')}`,
+      body: content,
+      rendered,
+      collection: 'nx-reference-packages',
+      data: {
+        title: reflection.name,
+        packageType: 'devkit',
+        docType: packageType,
+        description: reflection.comment?.summary
+          ? formatComment(reflection.comment.summary, packageType)
+          : 'No description available',
+        kind: ReflectionKind[reflection.kind],
+        category: categoryMap[reflection.kind] || 'Other',
+      },
+    };
 
-      records.push(documentRecord);
-    }
+    records.push(documentRecord);
   }
 
   return records;

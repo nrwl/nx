@@ -58,6 +58,14 @@ export function formatDeclarationToMarkdown(
     }
   }
 
+  if (reflection.type) {
+    // TODO: add type info
+  }
+
+  if (reflection.typeParameters) {
+    // TODO: add typeParameter info
+  }
+
   if (reflection.signatures) {
     content += '## Signatures\n\n';
     for (const sig of reflection.signatures) {
@@ -329,6 +337,11 @@ function parseTagForUrl(part: InlineTagDisplayPart, baseUrl: string) {
   }
 
   const normalizedUrlText = part.text.replace(/\s/g, '');
+
+  if (normalizedUrlText.includes('#')) {
+    // if the link already includes a fragment ignore it for now
+    return baseUrl;
+  }
 
   // we have a nested level declaration that should be on the same page as the root declaration
   // these are linked to by url fragments
