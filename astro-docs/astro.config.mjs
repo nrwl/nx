@@ -31,7 +31,7 @@ export default defineConfig({
     starlight({
       title: 'Nx',
       tagline:
-        'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+        'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
