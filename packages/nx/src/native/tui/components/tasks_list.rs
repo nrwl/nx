@@ -1935,6 +1935,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             Task {
                 id: "task2".to_string(),
@@ -1948,6 +1949,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             Task {
                 id: "task3".to_string(),
@@ -1961,6 +1963,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
         ];
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -2391,6 +2394,7 @@ mod tests {
             continuous: Some(true),
             start_time: None,
             end_time: None,
+            cache: Some(false),
         };
 
         // Add and start the continuous task
@@ -2426,6 +2430,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             };
             tasks.push(task);
         }
@@ -2473,6 +2478,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             Task {
                 id: "task2".to_string(),
@@ -2486,6 +2492,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
         ];
 
@@ -2547,6 +2554,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             Task {
                 id: "another-very-long-task-name-for-testing-purposes".to_string(),
@@ -2560,6 +2568,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
         ];
 
@@ -2746,6 +2755,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             });
         }
 
@@ -2790,6 +2800,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             });
         }
 
@@ -2841,6 +2852,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             });
         }
 
@@ -2885,6 +2897,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             });
         }
 
@@ -3013,6 +3026,7 @@ mod tests {
             continuous: Some(false),
             start_time: None,
             end_time: None,
+            cache: Some(false),
         }];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -3041,6 +3055,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             Task {
                 id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters".to_string(),
@@ -3054,6 +3069,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
         ];
 
@@ -3106,6 +3122,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
             Task {
                 id: "short2".to_string(),
@@ -3119,6 +3136,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
             Task {
                 id: "short3".to_string(),
@@ -3132,6 +3150,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
             // Page 2: Long task names
             Task {
@@ -3146,6 +3165,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
             Task {
                 id: "another-extremely-long-task-name-for-testing-pagination-consistency-page2-task2".to_string(),
@@ -3159,6 +3179,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
         ];
 
@@ -3226,6 +3247,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             Task {
                 id: "short2".to_string(),
@@ -3239,6 +3261,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             // Page 2: Long task names
             Task {
@@ -3254,6 +3277,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
             Task {
                 id: "another-extremely-long-task-name-for-testing-pagination-consistency-behavior"
@@ -3268,6 +3292,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+                cache: Some(false),
             },
         ];
 
@@ -3335,6 +3360,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
             Task {
                 id: "short2".to_string(),
@@ -3348,6 +3374,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
             // Page 2: Long task names that would affect column visibility
             Task {
@@ -3362,6 +3389,7 @@ mod tests {
                 continuous: Some(false),
                 start_time: None,
                 end_time: None,
+            cache: Some(false),
             },
         ];
 
@@ -3420,6 +3448,7 @@ mod tests {
             continuous: Some(false),
             start_time: None,
             end_time: None,
+            cache: Some(false),
         }];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
