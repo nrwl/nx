@@ -16,4 +16,4 @@ expression: terminal.backend()
 "                                                                                                                                                      "
 "                                                                                                                                                      "
 "                                                                                                                                                      "
-"  ← 1/1 →   This is some warning from Nx Cloud                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
+"This is some warning from Nx Cloud                                quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

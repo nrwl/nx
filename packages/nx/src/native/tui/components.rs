@@ -14,7 +14,6 @@ pub mod dependency_view;
 pub mod help_popup;
 pub mod help_text;
 pub mod layout_manager;
-pub mod pagination;
 pub mod task_selection_manager;
 pub mod tasks_list;
 pub mod terminal_pane;

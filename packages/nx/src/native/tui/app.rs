@@ -684,14 +684,6 @@ impl App {
                                         self.dispatch_action(Action::PreviousTask);
                                         let _ = self.debounce_pty_resize();
                                     }
-                                    KeyCode::Left => {
-                                        self.dispatch_action(Action::PreviousPage);
-                                        let _ = self.debounce_pty_resize();
-                                    }
-                                    KeyCode::Right => {
-                                        self.dispatch_action(Action::NextPage);
-                                        let _ = self.debounce_pty_resize();
-                                    }
                                     KeyCode::Esc => {
                                         if matches!(self.focus, Focus::HelpPopup) {
                                             if let Some(help_popup) =
@@ -748,18 +740,6 @@ impl App {
                                                                 // No need to debounce
                                                             }
                                                             '0' => self.clear_all_panes(),
-                                                            'h' => {
-                                                                self.dispatch_action(
-                                                                    Action::PreviousPage,
-                                                                );
-                                                                let _ = self.debounce_pty_resize();
-                                                            }
-                                                            'l' => {
-                                                                self.dispatch_action(
-                                                                    Action::NextPage,
-                                                                );
-                                                                let _ = self.debounce_pty_resize();
-                                                            }
                                                             'b' => self.toggle_task_list(),
                                                             'm' => {
                                                                 if let Some(area) = self.frame_area
@@ -829,7 +809,7 @@ impl App {
                 match mouse.kind {
                     MouseEventKind::ScrollUp => {
                         if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::PreviousTask);
+                            self.dispatch_action(Action::ScrollUp);
                         } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Up,
@@ -840,7 +820,7 @@ impl App {
                     }
                     MouseEventKind::ScrollDown => {
                         if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::NextTask);
+                            self.dispatch_action(Action::ScrollDown);
                         } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Down,
