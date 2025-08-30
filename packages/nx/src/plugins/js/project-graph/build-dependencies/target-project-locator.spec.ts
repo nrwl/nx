@@ -1284,8 +1284,10 @@ describe('TargetProjectLocator', () => {
 
 describe('isBuiltinModuleImport()', () => {
   const withExclusions = builtinModules
-    .concat(builtinModules.filter((a) => true).map((s) => 'node:' + s))
-    .concat(['node:test', 'node:sqlite', 'node:test']);
+    .concat(
+      builtinModules.map((s) => (s.startsWith('node:') ? s : 'node:' + s))
+    )
+    .concat(['node:test', 'node:sqlite']);
 
   it.each(withExclusions)(
     `should return true for %s builtin module`,
