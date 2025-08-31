@@ -81,7 +81,7 @@ The project or release group names specified in the Front Matter YAML section mu
 
 {% callout type="note" title="Single Version for All Packages" %}
 
-If you use a single version for all your packages (see [Release projects independetly](/recipes/nx-release/release-projects-independently)) your version plan file might look like this:
+If you use a single version for all your packages (see [Release projects independently](/recipes/nx-release/release-projects-independently)) your version plan file might look like this:
 
 ```md {% fileName=".nx/version-plans/version-plan-1723732065047.md" %}
 ---
