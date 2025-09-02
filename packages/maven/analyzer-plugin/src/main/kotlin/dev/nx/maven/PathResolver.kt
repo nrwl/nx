@@ -12,9 +12,9 @@ class PathResolver(
 ) {
     
     /**
-     * Adds an input path to the inputs array, checking existence and formatting appropriately
+     * Adds an input path to the inputs collection, checking existence and formatting appropriately
      */
-    fun addInputPath(path: String, inputs: ArrayNode) {
+    fun addInputPath(path: String, inputs: MutableSet<String>) {
         // Handle classpath-style paths (multiple paths separated by : or ;)
         val pathSeparator = System.getProperty("path.separator")
         if (path.contains(pathSeparator)) {
@@ -30,9 +30,25 @@ class PathResolver(
     }
     
     /**
-     * Adds a single input path to the inputs array
+     * Legacy method for backward compatibility - converts ArrayNode to Set, processes, then updates ArrayNode
      */
-    private fun addSingleInputPath(path: String, inputs: ArrayNode) {
+    fun addInputPath(path: String, inputs: ArrayNode) {
+        val inputSet = mutableSetOf<String>()
+        // Convert existing ArrayNode to Set
+        inputs.forEach { inputSet.add(it.asText()) }
+        
+        // Add new path to Set
+        addInputPath(path, inputSet)
+        
+        // Clear ArrayNode and repopulate from Set
+        inputs.removeAll()
+        inputSet.forEach { inputs.add(it) }
+    }
+    
+    /**
+     * Adds a single input path to the inputs collection
+     */
+    private fun addSingleInputPath(path: String, inputs: MutableSet<String>) {
         val file = File(path)
         if (file.exists()) {
             // TODO: External dependencies (like JARs from .m2/repository) are not yet supported by Nx
@@ -55,6 +71,17 @@ class PathResolver(
                 }
             }
         }
+    }
+    
+    /**
+     * Legacy method for ArrayNode compatibility
+     */
+    private fun addSingleInputPath(path: String, inputs: ArrayNode) {
+        val inputSet = mutableSetOf<String>()
+        inputs.forEach { inputSet.add(it.asText()) }
+        addSingleInputPath(path, inputSet)
+        inputs.removeAll()
+        inputSet.forEach { inputs.add(it) }
     }
     
     /**
@@ -81,10 +108,21 @@ class PathResolver(
     }
     
     /**
-     * Adds an output path to the outputs array
+     * Adds an output path to the outputs collection
+     */
+    fun addOutputPath(path: String, outputs: MutableSet<String>) {
+        outputs.add(toProjectPath(path))
+    }
+    
+    /**
+     * Legacy method for ArrayNode compatibility
      */
     fun addOutputPath(path: String, outputs: ArrayNode) {
-        outputs.add(toProjectPath(path))
+        val outputSet = mutableSetOf<String>()
+        outputs.forEach { outputSet.add(it.asText()) }
+        addOutputPath(path, outputSet)
+        outputs.removeAll()
+        outputSet.forEach { outputs.add(it) }
     }
     
     /**

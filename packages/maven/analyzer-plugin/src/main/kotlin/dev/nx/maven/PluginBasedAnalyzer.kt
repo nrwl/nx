@@ -28,7 +28,7 @@ class PluginBasedAnalyzer(
     /**
      * Analyzes a Maven phase by examining which plugins execute and their parameters
      */
-    fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
+    fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: MutableSet<String>, outputs: MutableSet<String>): Boolean {
         
         log.warn("*** STARTING PHASE ANALYSIS FOR '$phase' ***")
         try {
@@ -74,8 +74,8 @@ class PluginBasedAnalyzer(
     private fun analyzePluginExecution(
         execution: org.apache.maven.plugin.MojoExecution, 
         project: MavenProject, 
-        inputs: ArrayNode, 
-        outputs: ArrayNode
+        inputs: MutableSet<String>, 
+        outputs: MutableSet<String>
     ) {
         val plugin = execution.plugin
         val goal = execution.goal
@@ -212,7 +212,7 @@ class PluginBasedAnalyzer(
     private fun addCompilerPluginSourceDirectories(
         execution: org.apache.maven.plugin.MojoExecution, 
         project: MavenProject, 
-        inputs: com.fasterxml.jackson.databind.node.ArrayNode,
+        inputs: MutableSet<String>,
         phase: String
     ) {
         when (execution.goal) {
