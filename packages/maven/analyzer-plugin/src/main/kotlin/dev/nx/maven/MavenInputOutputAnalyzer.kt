@@ -48,10 +48,33 @@ class MavenInputOutputAnalyzer(
         // Use the new plugin-based analyzer that examines actual plugin parameters
         val pluginAnalyzer = PluginBasedAnalyzer(log, session, lifecycleExecutor, pluginManager, pathResolver)
         
-        val inputs = objectMapper.createArrayNode()
-        val outputs = objectMapper.createArrayNode()
+        val inputsSet = linkedSetOf<String>()
+        val outputsSet = linkedSetOf<String>()
         
         // Let plugin parameter analysis determine ALL inputs - no hardcoded assumptions
+        
+        // Analyze the phase using plugin parameter examination
+        val analyzed = pluginAnalyzer.analyzePhaseInputsOutputs(phase, project, inputsSet, outputsSet)
+        
+        if (!analyzed) {
+            // Fall back to preloaded analysis as backup
+            log.info("Using fallback analysis for phase: $phase")
+            val preloadedAnalyzer = PreloadedPluginAnalyzer(log, session, pathResolver)
+            val fallbackAnalyzed = preloadedAnalyzer.analyzePhaseInputsOutputs(phase, project, inputsSet, outputsSet)
+            
+            if (!fallbackAnalyzed) {
+                // Convert sets to ArrayNodes for return
+                val inputs = objectMapper.createArrayNode()
+                val outputs = objectMapper.createArrayNode()
+                inputsSet.forEach { inputs.add(it) }
+                outputsSet.forEach { outputs.add(it) }
+                return CacheabilityDecision(false, "No analysis available for phase '$phase'", inputs, outputs)
+            }
+        }
+        
+        // Convert sets to ArrayNodes for final return
+        val inputs = objectMapper.createArrayNode()
+        val outputs = objectMapper.createArrayNode()
         
         // Add dependentTasksOutputFiles to automatically include outputs from dependsOn tasks as inputs
         val dependentTasksOutputFiles = objectMapper.createObjectNode()
@@ -59,21 +82,11 @@ class MavenInputOutputAnalyzer(
         dependentTasksOutputFiles.put("transitive", true)
         inputs.add(dependentTasksOutputFiles)
         
-        // Analyze the phase using plugin parameter examination
-        val analyzed = pluginAnalyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs)
+        // Add all collected inputs and outputs from sets
+        inputsSet.forEach { inputs.add(it) }
+        outputsSet.forEach { outputs.add(it) }
         
-        if (!analyzed) {
-            // Fall back to preloaded analysis as backup
-            log.info("Using fallback analysis for phase: $phase")
-            val preloadedAnalyzer = PreloadedPluginAnalyzer(log, session, pathResolver)
-            val fallbackAnalyzed = preloadedAnalyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs)
-            
-            if (!fallbackAnalyzed) {
-                return CacheabilityDecision(false, "No analysis available for phase '$phase'", inputs, outputs)
-            }
-        }
-        
-        log.info("Analyzed phase '$phase': ${inputs.size()} inputs, ${outputs.size()} outputs")
+        log.info("Analyzed phase '$phase': ${inputs.size()} inputs (${inputsSet.size} unique paths), ${outputs.size()} outputs (${outputsSet.size} unique paths)")
         
         // Use enhanced plugin-based cacheability assessment
         val assessment = pluginAnalyzer.getCacheabilityAssessment(phase, project)
