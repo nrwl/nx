@@ -30,12 +30,14 @@ class PluginBasedAnalyzer(
      */
     fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
         
+        log.warn("*** STARTING PHASE ANALYSIS FOR '$phase' ***")
         try {
             // Find all plugin executions that will run during this phase
+            log.warn("  About to call findExecutionsForPhase")
             val executions = pluginExecutionFinder.findExecutionsForPhase(phase, project)
-            log.debug("Found ${executions.size} executions for phase '$phase'")
+            log.warn("  Back from findExecutionsForPhase with ${executions.size} executions")
             executions.forEach { execution ->
-                log.debug("  - ${execution.plugin.artifactId}:${execution.goal}")
+                log.warn("    - ${execution.plugin.artifactId}:${execution.goal}")
             }
             
             if (executions.isEmpty()) {
