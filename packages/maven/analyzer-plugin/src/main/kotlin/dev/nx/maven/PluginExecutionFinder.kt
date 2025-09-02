@@ -87,29 +87,40 @@ class PluginExecutionFinder(
         val executions = mutableListOf<org.apache.maven.plugin.MojoExecution>()
         
         try {
-            log.debug("Attempting to calculate execution plan for phase '$phase'")
+            log.warn("*** CALCULATING EXECUTION PLAN FOR PHASE '$phase' ***")
+            log.warn("  Project: ${project.artifactId}")
+            log.warn("  Session current project: ${session.currentProject?.artifactId}")
             
             // Use Maven's LifecycleExecutor to calculate what would actually run
             val originalProject = session.currentProject
             try {
                 session.currentProject = project
+                log.warn("  Set session current project to: ${session.currentProject?.artifactId}")
+                
                 val executionPlan = lifecycleExecutor.calculateExecutionPlan(session, phase)
-                log.debug("Execution plan calculated, found ${executionPlan.mojoExecutions.size} total executions")
+                log.warn("  Execution plan calculated successfully!")
+                log.warn("  Total executions in plan: ${executionPlan.mojoExecutions.size}")
+                
+                // Log all executions for debugging
+                executionPlan.mojoExecutions.forEach { execution ->
+                    log.warn("    Execution: ${execution.plugin.artifactId}:${execution.goal} -> phase=${execution.lifecyclePhase}")
+                }
                 
                 // Filter to only executions that run in the requested phase
                 for (execution in executionPlan.mojoExecutions) {
                     if (execution.lifecyclePhase == phase) {
                         executions.add(execution)
-                        log.debug("Added execution: ${execution.plugin.artifactId}:${execution.goal} (phase=${execution.lifecyclePhase})")
+                        log.warn("  *** ADDED EXECUTION FOR PHASE '$phase': ${execution.plugin.artifactId}:${execution.goal} ***")
                     }
                 }
                 
             } finally {
                 session.currentProject = originalProject
+                log.warn("  Restored session current project to: ${session.currentProject?.artifactId}")
             }
             
         } catch (e: Exception) {
-            log.warn("Failed to calculate execution plan for phase '$phase': ${e.javaClass.simpleName} - ${e.message}")
+            log.warn("*** EXCEPTION calculating execution plan for phase '$phase': ${e.javaClass.simpleName} - ${e.message} ***")
             e.printStackTrace()
         }
         

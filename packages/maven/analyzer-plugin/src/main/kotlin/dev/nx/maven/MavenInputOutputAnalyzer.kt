@@ -37,9 +37,9 @@ class MavenInputOutputAnalyzer(
      * Analyzes the cacheability of a Maven phase for the given project
      */
     fun analyzeCacheability(phase: String, project: MavenProject): CacheabilityDecision {
-        log.info("Analyzing phase '$phase' for project ${project.artifactId}")
+        log.warn("*** ANALYZING CACHEABILITY FOR PHASE '$phase' ***")
         if (phase == "verify") {
-            log.info("*** VERIFY PHASE ANALYSIS STARTING ***")
+            log.warn("*** VERIFY PHASE ANALYSIS STARTING ***")
         }
         
         // Create project-specific path resolver to ensure {projectRoot} refers to project directory
