@@ -4,6 +4,7 @@
 
 - Fix: auth redirect loop when using admin login
 - Fix: improvement to the flaky task retry mechanism
+- Fix: enable run hooks on DTE
 
 ### 2025.07
 
