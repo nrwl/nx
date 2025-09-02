@@ -18,7 +18,24 @@ class PreloadedPluginAnalyzer(
     /**
      * Analyzes a phase using Maven's already-loaded plugin information
      */
-    fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
+    fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: MutableSet<String>, outputs: MutableSet<String>): Boolean {
+        // Create temporary ArrayNodes for legacy methods, then convert back to sets
+        val inputsArray = com.fasterxml.jackson.databind.ObjectMapper().createArrayNode()
+        val outputsArray = com.fasterxml.jackson.databind.ObjectMapper().createArrayNode()
+        
+        val result = analyzePhaseInputsOutputsLegacy(phase, project, inputsArray, outputsArray)
+        
+        // Convert ArrayNodes back to Sets
+        inputsArray.forEach { inputs.add(it.asText()) }
+        outputsArray.forEach { outputs.add(it.asText()) }
+        
+        return result
+    }
+    
+    /**
+     * Legacy method that works with ArrayNodes
+     */
+    private fun analyzePhaseInputsOutputsLegacy(phase: String, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode): Boolean {
         
         try {
             // Use project's compile/test classpath elements directly - Maven has already resolved these!
