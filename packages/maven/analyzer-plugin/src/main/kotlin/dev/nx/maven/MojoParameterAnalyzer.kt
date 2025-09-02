@@ -18,7 +18,7 @@ class MojoParameterAnalyzer(
     /**
      * Analyzes a mojo's parameters to find inputs and outputs
      */
-    fun analyzeMojo(mojo: MojoDescriptor, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode) {
+    fun analyzeMojo(mojo: MojoDescriptor, project: MavenProject, inputs: MutableSet<String>, outputs: MutableSet<String>) {
         
         // Analyze mojo parameters to find inputs and outputs
         for (param in mojo.parameters ?: emptyList()) {
@@ -29,7 +29,7 @@ class MojoParameterAnalyzer(
     /**
      * Analyzes a single mojo parameter to determine if it's an input or output
      */
-    private fun analyzeParameter(param: Parameter, project: MavenProject, inputs: ArrayNode, outputs: ArrayNode) {
+    private fun analyzeParameter(param: Parameter, project: MavenProject, inputs: MutableSet<String>, outputs: MutableSet<String>) {
         val name = param.name ?: return
         val type = param.type ?: return
         val defaultValue = param.defaultValue
