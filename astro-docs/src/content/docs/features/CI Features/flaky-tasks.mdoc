@@ -9,7 +9,7 @@ Ideally as a developer you don't even notice flaky tasks any more as they're aut
 
 ## Enable Flaky Task Detection
 
-Flaky Task Detection is enabled by default if your workspace is connected to Nx Cloud and leverages [Nx Agents](/ci/features/distribute-task-execution).
+Flaky Task Detection is enabled by default if your workspace is connected to Nx Cloud and leverages [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 
 To connect your workspace to Nx Cloud run:
 
@@ -17,7 +17,7 @@ To connect your workspace to Nx Cloud run:
 npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
+See the [connect to Nx Cloud recipe](/docs/guides/nx-cloud/setup-ci) for all the details.
 
 ## How Nx Identifies Flaky Tasks
 
@@ -34,7 +34,7 @@ In this image, the `e2e-ci--src/e2e/app.cy.ts` task is a flaky task that has bee
 
 ## Automatically Re-run Flaky Tasks
 
-When a flaky task fails in CI with [distributed task execution](/ci/features/distribute-task-execution) enabled, Nx will **automatically send that task to a different agent** and run it again (up to 2 tries in total). Its important to run the task on a different agent to ensure that the agent itself or the other tasks that were run on that agent are not the reason for the flakiness.
+When a flaky task fails in CI with [distributed task execution](/docs/features/ci-features/distribute-task-execution) enabled, Nx will **automatically send that task to a different agent** and run it again (up to 2 tries in total). Its important to run the task on a different agent to ensure that the agent itself or the other tasks that were run on that agent are not the reason for the flakiness.
 
 ## Manually Mark a Task as Flaky or Not Flaky
 

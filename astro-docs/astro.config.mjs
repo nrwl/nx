@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import netlify from '@astrojs/netlify';
-import linkValidator from 'starlight-links-validator';
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
@@ -12,7 +11,9 @@ import { sidebar } from './sidebar.mts';
 export default defineConfig({
   base: '/docs',
   vite: { plugins: [tailwindcss()] },
-  site: 'https://nx.dev',
+  // Allow this to be configured per environment
+  // Note: this happens during build time so we don't use `import.meta.env`
+  site: process.env.NX_DEV_URL ?? 'https://nx.dev',
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp',
@@ -26,6 +27,7 @@ export default defineConfig({
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
   integrations: [
     markdoc(),
+    // https://starlight.astro.build/reference/configuration/
     starlight({
       title: 'Nx',
       tagline:
@@ -37,9 +39,7 @@ export default defineConfig({
         dark: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
-      plugins: [
-        // linkValidator(),
-      ],
+      plugins: [],
       routeMiddleware: [
         './src/plugins/banner.middleware.ts',
         // NOTE: this is responsibile for populating the Reference section

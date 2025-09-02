@@ -39,7 +39,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   });
 
   // Expected to run as part of the Github `publish` workflow
-  if (!options.local && process.env.NODE_AUTH_TOKEN) {
+  if (!options.local && process.env.GITHUB_ACTIONS) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync('find ./dist -name "*.node" -delete', {

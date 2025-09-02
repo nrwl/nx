@@ -520,7 +520,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(appTree, 'tsconfig.json', {
@@ -679,8 +679,8 @@ describe('lib', () => {
         {
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.cjs.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
@@ -699,7 +699,7 @@ describe('lib', () => {
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(appTree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

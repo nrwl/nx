@@ -88,6 +88,7 @@ export function applyWebConfig(
       plugins.push(
         new HtmlRspackPlugin({
           template: options.index,
+          templateParameters: options.templateParameters,
           sri: options.subresourceIntegrity ? 'sha256' : undefined,
           ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
           ...(config.output?.scriptType === 'module'

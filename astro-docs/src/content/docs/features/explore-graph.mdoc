@@ -24,7 +24,7 @@ This guide will teach you to use this tool to explore projects, the project grap
 Projects in Nx are the different parts of the monorepo which can have tasks run for them.
 
 The best way to see what projects are in your workspace is to view the [project graph](#explore-the-project-graph) which will be covered in the next section.
-Another way is to look at the **Projects** pane in [Nx Console](/getting-started/editor-setup) or run `nx show projects` to show a list of projects in your terminal.
+Another way is to look at the **Projects** pane in [Nx Console](/docs/getting-started/editor-setup) or run `nx show projects` to show a list of projects in your terminal.
 
 You can see more details about a specific project in Nx Console or by running `nx show project <project-name> --web`. Both methods will show something like the example below:
 
@@ -332,7 +332,7 @@ You can see more details about a specific project in Nx Console or by running `n
 
 {% /project_details %}
 
-The view shows a list of targets which can be [run by Nx](/features/run-tasks).
+The view shows a list of targets which can be [run by Nx](/docs/features/run-tasks).
 Each target has different options which determine how Nx runs the task.
 
 ## Explore the Project Graph
@@ -343,7 +343,7 @@ It always stays up to date without having to actively maintain a document as it 
 
 ### Launching the Project Graph
 
-To launch the project graph visualization for your workspace, use [Nx Console](/getting-started/editor-setup) or run:
+To launch the project graph visualization for your workspace, use [Nx Console](/docs/getting-started/editor-setup) or run:
 
 ```shell {% frame="none" %}
 npx nx graph
@@ -623,7 +623,7 @@ Some moments which you may want to share these images are:
 
 ## Explore the Task Graph
 
-Nx uses the project graph of your workspace to determine the order in which to [run tasks](/features/run-tasks). Pass the `--graph` flag to view the **task graph** which is executed by Nx when running a command.
+Nx uses the project graph of your workspace to determine the order in which to [run tasks](/docs/features/run-tasks). Pass the `--graph` flag to view the **task graph** which is executed by Nx when running a command.
 
 ```shell {% frame="none" %}
 nx build myreactapp --graph # View the graph for building myreactapp
@@ -634,7 +634,7 @@ nx affected --targets build --graph # View the graph for building the affected p
 Click on the nodes of this graph to see more information about the task such as:
 
 - Which executor was used to run the command
-- Which [inputs](/recipes/running-tasks/configure-inputs) are used to calculate the computation hash.
+- Which [inputs](/docs/guides/tasks--caching/configure-inputs) are used to calculate the computation hash.
 - A link to see more details about the project which the task belongs to
 
 Dependencies in this graph mean that Nx will need to wait for all task dependencies to complete successfully before running the task.

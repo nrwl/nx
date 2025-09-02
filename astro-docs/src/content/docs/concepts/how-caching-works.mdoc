@@ -49,20 +49,20 @@ work happens. The rest is either left as is or restored from the cache.
 
 Each cacheable task defines a set of inputs and outputs. Inputs are factors Nx considers when calculating the computation hash.
 Outputs are files that will be cached and restored when the computation hash matches.
-For more information on how to fine-tune caching, see the [Fine-tuning Caching with Inputs recipe](/recipes/running-tasks/configure-inputs).
+For more information on how to fine-tune caching, see the [Fine-tuning Caching with Inputs recipe](/docs/guides/tasks--caching/configure-inputs).
 
 ### Inputs
 
 Inputs are factors Nx considers when calculating the computation hash for a task.
 
-For more information on the different types of inputs and how to configure inputs for your tasks, read the [Fine-tuning Caching with Inputs recipe](/recipes/running-tasks/configure-inputs)
+For more information on the different types of inputs and how to configure inputs for your tasks, read the [Fine-tuning Caching with Inputs recipe](/docs/guides/tasks--caching/configure-inputs)
 
 ## What is Cached
 
 Nx cache works on the process level. Regardless of the tools used to build/test/lint/etc.. your project, the results are cached. This includes:
 
 - **Terminal output:** The terminal output generated when running a task. This includes logs, warnings, and errors.
-- **Task artifacts:** The output files of a task defined in the [`outputs` property of your project configuration](/recipes/running-tasks/configure-outputs). For example the build output, test results, or linting reports.
+- **Task artifacts:** The output files of a task defined in the [`outputs` property of your project configuration](/docs/guides/tasks--caching/configure-outputs). For example the build output, test results, or linting reports.
 - **Hash:** The hash of the inputs to the computation. The inputs include the source code, runtime values, and command line arguments. Note that the hash is included in the cache, but the actual inputs are not.
 
 {% tabs %}
@@ -178,7 +178,7 @@ Inputs may include
 - runtime inputs
 - command line arguments
 
-Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/recipes/running-tasks/configure-inputs).
+Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/docs/guides/tasks--caching/configure-inputs).
 
 ## Args Hash Inputs
 
@@ -215,4 +215,4 @@ npx nx build footer
 
 Learn more about how to configure caching, where the cache is stored, how to reset it and more.
 
-- [Cache Task Results](/features/cache-task-results)
+- [Cache Task Results](/docs/features/cache-task-results)

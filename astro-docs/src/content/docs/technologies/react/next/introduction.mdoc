@@ -24,7 +24,7 @@ npx create-nx-workspace@latest --preset=next
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any workspace, you can install `@nx/next` by running the following command:
@@ -54,7 +54,7 @@ npm add -D @nx/next
 ### How @nx/next Infers Tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/next` plugin will create tasks for any project that has a Next.js configuration file preset. Any of the following files will be recognized as a Next.js configuration file:
@@ -66,7 +66,7 @@ The `@nx/next` plugin will create tasks for any project that has a Next.js confi
 
 ### View Inferred Tasks
 
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project <project-name> --web` in your command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project <project-name> --web` in your command line.
 
 ### @nx/next Configuration
 
@@ -265,7 +265,7 @@ Note: This approach works best if you have `@nx/next/plugin` installed in your `
 {% tabitem label="Using the @nx/next:build executor" %}
 
 {% aside type="note" title="Legacy Configuration" %}
-This approach is for projects not using the `@nx/next/plugin` in `nx.json`. If you have the plugin configured, it will automatically infer tasks from your Next.js configuration. See the [Inferred Tasks concept page](/concepts/inferred-tasks) for more details.
+This approach is for projects not using the `@nx/next/plugin` in `nx.json`. If you have the plugin configured, it will automatically infer tasks from your Next.js configuration. See the [Inferred Tasks concept page](/docs/concepts/inferred-tasks) for more details.
 {% /aside %}
 
 You can customize the output folder by setting `outputPath` in the project's `project.json` file
@@ -353,7 +353,7 @@ This command performs several actions:
 
 Once you are ready to deploy your Next.js application, you have absolute freedom to choose any hosting provider that fits your needs.
 
-You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/technologies/react/recipes/deploy-nextjs-to-vercel).
+You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/docs/technologies/react/guides/deploy-nextjs-to-vercel).
 
 ## More Documentation
 

@@ -2489,6 +2489,16 @@
     ],
     "migrations": [
       {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.6 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-6.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-6",
+        "version": "21.4.1-beta.1",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-6",
+        "type": "migration"
+      },
+      {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.5 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-5.json",
         "hidden": false,
@@ -2903,6 +2913,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
+        "file": "generated/packages/js/migrations/migrate-development-custom-condition.json",
+        "hidden": false,
+        "name": "migrate-development-custom-condition",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/js",
+        "path": "js/migrations/migrate-development-custom-condition",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/js/migrations/21.5.0-package-updates.json",
@@ -5375,6 +5395,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.5.0-package-updates.json",
+        "hidden": false,
+        "name": "21.5.0-package-updates",
+        "version": "21.5.0-beta.2",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/21.5.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/rspack/migrations/21.4.0-package-updates.json",

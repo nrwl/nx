@@ -16,12 +16,12 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 ## Setting Up @nx/cypress
 
-> Info about [Cypress Component Testing can be found here](/technologies/test-tools/cypress/recipes/cypress-component-testing)
+> Info about [Cypress Component Testing can be found here](/docs/technologies/test-tools/cypress/guides/cypress-component-testing)
 
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/cypress` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/cypress` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/cypress` by running the following command:
@@ -50,7 +50,7 @@ npm add -D @nx/cypress
 ### How @nx/cypress Infers Tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
@@ -62,7 +62,7 @@ The `@nx/cypress` plugin will create a task for any project that has a Cypress c
 
 ### View Inferred Tasks
 
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/cypress Configuration
 
@@ -89,7 +89,7 @@ The `targetName`, `ciTargetName`, `componentTestingTargetName`, and `open-cypres
 
 ### Splitting E2E tasks by file
 
-The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
+The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about the Atomizer feature [here](/docs/features/ci-features/split-e2e-tasks).
 
 To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
 
@@ -115,7 +115,7 @@ export default defineConfig({
 ```
 
 {% aside type="note" title="Using setupNodeEvents function" %}
-If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/technologies/test-tools/cypress/recipes/cypress-setup-node-events) for more details.
+If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/technologies/test-tools/cypress/guides/cypress-setup-node-events) for more details.
 {% /aside %}
 
 ## E2E Testing
@@ -152,7 +152,7 @@ To set up a separate project, you can generate a separate project with a project
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-You can run your e2e test against a production build by using the `production` [configuration](/concepts/executors-and-configurations#use-task-configurations)
+You can run your e2e test against a production build by using the `production` [configuration](/docs/concepts/executors-and-configurations#use-task-configurations)
 
 ```shell {% frame="none" %}
 nx e2e frontend-e2e --configuration=production
@@ -238,7 +238,7 @@ For adding more dynamic configurations to your Cypress configuration, you can lo
 
 If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/reference/project-configuration#task-definitions-targets) or the command line.
+There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or the command line.
 
 Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Just don't forget to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 

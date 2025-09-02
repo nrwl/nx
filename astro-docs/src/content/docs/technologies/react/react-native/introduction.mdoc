@@ -34,7 +34,7 @@ npx create-nx-workspace your-workspace-name
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/react-native` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/react-native` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/react-native` by running the following command:
@@ -63,7 +63,7 @@ npm add -D @nx/react-native
 ### How @nx/react-native Infers Tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 The `@nx/react-native` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
@@ -73,7 +73,7 @@ The `@nx/react-native` plugin will create a task for any project that has an app
 
 ### View Inferred Tasks
 
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/react-native Configuration
 
@@ -129,11 +129,11 @@ Replace `<component-directory>` with the directory where you want to place the c
 
 ### Upgrade React Native
 
-The Nx CLI provides the [`migrate` command](/features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
+The Nx CLI provides the [`migrate` command](/docs/features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
 
 #### Use upgrade-native Generator
 
-To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/technologies/react/react-native/api/generators/upgrade-native) generator:
+To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/docs/technologies/react/react-native/generators#upgrade-native) generator:
 
 ```shell {% frame="none" %}
 nx generate @nx/react-native:upgrade-native apps/<your-app-name>
@@ -197,5 +197,5 @@ The build artifacts will be located under `<your app folder>/android/app/build`.
 
 ## More Documentation
 
-- [Using Detox](/technologies/test-tools/detox/introduction)
-- [Using Jest](/technologies/test-tools/jest/introduction)
+- [Using Detox](/docs/technologies/test-tools/detox/introduction)
+- [Using Jest](/docs/technologies/test-tools/jest/introduction)

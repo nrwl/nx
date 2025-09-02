@@ -98,14 +98,16 @@ export class ExternalApiImpl extends ExternalApi {
 
   focusTarget(projectName: string, targetName: string) {
     this.router.navigate(
-      `/tasks/${encodeURIComponent(targetName)}?projects=${encodeURIComponent(
-        projectName
-      )}`
+      `/tasks?targets=${encodeURIComponent(
+        targetName
+      )}&projects=${encodeURIComponent(projectName)}`
     );
   }
 
   selectAllTargetsByName(targetName: string) {
-    this.router.navigate(`/tasks/${encodeURIComponent(targetName)}/all`);
+    this.router.navigate(
+      `/tasks/all?targets=${encodeURIComponent(targetName)}`
+    );
   }
 
   enableExperimentalFeatures() {

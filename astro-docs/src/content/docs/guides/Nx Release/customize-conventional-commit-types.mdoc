@@ -3,7 +3,7 @@ title: Customize Conventional Commit Types
 description: Learn how to configure Nx Release to customize how different conventional commit types affect versioning and changelog generation, including changing semver bump types and section titles.
 ---
 
-[Nx release](/features/manage-releases) allows you to leverage the [conventional commits](/recipes/nx-release/automatically-version-with-conventional-commits) standard to automatically determine the next version increment.
+[Nx release](/docs/features/manage-releases) allows you to leverage the [conventional commits](/docs/guides/nx-release/automatically-version-with-conventional-commits) standard to automatically determine the next version increment.
 
 By default, this results in:
 
@@ -12,7 +12,7 @@ By default, this results in:
 - `BREAKING CHANGE` in the footer of the commit message or with an exclamation mark after the commit type (`fix(...)!`) triggers a major version bump (`?.0.0`)
 
 {% aside type="note" title="No changes detected" %}
-If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/nx-release/release-projects-independently) as well, allowing for only some projects to be released while others are skipped.
+If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/docs/guides/nx-release/release-projects-independently) as well, allowing for only some projects to be released while others are skipped.
 {% /aside %}
 
 However, you can customize how Nx interprets these conventional commits, for both **versioning** and **changelog** generation.
@@ -170,7 +170,7 @@ It's worth noting that this type will only include **invalid** commits. _e.g. th
 This can be useful in cases where you have not managed to be consistent with your use of the Conventional Commits standard (e.g. when applying it retroactively to an existing codebase) but still want a changelog to be generated with the contents of each commit message and/or for invalid commits to still affect project versioning.
 
 {% aside type="note" title="Alternative to Conventional Commits" %}
-If you cannot adhere to the Conventional Commits standard for your commits, file based versioning via Nx Release Version Plans could be a good alternative for managing your releases. See our docs on [File Based Versioning](/recipes/nx-release/file-based-versioning-version-plans) for more information.
+If you cannot adhere to the Conventional Commits standard for your commits, file based versioning via Nx Release Version Plans could be a good alternative for managing your releases. See our docs on [File Based Versioning](/docs/guides/nx-release/file-based-versioning-version-plans) for more information.
 {% /aside %}
 
 ```json

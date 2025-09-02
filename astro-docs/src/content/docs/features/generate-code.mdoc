@@ -9,13 +9,13 @@ sidebar:
 
 Code generators are like automation scripts designed to streamline your workflow. Essentially, they are TypeScript functions that accept parameters and help boost your productivity by:
 
-- Allowing you to **scaffold new projects** or **augment existing projects** with new features, like [adding Storybook support](/technologies/test-tools/storybook/introduction#generating-storybook-configuration)
+- Allowing you to **scaffold new projects** or **augment existing projects** with new features, like [adding Storybook support](/docs/technologies/test-tools/storybook/introduction#generating-storybook-configuration)
 - **Automating repetitive tasks** in your development workflow
 - Ensuring your **code is consistent and follows best practices**
 
 ## Invoke Generators
 
-Generators come as part of [Nx plugins](/concepts/nx-plugins) and can be invoked using the `nx generate` command (or `nx g`) using the following syntax: `nx g <plugin-name>:<generator-name> [options]`.
+Generators come as part of [Nx plugins](/docs/concepts/nx-plugins) and can be invoked using the `nx generate` command (or `nx g`) using the following syntax: `nx g <plugin-name>:<generator-name> [options]`.
 
 Here's an example of generating a React library:
 
@@ -39,11 +39,11 @@ nx list @nx/react
 
 ### Use Nx Console
 
-If you prefer a visual interface, then [Nx Console](/getting-started/editor-setup) is an excellent alternative. It provides a way to visually find and run generators:
+If you prefer a visual interface, then [Nx Console](/docs/getting-started/editor-setup) is an excellent alternative. It provides a way to visually find and run generators:
 
 ![Using Nx Console to run generators](../../../assets/nx-console/nx-console-gen-code.avif)
 
-Nx Console is an IDE extension that can be [installed here](/getting-started/editor-setup).
+Nx Console is an IDE extension that can be [installed here](/docs/getting-started/editor-setup).
 
 ## Build Your Own Generator
 
@@ -70,6 +70,6 @@ export default async function (tree: Tree, schema: any) {
 }
 ```
 
-To help build generators, Nx provides the `@nx/devkit` package containing utilities and helpers. Learn more about creating your own generators on [our docs page](/extending-nx/recipes/local-generators) or watch the video below:
+To help build generators, Nx provides the `@nx/devkit` package containing utilities and helpers. Learn more about creating your own generators on [our docs page](/docs/extending-nx/local-generators) or watch the video below:
 
 {% youtube src="https://www.youtube.com/embed/myqfGDWC2go" title="Scaffold new Pkgs in a PNPM Workspaces Monorepo" caption="Demonstrates how to use Nx generators in a PNPM workspace to automate the creation of libraries" /%}

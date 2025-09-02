@@ -34,13 +34,15 @@ const crumbs: Crumb[] = pathSegments.map((segment, index) => {
   const docPath = pathSegments.slice(0, index + 1).join('/');
   const doc = findDocByPath(docPath);
   const name = doc?.data?.sidebar?.label || doc?.data?.title || createNameFromSegment(segment);
+  // If `base` is set in config, don't include it in breadcrumbs
+  if (index === 0 && import.meta.env.BASE_URL) return null;
   return {
     id: segment,
     name,
     href: `/${docPath}`,
     current: index === pathSegments.length - 1,
   };
-});
+}).filter(Boolean);
 ---
 
 
@@ -53,11 +55,11 @@ const crumbs: Crumb[] = pathSegments.map((segment, index) => {
         )}
         <a
           href={crumb.href}
-          class={`no-underline text-sm font-medium${
+          class={`no-underline text-sm${
             crumb.current 
-              ? 'hover:text-slate-600 text-slate-600'
-          : 'hover:text-slate-600 text-slate-400'
-          } font-medium transition-colors`}
+              ? ' text-slate-900 dark:text-slate-100 font-semibold'
+          : ' text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700 dark:hover:text-slate-200'
+          } transition-colors`}
           aria-current={crumb.current ? 'page' : undefined}
         >
           {crumb.name}

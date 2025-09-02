@@ -43,6 +43,7 @@
               "{projectRoot}/vite.config.{js,ts,mjs,mts}"
             ],
             "ignoredDependencies": [
+              "@rspack/core",
               "@angular/core",
               "jsonc-eslint-parser",
               "vitest",

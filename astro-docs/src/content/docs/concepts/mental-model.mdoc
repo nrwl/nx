@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through [plugins](/concepts/nx-plugins). Nx works with a
+Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through [plugins](/docs/concepts/nx-plugins). Nx works with a
 few concepts to drive your monorepo efficiently, and effectively. This guide covers the mental model around how Nx works
 with project graphs, task graphs, affected commands, computation hashing and caching.
 
@@ -27,7 +27,7 @@ Nx provides an updated graph after each analysis is done.
 
 ## Metadata-driven
 
-Everything in Nx comes with metadata to enable toolability. Nx gathers information about your projects and tasks and then uses that information to help you understand and interact with your codebase. With the right plugins installed, most of the metadata can be [inferred directly from your existing configuration files](/concepts/inferred-tasks) so you don't have to define it manually.
+Everything in Nx comes with metadata to enable toolability. Nx gathers information about your projects and tasks and then uses that information to help you understand and interact with your codebase. With the right plugins installed, most of the metadata can be [inferred directly from your existing configuration files](/docs/concepts/inferred-tasks) so you don't have to define it manually.
 
 This metadata is used by Nx itself, by VSCode and WebStorm integrations, by GitHub integration, and by third-party
 tools.
@@ -324,7 +324,7 @@ By default, the computation hash for say `nx test app1` includes:
 - All the source files of `app1` and `lib`
 - Relevant global configuration
 - Versions of external dependencies
-- [Runtime values provisioned by the user](/reference/inputs#runtime-inputs)
+- [Runtime values provisioned by the user](/docs/reference/inputs#runtime-inputs)
 - CLI Command flags
 
 ![computation-hashing](../../../assets/concepts/mental-model/computation-hashing.svg)
@@ -396,7 +396,7 @@ work happens. The rest is either left as is or restored from the cache.
 
 ## Distributed task execution
 
-Nx supports running commands across multiple machines. You can either set it up by hand or use Nx Cloud. [Read the comparison of the two approaches.](/blog/distributing-ci-binning-and-distributed-task-execution)
+Nx supports running commands across multiple machines. You can either set it up by hand or use Nx Cloud. [Read the comparison of the two approaches.](https://nx.dev/blog/distributing-ci-binning-and-distributed-task-execution)
 
 When using the distributed task execution, Nx is able to run any task graph on many agents instead of locally.
 

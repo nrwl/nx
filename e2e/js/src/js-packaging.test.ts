@@ -1,15 +1,17 @@
 import {
-  updateJson,
   cleanupProject,
-  newProject,
-  runCLI,
-  tmpProjPath,
-  runCommand,
   createFile,
-  uniq,
+  detectPackageManager,
+  exists,
   getPackageManagerCommand,
+  newProject,
   readJson,
+  runCLI,
+  runCommand,
+  tmpProjPath,
+  uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
@@ -221,7 +223,8 @@ describe('packaging libs', () => {
       './foo/faz': './src/foo/faz.js',
     });
 
-    const pmc = getPackageManagerCommand();
+    const pm = detectPackageManager();
+    const pmc = getPackageManagerCommand({ packageManager: pm });
     let output: string;
 
     // Make sure CJS output is correct
@@ -255,6 +258,19 @@ describe('packaging libs', () => {
         console.log(faz);
       `
     );
+
+    if (pm === 'pnpm' && exists('pnpm-lock.yaml')) {
+      // if the workspace file exists, the packages must be included so the
+      // install command considers them
+      updateFile(
+        'pnpm-lock.yaml',
+        (content) => `${content}
+packages:
+  - 'libs/*'
+  - 'test-cjs'`
+      );
+    }
+
     runCommand(pmc.install, {
       cwd: join(tmpProjPath(), 'test-cjs'),
     });

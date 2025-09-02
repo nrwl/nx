@@ -16,7 +16,10 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getDefinedCustomConditionName,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname, join, relative } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
@@ -181,9 +184,6 @@ function updatePackageJson(
       ({ main, outputPath } = mergedTarget.options);
     }
 
-    // the file must exist in the TS solution setup
-    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
-
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,
       outputPath,
@@ -194,10 +194,7 @@ function updatePackageJson(
       format: options.format ?? ['esm'],
       outputFileExtensionForCjs: '.cjs.js',
       outputFileExtensionForEsm: '.esm.js',
-      skipDevelopmentExports:
-        !tsconfigBase.compilerOptions?.customConditions?.includes(
-          'development'
-        ),
+      developmentConditionName: getDefinedCustomConditionName(tree),
     });
 
     // rollup has a specific declaration file generation not handled by the util above,

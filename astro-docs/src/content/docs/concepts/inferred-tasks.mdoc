@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-In Nx version 18, Nx plugins can automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
+In Nx version 18, Nx plugins can automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/docs/features/run-tasks). This includes [fine-tuned cache settings](/docs/features/cache-task-results) and automatic [task dependencies](/docs/concepts/task-pipeline-configuration).
 
 For example, the `@nx/webpack` plugin infers tasks to run webpack through Nx based on your repository's webpack configuration. This configuration already defines the destination of your build files, so Nx reads that value and caches the correct output files.
 
@@ -33,10 +33,10 @@ The `@nx/webpack` plugin creates tasks named `build`, `serve` and `preview` by d
 Nx plugins infer the following properties by analyzing the tool configuration.
 
 - Command - How is the tool invoked
-- [Cacheability](/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
-- [Inputs](/recipes/running-tasks/configure-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
-- [Outputs](/recipes/running-tasks/configure-outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
-- [Task Dependencies](/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
+- [Cacheability](/docs/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
+- [Inputs](/docs/guides/tasks--caching/configure-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
+- [Outputs](/docs/guides/tasks--caching/configure-outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
+- [Task Dependencies](/docs/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
 
 ## Nx Uses Plugins to Build the Graph
 
@@ -48,7 +48,7 @@ Plugins are processed in the order that they appear in the `plugins` array in `n
 
 ## View Inferred Tasks
 
-To view the task settings for projects in your workspace, [show the project details](/features/explore-graph) either from the command line or using Nx Console.
+To view the task settings for projects in your workspace, [show the project details](/docs/features/explore-graph) either from the command line or using Nx Console.
 
 ```shell {% frame="none" %}
 nx show project my-project --web
@@ -361,8 +361,8 @@ nx show project my-project --web
 ## Overriding Inferred Task Configuration
 
 You can override the task configuration inferred by plugins in several ways.
-If you want to overwrite the task configuration for multiple projects, [use the `targetDefaults` object](/reference/nx-json#target-defaults) in the `nx.json` file.
-If you only want to override the task configuration for a specific project, [update that project's configuration](/reference/project-configuration) in `package.json` or `project.json`.
+If you want to overwrite the task configuration for multiple projects, [use the `targetDefaults` object](/docs/reference/nx-json#target-defaults) in the `nx.json` file.
+If you only want to override the task configuration for a specific project, [update that project's configuration](/docs/reference/project-configuration) in `package.json` or `project.json`.
 This configuration is more specific so it will override both the inferred configuration and the `targetDefaults`.
 
 The order of precedence for task configuration is:
@@ -371,12 +371,12 @@ The order of precedence for task configuration is:
 2. `targetDefaults` in `nx.json`.
 3. Project Configuration in `package.json` or `project.json`.
 
-More details about how to override task configuration is available in these recipes:
+More details about how to override task configuration is available in these guides:
 
-- [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
-- [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
-- [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
-- [Pass Arguments to Commands](/recipes/running-tasks/pass-args-to-commands)
+- [Configure Inputs for Task Caching](/docs/guides/tasks--caching/configure-inputs)
+- [Configure Outputs for Task Caching](/docs/guides/tasks--caching/configure-outputs)
+- [Defining a Task Pipeline](/docs/guides/tasks--caching/defining-task-pipeline)
+- [Pass Arguments to Commands](/docs/guides/tasks--caching/pass-args-to-commands)
 
 ## Existing Nx Workspaces
 
@@ -387,6 +387,6 @@ When `useInferencePlugins` is `false`:
 1. A newly generated project will have all targets defined with executors - not with inferred tasks.
 2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)
 
-If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/recipes/running-tasks/convert-to-inferred).
+If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/docs/guides/tasks--caching/convert-to-inferred).
 
-Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/technologies/typescript/recipes/enable-tsc-batch-mode)).
+Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/docs/technologies/typescript/guides/enable-tsc-batch-mode)).
