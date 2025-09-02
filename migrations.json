@@ -1,0 +1,28 @@
+{
+  "migrations": [
+    {
+      "version": "21.5.0-beta.2",
+      "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
+      "factory": "./src/migrations/update-21-5-0/migrate-development-custom-condition",
+      "package": "@nx/js",
+      "name": "migrate-development-custom-condition"
+    },
+    {
+      "cli": "nx",
+      "version": "21.5.0-beta.2",
+      "requires": { "@angular/core": ">=20.2.0" },
+      "description": "Update the @angular/cli package version to ~20.2.0.",
+      "factory": "./src/migrations/update-21-5-0/update-angular-cli",
+      "package": "@nx/angular",
+      "name": "update-angular-cli-version-20-2-0"
+    },
+    {
+      "version": "21.5.0-beta.2",
+      "requires": { "@angular/core": ">=20.2.0" },
+      "description": "Remove any Karma configuration files that only contain the default content. The default configuration is automatically available without a specific project configurationfile.",
+      "factory": "./src/migrations/update-21-5-0/remove-default-karma-configuration-files",
+      "package": "@nx/angular",
+      "name": "remove-default-karma-configuration-files"
+    }
+  ]
+}
