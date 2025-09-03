@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
 import java.io.File
@@ -32,6 +33,9 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
 
     @Parameter(property = "nx.workspaceRoot", defaultValue = "\${session.executionRootDirectory}")
     private lateinit var workspaceRoot: String
+
+    @Component
+    private lateinit var pluginManager: MavenPluginManager
 
     private val objectMapper = ObjectMapper()
     private val dependencyResolver = MavenDependencyResolver()
@@ -194,17 +198,33 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                 }
             }
             
-            // Generate targets from discovered plugin goals
+            // Generate targets from discovered plugin goals, organized by plugin
             val pluginGoalsNode = analysis.get("pluginGoals")
             if (pluginGoalsNode != null && pluginGoalsNode.isArray) {
+                // Group goals by plugin for better organization
+                val goalsByPlugin = mutableMapOf<String, MutableList<String>>()
+                
                 pluginGoalsNode.forEach { pluginGoalNode ->
                     val pluginGoal = pluginGoalNode.asText()
                     val parts = pluginGoal.split(":")
                     if (parts.size == 2) {
-                        val pluginName = parts[0]
+                        val originalPluginName = parts[0]
+                        val goalName = parts[1]
+                        val cleanPluginName = cleanPluginName(originalPluginName)
+                        goalsByPlugin.getOrPut(cleanPluginName) { mutableListOf() }.add("$originalPluginName:$goalName")
+                    }
+                }
+                
+                // Process each plugin group
+                goalsByPlugin.forEach { (cleanPluginName, pluginGoals) ->
+                    log.info("Processing ${pluginGoals.size} goals for plugin '$cleanPluginName': ${pluginGoals.map { it.split(":")[1] }.joinToString(", ")}")
+                    
+                    pluginGoals.forEach { pluginGoal ->
+                        val parts = pluginGoal.split(":")
+                        val originalPluginName = parts[0]
                         val goalName = parts[1]
                         
-                        // Create target for plugin goal (like spring-boot:run -> "run")
+                        // Create target for plugin goal using full plugin:goal naming
                         val target = objectMapper.createObjectNode()
                         target.put("executor", "nx:run-commands")
                         
@@ -217,11 +237,26 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                         target.put("cache", false)
                         target.put("parallelism", false)
                         
-                        // Generate unique target name to handle goal collisions
-                        val targetName = generateUniqueTargetName(targets, pluginName, goalName)
+                        // Add metadata to indicate plugin group
+                        val metadata = objectMapper.createObjectNode()
+                        metadata.put("plugin", cleanPluginName)
+                        metadata.put("originalPlugin", originalPluginName)
+                        metadata.put("goalName", goalName)
+                        target.put("metadata", metadata)
+                        
+                        // Add dependsOn for plugin goal prerequisites (using original plugin name)
+                        val goalDependencies = computeDependsOnForPluginGoal(pluginGoal, mavenProject)
+                        if (goalDependencies.isNotEmpty()) {
+                            val dependsOnArray = objectMapper.createArrayNode()
+                            goalDependencies.forEach { dep -> dependsOnArray.add(dep) }
+                            target.put("dependsOn", dependsOnArray)
+                        }
+                        
+                        // Use clean plugin:goal naming convention
+                        val targetName = "$cleanPluginName:$goalName"
                         targets.put(targetName, target)
                         
-                        log.info("Generated Nx target '$targetName' for plugin goal '$pluginGoal'")
+                        log.info("Generated Nx target '$targetName' for plugin goal '$pluginGoal' (group: $cleanPluginName)")
                     }
                 }
             }
@@ -265,52 +300,90 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
     }
     
     /**
-     * Generates unique target names to handle goal name collisions between different plugins
+     * Cleans plugin names to remove unnecessary suffixes like "maven-plugin"
      */
-    private fun generateUniqueTargetName(existingTargets: com.fasterxml.jackson.databind.node.ObjectNode, pluginName: String, goalName: String): String {
-        // First, try just the goal name
-        if (!existingTargets.has(goalName)) {
-            return goalName
-        }
-        
-        // If collision exists, use plugin-specific name based on artifact ID
-        val pluginSpecificName = generatePluginSpecificName(pluginName, goalName)
-        
-        // If still collision, add numeric suffix
-        if (!existingTargets.has(pluginSpecificName)) {
-            return pluginSpecificName
-        }
-        
-        // Last resort: add numeric suffix
-        var counter = 2
-        while (existingTargets.has("$pluginSpecificName-$counter")) {
-            counter++
-        }
-        
-        return "$pluginSpecificName-$counter"
+    private fun cleanPluginName(pluginName: String): String {
+        return pluginName
+            .replace("-maven-plugin", "") // Remove standard Maven plugin suffix
+            .replace("maven-", "") // Remove maven- prefix  
+            .split(".")
+            .last() // Take the last part after dots (e.g., org.springframework.boot -> boot)
+            .let { name ->
+                // Handle special cases for well-known plugins
+                when (name) {
+                    "spring-boot" -> "spring-boot"
+                    "compiler" -> "compiler" 
+                    "surefire" -> "surefire"
+                    "failsafe" -> "failsafe"
+                    else -> name
+                }
+            }
     }
     
     /**
-     * Generates a plugin-specific target name by extracting meaningful parts from the plugin artifact ID
+     * Computes dependsOn targets for plugin goals based on Maven API prerequisites
      */
-    private fun generatePluginSpecificName(pluginName: String, goalName: String): String {
-        // Extract the meaningful part of the plugin name using common Maven plugin naming patterns
-        val cleanName = pluginName
-            .replace("-maven-plugin", "") // Remove standard Maven plugin suffix
-            .replace("maven-", "") // Remove maven- prefix
-            .replace("org.springframework.boot.", "") // Remove Spring Boot group prefix
-            .replace("org.apache.maven.plugins.", "") // Remove Apache Maven group prefix  
-            .replace("org.codehaus.mojo.", "") // Remove Codehaus group prefix
-            .split(".")
-            .last() // Take the last part after dots
-            .split("-")
-            .let { parts ->
-                // Take the first meaningful part, avoiding generic words
-                parts.firstOrNull { part -> 
-                    part.isNotEmpty() && !part.matches(Regex("^(maven|plugin|mojo)$"))
-                } ?: parts.firstOrNull { it.isNotEmpty() } ?: pluginName
+    private fun computeDependsOnForPluginGoal(pluginGoal: String, mavenProject: MavenProject): List<String> {
+        try {
+            val parts = pluginGoal.split(":")
+            if (parts.size != 2) return emptyList()
+            
+            val pluginArtifactId = parts[0]  
+            val goalName = parts[1]
+            
+            // Find the plugin in the project
+            val plugin = findPluginInProject(pluginArtifactId, mavenProject) ?: return emptyList()
+            
+            // Load plugin descriptor to get mojo information
+            val pluginDescriptor = pluginManager.getPluginDescriptor(plugin, mavenProject.remotePluginRepositories, session.repositorySession)
+            val mojo = pluginDescriptor.getMojo(goalName) ?: return emptyList()
+            
+            val dependencies = mutableListOf<String>()
+            
+            // Check if mojo has a phase that should run before it
+            val executePhase = mojo.executePhase
+            if (!executePhase.isNullOrEmpty()) {
+                dependencies.add(executePhase)
+                log.debug("Plugin goal $pluginGoal requires phase: $executePhase")
             }
+            
+            // Check dependency resolution requirements
+            val dependencyResolution = mojo.dependencyResolutionRequired
+            when (dependencyResolution) {
+                "compile" -> dependencies.add("compile")
+                "test" -> dependencies.add("test-compile")
+                "runtime" -> dependencies.add("compile") 
+                "test-compile" -> dependencies.add("test-compile")
+                "compile+runtime", "compile_plus_runtime" -> dependencies.add("compile")
+                "runtime+system" -> dependencies.add("compile")
+            }
+            
+            return dependencies.distinct()
+            
+        } catch (e: Exception) {
+            log.debug("Could not compute dependencies for plugin goal $pluginGoal: ${e.message}")
+            return emptyList()
+        }
+    }
+    
+    /**
+     * Finds a plugin in the project by artifact ID
+     */
+    private fun findPluginInProject(pluginArtifactId: String, mavenProject: MavenProject): org.apache.maven.model.Plugin? {
+        // Check build plugins
+        mavenProject.build?.plugins?.find { it.artifactId == pluginArtifactId }?.let { return it }
         
-        return "$cleanName-$goalName"
+        // Check plugin management
+        mavenProject.build?.pluginManagement?.plugins?.find { it.artifactId == pluginArtifactId }?.let { return it }
+        
+        // Check parent projects
+        var currentProject: MavenProject? = mavenProject
+        while (currentProject?.parent != null) {
+            currentProject = currentProject.parent
+            currentProject.build?.plugins?.find { it.artifactId == pluginArtifactId }?.let { return it }
+            currentProject.build?.pluginManagement?.plugins?.find { it.artifactId == pluginArtifactId }?.let { return it }
+        }
+        
+        return null
     }
 }
