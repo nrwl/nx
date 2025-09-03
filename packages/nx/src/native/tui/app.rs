@@ -45,6 +45,25 @@ use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
 use crate::native::utils::time::current_timestamp_millis;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BatchStatus {
+    Running,
+    Success, 
+    Failure,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchInfo {
+    pub executor_name: String,
+    pub task_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct BatchState {
+    pub info: BatchInfo,     // executor_name, task_ids  
+    pub status: BatchStatus, // Running/Success/Failure
+}
+
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
     pub quit_at: Option<std::time::Instant>,
@@ -79,6 +98,9 @@ pub struct App {
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
     estimated_task_timings: HashMap<String, i64>,
+    // Batch tracking
+    batch_states: HashMap<String, BatchState>,               // batch_id → BatchState
+    batch_pty_instances: HashMap<String, Arc<PtyInstance>>,   // batch_id → PTY
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -162,6 +184,9 @@ impl App {
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
             estimated_task_timings: HashMap::new(),
+            // Initialize batch tracking
+            batch_states: HashMap::new(),
+            batch_pty_instances: HashMap::new(),
         })
     }
 
@@ -375,6 +400,44 @@ impl App {
             .get_mut(&task_id)
             .unwrap_or_else(|| panic!("{} has not been registered yet.", task_id));
         pty.process_output(output.as_bytes());
+    }
+
+    // Batch methods
+    pub fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) {        
+        // Create PTY instance for batch output
+        let pty = PtyInstance::non_interactive();
+        self.batch_pty_instances.insert(batch_id.clone(), Arc::new(pty));
+        
+        // Store batch state with initial Running status
+        self.batch_states.insert(batch_id.clone(), BatchState {
+            info: batch_info.clone(),
+            status: BatchStatus::Running, // Always starts as Running
+        });
+        
+        // Trigger resize for new PTY instance
+        let _ = self.debounce_pty_resize();
+        
+        self.dispatch_action(Action::StartBatch(batch_id, batch_info));
+    }
+
+    pub fn append_batch_output(&mut self, batch_id: String, output: String) {
+        if let Some(pty) = self.batch_pty_instances.get_mut(&batch_id) {
+            pty.process_output(output.as_bytes());
+        }
+        self.dispatch_action(Action::AppendBatchOutput(batch_id, output));
+    }
+
+    pub fn set_batch_status(&mut self, batch_id: String, status_str: String) {
+        if let Some(batch_state) = self.batch_states.get_mut(&batch_id) {
+            let new_status = match status_str.as_str() {
+                "success" => BatchStatus::Success,
+                "failure" => BatchStatus::Failure, 
+                _ => BatchStatus::Running,
+            };
+            
+            batch_state.status = new_status;
+            self.dispatch_action(Action::UpdateBatchStatus(batch_id, new_status));
+        }
     }
 
     pub fn handle_event(
@@ -1509,6 +1572,16 @@ impl App {
                 if current_rows != pty_height {
                     needs_sort = true;
                 }
+            }
+        }
+
+        for pty in self.batch_pty_instances.values() {
+            // Use the first terminal pane area as reference for batch PTY dimensions
+            // This ensures batch PTY instances have consistent dimensions with task PTYs
+            if let Some(first_pane_area) = self.layout_areas.as_ref().unwrap().terminal_panes.first() {
+                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*first_pane_area);
+                let mut pty_clone = pty.as_ref().clone();
+                pty_clone.resize(pty_height, pty_width)?;
             }
         }
 

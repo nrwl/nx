@@ -12,7 +12,7 @@ use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
 };
 
-use super::app::App;
+use super::app::{App, BatchInfo as RustBatchInfo};
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::tui::Tui;
@@ -61,6 +61,22 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
 pub enum RunMode {
     RunOne,
     RunMany,
+}
+
+#[napi(object)]
+#[derive(Clone)]
+pub struct BatchInfo {
+    pub executor_name: String,
+    pub task_ids: Vec<String>,
+}
+
+impl From<BatchInfo> for RustBatchInfo {
+    fn from(js: BatchInfo) -> Self {
+        Self {
+            executor_name: js.executor_name,
+            task_ids: js.task_ids,
+        }
+    }
 }
 
 #[napi]
@@ -306,6 +322,25 @@ impl AppLifeCycle {
         timings: std::collections::HashMap<String, i64>,
     ) -> napi::Result<()> {
         self.app.lock().set_estimated_task_timings(timings);
+        Ok(())
+    }
+
+    // Batch lifecycle methods
+    #[napi]
+    pub fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) -> napi::Result<()> {
+        self.app.lock().register_running_batch(batch_id, batch_info.into());
+        Ok(())
+    }
+
+    #[napi] 
+    pub fn append_batch_output(&mut self, batch_id: String, output: String) -> napi::Result<()> {
+        self.app.lock().append_batch_output(batch_id, output);
+        Ok(())
+    }
+
+    #[napi]
+    pub fn set_batch_status(&mut self, batch_id: String, status: String) -> napi::Result<()> {
+        self.app.lock().set_batch_status(batch_id, status);
         Ok(())
     }
 }
