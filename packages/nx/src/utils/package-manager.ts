@@ -128,17 +128,18 @@ export function getPackageManagerCommand(
         useBerry = true;
       }
 
+      // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
-        install: 'yarn',
+        install: useBerry ? 'yarn install' : `yarn install --ignore-scripts`,
         ciInstall: useBerry
           ? 'yarn install --immutable'
-          : 'yarn install --frozen-lockfile',
+          : 'yarn install --frozen-lockfile --ignore-scripts',
         updateLockFile: useBerry
           ? 'yarn install --mode update-lockfile'
           : 'yarn install',
-        add: useBerry ? 'yarn add' : 'yarn add -W',
-        addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
+        add: useBerry ? 'yarn add' : 'yarn add --ignore-scripts -W',
+        addDev: useBerry ? 'yarn add -D' : 'yarn add -D --ignore-scripts -W',
         rm: 'yarn remove',
         exec: 'yarn',
         dlx: useBerry ? 'yarn dlx' : 'yarn',
@@ -174,13 +175,14 @@ export function getPackageManagerCommand(
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
       return {
-        install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
-        ciInstall: 'pnpm install --frozen-lockfile',
+        install: 'pnpm install --no-frozen-lockfile --ignore-scripts', // explicitly disable in case of CI
+        ciInstall: 'pnpm install --frozen-lockfile --ignore-scripts',
         updateLockFile: 'pnpm install --lockfile-only',
         add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
         addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
         rm: 'pnpm rm',
         exec: modernPnpm ? 'pnpm exec' : 'pnpx',
+        // pnpm dlx is opt-in for postinstall scripts: https://pnpm.io/cli/dlx
         dlx: modernPnpm ? 'pnpm dlx' : 'pnpx',
         run: (script: string, args?: string) =>
           `pnpm run ${script}${
@@ -203,14 +205,14 @@ export function getPackageManagerCommand(
       process.env.npm_config_legacy_peer_deps ??= 'true';
 
       return {
-        install: 'npm install',
-        ciInstall: 'npm ci --legacy-peer-deps',
+        install: 'npm install --ignore-scripts',
+        ciInstall: 'npm ci --legacy-peer-deps --ignore-scripts',
         updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',
         rm: 'npm rm',
-        exec: 'npx',
-        dlx: 'npx',
+        exec: 'npx --ignore-scripts',
+        dlx: 'npx --ignore-scripts',
         run: (script: string, args?: string) =>
           `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
@@ -222,14 +224,14 @@ export function getPackageManagerCommand(
     bun: () => {
       // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
-        install: 'bun install',
-        ciInstall: 'bun install --no-cache',
+        install: 'bun install --ignore-scripts',
+        ciInstall: 'bun install --no-cache --ignore-scripts',
         updateLockFile: 'bun install --frozen-lockfile',
         add: 'bun install',
         addDev: 'bun install -D',
         rm: 'bun rm',
         exec: 'bun',
-        dlx: 'bunx',
+        dlx: 'bunx --ignore-scripts',
         run: (script: string, args: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
         // Unlike npm, bun publish does not support a custom registryConfigKey option

@@ -1133,12 +1133,9 @@ async function getPackageMigrationsUsingInstall(
   try {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
-    await execAsync(
-      `${pmc.add} ${packageName}@${packageVersion} --ignore-scripts`,
-      {
-        cwd: dir,
-      }
-    );
+    await execAsync(`${pmc.add} ${packageName}@${packageVersion} `, {
+      cwd: dir,
+    });
 
     const {
       migrations: migrationsFilePath,
