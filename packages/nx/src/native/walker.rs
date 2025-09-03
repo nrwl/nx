@@ -6,7 +6,7 @@ use crate::native::glob::build_glob_set;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::logger::enable_logger;
-use crate::native::utils::{Normalize, get_mod_time};
+use crate::native::utils::{Normalize, get_mod_time, git::find_git_root};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -158,21 +158,6 @@ where
     receiver_thread.join().unwrap()
 }
 
-/// Find the nearest git repository root by walking up the directory tree
-fn find_git_root<P: AsRef<Path>>(start_path: P) -> Option<PathBuf> {
-    let mut current_path = start_path.as_ref();
-
-    loop {
-        if current_path.join(".git").exists() {
-            return Some(current_path.to_path_buf());
-        }
-
-        match current_path.parent() {
-            Some(parent) => current_path = parent,
-            None => return None,
-        }
-    }
-}
 
 fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
