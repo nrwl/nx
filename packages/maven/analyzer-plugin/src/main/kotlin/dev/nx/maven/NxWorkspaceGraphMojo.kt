@@ -105,7 +105,6 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             // Generate final workspace graph
             val rootNode = objectMapper.createObjectNode()
             rootNode.put("createNodesResults", createNodesResults)
-            rootNode.put("generatedAt", System.currentTimeMillis())
             rootNode.put("workspaceRoot", workspaceRoot)
             rootNode.put("totalProjects", allProjects.size)
             rootNode.put("analyzedProjects", projectAnalyses.size)
@@ -192,6 +191,37 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                     
                     target.put("parallelism", true)
                     targets.put(phase, target)
+                }
+            }
+            
+            // Generate targets from discovered plugin goals
+            val pluginGoalsNode = analysis.get("pluginGoals")
+            if (pluginGoalsNode != null && pluginGoalsNode.isArray) {
+                pluginGoalsNode.forEach { pluginGoalNode ->
+                    val pluginGoal = pluginGoalNode.asText()
+                    val parts = pluginGoal.split(":")
+                    if (parts.size == 2) {
+                        val pluginName = parts[0]
+                        val goalName = parts[1]
+                        
+                        // Create target for plugin goal (like spring-boot:run -> "run")
+                        val target = objectMapper.createObjectNode()
+                        target.put("executor", "nx:run-commands")
+                        
+                        val options = objectMapper.createObjectNode()
+                        options.put("command", "mvn $pluginGoal -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+                        options.put("cwd", "{workspaceRoot}")
+                        target.put("options", options)
+                        
+                        // Plugin goals are typically not cacheable (like run) 
+                        target.put("cache", false)
+                        target.put("parallelism", false)
+                        
+                        // Use just the goal name as the target name (e.g., "run" instead of "spring-boot:run")
+                        targets.put(goalName, target)
+                        
+                        log.info("Generated Nx target '$goalName' for plugin goal '$pluginGoal'")
+                    }
                 }
             }
             
