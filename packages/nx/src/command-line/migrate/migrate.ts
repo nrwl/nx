@@ -80,7 +80,7 @@ import {
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
-  checkPackageHasProvenance,
+  ensurePackageHasProvenance,
   noProvenanceError,
 } from '../../utils/provenance';
 
@@ -995,15 +995,7 @@ async function getPackageMigrationsUsingRegistry(
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
   if (packageName.startsWith('@nx/') || packageName === 'nx') {
-    const hasProvenance = await checkPackageHasProvenance(
-      packageName,
-      packageVersion
-    );
-    if (!hasProvenance.success) {
-      throw new Error(
-        noProvenanceError(packageName, packageVersion, hasProvenance.error)
-      );
-    }
+    await ensurePackageHasProvenance(packageName, packageVersion);
   }
   // check if there are migrations in the packages by looking at the
   // registry directly
@@ -1119,21 +1111,13 @@ async function getPackageMigrationsUsingInstall(
   let result: ResolvedMigrationConfiguration;
 
   if (packageName.startsWith('@nx/') || packageName === 'nx') {
-    const hasProvenance = await checkPackageHasProvenance(
-      packageName,
-      packageVersion
-    );
-    if (!hasProvenance.success) {
-      throw new Error(
-        noProvenanceError(packageName, packageVersion, hasProvenance.error)
-      );
-    }
+    await ensurePackageHasProvenance(packageName, packageVersion);
   }
 
   try {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
-    await execAsync(`${pmc.add} ${packageName}@${packageVersion} `, {
+    await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
       cwd: dir,
     });
 
@@ -1898,10 +1882,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
-  const hasProvenance = await checkPackageHasProvenance('nx', version);
-  if (!hasProvenance.success) {
-    throw new Error(noProvenanceError('nx', version, hasProvenance.error));
-  }
+  await ensurePackageHasProvenance('nx', version);
 
   try {
     const packageManager = detectPackageManager();
