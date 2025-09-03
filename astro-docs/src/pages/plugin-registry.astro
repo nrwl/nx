@@ -18,20 +18,20 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
     {plugins.map(plugin => (
       <a 
         href={`/docs/${plugin.data.slug}`} 
-        class="block h-full bg-slate-900 border border-slate-800 rounded-lg p-6 hover:bg-slate-800 transition-colors no-underline"
+        class="block h-full bg-gray-50 dark:bg-slate-800/50 rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors no-underline"
       >
         <div class="flex flex-col h-full">
           <div class="flex items-start gap-3 mb-3">
-            <Icon name="github" class="w-6 h-6 text-slate-400 flex-shrink-0 mt-0.5" />
-            <h3 class="text-base font-medium text-slate-100 leading-tight">{plugin.data.packageName}</h3>
+            <Icon name="github" class="w-6 h-6 text-gray-600 dark:text-slate-400 flex-shrink-0 mt-0.5" />
+            <h3 class="text-base font-medium text-gray-900 dark:text-slate-100 leading-tight">{plugin.data.packageName}</h3>
           </div>
           
-          <p class="text-sm text-slate-400 line-clamp-3 mb-4 flex-grow">
+          <p class="text-sm text-gray-600 dark:text-slate-400 line-clamp-3 mb-4 flex-grow">
             {plugin.data.description}
           </p>
           
-          <div class="pt-3 border-t border-slate-800">
-            <div class="flex items-center justify-between text-xs text-slate-500">
+          <div class="pt-3 border-t border-gray-200 dark:border-slate-700">
+            <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-500">
               <div class="flex items-center gap-3">
                 {plugin.data.lastPublishedDate && (
                   <div class="flex items-center gap-1">
@@ -61,22 +61,22 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
     {communityPlugins.map(plugin => (
       <a 
         href={plugin.data.url} 
-        class="block h-full bg-slate-900 border border-slate-800 rounded-lg p-6 hover:bg-slate-800 transition-colors no-underline"
+        class="block h-full bg-gray-50 dark:bg-slate-800/50 rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors no-underline"
         target="_blank" 
         rel="noopener noreferrer"
       >
         <div class="flex flex-col h-full">
           <div class="flex items-start gap-3 mb-3">
-            <Icon name="github" class="w-6 h-6 text-slate-400 flex-shrink-0 mt-0.5" />
-            <h3 class="text-base font-medium text-slate-100 leading-tight">{plugin.id}</h3>
+            <Icon name="github" class="w-6 h-6 text-gray-600 dark:text-slate-400 flex-shrink-0 mt-0.5" />
+            <h3 class="text-base font-medium text-gray-900 dark:text-slate-100 leading-tight">{plugin.id}</h3>
           </div>
           
-          <p class="text-sm text-slate-400 line-clamp-3 mb-4 flex-grow">
+          <p class="text-sm text-gray-600 dark:text-slate-400 line-clamp-3 mb-4 flex-grow">
             {plugin.data.description}
           </p>
           
-          <div class="pt-3 border-t border-slate-800">
-            <div class="flex items-center justify-between text-xs text-slate-500">
+          <div class="pt-3 border-t border-gray-200 dark:border-slate-700">
+            <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-500">
               <div class="flex items-center gap-3">
                 {plugin.data.lastPublishedDate && (
                   <div class="flex items-center gap-1">
