@@ -253,54 +253,54 @@ pre {
 
   /* Override Starlight Badge component colors */
   /* Success/Tip variant - Green theme */
-  :global(.sl-badge[data-variant="success"]),
-  :global(.sl-badge[data-variant="tip"]) {
+  :global(.sl-badge.success),
+  :global(.sl-badge.tip) {
     --sl-color-bg-badge: theme('colors.green.50');
     --sl-color-border-badge: theme('colors.green.200');
     --sl-color-text-badge: theme('colors.green.700');
   }
   
-  :global([data-theme='dark'] .sl-badge[data-variant="success"]),
-  :global([data-theme='dark'] .sl-badge[data-variant="tip"]) {
+  :global([data-theme='dark'] .sl-badge.success),
+  :global([data-theme='dark'] .sl-badge.tip) {
     --sl-color-bg-badge: rgb(20 83 45 / 0.3); /* green-900/30 */
     --sl-color-border-badge: theme('colors.green.800');
     --sl-color-text-badge: theme('colors.green.400');
   }
   
   /* Caution variant - Yellow theme */
-  :global(.sl-badge[data-variant="caution"]) {
+  :global(.sl-badge.caution) {
     --sl-color-bg-badge: theme('colors.yellow.50');
     --sl-color-border-badge: theme('colors.yellow.200');
     --sl-color-text-badge: theme('colors.yellow.700');
   }
   
-  :global([data-theme='dark'] .sl-badge[data-variant="caution"]) {
+  :global([data-theme='dark'] .sl-badge.caution) {
     --sl-color-bg-badge: rgb(113 63 18 / 0.3); /* yellow-900/30 */
     --sl-color-border-badge: theme('colors.yellow.800');
     --sl-color-text-badge: theme('colors.yellow.400');
   }
   
   /* Danger variant - Red theme */
-  :global(.sl-badge[data-variant="danger"]) {
+  :global(.sl-badge.danger) {
     --sl-color-bg-badge: theme('colors.red.50');
     --sl-color-border-badge: theme('colors.red.200');
     --sl-color-text-badge: theme('colors.red.700');
   }
   
-  :global([data-theme='dark'] .sl-badge[data-variant="danger"]) {
+  :global([data-theme='dark'] .sl-badge.danger) {
     --sl-color-bg-badge: rgb(127 29 29 / 0.3); /* red-900/30 */
     --sl-color-border-badge: theme('colors.red.800');
     --sl-color-text-badge: theme('colors.red.400');
   }
   
   /* Note variant - Slate/gray theme */
-  :global(.sl-badge[data-variant="note"]) {
+  :global(.sl-badge.note) {
     --sl-color-bg-badge: theme('colors.slate.50');
     --sl-color-border-badge: theme('colors.slate.200');
     --sl-color-text-badge: theme('colors.slate.700');
   }
   
-  :global([data-theme='dark'] .sl-badge[data-variant="note"]) {
+  :global([data-theme='dark'] .sl-badge.note) {
     --sl-color-bg-badge: rgb(30 41 59 / 0.4); /* slate-800/40 */
     --sl-color-border-badge: theme('colors.slate.700');
     --sl-color-text-badge: theme('colors.slate.400');
