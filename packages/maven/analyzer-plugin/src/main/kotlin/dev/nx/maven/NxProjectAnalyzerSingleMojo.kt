@@ -177,17 +177,30 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
             discoveredPhases.add(phaseNode.asText())
         }
         
-        // Extract discovered plugin goals (including unbound ones)
+        // Extract discovered plugin goals (including unbound and development goals)
         val discoveredGoals = mutableSetOf<String>()
         lifecycleData.get("goals")?.forEach { goalNode ->
             val goalData = goalNode as com.fasterxml.jackson.databind.node.ObjectNode
             val plugin = goalData.get("plugin")?.asText()
             val goal = goalData.get("goal")?.asText()
             val phase = goalData.get("phase")?.asText()
-            if (plugin != null && goal != null && phase == "unbound") {
-                // Add unbound goals as discoverable targets
-                discoveredGoals.add("$plugin:$goal")
-                log.info("Discovered unbound plugin goal: $plugin:$goal")
+            val classification = goalData.get("classification")?.asText()
+            
+            if (plugin != null && goal != null) {
+                val shouldInclude = when {
+                    // Always include truly unbound goals
+                    phase == "unbound" -> true
+                    
+                    // Include development goals based on Maven API characteristics
+                    isDevelopmentGoal(goalData) -> true
+                    
+                    else -> false
+                }
+                
+                if (shouldInclude) {
+                    discoveredGoals.add("$plugin:$goal")
+                    log.info("Discovered ${classification ?: "unbound"} plugin goal: $plugin:$goal")
+                }
             }
         }
         
@@ -248,6 +261,40 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
             "jar", "war", "ear" -> "application" 
             "maven-plugin" -> "library"
             else -> "library"
+        }
+    }
+    
+    /**
+     * Determines if a goal is useful for development using Maven API characteristics
+     */
+    private fun isDevelopmentGoal(goalData: com.fasterxml.jackson.databind.node.ObjectNode): Boolean {
+        val goal = goalData.get("goal")?.asText() ?: return false
+        val phase = goalData.get("phase")?.asText() ?: return false
+        val isAggregator = goalData.get("isAggregator")?.asBoolean() ?: false
+        val isThreadSafe = goalData.get("isThreadSafe")?.asBoolean() ?: true
+        val requiresDependencyResolution = goalData.get("requiresDependencyResolution")?.asText()
+        
+        // Development goals often have these characteristics:
+        return when {
+            // Goals commonly named for development tasks
+            goal.contains("run", ignoreCase = true) -> true
+            goal.contains("start", ignoreCase = true) -> true
+            goal.contains("stop", ignoreCase = true) -> true
+            goal.contains("dev", ignoreCase = true) -> true
+            goal.contains("exec", ignoreCase = true) -> true
+            goal.contains("serve", ignoreCase = true) -> true
+            
+            // Goals that require test compile or runtime classpath (dev tools)
+            requiresDependencyResolution in listOf("test", "runtime", "compile_plus_runtime") -> {
+                // Additional filtering for development-like phases
+                phase in listOf("validate", "process-classes", "process-test-classes") || 
+                goal.endsWith("run") || goal.endsWith("exec")
+            }
+            
+            // Non-thread-safe goals often indicate interactive/development use
+            !isThreadSafe && phase == "validate" -> true
+            
+            else -> false
         }
     }
 }
