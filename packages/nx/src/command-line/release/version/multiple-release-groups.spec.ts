@@ -543,6 +543,14 @@ describe('Multiple Release Groups', () => {
         }
         "
       `);
+
+      const versionData = processor.getVersionData();
+      expect(versionData['pkg-a'].newVersion).toEqual('1.0.1');
+      expect(versionData['pkg-b'].newVersion).toEqual('1.0.1');
+      expect(versionData['pkg-c'].newVersion).toEqual('2.0.1');
+      expect(versionData['pkg-d'].newVersion).toEqual('2.0.1');
+      expect(versionData['pkg-e'].newVersion).toEqual('3.0.1');
+      expect(versionData['pkg-f'].newVersion).toEqual('3.0.1');
     });
   });
 
