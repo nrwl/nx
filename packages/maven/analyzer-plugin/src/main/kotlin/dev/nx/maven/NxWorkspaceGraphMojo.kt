@@ -336,20 +336,11 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
      */
     private fun cleanPluginName(pluginName: String): String {
         return pluginName
-            .replace("-maven-plugin", "") // Remove standard Maven plugin suffix
-            .replace("maven-", "") // Remove maven- prefix  
-            .split(".")
-            .last() // Take the last part after dots (e.g., org.springframework.boot -> boot)
-            .let { name ->
-                // Handle special cases for well-known plugins
-                when (name) {
-                    "spring-boot" -> "spring-boot"
-                    "compiler" -> "compiler" 
-                    "surefire" -> "surefire"
-                    "failsafe" -> "failsafe"
-                    else -> name
-                }
-            }
+            .split(".") // Split on dots first (e.g., org.springframework.boot -> boot)
+            .last()
+            .replace("-maven-plugin", "") // Remove standard Maven plugin suffix  
+            .replace("maven-", "") // Remove maven- prefix
+            .replace("-plugin", "") // Remove generic -plugin suffix
     }
     
     /**
