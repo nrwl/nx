@@ -165,7 +165,7 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         
         // Dynamically discover available phases using Maven's lifecycle APIs
         val phases = objectMapper.createObjectNode()
-        val lifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log)
+        val lifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
         val lifecycleData = lifecycleAnalyzer.extractLifecycleData(mavenProject)
         
         // Extract discovered phases from lifecycle analysis
@@ -175,6 +175,20 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         }
         lifecycleData.get("commonPhases")?.forEach { phaseNode ->
             discoveredPhases.add(phaseNode.asText())
+        }
+        
+        // Extract discovered plugin goals (including unbound ones)
+        val discoveredGoals = mutableSetOf<String>()
+        lifecycleData.get("goals")?.forEach { goalNode ->
+            val goalData = goalNode as com.fasterxml.jackson.databind.node.ObjectNode
+            val plugin = goalData.get("plugin")?.asText()
+            val goal = goalData.get("goal")?.asText()
+            val phase = goalData.get("phase")?.asText()
+            if (plugin != null && goal != null && phase == "unbound") {
+                // Add unbound goals as discoverable targets
+                discoveredGoals.add("$plugin:$goal")
+                log.info("Discovered unbound plugin goal: $plugin:$goal")
+            }
         }
         
         // If no phases discovered, fall back to essential phases
@@ -211,10 +225,16 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         }
         projectNode.put("phases", phases)
         
+        // Add discovered plugin goals to the project node for use by NxWorkspaceGraphMojo
+        val pluginGoalsNode = objectMapper.createArrayNode()
+        discoveredGoals.forEach { pluginGoal ->
+            pluginGoalsNode.add(pluginGoal)
+        }
+        projectNode.put("pluginGoals", pluginGoalsNode)
+        
         // Additional metadata
         projectNode.put("hasTests", File(mavenProject.basedir, "src/test/java").let { it.exists() && it.isDirectory })
         projectNode.put("hasResources", File(mavenProject.basedir, "src/main/resources").let { it.exists() && it.isDirectory })
-        projectNode.put("generatedAt", System.currentTimeMillis())
         projectNode.put("projectName", "${mavenProject.groupId}.${mavenProject.artifactId}")
         
         log.info("Analyzed single project: ${mavenProject.artifactId} at $relativePath")
