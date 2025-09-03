@@ -79,14 +79,16 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { execFile } from 'node:child_process';
+import {
+  checkPackageHasProvenance,
+  noProvenanceError,
+} from '../../utils/provenance';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
 }
 
 const execAsync = promisify(exec);
-const execFileAsync = promisify(execFile);
 
 export function normalizeVersion(version: string) {
   const [semver, ...prereleaseTagParts] = version.split('-');
@@ -992,6 +994,17 @@ async function getPackageMigrationsUsingRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
+  if (packageName.startsWith('@nx/') || packageName === 'nx') {
+    const hasProvenance = await checkPackageHasProvenance(
+      packageName,
+      packageVersion
+    );
+    if (!hasProvenance.success) {
+      throw new Error(
+        noProvenanceError(packageName, packageVersion, hasProvenance.error)
+      );
+    }
+  }
   // check if there are migrations in the packages by looking at the
   // registry directly
   const migrationsConfig = await getPackageMigrationsConfigFromRegistry(
@@ -1110,17 +1123,22 @@ async function getPackageMigrationsUsingInstall(
       packageName,
       packageVersion
     );
-    if (!hasProvenance) {
-      throw new Error(noProvenanceError(packageName, packageVersion));
+    if (!hasProvenance.success) {
+      throw new Error(
+        noProvenanceError(packageName, packageVersion, hasProvenance.error)
+      );
     }
   }
 
   try {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
-    await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
-      cwd: dir,
-    });
+    await execAsync(
+      `${pmc.add} ${packageName}@${packageVersion} --ignore-scripts`,
+      {
+        cwd: dir,
+      }
+    );
 
     const {
       migrations: migrationsFilePath,
@@ -1884,8 +1902,8 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   const hasProvenance = await checkPackageHasProvenance('nx', version);
-  if (!hasProvenance) {
-    throw new Error(noProvenanceError('nx', version));
+  if (!hasProvenance.success) {
+    throw new Error(noProvenanceError('nx', version, hasProvenance.error));
   }
 
   try {
@@ -1989,37 +2007,3 @@ function isStringArray(value: unknown): value is string[] {
   }
   return value.every((v) => typeof v === 'string');
 }
-
-async function checkPackageHasProvenance(
-  packageName: string,
-  packageVersion: string
-): Promise<boolean> {
-  // this is used for locally released versions without provenance
-  // do not set this for other reasons or you might be exposed to security risks
-  if (process.env.NX_MIGRATE_SKIP_PROVENANCE_CHECK) {
-    return true;
-  }
-
-  const npmView = (
-    await execFileAsync(
-      'npm',
-      [
-        'view',
-        `${packageName}@${packageVersion}`,
-        'dist.attestations.provenance',
-        '--json',
-      ],
-      {
-        timeout: 20000,
-      }
-    )
-  ).stdout.trim();
-
-  return npmView !== '';
-}
-
-export const noProvenanceError = (
-  packageName: string,
-  packageVersion: string
-) =>
-  `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. The migration has been aborted. Please file an issue at https://github.com/nrwl/nx/issues`;
