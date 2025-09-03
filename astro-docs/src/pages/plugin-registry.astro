@@ -31,16 +31,20 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
           </p>
           <div class="flex flex-wrap items-center justify-between py-0.5 text-xs text-slate-700 dark:text-slate-400">
             {plugin.data.lastPublishedDate && (
-              <div class="mx-1 my-1 flex items-center gap-1">
+              <div class="mr-1 my-1 flex items-center gap-1">
                 <Icon name="seti:clock" class="w-3.5 h-3.5" />
                 <span>{dateFormatter(plugin.data.lastPublishedDate!)}</span>
               </div>
             )}
             <div class="mx-1 my-1 flex items-center gap-1">
-              <Icon name="cloud-download" class="w-3.5 h-3.5" />
+              <Icon name="star" class="w-4 h-4" />
+              <span>{largeNumberFormatter(plugin.data.githubStars!)}</span>
+            </div>
+            <div class="mx-1 my-1 flex items-center gap-1">
+              <Icon name="cloud-download" class="w-4 h-4" />
               <span>{largeNumberFormatter(plugin.data.npmDownloads!)}</span>
             </div>
-            <div class="flex-1 flex justify-end mx-1 my-1">
+            <div class="flex-1 flex justify-end ml-1 my-1 text-nowrap">
               <Badge size="small" variant="tip" text="Nx Open Source" />
             </div>
           </div>
@@ -55,7 +59,7 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
         rel="noopener noreferrer"
       >
         <div class="flex flex-col h-full">
-          <div class="flex items-start gap-3 mb-3">
+          <div class="flex gap-3 items-center mb-3">
             <Icon name="github" class="w-6 h-6 text-gray-600 dark:text-slate-400 flex-shrink-0 mt-0.5" />
             <h3 class="text-base font-medium text-gray-900 dark:text-slate-100 leading-tight">{plugin.id}</h3>
           </div>
@@ -63,32 +67,30 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
           <p class="text-sm text-gray-600 dark:text-slate-400 line-clamp-3 mb-4 flex-grow">
             {plugin.data.description}
           </p>
-          
-          <div class="pt-3 border-t border-gray-200 dark:border-slate-700">
-            <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-500">
-              <div class="flex items-center gap-3">
-                {plugin.data.lastPublishedDate && (
-                  <div class="flex items-center gap-1">
-                    <Icon name="seti:clock" class="w-3.5 h-3.5" />
-                    <span>{dateFormatter(plugin.data.lastPublishedDate!)}</span>
-                  </div>
-                )}
-                
-                <div class="flex items-center gap-1">
-                  <Icon name="star" class="w-3.5 h-3.5" />
-                  <span>{largeNumberFormatter(plugin.data.githubStars!)}</span>
-                </div>
-                
-                <div class="flex items-center gap-1">
-                  <Icon name="cloud-download" class="w-3.5 h-3.5" />
-                  <span>{largeNumberFormatter(plugin.data.npmDownloads!)}</span>
-                </div>
+          <div class="flex flex-wrap items-center justify-between py-0.5 text-xs text-slate-700 dark:text-slate-400">
+            {plugin.data.lastPublishedDate && (
+              <div class="mr-1 my-1 flex items-center gap-1">
+                <Icon name="seti:clock" class="w-3.5 h-3.5" />
+                <span>{dateFormatter(plugin.data.lastPublishedDate!)}</span>
               </div>
-              
-              {plugin.data.nxVersion && (
-                <Badge size="small" variant="caution" text={`Nx ${plugin.data.nxVersion}`} />
-              )}
+            )}
+            <div class="mx-1 my-1 flex items-center gap-1">
+              <Icon name="star" class="w-4 h-4" />
+              <span>{largeNumberFormatter(plugin.data.githubStars!)}</span>
             </div>
+            <div class="mx-1 my-1 flex items-center gap-1">
+              <Icon name="cloud-download" class="w-4 h-4" />
+              <span>{largeNumberFormatter(plugin.data.npmDownloads!)}</span>
+            </div>
+            {plugin.data.nxVersion ? (
+              <div class="flex-1 flex justify-end ml-1 my-1 text-nowrap">
+                <Badge size="small" variant="caution" text={`Nx ${plugin.data.nxVersion}`} />
+              </div>
+            ) : (
+              <div class="flex-1 flex justify-end ml-1 my-1 text-nowrap">
+                <Badge size="small" variant="tip" text="Community" />
+              </div>
+            )}
           </div>
         </div>
       </a>
