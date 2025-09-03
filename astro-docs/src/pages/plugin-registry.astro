@@ -14,7 +14,15 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
   tableOfContents: false
 }}
 >
-  <CardGrid>
+  <style>
+    /* Remove background and border from GitHub icon */
+    .plugin-grid .card [data-icon="github"] {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+  </style>
+  <CardGrid class="plugin-grid">
     {plugins.map(plugin => (
       <a href={`/docs/${plugin.data.slug}`} class="no-underline hover:no-underline block h-full">
         <Card title={plugin.data.packageName} icon="github" class="h-full flex flex-col">
@@ -22,8 +30,8 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
             {plugin.data.description}
           </p>
           
-          <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-200 dark:border-gray-800">
-            <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+          <div class="mt-auto pt-2 border-t border-gray-200 dark:border-gray-800">
+            <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
               {plugin.data.lastPublishedDate && (
                 <div class="flex items-center gap-1">
                   <Icon name="seti:clock" class="w-3.5 h-3.5" />
@@ -40,9 +48,11 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
                 <Icon name="cloud-download" class="w-3.5 h-3.5" />
                 <span>{largeNumberFormatter(plugin.data.npmDownloads!)}</span>
               </div>
+              
+              <div class="ml-auto">
+                <Badge size="small" variant="success" text="Nx Open Source" />
+              </div>
             </div>
-            
-            <Badge size="small" variant="success" text="Nx Open Source" />
           </div>
         </Card>
       </a>
@@ -54,8 +64,8 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
             {plugin.data.description}
           </p>
           
-          <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-200 dark:border-gray-800">
-            <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+          <div class="mt-auto pt-2 border-t border-gray-200 dark:border-gray-800">
+            <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
               {plugin.data.lastPublishedDate && (
                 <div class="flex items-center gap-1">
                   <Icon name="seti:clock" class="w-3.5 h-3.5" />
@@ -72,11 +82,13 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
                 <Icon name="cloud-download" class="w-3.5 h-3.5" />
                 <span>{plugin.data.npmDownloads}</span>
               </div>
+              
+              {plugin.data.nxVersion && (
+                <div class="ml-auto">
+                  <Badge size="small" variant="caution" text={`Nx ${plugin.data.nxVersion}`} />
+                </div>
+              )}
             </div>
-            
-            {plugin.data.nxVersion && (
-              <Badge size="small" variant="caution" text={`Nx ${plugin.data.nxVersion}`} />
-            )}
           </div>
         </Card>
       </a>
