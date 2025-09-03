@@ -1,17 +1,17 @@
+use crate::native::utils::git::parent_gitignore_files;
 use ignore_files::IgnoreFile;
 use std::path::Path;
 use std::{fs, path::PathBuf};
 use tracing::trace;
 use watchexec_events::{Event, Tag};
-use crate::native::utils::git::find_git_root;
 
 /// Collect .gitignore files using a simple approach that reuses walker logic
 fn collect_workspace_gitignores<P: AsRef<Path>>(root: P) -> Vec<IgnoreFile> {
     use crate::native::walker::nx_walker_sync;
-    
+
     // Use our own walker to find .gitignore files, filtering out node_modules
     let gitignore_filters = vec!["node_modules".to_string()];
-    
+
     nx_walker_sync(&root, Some(&gitignore_filters))
         .filter_map(|path| {
             // Only process .gitignore files
@@ -29,33 +29,6 @@ fn collect_workspace_gitignores<P: AsRef<Path>>(root: P) -> Vec<IgnoreFile> {
         .collect()
 }
 
-/// Add .gitignore files from parent directories up to the git root
-fn add_parent_gitignores(
-    ignore_files: &mut Vec<IgnoreFile>,
-    root_path: &Path,
-    git_root: &Path,
-) {
-    let mut current_path = root_path.parent();
-    
-    while let Some(path) = current_path {
-        let gitignore_path = path.join(".gitignore");
-        if gitignore_path.exists() {
-            ignore_files.push(IgnoreFile {
-                path: gitignore_path,
-                applies_in: Some(path.to_path_buf()),
-                applies_to: None,
-            });
-        }
-
-        // Stop when we reach the git root
-        if path == git_root {
-            break;
-        }
-        
-        current_path = path.parent();
-    }
-}
-
 pub(super) fn get_gitignore_files<T: AsRef<str>>(
     use_ignore: bool,
     root: T,
@@ -65,14 +38,24 @@ pub(super) fn get_gitignore_files<T: AsRef<str>>(
     }
 
     let root_path = PathBuf::from(root.as_ref());
-    
+
     // Start with workspace .gitignore files
     let mut ignore_files = collect_workspace_gitignores(&root_path);
 
-    // Add parent .gitignore files only if we're nested within a git repo
-    if let Some(git_root_path) = find_git_root(&root_path).filter(|p| p != &root_path) {
-        trace!(?git_root_path, "Adding parent gitignores up to git root");
-        add_parent_gitignores(&mut ignore_files, &root_path, &git_root_path);
+    // Add parent .gitignore files using shared logic
+    for gitignore_path in parent_gitignore_files(&root_path) {
+        if gitignore_path.exists() {
+            ignore_files.push(IgnoreFile {
+                path: gitignore_path.clone(),
+                applies_in: Some(
+                    gitignore_path
+                        .parent()
+                        .unwrap_or(&gitignore_path)
+                        .to_path_buf(),
+                ),
+                applies_to: None,
+            });
+        }
     }
 
     trace!(?ignore_files, "Final ignore files list");
