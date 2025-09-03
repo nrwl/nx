@@ -217,10 +217,11 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                         target.put("cache", false)
                         target.put("parallelism", false)
                         
-                        // Use just the goal name as the target name (e.g., "run" instead of "spring-boot:run")
-                        targets.put(goalName, target)
+                        // Generate unique target name to handle goal collisions
+                        val targetName = generateUniqueTargetName(targets, pluginName, goalName)
+                        targets.put(targetName, target)
                         
-                        log.info("Generated Nx target '$goalName' for plugin goal '$pluginGoal'")
+                        log.info("Generated Nx target '$targetName' for plugin goal '$pluginGoal'")
                     }
                 }
             }
@@ -261,5 +262,55 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             log.error("Failed to generate Nx config for project ${mavenProject.artifactId}: ${e.message}", e)
             return null
         }
+    }
+    
+    /**
+     * Generates unique target names to handle goal name collisions between different plugins
+     */
+    private fun generateUniqueTargetName(existingTargets: com.fasterxml.jackson.databind.node.ObjectNode, pluginName: String, goalName: String): String {
+        // First, try just the goal name
+        if (!existingTargets.has(goalName)) {
+            return goalName
+        }
+        
+        // If collision exists, use plugin-specific name based on artifact ID
+        val pluginSpecificName = generatePluginSpecificName(pluginName, goalName)
+        
+        // If still collision, add numeric suffix
+        if (!existingTargets.has(pluginSpecificName)) {
+            return pluginSpecificName
+        }
+        
+        // Last resort: add numeric suffix
+        var counter = 2
+        while (existingTargets.has("$pluginSpecificName-$counter")) {
+            counter++
+        }
+        
+        return "$pluginSpecificName-$counter"
+    }
+    
+    /**
+     * Generates a plugin-specific target name by extracting meaningful parts from the plugin artifact ID
+     */
+    private fun generatePluginSpecificName(pluginName: String, goalName: String): String {
+        // Extract the meaningful part of the plugin name using common Maven plugin naming patterns
+        val cleanName = pluginName
+            .replace("-maven-plugin", "") // Remove standard Maven plugin suffix
+            .replace("maven-", "") // Remove maven- prefix
+            .replace("org.springframework.boot.", "") // Remove Spring Boot group prefix
+            .replace("org.apache.maven.plugins.", "") // Remove Apache Maven group prefix  
+            .replace("org.codehaus.mojo.", "") // Remove Codehaus group prefix
+            .split(".")
+            .last() // Take the last part after dots
+            .split("-")
+            .let { parts ->
+                // Take the first meaningful part, avoiding generic words
+                parts.firstOrNull { part -> 
+                    part.isNotEmpty() && !part.matches(Regex("^(maven|plugin|mojo)$"))
+                } ?: parts.firstOrNull { it.isNotEmpty() } ?: pluginName
+            }
+        
+        return "$cleanName-$goalName"
     }
 }
