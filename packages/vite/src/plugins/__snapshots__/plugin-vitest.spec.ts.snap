@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/vite/plugin root project should create nodes 1`] = `
 [
@@ -33,7 +33,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "metadata": {
                 "description": "Run Vite tests",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "npx --ignore-scripts vitest --help",
                   "example": {
                     "options": {
                       "bail": 1,
@@ -67,7 +67,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc -p tsconfig.lib.json --help",
+                  "command": "npx --ignore-scripts tsc -p tsconfig.lib.json --help",
                   "example": {
                     "options": {
                       "noEmit": true,
@@ -83,7 +83,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "command": "npx --ignore-scripts nx watch --projects vite --includeDependentProjects -- npx --ignore-scripts nx build-deps vite",
               "continuous": true,
               "dependsOn": [
                 "build-deps",

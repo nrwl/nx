@@ -112,7 +112,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "build" target for "my-app".",
                       "help": {
-                        "command": "npx ng run my-app:build --help",
+                        "command": "npx --ignore-scripts ng run my-app:build --help",
                         "example": {
                           "options": {
                             "localize": true,
@@ -141,7 +141,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "serve" target for "my-app".",
                       "help": {
-                        "command": "npx ng run my-app:serve --help",
+                        "command": "npx --ignore-scripts ng run my-app:serve --help",
                         "example": {
                           "options": {
                             "port": 4201,
@@ -172,7 +172,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "test" target for "my-app".",
                       "help": {
-                        "command": "npx ng run my-app:test --help",
+                        "command": "npx --ignore-scripts ng run my-app:test --help",
                         "example": {
                           "options": {
                             "codeCoverage": true,
@@ -214,7 +214,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "build" target for "my-lib".",
                       "help": {
-                        "command": "npx ng run my-lib:build --help",
+                        "command": "npx --ignore-scripts ng run my-lib:build --help",
                         "example": {
                           "options": {
                             "watch": true,
@@ -248,7 +248,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "test" target for "my-lib".",
                       "help": {
-                        "command": "npx ng run my-lib:test --help",
+                        "command": "npx --ignore-scripts ng run my-lib:test --help",
                         "example": {
                           "options": {
                             "codeCoverage": true,
@@ -411,7 +411,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "build" target for "org1-app1".",
                       "help": {
-                        "command": "npx ng run org1-app1:build --help",
+                        "command": "npx --ignore-scripts ng run org1-app1:build --help",
                         "example": {
                           "options": {
                             "localize": true,
@@ -440,7 +440,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "serve" target for "org1-app1".",
                       "help": {
-                        "command": "npx ng run org1-app1:serve --help",
+                        "command": "npx --ignore-scripts ng run org1-app1:serve --help",
                         "example": {
                           "options": {
                             "port": 4201,
@@ -471,7 +471,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "test" target for "org1-app1".",
                       "help": {
-                        "command": "npx ng run org1-app1:test --help",
+                        "command": "npx --ignore-scripts ng run org1-app1:test --help",
                         "example": {
                           "options": {
                             "codeCoverage": true,
@@ -513,7 +513,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "build" target for "org1-lib1".",
                       "help": {
-                        "command": "npx ng run org1-lib1:build --help",
+                        "command": "npx --ignore-scripts ng run org1-lib1:build --help",
                         "example": {
                           "options": {
                             "watch": true,
@@ -547,7 +547,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "test" target for "org1-lib1".",
                       "help": {
-                        "command": "npx ng run org1-lib1:test --help",
+                        "command": "npx --ignore-scripts ng run org1-lib1:test --help",
                         "example": {
                           "options": {
                             "codeCoverage": true,
@@ -596,7 +596,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "build" target for "org2-app1".",
                       "help": {
-                        "command": "npx ng run org2-app1:build --help",
+                        "command": "npx --ignore-scripts ng run org2-app1:build --help",
                         "example": {
                           "options": {
                             "localize": true,
@@ -625,7 +625,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "serve" target for "org2-app1".",
                       "help": {
-                        "command": "npx ng run org2-app1:serve --help",
+                        "command": "npx --ignore-scripts ng run org2-app1:serve --help",
                         "example": {
                           "options": {
                             "port": 4201,
@@ -656,7 +656,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "test" target for "org2-app1".",
                       "help": {
-                        "command": "npx ng run org2-app1:test --help",
+                        "command": "npx --ignore-scripts ng run org2-app1:test --help",
                         "example": {
                           "options": {
                             "codeCoverage": true,
@@ -698,7 +698,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "build" target for "org2-lib1".",
                       "help": {
-                        "command": "npx ng run org2-lib1:build --help",
+                        "command": "npx --ignore-scripts ng run org2-lib1:build --help",
                         "example": {
                           "options": {
                             "watch": true,
@@ -732,7 +732,7 @@ describe('@nx/angular/plugin', () => {
                     "metadata": {
                       "description": "Run the "test" target for "org2-lib1".",
                       "help": {
-                        "command": "npx ng run org2-lib1:test --help",
+                        "command": "npx --ignore-scripts ng run org2-lib1:test --help",
                         "example": {
                           "options": {
                             "codeCoverage": true,
@@ -965,7 +965,7 @@ describe('@nx/angular/plugin', () => {
         "metadata": {
           "description": "Run the "app-shell" target for "my-app".",
           "help": {
-            "command": "npx ng run my-app:app-shell --help",
+            "command": "npx --ignore-scripts ng run my-app:app-shell --help",
             "example": {
               "options": {
                 "route": "/some/route",
@@ -1112,7 +1112,7 @@ describe('@nx/angular/plugin', () => {
         "metadata": {
           "description": "Run the "prerender" target for "my-app".",
           "help": {
-            "command": "npx ng run my-app:prerender --help",
+            "command": "npx --ignore-scripts ng run my-app:prerender --help",
             "example": {
               "options": {
                 "discoverRoutes": false,
@@ -1157,7 +1157,7 @@ describe('@nx/angular/plugin', () => {
         "metadata": {
           "description": "Run the "some-target" target for "my-app".",
           "help": {
-            "command": "npx ng run my-app:some-target --help",
+            "command": "npx --ignore-scripts ng run my-app:some-target --help",
             "example": {},
           },
           "technologies": [

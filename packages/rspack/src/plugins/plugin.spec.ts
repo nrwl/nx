@@ -140,7 +140,7 @@ describe('@nx/rspack', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx --ignore-scripts nx watch --projects my-app --includeDependentProjects -- npx --ignore-scripts nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",

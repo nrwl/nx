@@ -49,19 +49,19 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - script: npm ci --legacy-peer-deps
-      - script: npx cypress install
+      - script: npm ci --legacy-peer-deps --ignore-scripts
+      - script: npx --ignore-scripts cypress install
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: npx nx-cloud record -- echo Hello World
+      # - script: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
+      - script: npx --ignore-scripts nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - script: npx nx fix-ci
+      - script: npx --ignore-scripts nx fix-ci
         condition: always()
 "
 `;
@@ -84,19 +84,19 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-            - npm ci --legacy-peer-deps
-            - npx cypress install
+            - npm ci --legacy-peer-deps --ignore-scripts
+            - npx --ignore-scripts cypress install
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # npx nx-cloud record -- echo Hello World
+            # npx --ignore-scripts nx-cloud record -- echo Hello World
             # When you enable task distribution, run the e2e-ci task instead of e2e
-            - npx nx affected --base=origin/main -t lint test build e2e
+            - npx --ignore-scripts nx affected --base=origin/main -t lint test build e2e
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
           after-script:
-            - npx nx fix-ci
+            - npx --ignore-scripts nx fix-ci
 
   branches:
     main:
@@ -107,13 +107,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
-            - npx nx affected -t lint test build e2e-ci --base=HEAD~1
+            # - npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected -t lint test build e2e-ci --base=HEAD~1
 "
 `;
 
@@ -134,21 +134,21 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx cypress install
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      - run: npx --ignore-scripts cypress install
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
-          command: npx nx affected -t lint test build e2e
+          command: npx --ignore-scripts nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
-          command: npx nx fix-ci
+          command: npx --ignore-scripts nx fix-ci
           when: always
 
 workflows:
@@ -186,7 +186,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -194,16 +194,16 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx cypress install
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      - run: npx --ignore-scripts cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: npx nx affected -t lint test build e2e
+      - run: npx --ignore-scripts nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -234,7 +234,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -242,16 +242,16 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx cypress install
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      - run: npx --ignore-scripts cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: npx nx affected -t lint test build e2e
+      - run: npx --ignore-scripts nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -308,9 +308,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: bun install --no-cache
+      - script: bun install --no-cache --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -375,9 +375,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: bun install --no-cache
+      - script: bun install --no-cache --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -410,9 +410,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
@@ -431,11 +431,11 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
@@ -463,9 +463,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
@@ -484,11 +484,11 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
@@ -517,9 +517,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -562,9 +562,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -616,9 +616,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -660,9 +660,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -704,9 +704,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -736,9 +736,9 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Uncomment this line to enable task distribution
-    # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - bun install --no-cache
+    - bun install --no-cache --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -801,17 +801,17 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci --legacy-peer-deps
+      - script: npm ci --legacy-peer-deps --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: npx nx-cloud record -- echo Hello World
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+      # - script: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - script: npx --ignore-scripts nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - script: npx nx fix-ci
+      - script: npx --ignore-scripts nx fix-ci
         condition: always()
 "
 `;
@@ -865,17 +865,17 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci --legacy-peer-deps
+      - script: npm ci --legacy-peer-deps --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: npx nx-cloud record -- echo Hello World
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+      # - script: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - script: npx --ignore-scripts nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - script: npx nx fix-ci
+      - script: npx --ignore-scripts nx fix-ci
         condition: always()
 "
 `;
@@ -898,17 +898,17 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # npx nx-cloud record -- echo Hello World
-            - npx nx affected --base=origin/main -t lint test build
+            # npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
           after-script:
-            - npx nx fix-ci
+            - npx --ignore-scripts nx fix-ci
 
   branches:
     main:
@@ -919,13 +919,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
-            - npx nx affected -t lint test build --base=HEAD~1
+            # - npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected -t lint test build --base=HEAD~1
 "
 `;
 
@@ -947,17 +947,17 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # npx nx-cloud record -- echo Hello World
-            - npx nx affected --base=origin/main -t lint test build
+            # npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
           after-script:
-            - npx nx fix-ci
+            - npx --ignore-scripts nx fix-ci
 
   branches:
     main:
@@ -968,13 +968,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
-            - npx nx affected -t lint test build --base=HEAD~1
+            # - npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected -t lint test build --base=HEAD~1
 "
 `;
 
@@ -995,19 +995,19 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       - run:
-          command: npx nx affected -t lint test build
+          command: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
-          command: npx nx fix-ci
+          command: npx --ignore-scripts nx fix-ci
           when: always
 
 workflows:
@@ -1036,19 +1036,19 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       - run:
-          command: npx nx affected -t lint test build
+          command: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
-          command: npx nx fix-ci
+          command: npx --ignore-scripts nx fix-ci
           when: always
 
 workflows:
@@ -1086,7 +1086,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1094,14 +1094,14 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      - run: npx nx affected -t lint test build
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - run: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -1132,7 +1132,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1140,14 +1140,14 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      - run: npx nx affected -t lint test build
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - run: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -1178,7 +1178,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1186,14 +1186,14 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      - run: npx nx affected -t lint test build
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - run: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -1214,19 +1214,19 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Uncomment this line to enable task distribution
-    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - npm ci --legacy-peer-deps
+    - npm ci --legacy-peer-deps --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-    # - npx nx-cloud record -- echo Hello World
-    - npx nx affected -t lint test build
+    # - npx --ignore-scripts nx-cloud record -- echo Hello World
+    - npx --ignore-scripts nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
   after_script:
-    - npx nx fix-ci
+    - npx --ignore-scripts nx fix-ci
 "
 `;
 
@@ -1284,7 +1284,7 @@ jobs:
       # Uncomment this line to enable task distribution
       # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: pnpm install --frozen-lockfile
+      - script: pnpm install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -1351,7 +1351,7 @@ jobs:
       # Uncomment this line to enable task distribution
       # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: pnpm install --frozen-lockfile
+      - script: pnpm install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -1386,7 +1386,7 @@ pipelines:
             # Uncomment this line to enable task distribution
             # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
@@ -1409,7 +1409,7 @@ pipelines:
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
@@ -1439,7 +1439,7 @@ pipelines:
             # Uncomment this line to enable task distribution
             # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
@@ -1462,7 +1462,7 @@ pipelines:
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
@@ -1493,7 +1493,7 @@ jobs:
       # Uncomment this line to enable task distribution
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -1538,7 +1538,7 @@ jobs:
       # Uncomment this line to enable task distribution
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -1600,7 +1600,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -1651,7 +1651,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -1703,7 +1703,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -1735,7 +1735,7 @@ CI:
     # Uncomment this line to enable task distribution
     # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - pnpm install --frozen-lockfile
+    - pnpm install --frozen-lockfile --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -1798,9 +1798,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -1862,9 +1862,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -1895,9 +1895,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
@@ -1916,9 +1916,9 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
@@ -1944,9 +1944,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
@@ -1965,9 +1965,9 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
@@ -1992,9 +1992,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -2033,9 +2033,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -2083,7 +2083,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2091,7 +2091,7 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -2131,7 +2131,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2139,7 +2139,7 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -2177,7 +2177,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2185,7 +2185,7 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -2213,9 +2213,9 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Uncomment this line to enable task distribution
-    # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - yarn install --frozen-lockfile
+    - yarn install --frozen-lockfile --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -2278,19 +2278,19 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - script: npm ci --legacy-peer-deps
-      - script: npx cypress install
+      - script: npm ci --legacy-peer-deps --ignore-scripts
+      - script: npx --ignore-scripts cypress install
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: npx nx-cloud record -- echo Hello World
+      # - script: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
+      - script: npx --ignore-scripts nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - script: npx nx fix-ci
+      - script: npx --ignore-scripts nx fix-ci
         condition: always()
 "
 `;
@@ -2313,19 +2313,19 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-            - npm ci --legacy-peer-deps
-            - npx cypress install
+            - npm ci --legacy-peer-deps --ignore-scripts
+            - npx --ignore-scripts cypress install
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # npx nx-cloud record -- echo Hello World
+            # npx --ignore-scripts nx-cloud record -- echo Hello World
             # When you enable task distribution, run the e2e-ci task instead of e2e
-            - npx nx affected --base=origin/main -t lint test build e2e
+            - npx --ignore-scripts nx affected --base=origin/main -t lint test build e2e
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
           after-script:
-            - npx nx fix-ci
+            - npx --ignore-scripts nx fix-ci
 
   branches:
     main:
@@ -2337,13 +2337,13 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
-            - npx nx affected -t lint test build e2e-ci --base=HEAD~1
+            # - npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected -t lint test build e2e-ci --base=HEAD~1
 "
 `;
 
@@ -2364,21 +2364,21 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx cypress install
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      - run: npx --ignore-scripts cypress install
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
-          command: npx nx affected -t lint test build e2e
+          command: npx --ignore-scripts nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
-          command: npx nx fix-ci
+          command: npx --ignore-scripts nx fix-ci
           when: always
 
 workflows:
@@ -2416,7 +2416,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2424,16 +2424,16 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx cypress install
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      - run: npx --ignore-scripts cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: npx nx affected -t lint test build e2e
+      - run: npx --ignore-scripts nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -2464,7 +2464,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2472,16 +2472,16 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx cypress install
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      - run: npx --ignore-scripts cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: npx nx affected -t lint test build e2e
+      - run: npx --ignore-scripts nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -2538,9 +2538,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: bun install --no-cache
+      - script: bun install --no-cache --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -2605,9 +2605,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: bun install --no-cache
+      - script: bun install --no-cache --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -2640,9 +2640,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
@@ -2662,11 +2662,11 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
@@ -2694,9 +2694,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
@@ -2716,11 +2716,11 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
-            - bun install --no-cache
+            - bun install --no-cache --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
@@ -2749,9 +2749,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -2794,9 +2794,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -2848,9 +2848,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -2892,9 +2892,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -2936,9 +2936,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: bun install --no-cache
+      - run: bun install --no-cache --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -2968,9 +2968,9 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - bunx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - bun install --no-cache
+    - bun install --no-cache --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -3033,17 +3033,17 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci --legacy-peer-deps
+      - script: npm ci --legacy-peer-deps --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: npx nx-cloud record -- echo Hello World
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+      # - script: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - script: npx --ignore-scripts nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - script: npx nx fix-ci
+      - script: npx --ignore-scripts nx fix-ci
         condition: always()
 "
 `;
@@ -3097,17 +3097,17 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci --legacy-peer-deps
+      - script: npm ci --legacy-peer-deps --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: npx nx-cloud record -- echo Hello World
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+      # - script: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - script: npx --ignore-scripts nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - script: npx nx fix-ci
+      - script: npx --ignore-scripts nx fix-ci
         condition: always()
 "
 `;
@@ -3130,17 +3130,17 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # npx nx-cloud record -- echo Hello World
-            - npx nx affected --base=origin/main -t lint test build
+            # npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
           after-script:
-            - npx nx fix-ci
+            - npx --ignore-scripts nx fix-ci
 
   branches:
     main:
@@ -3152,13 +3152,13 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
-            - npx nx affected -t lint test build --base=HEAD~1
+            # - npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected -t lint test build --base=HEAD~1
 "
 `;
 
@@ -3180,17 +3180,17 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # npx nx-cloud record -- echo Hello World
-            - npx nx affected --base=origin/main -t lint test build
+            # npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
           after-script:
-            - npx nx fix-ci
+            - npx --ignore-scripts nx fix-ci
 
   branches:
     main:
@@ -3202,13 +3202,13 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
-            - npx nx affected -t lint test build --base=HEAD~1
+            # - npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected -t lint test build --base=HEAD~1
 "
 `;
 
@@ -3229,19 +3229,19 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       - run:
-          command: npx nx affected -t lint test build
+          command: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
-          command: npx nx fix-ci
+          command: npx --ignore-scripts nx fix-ci
           when: always
 
 workflows:
@@ -3270,19 +3270,19 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
       - run:
-          command: npx nx affected -t lint test build
+          command: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
-          command: npx nx fix-ci
+          command: npx --ignore-scripts nx fix-ci
           when: always
 
 workflows:
@@ -3320,7 +3320,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3328,14 +3328,14 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      - run: npx nx affected -t lint test build
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - run: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -3366,7 +3366,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3374,14 +3374,14 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      - run: npx nx affected -t lint test build
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - run: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -3412,7 +3412,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3420,14 +3420,14 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      - run: npx nx affected -t lint test build
+      # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
+      - run: npx --ignore-scripts nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
+      - run: npx --ignore-scripts nx fix-ci
         if: always()
 "
 `;
@@ -3448,19 +3448,19 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - npm ci --legacy-peer-deps
+    - npm ci --legacy-peer-deps --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-    # - npx nx-cloud record -- echo Hello World
-    - npx nx affected -t lint test build
+    # - npx --ignore-scripts nx-cloud record -- echo Hello World
+    - npx --ignore-scripts nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
   after_script:
-    - npx nx fix-ci
+    - npx --ignore-scripts nx fix-ci
 "
 `;
 
@@ -3518,7 +3518,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: pnpm install --frozen-lockfile
+      - script: pnpm install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -3585,7 +3585,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: pnpm install --frozen-lockfile
+      - script: pnpm install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -3620,7 +3620,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
@@ -3644,7 +3644,7 @@ pipelines:
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
@@ -3674,7 +3674,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
@@ -3698,7 +3698,7 @@ pipelines:
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
-            - pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
@@ -3729,7 +3729,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -3774,7 +3774,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -3836,7 +3836,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -3887,7 +3887,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -3939,7 +3939,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -3971,7 +3971,7 @@ CI:
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - pnpm install --frozen-lockfile
+    - pnpm install --frozen-lockfile --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -4034,9 +4034,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -4098,9 +4098,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --frozen-lockfile --ignore-scripts
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -4131,9 +4131,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
@@ -4153,9 +4153,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
@@ -4181,9 +4181,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
@@ -4203,9 +4203,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - yarn install --frozen-lockfile
+            - yarn install --frozen-lockfile --ignore-scripts
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
@@ -4230,9 +4230,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -4271,9 +4271,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -4321,7 +4321,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -4329,7 +4329,7 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -4369,7 +4369,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -4377,7 +4377,7 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -4415,7 +4415,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -4423,7 +4423,7 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -4451,9 +4451,9 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - yarn install --frozen-lockfile
+    - yarn install --frozen-lockfile --ignore-scripts
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 

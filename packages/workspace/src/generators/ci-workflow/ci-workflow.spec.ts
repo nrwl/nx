@@ -392,7 +392,7 @@ describe('CI Workflow generator', () => {
               # Run this command as early as possible, before dependencies are installed
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
               # Cache node_modules
               - uses: actions/setup-node@v4
@@ -400,14 +400,14 @@ describe('CI Workflow generator', () => {
                   node-version: 20
                   cache: 'npm'
 
-              - run: npm ci --legacy-peer-deps
+              - run: npm ci --legacy-peer-deps --ignore-scripts
               - uses: nrwl/nx-set-shas@v4
 
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-              # - run: npx nx-cloud record -- echo Hello World
-              - run: npx nx affected -t lint test build typecheck
+              # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
+              - run: npx --ignore-scripts nx affected -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-              - run: npx nx fix-ci
+              - run: npx --ignore-scripts nx fix-ci
                 if: always()
         "
       `);
@@ -433,19 +433,19 @@ describe('CI Workflow generator', () => {
               # Run this command as early as possible, before dependencies are installed
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - run: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-              - run: npm ci --legacy-peer-deps
+              - run: npm ci --legacy-peer-deps --ignore-scripts
               - nx/set-shas:
                   main-branch-name: 'main'
 
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-              # - run: npx nx-cloud record -- echo Hello World
+              # - run: npx --ignore-scripts nx-cloud record -- echo Hello World
               - run:
-                  command: npx nx affected -t lint test build typecheck
+                  command: npx --ignore-scripts nx affected -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
               - run:
-                  command: npx nx fix-ci
+                  command: npx --ignore-scripts nx fix-ci
                   when: always
 
         workflows:
@@ -510,17 +510,17 @@ describe('CI Workflow generator', () => {
               # Run this command as early as possible, before dependencies are installed
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - script: npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-              - script: npm ci --legacy-peer-deps
+              - script: npm ci --legacy-peer-deps --ignore-scripts
               - script: git branch --track main origin/main
                 condition: eq(variables['Build.Reason'], 'PullRequest')
 
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-              # - script: npx nx-cloud record -- echo Hello World
-              - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
+              # - script: npx --ignore-scripts nx-cloud record -- echo Hello World
+              - script: npx --ignore-scripts nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-              - script: npx nx fix-ci
+              - script: npx --ignore-scripts nx fix-ci
                 condition: always()
         "
       `);
@@ -551,17 +551,17 @@ describe('CI Workflow generator', () => {
                     # Run this command as early as possible, before dependencies are installed
                     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
                     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-                    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+                    # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-                    - npm ci --legacy-peer-deps
+                    - npm ci --legacy-peer-deps --ignore-scripts
 
                     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-                    # npx nx-cloud record -- echo Hello World
-                    - npx nx affected --base=origin/main -t lint test build typecheck
+                    # npx --ignore-scripts nx-cloud record -- echo Hello World
+                    - npx --ignore-scripts nx affected --base=origin/main -t lint test build typecheck
                     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
                   after-script:
-                    - npx nx fix-ci
+                    - npx --ignore-scripts nx fix-ci
 
           branches:
             main:
@@ -573,13 +573,13 @@ describe('CI Workflow generator', () => {
                     # Run this command as early as possible, before dependencies are installed
                     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
                     # Connect your workspace by running "nx connect" and uncomment this
-                    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+                    # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-                    - npm ci --legacy-peer-deps
+                    - npm ci --legacy-peer-deps --ignore-scripts
 
                     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-                    # - npx nx-cloud record -- echo Hello World
-                    - npx nx affected -t lint test build typecheck --base=HEAD~1
+                    # - npx --ignore-scripts nx-cloud record -- echo Hello World
+                    - npx --ignore-scripts nx affected -t lint test build typecheck --base=HEAD~1
         "
       `);
     });
@@ -603,19 +603,19 @@ describe('CI Workflow generator', () => {
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx --ignore-scripts nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci --legacy-peer-deps --ignore-scripts
             - NX_HEAD=$CI_COMMIT_SHA
             - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-            # - npx nx-cloud record -- echo Hello World
-            - npx nx affected -t lint test build typecheck
+            # - npx --ignore-scripts nx-cloud record -- echo Hello World
+            - npx --ignore-scripts nx affected -t lint test build typecheck
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
           after_script:
-            - npx nx fix-ci
+            - npx --ignore-scripts nx fix-ci
         "
       `);
     });

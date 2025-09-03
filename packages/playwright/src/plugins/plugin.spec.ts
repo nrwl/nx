@@ -81,7 +81,7 @@ describe('@nx/playwright/plugin', () => {
                     "metadata": {
                       "description": "Runs Playwright Tests",
                       "help": {
-                        "command": "npx playwright test --help",
+                        "command": "npx --ignore-scripts playwright test --help",
                         "example": {
                           "options": {
                             "workers": 1,
@@ -116,7 +116,7 @@ describe('@nx/playwright/plugin', () => {
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
                       "help": {
-                        "command": "npx playwright test --help",
+                        "command": "npx --ignore-scripts playwright test --help",
                         "example": {
                           "options": {
                             "workers": 1,
@@ -194,7 +194,7 @@ describe('@nx/playwright/plugin', () => {
                     "metadata": {
                       "description": "Runs Playwright Tests",
                       "help": {
-                        "command": "npx playwright test --help",
+                        "command": "npx --ignore-scripts playwright test --help",
                         "example": {
                           "options": {
                             "workers": 1,
@@ -232,7 +232,7 @@ describe('@nx/playwright/plugin', () => {
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
                       "help": {
-                        "command": "npx playwright test --help",
+                        "command": "npx --ignore-scripts playwright test --help",
                         "example": {
                           "options": {
                             "workers": 1,
@@ -328,7 +328,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -364,7 +364,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -407,7 +407,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -486,7 +486,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -533,7 +533,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -583,7 +583,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -627,7 +627,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -705,7 +705,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -752,7 +752,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -809,7 +809,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
@@ -860,7 +860,7 @@ describe('@nx/playwright/plugin', () => {
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
           "help": {
-            "command": "npx playwright test --help",
+            "command": "npx --ignore-scripts playwright test --help",
             "example": {
               "options": {
                 "workers": 1,
