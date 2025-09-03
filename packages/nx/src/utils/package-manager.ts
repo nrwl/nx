@@ -142,7 +142,7 @@ export function getPackageManagerCommand(
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D --ignore-scripts -W',
         rm: 'yarn remove',
         exec: 'yarn',
-        dlx: useBerry ? 'yarn dlx' : 'yarn',
+        dlx: useBerry ? 'yarn dlx' : 'npx --ignore-scripts',
         run: (script: string, args?: string) =>
           `yarn ${script}${args ? ` ${args}` : ''}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
