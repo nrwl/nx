@@ -203,10 +203,61 @@ class MojoParameterAnalyzer(
      * Checks for side effects based on Maven @Mojo annotation properties
      */
     private fun hasAnnotationBasedSideEffects(mojo: MojoDescriptor): Boolean {
-        // Non-thread-safe mojos may have concurrency issues but aren't necessarily non-cacheable
-        // However, aggregator mojos typically have cross-project side effects
-        // For now, we'll use simple pattern matching since getting @Mojo annotation details is complex
+        // Aggregator mojos typically have cross-project side effects
+        if (mojo.isAggregator) {
+            return true
+        }
+        
+        // Non-thread-safe mojos in deployment/installation phases likely have side effects
+        if (!mojo.isThreadSafe && mojo.phase in listOf("install", "deploy")) {
+            return true
+        }
+        
         return false
+    }
+    
+    /**
+     * Detects side effect characteristics using Maven API metadata
+     */
+    private fun hasSideEffectCharacteristics(mojo: MojoDescriptor): Boolean {
+        val goal = mojo.goal
+        val pluginDescriptor = mojo.pluginDescriptor
+        
+        // Check if plugin modifies external state based on dependency resolution requirements
+        val dependencyResolution = mojo.dependencyResolutionRequired
+        if (dependencyResolution == "runtime" && goal.contains("repackage", ignoreCase = true)) {
+            return true // Modifies artifacts
+        }
+        
+        // Check for parameters that indicate external interactions
+        val parameters = mojo.parameters ?: return false
+        val hasNetworkParams = parameters.any { param ->
+            val name = param.name.lowercase()
+            val type = param.type.lowercase()
+            val description = param.description?.lowercase() ?: ""
+            
+            // Network/deployment related parameters
+            name.contains("url") || name.contains("repository") || name.contains("server") ||
+            name.contains("host") || name.contains("port") || name.contains("endpoint") ||
+            description.contains("deploy") || description.contains("publish") || 
+            description.contains("upload") || description.contains("remote")
+        }
+        
+        if (hasNetworkParams) {
+            return true
+        }
+        
+        // Check for file system modification beyond target directory
+        val hasFileSystemSideEffects = parameters.any { param ->
+            val name = param.name.lowercase()
+            val description = param.description?.lowercase() ?: ""
+            
+            (name.contains("install") && param.type == "java.io.File") ||
+            description.contains("install") || description.contains("deploy") ||
+            description.contains("modify") || description.contains("update")
+        }
+        
+        return hasFileSystemSideEffects
     }
     
     /**
@@ -243,22 +294,14 @@ class MojoParameterAnalyzer(
             "migrate", "create", "drop", "update"
         )
         
-        val sideEffectPlugins = setOf(
-            "maven-deploy-plugin",
-            "maven-install-plugin", 
-            "maven-release-plugin",
-            "exec-maven-plugin",
-            "spring-boot-maven-plugin",
-            "docker-maven-plugin"
-        )
-        
         if (sideEffectGoals.contains(goal)) {
             log.debug("${artifactId}:${goal} flagged - goal '${goal}' is in side-effect goals")
             return true
         }
         
-        if (sideEffectPlugins.contains(artifactId)) {
-            log.debug("${artifactId}:${goal} flagged - plugin '${artifactId}' is in side-effect plugins")
+        // Use Maven API characteristics to detect side effect plugins
+        if (hasSideEffectCharacteristics(mojo)) {
+            log.debug("${artifactId}:${goal} flagged - plugin has side-effect characteristics")
             return true
         }
         
