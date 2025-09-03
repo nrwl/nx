@@ -9,6 +9,8 @@ import { signalToCode } from '../../utils/exit-codes';
 export class BatchProcess {
   private exitCallbacks: Array<(code: number) => void> = [];
   private resultsCallbacks: Array<(results: BatchResults) => void> = [];
+  private outputCallbacks: Array<(output: string) => void> = [];
+  private terminalOutput: string = '';
 
   constructor(
     private childProcess: ChildProcess,
@@ -41,6 +43,38 @@ export class BatchProcess {
         cb(code);
       }
     });
+
+    // Capture stdout output
+    if (this.childProcess.stdout) {
+      this.childProcess.stdout.on('data', (chunk) => {
+        const output = chunk.toString();
+        this.terminalOutput += output;
+
+        // Maintain current terminal output behavior
+        process.stdout.write(chunk);
+
+        // Notify callbacks for TUI
+        for (const cb of this.outputCallbacks) {
+          cb(output);
+        }
+      });
+    }
+
+    // Capture stderr output
+    if (this.childProcess.stderr) {
+      this.childProcess.stderr.on('data', (chunk) => {
+        const output = chunk.toString();
+        this.terminalOutput += output;
+
+        // Maintain current terminal output behavior
+        process.stderr.write(chunk);
+
+        // Notify callbacks for TUI
+        for (const cb of this.outputCallbacks) {
+          cb(output);
+        }
+      });
+    }
   }
 
   onExit(cb: (code: number) => void) {
@@ -49,6 +83,10 @@ export class BatchProcess {
 
   onResults(cb: (results: BatchResults) => void) {
     this.resultsCallbacks.push(cb);
+  }
+
+  onOutput(cb: (output: string) => void) {
+    this.outputCallbacks.push(cb);
   }
 
   async getResults(): Promise<BatchResults> {
@@ -80,5 +118,9 @@ export class BatchProcess {
     if (this.childProcess.connected) {
       this.childProcess.kill(signal);
     }
+  }
+
+  getTerminalOutput(): string {
+    return this.terminalOutput;
   }
 }
