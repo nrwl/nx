@@ -229,7 +229,8 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                         target.put("executor", "nx:run-commands")
                         
                         val options = objectMapper.createObjectNode()
-                        options.put("command", "mvn $pluginGoal -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+                        val cleanCommand = "mvn $cleanPluginName:$goalName -pl ${mavenProject.groupId}:${mavenProject.artifactId}"
+                        options.put("command", cleanCommand)
                         options.put("cwd", "{workspaceRoot}")
                         target.put("options", options)
                         
