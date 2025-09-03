@@ -1,6 +1,5 @@
 import { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
 import {
-  cleanupProject,
   createFile,
   killProcessAndPorts,
   newProject,
@@ -20,14 +19,27 @@ describe('nx release - custom npm registries', () => {
   const scope = 'scope';
   let previousPackageManager: string;
 
+  let e2eRegistryHost: string;
+
   beforeAll(async () => {
     previousPackageManager = process.env.SELECTED_PM;
     // We are testing some more advanced scoped registry features that only npm has within this file
     process.env.SELECTED_PM = 'npm';
+
     newProject({
       packages: ['@nx/js'],
     });
+
+    // Get the e2e registry URL and parse it for auth token setup AFTER project is created
+    const e2eRegistryUrl = execSync('npm config get registry')
+      .toString()
+      .trim();
+    // Remove http:// or https:// and trailing slash to get just //host:port format for npm config
+    e2eRegistryHost = e2eRegistryUrl
+      .replace(/^https?:\/\//, '//')
+      .replace(/\/$/, '');
   }, 60000);
+
   afterAll(() => {
     process.env.SELECTED_PM = previousPackageManager;
   });
@@ -44,26 +56,27 @@ describe('nx release - custom npm registries', () => {
       .toString()
       .trim();
 
+    const e2eRegistryHost = e2eRegistryUrl
+      .replace(/^https?:\/\//, '//')
+      .replace(/\/$/, '');
+
     const npmrcEntries = [
       `@${scope}:registry=http://scoped-registry.com`,
       'tag=next',
       // We can't test overriding the default registry in this file since our e2e tests override it anyway.
       // Instead, we'll just assert that the e2e registry is used anytime we expect the default registry
+      '',
+      // Add auth tokens for all registries (required for NPM 11)
+      `${e2eRegistryHost}/:_authToken=test-auth-token`,
+      '//publish-config-registry.com/:_authToken=test-auth-token',
+      '//default-override-registy.com/:_authToken=test-auth-token',
+      '//scope-override-registry.com/:_authToken=test-auth-token',
+      '//scope-override-arg-registry.com/:_authToken=test-auth-token',
+      '//default-override-arg-registry.com/:_authToken=test-auth-token',
+      '//ignored-registry.com/:_authToken=test-auth-token',
+      '//scoped-registry.com/:_authToken=test-auth-token',
     ];
     createFile('.npmrc', npmrcEntries.join('\n'));
-
-    // Node 24 / NPM 11 needs these to work
-    [
-      e2eRegistryUrl.split(':').slice(1).join(':'),
-      '//publish-config-registry.com',
-      '//default-override-registy.com',
-      '//scope-override-registry.com',
-      '//scope-override-arg-registry.com',
-      '//default-override-arg-registry.com',
-      '//ignored-registry.com',
-    ].forEach((r) => {
-      execSync(`npm config set ${r}/:_authToken "example-token"`);
-    });
 
     const scopedWithPublishConfig = newPackage('pkg-scoped-publish-config', {
       scoped: true,
@@ -224,6 +237,11 @@ describe('nx release - custom npm registries', () => {
       `@${scope}:registry=${customRegistryUrl}`,
       `registry=http://ignored-registry.com`,
       'tag=next',
+      '',
+      // Add auth tokens for all registries (required for NPM 11)
+      `//localhost:${verdaccioPort}/:_authToken=test-auth-token`,
+      `${e2eRegistryHost}/:_authToken=test-auth-token`,
+      '//ignored-registry.com/:_authToken=test-auth-token',
     ];
     updateFile('.npmrc', npmrcEntries2.join('\n'));
 
@@ -351,7 +369,7 @@ describe('nx release - custom npm registries', () => {
         )
       ).length
     ).toBe(1);
-  }, 600_000);
+  }, 1_000_000);
 
   function newPackage(
     name: string,

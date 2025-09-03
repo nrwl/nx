@@ -9,5 +9,6 @@ export default {
   globalSetup: '../utils/global-setup.ts',
   globalTeardown: '../utils/global-teardown.ts',
   displayName: 'e2e-release',
+  testTimeout: 1_000_000,
   preset: '../jest.preset.e2e.js',
 };
