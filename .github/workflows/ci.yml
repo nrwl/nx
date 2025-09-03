@@ -126,7 +126,7 @@ jobs:
         timeout-minutes: 100
       - name: Fix CI
         run: pnpm nx-cloud fix-ci
-        if: always()
+        if: failed()
 
   main-macos:
     runs-on: macos-latest
