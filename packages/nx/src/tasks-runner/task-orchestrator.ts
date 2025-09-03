@@ -352,6 +352,7 @@ export class TaskOrchestrator {
 
       const batchResults = await this.runBatch(
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: unrunTaskGraph,
         },
@@ -373,6 +374,7 @@ export class TaskOrchestrator {
       await this.applyFromCacheOrRunBatch(
         doNotSkipCache,
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: removeTasksFromTaskGraph(
             batch.taskGraph,
@@ -407,8 +409,35 @@ export class TaskOrchestrator {
           this.taskGraph,
           env
         );
+
+      // Register batch for TUI output if enabled
+      if (this.tuiEnabled) {
+        // Register the batch using dedicated batch lifecycle methods
+        this.options.lifeCycle.registerRunningBatch?.(batch.id, {
+          executorName: batch.executorName,
+          taskIds: Object.keys(batch.taskGraph.tasks),
+        });
+
+        // Stream output from batch process to the batch
+        batchProcess.onOutput((output) => {
+          this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
+        });
+      }
+
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
+
+      // Update batch status based on results
+      if (this.tuiEnabled) {
+        const hasFailures = batchResultEntries.some(
+          ([, result]) => !result.success
+        );
+        this.options.lifeCycle.setBatchStatus?.(
+          batch.id,
+          hasFailures ? 'failure' : 'success'
+        );
+      }
+
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
         code: result.success ? 0 : 1,
@@ -421,6 +450,11 @@ export class TaskOrchestrator {
         terminalOutput: result.terminalOutput,
       }));
     } catch (e) {
+      // Update batch status on error
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setBatchStatus?.(batch.id, 'failure');
+      }
+
       return batch.taskGraph.roots.map((rootTaskId) => ({
         task: this.taskGraph.tasks[rootTaskId],
         code: 1,
