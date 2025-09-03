@@ -163,6 +163,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             // Generate targets from phase analysis
             val targets = objectMapper.createObjectNode()
             val phasesNode = analysis.get("phases")
+            val mavenPhaseTargets = mutableListOf<String>()
             
             if (phasesNode != null && phasesNode.isObject) {
                 phasesNode.fields().forEach { (phase, phaseAnalysis) ->
@@ -195,11 +196,16 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                     
                     target.put("parallelism", true)
                     targets.put(phase, target)
+                    
+                    // Add phase to Maven phases target group
+                    mavenPhaseTargets.add(phase)
                 }
             }
             
             // Generate targets from discovered plugin goals, organized by plugin
             val pluginGoalsNode = analysis.get("pluginGoals")
+            val targetGroups = objectMapper.createObjectNode()
+            
             if (pluginGoalsNode != null && pluginGoalsNode.isArray) {
                 // Group goals by plugin for better organization
                 val goalsByPlugin = mutableMapOf<String, MutableList<String>>()
@@ -218,6 +224,9 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                 // Process each plugin group
                 goalsByPlugin.forEach { (cleanPluginName, pluginGoals) ->
                     log.info("Processing ${pluginGoals.size} goals for plugin '$cleanPluginName': ${pluginGoals.map { it.split(":")[1] }.joinToString(", ")}")
+                    
+                    // Create target group for this plugin
+                    val pluginTargetGroup = objectMapper.createArrayNode()
                     
                     pluginGoals.forEach { pluginGoal ->
                         val parts = pluginGoal.split(":")
@@ -258,7 +267,13 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                         targets.put(targetName, target)
                         
                         log.info("Generated Nx target '$targetName' for plugin goal '$pluginGoal' (group: $cleanPluginName)")
+                        
+                        // Add target to the plugin's target group
+                        pluginTargetGroup.add(targetName)
                     }
+                    
+                    // Add this plugin's target group to the overall target groups
+                    targetGroups.put(cleanPluginName, pluginTargetGroup)
                 }
             }
             
@@ -280,7 +295,23 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             cleanTarget.put("parallelism", true)
             targets.put("clean", cleanTarget)
             
+            // Add clean to Maven phases target group
+            mavenPhaseTargets.add("clean")
+            
             project.put("targets", targets)
+            
+            // Project metadata including target groups
+            val projectMetadata = objectMapper.createObjectNode()
+            
+            // Add Maven phases to target groups
+            if (mavenPhaseTargets.isNotEmpty()) {
+                val mavenPhasesGroup = objectMapper.createArrayNode()
+                mavenPhaseTargets.forEach { phase -> mavenPhasesGroup.add(phase) }
+                targetGroups.put("maven-phases", mavenPhasesGroup)
+            }
+            
+            projectMetadata.put("targetGroups", targetGroups)
+            project.put("metadata", projectMetadata)
             
             // Tags
             val tags = objectMapper.createArrayNode()
