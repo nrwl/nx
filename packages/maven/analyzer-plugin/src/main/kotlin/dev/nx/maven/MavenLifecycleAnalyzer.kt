@@ -193,7 +193,7 @@ class MavenLifecycleAnalyzer(
                 groupId = plugin.groupId,
                 artifactId = plugin.artifactId,
                 goal = mojo.goal,
-                phase = mojo.phase ?: "available", // Mark as available if not bound to phase
+                phase = mojo.phase ?: "unbound", // Mark as unbound if not bound to phase
                 classification = if (mojo.phase != null) "available-bound" else "available",
                 isAggregator = mojo.isAggregator,
                 isThreadSafe = mojo.isThreadSafe,
