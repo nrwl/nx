@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { CardGrid, Card, Icon, Badge } from '@astrojs/starlight/components';
+import { Icon, Badge } from '@astrojs/starlight/components';
 import {largeNumberFormatter, dateFormatter } from '../utils/formatters';
 
 const communityPlugins = await getCollection('community-plugins');
@@ -14,72 +14,88 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
   tableOfContents: false
 }}
 >
-  <CardGrid>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 not-content">
     {plugins.map(plugin => (
-      <Card title={plugin.data.packageName} icon="open-book">
-        <div class="flex justify-between flex-col gap-2 min-h-40">
-
-        <div class="line-clamp-3">
-          {plugin.data.description}
-        </div>
-          <div class="grow content-end">
-          <div class="flex flex-wrap align-center justify-between gap-1 text-xs font-medium capitalize text-center">
-
-            {plugin.data.lastPublishedDate && <div class="inline-flex gap-1 items-end">
-                <Icon name="seti:clock" class="w-4 h-4 align-bottom inline-block" />
-                {dateFormatter(plugin.data.lastPublishedDate!)}</div>}
-
-            <div class="inline-flex gap-1">
-              <Icon name="star" class="w-4 h-4 inline-block align-bottom" />
-              {largeNumberFormatter(plugin.data.githubStars!)}</div>
-            <div class="inline-flex gap-1">
-              <Icon name="cloud-download" class="w-4 h-4 inline-block align-bottom" />
-              {largeNumberFormatter(plugin.data.npmDownloads!)}</div>
+      <a 
+        href={`/docs/${plugin.data.slug}`} 
+        class="block h-full bg-gray-50 border-1 border-slate-200 dark:bg-slate-800/50 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors no-underline dark:border-slate-900"
+      >
+        <div class="flex flex-col h-full">
+          <div class="flex gap-3 items-center mb-3">
+            <Icon name="github" class="w-6 h-6 text-gray-600 dark:text-slate-400 flex-shrink-0 mt-0.5" />
+            <h3 class="text-base font-medium text-gray-900 dark:text-slate-100 leading-tight">{plugin.data.packageName}</h3>
           </div>
-
-          <div class="flex flex-wrap align-center justify-between gap-1 font-medium capitalize text-center">
-            <a href={`/docs/${plugin.data.slug}`} >
-              View Plugin
-            </a>
-
-              <div>
-            <Badge size="small" variant="success" text="Nx Open Source" />
-            </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-    ))}
-    {communityPlugins.map(plugin => (
-      <Card title={plugin.id} icon="open-book">
-        <div class="flex flex-col gap-2 min-h-40">
-          <p class="line-clamp-3">
+          
+          <p class="text-sm text-gray-600 dark:text-slate-400 line-clamp-3 mb-4 flex-grow">
             {plugin.data.description}
           </p>
-
-          <div class="grow content-end">
-          <div class="flex flex-wrap align-center justify-between gap-1 text-xs font-medium capitalize text-center">
-            {plugin.data.lastPublishedDate &&
-              <div class="inline-flex gap-1 items-end">
-                <Icon name="seti:clock" class="w-4 h-4 align-bottom inline-block" />
-                {dateFormatter(plugin.data.lastPublishedDate!)}</div>}
-            <div class="inline-flex gap-1">
-              <Icon name="star" class="w-4 h-4 inline-block align-bottom" />
-              {plugin.data.githubStars}</div>
-            <div class="inline-flex gap-1">
-              <Icon name="cloud-download" class="w-4 h-4 inline-block align-bottom" />
-              {plugin.data.npmDownloads}</div>
-            {plugin.data.nxVersion &&
-              <div class="inline-flex gap-1">
-                <Icon name="information" class="w-4 h-4 inline-block align-bottom" />
-                {plugin.data.nxVersion}</div>}
-          </div>
-
-          <a href={plugin.data.url}>View Plugin</a>
+          <div class="flex flex-wrap items-center justify-between py-0.5 text-xs text-slate-700 dark:text-slate-400">
+            {plugin.data.lastPublishedDate && (
+              <div class="mr-1 my-1 flex items-center gap-1">
+                <Icon name="seti:clock" class="w-3.5 h-3.5" />
+                <span>{dateFormatter(plugin.data.lastPublishedDate!)}</span>
+              </div>
+            )}
+            <div class="mx-1 my-1 flex items-center gap-1">
+              <Icon name="star" class="w-4 h-4" />
+              <span>{largeNumberFormatter(plugin.data.githubStars!)}</span>
+            </div>
+            <div class="mx-1 my-1 flex items-center gap-1">
+              <Icon name="cloud-download" class="w-4 h-4" />
+              <span>{largeNumberFormatter(plugin.data.npmDownloads!)}</span>
+            </div>
+            <div class="flex-1 flex justify-end ml-1 my-1 text-nowrap">
+              <Badge size="small" variant="success" text="Nx Open Source" />
+            </div>
           </div>
         </div>
-      </Card>))}
-  </CardGrid>
+      </a>
+    ))}
+    {communityPlugins.map(plugin => (
+      <a 
+        href={plugin.data.url} 
+        class="block h-full bg-gray-50 dark:bg-slate-800/50 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors no-underline"
+        target="_blank" 
+        rel="noopener noreferrer"
+      >
+        <div class="flex flex-col h-full">
+          <div class="flex gap-3 items-center mb-3">
+            <Icon name="github" class="w-6 h-6 text-gray-600 dark:text-slate-400 flex-shrink-0 mt-0.5" />
+            <h3 class="text-base font-medium text-gray-900 dark:text-slate-100 leading-tight">{plugin.id}</h3>
+          </div>
+          
+          <p class="text-sm text-gray-600 dark:text-slate-400 line-clamp-3 mb-4 flex-grow">
+            {plugin.data.description}
+          </p>
+          <div class="flex flex-wrap items-center justify-between py-0.5 text-xs text-slate-700 dark:text-slate-400">
+            {plugin.data.lastPublishedDate && (
+              <div class="mr-1 my-1 flex items-center gap-1">
+                <Icon name="seti:clock" class="w-3.5 h-3.5" />
+                <span>{dateFormatter(plugin.data.lastPublishedDate!)}</span>
+              </div>
+            )}
+            <div class="mx-1 my-1 flex items-center gap-1">
+              <Icon name="star" class="w-4 h-4" />
+              <span>{largeNumberFormatter(plugin.data.githubStars!)}</span>
+            </div>
+            <div class="mx-1 my-1 flex items-center gap-1">
+              <Icon name="cloud-download" class="w-4 h-4" />
+              <span>{largeNumberFormatter(plugin.data.npmDownloads!)}</span>
+            </div>
+            {plugin.data.nxVersion ? (
+              <div class="flex-1 flex justify-end ml-1 my-1 text-nowrap">
+                <Badge size="small" variant="caution" text={`Nx ${plugin.data.nxVersion}`} />
+              </div>
+            ) : (
+              <div class="flex-1 flex justify-end ml-1 my-1 text-nowrap">
+                <Badge size="small" variant="tip" text="Community" />
+              </div>
+            )}
+          </div>
+        </div>
+      </a>
+    ))}
+  </div>
 
 
 </StarlightPage>
