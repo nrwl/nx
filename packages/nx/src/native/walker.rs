@@ -6,7 +6,7 @@ use crate::native::glob::build_glob_set;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::logger::enable_logger;
-use crate::native::utils::{Normalize, get_mod_time, git::find_git_root};
+use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files_unbounded};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -158,7 +158,6 @@ where
     receiver_thread.join().unwrap()
 }
 
-
 fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
     P: AsRef<Path>,
@@ -179,37 +178,13 @@ where
     walker.hidden(false);
 
     if use_ignores {
-        // Find the nearest git root to determine ignore file behavior
-        let git_root = find_git_root(&directory);
+        // Disable automatic parent traversal - we'll handle it manually for consistency
+        walker.parents(false);
 
-        match git_root {
-            Some(git_root_path) if git_root_path == directory => {
-                // The workspace IS the git root - don't use parent gitignores
-                walker.parents(false);
-            }
-            Some(git_root_path) => {
-                // The workspace is nested within a git repo - disable automatic parents
-                // and manually add ignore files only up to the git root
-                walker.parents(false);
-
-                // Manually add .gitignore files from parent directories up to the git root
-                let mut current_path = directory.parent();
-                while let Some(path) = current_path {
-                    let gitignore_path = path.join(".gitignore");
-                    if gitignore_path.exists() {
-                        walker.add_ignore(gitignore_path);
-                    }
-
-                    // Stop when we reach the git root (after processing it)
-                    if path == git_root_path {
-                        break;
-                    }
-                    current_path = path.parent();
-                }
-            }
-            None => {
-                // No git repository found - use all parent ignores (backwards compatibility)
-                walker.parents(true);
+        // Add parent .gitignore files using shared logic
+        for gitignore_path in parent_gitignore_files_unbounded(&directory) {
+            if gitignore_path.exists() {
+                walker.add_ignore(gitignore_path);
             }
         }
 
