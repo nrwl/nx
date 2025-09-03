@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'fs';
 import { getExampleForSchema } from './get-schema-example-content';
 import {
   getPropertyDefault,
@@ -8,28 +9,56 @@ import {
 
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
-  let markdown = `\n#### \`${name}\`\n`;
+  let markdown = `\n### \`${name}\`\n`;
+  if (config.version) {
+    markdown += `**Version**: ${config.version}\n\n`;
+  }
 
   if (config.description) {
     markdown += `${config.description}\n\n`;
   }
 
+  if (config.requires && Object.keys(config.requires).length > 0) {
+    markdown += `#### Requires\n\n`;
+    markdown += `| Name | Version |\n`;
+    markdown += `|------|---------|\n`;
+    for (const [packageName, version] of Object.entries(config.requires)) {
+      markdown += ` \`${packageName}\` | \`${version}\` |\n`;
+    }
+  }
+
+  if (config.fullPath) {
+    const maybeExampleMdFile = config.fullPath + '.md';
+    if (existsSync(maybeExampleMdFile)) {
+      markdown += `${readFileSync(maybeExampleMdFile, 'utf-8')}\n\n`;
+    }
+  }
+
   return markdown;
 }
 
-export function generatePackageUpdateItem(item: any): string {
+export function generatePackageUpdateItem(name: string, item: any): string {
   const { config } = item;
-  let markdown = `\n#### Package Updates for ${config.name}\n`;
+  let markdown = `\n### ${name}\n`;
+
+  if (config.version) {
+    markdown += `**Version**: ${config.version}\n\n`;
+  }
+
+  markdown += `\n#### Packages\n`;
 
   if (config.packages && Object.keys(config.packages).length > 0) {
     markdown += `\nThe following packages will be updated:\n\n`;
-    markdown += `| Package | Version |\n`;
-    markdown += `|---------|----------|\n`;
+    markdown += `| Name | Version | Always add to \`package.json\`\n`;
+    markdown += `|---------|----------|---------|\n`;
 
     for (const [packageName, packageConfig] of Object.entries(
       config.packages
     ) as [string, any][]) {
-      markdown += `| \`${packageName}\` | \`${packageConfig.version}\` |\n`;
+      const addToPackageJson = packageConfig.alwaysAddToPackageJson
+        ? 'Added if not installed'
+        : 'Updated only';
+      markdown += `| \`${packageName}\` | \`${packageConfig.version}\` | ${addToPackageJson}\n`;
     }
 
     markdown += `\n`;
@@ -102,9 +131,11 @@ Below is a complete reference for all available migrations.
     }
 
     // Add package updates
-    for (const { item } of packageUpdates) {
-      markdown += generatePackageUpdateItem(item);
+    for (const { name, item } of packageUpdates) {
+      markdown += generatePackageUpdateItem(name, item);
     }
+
+    markdown += '\n';
   }
 
   return markdown;

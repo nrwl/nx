@@ -195,8 +195,6 @@ export class AngularRspackPlugin implements RspackPluginInstance {
             name: PLUGIN_NAME,
             message: error.text || '',
             file: error.location?.file,
-            loc: `${error.location?.line}:${error.location?.column}`,
-            moduleIdentifier: error.location?.file,
             stack: error.text,
           });
         }
@@ -205,9 +203,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
             name: PLUGIN_NAME,
             message: warning.text || '',
             file: warning.location?.file,
-            loc: `${warning.location?.line}:${warning.location?.column}`,
             stack: warning.text,
-            moduleIdentifier: warning.location?.file,
           });
         }
       }

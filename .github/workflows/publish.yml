@@ -3,14 +3,7 @@ name: publish
 on:
   # Automated schedule - canary releases from master
   schedule:
-    - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
-  # Manual trigger - PR releases or dry-runs (based on workflow inputs)
-  workflow_dispatch:
-    inputs:
-      pr:
-        description: "PR Number - If set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
-        required: false
-        type: number
+    - cron: "0 20 * * 1-5" # Monday - Friday, at 20:00 UTC (8pm UTC)
   release:
     types: [ published ]
 
@@ -51,13 +44,10 @@ jobs:
       publish_branch: ${{ steps.script.outputs.publish_branch }}
       ref: ${{ steps.script.outputs.ref }}
       repo: ${{ steps.script.outputs.repo }}
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
       - uses: actions/checkout@v4
 
-      # Set up pnpm and node so that we can verify our setup and that the NPM_TOKEN secret will work later
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -68,10 +58,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
-
-      # Ensure that the NPM_TOKEN secret is still valid before wasting any time deriving data or building projects
-      - name: Check NPM Credentials
-        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
 
       - name: Resolve and set checkout and version data to use for release
         id: script
@@ -422,6 +408,7 @@ jobs:
     if: ${{ github.repository_owner == 'nrwl' }}
     name: Publish
     runs-on: ubuntu-latest
+    environment: npm-registry
     permissions:
       id-token: write
       contents: write
@@ -432,8 +419,6 @@ jobs:
       - build
     env:
       GH_TOKEN: ${{ github.token }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_CONFIG_PROVENANCE: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -451,6 +436,9 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
+     
+      - name: Use npm 11.5.2
+        run: npm install -g npm@11.5.2
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

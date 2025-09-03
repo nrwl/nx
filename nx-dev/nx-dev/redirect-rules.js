@@ -1,4 +1,9 @@
 /**
+ * Import docs to Astro redirects (added 2025-08-21 for DOC-107)
+ */
+const docsToAstroRedirects = require('./redirect-rules-docs-to-astro.js');
+
+/**
  * Executors & Generators old url schemes to package schema viewer url schemes (added 2022-03-16)
  */
 const schemaUrls = {
@@ -1539,4 +1544,8 @@ module.exports = {
   pricingRedirects,
   ciTutorialRedirects,
   dockerReleaseRedirect,
+  // Only enable these redirects if the new docs are enabled
+  docsToAstroRedirects: process.env['NEXT_PUBLIC_ASTRO_URL']
+    ? docsToAstroRedirects
+    : {},
 };

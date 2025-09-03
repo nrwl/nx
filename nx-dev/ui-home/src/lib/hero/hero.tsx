@@ -1,5 +1,5 @@
 'use client';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import { RustIcon, TypeScriptIcon } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 import { NxHeroVideo } from './nx-hero-video';
@@ -33,9 +33,9 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            Drop Nx into any repo and watch it automatically optimize your
-            builds, scale your CI, and fix failed PRs. Built for developers and
-            AI agents.
+            <Strong>Get to green PRs in half the time.</Strong> Nx optimizes
+            your builds, scales your CI, and fixes failed PRs. Built for
+            developers and AI agents.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
