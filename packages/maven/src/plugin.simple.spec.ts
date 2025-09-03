@@ -1,4 +1,4 @@
-import { MavenPluginOptions } from './plugins';
+import { MavenPluginOptions } from './plugins/types';
 
 describe('Maven Plugin Basic Tests', () => {
   it('should have correct plugin options interface', () => {
