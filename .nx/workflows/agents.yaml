@@ -78,6 +78,10 @@ launch-templates:
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
+      - name: Install Rust Dependencies
+        script: |
+          cargo fetch
+
       - name: Setup Java 21
         script: |
           sudo apt update
@@ -167,6 +171,10 @@ launch-templates:
 
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Install Rust Dependencies
+        script: |
+          cargo fetch
 
       - name: Setup Java 21
         script: |
