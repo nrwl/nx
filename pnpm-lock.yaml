@@ -2881,12 +2881,13 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      nx:
-        specifier: workspace:*
-        version: link:../nx
       toml-eslint-parser:
         specifier: ^0.10.0
         version: 0.10.0
+    devDependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../nx
 
   packages/jest:
     dependencies:
