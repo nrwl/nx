@@ -47,6 +47,7 @@ export class PackagesApi {
   getAngularRspackPackage(): ProcessedPackageMetadata {
     return {
       path: '/nx-api/angular-rspack',
+      introPath: '/technologies/angular/angular-rspack/introduction',
       name: 'angular-rspack',
       packageName: 'angular-rspack',
       description: 'Angular Rspack',
@@ -85,6 +86,7 @@ export class PackagesApi {
   getAngularRsbuildPackage(): ProcessedPackageMetadata {
     return {
       path: '/nx-api/angular-rsbuild',
+      introPath: '/technologies/angular/angular-rsbuild/introduction',
       name: 'angular-rsbuild',
       packageName: 'angular-rsbuild',
       description: 'Angular Rsbuild',
@@ -257,6 +259,7 @@ export class PackagesApi {
       name: this.manifest[k].name,
       packageName: this.manifest[k].packageName,
       path: this.manifest[k].path,
+      introPath: this.manifest[k].introPath,
       root: this.manifest[k].root,
       source: this.manifest[k].source,
     }));
