@@ -372,7 +372,7 @@ mod tests {
 
     #[test]
     fn test_handles_arrow_keys_cursor_movement() {
-        let mut pty = create_test_pty_instance(false);
+        let pty = create_test_pty_instance(false);
 
         // Initially should not be interactive
         assert!(!pty.handles_arrow_keys());
@@ -387,7 +387,7 @@ mod tests {
 
     #[test]
     fn test_handles_arrow_keys_enquirer_style_output() {
-        let mut pty = create_test_pty_instance(false);
+        let pty = create_test_pty_instance(false);
 
         // Simulate enquirer output with cursor positioning
         let enquirer_output =
