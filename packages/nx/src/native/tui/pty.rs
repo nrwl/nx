@@ -242,6 +242,22 @@ impl PtyInstance {
         }
     }
 
+    pub fn scroll_to_top(&mut self) {
+        if let Ok(mut parser) = self.parser.write() {
+            let screen = parser.screen();
+            let total_content = screen.get_total_content_rows();
+            let viewport_height = screen.size().0 as usize;
+            let max_scrollback = total_content.saturating_sub(viewport_height);
+            parser.screen_mut().set_scrollback(max_scrollback);
+        }
+    }
+
+    pub fn scroll_to_bottom(&mut self) {
+        if let Ok(mut parser) = self.parser.write() {
+            parser.screen_mut().set_scrollback(0);
+        }
+    }
+
     pub fn get_scroll_offset(&self) -> usize {
         if let Ok(parser) = self.parser.read() {
             return parser.screen().scrollback();
