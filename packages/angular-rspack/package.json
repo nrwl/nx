@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@ampproject/remapping": "2.3.0",
-    "@babel/core": "7.26.10",
+    "@babel/core": "7.28.3",
     "@discoveryjs/json-ext": "0.6.3",
     "@nx/angular-rspack-compiler": "workspace:*",
     "@nx/devkit": "workspace:*",

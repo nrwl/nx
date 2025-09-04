@@ -1,7 +1,6 @@
 import type { RsbuildConfig } from '@rsbuild/core';
 import {
-  AotCompilation,
-  JitCompilation,
+  createAngularCompilation,
   AngularCompilation,
   SourceFileCache,
 } from '../models';
@@ -20,9 +19,11 @@ export async function setupCompilationWithAngularCompilation(
 ) {
   const { rootNames, compilerOptions, componentStylesheetBundler } =
     await setupCompilation(config, options);
-  angularCompilation ??= options.aot
-    ? new AotCompilation(options.hasServer === false)
-    : new JitCompilation(options.hasServer === false);
+  angularCompilation ??= await createAngularCompilation(
+    !options.aot,
+    options.hasServer,
+    false
+  );
   modifiedFiles ??= new Set(rootNames);
 
   const fileReplacements: Record<string, string> =
