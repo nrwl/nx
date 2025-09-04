@@ -112,7 +112,7 @@
     },
     "neverConnectToCloud": {
       "type": "boolean",
-      "description": "Set this to true to disable all connections to Nx Cloud."
+      "description": "Setting this to true will cause all attempts to connect your workspace to Nx Cloud to fail. This value does not prevent using Nx Cloud if already connected. Use NX_NO_CLOUD=true env var to prevent using Nx Cloud when running commands."
     },
     "parallel": {
       "type": "number",
