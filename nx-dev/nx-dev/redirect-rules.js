@@ -896,8 +896,7 @@ const missingAndCatchAllRedirects = {
 };
 
 if (process.env['NEXT_PUBLIC_ASTRO_URL']) {
-  missingAndCatchAllRedirects['/getting-started/:path*'] =
-    '/docs/getting-started/intro';
+  missingAndCatchAllRedirects['/docs'] = '/docs/getting-started/intro';
 } else {
   // For new docs, we rewrite all docs URLs to astro site, so we can skip this redirect
   missingAndCatchAllRedirects['/docs'] = '/getting-started/intro';

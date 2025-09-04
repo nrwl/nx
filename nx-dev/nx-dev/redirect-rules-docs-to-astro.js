@@ -190,6 +190,8 @@ const docsToAstroRedirects = {
     '/docs/getting-started/tutorials/angular-monorepo-tutorial',
   '/getting-started/tutorials/gradle-tutorial':
     '/docs/getting-started/tutorials/gradle-tutorial',
+  // Fallback
+  '/getting-started/:path*': '/docs/getting-started/intro',
 
   // ========== NX-ENTERPRISE ==========
   '/nx-enterprise': '/docs/enterprise',
@@ -385,13 +387,12 @@ const docsToAstroRedirects = {
   '/reference/core-api': '/docs/reference',
   '/reference/core-api/nx': '/docs/reference', // TODO: missing
   '/reference/core-api/workspace': '/docs/reference', // TODO: missing
-  '/reference/core-api/devkit': '/docs/reference', // TODO: missing
   '/reference/core-api/plugin': '/docs/reference', // TODO: missing
   '/reference/core-api/web': '/docs/reference', // TODO: missing
   '/reference/core-api/create-nx-workspace':
     '/docs/reference/create-nx-workspace',
   '/reference/core-api/devkit/documents': '/docs/reference/devkit',
-  '/docs/reference/devkit': '/docs/reference/devkit',
+  '/reference/core-api/devkit': '/docs/reference/devkit',
   '/reference/core-api/devkit/documents/ngcli_adapter':
     '/docs/reference/devkit/ngcli_adapter',
   '/reference/core-api/devkit/documents/AggregateCreateNodesError':
@@ -1808,7 +1809,6 @@ const docsToAstroRedirects = {
   '/ci/recipes/set-up': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-azure': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-circle-ci': '/docs/guides/nx-cloud/setup-ci',
-  '/docs/guides/nx-cloud/setup-ci': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-jenkins': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-gitlab': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines':
