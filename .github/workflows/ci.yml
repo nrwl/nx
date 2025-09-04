@@ -124,6 +124,9 @@ jobs:
             wait "$pid"
           done
         timeout-minutes: 100
+      - name: Fix CI
+        run: pnpm nx-cloud fix-ci
+        if: failure()
 
   main-macos:
     runs-on: macos-latest
