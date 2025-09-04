@@ -1,7 +1,4 @@
 import { redirect, RouteObject, json, LoaderFunction } from 'react-router-dom';
-import { ProjectsSidebar } from './feature-projects/projects-sidebar';
-import { TasksSidebar } from './feature-tasks/tasks-sidebar';
-import { Shell } from './shell';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
@@ -18,6 +15,9 @@ import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-b
 import { ProjectDetailsPage } from '@nx/graph-internal-project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';
 import { taskGraphClientCache } from './task-graph-client-cache';
+import { ProjectsShell } from './feature-projects/projects-shell';
+import { TasksShell } from './feature-tasks/tasks-shell';
+import { GraphStateSerializer } from '@nx/graph';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -187,38 +187,11 @@ const projectDetailsLoader = async (
 };
 
 const childRoutes: RouteObject[] = [
-  {
-    path: 'projects',
-    children: [
-      {
-        index: true,
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'all',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'affected',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: ':focusedProject',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'trace/:startTrace',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'trace/:startTrace/:endTrace',
-        element: <ProjectsSidebar />,
-      },
-    ],
-  },
+  { path: 'projects', element: <ProjectsShell /> },
   {
     path: 'tasks',
     id: 'tasks',
+    element: <TasksShell />,
     errorElement: <TasksSidebarErrorBoundary />,
     loader: tasksLoader,
     shouldRevalidate: ({ currentParams, nextParams, currentUrl, nextUrl }) => {
@@ -241,47 +214,23 @@ const childRoutes: RouteObject[] = [
 
       return currentTargets !== nextTargets || currentProjects !== nextProjects;
     },
-    children: [
-      {
-        index: true,
-        element: <TasksSidebar />,
-      },
-      {
-        path: 'all',
-        id: 'allTasks',
-        loader: tasksLoader,
-        shouldRevalidate: ({
-          currentParams,
-          nextParams,
-          currentUrl,
-          nextUrl,
-        }) => {
-          // Always revalidate if workspace changes
-          if (
-            !currentParams.selectedWorkspaceId ||
-            currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
-          ) {
-            return true;
-          }
-
-          // Revalidate if query parameters change (targets or projects)
-          const currentSearchParams = new URLSearchParams(currentUrl.search);
-          const nextSearchParams = new URLSearchParams(nextUrl.search);
-
-          const currentTargets = currentSearchParams.get('targets');
-          const nextTargets = nextSearchParams.get('targets');
-          const currentProjects = currentSearchParams.get('projects');
-          const nextProjects = nextSearchParams.get('projects');
-
-          return (
-            currentTargets !== nextTargets || currentProjects !== nextProjects
-          );
-        },
-        element: <TasksSidebar />,
-      },
-    ],
   },
 ];
+
+function handleRawGraphQueryParam(searchParams: URLSearchParams) {
+  const rawGraph = searchParams.get('rawGraph');
+  // nothing to do here, bail
+  if (!rawGraph) return;
+
+  try {
+    const rawGraphJson = JSON.parse(rawGraph);
+    searchParams.delete('rawGraph');
+    searchParams.set('graph', GraphStateSerializer.serialize(rawGraphJson));
+  } catch (err) {
+    console.error('Graph Client: error during rawGraph handling', err);
+    return;
+  }
+}
 
 export const devRoutes: RouteObject[] = [
   {
@@ -290,16 +239,19 @@ export const devRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        loader: async ({ request, params }) => {
-          const { search } = new URL(request.url);
-
-          return redirect(`/${appConfig.defaultWorkspaceId}/projects${search}`);
+        loader: async ({ request }) => {
+          const { searchParams } = new URL(request.url);
+          handleRawGraphQueryParam(searchParams);
+          return redirect(
+            `/${
+              appConfig.defaultWorkspaceId
+            }/projects?${searchParams.toString()}`
+          );
         },
       },
       {
         path: ':selectedWorkspaceId',
         id: 'selectedWorkspace',
-        element: <Shell />,
         shouldRevalidate: ({ currentParams, nextParams }) => {
           return (
             currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
@@ -336,14 +288,13 @@ export const releaseRoutes: RouteObject[] = [
     shouldRevalidate: () => {
       return false;
     },
-    element: <Shell />,
     children: [
       {
         index: true,
         loader: ({ request }) => {
-          const { search } = new URL(request.url);
-
-          return redirect(`/projects${search}`);
+          const { searchParams } = new URL(request.url);
+          handleRawGraphQueryParam(searchParams);
+          return redirect(`/projects?${searchParams.toString()}`);
         },
       },
       ...childRoutes,

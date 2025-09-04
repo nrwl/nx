@@ -278,9 +278,7 @@ export async function generateGraph(
   let isPartial = false;
   try {
     const projectGraphAndSourceMaps =
-      await createProjectGraphAndSourceMapsAsync({
-        exitOnError: false,
-      });
+      await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     rawGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
   } catch (e) {
@@ -296,10 +294,7 @@ export async function generateGraph(
       const errors = e.getErrors();
       if (errors?.length > 0) {
         errors.forEach((e) => {
-          output.error({
-            title: e.message,
-            bodyLines: [e.stack],
-          });
+          output.error({ title: e.message, bodyLines: [e.stack] });
         });
       }
       output.warn({
@@ -501,10 +496,17 @@ export async function generateGraph(
       process.exit(1);
     }
 
+    // setting up `?graph=serialized-graph-state`
+    let graphState: Record<string, unknown> | undefined = undefined;
     url.pathname = args.view;
 
     if (args.focus) {
-      url.pathname += '/' + encodeURIComponent(args.focus);
+      // url.pathname += '/' + encodeURIComponent(args.focus);
+      graphState ??= { c: {} };
+      graphState['s'] = {
+        type: 'focused',
+        nodeId: `project-${encodeURIComponent(args.focus)}`,
+      };
     }
 
     // Add targets as query parameters for tasks view
@@ -516,18 +518,30 @@ export async function generateGraph(
     }
 
     if (args.all) {
-      url.pathname += '/all';
+      if (args.view === 'tasks') {
+        url.pathname += '/all';
+      }
     } else if (args.projects) {
       url.searchParams.append(
         'projects',
         args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
-      url.pathname += '/affected';
+      graphState ??= { c: {} };
+      graphState['c'] = {
+        ...(graphState['c'] as Record<string, unknown>),
+        showMode: 'affected',
+      };
+      // url.pathname += '/affected';
     }
-    if (args.groupByFolder) {
-      url.searchParams.append('groupByFolder', 'true');
+
+    if (graphState) {
+      url.searchParams.set('rawGraph', JSON.stringify(graphState));
     }
+
+    // if (args.groupByFolder) {
+    //   url.searchParams.append('groupByFolder', 'true');
+    // }
 
     output.success({
       title: `Project graph started at ${url.toString()}`,

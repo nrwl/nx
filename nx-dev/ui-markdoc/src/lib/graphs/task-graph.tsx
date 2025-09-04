@@ -5,15 +5,16 @@ import type {
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
 import { TaskGraph } from 'nx/src/config/task-graph';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { RenderTheme } from '@nx/graph';
-import { useTaskGraphClient } from '@nx/graph/tasks';
-import {
-  NxGraphContextMenu,
-  useGraphContextMenu,
-} from '@nx/graph/context-menu';
-import { Tag } from '@nx/graph-ui-common';
+import { useTaskGraphOrchestrator } from '@nx/graph/tasks';
 import { resolveTheme } from './resolve-theme';
+import {
+  NxGraphElementPanel,
+  NxGraphTaskNodePanelContent,
+  NxGraphTaskNodePanelHeader,
+  useElementPanel,
+} from '@nx/graph/ui';
 
 interface NxDevTaskGraphProps {
   theme: RenderTheme | 'system';
@@ -32,19 +33,29 @@ export function NxDevTaskGraph({
   theme = 'system',
   enableContextMenu = false,
 }: NxDevTaskGraphProps) {
-  const { containerRef, graphClient, sendRenderConfigEvent, send } =
-    useTaskGraphClient({ renderPlatform: 'nx-dev', styles: [] });
-
-  const { graphMenu } = useGraphContextMenu({
-    renderGraphEventBus: enableContextMenu ? graphClient : null,
+  const graphContext = useTaskGraphOrchestrator({
+    renderPlatform: 'nx-dev',
+    styles: [],
   });
+  const { containerRef, orchestrator, sendRendererConfigEvent, send } =
+    graphContext;
+
+  const eventBus = useMemo(
+    () => (enableContextMenu ? orchestrator : null),
+    [orchestrator, enableContextMenu]
+  );
+
+  const [element] = useElementPanel(eventBus);
 
   useEffect(() => {
-    sendRenderConfigEvent({ type: 'ThemeChange', theme: resolveTheme(theme) });
+    sendRendererConfigEvent({
+      type: 'themeChange',
+      theme: resolveTheme(theme),
+    });
   }, [theme]);
 
   useEffect(() => {
-    if (!graphClient) return;
+    if (!orchestrator) return;
 
     const showTaskIds = taskIds.length ? taskIds : [taskId];
 
@@ -57,7 +68,7 @@ export function NxDevTaskGraph({
         ),
       }
     );
-  }, [graphClient]);
+  }, [orchestrator]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -66,27 +77,45 @@ export function NxDevTaskGraph({
         className="flex h-full w-full cursor-pointer"
       ></div>
 
-      {graphMenu ? (
-        <NxGraphContextMenu
-          menu={graphMenu.props}
-          virtualElement={graphMenu.virtualElement}
-          placement="top"
-          menuItemsContainerClassName="dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
-        >
-          {{
-            task: ({ data }) => (
-              <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
-                <div className="flex items-center gap-2">
-                  <Tag>{data.executor}</Tag>
-                  <span className="font-mono">{data.label}</span>
-                </div>
-
-                {data.description ? <p>{data.description}</p> : null}
-              </div>
-            ),
-          }}
-        </NxGraphContextMenu>
-      ) : null}
+      <NxGraphElementPanel
+        element={element}
+        panelContainerClassName="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+        panelHeaderClassName="border-slate-300 dark:border-slate-700"
+        panelContentContainerClassName="divide-slate-300 dark:divide-slate-700"
+        header={{
+          task: (element, { open, close }) => (
+            <NxGraphTaskNodePanelHeader
+              element={element}
+              open={open}
+              close={close}
+              elementNameClassName="text-slate-900 dark:text-slate-100"
+              closeButtonClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
+              taskFlagBadgeClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600"
+            />
+          ),
+        }}
+      >
+        {{
+          task: (element) => (
+            <NxGraphTaskNodePanelContent
+              element={element}
+              sectionHeadingClassName="text-slate-900 dark:text-slate-100"
+              sectionTextClassName="text-slate-700 dark:text-slate-300"
+              actionButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
+              sectionListContainerClassName="border-slate-200 dark:border-slate-700"
+              sectionListSectionClassName="bg-slate-50 dark:bg-slate-800"
+              sectionListHeaderClassName="text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-800"
+              sectionListHeaderLabelClassName="text-slate-600 dark:text-slate-400"
+              sectionListItemsClassName="divide-slate-200 dark:divide-slate-600"
+              sectionListItemClassName="bg-slate-50 dark:bg-slate-700"
+              sectionListItemLabelClassName="text-slate-900 dark:text-slate-100"
+              loadingSkeletonHeaderClassName="bg-slate-200 dark:bg-slate-600"
+              loadingSkeletonItemClassName="bg-slate-100 dark:bg-slate-700"
+              loadingSkeletonListClassName="bg-slate-50 dark:bg-slate-800"
+            />
+          ),
+        }}
+      </NxGraphElementPanel>
     </div>
   );
 }

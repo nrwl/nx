@@ -16,9 +16,11 @@ import {
   ExpandedTargetsContext,
 } from '@nx/graph-internal-ui-project-details';
 import { useCallback, useContext, useEffect } from 'react';
+import { GRAPH_SERIALIZATION_VERSION, GraphStateSerializer } from '@nx/graph';
 
 interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
+  projectId?: string;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   connectedToCloud?: boolean;
@@ -27,6 +29,7 @@ interface ProjectDetailsProps {
 
 export function ProjectDetailsWrapper({
   project,
+  projectId,
   sourceMap,
   errors,
   connectedToCloud,
@@ -44,21 +47,30 @@ export function ProjectDetailsWrapper({
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
       if (environment === 'nx-console') {
-        externalApiService.postEvent({
+        return externalApiService.postEvent({
           type: 'open-project-graph',
           payload: {
             projectName: data.projectName,
           },
         });
-      } else {
-        navigate(
-          routeConstructor(
-            `/projects/${encodeURIComponent(data.projectName)}`,
-            true,
-            ['expanded'] // omit expanded targets from search params
-          )
-        );
       }
+
+      const serializedGraphState = GraphStateSerializer.serialize({
+        c: {},
+        s: {
+          type: 'focused',
+          nodeId: projectId || `project-${data.projectName}`,
+        },
+        v: GRAPH_SERIALIZATION_VERSION,
+      });
+
+      navigate(
+        routeConstructor(`/projects`, (searchParams) => {
+          searchParams.set('graph', serializedGraphState);
+          searchParams.delete('expanded');
+          return searchParams;
+        })
+      );
     },
     [externalApiService, routeConstructor, navigate, environment]
   );
@@ -169,6 +181,7 @@ export function ProjectDetailsWrapper({
     <>
       <ProjectDetails
         project={project}
+        projectId={projectId}
         sourceMap={sourceMap}
         onViewInProjectGraph={handleViewInProjectGraph}
         onViewInTaskGraph={handleViewInTaskGraph}

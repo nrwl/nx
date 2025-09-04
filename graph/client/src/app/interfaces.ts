@@ -1,13 +1,9 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
-/* eslint-enable @nx/enforce-module-boundaries */
-import type { TaskGraphClientResponse } from '@nx/graph-shared';
-
-export interface WorkspaceLayout {
-  libsDir: string;
-  appsDir: string;
-}
+import type {
+  ProjectGraphClientResponse,
+  TaskGraphClientResponse,
+} from 'nx/src/command-line/graph/graph';
 
 export interface ProjectGraphService {
   getHash: () => Promise<string>;
@@ -22,17 +18,4 @@ export interface ProjectGraphService {
 
 export interface Environment {
   environment: 'dev' | 'watch' | 'release';
-}
-
-export interface GraphPerfReport {
-  renderTime: number;
-  numNodes: number;
-  numEdges: number;
-}
-
-export interface CompositeNode {
-  id: string;
-  label: string;
-  state: 'expanded' | 'collapsed' | 'hidden';
-  parent?: string;
 }
