@@ -75,6 +75,15 @@ impl TerminalPaneData {
                     self.scroll(ScrollDirection::Down);
                     return Ok(None);
                 }
+                // Handle Home/End keys for jumping to beginning/end when not in interactive mode
+                KeyCode::Home if !self.is_interactive => {
+                    pty_mut.scroll_to_top();
+                    return Ok(None);
+                }
+                KeyCode::End if !self.is_interactive => {
+                    pty_mut.scroll_to_bottom();
+                    return Ok(None);
+                }
                 // Handle ctrl+u and ctrl+d for scrolling when not in interactive mode
                 KeyCode::Char('u')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>

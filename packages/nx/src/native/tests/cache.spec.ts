@@ -32,6 +32,7 @@ describe('Cache', () => {
         project: 'proj',
         target: 'test',
         configuration: 'production',
+        cache: true,
       },
     ]);
   });
