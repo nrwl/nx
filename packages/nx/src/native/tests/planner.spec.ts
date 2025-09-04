@@ -102,7 +102,7 @@ describe('task planner', () => {
         {
           "parent:build": [
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
-            "runtime:echo runtime123",
+            "parent:runtime:echo runtime123",
             "env:NONEXISTENTENV",
             "env:NX_CLOUD_ENCRYPTION_KEY",
             "env:TESTENV",

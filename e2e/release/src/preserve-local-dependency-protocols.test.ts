@@ -67,8 +67,6 @@ describe('nx release preserve local dependency protocols', () => {
     previousPackageManager = process.env.SELECTED_PM;
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
-    // Ignore NPM warnings as to not affect snapshots
-    execSync('npm config set loglevel error');
   });
 
   afterEach(() => cleanupProject());
