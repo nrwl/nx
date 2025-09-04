@@ -569,7 +569,7 @@ export async function startServer(): Promise<Server> {
                 sockets: openSockets,
               });
             }
-          }).unref();
+          }, 20).unref();
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
