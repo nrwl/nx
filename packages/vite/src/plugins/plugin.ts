@@ -574,7 +574,7 @@ function getOutputs(
     build?.rollupOptions?.input ||
     existsSync(join(workspaceRoot, projectRoot, 'index.html'));
 
-  const hasServeConfig = Boolean(server);
+  const hasServeConfig = Boolean(server?.host || server?.port);
 
   const reportsDirectoryPath = normalizeOutputPath(
     test?.coverage?.reportsDirectory,
