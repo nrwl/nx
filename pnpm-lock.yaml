@@ -2687,9 +2687,6 @@ importers:
       minimatch:
         specifier: 9.0.3
         version: 9.0.3
-      nx:
-        specifier: workspace:*
-        version: link:../nx
       semver:
         specifier: ^7.5.3
         version: 7.7.2
@@ -2706,6 +2703,9 @@ importers:
       jest:
         specifier: ^29.4.1
         version: 29.7.0(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@24.2.0)(typescript@5.9.2))
+      nx:
+        specifier: workspace:*
+        version: link:../nx
 
   packages/docker:
     dependencies:
@@ -2884,12 +2884,13 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      nx:
-        specifier: workspace:*
-        version: link:../nx
       toml-eslint-parser:
         specifier: ^0.10.0
         version: 0.10.0
+    devDependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../nx
 
   packages/jest:
     dependencies:

@@ -36,8 +36,10 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "toml-eslint-parser": "^0.10.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
