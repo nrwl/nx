@@ -157,8 +157,8 @@ describe('native task hasher', () => {
             "env:TESTENV": "11441948532827618368",
             "parent:ProjectConfiguration": "3608670998275221195",
             "parent:TsConfig": "2264969541778889434",
+            "parent:runtime:echo runtime123": "29846575039086708",
             "parent:{projectRoot}/**/*": "17059468255294227635",
-            "runtime:echo runtime123": "29846575039086708",
             "tagged:ProjectConfiguration": "8596726088057301092",
             "tagged:TsConfig": "2264969541778889434",
             "tagged:{projectRoot}/**/*": "14666997081331501901",
@@ -167,7 +167,7 @@ describe('native task hasher', () => {
             "unrelated:{projectRoot}/**/*": "4127219831408253695",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
           },
-          "value": "15987635381237972716",
+          "value": "3148053743646982433",
         },
       ]
     `);
@@ -809,14 +809,14 @@ describe('native task hasher', () => {
     // The runtime command should have access to NX_PROJECT_ROOT
     // and the hash should include that output
     expect(hash.details).toHaveProperty(
-      'runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'
+      'parent:runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'
     );
 
     // Verify the hash is deterministic and non-empty, proving NX_PROJECT_ROOT was available
     const runtimeHash =
-      hash.details['runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'];
+      hash.details['parent:runtime:echo "NX_PROJECT_ROOT: $NX_PROJECT_ROOT"'];
     expect(runtimeHash).toBeDefined();
     expect(runtimeHash).not.toBe('3244421341483603138'); // Should not be empty hash
-    expect(runtimeHash).toBe('17104739612706417536'); // Should be consistent hash for "libs/parent"
+    expect(runtimeHash).toBe('12937326468511235161'); // Should be consistent hash for "libs/parent"
   });
 });

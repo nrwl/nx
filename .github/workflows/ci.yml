@@ -64,7 +64,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24.6
+          node-version: 20
           cache: 'pnpm'
 
       - name: Cache Rust toolchain and cargo registry
@@ -280,7 +280,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24.3
+          node-version: 20
           cache: 'pnpm'
 
       - name: Cache Rust toolchain and cargo registry
