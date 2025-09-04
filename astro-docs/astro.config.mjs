@@ -7,9 +7,19 @@ import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import { sidebar } from './sidebar.mts';
 
+const BASE = '/docs';
+
+const PUBLIC_CONFIG = {
+  cookiebotDisabled: process.env.COOKIEBOT_DISABLED === 'true',
+  cookiebotId: process.env.COOKIEBOT_ID ?? null,
+  gaMeasurementId: 'UA-88380372-10',
+  gtmMeasurementId: 'GTM-KW8423B6',
+  isProd: process.env.NODE_ENV === 'production',
+};
+
 // https://astro.build/config
 export default defineConfig({
-  base: '/docs',
+  base: BASE,
   vite: { plugins: [tailwindcss()] },
   // Allow this to be configured per environment
   // Note: this happens during build time so we don't use `import.meta.env`
@@ -39,6 +49,35 @@ export default defineConfig({
         dark: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
+      head: [
+        {
+          tag: 'script',
+          content: `window.__CONFIG = ${JSON.stringify(PUBLIC_CONFIG)};`,
+        },
+        ...(process.env.COOKIEBOT_ID &&
+        process.env.COOKIEBOT_DISABLED !== 'true'
+          ? [
+              {
+                /** @type {"script"} */
+                tag: 'script',
+                attrs: {
+                  id: 'Cookiebot',
+                  src: 'https://consent.cookiebot.com/uc.js',
+                  'data-cbid': process.env.COOKIEBOT_ID,
+                  'data-blockingmode': 'auto',
+                  type: 'text/javascript',
+                },
+              },
+            ]
+          : []),
+        {
+          tag: 'script',
+          attrs: {
+            src: `${BASE}/global-scripts.js`,
+            defer: true,
+          },
+        },
+      ],
       plugins: [],
       routeMiddleware: [
         './src/plugins/banner.middleware.ts',
