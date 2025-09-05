@@ -13,7 +13,7 @@ export const yargsLoginCommand: CommandModule = {
         type: 'string',
         required: false,
       })
-    ),
+    ).help(false).showHelpOnFail(false),
   handler: async (args: any) => {
     process.exit(await (await import('./login')).loginHandler(args));
   },
