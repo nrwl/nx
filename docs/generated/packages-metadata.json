@@ -2489,6 +2489,16 @@
     ],
     "migrations": [
       {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.7 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-7.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-7",
+        "version": "21.5.1-beta.5",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-7",
+        "type": "migration"
+      },
+      {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.6 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-6.json",
         "hidden": false,
