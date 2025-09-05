@@ -1,12 +1,13 @@
 import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
-import {
+import { NxJsonConfiguration } from '../config/nx-json';
+import type {
   FileData,
   FileMap,
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { workspaceDataDirectory } from '../utils/cache-directory';
@@ -16,7 +17,6 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
-import { PackageJson } from '../utils/package-json';
 import { nxVersion } from '../utils/versions';
 import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
 import {
@@ -34,6 +34,7 @@ export interface FileMapCache {
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
   fileMap: FileMap;
+  externalNodes?: Record<string, string>;
 }
 
 export const nxProjectGraph = join(
@@ -182,9 +183,11 @@ export function createProjectFileMapCache(
   nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
   fileMap: FileMap,
-  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
+  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
+  externalNodes: Record<string, ProjectGraphExternalNode>
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
+  const externalNodesData = getExternalNodesData(externalNodes);
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
@@ -193,6 +196,7 @@ export function createProjectFileMapCache(
     nxJsonPlugins,
     pluginsConfig: nxJson?.pluginsConfig,
     fileMap,
+    externalNodes: externalNodesData,
   };
   return newValue;
 }
@@ -272,7 +276,8 @@ export function shouldRecomputeWholeGraph(
   packageJsonDeps: Record<string, string>,
   projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
-  tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
+  tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
+  externalNodes?: Record<string, ProjectGraphExternalNode>
 ): boolean {
   if (cache.version !== '6.0') {
     return true;
@@ -315,6 +320,14 @@ export function shouldRecomputeWholeGraph(
   if (
     JSON.stringify(nxJson?.pluginsConfig) !==
     JSON.stringify(cache.pluginsConfig)
+  ) {
+    return true;
+  }
+
+  // Check if external nodes have changed
+  if (
+    hashExternalNodes(getExternalNodesData(externalNodes)) !==
+    hashExternalNodes(cache.externalNodes)
   ) {
     return true;
   }
@@ -444,4 +457,28 @@ function getNxJsonPluginsData(
       options,
     };
   });
+}
+
+function getExternalNodesData(
+  externalNodes: Record<string, ProjectGraphExternalNode>
+): Record<string, string> {
+  return Object.entries(externalNodes).reduce((acc, [name, node]) => {
+    acc[name] = node.data.version;
+    return acc;
+  }, {});
+}
+
+function hashExternalNodes(
+  externalNodes: Record<string, string> | undefined
+): string {
+  if (!externalNodes || Object.keys(externalNodes).length === 0) {
+    return '';
+  }
+
+  // Sort external nodes by name for consistent hashing
+  const sortedNodes = Object.entries(externalNodes).sort(([a], [b]) =>
+    a.localeCompare(b)
+  );
+
+  return JSON.stringify(sortedNodes);
 }
