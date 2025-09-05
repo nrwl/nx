@@ -10,9 +10,9 @@ const ignoredLinks = [
   // TODO: caleb make this nx api reference page
   '/docs/reference/nx/executors',
   'NxPowerpack-Trial-v1.1.pdf',
-  // Known issues with devkit type gen atm: see DOC-63
-  'devkit/tasksRunnerOptions',
-  'devkit/GenerateFilesOptions',
+  // Known issues with devkit type gen atm
+  // we need to decide if we're using devkit/:type/:page or devkit/:page
+  'devkit',
 ];
 
 // These are more so until we cut over and can modify production file links

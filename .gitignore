@@ -118,3 +118,5 @@ packages/angular-rspack-compiler/coverage
 # Angular Rspack Packages use a template to generate the correct README
 packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
+
+test-output
