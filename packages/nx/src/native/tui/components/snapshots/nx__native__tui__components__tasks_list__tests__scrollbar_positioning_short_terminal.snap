@@ -1,0 +1,16 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                "
+" NX    Running Test Tasks with Scrollbar...                  Cache   Duration   "
+"                                                                               ↑"
+"                                                                               █"
+"> ·    task-1                                                  ...        ...  █"
+"  ·    task-10                                                 ...        ...  ║"
+"  ·    task-11                                                 ...        ...  ║"
+"  ·    task-12                                                 ...        ...  ║"
+"  ·    task-13                                                 ...        ...  ║"
+"  ·    task-14                                                 ...        ...  ║"
+"                                                                               ↓"
+"                                                                quit: q  help: ?"

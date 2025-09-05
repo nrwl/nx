@@ -1,0 +1,19 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                "
+" NX    Running Scrolling Test...                                Cache   Duration"
+"                                                                                "
+"                                                                                "
+"> ·    short1                                                     ...        ..."
+"  ·    short2                                                     ...        ..."
+"  ·    this-is-a-very-long-task-name-that-exceeds-thirty-chara    ...        ..."
+"                                                                                "
+"                                                                                "
+"                                                                                "
+"                                                                                "
+"                                                                                "
+"                                                                                "
+"                                                                                "
+"                                                                quit: q  help: ?"
