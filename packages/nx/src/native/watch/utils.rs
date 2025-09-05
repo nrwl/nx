@@ -43,19 +43,18 @@ pub(super) fn get_gitignore_files<T: AsRef<str>>(
     let mut ignore_files = collect_workspace_gitignores(&root_path);
 
     // Add parent .gitignore files using shared logic
-    for gitignore_path in parent_gitignore_files(&root_path) {
-        if gitignore_path.exists() {
-            ignore_files.push(IgnoreFile {
-                path: gitignore_path.clone(),
-                applies_in: Some(
-                    gitignore_path
-                        .parent()
-                        .unwrap_or(&gitignore_path)
-                        .to_path_buf(),
-                ),
+    if let Some(gitignore_paths) = parent_gitignore_files(&root_path) {
+        ignore_files.extend(gitignore_paths.into_iter().map(|gitignore_path| {
+            let applies_in = gitignore_path
+                .parent()
+                .expect(".gitignore file should have a parent directory")
+                .to_path_buf();
+            IgnoreFile {
+                path: gitignore_path,
+                applies_in: Some(applies_in),
                 applies_to: None,
-            });
-        }
+            }
+        }));
     }
 
     trace!(?ignore_files, "Final ignore files list");

@@ -6,7 +6,7 @@ use crate::native::glob::build_glob_set;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::logger::enable_logger;
-use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files_unbounded};
+use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -178,14 +178,16 @@ where
     walker.hidden(false);
 
     if use_ignores {
-        // Disable automatic parent traversal - we'll handle it manually for consistency
-        walker.parents(false);
-
-        // Add parent .gitignore files using shared logic
-        for gitignore_path in parent_gitignore_files_unbounded(&directory) {
-            if gitignore_path.exists() {
+        // Handle parent .gitignore files based on git repository boundaries
+        if let Some(gitignore_paths) = parent_gitignore_files(&directory) {
+            // Workspace is git root or nested in git repo - use manual parent traversal
+            walker.parents(false);
+            for gitignore_path in gitignore_paths {
                 walker.add_ignore(gitignore_path);
             }
+        } else {
+            // No git repo found - use automatic parent traversal for backwards compatibility
+            walker.parents(true);
         }
 
         walker.add_custom_ignore_filename(".nxignore");
