@@ -14,7 +14,7 @@ export interface NxPlaywrightOptions {
   /**
    * Whether to generate blob reports. Useful when running atomized tasks in CI
    * and you want to merge the reports.
-   * @default false
+   * @default `!!process.env['CI']`
    */
   generateBlobReports?: boolean;
 }
@@ -66,7 +66,9 @@ export function nxE2EPreset(
         : join(offset, 'dist', '.playwright', projectPath, 'playwright-report'),
     },
   ]);
-  if (options?.generateBlobReports) {
+  const shouldGenerateBlobReports =
+    options?.generateBlobReports ?? !!process.env['CI'];
+  if (shouldGenerateBlobReports) {
     reporters.push([
       'blob',
       {

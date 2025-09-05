@@ -15,10 +15,7 @@ const baseURL = process.env['BASE_URL'] || '<% if(webServerAddress) {%><%= webSe
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, {
-    testDir: './<%= directory %>',
-    generateBlobReports: !!process.env['CI'],
-  }),
+  ...nxE2EPreset(__filename, { testDir: './<%= directory %>' }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
