@@ -28,14 +28,12 @@ describe('NxTaskHistory', () => {
         project: 'proj',
         target: 'build',
         configuration: 'production',
-        cache: true,
       },
       {
         hash: '234',
         project: 'proj',
         target: 'build',
         configuration: 'production',
-        cache: true,
       },
     ]);
   });
@@ -124,62 +122,5 @@ describe('NxTaskHistory', () => {
       },
     ]);
     expect(r['proj:build:production']).toEqual(60 * 60 * 1000);
-  });
-
-  it('should not consider non-cacheable tasks as flaky', () => {
-    // Add tasks with different cache settings that have mixed success/failure
-    taskDetails.recordTaskDetails([
-      {
-        hash: '345',
-        project: 'proj',
-        target: 'serve',
-        configuration: undefined,
-        cache: false,
-      },
-      {
-        hash: '456',
-        project: 'proj',
-        target: 'dev',
-        configuration: undefined,
-        cache: false, // explicitly non-cacheable
-      },
-    ]);
-
-    taskHistory.recordTaskRuns([
-      // cache: false task
-      {
-        hash: '345',
-        code: 1,
-        status: 'failure',
-        start: Date.now() - 1000 * 60 * 60,
-        end: Date.now(),
-      },
-      {
-        hash: '345',
-        code: 0,
-        status: 'success',
-        start: Date.now() - 1000 * 60 * 60,
-        end: Date.now(),
-      },
-      // cache: null task
-      {
-        hash: '456',
-        code: 1,
-        status: 'failure',
-        start: Date.now() - 1000 * 60 * 60,
-        end: Date.now(),
-      },
-      {
-        hash: '456',
-        code: 0,
-        status: 'success',
-        start: Date.now() - 1000 * 60 * 60,
-        end: Date.now(),
-      },
-    ]);
-
-    const r = taskHistory.getFlakyTasks(['345', '456']);
-    expect(r).not.toContain('345'); // Should not be flaky because cache = false
-    expect(r).not.toContain('456'); // Should not be flaky because cache = false
   });
 });

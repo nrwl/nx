@@ -400,7 +400,7 @@ mod tests {
             let b = &tasks[i];
 
             // Map status to category for comparison
-            let status_to_category = |status: &TaskStatus, _name: &str| -> u8 {
+            let status_to_category = |status: &TaskStatus, name: &str| -> u8 {
                 // In this test we're using an empty highlighted list
                 match status {
                     TaskStatus::InProgress | TaskStatus::Shared => 0,
