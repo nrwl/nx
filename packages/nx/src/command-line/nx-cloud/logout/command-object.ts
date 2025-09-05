@@ -7,9 +7,9 @@ export const yargsLogoutCommand: CommandModule = {
     'Logout from Nx Cloud. This command is an alias for [`nx-cloud logout`](/ci/reference/nx-cloud-cli#npx-nxcloud-logout).',
   builder: (yargs) =>
     withVerbose(yargs)
-      .option('help', { describe: 'Show Help.', type: 'boolean' })
       .help(false)
-      .showHelpOnFail(false),
+      .showHelpOnFail(false)
+      .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(await (await import('./logout')).logoutHandler(args));
   },
