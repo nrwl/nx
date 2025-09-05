@@ -13,6 +13,11 @@
         "description": "The platform to target (e.g. web, node).",
         "enum": ["web", "node"]
       },
+      "deleteOutputPath": {
+        "type": "boolean",
+        "description": "Delete the output path before building.",
+        "default": true
+      },
       "main": { "type": "string", "description": "The main entry file." },
       "outputPath": {
         "type": "string",
