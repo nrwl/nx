@@ -33,7 +33,7 @@ CREATE apps/react/shell/src/environments/environment.ts
 CREATE apps/react/shell/src/favicon.ico
 CREATE apps/react/shell/src/index.html
 CREATE apps/react/shell/tsconfig.app.json
-CREATE apps/react/shell/webpack.config.ts
+CREATE apps/react/shell/rspack.config.ts
 CREATE apps/react/shell/.babelrc
 CREATE apps/react/shell/src/app/nx-welcome.tsx
 CREATE apps/react/shell/src/app/app.module.css
@@ -47,7 +47,6 @@ CREATE apps/react/shell/tsconfig.spec.json
 CREATE apps/react/shell/src/bootstrap.tsx
 CREATE apps/react/shell/module-federation.config.ts
 CREATE apps/react/shell/src/main.ts
-CREATE apps/react/shell/webpack.config.prod.ts
 ```
 
 {% /tab %}
@@ -100,7 +99,7 @@ CREATE apps/react/with-remotes/shell/src/environments/environment.ts
 CREATE apps/react/with-remotes/shell/src/favicon.ico
 CREATE apps/react/with-remotes/shell/src/index.html
 CREATE apps/react/with-remotes/shell/tsconfig.app.json
-CREATE apps/react/with-remotes/shell/webpack.config.ts
+CREATE apps/react/with-remotes/shell/rspack.config.ts
 CREATE apps/react/with-remotes/shell/.babelrc
 CREATE apps/react/with-remotes/shell/src/app/nx-welcome.tsx
 CREATE apps/react/with-remotes/shell/src/app/app.module.css
@@ -114,7 +113,6 @@ CREATE apps/react/with-remotes/shell/tsconfig.spec.json
 CREATE apps/react/with-remotes/shell/src/bootstrap.tsx
 CREATE apps/react/with-remotes/shell/module-federation.config.ts
 CREATE apps/react/with-remotes/shell/src/main.ts
-CREATE apps/react/with-remotes/shell/webpack.config.prod.ts
 
 CREATE apps/react/with-remotes/remote1/src/app/app.spec.tsx
 CREATE apps/react/with-remotes/remote1/src/assets/.gitkeep
@@ -123,7 +121,7 @@ CREATE apps/react/with-remotes/remote1/src/environments/environment.ts
 CREATE apps/react/with-remotes/remote1/src/favicon.ico
 CREATE apps/react/with-remotes/remote1/src/index.html
 CREATE apps/react/with-remotes/remote1/tsconfig.app.json
-CREATE apps/react/with-remotes/remote1/webpack.config.ts
+CREATE apps/react/with-remotes/remote1/rspack.config.ts
 CREATE apps/react/with-remotes/remote1/.babelrc
 CREATE apps/react/with-remotes/remote1/src/app/nx-welcome.tsx
 CREATE apps/react/with-remotes/remote1/src/app/app.module.css
@@ -138,7 +136,6 @@ CREATE apps/react/with-remotes/remote1/src/bootstrap.tsx
 CREATE apps/react/with-remotes/remote1/module-federation.config.ts
 CREATE apps/react/with-remotes/remote1/src/main.ts
 CREATE apps/react/with-remotes/remote1/src/remote-entry.ts
-CREATE apps/react/with-remotes/remote1/webpack.config.prod.ts
 
 UPDATE tsconfig.base.json
 
@@ -149,7 +146,7 @@ CREATE apps/react/with-remotes/remote2/src/environments/environment.ts
 CREATE apps/react/with-remotes/remote2/src/favicon.ico
 CREATE apps/react/with-remotes/remote2/src/index.html
 CREATE apps/react/with-remotes/remote2/tsconfig.app.json
-CREATE apps/react/with-remotes/remote2/webpack.config.ts
+CREATE apps/react/with-remotes/remote2/rspack.config.ts
 CREATE apps/react/with-remotes/remote2/.babelrc
 CREATE apps/react/with-remotes/remote2/src/app/nx-welcome.tsx
 CREATE apps/react/with-remotes/remote2/src/app/app.module.css
@@ -164,7 +161,6 @@ CREATE apps/react/with-remotes/remote2/src/bootstrap.tsx
 CREATE apps/react/with-remotes/remote2/module-federation.config.ts
 CREATE apps/react/with-remotes/remote2/src/main.ts
 CREATE apps/react/with-remotes/remote2/src/remote-entry.ts
-CREATE apps/react/with-remotes/remote2/webpack.config.prod.ts
 ```
 
 {% /tab %}
