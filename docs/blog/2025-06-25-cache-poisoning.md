@@ -5,7 +5,6 @@ authors: ['Victor Savkin']
 tags: ['caching', 'security']
 cover_image: /blog/images/2025-06-25/header.avif
 description: 'Build systems with remote caching can inadvertently grant every developer write access to production. Learn about the CREEP vulnerability (CVE-2025-36852) and how to protect your organization.'
-pinned: true
 ---
 
 Build systems with remote caching make CI/CD pipelines fast. Very fast. They are essential for scaling modern software development.
