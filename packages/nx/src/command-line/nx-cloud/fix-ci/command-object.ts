@@ -9,7 +9,7 @@ export const yargsFixCiCommand: CommandModule = {
     withVerbose(yargs)
       .help(false)
       .showHelpOnFail(false)
-      .option('help', { describe: 'Show help.', type: 'boolean' }),
+      .option('help', { describe: 'Show help', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(await (await import('./fix-ci')).fixCiHandler(args));
   },
