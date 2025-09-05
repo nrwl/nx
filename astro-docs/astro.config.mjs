@@ -47,6 +47,7 @@ export default defineConfig({
         // since the sidebar doesn't auto generate w/ dynamic routes from src/pages/reference
         // only the src/content/docs/reference files
         './src/plugins/sidebar-reference-updater.middleware.ts',
+        './src/plugins/og.middleware.ts',
       ],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
