@@ -6,7 +6,6 @@ tags: ['nx-cloud', 'release']
 cover_image: /blog/images/2025-06-24/header.avif
 description: 'Discover Polygraph for Nx Cloud: Gain organization-wide visibility, enforce coding standards, and automate workflows across all your repositories, even those not using Nx. Learn how Polygraph empowers enterprise teams with proactive architecture management and automated consistency.'
 youtubeUrl: https://youtu.be/BA_nkErlQoE
-pinned: true
 ---
 
 The monorepo approach has proven to be a powerful solution for managing applications and libraries within a single repository. It gives you visibility into the dependency graph of your projects, central management of tooling, and consolidated enforcement of organizational standards. But that visibility and management end at the boundaries of that repo. What if it didn't have to? That's why we’re excited to announce **Polygraph** for **Nx Cloud**. Polygraph brings the power of monorepo-level visibility and efficiency to your entire organization.
