@@ -683,7 +683,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
                   Your workspace is connected to Nx Cloud.
                 </p>
                 <a
-                  href="https://nx.dev/ci/intro/ci-with-nx#learn-about-nx-on-ci"
+                  href="https://nx.dev/ci/getting-started/intro/ci-with-nx#learn-about-nx-on-ci"
                   target="_blank"
                   rel="noreferrer"
                 > Learn about Nx on CI

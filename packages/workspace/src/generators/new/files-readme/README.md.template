@@ -154,7 +154,7 @@ To connect to Nx Cloud, run the following command:
 npx nx connect
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/getting-started/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
 
 - [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
@@ -169,7 +169,7 @@ Use the following command to configure a CI workflow for your workspace:
 npx nx g ci-workflow
 ```<% } %>
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+[Learn more about Nx on CI](https://nx.dev/ci/getting-started/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 
 ## Install Nx Console
 
@@ -182,7 +182,7 @@ Nx Console is an editor extension that enriches your developer experience. It le
 Learn more:
 <% if(learnMoreLink){ %>
 - [Learn more about this workspace setup](<%= learnMoreLink %>)<% } %>
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Learn about Nx on CI](https://nx.dev/ci/getting-started/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 
