@@ -13,12 +13,17 @@ fn collect_workspace_gitignores<P: AsRef<Path>>(root: P) -> Vec<IgnoreFile> {
     let gitignore_filters = vec!["node_modules".to_string()];
 
     nx_walker_sync(&root, Some(&gitignore_filters))
-        .filter_map(|path| {
+        .filter_map(|relative_path| {
             // Only process .gitignore files
-            if path.file_name()?.to_str()? == ".gitignore" {
-                let parent = path.parent().unwrap_or(&path).to_path_buf();
+            if relative_path.file_name()?.to_str()? == ".gitignore" {
+                // Convert relative path to absolute path
+                let absolute_path = root.as_ref().join(&relative_path);
+                let parent = absolute_path
+                    .parent()
+                    .unwrap_or(&absolute_path)
+                    .to_path_buf();
                 Some(IgnoreFile {
-                    path,
+                    path: absolute_path,
                     applies_in: Some(parent),
                     applies_to: None,
                 })
