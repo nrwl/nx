@@ -29,6 +29,8 @@ export default function (theme: NxMarkdownTheme) {
   Handlebars.registerHelper(
     'toc',
     function (this: ProjectReflection | DeclarationReflection) {
+      console.trace('TOC loaded!');
+      throw new Error('This should be used!');
       const md: string[] = [];
 
       const { hideInPageTOC } = theme;

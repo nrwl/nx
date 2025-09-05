@@ -10,25 +10,24 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ReflectionKind, type TypeDocOptions } from 'typedoc';
+import {
+  Application,
+  PackageJsonReader,
+  TSConfigReader,
+  TypeDocReader,
+  type TypeDocOptions,
+} from 'typedoc';
+import NxMarkdownTheme from './theme';
 
-export const categoryMap: Record<number, string> = {
-  [ReflectionKind.Class]: 'Classes',
-  [ReflectionKind.Enum]: 'Enumerations',
-  [ReflectionKind.Function]: 'Functions',
-  [ReflectionKind.Interface]: 'Interfaces',
-  [ReflectionKind.TypeAlias]: 'Type Aliases',
-  [ReflectionKind.Variable]: 'Variables',
+// Map directory names to categories
+export const directoryToCategoryMap: Record<string, string> = {
+  classes: 'Classes',
+  enums: 'Enumerations',
+  functions: 'Functions',
+  interfaces: 'Interfaces',
+  types: 'Type Aliases',
+  variables: 'Variables',
 };
-
-export const allowedReflections = [
-  ReflectionKind.Class,
-  ReflectionKind.Enum,
-  ReflectionKind.Function,
-  ReflectionKind.Interface,
-  ReflectionKind.TypeAlias,
-  ReflectionKind.Variable,
-];
 
 export function setupTypeDoc(logger: LoaderContext['logger']) {
   const tempDir = join(tmpdir(), `nx-devkit-docs`);
@@ -104,6 +103,8 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     theme: 'markdown',
     readme: 'none',
     hideBreadcrumbs: true,
+    // Disable automatic H1 generation this is done via astro now
+    hidePageTitle: true,
     allReflectionsHaveOwnDocument: true,
     skipErrorChecking: true,
     compilerOptions: {
@@ -119,4 +120,26 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     buildDir,
     defaultTypedocOptions,
   };
+}
+
+export async function runTypeDoc(
+  options: Partial<TypeDocOptions> & { [key: string]: unknown },
+  logger: LoaderContext['logger']
+) {
+  const app = await Application.bootstrapWithPlugins(
+    options as Partial<TypeDocOptions>,
+    [new TypeDocReader(), new PackageJsonReader(), new TSConfigReader()]
+  );
+
+  app.renderer.defineTheme('nx-markdown-theme', NxMarkdownTheme);
+
+  const project = await app.convert();
+
+  if (!project) {
+    throw new Error('Failed to convert the project');
+  }
+
+  const outputDir = app.options.getValue('out');
+  logger.info(`Generating typedoc files to ${outputDir}`);
+  await app.generateDocs(project, outputDir);
 }

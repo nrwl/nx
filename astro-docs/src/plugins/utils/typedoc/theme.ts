@@ -7,18 +7,17 @@ import {
 } from 'typedoc';
 import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
 import comment from './comment';
-import toc from './toc';
 
 /**
  * The MarkdownTheme is based on TypeDoc's DefaultTheme @see https://github.com/TypeStrong/typedoc/blob/master/src/lib/output/themes/DefaultTheme.ts.
  * - html specific components are removed from the renderer
  * - markdown specefic components have been added
  */
-
 export default class NxMarkdownTheme extends MarkdownTheme {
   constructor(renderer: Renderer) {
     super(renderer);
-    toc(this);
+    // NOTE: removing this still has the ToC showing up on each page?
+    // toc(this);
     comment();
   }
 
@@ -26,16 +25,16 @@ export default class NxMarkdownTheme extends MarkdownTheme {
     page: PageEvent<Reflection>,
     template: RenderTemplate<PageEvent<Reflection>>
   ): string {
-    return (
-      super
-        .render(page, template)
-        .replace(/\.md/gi, '')
-        /**
-         * Hack: This is the simplest way to update the urls and make them work
-         * in the `/packages/[name]/documents/[index|ngcli_adapter] context.
-         */
-        .replace(/\/devkit\//gi, '/devkit/documents/')
-    );
+    let content = super.render(page, template);
+
+    // NOTE: this doesn't seem to do anything?
+    // Remove .md extensions from all links in the content
+    content = content
+      .replace(/(\[.*?\]\([^)]*?)\.md(\)|#)/gi, '$1$2')
+      // Also handle any remaining .md extensions that might be in URLs
+      .replace(/\.md(?=[#)]|$)/gi, '');
+
+    return content;
   }
 
   get mappings() {
@@ -93,6 +92,7 @@ export default class NxMarkdownTheme extends MarkdownTheme {
    * Returns the full url of a given mapping and reflection
    */
   toUrl(mapping: Record<string, unknown>, reflection: Reflection) {
+    // Keep .md for actual file generation
     return (
       (mapping.directory === '.' ? '' : mapping.directory + '/') +
       this.getUrl(reflection) +

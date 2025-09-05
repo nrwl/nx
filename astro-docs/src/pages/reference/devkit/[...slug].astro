@@ -1,16 +1,18 @@
 ---
+import {devkitPages } from '../../../utils/devkit-content-queries'
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { render } from 'astro:content';
-
-import {devkitPages } from '../../../utils/devkit-content-queries'
 export async function getStaticPaths() {
-  return await devkitPages()
+  const pages = await devkitPages()
+
+  return pages
 }
 
-const { doc } = Astro.props;
-const { name } = Astro.params;
-if (!doc) {
-  throw new Error(`DevKit doc not found, ${name}`);
+const { doc } = Astro.props
+const { slug, title} = Astro.params
+
+if(!doc) {
+  throw new Error(`Missing devkit page for ${title} expected at ${slug}`)
 }
 
 const { Content, headings } = await render(doc);
