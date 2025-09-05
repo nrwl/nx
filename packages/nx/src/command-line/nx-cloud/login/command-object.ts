@@ -14,7 +14,7 @@ export const yargsLoginCommand: CommandModule = {
         required: false,
       })
     )
-      .option('help', { describe: 'Show help.', type: 'boolean', alias: 'h' })
+      .option('help', { describe: 'Show Help.', type: 'boolean' })
       .help(false)
       .showHelpOnFail(false),
   handler: async (args: any) => {

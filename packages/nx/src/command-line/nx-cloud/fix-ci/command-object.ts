@@ -7,7 +7,7 @@ export const yargsFixCiCommand: CommandModule = {
     'Fixes CI failures. This command is an alias for [`nx-cloud fix-ci`](/ci/reference/nx-cloud-cli#npx-nxcloud-fix-ci).',
   builder: (yargs) =>
     withVerbose(yargs)
-      .option('help', { describe: 'Show help.', type: 'boolean', alias: 'h' })
+      .option('help', { describe: 'Show Help.', type: 'boolean' })
       .help(false)
       .showHelpOnFail(false),
   handler: async (args: any) => {
