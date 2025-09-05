@@ -161,7 +161,7 @@ To understand how Module Federation works with Nx, let's take a look at three fi
 
 ### `apps/host/project.json`
 
-For React, the `build` target will be inferred by the `@nx/rspack/plugin`. It will evalute to `rspack build`, whereas for Angular the `@nx/angular:webpack-browser` executor is used. This is the same
+For React, the `build` target will be inferred by the `@nx/rspack/plugin`. It will evaluate to `rspack build`, whereas for Angular the `@nx/angular:webpack-browser` executor is used. This is the same
 as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration
 file.
 
@@ -186,6 +186,7 @@ In the future, Nx may automatically handle this for you.
 With React, we use Rspack by default and generate a compliant Rspack configuration file:
 
 ```javascript
+// apps/host/rspack.config.js
 import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
 import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
 import {
@@ -194,7 +195,7 @@ import {
 } from '@nx/module-federation/rspack.js';
 import { join } from 'path';
 
-import config from './module-federation.config';
+import config from './module-federation.config.js';
 
 export default {
    output: {
@@ -237,6 +238,7 @@ export default {
 The webpack configuration uses an utility function that Nx provides: `withModuleFederation`.
 
 ```javascript
+// apps/host/webpack.config.ts
 import { withModuleFederation } from '@nx/module-federation/angular';
 import moduleFederationConfig from './module-federation.config';
 
@@ -254,6 +256,7 @@ below. This example shows how you could use it to add the `LicenseWebpackPlugin`
 any webpack plugins you need.
 
 ```js
+// apps/host/webpack.config.ts
 import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
@@ -288,6 +291,7 @@ This file is the main configuration for the `host`, and you'll see `module-feder
 remotes as well.
 
 ```javascript
+// apps/host/module-federation.config.ts
 import { ModuleFederationConfig } from '@nx/module-federation';
 
 export const config: ModuleFederationConfig = {
@@ -431,7 +435,8 @@ the following line to the `host`'s project configuration.
 Next, open up the production webpack configuration file and update the remote URLs to their own sub-folder
 under `http://localhost:3000`.
 
-```javascript title="apps/host/webpack.config.prod.js"
+```javascript
+// apps/host/webpack.config.prod.js
 import { withModuleFederation } from '@nx/module-federation/angular';
 import moduleFederationConfig from './module-federation.config';
 

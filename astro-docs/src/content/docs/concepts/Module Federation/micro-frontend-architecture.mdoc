@@ -102,7 +102,8 @@ between applications.
 
 For example, you can create a base configuration file that only shares core libraries that _have_ to be shared.
 
-```javascript title="module-federation.config.ts"
+```javascript
+// module-federation.config.ts
 import { ModuleFederationConfig } from '@nx/module-federation';
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
@@ -132,7 +133,8 @@ export default config;
 
 Then, in the `shell` and remote applications, you can extend from the base configuration.
 
-```javascript title="apps/shell/module-federation.config.ts"
+```javascript
+// apps/shell/module-federation.config.ts
 import { ModuleFederationConfig } from '@nx/module-federation';
 import baseConfig from '../../module-federation.config';
 
@@ -146,7 +148,7 @@ export default config;
 ```
 
 {% aside type="note" title="More details" %}
-You can return any configuration [object that webpack/rspack's Module Federation supports](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+You can return any configuration object that webpack/rspack's Module Federation supports ([webpack docs](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints), [rspack docs](https://rspack.dev/plugins/webpack/module-federation-plugin#sharing-hints)).
 {% /aside %}
 
 There are downsides to not sharing a library (such as increasing network traffic due to duplication), so consider what

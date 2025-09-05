@@ -43,7 +43,7 @@ to exist between host and remotes.
 For example, if you have a `shell` host application, with three remotes -- `about`, `cart`, `shop` -- and a shared
 `ui-button` library, then your project graph might look something like this.
 
-![MFE setup with independent projects](../../../../assets/concepts/module-federation/mfe-dep-graph.png)
+![MFE setup with independent projects](../../../../../assets/concepts/module-federation/mfe-dep-graph.png)
 
 Keeping the applications independent allows them to be deployed on different cadences, which is the whole point of MFEs.
 
@@ -102,7 +102,8 @@ between applications.
 
 For example, you can create a base configuration file that only shares core libraries that _have_ to be shared.
 
-```javascript title="module-federation.config.ts"
+```javascript
+// module-federation.config.ts
 import { ModuleFederationConfig } from '@nx/module-federation';
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
@@ -132,7 +133,8 @@ export default config;
 
 Then, in the `shell` and remote applications, you can extend from the base configuration.
 
-```javascript title="apps/shell/module-federation.config.ts"
+```javascript
+// apps/shell/module-federation.config.ts
 import { ModuleFederationConfig } from '@nx/module-federation';
 import baseConfig from '../../module-federation.config';
 
