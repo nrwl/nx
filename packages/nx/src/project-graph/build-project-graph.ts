@@ -131,7 +131,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       packageJsonDeps,
       projects,
       nxJson,
-      rootTsConfig
+      rootTsConfig,
+      externalNodes
     );
   if (useCacheData) {
     const fromCache = extractCachedFileData(fileMap, fileMapCache);
@@ -167,7 +168,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       nxJson,
       packageJsonDeps,
       fileMap,
-      rootTsConfig
+      rootTsConfig,
+      externalNodes
     );
   } catch (e) {
     // we need to include the workspace validity errors in the final error
