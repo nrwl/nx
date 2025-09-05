@@ -65,6 +65,11 @@ export async function withModuleFederation(
            * Apply user-defined config override
            */
           ...(configOverride ? configOverride : {}),
+          experiments: {
+            asyncStartup: true,
+            // We should allow users to override experiments
+            ...(configOverride?.experiments ?? {}),
+          },
           runtimePlugins:
             process.env.NX_MF_DEV_REMOTES &&
             !options.disableNxRuntimeLibraryControlPlugin
