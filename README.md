@@ -67,7 +67,7 @@ our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIB
 help you get started.
 
 <a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank" rel="noreferrer">
-  <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute video"></p>
+  <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" alt="Nx - How to contribute video" width="600"></p>
 </a>
 
 ## Core Team
