@@ -92,16 +92,11 @@ impl NxTaskHistory {
                 .collect::<Vec<Value>>(),
         );
 
-        // Find tasks that are flaky (have inconsistent exit codes) but only among cacheable tasks.
-        // Non-cacheable tasks (like dev servers) are expected to have inconsistent results
-        // and should not be considered flaky.
         self.db
             .prepare(
-                "SELECT task_history.hash from task_history
-                    JOIN task_details ON task_history.hash = task_details.hash
-                    WHERE task_history.hash IN rarray(?1)
-                    AND task_details.cache = 1
-                    GROUP BY task_history.hash
+                "SELECT hash from task_history
+                    WHERE hash IN rarray(?1)
+                    GROUP BY hash
                     HAVING COUNT(DISTINCT code) > 1
                 ",
             )?

@@ -60,11 +60,10 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   if (tasksDetails?.recordTaskDetails) {
     tasksDetails.recordTaskDetails(
       tasksToHash.map((task) => ({
-        hash: task.hash!,
+        hash: task.hash,
         project: task.target.project,
         target: task.target.target,
         configuration: task.target.configuration,
-        cache: task.cache ?? false,
       }))
     );
   }
@@ -108,11 +107,10 @@ export async function hashTask(
   if (taskDetails?.recordTaskDetails) {
     taskDetails.recordTaskDetails([
       {
-        hash: task.hash!,
+        hash: task.hash,
         project: task.target.project,
         target: task.target.target,
         configuration: task.target.configuration,
-        cache: task.cache ?? false,
       },
     ]);
   }

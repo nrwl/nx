@@ -16,7 +16,6 @@ pub struct Task {
     pub start_time: Option<i64>,
     pub end_time: Option<i64>,
     pub continuous: Option<bool>,
-    pub cache: Option<bool>,
 }
 
 #[napi(object)]
