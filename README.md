@@ -47,7 +47,7 @@ Connect your existing Nx workspace with
 npx nx connect
 ```
 
-Learn more in the [Nx CI docs &raquo;](https://nx.dev/ci/intro?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo)
+Learn more in the [Nx CI docs &raquo;](https://nx.dev/ci/getting-started/intro?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo)
 
 ## Useful links
 
