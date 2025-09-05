@@ -13,7 +13,10 @@ export const yargsLoginCommand: CommandModule = {
         type: 'string',
         required: false,
       })
-    ).help(false).showHelpOnFail(false),
+    )
+      .option('help', { describe: 'Show help.', type: 'boolean', alias: 'h' })
+      .help(false)
+      .showHelpOnFail(false),
   handler: async (args: any) => {
     process.exit(await (await import('./login')).loginHandler(args));
   },
