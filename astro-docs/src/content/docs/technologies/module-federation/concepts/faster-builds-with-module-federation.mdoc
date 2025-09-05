@@ -1,8 +1,6 @@
 ---
 title: Faster Builds with Module Federation
 description: Learn how Module Federation in Nx enables faster builds by splitting large SPAs into smaller remote applications while minimizing common downsides.
-sidebar:
-  order: 100
 ---
 
 As applications grow, builds can become unacceptably slow, which leads to slow CI/CD pipelines and long dev-server
@@ -53,7 +51,7 @@ In the next section, we will see an example with a host app (`host`) and three r
 Although all the applications are independently built, thus have no dependency between them, conceptually you can think
 of them in the following hierarchy.
 
-![Host with implicit dependencies to remotes](../../../../assets/concepts/module-federation/dep-graph-2.png)
+![Host with implicit dependencies to remotes](../../../../../assets/concepts/module-federation/dep-graph-2.png)
 
 ## Creating an example workspace
 
@@ -77,7 +75,7 @@ that are simple to set up. You can see what the CI does by viewing the sample pu
 the [Nx Cloud](https://nx.app) integration, which gives you insight into each pipeline. We'll touch on
 this [later in this guide](#remote-computation-caching-with-nx-cloud).
 
-![Nx Cloud integration for GitHub](../../../../assets/concepts/module-federation/pull-request.png)
+![Nx Cloud integration for GitHub](../../../../../assets/concepts/module-federation/pull-request.png)
 
 Now, let's continue by creating an empty Nx workspace.
 
@@ -161,7 +159,7 @@ To understand how Module Federation works with Nx, let's take a look at three fi
 
 ### `apps/host/project.json`
 
-For React, the `build` target will be inferred by the `@nx/rspack/plugin`. It will evalute to `rspack build`, whereas for Angular the `@nx/angular:webpack-browser` executor is used. This is the same
+For React, the `build` target will be inferred by the `@nx/rspack/plugin`. It will evaluate to `rspack build`, whereas for Angular the `@nx/angular:webpack-browser` executor is used. This is the same
 as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration
 file.
 
@@ -412,7 +410,7 @@ In addition to computation caching, Nx Cloud also comes with:
 - GitHub integration, so you can easily access important information without digging through a bunch of CI/CD logs.
 - Actionable insights, which improve caching and task distribution.
 
-![Nx Cloud run details](../../../../assets/concepts/module-federation/nx-cloud.png)
+![Nx Cloud run details](../../../../../assets/concepts/module-federation/nx-cloud.png)
 
 ## Production build and deployment with Nx Cloud
 

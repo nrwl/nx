@@ -161,7 +161,7 @@ To understand how Module Federation works with Nx, let's take a look at three fi
 
 ### `apps/host/project.json`
 
-For React, the `build` target will be inferred by the `@nx/rspack/plugin`. It will evalute to `rspack build`, whereas for Angular the `@nx/angular:webpack-browser` executor is used. This is the same
+For React, the `build` target will be inferred by the `@nx/rspack/plugin`. It will evaluate to `rspack build`, whereas for Angular the `@nx/angular:webpack-browser` executor is used. This is the same
 as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration
 file.
 

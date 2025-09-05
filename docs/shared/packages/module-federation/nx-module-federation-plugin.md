@@ -91,6 +91,81 @@ The NxModuleFederationPlugin wraps and configures the Module Federation plugin f
 
 You can learn more about how Nx handles Module Federation in the [Module Federation and Nx Guide](/technologies/module-federation/concepts/module-federation-and-nx#nx-support-for-module-federation).
 
+## Deployment
+
+How applications are deployed depends on the teams and organizational requirements. There are two approaches:
+
+1. À la carte deployments - Each application is deployed according to a release schedule, and can have different cadences.
+2. Affected deployments - When changes are merged, use Nx to test and deploy the affected applications automatically.
+
+Often times, teams mix both approaches so deployments to staging (or other shared environments) are automatic. Then,
+promotion from staging to production occurs on a set cadence (e.g. weekly releases). It is also recommended to agree on
+a process to handle changes to core libraries (i.e. ones that are shared between applications). Since the core changes
+affect all applications, it also blocks all other releases, thus should not occur too frequently.
+
+You may also choose to fully automate deployments, even to production. This type of pipeline requires good end-to-end
+testing to provide higher confidence that the applications behave correctly. You will also need good rollback mechanisms
+in case of a bad deployment.
+
+When figuring out the best deployment strategy, or even how to achieve it with Module Federation and Nx, it is worth understanding what is happening under-the-hood.
+Each host and remote in your Module Federation system is treated like a separate application. However, when a remote is loaded into a host via Module Federation, Module Federation itself does not make any kind of distinguishment.
+It only cares that the JS file it is trying to load is available at the pre-specified URL, such that it can make a network request to fetch the JS file.
+
+When working locally, Nx parses the config in `module-federation.config.ts` to determine what projects in the workspace are federated. It then reads the project graph for these projects to determine what port they will be served on and uses this information to form a URL to tell Module Federation where it will find the remote JS files.
+You'll commonly see the following configuration in your `module-federation.config.ts`:
+
+```javascript
+export default {
+  remotes: ['shop', 'cart'],
+};
+```
+
+These names match the names of the projects in the workspace. Therefore, Nx can find them in the project graph and determine the information it needs.
+This usually amounts to Nx creating the following URLs:
+
+```shell
+shop@localhost:4201
+cart@localhost:4202
+```
+
+When it comes deployment to a real server, you'll need to configure the URLs to point to their real location. For example, if you deploy the host and the remotes to three servers, each with their own domain, you'd need to configure that:
+
+```shell
+shop@https://shop.example.com
+cart@https://cart.example.com
+```
+
+The `remotes` option in the `module-federation.config.ts` file allows you to do this:
+
+```javascript
+export default {
+  remotes: [
+    ['shop', 'https://shop.example.com'],
+    ['cart', 'https://cart.example.com'],
+  ],
+};
+```
+
+However, once you make this change, it will no longer work locally.
+You need some mechanism to change the URLs when you're building for a production environment.
+
+A simple way to achieve this could be to use an environment variable:
+
+```javascript
+const remotes = process.env.PRODUCTION_DEPLOY
+  ? [
+      ['shop', 'https://shop.example.com'],
+      ['cart', 'https://cart.example.com'],
+    ]
+  : ['shop', 'cart'];
+
+export default {
+  remotes,
+};
+```
+
+In your CI/CD pipeline, you can set the `PRODUCTION_DEPLOY` environment variable to `true` and then build for production, and the remotes will be configured to point to their real location.
+
 ## API Reference
 
 ### NxModuleFederationPlugin
