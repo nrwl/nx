@@ -23,7 +23,7 @@ pub fn find_git_root<P: AsRef<Path>>(start_path: P) -> Option<PathBuf> {
 /// - If workspace is nested in git repo: returns Some(parents up to git root)
 /// - If no git repo found: returns None (use walker.parents(true) for backwards compatibility)
 pub fn parent_gitignore_files<P: AsRef<Path>>(workspace_root: P) -> Option<Vec<PathBuf>> {
-    let workspace_root = workspace_root.as_ref().to_path_buf();
+    let workspace_root = workspace_root.as_ref();
     let git_root_path = find_git_root(&workspace_root)?;
 
     if git_root_path == workspace_root {
