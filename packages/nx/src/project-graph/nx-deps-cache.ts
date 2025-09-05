@@ -26,6 +26,7 @@ import {
 } from './error-types';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { serverLogger } from '../daemon/server/logger';
+import { hashObject } from '../hasher/file-hasher';
 
 export interface FileMapCache {
   version: string;
@@ -34,7 +35,7 @@ export interface FileMapCache {
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
   fileMap: FileMap;
-  externalNodes?: Record<string, string>;
+  externalNodes?: string;
 }
 
 export const nxProjectGraph = join(
@@ -187,7 +188,7 @@ export function createProjectFileMapCache(
   externalNodes: Record<string, ProjectGraphExternalNode>
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
-  const externalNodesData = getExternalNodesData(externalNodes);
+  const externalNodesHash = hashObject(getExternalNodesData(externalNodes));
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
@@ -196,7 +197,7 @@ export function createProjectFileMapCache(
     nxJsonPlugins,
     pluginsConfig: nxJson?.pluginsConfig,
     fileMap,
-    externalNodes: externalNodesData,
+    externalNodes: externalNodesHash,
   };
   return newValue;
 }
@@ -325,10 +326,7 @@ export function shouldRecomputeWholeGraph(
   }
 
   // Check if external nodes have changed
-  if (
-    hashExternalNodes(getExternalNodesData(externalNodes)) !==
-    hashExternalNodes(cache.externalNodes)
-  ) {
+  if (hashObject(getExternalNodesData(externalNodes)) !== cache.externalNodes) {
     return true;
   }
 
@@ -466,19 +464,4 @@ function getExternalNodesData(
     acc[name] = node.data.version;
     return acc;
   }, {});
-}
-
-function hashExternalNodes(
-  externalNodes: Record<string, string> | undefined
-): string {
-  if (!externalNodes || Object.keys(externalNodes).length === 0) {
-    return '';
-  }
-
-  // Sort external nodes by name for consistent hashing
-  const sortedNodes = Object.entries(externalNodes).sort(([a], [b]) =>
-    a.localeCompare(b)
-  );
-
-  return JSON.stringify(sortedNodes);
 }

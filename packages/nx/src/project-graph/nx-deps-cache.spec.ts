@@ -7,13 +7,14 @@ import {
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { nxVersion } from '../utils/versions';
+import { hashObject } from '../hasher/file-hasher';
 
 describe('nx deps utils', () => {
   describe('shouldRecomputeWholeGraph', () => {
     it('should be false when nothing changes', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ version: '6.0' }),
+          createCache({ version: '6.0', externalNodes: hashObject({}) }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
@@ -136,7 +137,7 @@ describe('nx deps utils', () => {
 
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: { 'npm:react': '18.0.0' } }),
+          createCache({ externalNodes: hashObject({ 'npm:react': '18.0.0' }) }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
@@ -149,7 +150,7 @@ describe('nx deps utils', () => {
     it('should be false when external nodes are both empty', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: {} }),
+          createCache({ externalNodes: hashObject({}) }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
@@ -170,7 +171,7 @@ describe('nx deps utils', () => {
 
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: {} }),
+          createCache({ externalNodes: hashObject({}) }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
@@ -183,7 +184,7 @@ describe('nx deps utils', () => {
     it('should be true when external nodes are removed', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: { 'npm:react': '18.0.0' } }),
+          createCache({ externalNodes: hashObject({ 'npm:react': '18.0.0' }) }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
@@ -406,7 +407,7 @@ describe('nx deps utils', () => {
           mylib: [],
         },
       },
-      externalNodes: {},
+      externalNodes: '',
     };
     return { ...defaults, ...p };
   }
