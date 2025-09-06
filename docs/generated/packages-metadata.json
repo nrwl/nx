@@ -6390,6 +6390,15 @@
         "originalFilePath": "/packages/workspace/src/generators/infer-targets/schema.json",
         "path": "workspace/generators/infer-targets",
         "type": "generator"
+      },
+      {
+        "description": "Sets up the Nx MCP & rule files for common AI Agents",
+        "file": "generated/packages/workspace/generators/set-up-ai-agents.json",
+        "hidden": true,
+        "name": "set-up-ai-agents",
+        "originalFilePath": "/packages/workspace/src/generators/set-up-ai-agents/schema.json",
+        "path": "workspace/generators/set-up-ai-agents",
+        "type": "generator"
       }
     ],
     "migrations": [
