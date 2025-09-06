@@ -410,6 +410,9 @@
             ]
           ]
         }
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
       }
     ]
   }
