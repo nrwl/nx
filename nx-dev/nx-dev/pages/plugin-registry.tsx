@@ -53,7 +53,7 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
         ...officialPluginList.map((plugin) => ({
           name: plugin.packageName,
           description: plugin.description ?? '',
-          url: plugin.path,
+          url: plugin.introPath,
           ...qualityIndicators[plugin.packageName],
           nxVersion: 'official',
           pluginType: plugin.name?.startsWith('powerpack-')

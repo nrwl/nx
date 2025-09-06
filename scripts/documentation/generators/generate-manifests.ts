@@ -320,6 +320,7 @@ function createNewPackagesManifest(packages: PackageMetadata[]): {
         'path'
       ),
       path: data.pagePath,
+      introPath: data.introPath,
     };
   });
 

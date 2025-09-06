@@ -65,6 +65,7 @@ export interface ProcessedPackageMetadata {
   name: string;
   packageName: string;
   path: string;
+  introPath: string;
   root: string;
   source: string;
 }
