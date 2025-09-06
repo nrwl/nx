@@ -163,10 +163,13 @@ describe('upgrade-react-native-projects', () => {
 
     await update(tree);
 
-    expect(execSync).toHaveBeenCalledWith('npx nx upgrade mobile-app', {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-    });
+    expect(execSync).toHaveBeenCalledWith(
+      'npx --ignore-scripts nx upgrade mobile-app',
+      {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      }
+    );
     expect(execSync).toHaveBeenCalledTimes(1);
   });
 
@@ -177,14 +180,20 @@ describe('upgrade-react-native-projects', () => {
 
     await update(tree);
 
-    expect(execSync).toHaveBeenCalledWith('npx nx upgrade mobile-app-1', {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-    });
-    expect(execSync).toHaveBeenCalledWith('npx nx upgrade mobile-app-2', {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-    });
+    expect(execSync).toHaveBeenCalledWith(
+      'npx --ignore-scripts nx upgrade mobile-app-1',
+      {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      }
+    );
+    expect(execSync).toHaveBeenCalledWith(
+      'npx --ignore-scripts nx upgrade mobile-app-2',
+      {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      }
+    );
     expect(execSync).toHaveBeenCalledTimes(2);
   });
 
@@ -274,10 +283,13 @@ describe('upgrade-react-native-projects', () => {
 
     await update(tree);
 
-    expect(execSync).toHaveBeenCalledWith('npx nx upgrade rn-config-js', {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-    });
+    expect(execSync).toHaveBeenCalledWith(
+      'npx --ignore-scripts nx upgrade rn-config-js',
+      {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      }
+    );
     expect(execSync).toHaveBeenCalledTimes(1);
   });
 
@@ -304,10 +316,13 @@ describe('upgrade-react-native-projects', () => {
 
     await update(tree);
 
-    expect(execSync).toHaveBeenCalledWith('npx nx upgrade rn-config-ts', {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-    });
+    expect(execSync).toHaveBeenCalledWith(
+      'npx --ignore-scripts nx upgrade rn-config-ts',
+      {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      }
+    );
     expect(execSync).toHaveBeenCalledTimes(1);
   });
 });

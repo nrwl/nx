@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/vite/plugin Library mode should exclude serve and preview targets when vite.config.ts is in library mode 1`] = `
 [
@@ -29,7 +29,7 @@ exports[`@nx/vite/plugin Library mode should exclude serve and preview targets w
               "metadata": {
                 "description": "Run Vite build",
                 "help": {
-                  "command": "npx vite build --help",
+                  "command": "npx --ignore-scripts vite build --help",
                   "example": {
                     "options": {
                       "manifest": "manifest.json",
@@ -54,7 +54,7 @@ exports[`@nx/vite/plugin Library mode should exclude serve and preview targets w
               ],
             },
             "watch-deps": {
-              "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+              "command": "npx --ignore-scripts nx watch --projects my-lib --includeDependentProjects -- npx --ignore-scripts nx build-deps my-lib",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -102,7 +102,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               "metadata": {
                 "description": "Run Vite build",
                 "help": {
-                  "command": "npx vite build --help",
+                  "command": "npx --ignore-scripts vite build --help",
                   "example": {
                     "options": {
                       "manifest": "manifest.json",
@@ -127,7 +127,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               "metadata": {
                 "description": "Starts Vite dev server",
                 "help": {
-                  "command": "npx vite --help",
+                  "command": "npx --ignore-scripts vite --help",
                   "example": {
                     "options": {
                       "port": 3000,
@@ -149,7 +149,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
                 "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                 "description": "Starts Vite dev server",
                 "help": {
-                  "command": "npx vite --help",
+                  "command": "npx --ignore-scripts vite --help",
                   "example": {
                     "options": {
                       "port": 3000,
@@ -173,7 +173,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               "metadata": {
                 "description": "Locally preview Vite production build",
                 "help": {
-                  "command": "npx vite preview --help",
+                  "command": "npx --ignore-scripts vite preview --help",
                   "example": {
                     "options": {
                       "port": 3000,
@@ -197,7 +197,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "command": "npx --ignore-scripts nx watch --projects my-app --includeDependentProjects -- npx --ignore-scripts nx build-deps my-app",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -240,7 +240,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "metadata": {
                 "description": "Run Vite build",
                 "help": {
-                  "command": "npx vite build --help",
+                  "command": "npx --ignore-scripts vite build --help",
                   "example": {
                     "options": {
                       "manifest": "manifest.json",
@@ -265,7 +265,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "metadata": {
                 "description": "Starts Vite dev server",
                 "help": {
-                  "command": "npx vite --help",
+                  "command": "npx --ignore-scripts vite --help",
                   "example": {
                     "options": {
                       "port": 3000,
@@ -289,7 +289,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "metadata": {
                 "description": "Locally preview Vite production build",
                 "help": {
-                  "command": "npx vite preview --help",
+                  "command": "npx --ignore-scripts vite preview --help",
                   "example": {
                     "options": {
                       "port": 3000,
@@ -311,7 +311,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
                 "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                 "description": "Starts Vite dev server",
                 "help": {
-                  "command": "npx vite --help",
+                  "command": "npx --ignore-scripts vite --help",
                   "example": {
                     "options": {
                       "port": 3000,

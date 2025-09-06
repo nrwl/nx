@@ -50,10 +50,10 @@ describe('getE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:preview",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:preview",
         "e2eDevServerTarget": "app:serve",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:serve",
       }
     `);
   });
@@ -88,10 +88,10 @@ describe('getE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:preview",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:preview",
         "e2eDevServerTarget": "app:serve",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:serve",
       }
     `);
   });
@@ -133,10 +133,10 @@ describe('getE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:vite:preview",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:vite:preview",
         "e2eDevServerTarget": "app:vite:serve",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:vite:serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:vite:serve",
       }
     `);
   });
@@ -184,10 +184,10 @@ describe('getE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:vite:preview",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:vite:preview",
         "e2eDevServerTarget": "app:vite:serve",
         "e2eWebServerAddress": "http://localhost:4400",
-        "e2eWebServerCommand": "npx nx run app:vite:serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:vite:serve",
       }
     `);
   });
@@ -238,10 +238,10 @@ describe('getE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:vite-preview",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:vite-preview",
         "e2eDevServerTarget": "app:vite-serve",
         "e2eWebServerAddress": "http://localhost:4400",
-        "e2eWebServerCommand": "npx nx run app:vite-serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:vite-serve",
       }
     `);
   });

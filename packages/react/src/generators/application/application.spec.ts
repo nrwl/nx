@@ -118,10 +118,10 @@ describe('app', () => {
               "cypressDir": "src",
               "bundler": "vite",
               "webServerCommands": {
-                "default": "npx nx run my-app:dev",
-                "production": "npx nx run my-app:preview"
+                "default": "npx --ignore-scripts nx run my-app:dev",
+                "production": "npx --ignore-scripts nx run my-app:preview"
               },
-              "ciWebServerCommand": "npx nx run my-app:preview",
+              "ciWebServerCommand": "npx --ignore-scripts nx run my-app:preview",
               "ciBaseUrl": "http://localhost:4300"
             }),
             baseUrl: 'http://localhost:4200'

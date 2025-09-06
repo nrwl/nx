@@ -79,6 +79,10 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import {
+  ensurePackageHasProvenance,
+  noProvenanceError,
+} from '../../utils/provenance';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -990,6 +994,9 @@ async function getPackageMigrationsUsingRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
+  if (packageName.startsWith('@nx/') || packageName === 'nx') {
+    await ensurePackageHasProvenance(packageName, packageVersion);
+  }
   // check if there are migrations in the packages by looking at the
   // registry directly
   const migrationsConfig = await getPackageMigrationsConfigFromRegistry(
@@ -1102,6 +1109,10 @@ async function getPackageMigrationsUsingInstall(
   const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
+
+  if (packageName.startsWith('@nx/') || packageName === 'nx') {
+    await ensurePackageHasProvenance(packageName, packageVersion);
+  }
 
   try {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
@@ -1792,14 +1803,14 @@ export async function migrate(
   });
 }
 
-export function runMigration() {
+export async function runMigration() {
   const runLocalMigrate = () => {
     runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
   if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-    const p = nxCliPath();
+    const p = await nxCliPath();
     if (p === null) {
       runLocalMigrate();
     } else {
@@ -1867,9 +1878,11 @@ export function getImplementationPath(
   return { path: implPath, fnSymbol };
 }
 
-export function nxCliPath(nxWorkspaceRoot?: string) {
+export async function nxCliPath(nxWorkspaceRoot?: string) {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
+  await ensurePackageHasProvenance('nx', version);
 
   try {
     const packageManager = detectPackageManager();

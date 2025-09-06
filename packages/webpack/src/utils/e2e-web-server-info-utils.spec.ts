@@ -38,10 +38,10 @@ describe('getWebpackE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4200",
-        "e2eCiWebServerCommand": "npx nx run app:serve-static",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:serve-static",
         "e2eDevServerTarget": "app:serve",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:serve",
       }
     `);
   });
@@ -64,10 +64,10 @@ describe('getWebpackE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4200",
-        "e2eCiWebServerCommand": "npx nx run app:serve-static",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:serve-static",
         "e2eDevServerTarget": "app:serve",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:serve",
       }
     `);
   });
@@ -97,10 +97,10 @@ describe('getWebpackE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4200",
-        "e2eCiWebServerCommand": "npx nx run app:webpack:preview",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:webpack:preview",
         "e2eDevServerTarget": "app:webpack:serve",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:webpack:serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:webpack:serve",
       }
     `);
   });
@@ -139,10 +139,10 @@ describe('getWebpackE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4200",
-        "e2eCiWebServerCommand": "npx nx run app:webpack-preview",
+        "e2eCiWebServerCommand": "npx --ignore-scripts nx run app:webpack-preview",
         "e2eDevServerTarget": "app:webpack-serve",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:webpack-serve",
+        "e2eWebServerCommand": "npx --ignore-scripts nx run app:webpack-serve",
       }
     `);
   });

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/react/react-router-plugin React Router should create nodes by default 1`] = `
 [
@@ -71,7 +71,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes by defau
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc --help",
+                  "command": "npx --ignore-scripts tsc --help",
                   "example": {
                     "options": {
                       "noEmit": true,
@@ -87,7 +87,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes by defau
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects acme --includeDependentProjects -- npx nx build-deps acme",
+              "command": "npx --ignore-scripts nx watch --projects acme --includeDependentProjects -- npx --ignore-scripts nx build-deps acme",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -161,7 +161,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes without 
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc --help",
+                  "command": "npx --ignore-scripts tsc --help",
                   "example": {
                     "options": {
                       "noEmit": true,
@@ -177,7 +177,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes without 
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects acme --includeDependentProjects -- npx nx build-deps acme",
+              "command": "npx --ignore-scripts nx watch --projects acme --includeDependentProjects -- npx --ignore-scripts nx build-deps acme",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
