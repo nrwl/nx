@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import { readNxJson, type PluginConfiguration } from '../../config/nx-json';
+import { type PluginConfiguration } from '../../config/nx-json';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -15,7 +15,6 @@ import type {
   PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
-import { createNodesFromFiles } from './utils';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
 
