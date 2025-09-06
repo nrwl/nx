@@ -11,7 +11,7 @@ In the context of Module Federation, a _module_ can be thought as any piece of c
 
 In order to share a module, it must be _federated_. This means that the module must be configured to be shared, and the application that wants to use it must be configured to use it.
 
-**Nx** includes first class support for Module Federation for React and Angular applications. This means that you can federate modules in your workspace with a few simple commands.
+**Nx** includes first-class support for Module Federation for React and Angular applications. This means that you can federate modules in your workspace with a few simple commands.
 
 {% callout type="info" title="Assumption" %}
 With this recipe we assume that you have already created a workspace with at least one React or Angular Module Federation host application.
@@ -76,7 +76,7 @@ This command will:
 {%tab label="Typescript Config File"%}
 
 ```typescript {% fileName="greeting/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'greeting',
@@ -123,7 +123,7 @@ Update the host application to use the federated module.
 {%tab label="Typescript Config File"%}
 
 ```ts {% fileName="host/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'host',
