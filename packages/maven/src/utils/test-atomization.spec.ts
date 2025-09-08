@@ -77,10 +77,10 @@ describe('TestAtomization', () => {
       expect(parentTarget.dependsOn).toHaveLength(2);
 
       // Check target groups
-      expect(targetGroups).toHaveProperty('verification');
-      expect(targetGroups['verification']).toContain('test-ci--UserServiceTest');
-      expect(targetGroups['verification']).toContain('test-ci--OrderServiceTest');
-      expect(targetGroups['verification']).toContain('test-ci');
+      expect(targetGroups).toHaveProperty('test');
+      expect(targetGroups['test']).toContain('test-ci--UserServiceTest');
+      expect(targetGroups['test']).toContain('test-ci--OrderServiceTest');
+      expect(targetGroups['test']).toContain('test-ci');
     });
 
     it('should not create targets when no test classes exist', () => {
@@ -98,7 +98,7 @@ describe('TestAtomization', () => {
 
       // Should not create any targets
       expect(Object.keys(targets)).toHaveLength(0);
-      expect(Object.keys(targetGroups)).toHaveLength(1); // verification group still created but empty
+      expect(Object.keys(targetGroups)).toHaveLength(1); // test group still created but empty
     });
   });
 });
