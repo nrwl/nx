@@ -746,11 +746,13 @@ export class DaemonClient {
         process.kill(pid, 'SIGTERM');
       }
     } catch (err) {
-      output.error({
-        title:
-          err?.message ||
-          'Something unexpected went wrong when stopping the daemon server',
-      });
+      if ((err as any).code !== 'ESRCH') {
+        output.error({
+          title:
+            err?.message ||
+            'Something unexpected went wrong when stopping the daemon server',
+        });
+      }
     }
 
     removeSocketDir();
