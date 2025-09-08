@@ -5,7 +5,6 @@ import {
 import { MavenPluginOptions, DEFAULT_OPTIONS } from './types';
 import { runMavenAnalysis } from './maven-analyzer';
 import { getCachedMavenData } from './maven-data-cache';
-import { addTestAtomization } from '../utils/maven-atomization-processor';
 
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
@@ -38,11 +37,8 @@ export const createNodesV2: CreateNodesV2 = [
         mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
       }
       
-      // Add test atomization if enabled
-      const processedData = addTestAtomization(mavenData, opts);
-      
-      // Return processed createNodesResults
-      return processedData.createNodesResults || [];
+      // Return createNodesResults (atomization now handled in Kotlin)
+      return mavenData.createNodesResults || [];
     } catch (error) {
       console.warn('Maven analysis failed:', error instanceof Error ? error.message : error);
       return [];
