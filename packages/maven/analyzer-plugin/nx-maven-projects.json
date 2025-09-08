@@ -1,11 +1,11 @@
 {
-  "createNodesResults" : [ [ "./pom.xml", {
+  "createNodesResults" : [ [ "/pom.xml", {
     "projects" : {
-      "." : {
+      "" : {
         "name" : "dev.nx.maven.nx-maven-analyzer-plugin",
-        "root" : ".",
+        "root" : "",
         "projectType" : "library",
-        "sourceRoot" : "./src/main/java",
+        "sourceRoot" : "/src/main/java",
         "targets" : {
           "process-resources" : {
             "executor" : "nx:run-commands",
@@ -13,12 +13,7 @@
               "command" : "mvn process-resources -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ "{projectRoot}/target/classes" ],
+            "cache" : false,
             "parallelism" : true
           },
           "compile" : {
@@ -41,12 +36,7 @@
               "command" : "mvn process-classes -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ "{projectRoot}/target/classes/META-INF/maven" ],
+            "cache" : false,
             "parallelism" : true
           },
           "process-test-resources" : {
@@ -55,12 +45,7 @@
               "command" : "mvn process-test-resources -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ "{projectRoot}/target/test-classes" ],
+            "cache" : false,
             "parallelism" : true
           },
           "package" : {
@@ -110,12 +95,7 @@
               "command" : "mvn site -pl dev.nx.maven:nx-maven-analyzer-plugin",
               "cwd" : "{workspaceRoot}"
             },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
+            "cache" : false,
             "parallelism" : true
           },
           "validate" : {
@@ -132,7 +112,7 @@
       }
     }
   } ] ],
-  "generatedAt" : 1756246736815,
+  "generatedAt" : 1757364479218,
   "workspaceRoot" : "/home/jason/projects/triage/java/maven/packages/maven/analyzer-plugin",
   "totalProjects" : 1,
   "analyzedProjects" : 1,
