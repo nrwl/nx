@@ -14,7 +14,7 @@ interface MavenProjectData {
   [key: string]: any;
 }
 
-const TEST_CI_TARGET_GROUP = 'verification';
+const TEST_CI_TARGET_GROUP = 'test';
 
 /**
  * Add test CI atomized targets for a Maven project
