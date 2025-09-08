@@ -7,7 +7,6 @@ import type {
   FileMap,
   ProjectFileMap,
   ProjectGraph,
-  ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { workspaceDataDirectory } from '../utils/cache-directory';
@@ -26,7 +25,6 @@ import {
 } from './error-types';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { serverLogger } from '../daemon/server/logger';
-import { hashObject } from '../hasher/file-hasher';
 
 export interface FileMapCache {
   version: string;
@@ -35,7 +33,7 @@ export interface FileMapCache {
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
   fileMap: FileMap;
-  externalNodes?: string;
+  externalNodesHash?: string;
 }
 
 export const nxProjectGraph = join(
@@ -185,10 +183,9 @@ export function createProjectFileMapCache(
   packageJsonDeps: Record<string, string>,
   fileMap: FileMap,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
-  externalNodes: Record<string, ProjectGraphExternalNode>
+  externalNodesHash: string
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
-  const externalNodesHash = hashObject(getExternalNodesData(externalNodes));
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
@@ -197,7 +194,7 @@ export function createProjectFileMapCache(
     nxJsonPlugins,
     pluginsConfig: nxJson?.pluginsConfig,
     fileMap,
-    externalNodes: externalNodesHash,
+    externalNodesHash,
   };
   return newValue;
 }
@@ -278,7 +275,7 @@ export function shouldRecomputeWholeGraph(
   projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
-  externalNodes?: Record<string, ProjectGraphExternalNode>
+  externalNodesHash: string
 ): boolean {
   if (cache.version !== '6.0') {
     return true;
@@ -326,7 +323,7 @@ export function shouldRecomputeWholeGraph(
   }
 
   // Check if external nodes have changed
-  if (hashObject(getExternalNodesData(externalNodes)) !== cache.externalNodes) {
+  if (externalNodesHash !== cache.externalNodesHash) {
     return true;
   }
 
@@ -455,13 +452,4 @@ function getNxJsonPluginsData(
       options,
     };
   });
-}
-
-function getExternalNodesData(
-  externalNodes: Record<string, ProjectGraphExternalNode>
-): Record<string, string> {
-  return Object.entries(externalNodes).reduce((acc, [name, node]) => {
-    acc[name] = node.data.version;
-    return acc;
-  }, {});
 }

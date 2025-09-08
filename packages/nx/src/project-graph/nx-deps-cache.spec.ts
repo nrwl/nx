@@ -14,12 +14,12 @@ describe('nx deps utils', () => {
     it('should be false when nothing changes', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ version: '6.0', externalNodes: hashObject({}) }),
+          createCache({ version: '6.0' }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          {}
+          ''
         )
       ).toEqual(false);
     });
@@ -32,7 +32,7 @@ describe('nx deps utils', () => {
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          {}
+          ''
         )
       ).toEqual(true);
     });
@@ -40,14 +40,12 @@ describe('nx deps utils', () => {
     it('should be true when version of nx changes', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({
-            nxVersion: '12.0.1',
-          }),
+          createCache({ nxVersion: '12.0.1' }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          {}
+          ''
         )
       ).toEqual(true);
     });
@@ -67,7 +65,7 @@ describe('nx deps utils', () => {
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          {}
+          ''
         )
       ).toEqual(true);
     });
@@ -80,7 +78,7 @@ describe('nx deps utils', () => {
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson({ mylib: ['libs/mylib/changed.ts'] }),
-          {}
+          ''
         )
       ).toEqual(true);
     });
@@ -95,7 +93,7 @@ describe('nx deps utils', () => {
             plugins: ['plugin', 'plugin2'],
           }),
           createTsConfigJson(),
-          {}
+          ''
         )
       ).toEqual(true);
     });
@@ -108,7 +106,7 @@ describe('nx deps utils', () => {
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          {}
+          ''
         )
       ).toEqual(true);
     });
@@ -121,28 +119,22 @@ describe('nx deps utils', () => {
           createProjectsConfiguration({}),
           createNxJson({ pluginsConfig: { somePlugin: { one: 1 } } }),
           createTsConfigJson(),
-          {}
+          ''
         )
       ).toEqual(true);
     });
 
     it('should be false when external nodes did not change', () => {
-      const externalNodes = {
-        'npm:react': {
-          type: 'npm' as const,
-          name: 'npm:react',
-          data: { version: '18.0.0', packageName: 'react' },
-        },
-      };
+      const externalNodesHash = hashObject({ 'npm:react': '18.0.0' });
 
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: hashObject({ 'npm:react': '18.0.0' }) }),
+          createCache({ externalNodesHash }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          externalNodes
+          externalNodesHash
         )
       ).toEqual(false);
     });
@@ -150,33 +142,27 @@ describe('nx deps utils', () => {
     it('should be false when external nodes are both empty', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: hashObject({}) }),
+          createCache({ externalNodesHash: hashObject({}) }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          {}
+          hashObject({})
         )
       ).toEqual(false);
     });
 
     it('should be true when external nodes are added', () => {
-      const externalNodes = {
-        'npm:react': {
-          type: 'npm' as const,
-          name: 'npm:react',
-          data: { version: '18.0.0', packageName: 'react' },
-        },
-      };
+      const externalNodesHash = hashObject({ 'npm:react': '18.0.0' });
 
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: hashObject({}) }),
+          createCache({ externalNodesHash: hashObject({}) }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          externalNodes
+          externalNodesHash
         )
       ).toEqual(true);
     });
@@ -184,12 +170,14 @@ describe('nx deps utils', () => {
     it('should be true when external nodes are removed', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ externalNodes: hashObject({ 'npm:react': '18.0.0' }) }),
+          createCache({
+            externalNodesHash: hashObject({ 'npm:react': '18.0.0' }),
+          }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson(),
-          {}
+          hashObject({})
         )
       ).toEqual(true);
     });
@@ -376,7 +364,7 @@ describe('nx deps utils', () => {
         createPackageJsonDeps({}),
         {} as any,
         {},
-        {}
+        ''
       );
     });
 
@@ -386,7 +374,7 @@ describe('nx deps utils', () => {
         createPackageJsonDeps({}),
         {} as any,
         undefined,
-        {}
+        ''
       );
 
       expect(result).toBeDefined();
@@ -407,7 +395,7 @@ describe('nx deps utils', () => {
           mylib: [],
         },
       },
-      externalNodes: '',
+      externalNodesHash: '',
     };
     return { ...defaults, ...p };
   }
