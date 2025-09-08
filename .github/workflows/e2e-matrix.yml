@@ -45,19 +45,19 @@ jobs:
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         name: Install pnpm
         with:
           version: 10.11.1
           run_install: false
 
       - name: Set node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
@@ -67,7 +67,7 @@ jobs:
         run: echo "path=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ${{ steps.pnpm-cache.outputs.path }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
@@ -91,7 +91,7 @@ jobs:
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           lookup-only: true
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
@@ -101,7 +101,7 @@ jobs:
 
       - name: Cache Cypress
         id: cache-cypress
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           lookup-only: true
           path: '${{ github.workspace }}/.cypress'
@@ -120,7 +120,7 @@ jobs:
       matrix: ${{ steps.process-json.outputs.MATRIX }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
@@ -146,7 +146,7 @@ jobs:
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
@@ -154,14 +154,14 @@ jobs:
       - name: Prepare dir for output
         run: mkdir -p outputs
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         name: Install pnpm
         with:
           version: 10.11.1
           run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
@@ -179,7 +179,7 @@ jobs:
   
       - name: Install bun
         if: ${{ matrix.os != 'windows-latest' }}
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
         with:
           bun-version: latest
 
@@ -207,7 +207,7 @@ jobs:
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
           key: brew-${{ matrix.node_version }}
@@ -216,7 +216,7 @@ jobs:
 
       - name: Cache Cypress
         id: cache-cypress
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
@@ -397,7 +397,7 @@ jobs:
           echo "$matrix" > 'outputs/matrix.json'
 
       - name: Upload matrix config
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: ${{ always() }}
         with:
           name: ${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
@@ -407,7 +407,7 @@ jobs:
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
-        uses: mxschmitt/action-tmate@v3.8
+        uses: mxschmitt/action-tmate@1fb8b1023602bf1fd0e2994d7f1e93015cb5bbec # v3.22
         timeout-minutes: 15
         with:
           sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
@@ -425,7 +425,7 @@ jobs:
       has_golden_failures: ${{ steps.process-json.outputs.has_golden_failures }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
@@ -434,7 +434,7 @@ jobs:
         run: mkdir -p outputs
 
       - name: Load outputs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           path: outputs
 
@@ -457,7 +457,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
           status: 'failure'
           message_format: '${{ needs.process-result.outputs.message }}'
@@ -475,7 +475,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
           status: 'success'
           message_format: '${{ needs.process-result.outputs.message }}'
@@ -492,7 +492,7 @@ jobs:
     name: Report duration per package manager
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
           status: 'skipped'
           message_format: '${{ needs.process-result.outputs.pm_duration }}'
@@ -508,7 +508,7 @@ jobs:
     name: Report duration per project
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
           status: 'skipped'
           message_format: '${{ needs.process-result.outputs.proj_duration }}'
