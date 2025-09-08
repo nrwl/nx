@@ -66,7 +66,8 @@ class MavenExpressionResolver(
         if (value.isNullOrBlank()) return false
         
         // Filter out values that look like version numbers (e.g., "1.8", "11", "17")
-        if (value.matches(Regex("^\\d+(\\.\\d+)*$"))) {
+        // Use simple string matching instead of regex to avoid StackOverflowError
+        if (isVersionNumber(value)) {
             return false
         }
         
@@ -120,5 +121,28 @@ class MavenExpressionResolver(
         }
         
         return resolved
+    }
+    
+    /**
+     * Check if a string looks like a version number without using regex
+     */
+    private fun isVersionNumber(value: String): Boolean {
+        if (value.isEmpty()) return false
+        
+        // Simple check: starts with digit and contains only digits and dots
+        if (!value[0].isDigit()) return false
+        
+        for (char in value) {
+            if (!char.isDigit() && char != '.') {
+                return false
+            }
+        }
+        
+        // Avoid multiple consecutive dots or ending with dot
+        if (value.contains("..") || value.endsWith(".")) {
+            return false
+        }
+        
+        return true
     }
 }
