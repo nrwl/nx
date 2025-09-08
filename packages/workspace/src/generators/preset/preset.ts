@@ -26,6 +26,15 @@ async function createPreset(tree: Tree, options: Schema) {
       applicationGenerator: angularApplicationGenerator,
     } = require('@nx' + '/angular/generators');
 
+    if (
+      options.bundler &&
+      !['webpack', 'rspack', 'esbuild'].includes(options.bundler)
+    ) {
+      throw new Error(
+        `Invalid bundler: ${options.bundler}. Please use one of the following: 'esbuild', 'webpack', 'rspack'.`
+      );
+    }
+
     return angularApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
@@ -44,6 +53,15 @@ async function createPreset(tree: Tree, options: Schema) {
     const {
       applicationGenerator: angularApplicationGenerator,
     } = require('@nx' + '/angular/generators');
+
+    if (
+      options.bundler &&
+      !['webpack', 'rspack', 'esbuild'].includes(options.bundler)
+    ) {
+      throw new Error(
+        `Invalid bundler: ${options.bundler}. Please use one of the following: 'esbuild', 'webpack', 'rspack'.`
+      );
+    }
 
     return angularApplicationGenerator(tree, {
       name: options.name,
