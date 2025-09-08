@@ -371,7 +371,10 @@ describe('@nx/vite/plugin', () => {
               name: 'my-lib',
             },
           },
-          server: {},
+          server: {
+            port: 3000,
+            host: 'localhost',
+          },
         }),
       }),
         (context = {
