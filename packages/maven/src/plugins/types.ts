@@ -5,9 +5,14 @@ export interface MavenPluginOptions {
   testTargetName?: string;
   serveTargetName?: string;
   verbose?: boolean;
+  atomizeTests?: boolean;
+  minTestClassesForAtomization?: number;
 }
 
-export const DEFAULT_OPTIONS: MavenPluginOptions = {};
+export const DEFAULT_OPTIONS: MavenPluginOptions = {
+  atomizeTests: false,
+  minTestClassesForAtomization: 1
+};
 
 // All Maven-specific types are now handled in the Kotlin analyzer
 // TypeScript only needs the final Nx format using official @nx/devkit types
