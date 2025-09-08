@@ -300,6 +300,9 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             // Add clean to Maven phases target group
             mavenPhaseTargets.add("clean")
             
+            // Add CI targets if atomization is enabled
+            addCiTargets(targets, analysis, mavenProject, targetGroups, hasTests)
+            
             project.put("targets", targets)
             
             // Project metadata including target groups
@@ -464,5 +467,192 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             
             projectPath == expectedModulePath
         }
+    }
+    
+    /**
+     * Add CI targets including atomized tests, verify-ci, and validate-ci
+     */
+    private fun addCiTargets(
+        targets: com.fasterxml.jackson.databind.node.ObjectNode,
+        analysis: com.fasterxml.jackson.databind.JsonNode,
+        mavenProject: MavenProject,
+        targetGroups: com.fasterxml.jackson.databind.node.ObjectNode,
+        hasTests: Boolean
+    ) {
+        // Check if atomization is enabled via system property or environment
+        val atomizeTests = System.getProperty("atomizeTests")?.toBoolean() 
+            ?: System.getenv("ATOMIZE_TESTS")?.toBoolean() 
+            ?: true // Default to enabled for now
+            
+        val minTestClasses = System.getProperty("minTestClassesForAtomization")?.toInt() ?: 1
+        
+        if (atomizeTests && hasTests) {
+            val testClasses = analysis.get("testClasses")
+            if (testClasses?.isArray == true && testClasses.size() >= minTestClasses) {
+                createAtomizedTestTargets(targets, testClasses, mavenProject, targetGroups)
+            }
+        }
+        
+        // Always create verify-ci and validate-ci targets
+        createVerifyCiTarget(targets, hasTests, atomizeTests, targetGroups)
+        createValidateCiTarget(targets, mavenProject, targetGroups)
+    }
+    
+    /**
+     * Create atomized test targets
+     */
+    private fun createAtomizedTestTargets(
+        targets: com.fasterxml.jackson.databind.node.ObjectNode,
+        testClasses: com.fasterxml.jackson.databind.JsonNode,
+        mavenProject: MavenProject,
+        targetGroups: com.fasterxml.jackson.databind.node.ObjectNode
+    ) {
+        val testCiTargets = mutableListOf<String>()
+        
+        // Create individual atomized test targets
+        for (testClass in testClasses) {
+            val className = testClass.get("className")?.asText() ?: continue
+            val packagePath = testClass.get("packagePath")?.asText() ?: continue
+            
+            val targetName = "test-ci--$className"
+            val target = objectMapper.createObjectNode()
+            
+            target.put("executor", "nx:run-commands")
+            
+            val options = objectMapper.createObjectNode()
+            options.put("command", "mvn test -Dtest=$packagePath -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+            options.put("cwd", "{workspaceRoot}")
+            target.put("options", options)
+            
+            // Add dependency on test-compile for efficient compilation reuse
+            val dependsOn = objectMapper.createArrayNode()
+            dependsOn.add("test-compile")
+            target.put("dependsOn", dependsOn)
+            
+            target.put("cache", true)
+            target.put("parallelism", true)
+            
+            val metadata = objectMapper.createObjectNode()
+            metadata.put("description", "Runs Maven test $packagePath in CI")
+            val technologies = objectMapper.createArrayNode()
+            technologies.add("maven")
+            metadata.put("technologies", technologies)
+            target.put("metadata", metadata)
+            
+            targets.put(targetName, target)
+            testCiTargets.add(targetName)
+        }
+        
+        // Create parent test-ci target
+        if (testCiTargets.isNotEmpty()) {
+            val testCiTarget = objectMapper.createObjectNode()
+            testCiTarget.put("executor", "nx:noop")
+            
+            val dependsOnArray = objectMapper.createArrayNode()
+            for (targetName in testCiTargets) {
+                val dependency = objectMapper.createObjectNode()
+                dependency.put("target", targetName)
+                dependency.put("projects", "self")
+                dependency.put("params", "forward")
+                dependsOnArray.add(dependency)
+            }
+            testCiTarget.put("dependsOn", dependsOnArray)
+            
+            testCiTarget.put("cache", true)
+            
+            val metadata = objectMapper.createObjectNode()
+            metadata.put("description", "Runs all Maven tests in CI")
+            val technologies = objectMapper.createArrayNode()
+            technologies.add("maven")
+            metadata.put("technologies", technologies)
+            testCiTarget.put("metadata", metadata)
+            
+            targets.put("test-ci", testCiTarget)
+            testCiTargets.add("test-ci")
+            
+            // Add all test-ci targets to test target group
+            val testTargetGroup = targetGroups.get("test")?.let { it as com.fasterxml.jackson.databind.node.ArrayNode }
+                ?: objectMapper.createArrayNode().also { targetGroups.put("test", it) }
+            for (targetName in testCiTargets) {
+                testTargetGroup.add(targetName)
+            }
+        }
+    }
+    
+    /**
+     * Create verify-ci target
+     */
+    private fun createVerifyCiTarget(
+        targets: com.fasterxml.jackson.databind.node.ObjectNode,
+        hasTests: Boolean,
+        atomizeTests: Boolean,
+        targetGroups: com.fasterxml.jackson.databind.node.ObjectNode
+    ) {
+        val verifyCiTarget = objectMapper.createObjectNode()
+        verifyCiTarget.put("executor", "nx:noop")
+        
+        val dependsOn = objectMapper.createArrayNode()
+        dependsOn.add("compile")
+        
+        if (hasTests) {
+            if (atomizeTests && targets.has("test-ci")) {
+                dependsOn.add("test-ci")
+            } else {
+                dependsOn.add("test")
+            }
+        }
+        
+        dependsOn.add("package")
+        verifyCiTarget.put("dependsOn", dependsOn)
+        
+        verifyCiTarget.put("cache", true)
+        
+        val metadata = objectMapper.createObjectNode()
+        metadata.put("description", "Runs Maven verification phase in CI with atomized tests")
+        val technologies = objectMapper.createArrayNode()
+        technologies.add("maven")
+        metadata.put("technologies", technologies)
+        verifyCiTarget.put("metadata", metadata)
+        
+        targets.put("verify-ci", verifyCiTarget)
+        
+        // Add to verification target group
+        val verificationGroup = targetGroups.get("verification")?.let { it as com.fasterxml.jackson.databind.node.ArrayNode }
+            ?: objectMapper.createArrayNode().also { targetGroups.put("verification", it) }
+        verificationGroup.add("verify-ci")
+    }
+    
+    /**
+     * Create validate-ci target
+     */
+    private fun createValidateCiTarget(
+        targets: com.fasterxml.jackson.databind.node.ObjectNode,
+        mavenProject: MavenProject,
+        targetGroups: com.fasterxml.jackson.databind.node.ObjectNode
+    ) {
+        val validateCiTarget = objectMapper.createObjectNode()
+        validateCiTarget.put("executor", "nx:run-commands")
+        
+        val options = objectMapper.createObjectNode()
+        options.put("command", "mvn validate -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+        options.put("cwd", "{workspaceRoot}")
+        validateCiTarget.put("options", options)
+        
+        validateCiTarget.put("cache", true)
+        validateCiTarget.put("parallelism", true)
+        
+        val metadata = objectMapper.createObjectNode()
+        metadata.put("description", "Validates Maven project structure in CI")
+        val technologies = objectMapper.createArrayNode()
+        technologies.add("maven")
+        metadata.put("technologies", technologies)
+        validateCiTarget.put("metadata", metadata)
+        
+        targets.put("validate-ci", validateCiTarget)
+        
+        // Add to validation target group
+        val validationGroup = targetGroups.get("validation")?.let { it as com.fasterxml.jackson.databind.node.ArrayNode }
+            ?: objectMapper.createArrayNode().also { targetGroups.put("validation", it) }
+        validationGroup.add("validate-ci")
     }
 }
