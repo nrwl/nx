@@ -8,7 +8,6 @@
 
 import { interpolateName } from 'loader-utils';
 import * as path from 'node:path';
-import * as url from 'node:url';
 import type { Declaration, Plugin } from 'postcss';
 import { assertIsError } from './misc-helpers';
 
@@ -96,7 +95,7 @@ export default function (options?: PostcssCliResourcesOptions): Plugin {
       inputUrl = inputUrl.slice(1);
     }
 
-    const normalizedUrl = inputUrl.replace(/\\/g, '/');
+    const normalizedUrl = path.resolve(context, inputUrl.replace(/\\/g, '/'));
     const parsedUrl = new URL(normalizedUrl, 'file:///');
     const { pathname, hash, search } = parsedUrl;
     const resolver = (file: string, base: string) =>
