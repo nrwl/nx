@@ -140,7 +140,7 @@ class PathResolver(
         }
         
         val relativePath = baseDirPath.relativize(filePath)
-        "{projectRoot}/$relativePath".replace("\\", "/")
+        "{projectRoot}/$relativePath".replace('\\', '/')
     } catch (e: Exception) {
         "{projectRoot}/$path"
     }

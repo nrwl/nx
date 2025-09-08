@@ -58,8 +58,10 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
         log.info("Merging individual project analyses into workspace graph...")
         
         try {
-            val allProjects = session.allProjects
-            log.info("Processing ${allProjects.size} Maven projects")
+            // Use Maven's module discovery logic instead of session.allProjects
+            val allProjects = collectProjectsFromModules(session.topLevelProject)
+            
+            log.info("Processing ${allProjects.size} Maven projects using module discovery logic")
             
             // Collect individual project analyses
             val projectAnalyses = mutableMapOf<String, JsonNode>()
@@ -303,6 +305,9 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             // Project metadata including target groups
             val projectMetadata = objectMapper.createObjectNode()
             
+            // Store original analysis data for test atomization
+            projectMetadata.put("mavenAnalysis", analysis)
+            
             // Add Maven phases to target groups
             if (mavenPhaseTargets.isNotEmpty()) {
                 val mavenPhasesGroup = objectMapper.createArrayNode()
@@ -408,5 +413,56 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
         }
         
         return null
+    }
+    
+    /**
+     * Collect all projects using Maven's module discovery logic
+     * This follows the same pattern as Maven's own module discovery
+     */
+    private fun collectProjectsFromModules(rootProject: MavenProject): List<MavenProject> {
+        val projects = mutableListOf<MavenProject>()
+        val visited = mutableSetOf<String>()
+        
+        fun collectRecursively(project: MavenProject) {
+            val projectKey = "${project.groupId}:${project.artifactId}"
+            if (projectKey in visited) return
+            visited.add(projectKey)
+            
+            projects.add(project)
+            log.debug("Added project from modules: ${project.artifactId} at ${project.basedir?.absolutePath}")
+            
+            // Process modules defined in this project
+            val modules = project.modules
+            if (modules != null && modules.isNotEmpty()) {
+                log.debug("Project ${project.artifactId} has ${modules.size} modules: ${modules.joinToString(", ")}")
+                
+                // Find each module project in the session
+                for (moduleName in modules) {
+                    val moduleProject = findModuleProject(project, moduleName)
+                    if (moduleProject != null) {
+                        collectRecursively(moduleProject)
+                    } else {
+                        log.debug("Module '$moduleName' from project ${project.artifactId} not found in session")
+                    }
+                }
+            }
+        }
+        
+        collectRecursively(rootProject)
+        return projects
+    }
+    
+    /**
+     * Find a module project by name relative to the parent project
+     */
+    private fun findModuleProject(parentProject: MavenProject, moduleName: String): MavenProject? {
+        // Look for the module in the session projects
+        return session.allProjects.find { project ->
+            // Check if this project's basedir matches the expected module path
+            val expectedModulePath = File(parentProject.basedir, moduleName).canonicalPath
+            val projectPath = project.basedir?.canonicalPath
+            
+            projectPath == expectedModulePath
+        }
     }
 }
