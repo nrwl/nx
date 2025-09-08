@@ -60,6 +60,8 @@
       <version>2.11.0</version>
     </dependency>
     
+    <!-- Removed JavaParser - was causing StackOverflowError -->
+    
     <!-- Maven Model -->
     <dependency>
       <groupId>org.apache.maven</groupId>
