@@ -109,7 +109,7 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         // Calculate relative path from workspace root
         val workspaceRootPath = Paths.get(workspaceRoot)
         val projectPath = mavenProject.basedir.toPath()
-        val relativePath = workspaceRootPath.relativize(projectPath).toString().replace("\\", "/")
+        val relativePath = workspaceRootPath.relativize(projectPath).toString().replace('\\', '/')
         projectNode.put("root", relativePath)
         
         // Project type based on packaging
@@ -119,7 +119,7 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         // Source roots
         val sourceRoots = objectMapper.createArrayNode()
         mavenProject.compileSourceRoots?.forEach { sourceRoot ->
-            val relativeSourceRoot = workspaceRootPath.relativize(Paths.get(sourceRoot)).toString().replace("\\", "/")
+            val relativeSourceRoot = workspaceRootPath.relativize(Paths.get(sourceRoot)).toString().replace('\\', '/')
             sourceRoots.add(relativeSourceRoot)
         }
         projectNode.put("sourceRoots", sourceRoots)
@@ -127,7 +127,7 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         // Test source roots  
         val testSourceRoots = objectMapper.createArrayNode()
         mavenProject.testCompileSourceRoots?.forEach { testSourceRoot ->
-            val relativeTestRoot = workspaceRootPath.relativize(Paths.get(testSourceRoot)).toString().replace("\\", "/")
+            val relativeTestRoot = workspaceRootPath.relativize(Paths.get(testSourceRoot)).toString().replace('\\', '/')
             testSourceRoots.add(relativeTestRoot)
         }
         projectNode.put("testSourceRoots", testSourceRoots)
@@ -249,6 +249,11 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         projectNode.put("hasTests", File(mavenProject.basedir, "src/test/java").let { it.exists() && it.isDirectory })
         projectNode.put("hasResources", File(mavenProject.basedir, "src/main/resources").let { it.exists() && it.isDirectory })
         projectNode.put("projectName", "${mavenProject.groupId}.${mavenProject.artifactId}")
+        
+        // Discover test classes for atomization using simple string matching
+        val testClassDiscovery = TestClassDiscovery()
+        val testClasses = testClassDiscovery.discoverTestClasses(mavenProject)
+        projectNode.put("testClasses", testClasses)
         
         log.info("Analyzed single project: ${mavenProject.artifactId} at $relativePath")
         
