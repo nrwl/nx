@@ -82,9 +82,26 @@ class MavenDependencyResolver {
             val parentCoordinates = "${parent.groupId}:${parent.artifactId}"
             val parentProjectName = coordinatesToProjectName[parentCoordinates]
             if (parentProjectName != null) {
-                // For install phase, depend on parent's install phase
-                if (phase == "install") {
+                // Always depend on parent's install phase for all phases except validate/initialize
+                if (phase != "validate" && phase != "initialize") {
                     dependsOn.add("$parentProjectName:install")
+                }
+            }
+        }
+        
+        // Add compile-time dependencies for phases that require compilation
+        val compilationPhases = listOf("compile", "test-compile", "test", "package", "verify", "install", "deploy")
+        if (phase in compilationPhases) {
+            for (dependency in mavenProject.dependencies) {
+                // Include compile, provided dependencies for compilation
+                if (listOf("compile", "provided").contains(dependency.scope)) {
+                    val depCoordinates = "${dependency.groupId}:${dependency.artifactId}"
+                    val depProjectName = coordinatesToProjectName[depCoordinates]
+                    if (depProjectName != null && depProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
+                        // Dependencies should be installed so they're available for compilation
+                        val bestPhase = getBestDependencyPhase(depProjectName, "install", allProjects)
+                        dependsOn.add("$depProjectName:$bestPhase")
+                    }
                 }
             }
         }
