@@ -994,7 +994,11 @@ async function getPackageMigrationsUsingRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  if (packageName.startsWith('@nx/') || packageName === 'nx') {
+  if (
+    (packageName.startsWith('@nx/') || packageName === 'nx') &&
+    packageName !== '@nx/php' &&
+    packageName !== 'nx-ignore'
+  ) {
     await ensurePackageHasProvenance(packageName, packageVersion);
   }
   // check if there are migrations in the packages by looking at the
@@ -1110,7 +1114,11 @@ async function getPackageMigrationsUsingInstall(
 
   let result: ResolvedMigrationConfiguration;
 
-  if (packageName.startsWith('@nx/') || packageName === 'nx') {
+  if (
+    (packageName.startsWith('@nx/') || packageName === 'nx') &&
+    packageName !== '@nx/php' &&
+    packageName !== 'nx-ignore'
+  ) {
     await ensurePackageHasProvenance(packageName, packageVersion);
   }
 

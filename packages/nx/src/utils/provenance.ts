@@ -14,7 +14,7 @@ export async function ensurePackageHasProvenance(
 ): Promise<void> {
   // this is used for locally released versions without provenance
   // do not set this for other reasons or you might be exposed to security risks
-  if (process.env.NX_MIGRATE_SKIP_PROVENANCE_CHECK) {
+  if (process.env.NX_SKIP_PROVENANCE_CHECK) {
     return;
   }
 
