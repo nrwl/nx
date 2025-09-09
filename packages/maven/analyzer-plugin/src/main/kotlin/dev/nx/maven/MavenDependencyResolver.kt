@@ -108,6 +108,15 @@ class MavenDependencyResolver {
             }
         }
 
+        // Child modules need their dependencies installed in the local repository
+        for (dependency in mavenProject.dependencies) {
+            val depCoordinates = "${dependency.groupId}:${dependency.artifactId}"
+            val depProjectName = coordinatesToProjectName[depCoordinates]
+            if (depProjectName != null && depProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
+                dependsOn.add("$depProjectName:install")
+            }
+        }
+
         return dependsOn
     }
 
