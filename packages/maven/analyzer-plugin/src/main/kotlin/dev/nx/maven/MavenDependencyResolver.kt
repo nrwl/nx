@@ -89,21 +89,19 @@ class MavenDependencyResolver {
             }
         }
         
-        // If this is a POM project, add dependencies on child modules
-        if (mavenProject.packaging.lowercase() == "pom") {
-            val currentProjectCoordinates = "${mavenProject.groupId}.${mavenProject.artifactId}"
-            for (project in allProjects) {
-                val childParent = project.parent
-                if (childParent != null) {
-                    val childParentCoordinates = "${childParent.groupId}.${childParent.artifactId}"
-                    val childParentProjectName = coordinatesToProjectName[childParentCoordinates]
-                    if (childParentProjectName == currentProjectCoordinates) {
-                        // This project is a child of the current parent
-                        val childProjectName = "${project.groupId}.${project.artifactId}"
-                        // Parent should depend on children's install phase to ensure they're in local repo
-                        val bestPhase = getBestDependencyPhase(childProjectName, "install", allProjects)
-                        dependsOn.add("$childProjectName:$bestPhase")
-                    }
+        // If this project has child modules, add dependencies on them
+        val currentProjectCoordinates = "${mavenProject.groupId}.${mavenProject.artifactId}"
+        for (project in allProjects) {
+            val childParent = project.parent
+            if (childParent != null) {
+                val childParentCoordinates = "${childParent.groupId}.${childParent.artifactId}"
+                val childParentProjectName = coordinatesToProjectName[childParentCoordinates]
+                if (childParentProjectName == currentProjectCoordinates) {
+                    // This project is a child of the current parent
+                    val childProjectName = "${project.groupId}.${project.artifactId}"
+                    // Parent should depend on children's install phase to ensure they're in local repo
+                    val bestPhase = getBestDependencyPhase(childProjectName, "install", allProjects)
+                    dependsOn.add("$childProjectName:$bestPhase")
                 }
             }
         }
