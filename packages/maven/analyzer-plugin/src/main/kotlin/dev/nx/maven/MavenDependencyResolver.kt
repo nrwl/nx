@@ -100,7 +100,8 @@ class MavenDependencyResolver {
                     if (childParentProjectName == currentProjectCoordinates) {
                         // This project is a child of the current parent
                         val childProjectName = "${project.groupId}.${project.artifactId}"
-                        val bestPhase = getBestDependencyPhase(childProjectName, phase, allProjects)
+                        // Parent should depend on children's install phase to ensure they're in local repo
+                        val bestPhase = getBestDependencyPhase(childProjectName, "install", allProjects)
                         dependsOn.add("$childProjectName:$bestPhase")
                     }
                 }
