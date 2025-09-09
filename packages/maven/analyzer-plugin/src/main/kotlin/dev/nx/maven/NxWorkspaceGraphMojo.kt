@@ -98,7 +98,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                 if (analysis != null) {
                     // Generate Nx configuration with cross-project dependency resolution
                     val nxConfig = generateNxConfigFromAnalysis(
-                        analysis, mavenProject, coordinatesToProjectName, allProjects
+                        analysis, mavenProject, coordinatesToProjectName, allProjects, projectAnalyses
                     )
                     if (nxConfig != null) {
                         createNodesResults.add(nxConfig)
@@ -138,7 +138,8 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
         analysis: JsonNode,
         mavenProject: MavenProject,
         coordinatesToProjectName: Map<String, String>,
-        allProjects: List<MavenProject>
+        allProjects: List<MavenProject>,
+        projectAnalyses: Map<String, JsonNode>
     ): ArrayNode? {
         try {
             val projectName = analysis.get("projectName")?.asText() 
@@ -179,7 +180,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                     
                     // Add dependency resolution
                     val dependsOn = dependencyResolver.computeDependsOnForPhase(
-                        phase, mavenProject, coordinatesToProjectName, allProjects
+                        phase, mavenProject, coordinatesToProjectName, allProjects, projectAnalyses
                     )
                     if (dependsOn.isNotEmpty()) {
                         val dependsOnArray = objectMapper.createArrayNode()
