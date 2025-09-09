@@ -103,7 +103,8 @@ class MavenDependencyResolver {
                 val depCoordinates = "${dependency.groupId}:${dependency.artifactId}"
                 val depProjectName = coordinatesToProjectName[depCoordinates]
                 if (depProjectName != null && depProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
-                    val bestPhase = getBestDependencyPhase(depProjectName, phase, allProjects)
+                    // Dependencies should be installed so they're available in local repository
+                    val bestPhase = getBestDependencyPhase(depProjectName, "install", allProjects)
                     dependsOn.add("$depProjectName:$bestPhase")
                 }
             }
