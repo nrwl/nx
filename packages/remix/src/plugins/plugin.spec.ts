@@ -207,7 +207,7 @@ module.exports = {
           {
             "description": "Runs type-checking for the project.",
             "help": {
-              "command": "npx --ignore-scripts tsc --help",
+              "command": "npx tsc --help",
               "example": {
                 "options": {
                   "noEmit": true,
@@ -248,7 +248,7 @@ module.exports = {
           {
             "description": "Runs type-checking for the project.",
             "help": {
-              "command": "npx --ignore-scripts tsc --build --help",
+              "command": "npx tsc --build --help",
               "example": {
                 "args": [
                   "--force",

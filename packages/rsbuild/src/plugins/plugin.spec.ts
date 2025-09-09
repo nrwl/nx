@@ -93,7 +93,7 @@ describe('@nx/rsbuild', () => {
                     "metadata": {
                       "description": "Run Rsbuild build",
                       "help": {
-                        "command": "npx --ignore-scripts rsbuild build --help",
+                        "command": "npx rsbuild build --help",
                         "example": {
                           "options": {
                             "watch": false,
@@ -145,7 +145,7 @@ describe('@nx/rsbuild', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx --ignore-scripts nx watch --projects my-app --includeDependentProjects -- npx --ignore-scripts nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",
@@ -177,7 +177,7 @@ describe('@nx/rsbuild', () => {
       {
         "description": "Runs type-checking for the project.",
         "help": {
-          "command": "npx --ignore-scripts tsc -p tsconfig.json --help",
+          "command": "npx tsc -p tsconfig.json --help",
           "example": {
             "options": {
               "noEmit": true,
@@ -215,7 +215,7 @@ describe('@nx/rsbuild', () => {
       {
         "description": "Runs type-checking for the project.",
         "help": {
-          "command": "npx --ignore-scripts tsc --build --help",
+          "command": "npx tsc --build --help",
           "example": {
             "args": [
               "--force",

@@ -84,7 +84,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "metadata": {
                       "description": "Run Jest Tests",
                       "help": {
-                        "command": "npx --ignore-scripts jest --help",
+                        "command": "npx jest --help",
                         "example": {
                           "options": {
                             "coverage": true,
@@ -165,7 +165,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "metadata": {
                       "description": "Run Jest Tests",
                       "help": {
-                        "command": "npx --ignore-scripts jest --help",
+                        "command": "npx jest --help",
                         "example": {
                           "options": {
                             "coverage": true,
@@ -204,7 +204,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "metadata": {
                       "description": "Run Jest Tests in CI",
                       "help": {
-                        "command": "npx --ignore-scripts jest --help",
+                        "command": "npx jest --help",
                         "example": {
                           "options": {
                             "coverage": true,
@@ -235,7 +235,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "metadata": {
                       "description": "Run Jest Tests in src/unit.spec.ts",
                       "help": {
-                        "command": "npx --ignore-scripts jest --help",
+                        "command": "npx jest --help",
                         "example": {
                           "options": {
                             "coverage": true,
@@ -304,7 +304,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "metadata": {
                       "description": "Run Jest Tests",
                       "help": {
-                        "command": "npx --ignore-scripts jest --help",
+                        "command": "npx jest --help",
                         "example": {
                           "options": {
                             "coverage": true,
@@ -384,7 +384,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "metadata": {
                       "description": "Run Jest Tests",
                       "help": {
-                        "command": "npx --ignore-scripts jest --help",
+                        "command": "npx jest --help",
                         "example": {
                           "options": {
                             "coverage": true,
@@ -468,7 +468,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -507,7 +507,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests in CI",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -538,7 +538,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests in src/unit.spec.ts",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -618,7 +618,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -657,7 +657,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests in CI",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -688,7 +688,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests in src/unit.spec.ts",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -768,7 +768,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -807,7 +807,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests in CI",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,
@@ -838,7 +838,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "metadata": {
                         "description": "Run Jest Tests in src/unit.spec.ts",
                         "help": {
-                          "command": "npx --ignore-scripts jest --help",
+                          "command": "npx jest --help",
                           "example": {
                             "options": {
                               "coverage": true,

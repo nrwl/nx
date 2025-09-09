@@ -105,7 +105,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -159,7 +159,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -216,7 +216,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -273,7 +273,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -328,7 +328,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -386,7 +386,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -485,7 +485,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -545,7 +545,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -607,7 +607,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Runs type-checking for the project.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -687,7 +687,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -754,7 +754,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -820,7 +820,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -891,7 +891,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -966,7 +966,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1041,7 +1041,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1121,7 +1121,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1196,7 +1196,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1274,7 +1274,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1366,7 +1366,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1474,7 +1474,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1522,7 +1522,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1619,7 +1619,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1869,7 +1869,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -1943,7 +1943,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2007,7 +2007,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2078,7 +2078,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2119,7 +2119,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2179,7 +2179,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2290,7 +2290,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2341,7 +2341,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2406,7 +2406,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2471,7 +2471,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2547,7 +2547,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2612,7 +2612,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2673,7 +2673,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Runs type-checking for the project.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -2874,7 +2874,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -2951,7 +2951,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -2978,7 +2978,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                 },
                 "watch-deps": {
-                  "command": "npx --ignore-scripts nx watch --projects my-lib --includeDependentProjects -- npx --ignore-scripts nx build-deps my-lib",
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
                   "continuous": true,
                   "dependsOn": [
                     "build-deps",
@@ -3026,7 +3026,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -3104,7 +3104,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -3131,7 +3131,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                 },
                 "watch-deps": {
-                  "command": "npx --ignore-scripts nx watch --projects my-lib --includeDependentProjects -- npx --ignore-scripts nx build-deps my-lib",
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
                   "continuous": true,
                   "dependsOn": [
                     "build-deps",
@@ -3180,7 +3180,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -3247,7 +3247,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -3314,7 +3314,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -3403,7 +3403,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -3474,7 +3474,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -3548,7 +3548,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -3626,7 +3626,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -3701,7 +3701,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -3784,7 +3784,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -3864,7 +3864,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -3945,7 +3945,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4042,7 +4042,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4127,7 +4127,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4214,7 +4214,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4466,7 +4466,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4535,7 +4535,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4606,7 +4606,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4670,7 +4670,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4759,7 +4759,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4833,7 +4833,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4903,7 +4903,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -4984,7 +4984,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -5054,7 +5054,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -5121,7 +5121,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
                       "help": {
-                        "command": "npx --ignore-scripts tsc --build --help",
+                        "command": "npx tsc --build --help",
                         "example": {
                           "args": [
                             "--force",
@@ -5195,7 +5195,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5266,7 +5266,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5368,7 +5368,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5439,7 +5439,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5510,7 +5510,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5612,7 +5612,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5683,7 +5683,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5754,7 +5754,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5852,7 +5852,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -5949,7 +5949,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",
@@ -6050,7 +6050,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
                     "help": {
-                      "command": "npx --ignore-scripts tsc --build --help",
+                      "command": "npx tsc --build --help",
                       "example": {
                         "args": [
                           "--force",

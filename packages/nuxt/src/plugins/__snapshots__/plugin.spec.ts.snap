@@ -78,7 +78,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           },
         },
         "watch-deps": {
-          "command": "npx --ignore-scripts nx watch --projects my-app --includeDependentProjects -- npx --ignore-scripts nx build-deps my-app",
+          "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
           "continuous": true,
           "dependsOn": [
             "build-deps",
@@ -168,7 +168,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           },
         },
         "watch-deps": {
-          "command": "npx --ignore-scripts nx watch --projects nuxt --includeDependentProjects -- npx --ignore-scripts nx build-deps nuxt",
+          "command": "npx nx watch --projects nuxt --includeDependentProjects -- npx nx build-deps nuxt",
           "continuous": true,
           "dependsOn": [
             "build-deps",

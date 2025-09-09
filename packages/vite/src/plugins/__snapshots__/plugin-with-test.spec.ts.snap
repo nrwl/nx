@@ -33,7 +33,7 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
               "metadata": {
                 "description": "Run Vite tests",
                 "help": {
-                  "command": "npx --ignore-scripts vitest --help",
+                  "command": "npx vitest --help",
                   "example": {
                     "options": {
                       "bail": 1,
@@ -70,7 +70,7 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx --ignore-scripts tsc --build --help",
+                  "command": "npx tsc --build --help",
                   "example": {
                     "args": [
                       "--force",
@@ -89,7 +89,7 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
               ],
             },
             "watch-deps": {
-              "command": "npx --ignore-scripts nx watch --projects vite --includeDependentProjects -- npx --ignore-scripts nx build-deps vite",
+              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
               "continuous": true,
               "dependsOn": [
                 "build-deps",

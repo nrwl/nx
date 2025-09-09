@@ -178,7 +178,7 @@ describe('app', () => {
         'android.local': {
           binaryPath: '../my-dir/dist/MyApp.apk',
           build:
-            'npx --ignore-scripts nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-dir/dist/MyApp.apk',
+            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-dir/dist/MyApp.apk',
           type: 'android.apk',
         },
         'android.release': {
@@ -198,7 +198,7 @@ describe('app', () => {
         'ios.local': {
           binaryPath: '../my-dir/dist/MyApp.app',
           build:
-            'npx --ignore-scripts nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-dir/dist/MyApp.tar.gz',
+            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-dir/dist/MyApp.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {
@@ -238,7 +238,7 @@ describe('app', () => {
         'android.local': {
           binaryPath: '../my-app/dist/MyApp.apk',
           build:
-            'npx --ignore-scripts nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-app/dist/MyApp.apk',
+            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-app/dist/MyApp.apk',
           type: 'android.apk',
         },
         'android.release': {
@@ -258,7 +258,7 @@ describe('app', () => {
         'ios.local': {
           binaryPath: '../my-app/dist/MyApp.app',
           build:
-            'npx --ignore-scripts nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-app/dist/MyApp.tar.gz',
+            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-app/dist/MyApp.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {
@@ -302,7 +302,7 @@ describe('app', () => {
         'android.local': {
           binaryPath: '../my-app/dist/myappname.apk',
           build:
-            'npx --ignore-scripts nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-app/dist/myappname.apk',
+            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-app/dist/myappname.apk',
           type: 'android.apk',
         },
         'android.release': {
@@ -322,7 +322,7 @@ describe('app', () => {
         'ios.local': {
           binaryPath: '../my-app/dist/myappname.app',
           build:
-            'npx --ignore-scripts nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-app/dist/myappname.tar.gz',
+            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-app/dist/myappname.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {

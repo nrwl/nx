@@ -80,7 +80,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx --ignore-scripts tsc --help",
+                  "command": "npx tsc --help",
                   "example": {
                     "options": {
                       "noEmit": true,
@@ -96,7 +96,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
               },
             },
             "watch-deps": {
-              "command": "npx --ignore-scripts nx watch --projects my-app --includeDependentProjects -- npx --ignore-scripts nx build-deps my-app",
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -190,7 +190,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx --ignore-scripts tsc --help",
+                  "command": "npx tsc --help",
                   "example": {
                     "options": {
                       "noEmit": true,
@@ -206,7 +206,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
               },
             },
             "watch-deps": {
-              "command": "npx --ignore-scripts nx watch --projects my-app --includeDependentProjects -- npx --ignore-scripts nx build-deps my-app",
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -295,7 +295,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx --ignore-scripts tsc --help",
+                  "command": "npx tsc --help",
                   "example": {
                     "options": {
                       "noEmit": true,
@@ -397,7 +397,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx --ignore-scripts tsc --help",
+                  "command": "npx tsc --help",
                   "example": {
                     "options": {
                       "noEmit": true,
@@ -413,7 +413,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
               },
             },
             "watch-deps": {
-              "command": "npx --ignore-scripts nx watch --projects my-app --includeDependentProjects -- npx --ignore-scripts nx build-deps my-app",
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -501,7 +501,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx --ignore-scripts tsc --help",
+                  "command": "npx tsc --help",
                   "example": {
                     "options": {
                       "noEmit": true,

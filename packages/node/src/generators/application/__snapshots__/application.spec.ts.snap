@@ -19,7 +19,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-fastify",
     ],
-    "runtimeExecutable": "npx --ignore-scripts",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],
@@ -48,7 +48,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-express",
     ],
-    "runtimeExecutable": "npx --ignore-scripts",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],
@@ -77,7 +77,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-koa",
     ],
-    "runtimeExecutable": "npx --ignore-scripts",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],
@@ -106,7 +106,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-nest",
     ],
-    "runtimeExecutable": "npx --ignore-scripts",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],

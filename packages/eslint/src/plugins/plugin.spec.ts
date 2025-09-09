@@ -121,7 +121,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -177,7 +177,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -266,7 +266,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -322,7 +322,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -454,7 +454,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -493,7 +493,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -597,7 +597,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -637,7 +637,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -695,7 +695,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -757,7 +757,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -813,7 +813,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
@@ -870,7 +870,7 @@ describe('@nx/eslint/plugin', () => {
                   "metadata": {
                     "description": "Runs ESLint on project",
                     "help": {
-                      "command": "npx --ignore-scripts eslint --help",
+                      "command": "npx eslint --help",
                       "example": {
                         "options": {
                           "max-warnings": 0,
