@@ -4,11 +4,11 @@ use watchexec::error::RuntimeError;
 use watchexec::filter::Filterer;
 use watchexec_events::filekind::{CreateKind, FileEventKind, ModifyKind, RemoveKind};
 
+use crate::native::utils::git::get_gitignore_files;
+use crate::native::watch::utils::{get_nx_ignore, transform_event};
 use ignore_files::IgnoreFilter;
 use watchexec_events::{Event, FileType, Priority, Source, Tag};
 use watchexec_filterer_ignore::IgnoreFilterer;
-
-use crate::native::watch::utils::{get_ignore_files, get_nx_ignore, transform_event};
 
 #[derive(Debug)]
 pub struct WatchFilterer {
@@ -118,7 +118,7 @@ pub(super) async fn create_filter(
     additional_globs: &[String],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
-    let ignore_files = get_ignore_files(use_ignore, origin);
+    let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
     let nx_ignore_file = get_nx_ignore(origin);
 
     trace!(
