@@ -2,9 +2,9 @@
 /// during scroll operations by gathering all needed information in a single lock acquisition
 #[derive(Debug, Clone)]
 pub struct ScrollMetrics {
-    pub total_entries: usize,
+    pub total_task_count: usize,
     pub visible_task_count: usize,
-    pub selected_absolute_index: Option<usize>,
+    pub selected_task_index: Option<usize>,
     pub can_scroll_up: bool,
     pub can_scroll_down: bool,
 }
@@ -20,6 +20,14 @@ pub struct TaskSelectionManager {
     viewport_height: usize,
     // Selection mode determines how the selection behaves when entries change
     selection_mode: SelectionMode,
+
+    // Performance caches to avoid repeated O(n) operations during rendering
+    /// Cached index of the currently selected task among actual tasks (excludes spacers)
+    selected_task_index_cache: Option<usize>,
+    /// Cached count of total actual tasks (excludes None spacer entries)
+    total_task_count_cache: Option<usize>,
+    /// Cached count of actual tasks visible in the current viewport
+    visible_task_count_cache: Option<usize>,
 }
 
 /// Controls how task selection behaves when entries are updated or reordered
@@ -42,7 +50,32 @@ impl TaskSelectionManager {
             scroll_offset: 0,
             viewport_height: viewport_height.max(1),
             selection_mode: SelectionMode::TrackByName,
+            selected_task_index_cache: None,
+            total_task_count_cache: None,
+            visible_task_count_cache: None,
         }
+    }
+
+    // Cache invalidation methods for performance optimization
+
+    /// Invalidate all performance caches when entries change
+    /// This should be called whenever the entries vector is modified
+    fn invalidate_all_caches(&mut self) {
+        self.selected_task_index_cache = None;
+        self.total_task_count_cache = None;
+        self.visible_task_count_cache = None;
+    }
+
+    /// Invalidate only selection-related cache when selection changes
+    /// This should be called whenever the selected task changes
+    fn invalidate_selection_cache(&mut self) {
+        self.selected_task_index_cache = None;
+    }
+
+    /// Invalidate only viewport-related cache when scroll or viewport changes
+    /// This should be called whenever scroll_offset or viewport_height changes
+    fn invalidate_viewport_cache(&mut self) {
+        self.visible_task_count_cache = None;
     }
 
     /// Sets the selection mode
@@ -69,6 +102,8 @@ impl TaskSelectionManager {
 
         // Update the entries
         self.entries = entries;
+        // Invalidate all caches since entries have changed
+        self.invalidate_all_caches();
 
         // If we had a selection, try to find it in the new list
         if let Some(task_name) = selected {
@@ -100,6 +135,8 @@ impl TaskSelectionManager {
 
         // Update the entries
         self.entries = entries;
+        // Invalidate all caches since entries have changed
+        self.invalidate_all_caches();
 
         // If we had a selection and there are entries, try to maintain the position
         if let Some(idx) = selection_index {
@@ -133,17 +170,23 @@ impl TaskSelectionManager {
         match task_name {
             Some(name) if self.entries.iter().any(|e| e.as_ref() == Some(&name)) => {
                 self.selected_task_name = Some(name);
+                // Invalidate selection cache since selected task changed
+                self.invalidate_selection_cache();
                 // Scroll to ensure the selected task is visible
                 self.scroll_to_selected();
             }
             _ => {
                 self.selected_task_name = None;
+                // Invalidate selection cache since selection was cleared
+                self.invalidate_selection_cache();
             }
         }
     }
 
     pub fn select_task(&mut self, task_id: String) {
         self.selected_task_name = Some(task_id);
+        // Invalidate selection cache since selected task changed
+        self.invalidate_selection_cache();
         self.scroll_to_selected();
     }
 
@@ -153,6 +196,8 @@ impl TaskSelectionManager {
             for idx in (current_idx + 1)..self.entries.len() {
                 if self.entries[idx].is_some() {
                     self.selected_task_name = self.entries[idx].clone();
+                    // Invalidate selection cache since selected task changed
+                    self.invalidate_selection_cache();
                     self.scroll_to_selected();
                     return;
                 }
@@ -168,6 +213,8 @@ impl TaskSelectionManager {
             for idx in (0..current_idx).rev() {
                 if self.entries[idx].is_some() {
                     self.selected_task_name = self.entries[idx].clone();
+                    // Invalidate selection cache since selected task changed
+                    self.invalidate_selection_cache();
                     self.scroll_to_selected();
                     return;
                 }
@@ -180,17 +227,22 @@ impl TaskSelectionManager {
     /// Scroll up by the specified number of lines
     pub fn scroll_up(&mut self, lines: usize) {
         self.scroll_offset = self.scroll_offset.saturating_sub(lines);
+        // Invalidate viewport cache since scroll position changed
+        self.invalidate_viewport_cache();
     }
 
     /// Scroll down by the specified number of lines
     pub fn scroll_down(&mut self, lines: usize) {
         let max_scroll = self.entries.len().saturating_sub(self.viewport_height);
-        self.scroll_offset = (self.scroll_offset + lines).min(max_scroll);
+        self.scroll_offset = self.scroll_offset.saturating_add(lines).min(max_scroll);
+        // Invalidate viewport cache since scroll position changed
+        self.invalidate_viewport_cache();
     }
 
     /// Scroll to ensure the selected task is visible in the viewport
     pub fn scroll_to_selected(&mut self) {
         if let Some(idx) = self.get_selected_index() {
+            let old_scroll_offset = self.scroll_offset;
             // If selected task is above viewport, scroll up to show it
             if idx < self.scroll_offset {
                 self.scroll_offset = idx;
@@ -198,6 +250,11 @@ impl TaskSelectionManager {
             // If selected task is below viewport, scroll down to show it
             else if idx >= self.scroll_offset + self.viewport_height {
                 self.scroll_offset = idx.saturating_sub(self.viewport_height.saturating_sub(1));
+            }
+
+            // Only invalidate viewport cache if scroll actually changed
+            if self.scroll_offset != old_scroll_offset {
+                self.invalidate_viewport_cache();
             }
         }
     }
@@ -224,25 +281,62 @@ impl TaskSelectionManager {
         self.entries.len()
     }
 
-    /// Get the number of actual tasks visible in the current viewport
-    /// This excludes None spacer entries from the viewport calculation
-    pub fn get_visible_task_count(&self) -> usize {
-        self.get_viewport_entries()
-            .iter()
-            .filter(|entry| entry.is_some())
-            .count()
+    /// Get total number of actual tasks (excludes None spacer entries)
+    pub fn get_total_task_count(&mut self) -> usize {
+        if let Some(cached_count) = self.total_task_count_cache {
+            return cached_count;
+        }
+
+        // Cache miss - compute and store the result
+        let count = self.entries.iter().filter(|entry| entry.is_some()).count();
+        self.total_task_count_cache = Some(count);
+        count
     }
 
-    /// Get the absolute index of the currently selected task in the complete entries array
-    /// This includes spacer entries and represents true progress through the complete task list
-    pub fn get_selected_absolute_index(&self) -> Option<usize> {
-        if let Some(selected_name) = &self.selected_task_name {
-            self.entries
-                .iter()
-                .position(|entry| entry.as_ref().map_or(false, |name| name == selected_name))
-        } else {
-            None
+    /// Get the number of actual tasks visible in the current viewport
+    /// This excludes None spacer entries from the viewport calculation
+    pub fn get_visible_task_count(&mut self) -> usize {
+        if let Some(cached_count) = self.visible_task_count_cache {
+            return cached_count;
         }
+
+        // Cache miss - compute and store the result
+        let count = self
+            .get_viewport_entries()
+            .iter()
+            .filter(|entry| entry.is_some())
+            .count();
+        self.visible_task_count_cache = Some(count);
+        count
+    }
+
+    /// Get the index of the currently selected task among actual tasks only (excludes spacers)
+    /// This represents progress through tasks only, ignoring None spacer entries (which are never selected)
+    pub fn get_selected_task_index(&mut self) -> Option<usize> {
+        // No selection means no index - don't cache None values
+        if self.selected_task_name.is_none() {
+            return None;
+        }
+
+        // Return cached value if available (only valid when we have a selection)
+        if let Some(cached_index) = self.selected_task_index_cache {
+            return Some(cached_index);
+        }
+
+        // Cache miss - compute and store the result
+        if let Some(selected_name) = &self.selected_task_name {
+            let mut task_index = 0;
+            for entry in &self.entries {
+                if let Some(name) = entry {
+                    if name == selected_name {
+                        self.selected_task_index_cache = Some(task_index);
+                        return Some(task_index);
+                    }
+                    task_index += 1;
+                }
+            }
+        }
+        None
     }
 
     /// Check if there are more entries above the current viewport
@@ -255,8 +349,14 @@ impl TaskSelectionManager {
         self.scroll_offset + self.viewport_height < self.entries.len()
     }
 
+    pub fn get_scroll_offset(&self) -> usize {
+        self.scroll_offset
+    }
+
     fn select_first_available(&mut self) {
-        self.selected_task_name = self.entries.iter().find_map(|e| e.clone());
+        self.selected_task_name = self.entries.iter().find_map(|e| e.as_ref().cloned());
+        // Invalidate selection cache since selected task changed
+        self.invalidate_selection_cache();
         // Ensure selected task is visible in viewport
         self.scroll_to_selected();
     }
@@ -264,7 +364,13 @@ impl TaskSelectionManager {
     /// Validate and adjust scroll offset to ensure it's within bounds
     fn validate_scroll_offset(&mut self) {
         let max_scroll = self.entries.len().saturating_sub(self.viewport_height);
+        let old_scroll_offset = self.scroll_offset;
         self.scroll_offset = self.scroll_offset.min(max_scroll);
+
+        // Only invalidate viewport cache if scroll actually changed
+        if self.scroll_offset != old_scroll_offset {
+            self.invalidate_viewport_cache();
+        }
     }
 
     pub fn get_selected_index(&self) -> Option<usize> {
@@ -279,7 +385,14 @@ impl TaskSelectionManager {
 
     /// Set the viewport height (visible area size)
     pub fn set_viewport_height(&mut self, viewport_height: usize) {
+        let old_viewport_height = self.viewport_height;
         self.viewport_height = viewport_height.max(1);
+
+        // Only invalidate viewport cache if viewport height actually changed
+        if self.viewport_height != old_viewport_height {
+            self.invalidate_viewport_cache();
+        }
+
         self.validate_scroll_offset();
         self.scroll_to_selected();
     }
@@ -290,9 +403,9 @@ impl TaskSelectionManager {
     pub fn update_viewport_and_get_metrics(&mut self, viewport_height: usize) -> ScrollMetrics {
         self.set_viewport_height(viewport_height);
         ScrollMetrics {
-            total_entries: self.get_total_entries(),
+            total_task_count: self.get_total_task_count(),
             visible_task_count: self.get_visible_task_count(),
-            selected_absolute_index: self.get_selected_absolute_index(),
+            selected_task_index: self.get_selected_task_index(),
             can_scroll_up: self.can_scroll_up(),
             can_scroll_down: self.can_scroll_down(),
         }

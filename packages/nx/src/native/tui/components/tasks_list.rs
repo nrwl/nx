@@ -386,14 +386,57 @@ impl TasksList {
     }
 
     // Add a helper method to safely check if we should show the parallel in progress section
-    fn should_show_parallel_section(&self, scroll_metrics: &ScrollMetrics) -> bool {
-        let is_at_top = !scroll_metrics.can_scroll_up;
+    fn should_show_parallel_section(&self) -> bool {
         let has_active_tasks = self
             .tasks
             .iter()
             .any(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::NotStarted));
 
-        is_at_top && self.max_parallel > 0 && has_active_tasks
+        self.max_parallel > 0 && has_active_tasks
+    }
+
+    /// Check if any entries in the parallel section are visible in the current viewport
+    fn has_visible_parallel_entries_in_viewport(&self) -> bool {
+        if self.max_parallel == 0 || !self.has_active_tasks() {
+            return false;
+        }
+
+        // Get scroll position and viewport from selection manager
+        let (scroll_offset, viewport_entries) = {
+            let manager = self.selection_manager.lock().unwrap();
+            (manager.get_scroll_offset(), manager.get_viewport_entries())
+        };
+
+        let viewport_size = viewport_entries.len();
+
+        // Waiting entries are at absolute positions 0..(max_parallel-1)
+        // Check if any of these positions are visible in current viewport
+        for waiting_entry_pos in 0..self.max_parallel {
+            if waiting_entry_pos >= scroll_offset
+                && waiting_entry_pos < scroll_offset + viewport_size
+            {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Calculate the absolute position in the entries list from viewport-relative position
+    fn get_absolute_position(&self, row_idx: usize, scroll_offset: usize) -> usize {
+        scroll_offset + row_idx
+    }
+
+    /// Determine if an entry at absolute position is part of the parallel section
+    fn is_in_parallel_section(&self, absolute_idx: usize) -> bool {
+        absolute_idx < self.max_parallel && self.max_parallel > 0 && self.has_active_tasks()
+    }
+
+    /// Check if there are active tasks that warrant showing the parallel section
+    fn has_active_tasks(&self) -> bool {
+        self.tasks
+            .iter()
+            .any(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::NotStarted))
     }
 
     // Add a helper method to check if we're in the initial loading state
@@ -910,6 +953,8 @@ impl TasksList {
                 )
             });
 
+        let has_visible_parallel_entries = self.has_visible_parallel_entries_in_viewport();
+
         // Determine the color of the NX logo based on task status
         let logo_color = if self.tasks.is_empty() {
             // No tasks
@@ -932,6 +977,9 @@ impl TasksList {
 
         // Get header cells using the existing method but add NX logo to first cell
         let mut header_cells = self.get_header_cells(column_visibility);
+
+        // Determine if we show parallel section styling
+        let show_parallel = self.should_show_parallel_section();
 
         // Get the style based on whether all tasks are completed
         let title_color = if all_tasks_completed {
@@ -957,9 +1005,6 @@ impl TasksList {
 
         // Replace the first cell with a new one containing the NX logo and title
         if !header_cells.is_empty() {
-            // Determine if we need to add the vertical line with top corner
-            let show_parallel = self.should_show_parallel_section(scroll_metrics);
-            let is_at_top = !scroll_metrics.can_scroll_up;
             let running = self
                 .tasks
                 .iter()
@@ -972,10 +1017,9 @@ impl TasksList {
                 Style::reset().bold().bg(logo_color).fg(THEME.primary_fg),
             )];
 
-            // Add box corner if needed
-            if show_parallel && is_at_top && running > 0 && !self.is_loading_state() {
+            // Add spacing if needed - show when parallel section entries are present
+            if show_parallel && running > 0 && !self.is_loading_state() {
                 first_cell_spans.push(Span::raw(" "));
-                // Top corner of the box
             }
 
             // Second cell: Put the title text in the task name column
@@ -1027,20 +1071,14 @@ impl TasksList {
         let mut all_rows = Vec::new();
 
         // Add an empty row right after the header to create visual spacing
-        // while maintaining the seamless vertical line if we're showing the parallel section
-        if self.should_show_parallel_section(scroll_metrics) {
-            let is_at_top = !scroll_metrics.can_scroll_up;
-
+        // while maintaining the seamless vertical line if parallel entries are visible in viewport
+        if has_visible_parallel_entries {
             let mut empty_cells = vec![
                 Cell::from(Line::from(vec![
                     // Space for selection indicator
                     Span::raw(" "),
-                    // Add vertical line for visual continuity, only when at the top
-                    if is_at_top && self.max_parallel > 0 {
-                        Span::styled("│", Style::default().fg(THEME.info))
-                    } else {
-                        Span::raw(" ")
-                    },
+                    // Add vertical line for visual continuity when parallel entries are visible
+                    Span::styled("│", Style::default().fg(THEME.info)),
                     Span::raw("   "),
                 ])),
                 Cell::from(""),
@@ -1076,11 +1114,14 @@ impl TasksList {
                         .unwrap()
                         .is_selected(task_name);
 
-                    // Use the helper method to check if we should show the parallel section
-                    let show_parallel = self.should_show_parallel_section(scroll_metrics);
-
-                    // Only consider rows for the parallel section if appropriate
-                    let is_in_parallel_section = show_parallel && row_idx < self.max_parallel;
+                    // Calculate absolute position to determine if the task is in the parallel section
+                    let scroll_offset = {
+                        let manager = self.selection_manager.lock().unwrap();
+                        manager.get_scroll_offset()
+                    };
+                    let absolute_idx = self.get_absolute_position(row_idx, scroll_offset);
+                    let is_in_parallel_section =
+                        show_parallel && self.is_in_parallel_section(absolute_idx);
 
                     let status_cell = {
                         let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
@@ -1088,7 +1129,6 @@ impl TasksList {
                         // Add vertical line for parallel section if needed (InProgress/Shared tasks only)
                         if matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
                             && is_in_parallel_section
-                            && !scroll_metrics.can_scroll_up
                         {
                             spans.push(Span::styled("│", Style::default().fg(THEME.info)));
                         } else {
@@ -1204,27 +1244,26 @@ impl TasksList {
                 }
             } else {
                 // Handle None entries (separators)
-                // Check if this is within the parallel section
-                let show_parallel = self.should_show_parallel_section(scroll_metrics);
-                let is_in_parallel_section = show_parallel && row_idx < self.max_parallel;
+                let scroll_offset = {
+                    let manager = self.selection_manager.lock().unwrap();
+                    manager.get_scroll_offset()
+                };
+                let absolute_idx = self.get_absolute_position(row_idx, scroll_offset);
+                let is_in_parallel_section = self.is_in_parallel_section(absolute_idx);
 
                 // Check if this is the bottom cap (the separator after the last parallel task)
-                let is_bottom_cap = show_parallel && row_idx == self.max_parallel;
+                // Only show bottom corner when waiting entries are actually visible in viewport
+                let is_bottom_cap =
+                    absolute_idx == self.max_parallel && has_visible_parallel_entries;
 
-                if is_in_parallel_section {
-                    // Add a vertical line for separators in the parallel section, only when at the top
-                    let is_at_top = !scroll_metrics.can_scroll_up;
-
+                if is_in_parallel_section && !is_bottom_cap {
+                    // This is a "Waiting for task..." entry within the parallel section
                     let mut empty_cells = vec![
                         Cell::from(Line::from(vec![
                             // Space for selection indicator (fixed width of 2)
                             Span::raw(" "),
-                            // Add space and vertical line for parallel section (fixed position)
-                            if is_at_top && self.max_parallel > 0 {
-                                Span::styled("│", Style::default().fg(THEME.info))
-                            } else {
-                                Span::raw("  ")
-                            },
+                            // Add vertical line for parallel section (always show when parallel entry is visible)
+                            Span::styled("│", Style::default().fg(THEME.info)),
                             Span::styled("·  ", Style::default().dim()),
                         ])),
                         Cell::from(Span::styled(
@@ -1244,19 +1283,13 @@ impl TasksList {
                     }
                     Row::new(empty_cells).height(1).style(normal_style)
                 } else if is_bottom_cap {
-                    // Add the bottom corner cap at the end of the parallel section, only when at the top
-                    let is_at_top = !scroll_metrics.can_scroll_up;
-
+                    // Add the bottom corner cap at the end of the parallel section
                     let mut empty_cells = vec![
                         Cell::from(Line::from(vec![
                             // Space for selection indicator (fixed width of 2)
                             Span::raw(" "),
-                            // Add bottom corner for the box, or just spaces if not at the top
-                            if is_at_top {
-                                Span::styled("└", Style::default().fg(THEME.info))
-                            } else {
-                                Span::raw(" ")
-                            },
+                            // Always show bottom corner when at structural boundary
+                            Span::styled("└", Style::default().fg(THEME.info)),
                             Span::raw("   "),
                         ])),
                         Cell::from(""),
@@ -1312,9 +1345,9 @@ impl TasksList {
 
         // Use pre-computed scroll metrics passed from main render method
         // This completely eliminates lock acquisitions in this method
-        let total_entries = scroll_metrics.total_entries;
+        let total_task_count = scroll_metrics.total_task_count;
         let visible_task_count = scroll_metrics.visible_task_count;
-        let selected_absolute_index = scroll_metrics.selected_absolute_index;
+        let selected_task_index = scroll_metrics.selected_task_index;
 
         // Split the area to reserve space for scrollbar and padding when needed
         let (table_render_area, scrollbar_area) = if needs_scrollbar {
@@ -1352,15 +1385,15 @@ impl TasksList {
                     .saturating_sub(header_and_spacing_rows), // Adjust height accordingly
             };
 
-            // Update scrollbar state using complete entries and selected task position
-            // This ensures thumb positioning accurately reflects progress through the complete task list
+            // Update scrollbar state using task-centric metrics for consistent task navigation
+            // This ensures thumb positioning accurately reflects progress through tasks
 
-            let selected_position = selected_absolute_index.unwrap_or(0);
+            let selected_position = selected_task_index.unwrap_or(0);
 
             self.scrollbar_state = ScrollbarState::default()
-                .content_length(total_entries) // Complete entries including spacers
+                .content_length(total_task_count) // Total tasks excluding spacers
                 .viewport_content_length(visible_task_count) // Tasks visible in viewport (no spacers)
-                .position(selected_position); // Selected task's absolute position in complete list
+                .position(selected_position); // Selected task's index among tasks
 
             // Determine scrollbar style based on focus state
             let base_style = Style::default().fg(THEME.info);
@@ -2439,6 +2472,130 @@ mod tests {
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("scrolling_after_scroll", terminal.backend());
+    }
+
+    #[test]
+    fn test_no_vertical_line_when_waiting_entries_scrolled_out() {
+        // Test that vertical line disappears when "Waiting for task..." entries are scrolled out of viewport
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(4))); // Small viewport
+        let mut tasks = Vec::new();
+
+        // Create many tasks to ensure scrolling beyond waiting entries
+        for i in 1..=10 {
+            let task = Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            };
+            tasks.push(task);
+        }
+
+        let mut tasks_list = TasksList::new(
+            tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Test Tasks".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(80, 10);
+
+        // Set parallel limit of 2 - this will create "Waiting for task..." entries at positions 0,1
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list.apply_filter();
+
+        // Initial render - should show waiting entries and vertical line
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "vertical_line_with_waiting_entries_visible",
+            terminal.backend()
+        );
+
+        // Scroll down multiple times to move past the waiting entries (positions 0,1)
+        // With viewport size 4, we need to scroll enough to push waiting entries out
+        tasks_list.update(Action::ScrollDown).ok();
+        tasks_list.update(Action::ScrollDown).ok();
+        tasks_list.update(Action::ScrollDown).ok(); // Scroll past waiting entries
+
+        // Re-render after scrolling
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        // This snapshot will show the bug: vertical line │ appears even when no waiting entries visible
+        insta::assert_snapshot!(
+            "vertical_line_when_waiting_entries_scrolled_out",
+            terminal.backend()
+        );
+    }
+
+    #[test]
+    fn test_no_bottom_corner_when_waiting_entries_scrolled_out() {
+        // Test that bottom corner └ disappears when "Waiting for task..." entries are scrolled out of viewport
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(4))); // Small viewport
+        let mut tasks = Vec::new();
+
+        // Create many tasks to ensure scrolling beyond waiting entries and bottom corner
+        for i in 1..=10 {
+            let task = Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            };
+            tasks.push(task);
+        }
+
+        let mut tasks_list = TasksList::new(
+            tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Test Tasks".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(80, 10);
+
+        // Set parallel limit of 2 - this creates waiting entries at positions 0,1 and bottom corner at position 2
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list.apply_filter();
+
+        // Initial render - should show waiting entries and bottom corner └
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "bottom_corner_with_waiting_entries_visible",
+            terminal.backend()
+        );
+
+        // Scroll down carefully to move past waiting entries but keep bottom corner in viewport
+        // Positions: 0,1 = waiting entries, 2 = bottom corner, 3+ = actual tasks
+        // We want: viewport shows positions 2,3,4,5 (bottom corner visible, waiting entries scrolled out)
+        tasks_list.update(Action::ScrollDown).ok();
+        tasks_list.update(Action::ScrollDown).ok(); // This should show bottom corner but no waiting entries
+
+        // Re-render after scrolling past all parallel section elements
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        // This snapshot should show the bug: bottom corner └ appears even when no waiting entries visible
+        insta::assert_snapshot!(
+            "bottom_corner_when_waiting_entries_scrolled_out",
+            terminal.backend()
+        );
     }
 
     #[test]
