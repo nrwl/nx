@@ -83,6 +83,7 @@ describe('release-publish executor', () => {
   describe('npm dist-tag error handling', () => {
     it('returns failure and logs only the dist-tag add error when add fails with empty stdout', async () => {
       mockExecSync
+        .mockReturnValueOnce('11.5.1') // npm version check
         .mockReturnValueOnce(
           Buffer.from(
             JSON.stringify({
