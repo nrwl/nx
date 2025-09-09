@@ -81,8 +81,7 @@ import {
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   ensurePackageHasProvenance,
-  getPublishedNxPackages,
-  noProvenanceError,
+  getNxPackageGroup,
 } from '../../utils/provenance';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
@@ -995,7 +994,7 @@ async function getPackageMigrationsUsingRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  if (getPublishedNxPackages().includes(packageName)) {
+  if (getNxPackageGroup().includes(packageName)) {
     await ensurePackageHasProvenance(packageName, packageVersion);
   }
   // check if there are migrations in the packages by looking at the
@@ -1111,7 +1110,7 @@ async function getPackageMigrationsUsingInstall(
 
   let result: ResolvedMigrationConfiguration;
 
-  if (getPublishedNxPackages().includes(packageName)) {
+  if (getNxPackageGroup().includes(packageName)) {
     await ensurePackageHasProvenance(packageName, packageVersion);
   }
 

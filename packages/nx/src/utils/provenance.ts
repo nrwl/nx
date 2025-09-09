@@ -116,7 +116,7 @@ export const noProvenanceError = (
     error ?? ''
   }`;
 
-export function getPublishedNxPackages(): string[] {
+export function getNxPackageGroup(): string[] {
   const packageJsonPath = join(__dirname, '../../package.json');
   const packageJson = readJsonFile(packageJsonPath);
   const packages = packageJson['nx-migrations'].packageGroup.filter(
