@@ -28,11 +28,6 @@ jobs:
   # - release:
   #   - We are running a full release which is based on the tag that triggered the release event, we can use default
   #     ref resolution in actions/checkout. The exact version will be generated within scripts/nx-release.ts.
-  #
-  # - workflow_dispatch:
-  #   - We are either running a dry-run on the current branch, in which case the version will be statica and we can use
-  #     default ref resolution in actions/checkout, or we are creating a PR release for the given PR number, in which case
-  #     we should generate an applicable version number within publish-resolve-data.js and use a custom ref of the PR branch name.
   resolve-required-data:
     name: Resolve Required Data
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -40,20 +35,17 @@ jobs:
     outputs:
       version: ${{ steps.script.outputs.version }}
       dry_run_flag: ${{ steps.script.outputs.dry_run_flag }}
-      success_comment: ${{ steps.script.outputs.success_comment }}
       publish_branch: ${{ steps.script.outputs.publish_branch }}
-      ref: ${{ steps.script.outputs.ref }}
-      repo: ${{ steps.script.outputs.repo }}
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
@@ -61,7 +53,7 @@ jobs:
 
       - name: Resolve and set checkout and version data to use for release
         id: script
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           PR_NUMBER: ${{ github.event.inputs.pr }}
         with:
@@ -69,36 +61,6 @@ jobs:
           script: |
             const script = require('${{ github.workspace }}/scripts/publish-resolve-data.js');
             await script({ github, context, core });
-
-      - name: (PR Release Only) Check out latest master
-        if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@v4
-        with:
-          # Check out the latest master branch to get its copy of nx-release.ts
-          repository: nrwl/nx
-          ref: master
-          path: latest-master-checkout
-
-      - name: (PR Release Only) Check out PR branch
-        if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@v4
-        with:
-          # Check out the PR branch to get its copy of nx-release.ts
-          repository: ${{ steps.script.outputs.repo }}
-          ref: ${{ steps.script.outputs.ref }}
-          path: pr-branch-checkout
-
-      - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
-        if: ${{ steps.script.outputs.ref != '' }}
-        env:
-          FILE_TO_COMPARE: "scripts/nx-release.ts"
-        run: |
-          if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
-            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
-            exit 1
-          else
-            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
-          fi
 
   build:
     needs: [ resolve-required-data ]
@@ -253,17 +215,14 @@ jobs:
     name: stable - ${{ matrix.settings.target }} - node@22.16.0
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -271,13 +230,13 @@ jobs:
           cache: 'pnpm'
 
       - name: Install
-        uses: dtolnay/rust-toolchain@stable
+        uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
         if: ${{ !matrix.settings.docker }}
         with:
           targets: ${{ matrix.settings.target }}
 
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -287,7 +246,7 @@ jobs:
             target/
           key: ${{ matrix.settings.target }}-cargo-registry
 
-      - uses: goto-bus-stop/setup-zig@v2
+      - uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
         with:
           version: 0.10.0
@@ -308,7 +267,7 @@ jobs:
         timeout-minutes: 30
 
       - name: Setup node x86
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -317,7 +276,7 @@ jobs:
           architecture: x86
 
       - name: Build in docker
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         if: ${{ matrix.settings.docker }}
         with:
           image: ${{ matrix.settings.docker }}
@@ -330,7 +289,7 @@ jobs:
         shell: bash
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
@@ -345,14 +304,11 @@ jobs:
     name: Build FreeBSD
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Build
         id: build
-        uses: cross-platform-actions/action@v0.25.0
+        uses: cross-platform-actions/action@462ed697694d2ac9aa49e1225f395f7bb6dd49fe # v0.29.0
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
@@ -397,7 +353,7 @@ jobs:
             echo "COMPLETE"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bindings-freebsd
           path: |
@@ -420,17 +376,14 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
@@ -444,7 +397,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           path: artifacts
 
@@ -478,22 +431,6 @@ jobs:
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
         run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
 
-      - name: (PR Release Only) Create comment for successful PR release
-        if: success() && github.event.inputs.pr
-        uses: actions/github-script@v7
-        env:
-          SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const successComment = JSON.parse(process.env.SUCCESS_COMMENT);
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ github.event.inputs.pr }},
-              body: successComment
-            });
-
   pr_failure_comment:
     # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
     if: ${{ github.repository_owner == 'nrwl' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
@@ -502,7 +439,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create comment for failed PR release
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # This script is intentionally kept inline (and e.g. not generated in publish-resolve-data.js)
