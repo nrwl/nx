@@ -385,18 +385,8 @@ impl TasksList {
         entries
     }
 
-    // Add a helper method to safely check if we should show the parallel in progress section
-    fn should_show_parallel_section(&self) -> bool {
-        let has_active_tasks = self
-            .tasks
-            .iter()
-            .any(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::NotStarted));
-
-        self.max_parallel > 0 && has_active_tasks
-    }
-
-    /// Check if any entries in the parallel section are visible in the current viewport
-    fn has_visible_parallel_entries_in_viewport(&self) -> bool {
+    /// Check if any parallel entries are visible in the current viewport.
+    fn has_visible_parallel_entries(&self) -> bool {
         if self.max_parallel == 0 || !self.has_active_tasks() {
             return false;
         }
@@ -953,7 +943,7 @@ impl TasksList {
                 )
             });
 
-        let has_visible_parallel_entries = self.has_visible_parallel_entries_in_viewport();
+        let has_visible_parallel_entries = self.has_visible_parallel_entries();
 
         // Determine the color of the NX logo based on task status
         let logo_color = if self.tasks.is_empty() {
@@ -979,7 +969,7 @@ impl TasksList {
         let mut header_cells = self.get_header_cells(column_visibility);
 
         // Determine if we show parallel section styling
-        let show_parallel = self.should_show_parallel_section();
+        let show_parallel = self.has_visible_parallel_entries();
 
         // Get the style based on whether all tasks are completed
         let title_color = if all_tasks_completed {
@@ -1071,7 +1061,7 @@ impl TasksList {
         let mut all_rows = Vec::new();
 
         // Add an empty row right after the header to create visual spacing
-        // while maintaining the seamless vertical line if parallel entries are visible in viewport
+        // while maintaining the seamless vertical line when parallel section is shown
         if has_visible_parallel_entries {
             let mut empty_cells = vec![
                 Cell::from(Line::from(vec![
@@ -1252,7 +1242,7 @@ impl TasksList {
                 let is_in_parallel_section = self.is_in_parallel_section(absolute_idx);
 
                 // Check if this is the bottom cap (the separator after the last parallel task)
-                // Only show bottom corner when waiting entries are actually visible in viewport
+                // Only show bottom corner when parallel section is shown
                 let is_bottom_cap =
                     absolute_idx == self.max_parallel && has_visible_parallel_entries;
 
