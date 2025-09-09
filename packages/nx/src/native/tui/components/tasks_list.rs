@@ -1328,11 +1328,6 @@ impl TasksList {
             constraints.push(Constraint::Length(DURATION_COLUMN_WIDTH));
         }
 
-        // Calculate dynamic viewport height based on actual table content area
-        let header_and_spacing_rows = 4;
-        let _dynamic_viewport_height =
-            table_area.height.saturating_sub(header_and_spacing_rows) as usize;
-
         // Use pre-computed scroll metrics passed from main render method
         // This completely eliminates lock acquisitions in this method
         let total_task_count = scroll_metrics.total_task_count;
