@@ -51,6 +51,8 @@ export interface PackageManagerCommands {
     registryConfigKey: string,
     tag: string
   ) => string;
+  // yarn berry doesn't support ignoring scripts via flag
+  ignoreScriptsFlag?: string;
 }
 
 /**
@@ -131,7 +133,7 @@ export function getPackageManagerCommand(
       // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
-        install: useBerry ? 'yarn install' : `yarn install`,
+        install: 'yarn install',
         ciInstall: useBerry
           ? 'yarn install --immutable'
           : 'yarn install --frozen-lockfile',
@@ -151,6 +153,7 @@ export function getPackageManagerCommand(
           : 'yarn config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: useBerry ? undefined : `--ignore-scripts`,
       };
     },
     pnpm: () => {
@@ -198,6 +201,7 @@ export function getPackageManagerCommand(
           `pnpm publish "${packageRoot}" --json --"${
             allowRegistryConfigKey ? registryConfigKey : 'registry'
           }=${registry}" --tag=${tag} --no-git-checks`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     npm: () => {
@@ -207,6 +211,7 @@ export function getPackageManagerCommand(
       return {
         install: 'npm install',
         ciInstall: 'npm ci --legacy-peer-deps',
+        installIgnoreScripts: 'npm install --ignore-scripts',
         updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',
@@ -219,6 +224,7 @@ export function getPackageManagerCommand(
         getRegistryUrl: 'npm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     bun: () => {
@@ -226,6 +232,7 @@ export function getPackageManagerCommand(
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
+        installIgnoreScripts: 'bun install --ignore-scripts',
         updateLockFile: 'bun install --frozen-lockfile',
         add: 'bun install',
         addDev: 'bun install -D',
@@ -237,6 +244,7 @@ export function getPackageManagerCommand(
         // Unlike npm, bun publish does not support a custom registryConfigKey option
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
   };

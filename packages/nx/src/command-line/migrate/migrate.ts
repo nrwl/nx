@@ -81,6 +81,7 @@ import {
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   ensurePackageHasProvenance,
+  getPublishedNxPackages,
   noProvenanceError,
 } from '../../utils/provenance';
 
@@ -994,11 +995,7 @@ async function getPackageMigrationsUsingRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  if (
-    (packageName.startsWith('@nx/') || packageName === 'nx') &&
-    packageName !== '@nx/php' &&
-    packageName !== 'nx-ignore'
-  ) {
+  if (getPublishedNxPackages().includes(packageName)) {
     await ensurePackageHasProvenance(packageName, packageVersion);
   }
   // check if there are migrations in the packages by looking at the
@@ -1114,11 +1111,7 @@ async function getPackageMigrationsUsingInstall(
 
   let result: ResolvedMigrationConfiguration;
 
-  if (
-    (packageName.startsWith('@nx/') || packageName === 'nx') &&
-    packageName !== '@nx/php' &&
-    packageName !== 'nx-ignore'
-  ) {
+  if (getPublishedNxPackages().includes(packageName)) {
     await ensurePackageHasProvenance(packageName, packageVersion);
   }
 
@@ -1483,10 +1476,13 @@ function runInstall(nxWorkspaceRoot?: string) {
   if (packageManager ?? detectPackageManager() === 'npm') {
     process.env.npm_config_legacy_peer_deps ??= 'true';
   }
+  const installCommand = `${pmCommands.install} ${
+    pmCommands.ignoreScriptsFlag ?? ''
+  }`;
   output.log({
-    title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
+    title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
-  execSync(pmCommands.install, {
+  execSync(installCommand, {
     stdio: [0, 1, 2],
     windowsHide: false,
     cwd: nxWorkspaceRoot ?? process.cwd(),
@@ -1934,7 +1930,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
       }
     }
 
-    execSync(pmc.install, {
+    execSync(`${pmc.install} ${pmc.ignoreScriptsFlag ?? ''}`, {
       cwd: tmpDir,
       stdio,
       windowsHide: false,

@@ -1,5 +1,7 @@
 import { execFile } from 'child_process';
+import { join } from 'path';
 import { promisify } from 'util';
+import { readJsonFile } from './fileutils';
 
 /*
  * Verifies that the given npm package has provenance attestations
@@ -113,6 +115,16 @@ export const noProvenanceError = (
   `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues \n Error: ${
     error ?? ''
   }`;
+
+export function getPublishedNxPackages(): string[] {
+  const packageJsonPath = join(__dirname, '../../package.json');
+  const packageJson = readJsonFile(packageJsonPath);
+  const packages = packageJson['nx-migrations'].packageGroup.filter(
+    (dep) => typeof dep === 'string' && dep.startsWith('@nx/')
+  );
+  packages.push('nx');
+  return packages;
+}
 
 type Attestation = {
   predicateType: string;
