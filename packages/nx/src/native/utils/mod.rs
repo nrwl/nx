@@ -16,5 +16,6 @@ pub mod ai;
 pub mod atomics;
 pub mod ci;
 pub mod file_lock;
+pub mod git;
 
 pub use atomics::*;
