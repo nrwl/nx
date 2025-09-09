@@ -75,16 +75,8 @@ class MavenDependencyResolver {
     ): List<String> {
         val dependsOn = mutableListOf<String>()
         
-        // Add parent dependency first (parent POMs must be installed before children)
-        val parent = mavenProject.parent
-        if (parent != null) {
-            val parentCoordinates = "${parent.groupId}:${parent.artifactId}"
-            val parentProjectName = coordinatesToProjectName[parentCoordinates]
-            if (parentProjectName != null && parentProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
-                val bestPhase = getBestDependencyPhase(parentProjectName, phase, allProjects)
-                dependsOn.add("$parentProjectName:$bestPhase")
-            }
-        }
+        // Parent POMs are configuration only - no task dependencies needed
+        // They must be available in the repository but don't need to "run" tasks
         
         // Add regular dependencies
         for (dependency in mavenProject.dependencies) {
