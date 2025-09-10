@@ -14,6 +14,10 @@ class PluginExecutionFinder(
     private val session: MavenSession
 ) {
     
+    // Cache for expensive calculateExecutionPlan results
+    // Key: "phase:packaging:groupId" (projects with same characteristics often have same execution plans)
+    private val executionPlanCache = mutableMapOf<String, List<org.apache.maven.plugin.MojoExecution>>()
+    
     /**
      * Get effective plugins by accessing Maven's resolved model including inherited plugins
      */
@@ -84,10 +88,19 @@ class PluginExecutionFinder(
      * Returns a list of MojoExecutions that Maven would actually execute
      */
     fun findExecutionsForPhase(phase: String, project: MavenProject): List<org.apache.maven.plugin.MojoExecution> {
+        // Create cache key based on characteristics that affect execution plan
+        val cacheKey = "$phase:${project.packaging}:${project.groupId}"
+        
+        // Check cache first
+        executionPlanCache[cacheKey]?.let { cachedExecutions ->
+            log.debug("Using cached execution plan for $cacheKey (${cachedExecutions.size} executions)")
+            return cachedExecutions
+        }
+        
         val executions = mutableListOf<org.apache.maven.plugin.MojoExecution>()
         
         try {
-            log.warn("*** CALCULATING EXECUTION PLAN FOR PHASE '$phase' ***")
+            log.warn("*** CALCULATING EXECUTION PLAN FOR PHASE '$phase' (cache miss: $cacheKey) ***")
             log.warn("  Project: ${project.artifactId}")
             log.warn("  Session current project: ${session.currentProject?.artifactId}")
             
@@ -129,6 +142,10 @@ class PluginExecutionFinder(
             log.warn("No executions found via calculateExecutionPlan, trying fallback analysis for phase '$phase'")
             executions.addAll(findExecutionsFromProjectPlugins(phase, project))
         }
+        
+        // Cache the result for future use (even if empty - that's a valid result)
+        executionPlanCache[cacheKey] = executions
+        log.debug("Cached execution plan for $cacheKey (${executions.size} executions)")
         
         return executions
     }
