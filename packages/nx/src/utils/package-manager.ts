@@ -133,7 +133,7 @@ export function getPackageManagerCommand(
       // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
-        install: 'yarn install',
+        install: 'yarn',
         ciInstall: useBerry
           ? 'yarn install --immutable'
           : 'yarn install --frozen-lockfile',
@@ -185,7 +185,6 @@ export function getPackageManagerCommand(
         addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
         rm: 'pnpm rm',
         exec: modernPnpm ? 'pnpm exec' : 'pnpx',
-        // pnpm dlx is opt-in for postinstall scripts: https://pnpm.io/cli/dlx
         dlx: modernPnpm ? 'pnpm dlx' : 'pnpx',
         run: (script: string, args?: string) =>
           `pnpm run ${script}${
@@ -211,7 +210,6 @@ export function getPackageManagerCommand(
       return {
         install: 'npm install',
         ciInstall: 'npm ci --legacy-peer-deps',
-        installIgnoreScripts: 'npm install --ignore-scripts',
         updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',
@@ -232,7 +230,6 @@ export function getPackageManagerCommand(
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
-        installIgnoreScripts: 'bun install --ignore-scripts',
         updateLockFile: 'bun install --frozen-lockfile',
         add: 'bun install',
         addDev: 'bun install -D',
