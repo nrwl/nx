@@ -1,5 +1,7 @@
 package dev.nx.maven
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.plugin.AbstractMojo
@@ -38,52 +40,83 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
-        log.info("Analyzing Maven projects using two-tier approach...")
+        log.info("Analyzing Maven projects using optimized two-tier approach...")
         
         try {
             val allProjects = session.allProjects
             log.info("Found ${allProjects.size} Maven projects")
             
-            // Step 1: Execute per-project analysis for all projects
-            log.info("Step 1: Running per-project analysis...")
-            executePerProjectAnalysis(allProjects)
+            // Step 1: Execute per-project analysis for all projects (in-memory)
+            log.info("Step 1: Running optimized per-project analysis...")
+            val inMemoryAnalyses = executePerProjectAnalysisInMemory(allProjects)
             
-            // Step 2: Generate workspace graph from individual analyses  
-            log.info("Step 2: Generating workspace graph...")
-            generateWorkspaceGraph(allProjects)
+            // Step 2: Generate workspace graph from in-memory analyses  
+            log.info("Step 2: Generating workspace graph from in-memory analyses...")
+            generateWorkspaceGraphFromMemory(allProjects, inMemoryAnalyses)
             
-            log.info("Two-tier analysis completed successfully")
+            log.info("Optimized two-tier analysis completed successfully")
             
         } catch (e: Exception) {
-            throw MojoExecutionException("Failed to execute two-tier Maven analysis", e)
+            throw MojoExecutionException("Failed to execute optimized two-tier Maven analysis", e)
         }
     }
     
-    private fun executePerProjectAnalysis(allProjects: List<MavenProject>) {
+    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>): Map<String, JsonNode> {
+        val startTime = System.currentTimeMillis()
+        log.info("Creating shared component instances for optimized analysis...")
+        
+        // Create shared component instances ONCE for all projects (major optimization)
+        val objectMapper = ObjectMapper()
+        val sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
+            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
+        )
+        val sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
+        val sharedTestClassDiscovery = TestClassDiscovery()
+        
+        val setupTime = System.currentTimeMillis() - startTime
+        log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
+        
         val singleAnalyzer = NxProjectAnalyzerSingleMojo()
         
+        // Set up shared components once
+        singleAnalyzer.setSession(session)
+        singleAnalyzer.setPluginManager(pluginManager)
+        singleAnalyzer.setLifecycleExecutor(lifecycleExecutor)
+        singleAnalyzer.setWorkspaceRoot(workspaceRoot)
+        singleAnalyzer.setLog(log)
+        singleAnalyzer.setSharedInputOutputAnalyzer(sharedInputOutputAnalyzer)
+        singleAnalyzer.setSharedLifecycleAnalyzer(sharedLifecycleAnalyzer)
+        singleAnalyzer.setSharedTestClassDiscovery(sharedTestClassDiscovery)
+        
+        // Collect analyses in memory instead of writing to files
+        val inMemoryAnalyses = mutableMapOf<String, JsonNode>()
+        
+        val projectStartTime = System.currentTimeMillis()
         for (mavenProject in allProjects) {
             try {
                 log.info("Analyzing project: ${mavenProject.artifactId}")
                 
-                // Set up the single project analyzer with current project context
+                // Only set the project context (no expensive component recreation)
                 singleAnalyzer.setProject(mavenProject)
-                singleAnalyzer.setSession(session)
-                singleAnalyzer.setPluginManager(pluginManager)
-                singleAnalyzer.setLifecycleExecutor(lifecycleExecutor)
-                singleAnalyzer.setWorkspaceRoot(workspaceRoot)
-                singleAnalyzer.setLog(log)
                 
-                // Execute single project analysis
-                singleAnalyzer.execute()
+                // Get analysis directly without writing to file
+                val analysis = singleAnalyzer.analyzeProjectInMemory()
+                val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
+                inMemoryAnalyses[projectName] = analysis
                 
             } catch (e: Exception) {
                 log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
             }
         }
+        
+        val totalTime = System.currentTimeMillis() - startTime
+        val analysisTime = System.currentTimeMillis() - projectStartTime
+        log.info("Completed in-memory analysis of ${allProjects.size} projects in ${totalTime}ms (setup: ${setupTime}ms, analysis: ${analysisTime}ms)")
+        
+        return inMemoryAnalyses
     }
     
-    private fun generateWorkspaceGraph(allProjects: List<MavenProject>) {
+    private fun generateWorkspaceGraphFromMemory(allProjects: List<MavenProject>, inMemoryAnalyses: Map<String, JsonNode>) {
         val graphGenerator = NxWorkspaceGraphMojo()
         
         // Set up the workspace graph generator
@@ -92,8 +125,12 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         graphGenerator.setWorkspaceRoot(workspaceRoot)
         graphGenerator.setLog(log)
         
-        // Execute workspace graph generation
+        // Pass in-memory analyses (optimization)
+        graphGenerator.setInMemoryProjectAnalyses(inMemoryAnalyses)
+        
+        // Execute workspace graph generation with in-memory data
         graphGenerator.execute()
     }
+    
 
 }

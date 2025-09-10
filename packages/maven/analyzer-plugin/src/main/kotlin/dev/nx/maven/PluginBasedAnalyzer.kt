@@ -25,6 +25,10 @@ class PluginBasedAnalyzer(
     private val pluginExecutionFinder = PluginExecutionFinder(log, lifecycleExecutor, session)
     private val mojoParameterAnalyzer = MojoParameterAnalyzer(log, expressionResolver, pathResolver)
     
+    // Cache for expensive plugin descriptor loading
+    // Key: "groupId:artifactId:version" (plugin coordinates)
+    private val pluginDescriptorCache = mutableMapOf<String, PluginDescriptor?>()
+    
     /**
      * Analyzes a Maven phase by examining which plugins execute and their parameters
      */
@@ -106,15 +110,32 @@ class PluginBasedAnalyzer(
      * Loads a plugin descriptor using Maven's plugin manager
      */
     private fun loadPluginDescriptor(plugin: org.apache.maven.model.Plugin, project: MavenProject): PluginDescriptor? {
+        // Create cache key from plugin coordinates
+        val cacheKey = "${plugin.groupId}:${plugin.artifactId}:${plugin.version ?: "LATEST"}"
+        
+        // Check cache first
+        if (pluginDescriptorCache.containsKey(cacheKey)) {
+            val cachedDescriptor = pluginDescriptorCache[cacheKey]
+            log.debug("Using cached plugin descriptor for $cacheKey")
+            return cachedDescriptor
+        }
+        
         return try {
+            log.debug("Loading plugin descriptor for $cacheKey (cache miss)")
             
             // Use Maven's plugin manager to load the plugin descriptor
             val descriptor = pluginManager.getPluginDescriptor(plugin, project.remotePluginRepositories, session.repositorySession)
             
+            // Cache the result (even if null - that's a valid cache entry)
+            pluginDescriptorCache[cacheKey] = descriptor
+            log.debug("Cached plugin descriptor for $cacheKey")
             
             descriptor
             
         } catch (e: Exception) {
+            // Cache the null result to avoid retrying failed loads
+            pluginDescriptorCache[cacheKey] = null
+            log.debug("Cached null plugin descriptor for $cacheKey due to exception: ${e.message}")
             null
         }
     }
