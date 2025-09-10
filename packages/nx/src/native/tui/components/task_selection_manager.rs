@@ -7,6 +7,7 @@ pub struct ScrollMetrics {
     pub selected_task_index: Option<usize>,
     pub can_scroll_up: bool,
     pub can_scroll_down: bool,
+    pub scroll_offset: usize,
 }
 
 pub struct TaskSelectionManager {
@@ -349,10 +350,6 @@ impl TaskSelectionManager {
         self.scroll_offset + self.viewport_height < self.entries.len()
     }
 
-    pub fn get_scroll_offset(&self) -> usize {
-        self.scroll_offset
-    }
-
     fn select_first_available(&mut self) {
         self.selected_task_name = self.entries.iter().find_map(|e| e.as_ref().cloned());
         // Invalidate selection cache since selected task changed
@@ -408,13 +405,8 @@ impl TaskSelectionManager {
             selected_task_index: self.get_selected_task_index(),
             can_scroll_up: self.can_scroll_up(),
             can_scroll_down: self.can_scroll_down(),
+            scroll_offset: self.scroll_offset,
         }
-    }
-}
-
-impl Default for TaskSelectionManager {
-    fn default() -> Self {
-        Self::new(10) // Default viewport height
     }
 }
 

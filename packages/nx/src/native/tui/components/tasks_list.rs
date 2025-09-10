@@ -198,7 +198,6 @@ pub struct TasksList {
     pub tasks: Vec<TaskItem>,        // Source of truth - all tasks
     filtered_names: Vec<String>,     // Names of tasks that match the filter
     scroll_momentum: ScrollMomentum, // Track scroll momentum for smooth scrolling
-    scrollbar_state: ScrollbarState, // State for the visual scrollbar indicator
     pub throbber_counter: usize,
     pub filter_mode: bool,
     filter_text: String,
@@ -240,7 +239,6 @@ impl TasksList {
             filtered_names,
             tasks: task_items,
             scroll_momentum: ScrollMomentum::new(),
-            scrollbar_state: ScrollbarState::default(),
             throbber_counter: 0,
             filter_mode: false,
             filter_text: String::new(),
@@ -284,7 +282,7 @@ impl TasksList {
     }
 
     /// Scrolls the task list up with momentum support
-    fn scroll_up(&mut self, base_lines: usize) {
+    fn scroll_up(&mut self) {
         if self.filtered_names.is_empty() {
             return;
         }
@@ -292,11 +290,11 @@ impl TasksList {
         self.selection_manager
             .lock()
             .unwrap()
-            .scroll_up(lines.max(base_lines));
+            .scroll_up(lines.max(1));
     }
 
     /// Scrolls the task list down with momentum support
-    fn scroll_down(&mut self, base_lines: usize) {
+    fn scroll_down(&mut self) {
         if self.filtered_names.is_empty() {
             return;
         }
@@ -306,7 +304,7 @@ impl TasksList {
         self.selection_manager
             .lock()
             .unwrap()
-            .scroll_down(lines.max(base_lines));
+            .scroll_down(lines.max(1));
     }
 
     /// Creates a list of task entries with separators between different status groups.
@@ -386,35 +384,26 @@ impl TasksList {
     }
 
     /// Check if any parallel entries are visible in the current viewport.
-    fn has_visible_parallel_entries(&self) -> bool {
+    fn has_visible_parallel_entries(&self, scroll_offset: usize) -> bool {
         if self.max_parallel == 0 || !self.has_active_tasks() {
             return false;
         }
 
         // Get scroll position and viewport from selection manager
-        let (scroll_offset, viewport_entries) = {
+        let viewport_entries = {
             let manager = self.selection_manager.lock().unwrap();
-            (manager.get_scroll_offset(), manager.get_viewport_entries())
+            manager.get_viewport_entries()
         };
 
-        let viewport_size = viewport_entries.len();
-
-        // Waiting entries are at absolute positions 0..(max_parallel-1)
-        // Check if any of these positions are visible in current viewport
-        for waiting_entry_pos in 0..self.max_parallel {
-            if waiting_entry_pos >= scroll_offset
-                && waiting_entry_pos < scroll_offset + viewport_size
-            {
-                return true;
-            }
+        // Edge case: empty viewport means no visible entries
+        if viewport_entries.len() == 0 {
+            return false;
         }
 
-        false
-    }
-
-    /// Calculate the absolute position in the entries list from viewport-relative position
-    fn get_absolute_position(&self, row_idx: usize, scroll_offset: usize) -> usize {
-        scroll_offset + row_idx
+        // Waiting entries are at positions 0..max_parallel
+        // Viewport shows entries from scroll_offset to scroll_offset+viewport_size
+        // Ranges overlap if: max_parallel > scroll_offset AND 0 < scroll_offset + viewport_size
+        scroll_offset < self.max_parallel
     }
 
     /// Determine if an entry at absolute position is part of the parallel section
@@ -943,7 +932,8 @@ impl TasksList {
                 )
             });
 
-        let has_visible_parallel_entries = self.has_visible_parallel_entries();
+        let has_visible_parallel_entries =
+            self.has_visible_parallel_entries(scroll_metrics.scroll_offset);
 
         // Determine the color of the NX logo based on task status
         let logo_color = if self.tasks.is_empty() {
@@ -967,9 +957,6 @@ impl TasksList {
 
         // Get header cells using the existing method but add NX logo to first cell
         let mut header_cells = self.get_header_cells(column_visibility);
-
-        // Determine if we show parallel section styling
-        let show_parallel = self.has_visible_parallel_entries();
 
         // Get the style based on whether all tasks are completed
         let title_color = if all_tasks_completed {
@@ -1008,7 +995,7 @@ impl TasksList {
             )];
 
             // Add spacing if needed - show when parallel section entries are present
-            if show_parallel && running > 0 && !self.is_loading_state() {
+            if has_visible_parallel_entries && running > 0 && !self.is_loading_state() {
                 first_cell_spans.push(Span::raw(" "));
             }
 
@@ -1105,13 +1092,9 @@ impl TasksList {
                         .is_selected(task_name);
 
                     // Calculate absolute position to determine if the task is in the parallel section
-                    let scroll_offset = {
-                        let manager = self.selection_manager.lock().unwrap();
-                        manager.get_scroll_offset()
-                    };
-                    let absolute_idx = self.get_absolute_position(row_idx, scroll_offset);
+                    let absolute_idx = scroll_metrics.scroll_offset + row_idx;
                     let is_in_parallel_section =
-                        show_parallel && self.is_in_parallel_section(absolute_idx);
+                        has_visible_parallel_entries && self.is_in_parallel_section(absolute_idx);
 
                     let status_cell = {
                         let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
@@ -1234,11 +1217,7 @@ impl TasksList {
                 }
             } else {
                 // Handle None entries (separators)
-                let scroll_offset = {
-                    let manager = self.selection_manager.lock().unwrap();
-                    manager.get_scroll_offset()
-                };
-                let absolute_idx = self.get_absolute_position(row_idx, scroll_offset);
+                let absolute_idx = scroll_metrics.scroll_offset + row_idx;
                 let is_in_parallel_section = self.is_in_parallel_section(absolute_idx);
 
                 // Check if this is the bottom cap (the separator after the last parallel task)
@@ -1370,35 +1349,39 @@ impl TasksList {
                     .saturating_sub(header_and_spacing_rows), // Adjust height accordingly
             };
 
-            // Update scrollbar state using task-centric metrics for consistent task navigation
-            // This ensures thumb positioning accurately reflects progress through tasks
+            // Ensure the scrollbar area is within frame bounds
+            // This handles race conditions during terminal resize
+            let safe_scrollbar_area = content_scrollbar_area.intersection(f.area());
 
-            let selected_position = selected_task_index.unwrap_or(0);
+            // Only render if we have a valid visible area
+            if safe_scrollbar_area.width > 0 && safe_scrollbar_area.height > 0 {
+                // Update scrollbar state using task-centric metrics for consistent task navigation
+                // This ensures thumb positioning accurately reflects progress through tasks
 
-            self.scrollbar_state = ScrollbarState::default()
-                .content_length(total_task_count) // Total tasks excluding spacers
-                .viewport_content_length(visible_task_count) // Tasks visible in viewport (no spacers)
-                .position(selected_position); // Selected task's index among tasks
+                let selected_position = selected_task_index.unwrap_or(0);
 
-            // Determine scrollbar style based on focus state
-            let base_style = Style::default().fg(THEME.info);
-            let scrollbar_style = if self.is_task_list_focused() {
-                base_style
-            } else {
-                base_style.dim()
-            };
+                let mut scrollbar_state = ScrollbarState::default()
+                    .content_length(total_task_count) // Total tasks excluding spacers
+                    .viewport_content_length(visible_task_count) // Tasks visible in viewport (no spacers)
+                    .position(selected_position); // Selected task's index among tasks
 
-            let scrollbar = Scrollbar::default()
-                .orientation(ScrollbarOrientation::VerticalRight)
-                .begin_symbol(Some("↑"))
-                .end_symbol(Some("↓"))
-                .style(scrollbar_style);
+                // Determine scrollbar style based on focus state
+                let base_style = Style::default().fg(THEME.info);
+                let scrollbar_style = if self.is_task_list_focused() {
+                    base_style
+                } else {
+                    base_style.dim()
+                };
 
-            // Render scrollbar in the content-aligned area
-            f.render_stateful_widget(scrollbar, content_scrollbar_area, &mut self.scrollbar_state);
-        } else {
-            // Reset scrollbar state if not needed
-            self.scrollbar_state = ScrollbarState::default();
+                let scrollbar = Scrollbar::default()
+                    .orientation(ScrollbarOrientation::VerticalRight)
+                    .begin_symbol(Some("↑"))
+                    .end_symbol(Some("↓"))
+                    .style(scrollbar_style);
+
+                // Render scrollbar in the safe area
+                f.render_stateful_widget(scrollbar, safe_scrollbar_area, &mut scrollbar_state);
+            }
         }
     }
 
@@ -1840,8 +1823,6 @@ impl Component for TasksList {
                 } else {
                     self.enter_filter_mode();
                 }
-                self.scroll_momentum.reset(); // Reset scroll momentum on mode change
-                self.scrollbar_state = ScrollbarState::default(); // Reset scrollbar state
             }
             Action::ClearFilter => {
                 self.clear_filter();
@@ -1875,10 +1856,10 @@ impl Component for TasksList {
                 self.cloud_message = Some(message);
             }
             Action::ScrollUp => {
-                self.scroll_up(1);
+                self.scroll_up();
             }
             Action::ScrollDown => {
-                self.scroll_down(1);
+                self.scroll_down();
             }
             Action::NextTask => {
                 self.next_task();
@@ -2929,7 +2910,7 @@ mod tests {
 
         // Scroll deep into task list (position 49)
         for _ in 0..49 {
-            tasks_list.scroll_down(1);
+            tasks_list.scroll_down();
         }
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
@@ -3198,11 +3179,11 @@ mod tests {
         let visibility_viewport1 = tasks_list.calculate_column_visibility(54);
 
         // Scroll to view long task names
-        tasks_list.scroll_down(1);
+        tasks_list.scroll_down();
         let visibility_viewport2 = tasks_list.calculate_column_visibility(54);
 
         // Navigate back to viewport 1 (with short task names)
-        tasks_list.scroll_up(1);
+        tasks_list.scroll_up();
         let visibility_viewport1_again = tasks_list.calculate_column_visibility(54);
 
         // Column visibility should be consistent across viewports
@@ -3307,11 +3288,11 @@ mod tests {
         let visibility_viewport1 = tasks_list.calculate_column_visibility(120);
 
         // Scroll to view long task names
-        tasks_list.scroll_down(1);
+        tasks_list.scroll_down();
         let visibility_viewport2 = tasks_list.calculate_column_visibility(120);
 
         // Navigate back to viewport 1 (with short task names)
-        tasks_list.scroll_up(1);
+        tasks_list.scroll_up();
         let visibility_viewport1_again = tasks_list.calculate_column_visibility(120);
 
         // Column visibility should be consistent across viewports
@@ -3407,7 +3388,7 @@ mod tests {
         );
 
         // Scroll to view long task names
-        tasks_list.scroll_down(1);
+        tasks_list.scroll_down();
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(
             "scrolling_consistency_viewport2_long_names",
@@ -3415,7 +3396,7 @@ mod tests {
         );
 
         // Navigate back to viewport 1 to verify consistency
-        tasks_list.scroll_up(1);
+        tasks_list.scroll_up();
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(
             "scrolling_consistency_viewport1_after_navigation",
