@@ -43,6 +43,11 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
 
     private val objectMapper = ObjectMapper()
     
+    // Shared component instances for optimization
+    private var sharedInputOutputAnalyzer: MavenInputOutputAnalyzer? = null
+    private var sharedLifecycleAnalyzer: MavenLifecycleAnalyzer? = null
+    private var sharedTestClassDiscovery: TestClassDiscovery? = null
+    
     // Setters for orchestrated execution
     fun setProject(project: MavenProject) {
         this.project = project
@@ -62,6 +67,19 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
     
     fun setWorkspaceRoot(workspaceRoot: String) {
         this.workspaceRoot = workspaceRoot
+    }
+    
+    // Setters for shared component instances (optimization)
+    fun setSharedInputOutputAnalyzer(analyzer: MavenInputOutputAnalyzer) {
+        this.sharedInputOutputAnalyzer = analyzer
+    }
+    
+    fun setSharedLifecycleAnalyzer(analyzer: MavenLifecycleAnalyzer) {
+        this.sharedLifecycleAnalyzer = analyzer
+    }
+    
+    fun setSharedTestClassDiscovery(discovery: TestClassDiscovery) {
+        this.sharedTestClassDiscovery = discovery
     }
 
     @Throws(MojoExecutionException::class)
@@ -93,6 +111,13 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         } catch (e: IOException) {
             throw MojoExecutionException("Failed to generate single project analysis", e)
         }
+    }
+    
+    /**
+     * Analyzes the project and returns the result in memory (optimization for in-memory analysis)
+     */
+    fun analyzeProjectInMemory(): com.fasterxml.jackson.databind.node.ObjectNode {
+        return analyzeSingleProject(project)
     }
 
     private fun analyzeSingleProject(mavenProject: MavenProject): ObjectNode {
@@ -158,14 +183,14 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
             projectNode.put("parent", parentNode)
         }
         
-        // Generate Nx project configuration using plugin parameter analyzer
-        val inputOutputAnalyzer = MavenInputOutputAnalyzer(
+        // Use shared components if available, otherwise create new ones (backward compatibility)
+        val inputOutputAnalyzer = sharedInputOutputAnalyzer ?: MavenInputOutputAnalyzer(
             objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
         )
         
         // Dynamically discover available phases using Maven's lifecycle APIs
         val phases = objectMapper.createObjectNode()
-        val lifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
+        val lifecycleAnalyzer = sharedLifecycleAnalyzer ?: MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
         val lifecycleData = lifecycleAnalyzer.extractLifecycleData(mavenProject)
         
         // Extract discovered phases from lifecycle analysis
@@ -251,7 +276,7 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
         projectNode.put("projectName", "${mavenProject.groupId}.${mavenProject.artifactId}")
         
         // Discover test classes for atomization using simple string matching
-        val testClassDiscovery = TestClassDiscovery()
+        val testClassDiscovery = sharedTestClassDiscovery ?: TestClassDiscovery()
         val testClasses = testClassDiscovery.discoverTestClasses(mavenProject)
         projectNode.put("testClasses", testClasses)
         
