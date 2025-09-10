@@ -147,7 +147,7 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters (excluding the "blob" reporter).",
+                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters.",
                       "technologies": [
                         "playwright",
                       ],
@@ -289,7 +289,7 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters (excluding the "blob" reporter).",
+                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters.",
                       "technologies": [
                         "playwright",
                       ],
@@ -681,7 +681,7 @@ describe('@nx/playwright/plugin', () => {
           },
         ],
         "metadata": {
-          "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters (excluding the "blob" reporter).",
+          "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters.",
           "technologies": [
             "playwright",
           ],
