@@ -212,21 +212,21 @@ describe('@nx/rsbuild', () => {
     );
     expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
       .toMatchInlineSnapshot(`
-        {
-          "description": "Runs type-checking for the project.",
-          "help": {
-            "command": "npx tsc --build --help",
-            "example": {
-              "args": [
-                "--force",
-              ],
-            },
+      {
+        "description": "Runs type-checking for the project.",
+        "help": {
+          "command": "npx tsc --build --help",
+          "example": {
+            "args": [
+              "--force",
+            ],
           },
-          "technologies": [
-            "typescript",
-          ],
-        }
-      `);
+        },
+        "technologies": [
+          "typescript",
+        ],
+      }
+    `);
     expect(nodes[0][1].projects['my-app'].targets.typecheck.dependsOn).toEqual([
       `^typecheck`,
     ]);
