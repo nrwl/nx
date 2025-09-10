@@ -44,7 +44,6 @@ describe('lib', () => {
       linter: 'eslint',
       skipFormat: true,
       unitTestRunner: UnitTestRunner.Jest,
-      simpleName: false,
       strict: true,
       standalone: false,
       ...opts,
@@ -525,7 +524,6 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({
         name: 'my-lib2',
         directory: 'my-dir/my-lib2',
-        simpleName: true,
       });
 
       // ASSERT
@@ -646,7 +644,6 @@ describe('lib', () => {
       };
       await runLibraryGeneratorWithOpts({
         directory: 'my-dir/my-lib',
-        simpleName: true,
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -786,7 +783,6 @@ describe('lib', () => {
           directory: 'my-dir/my-lib2',
           routing: true,
           lazy: true,
-          simpleName: true,
         });
 
         // ASSERT
@@ -830,7 +826,6 @@ describe('lib', () => {
           directory: 'my-dir/my-lib2',
           routing: true,
           lazy: true,
-          simpleName: true,
           parent: 'myapp/src/app/app-module.ts',
           skipFormat: false,
         });
@@ -847,7 +842,6 @@ describe('lib', () => {
           directory: 'my-dir/my-lib3',
           routing: true,
           lazy: true,
-          simpleName: true,
           parent: 'myapp/src/app/app-module.ts',
           skipFormat: false,
         });
@@ -962,7 +956,6 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({
           name: 'my-lib2',
           directory: 'my-dir/my-lib2',
-          simpleName: true,
           routing: true,
         });
         // ASSERT
@@ -1006,7 +999,6 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({
           name: 'my-lib2',
           directory: 'my-dir/my-lib2',
-          simpleName: true,
           routing: true,
           parent: 'myapp/src/app/app-module.ts',
         });
@@ -1020,7 +1012,6 @@ describe('lib', () => {
           directory: 'my-dir/my-lib3',
           routing: true,
           parent: 'myapp/src/app/app-module.ts',
-          simpleName: true,
         });
 
         const moduleContents3 = tree
@@ -1602,7 +1593,6 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({
         standalone: true,
         directory: 'my-dir/my-lib',
-        simpleName: true,
       });
 
       expect(
