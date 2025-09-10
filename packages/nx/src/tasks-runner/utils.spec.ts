@@ -30,6 +30,31 @@ describe('utils', () => {
         'https://npm-registry.example.com/'
       );
     });
+
+    it('should interpolate userHome token', () => {
+      const mockHomeDir = '/Users/testuser';
+      const result = interpolate('{userHome}/builds/myapp', {
+        userHome: mockHomeDir,
+      });
+      expect(result).toEqual('/Users/testuser/builds/myapp');
+    });
+
+    it('should throw error when userHome is not at beginning', () => {
+      expect(() => {
+        interpolate('dist/{userHome}/build', { userHome: '/Users/testuser' });
+      }).toThrow(
+        "Output 'dist/{userHome}/build' is invalid. {userHome} can only be used at the beginning of the expression."
+      );
+    });
+
+    it('should handle userHome with subdirectories', () => {
+      const mockHomeDir = '/Users/testuser';
+      const result = interpolate('{userHome}/shared-builds/{projectName}', {
+        userHome: mockHomeDir,
+        projectName: 'myapp',
+      });
+      expect(result).toEqual('/Users/testuser/shared-builds/myapp');
+    });
   });
 
   describe('getOutputsForTargetAndConfiguration', () => {

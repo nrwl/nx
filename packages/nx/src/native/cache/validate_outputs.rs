@@ -3,7 +3,12 @@ use regex::Regex;
 
 use crate::native::glob::{contains_glob_pattern, glob_transform::partition_glob};
 
-const ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES: [&str; 2] = ["!{workspaceRoot}", "{workspaceRoot}"];
+const ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES: [&str; 4] = [
+    "!{workspaceRoot}",
+    "{workspaceRoot}",
+    "!{userHome}",
+    "{userHome}",
+];
 
 fn is_missing_prefix(output: &str) -> bool {
     let re = Regex::new(r"^!?\{[\s\S]+\}").expect("Output pattern regex should compile");
@@ -73,5 +78,7 @@ mod test {
         assert!(is_missing_prefix("!dist"));
         assert!(!is_missing_prefix("{workspaceRoot}/dist"));
         assert!(!is_missing_prefix("!{workspaceRoot}/dist"));
+        assert!(!is_missing_prefix("{userHome}/dist"));
+        assert!(!is_missing_prefix("!{userHome}/dist"));
     }
 }

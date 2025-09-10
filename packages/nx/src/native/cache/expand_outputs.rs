@@ -4,8 +4,31 @@ use tracing::{debug, trace};
 
 use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
 use crate::native::logger::enable_logger;
-use crate::native::utils::Normalize;
+use crate::native::utils::{Normalize, home_dir::get_home_dir};
 use crate::native::walker::{nx_walker, nx_walker_sync};
+
+/// Resolves {userHome} tokens in output paths to actual home directory paths
+fn resolve_user_home_tokens(entries: Vec<String>) -> anyhow::Result<Vec<String>> {
+    let home_dir = get_home_dir()?;
+    let home_str = home_dir
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("Home directory path contains invalid Unicode"))?;
+
+    let resolved_entries = entries
+        .into_iter()
+        .map(|entry| {
+            if entry.starts_with("{userHome}") {
+                entry.replace("{userHome}", home_str)
+            } else if entry.starts_with("!{userHome}") {
+                entry.replace("!{userHome}", &format!("!{}", home_str))
+            } else {
+                entry
+            }
+        })
+        .collect();
+
+    Ok(resolved_entries)
+}
 
 #[napi]
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
@@ -19,6 +42,9 @@ where
     P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
+
+    // First resolve any {userHome} tokens in the entries
+    let entries = resolve_user_home_tokens(entries)?;
     trace!(
         "Expanding {} output entries in directory: {:?}",
         entries.len(),
@@ -33,7 +59,13 @@ where
         let existing_directories = entries
             .into_iter()
             .filter(|entry| {
-                let path = directory.join(entry);
+                // Check if this is an absolute path (external to workspace)
+                let path = if PathBuf::from(entry).is_absolute() {
+                    PathBuf::from(entry)
+                } else {
+                    directory.join(entry)
+                };
+
                 let exists = path.exists();
                 if exists {
                     existing_count += 1;
@@ -134,11 +166,19 @@ pub fn get_files_for_outputs(
 
     let directory: PathBuf = directory.into();
 
+    // First resolve any {userHome} tokens in the entries
+    let entries = resolve_user_home_tokens(entries)?;
+
     let mut globs: Vec<String> = vec![];
     let mut files: Vec<String> = vec![];
     let mut directories: Vec<String> = vec![];
     for entry in entries.into_iter() {
-        let path = directory.join(&entry);
+        // Check if this is an absolute path (external to workspace)
+        let path = if PathBuf::from(&entry).is_absolute() {
+            PathBuf::from(&entry)
+        } else {
+            directory.join(&entry)
+        };
 
         if !path.exists() {
             if contains_glob_pattern(&entry) {
@@ -180,13 +220,24 @@ pub fn get_files_for_outputs(
 
     if !directories.is_empty() {
         for dir in directories {
-            let dir = PathBuf::from(dir);
-            let dir_path = directory.join(&dir);
+            let dir_entry = PathBuf::from(&dir);
+            let dir_path = if dir_entry.is_absolute() {
+                dir_entry.clone()
+            } else {
+                directory.join(&dir_entry)
+            };
+
             let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
                 let path = dir_path.join(&e.normalized_path);
 
                 if path.is_file() {
-                    Some(dir.join(e.normalized_path).to_normalized_string())
+                    if dir_entry.is_absolute() {
+                        // For absolute paths, return the full path
+                        Some(dir_path.join(e.normalized_path).to_normalized_string())
+                    } else {
+                        // For relative paths, return relative to workspace
+                        Some(dir_entry.join(e.normalized_path).to_normalized_string())
+                    }
                 } else {
                     None
                 }
@@ -310,6 +361,30 @@ mod test {
                 "test.txt"
             ]
         );
+    }
+
+    #[test]
+    fn should_resolve_user_home_tokens() {
+        let entries = vec![
+            "{userHome}/builds/test".to_string(),
+            "!{userHome}/builds/ignore".to_string(),
+            "regular/path".to_string(),
+        ];
+
+        let resolved = resolve_user_home_tokens(entries).unwrap();
+
+        // Check that {userHome} was replaced with actual home directory
+        assert!(resolved[0].starts_with('/') || resolved[0].chars().nth(1) == Some(':')); // Unix absolute path or Windows drive
+        assert!(!resolved[0].contains("{userHome}"));
+        assert!(resolved[0].ends_with("/builds/test"));
+
+        // Check negated token
+        assert!(resolved[1].starts_with('!'));
+        assert!(!resolved[1].contains("{userHome}"));
+        assert!(resolved[1].ends_with("/builds/ignore"));
+
+        // Check regular path unchanged
+        assert_eq!(resolved[2], "regular/path");
     }
 
     #[test]
