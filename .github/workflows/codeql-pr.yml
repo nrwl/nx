@@ -38,8 +38,10 @@ jobs:
         include:
         - language: actions
           build-mode: none
-        - language: java-kotlin
-          build-mode: autobuild
+        
+        # See comment in @./codeql-master.yml about Java / Kotlin
+        # - language: java-kotlin
+        #   build-mode: autobuild
         - language: javascript-typescript
           build-mode: none
         - language: rust
