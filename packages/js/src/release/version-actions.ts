@@ -244,13 +244,10 @@ export default class JsVersionActions extends VersionActions {
                   preserveMatchingDependencyRanges.includes(depType) &&
                   !this.isLocalDependencyProtocol(currentVersion)
                 ) {
-                  // If peerDependency with a range, do some additional processing to determine whether to update the version
-                  if (isMatchingDependencyRange(version, currentVersion)) {
-                    // If the current version is a valid range, then we should not update it
-                    continue;
-                  } else {
+                  // If the dependency is specified using a range, do some additional processing to determine whether to update the version
+                  if (!isMatchingDependencyRange(version, currentVersion)) {
                     throw new Error(
-                      `The version "${version}" is not a valid range for peerDependency "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update to a valid range.`
+                      `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
                     );
                   }
                 }

@@ -219,6 +219,7 @@ export interface NxReleaseVersionConfiguration {
    * This was false by default in legacy versioning, but is true by default now.
    */
   preserveLocalDependencyProtocols?: boolean;
+  // TODO(v22): change the default value of this to true
   /**
    * Whether to preserve matching dependency ranges when updating them during versioning.
    * e.g.

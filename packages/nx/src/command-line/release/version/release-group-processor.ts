@@ -1338,12 +1338,9 @@ Valid values are: ${validReleaseVersionPrefixes
       true;
 
     // TODO(v22): flip to true by default
-    /**
-     * preserveMatchingDependencyRanges
-     */
     const preserveMatchingDependencyRanges =
-      projectVersionConfig?.preserveLocalDependencyProtocols ??
-      releaseGroupVersionConfig?.preserveLocalDependencyProtocols ??
+      projectVersionConfig?.preserveMatchingDependencyRanges ??
+      releaseGroupVersionConfig?.preserveMatchingDependencyRanges ??
       false;
 
     /**
