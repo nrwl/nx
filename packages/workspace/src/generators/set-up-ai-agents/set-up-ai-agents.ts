@@ -77,7 +77,7 @@ async function getLatestGeneratorUsingInstall(
       'node_modules',
       '@nx',
       'workspace',
-      'src/generators/setup-ai-agents/setup-ai-agents.js'
+      'src/generators/set-up-ai-agents/set-up-ai-agents.js'
     );
 
     return { module: await import(modulePath), cleanup };
