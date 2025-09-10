@@ -111,10 +111,15 @@ export async function setupAiAgentsGeneratorImpl(
 
   const geminPath = join(options.directory, '.gemini', 'settings.json');
   addMcpConfigToJson(tree, geminPath);
-  updateJson(tree, geminPath, (json) => ({
-    ...json,
-    contextFileName: 'AGENTS.md',
-  }));
+
+  // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist
+  // This preserves existing Gemini-specific configurations
+  if (!tree.exists(join(options.directory, 'GEMINI.md'))) {
+    updateJson(tree, geminPath, (json) => ({
+      ...json,
+      contextFileName: 'AGENTS.md',
+    }));
+  }
 
   addMcpConfigToJson(tree, join(options.directory, '.cursor', 'mcp.json'));
   await formatFiles(tree);
