@@ -14,7 +14,7 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
-import { isRange, satisfiesRange } from './utils/semver';
+import { isMatchingDependencyRange } from './utils/semver';
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,
@@ -210,6 +210,14 @@ export default class JsVersionActions extends VersionActions {
           'peerDependencies',
           'optionalDependencies',
         ];
+        // TODO(v22): Flip this to all by default
+        const preserveMatchingDependencyRanges =
+          this.finalConfigForProject.preserveMatchingDependencyRanges === true
+            ? dependencyTypes
+            : this.finalConfigForProject.preserveMatchingDependencyRanges ===
+              false
+            ? []
+            : this.finalConfigForProject.preserveMatchingDependencyRanges || [];
 
         for (const depType of dependencyTypes) {
           if (json[depType]) {
@@ -233,12 +241,11 @@ export default class JsVersionActions extends VersionActions {
                   numDependenciesToUpdate--;
                   continue;
                 } else if (
-                  depType === 'peerDependencies' &&
-                  !this.isLocalDependencyProtocol(currentVersion) &&
-                  isRange(currentVersion)
+                  preserveMatchingDependencyRanges.includes(depType) &&
+                  !this.isLocalDependencyProtocol(currentVersion)
                 ) {
                   // If peerDependency with a range, do some additional processing to determine whether to update the version
-                  if (satisfiesRange(version, currentVersion)) {
+                  if (isMatchingDependencyRange(version, currentVersion)) {
                     // If the current version is a valid range, then we should not update it
                     continue;
                   } else {

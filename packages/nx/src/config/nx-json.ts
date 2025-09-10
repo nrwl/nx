@@ -219,6 +219,22 @@ export interface NxReleaseVersionConfiguration {
    * This was false by default in legacy versioning, but is true by default now.
    */
   preserveLocalDependencyProtocols?: boolean;
+  /**
+   * Whether to preserve matching dependency ranges when updating them during versioning.
+   * e.g.
+   *  The new version will be "1.2.0" and the current version range in dependents is already "^1.0.0"
+   *  Therefore, the manifest file is not updated.
+   *
+   * This is false by default.
+   */
+  preserveMatchingDependencyRanges?:
+    | boolean
+    | Array<
+        | 'dependencies'
+        | 'devDependencies'
+        | 'peerDependencies'
+        | 'optionalDependencies'
+      >;
 }
 
 export interface NxReleaseChangelogConfiguration {
