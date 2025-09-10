@@ -25,34 +25,43 @@ export async function handleDockerVersion(
   dockerVersionScheme?: string,
   dockerVersion?: string
 ) {
+  // If the full docker image reference is provided, use it directly
+  const nxDockerImageRefEnvOverride =
+    process.env.NX_DOCKER_IMAGE_REF?.trim() || undefined;
   // If an explicit dockerVersion is provided, use it directly
-  let newVersion: string;
-  if (dockerVersion) {
-    newVersion = dockerVersion;
-  } else {
-    const availableVersionSchemes =
-      finalConfigForProject.dockerOptions.versionSchemes ??
-      DEFAULT_VERSION_SCHEMES;
-    const versionScheme =
-      dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
-        ? dockerVersionScheme
-        : await promptForNewVersion(
-            availableVersionSchemes,
-            projectGraphNode.name
-          );
-    newVersion = calculateNewVersion(
-      projectGraphNode.name,
-      versionScheme,
-      availableVersionSchemes
-    );
+  let newVersion: string | undefined;
+
+  if (!nxDockerImageRefEnvOverride) {
+    if (dockerVersion) {
+      newVersion = dockerVersion;
+    } else {
+      const availableVersionSchemes =
+        finalConfigForProject.dockerOptions.versionSchemes ??
+        DEFAULT_VERSION_SCHEMES;
+      const versionScheme =
+        dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
+          ? dockerVersionScheme
+          : await promptForNewVersion(
+              availableVersionSchemes,
+              projectGraphNode.name
+            );
+      newVersion = calculateNewVersion(
+        projectGraphNode.name,
+        versionScheme,
+        availableVersionSchemes
+      );
+    }
   }
+
   const logs = updateProjectVersion(
     newVersion,
+    nxDockerImageRefEnvOverride,
     workspaceRoot,
     projectGraphNode.data.root,
     finalConfigForProject.dockerOptions.repositoryName,
     finalConfigForProject.dockerOptions.registryUrl
   );
+
   return {
     newVersion,
     logs,
@@ -96,20 +105,18 @@ function calculateNewVersion(
 }
 
 function updateProjectVersion(
-  newVersion: string,
+  newVersion: string | undefined,
+  nxDockerImageRefEnvOverride: string | undefined,
   workspaceRoot: string,
   projectRoot: string,
   repositoryName?: string,
   registry?: string
 ): string[] {
   const isDryRun = process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false';
-  const nxDockerRegistryEnvOverride =
-    process.env.NX_DOCKER_REGISTRY?.trim() || undefined;
   const imageRef = getDefaultImageReference(projectRoot);
-  const newImageRef =
-    nxDockerRegistryEnvOverride ??
-    getImageReference(projectRoot, repositoryName, registry);
-  const fullImageRef = `${newImageRef}:${newVersion}`;
+  const newImageRef = getImageReference(projectRoot, repositoryName, registry);
+  const fullImageRef =
+    nxDockerImageRefEnvOverride ?? `${newImageRef}:${newVersion}`;
   if (!isDryRun) {
     execSync(`docker tag ${imageRef} ${fullImageRef}`);
   }
