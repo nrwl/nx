@@ -103,8 +103,12 @@ function updateProjectVersion(
   registry?: string
 ): string[] {
   const isDryRun = process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false';
+  const nxDockerRegistryEnvOverride =
+    process.env.NX_DOCKER_REGISTRY?.trim() || undefined;
   const imageRef = getDefaultImageReference(projectRoot);
-  const newImageRef = getImageReference(projectRoot, repositoryName, registry);
+  const newImageRef =
+    nxDockerRegistryEnvOverride ??
+    getImageReference(projectRoot, repositoryName, registry);
   const fullImageRef = `${newImageRef}:${newVersion}`;
   if (!isDryRun) {
     execSync(`docker tag ${imageRef} ${fullImageRef}`);
