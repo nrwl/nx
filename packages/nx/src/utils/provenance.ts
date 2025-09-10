@@ -21,8 +21,6 @@ export async function ensurePackageHasProvenance(
   }
 
   const execFileAsync = promisify(execFile);
-
-  let npmViewResult: any;
   try {
     const result = await execFileAsync(
       'npm',
@@ -31,80 +29,62 @@ export async function ensurePackageHasProvenance(
         timeout: 20000,
       }
     );
+    const npmViewResult = JSON.parse(result.stdout.trim());
 
-    if (!result || !result.stdout) {
-      throw new Error('npm view command returned empty output');
-    }
+    const attURL = npmViewResult.dist?.attestations?.url;
 
-    npmViewResult = JSON.parse(result.stdout.trim());
-  } catch (error) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      error.message || error
-    );
-  }
+    if (!attURL) throw 'No attestation URL found';
 
-  const attURL = npmViewResult.dist?.attestations?.url;
-
-  if (!attURL)
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'No attestation URL found'
-    );
-
-  let attestations: { attestations: Attestation[] };
-  try {
     const response = await fetch(attURL);
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw `HTTP ${response.status}: ${response.statusText}`;
     }
 
-    const jsonResponse = await response.json();
+    const attestations = (await response.json()) as {
+      attestations: Attestation[];
+    };
 
-    if (!jsonResponse || typeof jsonResponse !== 'object') {
-      throw new Error('Invalid attestation response format');
-    }
-    
-    attestations = jsonResponse as { attestations: Attestation[] };
-  } catch (error) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      error.message || error
-    );
-  }
-
-  const provenanceAttestation = attestations?.attestations?.find(
-    (a) => a.predicateType === 'https://slsa.dev/provenance/v1'
-  );
-  if (!provenanceAttestation)
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'No provenance attestation found'
+    const provenanceAttestation = attestations?.attestations?.find(
+      (a) => a.predicateType === 'https://slsa.dev/provenance/v1'
     );
 
-  let dsseEnvelopePayload: any;
-  try {
-    if (!provenanceAttestation.bundle?.dsseEnvelope?.payload) {
-      throw new Error('Missing DSSE envelope payload in attestation');
+    const dsseEnvelopePayload = JSON.parse(
+      Buffer.from(
+        provenanceAttestation.bundle.dsseEnvelope.payload,
+        'base64'
+      ).toString()
+    );
+
+    const workflowParameters =
+      dsseEnvelopePayload?.predicate?.buildDefinition?.externalParameters
+        ?.workflow;
+
+    // verify that provenance was actually generated from the right publishing workflow
+    if (!workflowParameters) {
+      throw 'Missing workflow parameters in attestation';
     }
 
-    const decodedBuffer = Buffer.from(
-      provenanceAttestation.bundle.dsseEnvelope.payload,
+    if (workflowParameters.repository !== 'https://github.com/nrwl/nx') {
+      throw 'Repository does not match nrwl/nx';
+    }
+    if (workflowParameters.path !== '.github/workflows/publish.yml') {
+      throw 'Publishing workflow does not match .github/workflows/publish.yml';
+    }
+    if (workflowParameters.ref !== `refs/tags/${npmViewResult.version}`) {
+      throw `Version ref does not match refs/tags/${npmViewResult.version}`;
+    }
+
+    // verify that provenance was generated from the exact same artifact as the one we are installing
+    const distSha = Buffer.from(
+      npmViewResult.dist.integrity.replace('sha512-', ''),
       'base64'
-    );
-
-    const decodedString = decodedBuffer.toString();
-
-    dsseEnvelopePayload = JSON.parse(decodedString);
-
-    if (!dsseEnvelopePayload || typeof dsseEnvelopePayload !== 'object') {
-      throw new Error('Invalid payload structure');
+    ).toString('hex');
+    const attestationSha = dsseEnvelopePayload.subject[0].digest.sha512;
+    if (distSha !== attestationSha) {
+      throw 'Integrity hash does not match attestation hash';
     }
+    return;
   } catch (error) {
     throw noProvenanceError(
       packageName,
@@ -112,72 +92,6 @@ export async function ensurePackageHasProvenance(
       error.message || error
     );
   }
-
-  const workflowParameters =
-    dsseEnvelopePayload?.predicate?.buildDefinition?.externalParameters
-      ?.workflow;
-
-  // verify that provenance was actually generated from the right publishing workflow
-  if (!workflowParameters) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Missing workflow parameters in attestation'
-    );
-  }
-
-  if (workflowParameters.repository !== 'https://github.com/nrwl/nx') {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Repository does not match nrwl/nx'
-    );
-  }
-  if (workflowParameters.path !== '.github/workflows/publish.yml') {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Publishing workflow does not match .github/workflows/publish.yml'
-    );
-  }
-  if (workflowParameters.ref !== `refs/tags/${npmViewResult.version}`) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      `Version ref does not match refs/tags/${npmViewResult.version}`
-    );
-  }
-
-  // verify that provenance was generated from the exact same artifact as the one we are installing
-  if (!npmViewResult.dist?.integrity) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Missing integrity hash in package metadata'
-    );
-  }
-
-  if (!dsseEnvelopePayload.subject?.[0]?.digest?.sha512) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Missing SHA512 digest in attestation'
-    );
-  }
-
-  const distSha = Buffer.from(
-    npmViewResult.dist.integrity.replace('sha512-', ''),
-    'base64'
-  ).toString('hex');
-  const attestationSha = dsseEnvelopePayload.subject[0].digest.sha512;
-  if (distSha !== attestationSha) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Integrity hash does not match attestation hash'
-    );
-  }
-  return;
 }
 
 export const noProvenanceError = (
