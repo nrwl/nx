@@ -39,6 +39,14 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
 
     private val objectMapper = ObjectMapper()
     private val dependencyResolver = MavenDependencyResolver()
+    private lateinit var pathResolver: PathResolver
+    
+    /**
+     * Gets the Maven command using PathResolver
+     */
+    private fun getMavenCommand(): String {
+        return pathResolver.getMavenCommand()
+    }
     
     // Setters for orchestrated execution
     fun setSession(session: MavenSession) {
@@ -58,6 +66,12 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
         log.info("Merging individual project analyses into workspace graph...")
         
         try {
+            // Initialize path resolver with session for Maven command detection
+            pathResolver = PathResolver(
+                workspaceRoot = session.executionRootDirectory, 
+                session = session
+            )
+            
             // Use Maven's module discovery logic instead of session.allProjects
             val allProjects = collectProjectsFromModules(session.topLevelProject)
             
@@ -174,7 +188,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                     target.put("executor", "nx:run-commands")
                     
                     val options = objectMapper.createObjectNode()
-                    options.put("command", "mvn $phase -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+                    options.put("command", "${getMavenCommand()} $phase -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
                     options.put("cwd", "{workspaceRoot}")
                     target.put("options", options)
                     
@@ -241,7 +255,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                         target.put("executor", "nx:run-commands")
                         
                         val options = objectMapper.createObjectNode()
-                        val cleanCommand = "mvn $cleanPluginName:$goalName -pl ${mavenProject.groupId}:${mavenProject.artifactId}"
+                        val cleanCommand = "${getMavenCommand()} $cleanPluginName:$goalName -pl ${mavenProject.groupId}:${mavenProject.artifactId}"
                         options.put("command", cleanCommand)
                         options.put("cwd", "{workspaceRoot}")
                         target.put("options", options)
@@ -291,7 +305,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             val cleanTarget = objectMapper.createObjectNode()
             cleanTarget.put("executor", "nx:run-commands")
             val cleanOptions = objectMapper.createObjectNode()
-            cleanOptions.put("command", "mvn clean -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+            cleanOptions.put("command", "${getMavenCommand()} clean -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
             cleanOptions.put("cwd", "{workspaceRoot}")
             cleanTarget.put("options", cleanOptions)
             cleanTarget.put("cache", false)
@@ -521,7 +535,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             target.put("executor", "nx:run-commands")
             
             val options = objectMapper.createObjectNode()
-            options.put("command", "mvn test -Dtest=$packagePath -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+            options.put("command", "${getMavenCommand()} test -Dtest=$packagePath -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
             options.put("cwd", "{workspaceRoot}")
             target.put("options", options)
             
@@ -635,7 +649,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
         validateCiTarget.put("executor", "nx:run-commands")
         
         val options = objectMapper.createObjectNode()
-        options.put("command", "mvn validate -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
+        options.put("command", "${getMavenCommand()} validate -pl ${mavenProject.groupId}:${mavenProject.artifactId}")
         options.put("cwd", "{workspaceRoot}")
         validateCiTarget.put("options", options)
         
