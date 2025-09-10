@@ -96,10 +96,19 @@ export async function mergeReportsExecutor(
 
   if (expectedSuites !== undefined) {
     if (blobReportFiles.length !== expectedSuites) {
+      const hasAdditionalReports = blobReportFiles.length > expectedSuites;
+
       output.warn({
-        title: 'Some test results were not reported',
+        title: hasAdditionalReports
+          ? 'There are more blob reports than expected'
+          : 'Some test results were not reported',
         bodyLines: [
-          `Expected results for ${expectedSuites} test suites, but only ${blobReportFiles.length} were reported.`,
+          `Expected results for ${expectedSuites} test suites, but ${blobReportFiles.length} were reported.`,
+          ...(hasAdditionalReports
+            ? [
+                `Ensure the blob reporter's output folder only contains the blob reports for the test suites that were run.`,
+              ]
+            : []),
         ],
       });
     }
