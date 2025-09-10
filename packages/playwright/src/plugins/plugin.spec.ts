@@ -499,7 +499,7 @@ describe('@nx/playwright/plugin', () => {
       reporter: [
         ['html', { outputFolder: 'test-results/html' }],
         ['junit', { outputFile: 'test-results/report.xml' }],
-        ['blob', { outputFile: 'blob-report/blob.json' }],
+        ['blob', { outputFile: 'blob-report/blob.zip' }],
       ],
     }`
     );
@@ -607,7 +607,7 @@ describe('@nx/playwright/plugin', () => {
         "options": {
           "cwd": "{projectRoot}",
           "env": {
-            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-spec-ts.json",
+            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-spec-ts.zip",
             "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
             "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
             "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-spec-ts/report.xml",
@@ -617,7 +617,7 @@ describe('@nx/playwright/plugin', () => {
           "{projectRoot}/test-results/tests-run-me-spec-ts",
           "{projectRoot}/test-results/html/tests-run-me-spec-ts",
           "{projectRoot}/test-results/tests-run-me-spec-ts/report.xml",
-          "{projectRoot}/blob-report/tests-run-me-spec-ts.json",
+          "{projectRoot}/blob-report/tests-run-me-spec-ts.zip",
         ],
         "parallelism": false,
       }
@@ -652,7 +652,7 @@ describe('@nx/playwright/plugin', () => {
         "options": {
           "cwd": "{projectRoot}",
           "env": {
-            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-2-spec-ts.json",
+            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-2-spec-ts.zip",
             "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-2-spec-ts",
             "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-2-spec-ts",
             "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-2-spec-ts/report.xml",
@@ -662,7 +662,7 @@ describe('@nx/playwright/plugin', () => {
           "{projectRoot}/test-results/tests-run-me-2-spec-ts",
           "{projectRoot}/test-results/html/tests-run-me-2-spec-ts",
           "{projectRoot}/test-results/tests-run-me-2-spec-ts/report.xml",
-          "{projectRoot}/blob-report/tests-run-me-2-spec-ts.json",
+          "{projectRoot}/blob-report/tests-run-me-2-spec-ts.zip",
         ],
         "parallelism": false,
       }

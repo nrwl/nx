@@ -217,7 +217,7 @@ async function buildPlaywrightTargets(
     // report files
     const ciReporterOutputs = reporterOutputs.map<ReporterOutput>(
       ([reporter, output]) =>
-        reporter === 'blob' && parse(output).ext !== ''
+        reporter === 'blob' && output.endsWith('.zip')
           ? [reporter, dirname(output)]
           : [reporter, output]
     );
@@ -628,10 +628,8 @@ function normalizeAtomizedTaskBlobReportOutput(
   output: string,
   subfolder: string
 ): string {
-  const outputExtname = parse(output).ext;
-
   // set unique name for the blob report file
-  return outputExtname !== ''
-    ? join(dirname(output), `${subfolder}${outputExtname}`)
+  return output.endsWith('.zip')
+    ? join(dirname(output), `${subfolder}.zip`)
     : join(output, `${subfolder}.zip`);
 }

@@ -6,7 +6,7 @@ import {
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { getReporterOutputs } from '../../utils/reporters';
 import type { Schema } from './schema';
@@ -59,12 +59,26 @@ export async function mergeReportsExecutor(
   }
 
   const blobReportDir = blobReporterOutput[1];
-  const blobReportFiles = collectBlobReports(join(projectRoot, blobReportDir));
+  const absoluteBlobReportDir = join(projectRoot, blobReportDir);
+
+  if (!existsSync(absoluteBlobReportDir)) {
+    output.error({
+      title: 'The blob reporter output directory does not exist',
+      bodyLines: [
+        `The blob reporter output directory "${blobReportDir}" does not exist.`,
+        'Please ensure the directory is configured correctly and it exists.',
+      ],
+    });
+
+    return { success: false };
+  }
+
+  const blobReportFiles = collectBlobReports(absoluteBlobReportDir);
   const pmc = getPackageManagerCommand();
 
   const result = spawnSync(
     pmc.exec,
-    ['playwright', 'merge-reports', blobReportDir, `--config="${configPath}"`],
+    ['playwright', 'merge-reports', blobReportDir, '--config', configPath],
     {
       cwd: projectRoot,
       stdio: 'inherit',
