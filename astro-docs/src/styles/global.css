@@ -96,8 +96,8 @@
 /* Custom font for code blocks */
 @font-face {
   font-family: 'Input Mono';
-  src: url('/fonts/InputMono-Regular.woff2') format('woff2'),
-    url('/fonts/InputMono-Regular.woff') format('woff');
+  src: url('/docs/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('/docs/fonts/InputMono-Regular.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
