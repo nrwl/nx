@@ -211,8 +211,8 @@ export async function* compileSwcWatch(
             );
           }
         } else if (type === 'stderr' && !data.includes('Successfully')) {
-          process.stderr.write(err);
-          if (err.includes('Debugger attached.')) {
+          process.stderr.write(data);
+          if (data.includes('Debugger attached.')) {
             return;
           }
           next(getResult(false));
