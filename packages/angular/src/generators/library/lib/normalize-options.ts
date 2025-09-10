@@ -21,7 +21,6 @@ export async function normalizeOptions(
     buildable: false,
     linter: 'eslint',
     publishable: false,
-    simpleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
     // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
@@ -45,9 +44,7 @@ export async function normalizeOptions(
     importPath: options.importPath,
   });
 
-  const fileName = options.simpleName
-    ? projectNames.projectSimpleName
-    : projectNames.projectFileName;
+  const fileName = projectNames.projectFileName;
 
   const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags
