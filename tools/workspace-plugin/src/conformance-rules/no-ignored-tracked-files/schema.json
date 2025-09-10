@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "no-ignored-tracked-files",
+  "title": "no-ignored-tracked-files rule configuration",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
