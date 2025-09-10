@@ -37,7 +37,10 @@ export async function setupAiAgentsGenerator(
     );
     const { module: latestGeneratorModule, cleanup } = getLatestGeneratorResult;
     const setupAiAgentsGeneratorResult =
-      await latestGeneratorModule.setupAiAgentsGeneratorImpl(tree, options);
+      await latestGeneratorModule.setupAiAgentsGeneratorImpl(
+        tree,
+        normalizedOptions
+      );
     await cleanup();
     return setupAiAgentsGeneratorResult;
   } catch (error) {
