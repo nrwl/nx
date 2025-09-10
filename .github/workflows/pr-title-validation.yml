@@ -17,17 +17,11 @@ jobs:
           # Ensure's validate-pr-title.js is the copy from master
           ref: master
 
-      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
-        name: Install pnpm
-        with:
-          version: 10.11.1
-          run_install: false
-
       - name: Setup Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 20
-          cache: 'pnpm'
+          package-manager-cache: false
 
       - name: Validate PR title
         env:
