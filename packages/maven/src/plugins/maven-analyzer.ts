@@ -5,12 +5,22 @@ import { workspaceRoot } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenPluginOptions, MavenAnalysisData } from './types';
 /**
- * Detect Maven executable: mvnw > mvn
+ * Detect Maven executable: mvnd > mvnw > mvn
  */
 function detectMavenExecutable(): string {
   console.log(`[Maven Analyzer] Detecting Maven executable in workspace: ${workspaceRoot}`);
   
-  // First priority: Check for Maven wrapper
+  // First priority: Check for Maven Daemon
+  try {
+    const { execSync } = require('child_process');
+    execSync('mvnd --version', { stdio: 'pipe' });
+    console.log(`[Maven Analyzer] Found Maven Daemon, using: mvnd`);
+    return 'mvnd';
+  } catch (error) {
+    console.log(`[Maven Analyzer] Maven Daemon not available`);
+  }
+  
+  // Second priority: Check for Maven wrapper
   if (process.platform === 'win32') {
     const wrapperPath = join(workspaceRoot, 'mvnw.cmd');
     if (existsSync(wrapperPath)) {
