@@ -41,6 +41,9 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
     private val dependencyResolver = MavenDependencyResolver()
     private lateinit var pathResolver: PathResolver
     
+    // For memory-only analysis optimization
+    private var inMemoryProjectAnalyses: Map<String, JsonNode>? = null
+    
     /**
      * Gets the Maven command using PathResolver
      */
@@ -60,6 +63,11 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
     fun setWorkspaceRoot(workspaceRoot: String) {
         this.workspaceRoot = workspaceRoot
     }
+    
+    // Setter for memory-only analysis (optimization)
+    fun setInMemoryProjectAnalyses(analyses: Map<String, JsonNode>) {
+        this.inMemoryProjectAnalyses = analyses
+    }
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
@@ -77,7 +85,7 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
             
             log.info("Processing ${allProjects.size} Maven projects using module discovery logic")
             
-            // Collect individual project analyses
+            // Collect individual project analyses (from memory or files)
             val projectAnalyses = mutableMapOf<String, JsonNode>()
             val coordinatesToProjectName = mutableMapOf<String, String>()
             
@@ -87,18 +95,14 @@ class NxWorkspaceGraphMojo : AbstractMojo() {
                 val coordinates = "${mavenProject.groupId}:${mavenProject.artifactId}"
                 coordinatesToProjectName[coordinates] = projectName
                 
-                // Try to load individual project analysis
-                val analysisFile = File(mavenProject.build.directory, "nx-project-analysis.json")
+                // Use in-memory analysis (optimized)
+                val analysis = inMemoryProjectAnalyses?.get(projectName)
+                if (analysis == null) {
+                    log.warn("No in-memory analysis found for project '$projectName'")
+                }
                 
-                if (analysisFile.exists()) {
-                    try {
-                        val analysis = objectMapper.readTree(analysisFile)
-                        projectAnalyses[projectName] = analysis
-                    } catch (e: Exception) {
-                        log.warn("❌ Failed to parse analysis file for project '$projectName' at ${analysisFile.absolutePath}: ${e.message}")
-                    }
-                } else {
-                    // Analysis file not found for project
+                if (analysis != null) {
+                    projectAnalyses[projectName] = analysis
                 }
             }
             
