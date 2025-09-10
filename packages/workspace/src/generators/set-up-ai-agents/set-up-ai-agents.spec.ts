@@ -46,30 +46,30 @@ describe('setup-ai-agents generator', () => {
       expect(content.trim()).toBe('Existing content');
     });
 
-    it('should generate GEMINI.md when it does not exist', async () => {
+    it('should generate AGENTS.md when it does not exist', async () => {
       const options: SetupAiAgentsGeneratorSchema = {
         directory: '.',
       };
 
       await setupAiAgentsGenerator(tree, options);
 
-      expect(tree.exists('GEMINI.md')).toBe(true);
-      const content = tree.read('GEMINI.md').toString();
+      expect(tree.exists('AGENTS.md')).toBe(true);
+      const content = tree.read('AGENTS.md').toString();
       expect(content).toContain('# General Guidelines for working with Nx');
     });
 
-    it('should NOT generate GEMINI.md if it already exists', async () => {
+    it('should NOT generate AGENTS.md if it already exists', async () => {
       const options: SetupAiAgentsGeneratorSchema = {
         directory: '.',
       };
 
       // Create existing file
-      tree.write('GEMINI.md', 'Existing gemini content');
+      tree.write('AGENTS.md', 'Existing agents content');
 
       await setupAiAgentsGenerator(tree, options);
 
-      const content = tree.read('GEMINI.md').toString();
-      expect(content.trim()).toBe('Existing gemini content');
+      const content = tree.read('AGENTS.md').toString();
+      expect(content.trim()).toBe('Existing agents content');
     });
   });
 
@@ -201,6 +201,63 @@ describe('setup-ai-agents generator', () => {
         args: ['nx', 'mcp'],
       });
     });
+
+    it('should NOT set contextFileName to AGENTS.md when GEMINI.md already exists', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+      };
+
+      // Create existing GEMINI.md file
+      tree.write('GEMINI.md', '# Existing Gemini configuration');
+
+      // Create existing .gemini/settings.json with custom contextFileName
+      tree.write(
+        '.gemini/settings.json',
+        JSON.stringify(
+          {
+            contextFileName: 'GEMINI.md',
+            mcpServers: {
+              'existing-server': {
+                type: 'stdio',
+                command: 'existing',
+                args: ['args'],
+              },
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await setupAiAgentsGenerator(tree, options);
+
+      const config = JSON.parse(tree.read('.gemini/settings.json').toString());
+      // Should preserve the existing contextFileName
+      expect(config.contextFileName).toBe('GEMINI.md');
+      // Should still add nx-mcp server
+      expect(config.mcpServers['nx-mcp']).toEqual({
+        type: 'stdio',
+        command: 'npx',
+        args: ['nx', 'mcp'],
+      });
+    });
+
+    it('should set contextFileName to AGENTS.md when GEMINI.md does NOT exist', async () => {
+      const options: SetupAiAgentsGeneratorSchema = {
+        directory: '.',
+      };
+
+      await setupAiAgentsGenerator(tree, options);
+
+      const config = JSON.parse(tree.read('.gemini/settings.json').toString());
+      // Should set contextFileName to AGENTS.md when GEMINI.md doesn't exist
+      expect(config.contextFileName).toBe('AGENTS.md');
+      expect(config.mcpServers['nx-mcp']).toEqual({
+        type: 'stdio',
+        command: 'npx',
+        args: ['nx', 'mcp'],
+      });
+    });
   });
 
   describe('options', () => {
@@ -225,7 +282,7 @@ describe('setup-ai-agents generator', () => {
       await setupAiAgentsGenerator(tree, options);
 
       expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
-      expect(tree.exists('custom-dir/GEMINI.md')).toBe(true);
+      expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
       expect(tree.exists('custom-dir/.mcp.json')).toBe(true);
       expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
     });
