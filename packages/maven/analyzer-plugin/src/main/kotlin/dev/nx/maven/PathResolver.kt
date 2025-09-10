@@ -148,10 +148,26 @@ class PathResolver(
     }
     
     /**
-     * Determines whether to use Maven wrapper or regular Maven command
+     * Determines the best Maven executable: mvnd > mvnw > mvn
      */
     fun getMavenCommand(): String {
         val root = findProjectWorkspaceRoot()
+        
+        // First priority: Check for Maven Daemon
+        try {
+            val process = ProcessBuilder("mvnd", "--version")
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+            val exitCode = process.waitFor()
+            if (exitCode == 0) {
+                return "mvnd"
+            }
+        } catch (e: Exception) {
+            // mvnd not available, continue to next option
+        }
+        
+        // Second priority: Check for Maven wrapper
         val mvnwFile = File(root, "mvnw")
         return if (mvnwFile.exists() && mvnwFile.canExecute()) {
             "./mvnw"
