@@ -132,7 +132,11 @@ export default function Browse(props: BrowseProps): JSX.Element {
                     Are you a plugin author? You can{' '}
                     <a
                       className="underline"
-                      href="/extending-nx/recipes/publish-plugin#list-your-nx-plugin"
+                      href={
+                        process.env.NEXT_PUBLIC_ASTRO_URL
+                          ? '/docs/extending-nx/recipes/publish-plugin#list-your-nx-plugin'
+                          : '/extending-nx/recipes/publish-plugin#list-your-nx-plugin'
+                      }
                     >
                       add your plugin to the registry
                     </a>{' '}
