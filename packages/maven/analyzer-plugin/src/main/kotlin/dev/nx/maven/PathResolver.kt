@@ -1,14 +1,16 @@
 package dev.nx.maven
 
 import com.fasterxml.jackson.databind.node.ArrayNode
+import org.apache.maven.execution.MavenSession
 import java.io.File
 
 /**
- * Handles path resolution and input/output path formatting for Nx
+ * Handles path resolution, Maven command detection, and input/output path formatting for Nx
  */
 class PathResolver(
     private val workspaceRoot: String,
-    private val projectBaseDir: String? = null
+    private val projectBaseDir: String? = null,
+    private val session: MavenSession? = null
 ) {
     
     /**
@@ -143,5 +145,40 @@ class PathResolver(
         "{projectRoot}/$relativePath".replace('\\', '/')
     } catch (e: Exception) {
         "{projectRoot}/$path"
+    }
+    
+    /**
+     * Determines whether to use Maven wrapper or regular Maven command
+     */
+    fun getMavenCommand(): String {
+        val root = findProjectWorkspaceRoot()
+        val mvnwFile = File(root, "mvnw")
+        return if (mvnwFile.exists() && mvnwFile.canExecute()) {
+            "./mvnw"
+        } else {
+            "mvn"
+        }
+    }
+    
+    /**
+     * Finds the workspace root by looking for the top-level pom.xml
+     */
+    private fun findProjectWorkspaceRoot(): File {
+        // If we have a session, use it to find the execution root and walk up to find workspace root
+        if (session != null) {
+            var current = File(session.executionRootDirectory)
+            while (current.parent != null) {
+                val parentPom = File(current.parent, "pom.xml")
+                if (parentPom.exists()) {
+                    current = current.parentFile
+                } else {
+                    break
+                }
+            }
+            return current
+        } else {
+            // Fallback to using the provided workspace root
+            return File(workspaceRoot)
+        }
     }
 }
