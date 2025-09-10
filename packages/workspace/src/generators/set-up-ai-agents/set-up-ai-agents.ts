@@ -5,6 +5,8 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
 } from 'nx/src/utils/package-manager';
+import { ensurePackageHasProvenance } from 'nx/src/utils/provenance';
+import { updateJson } from 'nx/src/generators/utils/json';
 import { join } from 'path';
 import { promisify } from 'util';
 import {
@@ -23,6 +25,11 @@ export async function setupAiAgentsGenerator(
   if (process.env.NX_AI_FILES_USE_LOCAL === 'true') {
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
   }
+
+  await ensurePackageHasProvenance(
+    '@nx/workspace',
+    normalizedOptions.packageVersion
+  );
 
   try {
     const getLatestGeneratorResult = await getLatestGeneratorUsingInstall(
@@ -90,16 +97,23 @@ export async function setupAiAgentsGeneratorImpl(
       agent: 'CLAUDE',
     });
   }
-  if (!tree.exists(join(options.directory, 'GEMINI.md'))) {
+  if (!tree.exists(join(options.directory, 'AGENTS.md'))) {
     generateFiles(tree, join(__dirname, './files'), options.directory, {
       writeNxCloudRules: options.writeNxCloudRules,
-      agent: 'GEMINI',
+      agent: 'AGENTS',
     });
   }
 
   addMcpConfigToJson(tree, join(options.directory, '.mcp.json'));
 
-  addMcpConfigToJson(tree, join(options.directory, '.gemini/settings.json'));
+  const geminPath = join(options.directory, '.gemini', 'settings.json');
+  addMcpConfigToJson(tree, geminPath);
+  updateJson(tree, geminPath, (json) => ({
+    ...json,
+    contextFileName: 'AGENTS.md',
+  }));
+
+  addMcpConfigToJson(tree, join(options.directory, '.cursor', 'mcp.json'));
   await formatFiles(tree);
 }
 
