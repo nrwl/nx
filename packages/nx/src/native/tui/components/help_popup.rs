@@ -128,8 +128,6 @@ impl HelpPopup {
             ("↓ or j", "Navigate/scroll task output down"),
             ("<ctrl>+u", "Scroll task output up"),
             ("<ctrl>+d", "Scroll task output down"),
-            ("← or h", "Navigate left"),
-            ("→ or l", "Navigate right"),
             ("", ""),
             // Task List Controls
             ("/", "Filter tasks based on search term"),

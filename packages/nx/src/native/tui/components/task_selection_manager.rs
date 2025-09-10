@@ -1,13 +1,34 @@
+/// Batch data structure containing scroll-related metrics to reduce lock contention
+/// during scroll operations by gathering all needed information in a single lock acquisition
+#[derive(Debug, Clone)]
+pub struct ScrollMetrics {
+    pub total_task_count: usize,
+    pub visible_task_count: usize,
+    pub selected_task_index: Option<usize>,
+    pub can_scroll_up: bool,
+    pub can_scroll_down: bool,
+    pub scroll_offset: usize,
+}
+
 pub struct TaskSelectionManager {
     // The list of task names in their current visual order, None represents empty rows
     entries: Vec<Option<String>>,
     // The currently selected task name
     selected_task_name: Option<String>,
-    // Current page and pagination settings
-    current_page: usize,
-    items_per_page: usize,
+    // Scroll offset for viewport management
+    scroll_offset: usize,
+    // Viewport height for visible area calculations
+    viewport_height: usize,
     // Selection mode determines how the selection behaves when entries change
     selection_mode: SelectionMode,
+
+    // Performance caches to avoid repeated O(n) operations during rendering
+    /// Cached index of the currently selected task among actual tasks (excludes spacers)
+    selected_task_index_cache: Option<usize>,
+    /// Cached count of total actual tasks (excludes None spacer entries)
+    total_task_count_cache: Option<usize>,
+    /// Cached count of actual tasks visible in the current viewport
+    visible_task_count_cache: Option<usize>,
 }
 
 /// Controls how task selection behaves when entries are updated or reordered
@@ -23,14 +44,39 @@ pub enum SelectionMode {
 }
 
 impl TaskSelectionManager {
-    pub fn new(items_per_page: usize) -> Self {
+    pub fn new(viewport_height: usize) -> Self {
         Self {
             entries: Vec::new(),
             selected_task_name: None,
-            current_page: 0,
-            items_per_page,
+            scroll_offset: 0,
+            viewport_height: viewport_height.max(1),
             selection_mode: SelectionMode::TrackByName,
+            selected_task_index_cache: None,
+            total_task_count_cache: None,
+            visible_task_count_cache: None,
         }
+    }
+
+    // Cache invalidation methods for performance optimization
+
+    /// Invalidate all performance caches when entries change
+    /// This should be called whenever the entries vector is modified
+    fn invalidate_all_caches(&mut self) {
+        self.selected_task_index_cache = None;
+        self.total_task_count_cache = None;
+        self.visible_task_count_cache = None;
+    }
+
+    /// Invalidate only selection-related cache when selection changes
+    /// This should be called whenever the selected task changes
+    fn invalidate_selection_cache(&mut self) {
+        self.selected_task_index_cache = None;
+    }
+
+    /// Invalidate only viewport-related cache when scroll or viewport changes
+    /// This should be called whenever scroll_offset or viewport_height changes
+    fn invalidate_viewport_cache(&mut self) {
+        self.visible_task_count_cache = None;
     }
 
     /// Sets the selection mode
@@ -57,9 +103,8 @@ impl TaskSelectionManager {
 
         // Update the entries
         self.entries = entries;
-
-        // Ensure current page is valid before validating selection
-        self.validate_current_page();
+        // Invalidate all caches since entries have changed
+        self.invalidate_all_caches();
 
         // If we had a selection, try to find it in the new list
         if let Some(task_name) = selected {
@@ -72,11 +117,8 @@ impl TaskSelectionManager {
             if task_still_exists {
                 // Task is still in the list, keep it selected with the same name
                 self.selected_task_name = Some(task_name);
-
-                // Update the current page to ensure the selected task is visible
-                if let Some(idx) = self.get_selected_index() {
-                    self.current_page = idx / self.items_per_page;
-                }
+                // Scroll to ensure the selected task is visible
+                self.scroll_to_selected();
             } else {
                 // If task is no longer in the list, select first available task
                 self.select_first_available();
@@ -85,49 +127,39 @@ impl TaskSelectionManager {
             // No previous selection, select first available task
             self.select_first_available();
         }
-
-        // Validate selection for current page
-        self.validate_selection_for_current_page();
     }
 
     /// Updates entries while trying to preserve the selected position in the list
     fn update_entries_track_by_position(&mut self, entries: Vec<Option<String>>) {
-        // Get the current selection position within the page
-        let page_index = self.get_selected_index_in_current_page();
+        // Get the current selection index
+        let selection_index = self.get_selected_index();
 
         // Update the entries
         self.entries = entries;
-
-        // Ensure current page is valid
-        self.validate_current_page();
+        // Invalidate all caches since entries have changed
+        self.invalidate_all_caches();
 
         // If we had a selection and there are entries, try to maintain the position
-        if let Some(idx) = page_index {
-            let start = self.current_page * self.items_per_page;
-            let end = (start + self.items_per_page).min(self.entries.len());
-
-            if start < end {
-                // Convert page index to absolute index
-                let absolute_idx = start + idx;
-
-                // Find the next non-empty entry at or after the position
-                for i in absolute_idx..end {
-                    if let Some(Some(name)) = self.entries.get(i) {
-                        self.selected_task_name = Some(name.clone());
-                        return;
-                    }
-                }
-
-                // If we can't find one after, try before
-                for i in (start..absolute_idx).rev() {
-                    if let Some(Some(name)) = self.entries.get(i) {
-                        self.selected_task_name = Some(name.clone());
-                        return;
-                    }
+        if let Some(idx) = selection_index {
+            // Find the next non-empty entry at or after the position
+            for i in idx..self.entries.len() {
+                if let Some(Some(name)) = self.entries.get(i) {
+                    self.selected_task_name = Some(name.clone());
+                    self.scroll_to_selected();
+                    return;
                 }
             }
 
-            // If we couldn't find anything on the current page, select first available
+            // If we can't find one after, try before
+            for i in (0..idx).rev() {
+                if let Some(Some(name)) = self.entries.get(i) {
+                    self.selected_task_name = Some(name.clone());
+                    self.scroll_to_selected();
+                    return;
+                }
+            }
+
+            // If we couldn't find anything, select first available
             self.select_first_available();
         } else {
             // No previous selection, select first available task
@@ -139,23 +171,24 @@ impl TaskSelectionManager {
         match task_name {
             Some(name) if self.entries.iter().any(|e| e.as_ref() == Some(&name)) => {
                 self.selected_task_name = Some(name);
-                // Update current page to show selected task
-                if let Some(idx) = self
-                    .entries
-                    .iter()
-                    .position(|e| e.as_deref() == self.selected_task_name.as_deref())
-                {
-                    self.current_page = idx / self.items_per_page;
-                }
+                // Invalidate selection cache since selected task changed
+                self.invalidate_selection_cache();
+                // Scroll to ensure the selected task is visible
+                self.scroll_to_selected();
             }
             _ => {
                 self.selected_task_name = None;
+                // Invalidate selection cache since selection was cleared
+                self.invalidate_selection_cache();
             }
         }
     }
 
     pub fn select_task(&mut self, task_id: String) {
         self.selected_task_name = Some(task_id);
+        // Invalidate selection cache since selected task changed
+        self.invalidate_selection_cache();
+        self.scroll_to_selected();
     }
 
     pub fn next(&mut self) {
@@ -164,8 +197,9 @@ impl TaskSelectionManager {
             for idx in (current_idx + 1)..self.entries.len() {
                 if self.entries[idx].is_some() {
                     self.selected_task_name = self.entries[idx].clone();
-                    // Update page if needed
-                    self.current_page = idx / self.items_per_page;
+                    // Invalidate selection cache since selected task changed
+                    self.invalidate_selection_cache();
+                    self.scroll_to_selected();
                     return;
                 }
             }
@@ -180,8 +214,9 @@ impl TaskSelectionManager {
             for idx in (0..current_idx).rev() {
                 if self.entries[idx].is_some() {
                     self.selected_task_name = self.entries[idx].clone();
-                    // Update page if needed
-                    self.current_page = idx / self.items_per_page;
+                    // Invalidate selection cache since selected task changed
+                    self.invalidate_selection_cache();
+                    self.scroll_to_selected();
                     return;
                 }
             }
@@ -190,24 +225,45 @@ impl TaskSelectionManager {
         }
     }
 
-    pub fn next_page(&mut self) {
-        let total_pages = self.total_pages();
-        if self.current_page < total_pages - 1 {
-            self.current_page += 1;
-            self.validate_selection_for_current_page();
+    /// Scroll up by the specified number of lines
+    pub fn scroll_up(&mut self, lines: usize) {
+        self.scroll_offset = self.scroll_offset.saturating_sub(lines);
+        // Invalidate viewport cache since scroll position changed
+        self.invalidate_viewport_cache();
+    }
+
+    /// Scroll down by the specified number of lines
+    pub fn scroll_down(&mut self, lines: usize) {
+        let max_scroll = self.entries.len().saturating_sub(self.viewport_height);
+        self.scroll_offset = self.scroll_offset.saturating_add(lines).min(max_scroll);
+        // Invalidate viewport cache since scroll position changed
+        self.invalidate_viewport_cache();
+    }
+
+    /// Scroll to ensure the selected task is visible in the viewport
+    pub fn scroll_to_selected(&mut self) {
+        if let Some(idx) = self.get_selected_index() {
+            let old_scroll_offset = self.scroll_offset;
+            // If selected task is above viewport, scroll up to show it
+            if idx < self.scroll_offset {
+                self.scroll_offset = idx;
+            }
+            // If selected task is below viewport, scroll down to show it
+            else if idx >= self.scroll_offset + self.viewport_height {
+                self.scroll_offset = idx.saturating_sub(self.viewport_height.saturating_sub(1));
+            }
+
+            // Only invalidate viewport cache if scroll actually changed
+            if self.scroll_offset != old_scroll_offset {
+                self.invalidate_viewport_cache();
+            }
         }
     }
 
-    pub fn previous_page(&mut self) {
-        if self.current_page > 0 {
-            self.current_page -= 1;
-            self.validate_selection_for_current_page();
-        }
-    }
-
-    pub fn get_current_page_entries(&self) -> Vec<Option<String>> {
-        let start = self.current_page * self.items_per_page;
-        let end = (start + self.items_per_page).min(self.entries.len());
+    /// Get the entries visible in the current viewport
+    pub fn get_viewport_entries(&self) -> Vec<Option<String>> {
+        let start = self.scroll_offset;
+        let end = (start + self.viewport_height).min(self.entries.len());
         self.entries[start..end].to_vec()
     }
 
@@ -221,43 +277,96 @@ impl TaskSelectionManager {
         self.selected_task_name.as_ref()
     }
 
-    pub fn total_pages(&self) -> usize {
-        self.entries.len().div_ceil(self.items_per_page)
+    /// Get total number of entries
+    pub fn get_total_entries(&self) -> usize {
+        self.entries.len()
     }
 
-    pub fn get_current_page(&self) -> usize {
-        self.current_page
+    /// Get total number of actual tasks (excludes None spacer entries)
+    pub fn get_total_task_count(&mut self) -> usize {
+        if let Some(cached_count) = self.total_task_count_cache {
+            return cached_count;
+        }
+
+        // Cache miss - compute and store the result
+        let count = self.entries.iter().filter(|entry| entry.is_some()).count();
+        self.total_task_count_cache = Some(count);
+        count
+    }
+
+    /// Get the number of actual tasks visible in the current viewport
+    /// This excludes None spacer entries from the viewport calculation
+    pub fn get_visible_task_count(&mut self) -> usize {
+        if let Some(cached_count) = self.visible_task_count_cache {
+            return cached_count;
+        }
+
+        // Cache miss - compute and store the result
+        let count = self
+            .get_viewport_entries()
+            .iter()
+            .filter(|entry| entry.is_some())
+            .count();
+        self.visible_task_count_cache = Some(count);
+        count
+    }
+
+    /// Get the index of the currently selected task among actual tasks only (excludes spacers)
+    /// This represents progress through tasks only, ignoring None spacer entries (which are never selected)
+    pub fn get_selected_task_index(&mut self) -> Option<usize> {
+        // No selection means no index - don't cache None values
+        if self.selected_task_name.is_none() {
+            return None;
+        }
+
+        // Return cached value if available (only valid when we have a selection)
+        if let Some(cached_index) = self.selected_task_index_cache {
+            return Some(cached_index);
+        }
+
+        // Cache miss - compute and store the result
+        if let Some(selected_name) = &self.selected_task_name {
+            let mut task_index = 0;
+            for entry in &self.entries {
+                if let Some(name) = entry {
+                    if name == selected_name {
+                        self.selected_task_index_cache = Some(task_index);
+                        return Some(task_index);
+                    }
+                    task_index += 1;
+                }
+            }
+        }
+        None
+    }
+
+    /// Check if there are more entries above the current viewport
+    pub fn can_scroll_up(&self) -> bool {
+        self.scroll_offset > 0
+    }
+
+    /// Check if there are more entries below the current viewport
+    pub fn can_scroll_down(&self) -> bool {
+        self.scroll_offset + self.viewport_height < self.entries.len()
     }
 
     fn select_first_available(&mut self) {
-        self.selected_task_name = self.entries.iter().find_map(|e| e.clone());
-        // Ensure selected task is on current page
-        self.validate_selection_for_current_page();
+        self.selected_task_name = self.entries.iter().find_map(|e| e.as_ref().cloned());
+        // Invalidate selection cache since selected task changed
+        self.invalidate_selection_cache();
+        // Ensure selected task is visible in viewport
+        self.scroll_to_selected();
     }
 
-    fn validate_current_page(&mut self) {
-        let total_pages = self.total_pages();
-        if total_pages == 0 {
-            self.current_page = 0;
-        } else {
-            self.current_page = self.current_page.min(total_pages - 1);
-        }
-    }
+    /// Validate and adjust scroll offset to ensure it's within bounds
+    fn validate_scroll_offset(&mut self) {
+        let max_scroll = self.entries.len().saturating_sub(self.viewport_height);
+        let old_scroll_offset = self.scroll_offset;
+        self.scroll_offset = self.scroll_offset.min(max_scroll);
 
-    fn validate_selection_for_current_page(&mut self) {
-        if let Some(task_name) = &self.selected_task_name {
-            let start = self.current_page * self.items_per_page;
-            let end = (start + self.items_per_page).min(self.entries.len());
-
-            // Check if selected task is on current page
-            if start < end
-                && !self.entries[start..end]
-                    .iter()
-                    .any(|e| e.as_ref() == Some(task_name))
-            {
-                // If not, select first available task on current page
-                self.selected_task_name = self.entries[start..end].iter().find_map(|e| e.clone());
-            }
+        // Only invalidate viewport cache if scroll actually changed
+        if self.scroll_offset != old_scroll_offset {
+            self.invalidate_viewport_cache();
         }
     }
 
@@ -271,32 +380,33 @@ impl TaskSelectionManager {
         }
     }
 
-    pub fn get_selected_index_in_current_page(&self) -> Option<usize> {
-        if let Some(task_name) = &self.selected_task_name {
-            let current_page_entries = self.get_current_page_entries();
-            current_page_entries
-                .iter()
-                .position(|entry| entry.as_ref() == Some(task_name))
-        } else {
-            None
+    /// Set the viewport height (visible area size)
+    pub fn set_viewport_height(&mut self, viewport_height: usize) {
+        let old_viewport_height = self.viewport_height;
+        self.viewport_height = viewport_height.max(1);
+
+        // Only invalidate viewport cache if viewport height actually changed
+        if self.viewport_height != old_viewport_height {
+            self.invalidate_viewport_cache();
         }
+
+        self.validate_scroll_offset();
+        self.scroll_to_selected();
     }
 
-    pub fn set_items_per_page(&mut self, items_per_page: usize) {
-        // Ensure we never set items_per_page to 0
-        self.items_per_page = items_per_page.max(1);
-        self.validate_current_page();
-        self.validate_selection_for_current_page();
-    }
-
-    pub fn get_items_per_page(&self) -> usize {
-        self.items_per_page
-    }
-}
-
-impl Default for TaskSelectionManager {
-    fn default() -> Self {
-        Self::new(5) // Default to 5 items per page
+    /// Update viewport height and return current metrics in single lock acquisition.
+    /// This combines the common pattern of setting viewport height and then querying
+    /// multiple metrics, reducing lock contention during scroll operations.
+    pub fn update_viewport_and_get_metrics(&mut self, viewport_height: usize) -> ScrollMetrics {
+        self.set_viewport_height(viewport_height);
+        ScrollMetrics {
+            total_task_count: self.get_total_task_count(),
+            visible_task_count: self.get_visible_task_count(),
+            selected_task_index: self.get_selected_task_index(),
+            can_scroll_up: self.can_scroll_up(),
+            can_scroll_down: self.can_scroll_down(),
+            scroll_offset: self.scroll_offset,
+        }
     }
 }
 
@@ -308,8 +418,9 @@ mod tests {
     fn test_new_manager() {
         let manager = TaskSelectionManager::new(5);
         assert_eq!(manager.get_selected_task_name(), None);
-        assert_eq!(manager.get_current_page(), 0);
         assert_eq!(manager.get_selection_mode(), SelectionMode::TrackByName);
+        assert!(!manager.can_scroll_up());
+        assert!(!manager.can_scroll_down()); // No entries, can't scroll
     }
 
     #[test]
@@ -370,7 +481,6 @@ mod tests {
             manager.get_selected_task_name(),
             Some(&"Task 2".to_string())
         );
-        assert_eq!(manager.get_current_page(), 1); // Should move to page containing Task 2
     }
 
     #[test]
@@ -404,8 +514,8 @@ mod tests {
     }
 
     #[test]
-    fn test_pagination() {
-        let mut manager = TaskSelectionManager::new(2);
+    fn test_scrolling() {
+        let mut manager = TaskSelectionManager::new(2); // Viewport height = 2
         let entries = vec![
             Some("Task 1".to_string()),
             Some("Task 2".to_string()),
@@ -414,21 +524,31 @@ mod tests {
         ];
         manager.update_entries(entries);
 
-        assert_eq!(manager.total_pages(), 2);
-        assert_eq!(manager.get_current_page(), 0);
+        assert_eq!(manager.get_total_entries(), 4);
 
-        // Test next page
-        manager.next_page();
-        assert_eq!(manager.get_current_page(), 1);
-        let page_entries = manager.get_current_page_entries();
-        assert_eq!(page_entries.len(), 2);
-        assert_eq!(page_entries[0], Some("Task 3".to_string()));
+        // Initial state - at top of list
+        assert!(!manager.can_scroll_up());
+        assert!(manager.can_scroll_down());
+        let viewport_entries = manager.get_viewport_entries();
+        assert_eq!(viewport_entries[0], Some("Task 1".to_string()));
+        assert_eq!(viewport_entries[1], Some("Task 2".to_string()));
 
-        // Test previous page
-        manager.previous_page();
-        assert_eq!(manager.get_current_page(), 0);
-        let page_entries = manager.get_current_page_entries();
-        assert_eq!(page_entries[0], Some("Task 1".to_string()));
+        // Test scrolling down
+        manager.scroll_down(1);
+        assert!(manager.can_scroll_up());
+        assert!(manager.can_scroll_down());
+        let viewport_entries = manager.get_viewport_entries();
+        assert_eq!(viewport_entries.len(), 2);
+        assert_eq!(viewport_entries[0], Some("Task 2".to_string()));
+        assert_eq!(viewport_entries[1], Some("Task 3".to_string()));
+
+        // Test scrolling up
+        manager.scroll_up(1);
+        assert!(!manager.can_scroll_up());
+        assert!(manager.can_scroll_down());
+        let viewport_entries = manager.get_viewport_entries();
+        assert_eq!(viewport_entries[0], Some("Task 1".to_string()));
+        assert_eq!(viewport_entries[1], Some("Task 2".to_string()));
     }
 
     #[test]
