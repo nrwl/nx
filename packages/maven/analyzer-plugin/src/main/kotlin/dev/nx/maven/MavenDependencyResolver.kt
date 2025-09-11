@@ -16,25 +16,25 @@ class MavenDependencyResolver {
         projectAnalyses: Map<String, JsonNode> = emptyMap()
     ): List<String> {
         val dependsOn = mutableListOf<String>()
-
-        // Child modules need their parent POM in the local repository
-        val parent = mavenProject.parent
-        if (parent != null) {
-            val parentCoordinates = "${parent.groupId}:${parent.artifactId}"
-            val parentProjectName = coordinatesToProjectName[parentCoordinates]
-            if (parentProjectName != null) {
-                dependsOn.add("$parentProjectName:install")
-            }
-        }
-
-        // Child modules need their dependencies installed in the local repository
-        for (dependency in mavenProject.dependencies) {
-            val depCoordinates = "${dependency.groupId}:${dependency.artifactId}"
-            val depProjectName = coordinatesToProjectName[depCoordinates]
-            if (depProjectName != null && depProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
-                dependsOn.add("$depProjectName:install")
-            }
-        }
+// TODO: We might need this
+//        // Child modules need their parent POM in the local repository
+//        val parent = mavenProject.parent
+//        if (parent != null) {
+//            val parentCoordinates = "${parent.groupId}:${parent.artifactId}"
+//            val parentProjectName = coordinatesToProjectName[parentCoordinates]
+//            if (parentProjectName != null) {
+//                dependsOn.add("$parentProjectName:install")
+//            }
+//        }
+//
+//        // Child modules need their dependencies installed in the local repository
+//        for (dependency in mavenProject.dependencies) {
+//            val depCoordinates = "${dependency.groupId}:${dependency.artifactId}"
+//            val depProjectName = coordinatesToProjectName[depCoordinates]
+//            if (depProjectName != null && depProjectName != "${mavenProject.groupId}.${mavenProject.artifactId}") {
+//                dependsOn.add("$depProjectName:install")
+//            }
+//        }
 
         return dependsOn
     }
