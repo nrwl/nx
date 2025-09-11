@@ -65,31 +65,7 @@ class NxProjectAnalyzer(
             }
             
             // Extract discovered plugin goals
-            val discoveredGoals = mutableSetOf<String>()
-            lifecycleData.get("goals")?.forEach { goalNode ->
-                val goalData = goalNode as com.fasterxml.jackson.databind.node.ObjectNode
-                val plugin = goalData.get("plugin")?.asText()
-                val goal = goalData.get("goal")?.asText()
-                val phase = goalData.get("phase")?.asText()
-                val classification = goalData.get("classification")?.asText()
-                
-                if (plugin != null && goal != null) {
-                    val shouldInclude = when {
-                        // Always include truly unbound goals
-                        phase == "unbound" -> true
-                        
-                        // Include development goals based on Maven API characteristics
-                        isDevelopmentGoal(goalData) -> true
-                        
-                        else -> false
-                    }
-                    
-                    if (shouldInclude) {
-                        discoveredGoals.add("$plugin:$goal")
-                        log.info("Discovered ${classification ?: "unbound"} plugin goal: $plugin:$goal")
-                    }
-                }
-            }
+            val discoveredGoals = extractPluginGoals(lifecycleData)
             
             // If no phases discovered, fall back to essential phases
             val phasesToAnalyze = if (discoveredPhases.isNotEmpty()) {
@@ -223,6 +199,35 @@ class NxProjectAnalyzer(
             log.error("Failed to analyze project ${project.artifactId}: ${e.message}", e)
             return null
         }
+    }
+    
+    private fun extractPluginGoals(lifecycleData: com.fasterxml.jackson.databind.JsonNode): Set<String> {
+        val discoveredGoals = mutableSetOf<String>()
+        lifecycleData.get("goals")?.forEach { goalNode ->
+            val goalData = goalNode as com.fasterxml.jackson.databind.node.ObjectNode
+            val plugin = goalData.get("plugin")?.asText()
+            val goal = goalData.get("goal")?.asText()
+            val phase = goalData.get("phase")?.asText()
+            val classification = goalData.get("classification")?.asText()
+            
+            if (plugin != null && goal != null) {
+                val shouldInclude = when {
+                    // Always include truly unbound goals
+                    phase == "unbound" -> true
+                    
+                    // Include development goals based on Maven API characteristics
+                    isDevelopmentGoal(goalData) -> true
+                    
+                    else -> false
+                }
+                
+                if (shouldInclude) {
+                    discoveredGoals.add("$plugin:$goal")
+                    log.info("Discovered ${classification ?: "unbound"} plugin goal: $plugin:$goal")
+                }
+            }
+        }
+        return discoveredGoals
     }
     
     /**
