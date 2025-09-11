@@ -34,21 +34,18 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     @Component
     private lateinit var lifecycleExecutor: LifecycleExecutor
 
-    @Parameter(property = "nx.outputFile", defaultValue = "nx-maven-projects.json")
+    @Parameter(property = "outputFile", defaultValue = "nx-maven-projects.json")
     private lateinit var outputFile: String
 
-    @Parameter(property = "nx.workspaceRoot", defaultValue = "\${session.executionRootDirectory}")
+    @Parameter(property = "workspaceRoot", defaultValue = "\${session.executionRootDirectory}")
     private lateinit var workspaceRoot: String
 
     private val objectMapper = ObjectMapper()
 
-    // Shared components for target generation
-    private var sharedLifecycleAnalyzer: MavenLifecycleAnalyzer? = null
-    private var sharedTestClassDiscovery: TestClassDiscovery? = null
-
     @Throws(MojoExecutionException::class)
     override fun execute() {
         log.info("Analyzing Maven projects using optimized two-tier approach...")
+        log.info("Parameters: outputFile='$outputFile', workspaceRoot='$workspaceRoot'")
 
         try {
             val allProjects = session.allProjects
@@ -77,8 +74,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
             objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
         )
-        sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycles, sharedInputOutputAnalyzer, lifecycleExecutor, session, objectMapper, log)
-        sharedTestClassDiscovery = TestClassDiscovery()
+        val sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycles, sharedInputOutputAnalyzer, objectMapper, log)
+        val sharedTestClassDiscovery = TestClassDiscovery()
 
         val setupTime = System.currentTimeMillis() - startTime
         log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
@@ -98,8 +95,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     lifecycleExecutor,
                     workspaceRoot,
                     log,
-                    sharedLifecycleAnalyzer!!,
-                    sharedTestClassDiscovery!!
+                    sharedLifecycleAnalyzer,
+                    sharedTestClassDiscovery
                 )
 
                 // Get Nx config for project
