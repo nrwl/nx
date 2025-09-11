@@ -567,7 +567,11 @@ export class TaskOrchestrator {
           this.runningRunCommandsTasks.delete(task.id);
         });
 
-        if (this.tuiEnabled) {
+        // Only register with main TUI if NOT using inline TUI for single tasks
+        const taskCount = Object.keys(this.taskGraph.tasks).length;
+        const isUsingInlineTui = this.tuiEnabled && taskCount === 1;
+        
+        if (this.tuiEnabled && !isUsingInlineTui) {
           if (runningTask instanceof PseudoTtyProcess) {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
             this.options.lifeCycle.registerRunningTask(
@@ -641,7 +645,11 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         streamOutput
       );
-      if (this.tuiEnabled) {
+      // Only register with main TUI if NOT using inline TUI for single tasks
+      const taskCount = Object.keys(this.taskGraph.tasks).length;
+      const isUsingInlineTui = this.tuiEnabled && taskCount === 1;
+      
+      if (this.tuiEnabled && !isUsingInlineTui) {
         if (runningTask instanceof PseudoTtyProcess) {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
           this.options.lifeCycle.registerRunningTask(

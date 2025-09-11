@@ -16,7 +16,7 @@ export function createPseudoTerminal(skipSupportCheck: boolean = false) {
   if (!skipSupportCheck && !PseudoTerminal.isSupported()) {
     throw new Error('Pseudo terminal is not supported on this platform.');
   }
-  const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal());
+  const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal(), false);
   pseudoTerminalShutdownCallbacks.push(
     pseudoTerminal.shutdown.bind(pseudoTerminal)
   );
@@ -38,7 +38,10 @@ export class PseudoTerminal {
     return process.stdout.isTTY && supportedPtyPlatform();
   }
 
-  constructor(private rustPseudoTerminal: RustPseudoTerminal) {}
+  constructor(
+    private rustPseudoTerminal: RustPseudoTerminal,
+    private useInlineTui: boolean = false
+  ) {}
 
   async init() {
     if (this.initialized) {
@@ -90,6 +93,37 @@ export class PseudoTerminal {
     return cp;
   }
 
+  runCommandWithInlineTui(
+    command: string,
+    {
+      cwd,
+      execArgv,
+      jsEnv,
+      commandLabel,
+      enableInlineTui = true,
+    }: {
+      cwd?: string;
+      execArgv?: string[];
+      jsEnv?: Record<string, string>;
+      commandLabel?: string;
+      enableInlineTui?: boolean;
+    } = {}
+  ) {
+    const cp = new PseudoTtyProcess(
+      this.rustPseudoTerminal,
+      this.rustPseudoTerminal.runCommandWithInlineTui(
+        command,
+        cwd,
+        jsEnv,
+        execArgv,
+        commandLabel,
+        enableInlineTui
+      )
+    );
+    this.childProcesses.add(cp);
+    return cp;
+  }
+
   async fork(
     id: string,
     script: string,
@@ -99,20 +133,38 @@ export class PseudoTerminal {
       jsEnv,
       quiet,
       commandLabel,
+      useInlineTui,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
       commandLabel?: string;
+      useInlineTui?: boolean;
     }
   ) {
     if (!this.initialized) {
       throw new Error('Call init() before forking processes');
     }
-    const cp = new PseudoTtyProcessWithSend(
-      this.rustPseudoTerminal,
-      this.rustPseudoTerminal.fork(
+    
+    // Use inline TUI if requested (overrides instance setting)
+    const shouldUseInlineTui = useInlineTui ?? this.useInlineTui;
+    
+    let childProcess: ChildProcess;
+    if (shouldUseInlineTui) {
+      // Use the inline TUI mode
+      const command = `node ${script} ${this.pseudoIPCPath} ${id}`;
+      childProcess = this.rustPseudoTerminal.runCommandWithInlineTui(
+        command,
+        cwd,
+        jsEnv,
+        execArgv,
+        commandLabel,
+        true // enable inline TUI
+      );
+    } else {
+      // Use regular fork
+      childProcess = this.rustPseudoTerminal.fork(
         id,
         script,
         this.pseudoIPCPath,
@@ -121,7 +173,12 @@ export class PseudoTerminal {
         execArgv,
         quiet,
         commandLabel
-      ),
+      );
+    }
+    
+    const cp = new PseudoTtyProcessWithSend(
+      this.rustPseudoTerminal,
+      childProcess,
       id,
       this.pseudoIPC
     );

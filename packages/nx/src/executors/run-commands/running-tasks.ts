@@ -510,7 +510,17 @@ export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<PseudoTtyProcess> {
-  const pseudoTerminal = createPseudoTerminal();
+  // Import here to avoid circular dependencies
+  const { isTuiEnabled } = await import('../../tasks-runner/is-tui-enabled');
+  const { RustPseudoTerminal } = await import('../../native');
+  
+  // Use inline TUI for single commands when TUI is enabled
+  const useInlineTui = isTuiEnabled() && normalized.commands.length === 1;
+  
+  const pseudoTerminal = useInlineTui 
+    ? new PseudoTerminal(new RustPseudoTerminal(), true) // Enable inline TUI
+    : createPseudoTerminal(); // Regular pseudo terminal
+    
   const pseudoTtyProcess = await createProcessWithPseudoTty(
     pseudoTerminal,
     normalized.commands[0],
@@ -519,7 +529,8 @@ export async function runSingleCommandWithPseudoTerminal(
     normalized.env,
     normalized.streamOutput,
     pseudoTerminal ? normalized.isTTY : false,
-    normalized.envFile
+    normalized.envFile,
+    useInlineTui
   );
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);
   return pseudoTtyProcess;
@@ -533,8 +544,20 @@ async function createProcessWithPseudoTty(
   env: Record<string, string>,
   streamOutput: boolean = true,
   tty: boolean,
-  envFile?: string
+  envFile?: string,
+  useInlineTui: boolean = false
 ) {
+  // Use inline TUI method if requested and the pseudo terminal supports it
+  if (useInlineTui && 'runCommandWithInlineTui' in pseudoTerminal) {
+    return pseudoTerminal.runCommandWithInlineTui(commandConfig.command, {
+      cwd,
+      jsEnv: processEnv(color, cwd, env, envFile),
+      execArgv: [],
+      commandLabel: `nx run-commands: ${commandConfig.command}`,
+      enableInlineTui: true,
+    });
+  }
+  
   return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
     jsEnv: processEnv(color, cwd, env, envFile),

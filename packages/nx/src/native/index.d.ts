@@ -107,6 +107,8 @@ export declare class RustPseudoTerminal {
    * this makes it possible to be backwards compatible with the old implementation
    */
   fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean, commandLabel?: string | undefined | null): ChildProcess
+  /** Run a command with inline TUI mode that shows progress below the command output */
+  runCommandWithInlineTui(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, commandLabel?: string | undefined | null, enableInlineTui?: boolean | undefined | null): ChildProcess
 }
 
 export declare class TaskDetails {

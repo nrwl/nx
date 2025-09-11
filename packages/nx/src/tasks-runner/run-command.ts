@@ -94,11 +94,10 @@ async function getTerminalOutputLifeCycle(
 
   const isRunOne = initiatingProject != null;
 
-  if (tasks.length === 1) {
-    process.env.NX_TUI = 'false';
-  }
+  // Use main TUI only if TUI is enabled AND we're not running a single task (which uses inline TUI)
+  const shouldUseMainTui = isTuiEnabled() && tasks.length !== 1;
 
-  if (isTuiEnabled()) {
+  if (shouldUseMainTui) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
 
     const createPatchedConsoleMethod = (
@@ -174,8 +173,12 @@ async function getTerminalOutputLifeCycle(
       (resolve) => (resolveRenderIsDonePromise = resolve)
     );
 
-    const { lifeCycle: tsLifeCycle, printSummary } =
-      getTuiTerminalSummaryLifeCycle({
+    let tsLifeCycle: LifeCycle;
+    let printSummary: (() => void) | undefined;
+
+    // Only create TUI lifecycle if we're actually using the main TUI
+    if (shouldUseMainTui) {
+      const tuiResult = getTuiTerminalSummaryLifeCycle({
         projectNames,
         tasks,
         taskGraph,
@@ -185,6 +188,13 @@ async function getTerminalOutputLifeCycle(
         initiatingTasks,
         resolveRenderIsDonePromise,
       });
+      tsLifeCycle = tuiResult.lifeCycle;
+      printSummary = tuiResult.printSummary;
+    } else {
+      // Create a minimal lifecycle for non-TUI mode
+      tsLifeCycle = {} as LifeCycle;
+      resolveRenderIsDonePromise();
+    }
 
     if (tasks.length === 0) {
       renderIsDone = renderIsDone.then(() => {
@@ -197,8 +207,8 @@ async function getTerminalOutputLifeCycle(
     }
 
     const lifeCycles: LifeCycle[] = [tsLifeCycle];
-    // Only run the TUI if there are tasks to run
-    if (tasks.length > 0) {
+    // Only run the TUI if there are tasks to run AND we're using main TUI
+    if (tasks.length > 0 && shouldUseMainTui) {
       appLifeCycle = new AppLifeCycle(
         tasks,
         initiatingTasks.map((t) => t.id),
@@ -323,7 +333,10 @@ async function getTerminalOutputLifeCycle(
         process.stderr.write = originalStderrWrite;
         console.log = originalConsoleLog;
         console.error = originalConsoleError;
-        restoreTerminal();
+        // Only call restoreTerminal if main TUI was actually used
+        if (shouldUseMainTui) {
+          restoreTerminal();
+        }
       },
       printSummary,
       renderIsDone,
