@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0           http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.maven</groupId>
+    <artifactId>maven</artifactId>
+    <version>4.1.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
 
   <groupId>dev.nx.maven</groupId>
   <artifactId>nx-maven-analyzer-plugin</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>Nx Maven Analyzer Plugin</name>
   <description>Maven plugin to analyze project structure for Nx integration</description>
 
   <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.version>3.9.6</maven.version>
     <kotlin.version>1.9.22</kotlin.version>
   </properties>
 
@@ -29,7 +28,7 @@
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- Maven Core -->
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -37,7 +36,7 @@
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- Maven Plugin Annotations -->
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
@@ -45,23 +44,23 @@
       <version>3.11.0</version>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- JSON Processing -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>2.16.1</version>
     </dependency>
-    
+
     <!-- Test dependency to verify classpath capture -->
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.11.0</version>
     </dependency>
-    
+
     <!-- Removed JavaParser - was causing StackOverflowError -->
-    
+
     <!-- Maven Model -->
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -69,7 +68,7 @@
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- Maven Project -->
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -77,14 +76,14 @@
       <version>2.2.1</version>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- Kotlin -->
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib</artifactId>
       <version>${kotlin.version}</version>
     </dependency>
-    
+
     <!-- Maven Compat for PluginVersionResolver -->
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -92,7 +91,7 @@
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- Maven Artifact for plugin artifact creation -->
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -100,7 +99,7 @@
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
-    
+
     <!-- Maven Build Cache Extension for native cacheability detection -->
     <dependency>
       <groupId>org.apache.maven.extensions</groupId>
@@ -108,7 +107,7 @@
       <version>1.2.0</version>
       <optional>true</optional>
     </dependency>
-    
+
     <!-- Test Dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -116,14 +115,14 @@
       <version>5.10.1</version>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.mockito.kotlin</groupId>
       <artifactId>mockito-kotlin</artifactId>
       <version>5.2.1</version>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-test-junit5</artifactId>
@@ -133,35 +132,33 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>src/main/kotlin</sourceDirectory>
-    <testSourceDirectory>src/test/kotlin</testSourceDirectory>
     <plugins>
       <!-- Kotlin Maven Plugin -->
       <plugin>
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-maven-plugin</artifactId>
         <version>${kotlin.version}</version>
-        <executions>
-          <execution>
-            <id>compile</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>test-compile</id>
-            <phase>test-compile</phase>
-            <goals>
-              <goal>test-compile</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
           <jvmTarget>17</jvmTarget>
         </configuration>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <phase>compile</phase>
+          </execution>
+          <execution>
+            <id>test-compile</id>
+            <goals>
+              <goal>test-compile</goal>
+            </goals>
+            <phase>test-compile</phase>
+          </execution>
+        </executions>
       </plugin>
-      
+
       <!-- Maven Compiler Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -172,7 +169,7 @@
           <target>17</target>
         </configuration>
       </plugin>
-      
+
       <!-- Maven Plugin Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -182,7 +179,7 @@
           <goalPrefix>nx-maven</goalPrefix>
         </configuration>
       </plugin>
-      
+
       <!-- Maven Surefire Plugin for running tests -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -193,5 +190,7 @@
         </configuration>
       </plugin>
     </plugins>
+    <sourceDirectory>src/main/kotlin</sourceDirectory>
+    <testSourceDirectory>src/test/kotlin</testSourceDirectory>
   </build>
 </project>
