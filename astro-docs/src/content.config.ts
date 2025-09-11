@@ -67,7 +67,7 @@ const pluginDocs = defineCollection({
 
 const communityPlugins = defineCollection({
   loader: CommunityPluginsLoader(),
-  schema: baseSchema.pick({ slug: true, title: true }).and(
+  schema: baseSchema.and(
     z.object({
       // community plugins don't have title currently; derive from slug
       description: z.string(),

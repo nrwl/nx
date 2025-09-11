@@ -9,7 +9,10 @@ test('links in descriptions of properties should correctly link to the same page
     page.getByRole('heading', { name: 'NxJsonConfiguration' })
   ).toBeVisible();
 
-  await page.getByRole('link', { name: 'nxCloudAccessToken' }).click();
+  await page
+    .getByTestId('main-pane')
+    .getByRole('link', { name: 'nxCloudAccessToken' })
+    .click();
 
   await expect(
     page.getByRole('heading', { name: 'nxCloudAccessToken' })

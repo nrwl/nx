@@ -9,7 +9,6 @@ import { workspaceRoot } from '@nx/devkit';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
-import { join as pathJoin } from 'node:path';
 
 export async function loadDevkitPackage(
   context: LoaderContext
@@ -159,7 +158,7 @@ async function walkDirectory(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
-    const fullPath = pathJoin(dir, entry.name);
+    const fullPath = join(dir, entry.name);
 
     if (entry.isDirectory()) {
       // Recursively walk subdirectories
