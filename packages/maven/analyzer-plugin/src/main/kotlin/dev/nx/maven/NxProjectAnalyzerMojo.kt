@@ -111,8 +111,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             }
         }.filter { it != null }.collect(java.util.stream.Collectors.toList())
         
-        // Convert to map
-        analyses.filterNotNull().forEach { (projectName, analysis) ->
+        // Convert to map - items are already filtered for null
+        @Suppress("UNCHECKED_CAST")
+        (analyses as List<Pair<String, com.fasterxml.jackson.databind.JsonNode>>).forEach { (projectName, analysis) ->
             inMemoryAnalyses[projectName] = analysis
         }
         
