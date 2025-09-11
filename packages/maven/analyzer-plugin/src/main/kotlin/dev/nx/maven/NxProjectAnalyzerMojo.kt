@@ -184,7 +184,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     sharedTestClassDiscovery!!
                 )
                 
-                val nxProjectConfig = analyzer.generateNxProjectConfig(analysis as com.fasterxml.jackson.databind.node.ObjectNode)
+                val nxProjectConfig = analyzer.generateNxProjectConfig()
                 if (nxProjectConfig != null) {
                     val (root, projectConfig) = nxProjectConfig
                     projects.set<JsonNode>(root, projectConfig)
