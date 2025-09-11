@@ -9,22 +9,25 @@ common-init-steps: &common-init-steps
   - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
 
-  - group-name: Install Packages
-    parallel: true
-    steps:
-      - name: Install zip and unzip
-        script: sudo apt-get -yqq install zip unzip
-      - name: Install e2e deps
-        script: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev 
-
   - name: Cache restore
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
     inputs:
       key: 'pnpm-lock.yaml'
       paths: .pnpm-store
       base-branch: 'master'
+
+  - group-name: Install Packages
+    parallel: false
+    steps:
+      - name: Apt Update
+        script: |
+          sudo apt-get update
+      - name: Install zip and unzip for Bun
+        script: |
+          sudo apt-get -yqq install zip unzip
+      - name: Install E2E deps
+        script: |
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
 
   - group-name: Install Tooling
     parallel: true
@@ -38,24 +41,18 @@ common-init-steps: &common-init-steps
       - name: Install Bun
         script: |
           curl -fsSL https://bun.sh/install | bash
-          echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
-          echo "PATH=$HOME/.bun/bin:$PATH" >> $NX_CLOUD_ENV
       - name: Setup Java 21
         script: |
           sudo apt install -y openjdk-21-jdk
           sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
           java -version
-      - name: Install Browsers
+      - name: Pnpm Install from Lockfile
         script: |
-          pnpm exec cypress install
-          pnpm exec playwright install --with-deps 
+          pnpm install --frozen-lockfile
 
   - group-name: Install Dependencies and E2E
     parallel: true
     steps:
-      - name: Pnpm Install from Lockfile
-        script: |
-          pnpm install --frozen-lockfile
       - name: Install Rust Dependencies
         script: |
           cargo fetch
@@ -63,6 +60,10 @@ common-init-steps: &common-init-steps
         script: |
           ./gradlew wrapper
           ./gradlew --version
+      - name: Install Browsers
+        script: |
+          pnpm exec cypress install
+          pnpm exec playwright install --with-deps
 
   - group-name: Misc Steps
     parallel: true
@@ -74,7 +75,10 @@ common-init-steps: &common-init-steps
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
       - name: Check bun
-        script: bun --version
+        script: |
+          echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
+          echo "PATH=$HOME/.bun/bin:$PATH" >> $NX_CLOUD_ENV
+          bun --version
 
 launch-templates:
   linux-large:
