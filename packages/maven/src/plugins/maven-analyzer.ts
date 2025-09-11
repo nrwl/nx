@@ -9,7 +9,7 @@ import { MavenPluginOptions, MavenAnalysisData } from './types';
  */
 function detectMavenExecutable(): string {
   console.log(`[Maven Analyzer] Detecting Maven executable in workspace: ${workspaceRoot}`);
-  
+
   // First priority: Check for Maven Daemon
   try {
     const { execSync } = require('child_process');
@@ -19,7 +19,7 @@ function detectMavenExecutable(): string {
   } catch (error) {
     console.log(`[Maven Analyzer] Maven Daemon not available`);
   }
-  
+
   // Second priority: Check for Maven wrapper
   if (process.platform === 'win32') {
     const wrapperPath = join(workspaceRoot, 'mvnw.cmd');
@@ -34,7 +34,7 @@ function detectMavenExecutable(): string {
       return './mvnw';
     }
   }
-  
+
   // Fallback: Use regular Maven
   console.log(`[Maven Analyzer] Using fallback: mvn`);
   return 'mvn';
@@ -45,20 +45,21 @@ function detectMavenExecutable(): string {
  */
 export async function runMavenAnalysis(options: MavenPluginOptions): Promise<MavenAnalysisData> {
   console.log(`[Maven Analyzer] Starting analysis with options:`, options);
-  
+
   const outputFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
   const isVerbose = options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
-  
+
   console.log(`[Maven Analyzer] Output file: ${outputFile}`);
   console.log(`[Maven Analyzer] Verbose mode: ${isVerbose}`);
   console.log(`[Maven Analyzer] Workspace data directory: ${workspaceDataDirectory}`);
 
   // Detect Maven executable (mvnw > mvn)
   const mavenExecutable = detectMavenExecutable();
-  
+
   const mavenArgs = [
-    'dev.nx.maven:nx-maven-analyzer-plugin:0.0.1-SNAPSHOT:analyze',
-    `-Dnx.outputFile=${outputFile}`,
+    'dev.nx.maven:nx-maven-analyzer-plugin:4.1.0-SNAPSHOT:analyze',
+    `-DoutputFile=${outputFile}`,
+    `-DworkspaceRoot=${workspaceRoot}`,
     '--batch-mode',
     '--no-transfer-progress'
   ];
@@ -143,7 +144,7 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
   console.log(`[Maven Analyzer] Reading output file...`);
   const jsonContent = readFileSync(outputFile, 'utf8');
   console.log(`[Maven Analyzer] Output file size: ${jsonContent.length} characters`);
-  
+
   try {
     const result = JSON.parse(jsonContent) as MavenAnalysisData;
     console.log(`[Maven Analyzer] Successfully parsed analysis data with ${Object.keys(result).length} top-level keys`);
