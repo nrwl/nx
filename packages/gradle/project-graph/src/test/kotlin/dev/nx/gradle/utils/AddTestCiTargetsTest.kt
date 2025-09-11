@@ -130,14 +130,14 @@ class AddTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-            package com.example;
-            import org.junit.jupiter.api.Test;
-            
-            abstract class AbstractTest {
-                @Test
-                void testMethod() {}
-            }
-          """
+                package com.example;
+                import org.junit.jupiter.api.Test;
+                
+                abstract class AbstractTest {
+                    @Test
+                    void testMethod() {}
+                }
+              """
                   .trimIndent())
         }
 
@@ -146,14 +146,14 @@ class AddTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-            package com.example;
-            import org.junit.jupiter.api.Test;
-            
-            class ConcreteTest {
-                @Test
-                void testMethod() {}
-            }
-          """
+                package com.example;
+                import org.junit.jupiter.api.Test;
+                
+                class ConcreteTest {
+                    @Test
+                    void testMethod() {}
+                }
+              """
                   .trimIndent())
         }
 
