@@ -456,3 +456,24 @@ jobs:
               issue_number: ${{ github.event.inputs.pr }},
               body: message
             });
+
+  report-status:
+    name: Report Publish Status to Slack
+    if: ${{ always() && github.repository_owner == 'nrwl' }}
+    needs: [ resolve-required-data, build, build-freebsd, publish ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true  # Don't fail the workflow if notification fails
+    steps:
+      - name: Send Slack notification
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
+        with:
+          status: ${{ needs.publish.result }}
+          notification_title: >
+            ${{ needs.publish.result == 'success' && '✅ Publish Successful' || '❌ Publish Failed' }}
+          message_format: >
+            ${{ needs.publish.result == 'success' && format('Successfully published version `{0}` to npm', needs.resolve-required-data.outputs.version) || 'Failed to publish version to npm' }}
+          footer: '<{run_url}|View Workflow Run>'
+          mention_groups: 'U9NPA6C90' # Jason
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
