@@ -33,11 +33,21 @@ class MavenLifecycleAnalyzer(
                 lifecycleExecutor.calculateExecutionPlan(session, phase)
             }
             
-            // Extract phases from all lifecycles
+            // Extract phases from all lifecycles and include all standard phases
             val phasesArray = objectMapper.createArrayNode()
             val goalsSet = LinkedHashSet<GoalInfo>() // Use LinkedHashSet to maintain order and eliminate duplicates
             val uniquePhases = mutableSetOf<String>()
             
+            // Ensure key phases are always included, even if they have no bindings
+            val essentialPhases = listOf("verify", "integration-test", "pre-integration-test", "post-integration-test")
+            for (phase in essentialPhases) {
+                if (!uniquePhases.contains(phase)) {
+                    uniquePhases.add(phase)
+                    phasesArray.add(phase)
+                }
+            }
+            
+            // Then add any additional phases discovered from executions
             for (executionPlan in allExecutionPlans) {
                 for (execution in executionPlan.mojoExecutions) {
                     execution.lifecyclePhase?.let { phase ->
@@ -216,6 +226,7 @@ class MavenLifecycleAnalyzer(
             pluginManager.getPluginDescriptor(plugin, project.remotePluginRepositories, session.repositorySession)
         }
     }
+    
     
 }
 
