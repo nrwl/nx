@@ -76,36 +76,44 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val setupTime = System.currentTimeMillis() - startTime
         log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
         
-        val singleAnalyzer = NxProjectAnalyzerSingleMojo(
-            session,
-            pluginManager,
-            lifecycleExecutor,
-            workspaceRoot,
-            sharedInputOutputAnalyzer,
-            sharedLifecycleAnalyzer,
-            sharedTestClassDiscovery
-        )
-        singleAnalyzer.setLog(log)
-        
         // Collect analyses in memory instead of writing to files
         val inMemoryAnalyses = mutableMapOf<String, JsonNode>()
         
         val projectStartTime = System.currentTimeMillis()
-        for (mavenProject in allProjects) {
+        
+        // Process projects in parallel with separate analyzer instances
+        val analyses = allProjects.parallelStream().map { mavenProject ->
             try {
                 log.info("Analyzing project: ${mavenProject.artifactId}")
                 
-                // Only set the project context (no expensive component recreation)
+                // Create separate analyzer instance for each project (thread-safe)
+                val singleAnalyzer = NxProjectAnalyzerSingleMojo(
+                    session,
+                    pluginManager,
+                    lifecycleExecutor,
+                    workspaceRoot,
+                    sharedInputOutputAnalyzer,
+                    sharedLifecycleAnalyzer,
+                    sharedTestClassDiscovery
+                )
+                singleAnalyzer.setLog(log)
                 singleAnalyzer.setProject(mavenProject)
                 
                 // Get analysis directly without writing to file
                 val analysis = singleAnalyzer.analyzeProjectInMemory()
                 val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
-                inMemoryAnalyses[projectName] = analysis
+                
+                projectName to analysis
                 
             } catch (e: Exception) {
                 log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
+                null
             }
+        }.filter { it != null }.collect(java.util.stream.Collectors.toList())
+        
+        // Convert to map
+        analyses.forEach { (projectName, analysis) ->
+            inMemoryAnalyses[projectName] = analysis
         }
         
         val totalTime = System.currentTimeMillis() - startTime
