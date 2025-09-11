@@ -76,17 +76,16 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val setupTime = System.currentTimeMillis() - startTime
         log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
         
-        val singleAnalyzer = NxProjectAnalyzerSingleMojo()
-        
-        // Set up shared components once
-        singleAnalyzer.setSession(session)
-        singleAnalyzer.setPluginManager(pluginManager)
-        singleAnalyzer.setLifecycleExecutor(lifecycleExecutor)
-        singleAnalyzer.setWorkspaceRoot(workspaceRoot)
+        val singleAnalyzer = NxProjectAnalyzerSingleMojo(
+            session,
+            pluginManager,
+            lifecycleExecutor,
+            workspaceRoot,
+            sharedInputOutputAnalyzer,
+            sharedLifecycleAnalyzer,
+            sharedTestClassDiscovery
+        )
         singleAnalyzer.setLog(log)
-        singleAnalyzer.setSharedInputOutputAnalyzer(sharedInputOutputAnalyzer)
-        singleAnalyzer.setSharedLifecycleAnalyzer(sharedLifecycleAnalyzer)
-        singleAnalyzer.setSharedTestClassDiscovery(sharedTestClassDiscovery)
         
         // Collect analyses in memory instead of writing to files
         val inMemoryAnalyses = mutableMapOf<String, JsonNode>()
