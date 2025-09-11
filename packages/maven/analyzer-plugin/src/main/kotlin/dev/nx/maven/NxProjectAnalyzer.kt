@@ -207,7 +207,7 @@ class NxProjectAnalyzer(
             val mavenCommand = pathResolver.getMavenCommand()
             
             // Analyze the project to get the data we need
-            val projectNode = analyzeSingleProject(project)
+            val projectNode = analyze()
             val root = projectNode.get("root")?.asText() ?: return null
             val projectName = "${project.groupId}.${project.artifactId}"
             
