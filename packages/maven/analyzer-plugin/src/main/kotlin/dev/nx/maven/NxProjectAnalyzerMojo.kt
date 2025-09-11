@@ -112,7 +112,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         }.filter { it != null }.collect(java.util.stream.Collectors.toList())
         
         // Convert to map
-        analyses.forEach { (projectName, analysis) ->
+        analyses.filterNotNull().forEach { (projectName, analysis) ->
             inMemoryAnalyses[projectName] = analysis
         }
         
