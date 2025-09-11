@@ -25,14 +25,14 @@ const sitemapPath = path.join(distDir, 'sitemap-0.xml');
 
 if (!fs.existsSync(distDir)) {
   console.error(
-    `Dist directory does not exist at path Have you ran the build?: ${distDir}`,
+    `Dist directory does not exist at path Have you ran the build?: ${distDir}`
   );
   process.exit(1);
 }
 
 if (!fs.existsSync(sitemapPath)) {
   console.error(
-    `Sitemap does not exist at path. Have you ran the build?: ${sitemapPath}`,
+    `Sitemap does not exist at path. Have you ran the build?: ${sitemapPath}`
   );
   process.exit(1);
 }
@@ -162,7 +162,7 @@ function validateLinks() {
 
   const actualLinksUsed = new Set(filteredLinks);
   console.log(
-    `Extracted ${actualLinksUsed.size} total internal links from ${htmlFiles.length} files\n`,
+    `Extracted ${actualLinksUsed.size} total internal links from ${htmlFiles.length} files\n`
   );
 
   console.log('📍 Parsing sitemap for valid routes...');
@@ -170,14 +170,14 @@ function validateLinks() {
   const sitemapContent = fs.readFileSync(sitemapPath, 'utf-8');
   const availableInternalRoutes = parseSitemap(sitemapContent);
   console.log(
-    `Found ${availableInternalRoutes.size} unique routes in sitemap\n`,
+    `Found ${availableInternalRoutes.size} unique routes in sitemap\n`
   );
 
   console.log('✅ Validating links...\n');
 
   // Find links that exist in actualLinksUsed but not in availableInternalRoutes
   const brokenLinks: Set<string> = new Set(
-    [...actualLinksUsed].filter((link) => !availableInternalRoutes.has(link)),
+    [...actualLinksUsed].filter((link) => !availableInternalRoutes.has(link))
   );
 
   if (brokenLinks.size > 0) {
@@ -190,7 +190,7 @@ function validateLinks() {
 
       if (!files) {
         throw new Error(
-          `Unable to find file where link was parsed from: ${link}`,
+          `Unable to find file where link was parsed from: ${link}`
         );
       }
 
@@ -207,13 +207,13 @@ function validateLinks() {
 
     for (const [file, badLinks] of filesWithErrors) {
       console.log(
-        `\n❌ ${toFriendlyName(file)} has ${badLinks.length} broken links:`,
+        `\n❌ ${toFriendlyName(file)} has ${badLinks.length} broken links:`
       );
       badLinks.forEach((link) => console.log(`\t- ${link}`));
     }
 
     console.log(
-      `\n🔎 Check the above output to resolve the ${brokenLinks.size} broken links in each respecitve source (.mdoc, .astro, and/or content collection generation`,
+      `\n🔎 Check the above output to resolve the ${brokenLinks.size} broken links in each respecitve source (.mdoc, .astro, and/or content collection generation`
     );
 
     process.exit(1);

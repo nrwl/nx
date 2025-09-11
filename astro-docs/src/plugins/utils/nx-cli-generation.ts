@@ -78,6 +78,7 @@ export async function loadNxCliPackage(
     ),
     data: {
       title: 'Nx Commands',
+      slug: 'reference/nx-commands',
       packageType: 'nx-cli',
       docType: 'cli',
       description: 'Complete reference for Nx CLI commands',

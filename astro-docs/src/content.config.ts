@@ -42,41 +42,43 @@ const nxReferencePackages = defineCollection({
       githubStars: z.number().optional(),
       lastPublishedDate: z.date().optional(),
       lastFetched: z.date().optional(),
-    }),
+    })
   ),
 });
 
 const pluginDocs = defineCollection({
   loader: PluginLoader(),
-  schema: z.object({
-    title: z.string(),
-    pluginName: z.string(),
-    packageName: z.string(),
-    docType: z.enum(['generators', 'executors', 'migrations', 'overview']),
-    technologyCategory: z.string(),
-    slug: z.string(),
-    features: z.array(z.string()).optional(),
-    totalDocs: z.number().optional(),
-    description: z.string(),
-    npmDownloads: z.number().optional(),
-    githubStars: z.number().optional(),
-    lastPublishedDate: z.date().optional(),
-    lastFetched: z.date().optional(),
-  }),
+  schema: baseSchema.and(
+    z.object({
+      pluginName: z.string(),
+      packageName: z.string(),
+      docType: z.enum(['generators', 'executors', 'migrations', 'overview']),
+      technologyCategory: z.string(),
+      features: z.array(z.string()).optional(),
+      totalDocs: z.number().optional(),
+      description: z.string(),
+      npmDownloads: z.number().optional(),
+      githubStars: z.number().optional(),
+      lastPublishedDate: z.date().optional(),
+      lastFetched: z.date().optional(),
+    })
+  ),
 });
 
 const communityPlugins = defineCollection({
   loader: CommunityPluginsLoader(),
-  schema: z.object({
-    slug: z.string(),
-    description: z.string(),
-    url: z.string(),
-    lastPublishedDate: z.date().optional(),
-    npmDownloads: z.number().optional(),
-    githubStars: z.number().optional(),
-    nxVersion: z.string().optional(),
-    lastFetched: z.date().optional(),
-  }),
+  schema: baseSchema.pick({ slug: true, title: true }).and(
+    z.object({
+      // community plugins don't have title currently; derive from slug
+      description: z.string(),
+      url: z.string(),
+      lastPublishedDate: z.date().optional(),
+      npmDownloads: z.number().optional(),
+      githubStars: z.number().optional(),
+      nxVersion: z.string().optional(),
+      lastFetched: z.date().optional(),
+    })
+  ),
 });
 
 // general notification collection for showing time based notifications

@@ -3,9 +3,7 @@ import {devkitPages } from '../../../utils/devkit-content-queries'
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { render } from 'astro:content';
 export async function getStaticPaths() {
-  const pages = await devkitPages()
-
-  return pages
+  return  await devkitPages()
 }
 
 const { doc } = Astro.props

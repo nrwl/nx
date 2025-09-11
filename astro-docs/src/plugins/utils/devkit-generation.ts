@@ -12,7 +12,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join as pathJoin } from 'node:path';
 
 export async function loadDevkitPackage(
-  context: LoaderContext,
+  context: LoaderContext
 ): Promise<CollectionEntry<'nx-reference-packages'>[]> {
   const { logger, renderMarkdown } = context;
   logger.info('Loading DevKit documentation');
@@ -31,7 +31,7 @@ export async function loadDevkitPackage(
     'dist',
     'packages',
     'devkit',
-    'index.d.ts',
+    'index.d.ts'
   );
   if (existsSync(devkitEntryPoint)) {
     await runTypeDoc(
@@ -43,7 +43,7 @@ export async function loadDevkitPackage(
         excludePrivate: true,
         publicPath: '/docs/reference/devkit/',
       },
-      logger,
+      logger
     );
   }
 
@@ -54,7 +54,7 @@ export async function loadDevkitPackage(
     'dist',
     'packages',
     'devkit',
-    'ngcli-adapter.d.ts',
+    'ngcli-adapter.d.ts'
   );
   if (existsSync(ngcliEntryPoint)) {
     await runTypeDoc(
@@ -65,7 +65,7 @@ export async function loadDevkitPackage(
         out: join(outDir, 'ngcli_adapter'),
         publicPath: '/docs/reference/devkit/ngcli_adapter/',
       },
-      logger,
+      logger
     );
   }
 

@@ -2,10 +2,7 @@ import {
   defineRouteMiddleware,
   type StarlightRouteData,
 } from '@astrojs/starlight/route-data';
-import {
-  devkitPages,
-  ngcliAdapterPages,
-} from '../utils/devkit-content-queries';
+import { devkitPages } from '../utils/devkit-content-queries';
 import { getEntries } from 'astro:content';
 
 interface SidebarLink {
@@ -80,7 +77,8 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
       label: record.props.doc.data.title,
       href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
       badge: undefined,
-      isCurrent: entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
+      isCurrent:
+        entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
       attrs: {},
     })
   );
@@ -100,7 +98,8 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
       label: record.props.doc.data.title,
       href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
       badge: undefined,
-      isCurrent: entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
+      isCurrent:
+        entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
       attrs: {},
     })
   );

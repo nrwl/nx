@@ -29,9 +29,15 @@ export default class NxMarkdownTheme extends MarkdownTheme {
     // e.g., /docs/reference/devkit/enums/ChangeType.md -> /docs/reference/devkit/ChangeType.md
     content = content
       // Remove type directories (enums, classes, interfaces, types, variables, functions) from URLs
-      .replace(/(\[.*?\]\([^)]*?\/devkit\/)(?:enums|classes|interfaces|types|variables|functions)\//gi, '$1')
+      .replace(
+        /(\[.*?\]\([^)]*?\/devkit\/)(?:enums|classes|interfaces|types|variables|functions)\//gi,
+        '$1'
+      )
       // Handle ngcli_adapter paths - keep the ngcli_adapter prefix but remove type directories
-      .replace(/(\[.*?\]\([^)]*?\/devkit\/ngcli_adapter\/)(?:enums|classes|interfaces|types|variables|functions)\//gi, '$1')
+      .replace(
+        /(\[.*?\]\([^)]*?\/devkit\/ngcli_adapter\/)(?:enums|classes|interfaces|types|variables|functions)\//gi,
+        '$1'
+      )
       // Remove .md extensions from all links
       .replace(/(\[.*?\]\([^)]*?)\.md(\)|#)/gi, '$1$2')
       // Also handle any remaining .md extensions that might be in URLs

@@ -97,6 +97,7 @@ export async function loadCnwPackage(
     ),
     data: {
       title: 'create-nx-workspace',
+      slug: 'reference/create-nx-workspace',
       packageType: 'cnw',
       docType: 'cli',
       description: 'Create a new Nx workspace',

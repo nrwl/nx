@@ -60,6 +60,7 @@ export async function loadNxSpecialPackage(
     collection: 'nx-reference-packages',
     data: {
       title: npmPackageName,
+      slug: `reference/${packageName}`,
       packageType: packageName,
       docType: 'overview',
       description: packageDescription,
@@ -81,6 +82,7 @@ export async function loadNxSpecialPackage(
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Generators`,
+        slug: `reference/${packageName}/generators`,
         packageType: packageName,
         docType: 'generators',
         description: packageDescription,
@@ -102,6 +104,7 @@ export async function loadNxSpecialPackage(
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Executors`,
+        slug: `reference/${packageName}/executors`,
         packageType: packageName,
         docType: 'executors',
         description: packageDescription,
@@ -123,6 +126,7 @@ export async function loadNxSpecialPackage(
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Migrations`,
+        slug: `reference/${packageName}/migrations`,
         packageType: packageName,
         docType: 'migrations',
         description: packageDescription,
