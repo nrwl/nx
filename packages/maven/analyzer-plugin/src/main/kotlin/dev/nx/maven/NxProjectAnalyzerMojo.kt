@@ -84,7 +84,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 log.info("Analyzing project: ${mavenProject.artifactId}")
                 
                 // Create separate analyzer instance for each project (thread-safe)
-                val singleAnalyzer = NxProjectAnalyzerSingleMojo(
+                val singleAnalyzer = NxProjectAnalyzer(
                     session,
                     mavenProject,
                     pluginManager,
