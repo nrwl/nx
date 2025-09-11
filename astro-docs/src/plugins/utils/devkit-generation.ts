@@ -98,10 +98,18 @@ export async function loadDevkitPackage(
         category = 'overview';
       }
     } else {
-      // Regular markdown files are in the same location as file location
-      // NOTE: we might want to change this to flatten out the "types" i.e. interface/function etc
-      // that will require changing the URL generation of typedoc as well
-      slug = relativePath.replace(/\.md$/, '');
+      // Flatten routes: remove intermediate directory structure
+      // For ngcli_adapter subroutes, keep the ngcli_adapter prefix but flatten the rest
+      if (pathParts[0] === 'ngcli_adapter' && pathParts.length > 2) {
+        // ngcli_adapter/classes/SomeFile.md -> ngcli_adapter/SomeFile
+        slug = `ngcli_adapter/${fileName.replace(/\.md$/, '')}`;
+      } else if (pathParts[0] !== 'ngcli_adapter' && pathParts.length > 1) {
+        // classes/SomeFile.md -> SomeFile
+        slug = fileName.replace(/\.md$/, '');
+      } else {
+        // Already at root level or single directory
+        slug = relativePath.replace(/\.md$/, '');
+      }
       title = fileName.replace(/\.md$/, '');
       category = pathParts.length > 1 ? pathParts[0] : 'overview';
     }

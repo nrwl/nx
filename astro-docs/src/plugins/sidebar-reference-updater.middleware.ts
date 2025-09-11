@@ -66,11 +66,11 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
 
   const devkitOnlyItems = devkitItems.filter(
     (item) =>
-      !item.params.slug?.includes('ngcli_adapter') && item.params.slug !== ''
+      !item.params.slug?.startsWith('ngcli_adapter') && item.params.slug !== ''
   );
   const ngcliItems = devkitItems.filter(
     (item) =>
-      item.params.slug?.includes('ngcli_adapter') &&
+      item.params.slug?.startsWith('ngcli_adapter/') &&
       item.params.slug !== 'ngcli_adapter'
   );
 
@@ -78,9 +78,9 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
     (record): SidebarLink => ({
       type: 'link',
       label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/${record.params.slug}`,
+      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
       badge: undefined,
-      isCurrent: entry.slug === `reference/devkit/${record.params.slug}`,
+      isCurrent: entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
       attrs: {},
     })
   );
@@ -98,9 +98,9 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
     (record): SidebarLink => ({
       type: 'link',
       label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/${record.params.slug}`,
+      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
       badge: undefined,
-      isCurrent: entry.slug === `reference/devkit/${record.params.slug}`,
+      isCurrent: entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
       attrs: {},
     })
   );

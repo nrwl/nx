@@ -100,7 +100,7 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
   } = {
     plugin: ['typedoc-plugin-markdown'],
     disableSources: true,
-    theme: 'markdown',
+    theme: 'nx-markdown-theme',
     readme: 'none',
     hideBreadcrumbs: true,
     // Disable automatic H1 generation this is done via astro now

@@ -6,7 +6,6 @@ import {
   type RenderTemplate,
 } from 'typedoc';
 import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
-import comment from './comment';
 
 /**
  * The MarkdownTheme is based on TypeDoc's DefaultTheme @see https://github.com/TypeStrong/typedoc/blob/master/src/lib/output/themes/DefaultTheme.ts.
@@ -18,7 +17,6 @@ export default class NxMarkdownTheme extends MarkdownTheme {
     super(renderer);
     // NOTE: removing this still has the ToC showing up on each page?
     // toc(this);
-    comment();
   }
 
   render(
@@ -27,9 +25,14 @@ export default class NxMarkdownTheme extends MarkdownTheme {
   ): string {
     let content = super.render(page, template);
 
-    // NOTE: this doesn't seem to do anything?
-    // Remove .md extensions from all links in the content
+    // Remove type-specific directories from links to flatten URL structure
+    // e.g., /docs/reference/devkit/enums/ChangeType.md -> /docs/reference/devkit/ChangeType.md
     content = content
+      // Remove type directories (enums, classes, interfaces, types, variables, functions) from URLs
+      .replace(/(\[.*?\]\([^)]*?\/devkit\/)(?:enums|classes|interfaces|types|variables|functions)\//gi, '$1')
+      // Handle ngcli_adapter paths - keep the ngcli_adapter prefix but remove type directories
+      .replace(/(\[.*?\]\([^)]*?\/devkit\/ngcli_adapter\/)(?:enums|classes|interfaces|types|variables|functions)\//gi, '$1')
+      // Remove .md extensions from all links
       .replace(/(\[.*?\]\([^)]*?)\.md(\)|#)/gi, '$1$2')
       // Also handle any remaining .md extensions that might be in URLs
       .replace(/\.md(?=[#)]|$)/gi, '');
