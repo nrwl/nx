@@ -27,12 +27,11 @@ class NxProjectAnalyzer(
 
     
     /**
-     * Analyzes the project and returns complete result with both basic analysis and Nx project config
+     * Analyzes the project and returns Nx project config
      */
-    fun analyze(): Pair<com.fasterxml.jackson.databind.node.ObjectNode, Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>?> {
+    fun analyze(): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
         val projectAnalysis = analyzeSingleProject(project)
-        val nxProjectConfig = generateNxProjectConfigFromAnalysis(projectAnalysis)
-        return projectAnalysis to nxProjectConfig
+        return generateNxProjectConfigFromAnalysis(projectAnalysis)
     }
 
     private fun analyzeSingleProject(mavenProject: MavenProject): ObjectNode {
