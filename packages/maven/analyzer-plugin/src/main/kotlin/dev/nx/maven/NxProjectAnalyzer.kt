@@ -19,7 +19,6 @@ class NxProjectAnalyzer(
     private val lifecycleExecutor: LifecycleExecutor,
     private val workspaceRoot: String,
     private val log: org.apache.maven.plugin.logging.Log,
-    private val sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
     private val sharedLifecycleAnalyzer: MavenLifecycleAnalyzer,
     private val sharedTestClassDiscovery: TestClassDiscovery
 ) {
@@ -47,125 +46,50 @@ class NxProjectAnalyzer(
             nxProject.put("root", root)
             nxProject.put("projectType", projectType)
             nxProject.put("sourceRoot", "${root}/src/main/java")
-
-            // Analyze phases and generate targets
-            val targets = objectMapper.createObjectNode()
-            val mavenPhaseTargets = mutableListOf<String>()
-
-            // Extract lifecycle data for phase and goal discovery
-            val lifecycleData = sharedLifecycleAnalyzer.extractLifecycleData(project)
-
-            // Extract discovered phases from lifecycle analysis
-            val phasesToAnalyze = lifecycleData.get("phases")?.map { it.asText() }?.toList() ?: emptyList()
-
-            log.info("Analyzing ${phasesToAnalyze.size} phases for ${project.artifactId}: ${phasesToAnalyze.joinToString(", ")}")
-
-            // Generate targets from phase analysis
-            phasesToAnalyze.forEach { phase ->
-                try {
-                    val analysis = sharedInputOutputAnalyzer.analyzeCacheability(phase, project)
-                    log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
-
-                    val target = objectMapper.createObjectNode()
-                    target.put("executor", "nx:run-commands")
-
-                    val options = objectMapper.createObjectNode()
-                    options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
-                    options.put("cwd", "{workspaceRoot}")
-                    target.put("options", options)
-
-                    // Copy caching info from analysis
-                    if (analysis.cacheable) {
-                        target.put("cache", true)
-                        target.put("inputs", analysis.inputs)
-                        target.put("outputs", analysis.outputs)
-                    } else {
-                        target.put("cache", false)
-                    }
-
-                    target.put("parallelism", true)
-                    targets.put(phase, target)
-                    mavenPhaseTargets.add(phase)
-
-                } catch (e: Exception) {
-                    log.debug("Failed to analyze phase '$phase' for project ${project.artifactId}: ${e.message}")
-                }
-            }
+            val nxTargets = objectMapper.createObjectNode()
 
             // Generate targets from discovered plugin goals
             val targetGroups = objectMapper.createObjectNode()
 
-            // Extract discovered plugin goals
-            val discoveredGoals = extractPluginGoals(lifecycleData)
+            val phaseTargets = sharedLifecycleAnalyzer.generatePhaseTargets(project, mavenCommand)
+            val mavenPhasesGroup = objectMapper.createArrayNode()
+            phaseTargets.forEach { (phase, target) ->
+                nxTargets.set<ObjectNode>(phase, target)
+                mavenPhasesGroup.add(phase)
+            }
+            targetGroups.put("maven-phases", mavenPhasesGroup)
 
-            if (discoveredGoals.isNotEmpty()) {
-                val goalsByPlugin = mutableMapOf<String, MutableList<String>>()
+            val (goalTargets, goalGroups) = sharedLifecycleAnalyzer.generateGoalTargets(project, mavenCommand)
 
-                discoveredGoals.forEach { pluginGoal ->
-                    val parts = pluginGoal.split(":")
-                    if (parts.size == 2) {
-                        val originalPluginName = parts[0]
-                        val goalName = parts[1]
-                        val cleanPluginName = cleanPluginName(originalPluginName)
-                        goalsByPlugin.getOrPut(cleanPluginName) { mutableListOf() }.add("$originalPluginName:$goalName")
-                    }
-                }
-
-                goalsByPlugin.forEach { (cleanPluginName, pluginGoals) ->
-                    val pluginTargetGroup = objectMapper.createArrayNode()
-
-                    pluginGoals.forEach { pluginGoal ->
-                        val parts = pluginGoal.split(":")
-                        val originalPluginName = parts[0]
-                        val goalName = parts[1]
-
-                        val target = objectMapper.createObjectNode()
-                        target.put("executor", "nx:run-commands")
-
-                        val options = objectMapper.createObjectNode()
-                        options.put("command", "$mavenCommand $cleanPluginName:$goalName -am -pl ${project.groupId}:${project.artifactId}")
-                        options.put("cwd", "{workspaceRoot}")
-                        target.put("options", options)
-
-                        target.put("cache", false)
-                        target.put("parallelism", false)
-
-                        val targetName = "$cleanPluginName:$goalName"
-                        targets.put(targetName, target)
-                        pluginTargetGroup.add(targetName)
-                    }
-
-                    targetGroups.put(cleanPluginName, pluginTargetGroup)
-                }
+            goalTargets.forEach { (goal, target) ->
+                nxTargets.set<ObjectNode>(goal, target)
+            }
+            goalGroups.forEach { (groupName, group) ->
+                val groupArray = objectMapper.createArrayNode()
+                group.forEach { goal -> groupArray.add(goal) }
+                targetGroups.put(groupName, groupArray)
             }
 
-            // Remove test-related targets if project has no tests
-            val hasTests = File(project.basedir, "src/test/java").let { it.exists() && it.isDirectory }
-            if (!hasTests) {
-                targets.remove("test")
-                targets.remove("test-compile")
-            }
-
-            // Add clean target (always uncached)
-            val cleanTarget = objectMapper.createObjectNode()
-            cleanTarget.put("executor", "nx:run-commands")
-            val cleanOptions = objectMapper.createObjectNode()
-            cleanOptions.put("command", "$mavenCommand clean -am -pl ${project.groupId}:${project.artifactId}")
-            cleanOptions.put("cwd", "{workspaceRoot}")
-            cleanTarget.put("options", cleanOptions)
-            cleanTarget.put("cache", false)
-            cleanTarget.put("parallelism", true)
-            targets.put("clean", cleanTarget)
-            mavenPhaseTargets.add("clean")
-
-            nxProject.put("targets", targets)
-
-            // Add Maven phases to target groups
-            if (mavenPhaseTargets.isNotEmpty()) {
-                val mavenPhasesGroup = objectMapper.createArrayNode()
-                mavenPhaseTargets.forEach { phase -> mavenPhasesGroup.add(phase) }
-                targetGroups.put("maven-phases", mavenPhasesGroup)
-            }
+//            // Remove test-related targets if project has no tests
+//            val hasTests = File(project.basedir, "src/test/java").let { it.exists() && it.isDirectory }
+//            if (!hasTests) {
+//                targets.remove("test")
+//                targets.remove("test-compile")
+//            }
+//
+//            // Add clean target (always uncached)
+//            val cleanTarget = objectMapper.createObjectNode()
+//            cleanTarget.put("executor", "nx:run-commands")
+//            val cleanOptions = objectMapper.createObjectNode()
+//            cleanOptions.put("command", "$mavenCommand clean -am -pl ${project.groupId}:${project.artifactId}")
+//            cleanOptions.put("cwd", "{workspaceRoot}")
+//            cleanTarget.put("options", cleanOptions)
+//            cleanTarget.put("cache", false)
+//            cleanTarget.put("parallelism", true)
+//            targets.put("clean", cleanTarget)
+//            mavenPhaseTargets.add("clean")
+//
+            nxProject.put("targets", nxTargets)
 
             // Project metadata including target groups
             val projectMetadata = objectMapper.createObjectNode()
@@ -217,16 +141,6 @@ class NxProjectAnalyzer(
         return discoveredGoals
     }
 
-    /**
-     * Clean plugin name for better target naming
-     */
-    private fun cleanPluginName(pluginName: String): String {
-        return pluginName
-            .replace("org.apache.maven.plugins.", "")
-            .replace("maven-", "")
-            .replace("-plugin", "")
-    }
-
     private fun determineProjectType(packaging: String): String {
         return when (packaging.lowercase()) {
             "pom" -> "library"
@@ -260,7 +174,7 @@ class NxProjectAnalyzer(
             requiresDependencyResolution in listOf("test", "runtime", "compile_plus_runtime") -> {
                 // Additional filtering for development-like phases
                 phase in listOf("validate", "process-classes", "process-test-classes") ||
-                goal.endsWith("run") || goal.endsWith("exec")
+                        goal.endsWith("run") || goal.endsWith("exec")
             }
 
             // Non-thread-safe goals often indicate interactive/development use
