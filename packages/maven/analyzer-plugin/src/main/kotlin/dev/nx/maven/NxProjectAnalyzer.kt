@@ -4,106 +4,27 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.LifecycleExecutor
-import org.apache.maven.plugin.AbstractMojo
-import org.apache.maven.plugin.MojoExecutionException
-import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
 import java.io.File
-import java.io.IOException
 import java.nio.file.Paths
 
 /**
- * Maven plugin to analyze a single project structure and generate JSON for Nx integration
+ * Analyzer for a single Maven project structure to generate JSON for Nx integration
  * This is a simplified, per-project analyzer that doesn't require cross-project coordination
  */
-@Mojo(
-    name = "analyze-project",
-    aggregator = false,
-    requiresDependencyResolution = ResolutionScope.NONE
-)
-class NxProjectAnalyzerSingleMojo : AbstractMojo {
-
-    @Parameter(defaultValue = "\${session}", readonly = true, required = true)
-    private lateinit var session: MavenSession
-
-    @Parameter(defaultValue = "\${project}", readonly = true, required = true)
-    private lateinit var project: MavenProject
-
-    @Component
-    private lateinit var pluginManager: org.apache.maven.plugin.MavenPluginManager
-
-    @Component
-    private lateinit var lifecycleExecutor: LifecycleExecutor
-
-    @Parameter(property = "nx.outputFile")
-    private var outputFile: String? = null
-
-    @Parameter(property = "nx.workspaceRoot", defaultValue = "\${session.executionRootDirectory}")
-    private lateinit var workspaceRoot: String
-
+class NxProjectAnalyzer(
+    private val session: MavenSession,
+    private val project: MavenProject,
+    private val pluginManager: org.apache.maven.plugin.MavenPluginManager,
+    private val lifecycleExecutor: LifecycleExecutor,
+    private val workspaceRoot: String,
+    private val log: org.apache.maven.plugin.logging.Log,
+    private val sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
+    private val sharedLifecycleAnalyzer: MavenLifecycleAnalyzer,
+    private val sharedTestClassDiscovery: TestClassDiscovery
+) {
     private val objectMapper = ObjectMapper()
-    
-    // Shared component instances for optimization
-    private var sharedInputOutputAnalyzer: MavenInputOutputAnalyzer? = null
-    private var sharedLifecycleAnalyzer: MavenLifecycleAnalyzer? = null
-    private var sharedTestClassDiscovery: TestClassDiscovery? = null
-    
-    // Default constructor for Maven injection
-    constructor() : super()
-    
-    // Constructor for programmatic instantiation with all dependencies
-    constructor(
-        session: MavenSession,
-        project: MavenProject,
-        pluginManager: org.apache.maven.plugin.MavenPluginManager,
-        lifecycleExecutor: LifecycleExecutor,
-        workspaceRoot: String,
-        logger: org.apache.maven.plugin.logging.Log,
-        sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
-        sharedLifecycleAnalyzer: MavenLifecycleAnalyzer,
-        sharedTestClassDiscovery: TestClassDiscovery
-    ) : super() {
-        this.session = session
-        this.project = project
-        this.pluginManager = pluginManager
-        this.lifecycleExecutor = lifecycleExecutor
-        this.workspaceRoot = workspaceRoot
-        this.log = logger
-        this.sharedInputOutputAnalyzer = sharedInputOutputAnalyzer
-        this.sharedLifecycleAnalyzer = sharedLifecycleAnalyzer
-        this.sharedTestClassDiscovery = sharedTestClassDiscovery
-    }
 
-    @Throws(MojoExecutionException::class)
-    override fun execute() {
-        log.info("Analyzing single Maven project '${project.artifactId}' for Nx integration...")
-        
-        try {
-            val projectAnalysis = analyzeSingleProject(project)
-            
-            // Determine output file - if not specified, use project-specific name
-            val outputPath = if (outputFile != null) {
-                if (outputFile!!.startsWith("/")) {
-                    File(outputFile!!)
-                } else {
-                    File(workspaceRoot, outputFile!!)
-                }
-            } else {
-                // Default: write to project's target directory
-                File(project.build.directory, "nx-project-analysis.json")
-            }
-            
-            // Ensure parent directory exists
-            outputPath.parentFile?.mkdirs()
-            
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath, projectAnalysis)
-            
-            log.info("Generated single project analysis: ${outputPath.absolutePath}")
-            
-        } catch (e: IOException) {
-            throw MojoExecutionException("Failed to generate single project analysis", e)
-        }
-    }
     
     /**
      * Analyzes the project and returns the result in memory
