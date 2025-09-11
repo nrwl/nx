@@ -6,6 +6,13 @@ import { PluginLoader } from './plugins/plugin.loader';
 import { NxReferencePackagesLoader } from './plugins/nx-reference-packages.loader';
 import { CommunityPluginsLoader } from './plugins/community-plugins.loader';
 
+const baseSchema = z.object({
+  title: z.string(),
+  /**
+   * Slug should be from the root route without any prefix requirements i.e. `/docs`
+   **/
+  slug: z.string(),
+});
 // Default docs collection handled by Starlight
 const docs = defineCollection({
   loader: docsLoader(),
@@ -14,28 +21,29 @@ const docs = defineCollection({
 
 const nxReferencePackages = defineCollection({
   loader: NxReferencePackagesLoader(),
-  schema: z.object({
-    title: z.string(),
-    packageType: z.enum([
-      'cnw',
-      'devkit',
-      'nx-cli',
-      'nx',
-      'plugin',
-      'web',
-      'workspace',
-    ]),
-    docType: z.string(), // 'overview', 'generators', 'executors', 'cli', 'migrations', 'devkit', 'ngcli_adapter', etc.
-    description: z.string().optional(),
-    category: z.string().optional(),
-    kind: z.string().optional(),
-    features: z.array(z.string()).optional(),
-    totalDocs: z.number().optional(),
-    npmDownloads: z.number().optional(),
-    githubStars: z.number().optional(),
-    lastPublishedDate: z.date().optional(),
-    lastFetched: z.date().optional(),
-  }),
+  schema: baseSchema.and(
+    z.object({
+      packageType: z.enum([
+        'cnw',
+        'devkit',
+        'nx-cli',
+        'nx',
+        'plugin',
+        'web',
+        'workspace',
+      ]),
+      docType: z.string(), // 'overview', 'generators', 'executors', 'cli', 'migrations', 'devkit', 'ngcli_adapter', etc.
+      description: z.string().optional(),
+      category: z.string().optional(),
+      kind: z.string().optional(),
+      features: z.array(z.string()).optional(),
+      totalDocs: z.number().optional(),
+      npmDownloads: z.number().optional(),
+      githubStars: z.number().optional(),
+      lastPublishedDate: z.date().optional(),
+      lastFetched: z.date().optional(),
+    }),
+  ),
 });
 
 const pluginDocs = defineCollection({
