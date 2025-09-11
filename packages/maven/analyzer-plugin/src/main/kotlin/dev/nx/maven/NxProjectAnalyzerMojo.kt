@@ -40,6 +40,11 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     private lateinit var workspaceRoot: String
     
     private val objectMapper = ObjectMapper()
+    
+    // Shared components for target generation
+    private var sharedInputOutputAnalyzer: MavenInputOutputAnalyzer? = null
+    private var sharedLifecycleAnalyzer: MavenLifecycleAnalyzer? = null
+    private var sharedTestClassDiscovery: TestClassDiscovery? = null
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
@@ -69,12 +74,11 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Creating shared component instances for optimized analysis...")
         
         // Create shared component instances ONCE for all projects (major optimization)
-        val objectMapper = ObjectMapper()
-        val sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
+        sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
             objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
         )
-        val sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
-        val sharedTestClassDiscovery = TestClassDiscovery()
+        sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
+        sharedTestClassDiscovery = TestClassDiscovery()
         
         val setupTime = System.currentTimeMillis() - startTime
         log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
@@ -94,9 +98,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     lifecycleExecutor,
                     workspaceRoot,
                     log,
-                    sharedInputOutputAnalyzer,
-                    sharedLifecycleAnalyzer,
-                    sharedTestClassDiscovery
+                    sharedInputOutputAnalyzer!!,
+                    sharedLifecycleAnalyzer!!,
+                    sharedTestClassDiscovery!!
                 )
                 
                 // Get analysis directly without writing to file
@@ -128,18 +132,77 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         // Ensure parent directory exists
         outputPath.parentFile?.mkdirs()
         
-        // Create simple JSON structure with project analyses
+        // Create JSON structure with both project analyses and createNodesResults
         val rootNode = objectMapper.createObjectNode()
         val projectsNode = objectMapper.createObjectNode()
         
+        // Add project analyses
         inMemoryAnalyses.forEach { (projectName, analysis) ->
             projectsNode.set<JsonNode>(projectName, analysis)
         }
-        
         rootNode.set<JsonNode>("projects", projectsNode)
         
+        // Generate createNodesResults for Nx plugin consumption
+        val createNodesResults = generateCreateNodesResults(inMemoryAnalyses)
+        rootNode.set<JsonNode>("createNodesResults", createNodesResults)
+        
+        // Add metadata
+        rootNode.put("totalProjects", inMemoryAnalyses.size)
+        rootNode.put("workspaceRoot", workspaceRoot)
+        rootNode.put("analysisMethod", "optimized-parallel")
+        rootNode.put("analyzedProjects", inMemoryAnalyses.size)
+        
         objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath, rootNode)
-        log.info("Generated project analyses: ${outputPath.absolutePath}")
+        log.info("Generated project analyses with ${inMemoryAnalyses.size} projects: ${outputPath.absolutePath}")
+    }
+    
+    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, JsonNode>): com.fasterxml.jackson.databind.node.ArrayNode {
+        val createNodesResults = objectMapper.createArrayNode()
+        
+        // Group projects by root directory (for now, assume all projects are at workspace root)
+        val projects = objectMapper.createObjectNode()
+        
+        inMemoryAnalyses.forEach { (projectName, analysis) ->
+            try {
+                // Find the corresponding Maven project
+                val mavenProject = session.allProjects.find { "${it.groupId}.${it.artifactId}" == projectName }
+                if (mavenProject == null) {
+                    log.warn("Could not find Maven project for $projectName")
+                    return@forEach
+                }
+                
+                // Create analyzer instance to generate Nx project config
+                val analyzer = NxProjectAnalyzer(
+                    session,
+                    mavenProject,
+                    pluginManager,
+                    lifecycleExecutor,
+                    workspaceRoot,
+                    log,
+                    sharedInputOutputAnalyzer!!,
+                    sharedLifecycleAnalyzer!!,
+                    sharedTestClassDiscovery!!
+                )
+                
+                val nxProjectConfig = analyzer.generateNxProjectConfig(analysis as com.fasterxml.jackson.databind.node.ObjectNode)
+                if (nxProjectConfig != null) {
+                    val (root, projectConfig) = nxProjectConfig
+                    projects.set<JsonNode>(root, projectConfig)
+                }
+            } catch (e: Exception) {
+                log.warn("Failed to generate Nx config for project $projectName: ${e.message}")
+            }
+        }
+        
+        // Create the createNodesResults structure: [root, {projects: {...}}]
+        val resultTuple = objectMapper.createArrayNode()
+        resultTuple.add("") // Root path (workspace root)
+        val projectsWrapper = objectMapper.createObjectNode()
+        projectsWrapper.set<JsonNode>("projects", projects)
+        resultTuple.add(projectsWrapper)
+        
+        createNodesResults.add(resultTuple)
+        return createNodesResults
     }
     
 
