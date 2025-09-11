@@ -52,12 +52,8 @@ class NxProjectAnalyzer(
             val targets = objectMapper.createObjectNode()
             val mavenPhaseTargets = mutableListOf<String>()
             
-            // Use shared components for phase analysis
-            val inputOutputAnalyzer = sharedInputOutputAnalyzer ?: MavenInputOutputAnalyzer(
-                objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
-            )
-            val lifecycleAnalyzer = sharedLifecycleAnalyzer ?: MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
-            val lifecycleData = lifecycleAnalyzer.extractLifecycleData(project)
+            // Extract lifecycle data for phase and goal discovery
+            val lifecycleData = sharedLifecycleAnalyzer.extractLifecycleData(project)
             
             // Extract discovered phases from lifecycle analysis
             val discoveredPhases = mutableSetOf<String>()
@@ -107,7 +103,7 @@ class NxProjectAnalyzer(
             // Generate targets from phase analysis
             phasesToAnalyze.forEach { phase ->
                 try {
-                    val analysis = inputOutputAnalyzer.analyzeCacheability(phase, project)
+                    val analysis = sharedInputOutputAnalyzer.analyzeCacheability(phase, project)
                     log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
                     
                     val target = objectMapper.createObjectNode()
