@@ -170,6 +170,7 @@ class MavenLifecycleAnalyzer(
                 commonPhases.add("compile")
                 commonPhases.add("test")
                 commonPhases.add("package")
+                commonPhases.add("verify")
                 commonPhases.add("install")
                 commonPhases.add("deploy")
             }
