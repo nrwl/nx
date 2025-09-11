@@ -70,7 +70,7 @@ class NxProjectAnalyzer(
                     target.put("executor", "nx:run-commands")
 
                     val options = objectMapper.createObjectNode()
-                    options.put("command", "$mavenCommand $phase -pl ${project.groupId}:${project.artifactId}")
+                    options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
                     options.put("cwd", "{workspaceRoot}")
                     target.put("options", options)
 
@@ -123,7 +123,7 @@ class NxProjectAnalyzer(
                         target.put("executor", "nx:run-commands")
 
                         val options = objectMapper.createObjectNode()
-                        options.put("command", "$mavenCommand $cleanPluginName:$goalName -pl ${project.groupId}:${project.artifactId}")
+                        options.put("command", "$mavenCommand $cleanPluginName:$goalName -am -pl ${project.groupId}:${project.artifactId}")
                         options.put("cwd", "{workspaceRoot}")
                         target.put("options", options)
 
@@ -150,7 +150,7 @@ class NxProjectAnalyzer(
             val cleanTarget = objectMapper.createObjectNode()
             cleanTarget.put("executor", "nx:run-commands")
             val cleanOptions = objectMapper.createObjectNode()
-            cleanOptions.put("command", "$mavenCommand clean -pl ${project.groupId}:${project.artifactId}")
+            cleanOptions.put("command", "$mavenCommand clean -am -pl ${project.groupId}:${project.artifactId}")
             cleanOptions.put("cwd", "{workspaceRoot}")
             cleanTarget.put("options", cleanOptions)
             cleanTarget.put("cache", false)
