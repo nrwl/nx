@@ -63,7 +63,8 @@ export async function handleDockerVersion(
   );
 
   return {
-    newVersion: newVersion || (process.env.NX_DOCKER_IMAGE_REF?.split(':')[1] || null),
+    newVersion:
+      newVersion || process.env.NX_DOCKER_IMAGE_REF?.split(':')[1] || null,
     logs,
   };
 }
