@@ -1819,22 +1819,6 @@
                 "isExternal": false,
                 "children": [
                   {
-                    "name": "React Native with Nx",
-                    "path": "/technologies/react/recipes/react-native",
-                    "id": "react-native",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Remix with Nx",
-                    "path": "/technologies/react/recipes/remix",
-                    "id": "remix",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
                     "name": "React Router with Nx",
                     "path": "/technologies/react/recipes/react-router",
                     "id": "react-router",
