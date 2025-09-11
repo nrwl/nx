@@ -27,10 +27,12 @@ class NxProjectAnalyzer(
 
     
     /**
-     * Analyzes the project and returns the result in memory
+     * Analyzes the project and returns complete result with both basic analysis and Nx project config
      */
-    fun analyze(): com.fasterxml.jackson.databind.node.ObjectNode {
-        return analyzeSingleProject(project)
+    fun analyze(): Pair<com.fasterxml.jackson.databind.node.ObjectNode, Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>?> {
+        val projectAnalysis = analyzeSingleProject(project)
+        val nxProjectConfig = generateNxProjectConfigFromAnalysis(projectAnalysis)
+        return projectAnalysis to nxProjectConfig
     }
 
     private fun analyzeSingleProject(mavenProject: MavenProject): ObjectNode {
@@ -199,15 +201,12 @@ class NxProjectAnalyzer(
     }
     
     /**
-     * Generate complete Nx project configuration with targets directly from Maven project
+     * Generate complete Nx project configuration with targets from project analysis data
      */
-    fun generateNxProjectConfig(): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
+    private fun generateNxProjectConfigFromAnalysis(projectNode: com.fasterxml.jackson.databind.node.ObjectNode): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
         try {
             val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath, session)
             val mavenCommand = pathResolver.getMavenCommand()
-            
-            // Analyze the project to get the data we need
-            val projectNode = analyze()
             val root = projectNode.get("root")?.asText() ?: return null
             val projectName = "${project.groupId}.${project.artifactId}"
             

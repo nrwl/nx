@@ -69,7 +69,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         }
     }
     
-    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>): Map<String, JsonNode> {
+    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>): Map<String, Pair<JsonNode, Pair<String, JsonNode>?>> {
         val startTime = System.currentTimeMillis()
         log.info("Creating shared component instances for optimized analysis...")
         
@@ -103,11 +103,11 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     sharedTestClassDiscovery!!
                 )
                 
-                // Get analysis directly without writing to file
-                val analysis = singleAnalyzer.analyze()
+                // Get complete analysis including Nx config
+                val (analysis, nxConfig) = singleAnalyzer.analyze()
                 val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
                 
-                projectName to analysis
+                projectName to (analysis to nxConfig)
                 
             } catch (e: Exception) {
                 log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
@@ -122,7 +122,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         return inMemoryAnalyses
     }
     
-    private fun writeProjectAnalysesToFile(inMemoryAnalyses: Map<String, JsonNode>) {
+    private fun writeProjectAnalysesToFile(inMemoryAnalyses: Map<String, Pair<JsonNode, Pair<String, JsonNode>?>>) {
         val outputPath = if (outputFile.startsWith("/")) {
             File(outputFile)
         } else {
@@ -137,7 +137,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val projectsNode = objectMapper.createObjectNode()
         
         // Add project analyses
-        inMemoryAnalyses.forEach { (projectName, analysis) ->
+        inMemoryAnalyses.forEach { (projectName, analysisData) ->
+            val (analysis, _) = analysisData
             projectsNode.set<JsonNode>(projectName, analysis)
         }
         rootNode.set<JsonNode>("projects", projectsNode)
@@ -156,37 +157,17 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Generated project analyses with ${inMemoryAnalyses.size} projects: ${outputPath.absolutePath}")
     }
     
-    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, JsonNode>): com.fasterxml.jackson.databind.node.ArrayNode {
+    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, Pair<JsonNode, Pair<String, JsonNode>?>>) : com.fasterxml.jackson.databind.node.ArrayNode {
         val createNodesResults = objectMapper.createArrayNode()
         
         // Group projects by root directory (for now, assume all projects are at workspace root)
         val projects = objectMapper.createObjectNode()
         
-        inMemoryAnalyses.forEach { (projectName, analysis) ->
+        inMemoryAnalyses.forEach { (projectName, analysisData) ->
             try {
-                // Find the corresponding Maven project
-                val mavenProject = session.allProjects.find { "${it.groupId}.${it.artifactId}" == projectName }
-                if (mavenProject == null) {
-                    log.warn("Could not find Maven project for $projectName")
-                    return@forEach
-                }
-                
-                // Create analyzer instance to generate Nx project config
-                val analyzer = NxProjectAnalyzer(
-                    session,
-                    mavenProject,
-                    pluginManager,
-                    lifecycleExecutor,
-                    workspaceRoot,
-                    log,
-                    sharedInputOutputAnalyzer!!,
-                    sharedLifecycleAnalyzer!!,
-                    sharedTestClassDiscovery!!
-                )
-                
-                val nxProjectConfig = analyzer.generateNxProjectConfig()
-                if (nxProjectConfig != null) {
-                    val (root, projectConfig) = nxProjectConfig
+                val (analysis, nxConfig) = analysisData
+                if (nxConfig != null) {
+                    val (root, projectConfig) = nxConfig
                     projects.set<JsonNode>(root, projectConfig)
                 }
             } catch (e: Exception) {
