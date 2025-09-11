@@ -4,7 +4,7 @@ use watchexec::error::RuntimeError;
 use watchexec::filter::Filterer;
 use watchexec_events::filekind::{CreateKind, FileEventKind, ModifyKind, RemoveKind};
 
-use crate::native::utils::git::get_gitignore_files;
+use crate::native::watch::git_utils::get_gitignore_files;
 use crate::native::watch::utils::{get_nx_ignore, transform_event};
 use ignore_files::IgnoreFilter;
 use watchexec_events::{Event, FileType, Priority, Source, Tag};
