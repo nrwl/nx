@@ -109,11 +109,10 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
                 null
             }
-        }.filter { it != null }.collect(java.util.stream.Collectors.toList())
+        }.collect(java.util.stream.Collectors.toList()).filterNotNull()
         
-        // Convert to map - items are already filtered for null
-        @Suppress("UNCHECKED_CAST")
-        (analyses as List<Pair<String, com.fasterxml.jackson.databind.JsonNode>>).forEach { (projectName, analysis) ->
+        // Convert to map
+        analyses.forEach { (projectName, analysis) ->
             inMemoryAnalyses[projectName] = analysis
         }
         
