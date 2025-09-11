@@ -199,12 +199,15 @@ class NxProjectAnalyzer(
     }
     
     /**
-     * Generate complete Nx project configuration with targets from project analysis data
+     * Generate complete Nx project configuration with targets directly from Maven project
      */
-    fun generateNxProjectConfig(projectNode: com.fasterxml.jackson.databind.node.ObjectNode): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
+    fun generateNxProjectConfig(): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
         try {
             val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath, session)
             val mavenCommand = pathResolver.getMavenCommand()
+            
+            // Analyze the project to get the data we need
+            val projectNode = analyze()
             val root = projectNode.get("root")?.asText() ?: return null
             val projectName = "${project.groupId}.${project.artifactId}"
             
