@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.project.MavenProject
-import java.io.File
 import java.nio.file.Paths
 
 /**
@@ -28,7 +27,7 @@ class NxProjectAnalyzer(
     /**
      * Analyzes the project and returns Nx project config
      */
-    fun analyze(): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
+    fun analyze(): Pair<String, ObjectNode>? {
         try {
             val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath, session)
             val mavenCommand = pathResolver.getMavenCommand()
@@ -46,50 +45,9 @@ class NxProjectAnalyzer(
             nxProject.put("root", root)
             nxProject.put("projectType", projectType)
             nxProject.put("sourceRoot", "${root}/src/main/java")
-            val nxTargets = objectMapper.createObjectNode()
 
-            // Generate targets from discovered plugin goals
-            val targetGroups = objectMapper.createObjectNode()
-
-            val phaseTargets = sharedLifecycleAnalyzer.generatePhaseTargets(project, mavenCommand)
-            val mavenPhasesGroup = objectMapper.createArrayNode()
-            phaseTargets.forEach { (phase, target) ->
-                nxTargets.set<ObjectNode>(phase, target)
-                mavenPhasesGroup.add(phase)
-            }
-            targetGroups.put("maven-phases", mavenPhasesGroup)
-
-            val (goalTargets, goalGroups) = sharedLifecycleAnalyzer.generateGoalTargets(project, mavenCommand)
-
-            goalTargets.forEach { (goal, target) ->
-                nxTargets.set<ObjectNode>(goal, target)
-            }
-            goalGroups.forEach { (groupName, group) ->
-                val groupArray = objectMapper.createArrayNode()
-                group.forEach { goal -> groupArray.add(goal) }
-                targetGroups.put(groupName, groupArray)
-            }
-
-//            // Remove test-related targets if project has no tests
-//            val hasTests = File(project.basedir, "src/test/java").let { it.exists() && it.isDirectory }
-//            if (!hasTests) {
-//                targets.remove("test")
-//                targets.remove("test-compile")
-//            }
-//
-//            // Add clean target (always uncached)
-//            val cleanTarget = objectMapper.createObjectNode()
-//            cleanTarget.put("executor", "nx:run-commands")
-//            val cleanOptions = objectMapper.createObjectNode()
-//            cleanOptions.put("command", "$mavenCommand clean -am -pl ${project.groupId}:${project.artifactId}")
-//            cleanOptions.put("cwd", "{workspaceRoot}")
-//            cleanTarget.put("options", cleanOptions)
-//            cleanTarget.put("cache", false)
-//            cleanTarget.put("parallelism", true)
-//            targets.put("clean", cleanTarget)
-//            mavenPhaseTargets.add("clean")
-//
-            nxProject.put("targets", nxTargets)
+            val (nxTargets, targetGroups) = createNxTargets(mavenCommand)
+            nxProject.set<ObjectNode>("targets", nxTargets)
 
             // Project metadata including target groups
             val projectMetadata = objectMapper.createObjectNode()
@@ -112,33 +70,33 @@ class NxProjectAnalyzer(
         }
     }
 
-    private fun extractPluginGoals(lifecycleData: com.fasterxml.jackson.databind.JsonNode): Set<String> {
-        val discoveredGoals = mutableSetOf<String>()
-        lifecycleData.get("goals")?.forEach { goalNode ->
-            val goalData = goalNode as com.fasterxml.jackson.databind.node.ObjectNode
-            val plugin = goalData.get("plugin")?.asText()
-            val goal = goalData.get("goal")?.asText()
-            val phase = goalData.get("phase")?.asText()
-            val classification = goalData.get("classification")?.asText()
+    private fun createNxTargets(
+        mavenCommand: String,
+    ): Pair<ObjectNode, ObjectNode> {
+        val nxTargets = objectMapper.createObjectNode()
 
-            if (plugin != null && goal != null) {
-                val shouldInclude = when {
-                    // Always include truly unbound goals
-                    phase == "unbound" -> true
+        // Generate targets from discovered plugin goals
+        val targetGroups = objectMapper.createObjectNode()
 
-                    // Include development goals based on Maven API characteristics
-                    isDevelopmentGoal(goalData) -> true
-
-                    else -> false
-                }
-
-                if (shouldInclude) {
-                    discoveredGoals.add("$plugin:$goal")
-                    log.info("Discovered ${classification ?: "unbound"} plugin goal: $plugin:$goal")
-                }
-            }
+        val phaseTargets = sharedLifecycleAnalyzer.generatePhaseTargets(project, mavenCommand)
+        val mavenPhasesGroup = objectMapper.createArrayNode()
+        phaseTargets.forEach { (phase, target) ->
+            nxTargets.set<ObjectNode>(phase, target)
+            mavenPhasesGroup.add(phase)
         }
-        return discoveredGoals
+        targetGroups.put("maven-phases", mavenPhasesGroup)
+
+        val (goalTargets, goalGroups) = sharedLifecycleAnalyzer.generateGoalTargets(project, mavenCommand)
+
+        goalTargets.forEach { (goal, target) ->
+            nxTargets.set<ObjectNode>(goal, target)
+        }
+        goalGroups.forEach { (groupName, group) ->
+            val groupArray = objectMapper.createArrayNode()
+            group.forEach { goal -> groupArray.add(goal) }
+            targetGroups.put(groupName, groupArray)
+        }
+        return Pair(nxTargets, targetGroups)
     }
 
     private fun determineProjectType(packaging: String): String {
@@ -147,40 +105,6 @@ class NxProjectAnalyzer(
             "jar", "war", "ear" -> "application"
             "maven-plugin" -> "library"
             else -> "library"
-        }
-    }
-
-    /**
-     * Determines if a goal is useful for development using Maven API characteristics
-     */
-    private fun isDevelopmentGoal(goalData: com.fasterxml.jackson.databind.node.ObjectNode): Boolean {
-        val goal = goalData.get("goal")?.asText() ?: return false
-        val phase = goalData.get("phase")?.asText() ?: return false
-        val isAggregator = goalData.get("isAggregator")?.asBoolean() ?: false
-        val isThreadSafe = goalData.get("isThreadSafe")?.asBoolean() ?: true
-        val requiresDependencyResolution = goalData.get("requiresDependencyResolution")?.asText()
-
-        // Development goals often have these characteristics:
-        return when {
-            // Goals commonly named for development tasks
-            goal.contains("run", ignoreCase = true) -> true
-            goal.contains("start", ignoreCase = true) -> true
-            goal.contains("stop", ignoreCase = true) -> true
-            goal.contains("dev", ignoreCase = true) -> true
-            goal.contains("exec", ignoreCase = true) -> true
-            goal.contains("serve", ignoreCase = true) -> true
-
-            // Goals that require test compile or runtime classpath (dev tools)
-            requiresDependencyResolution in listOf("test", "runtime", "compile_plus_runtime") -> {
-                // Additional filtering for development-like phases
-                phase in listOf("validate", "process-classes", "process-test-classes") ||
-                        goal.endsWith("run") || goal.endsWith("exec")
-            }
-
-            // Non-thread-safe goals often indicate interactive/development use
-            !isThreadSafe && phase == "validate" -> true
-
-            else -> false
         }
     }
 }
