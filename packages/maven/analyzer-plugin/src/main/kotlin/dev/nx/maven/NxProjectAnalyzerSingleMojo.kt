@@ -21,7 +21,7 @@ import java.nio.file.Paths
     aggregator = false,
     requiresDependencyResolution = ResolutionScope.NONE
 )
-class NxProjectAnalyzerSingleMojo : AbstractMojo() {
+class NxProjectAnalyzerSingleMojo : AbstractMojo {
 
     @Parameter(defaultValue = "\${session}", readonly = true, required = true)
     private lateinit var session: MavenSession
@@ -48,38 +48,31 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo() {
     private var sharedLifecycleAnalyzer: MavenLifecycleAnalyzer? = null
     private var sharedTestClassDiscovery: TestClassDiscovery? = null
     
-    // Setters for orchestrated execution
+    // Default constructor for Maven injection
+    constructor() : super()
+    
+    // Constructor for programmatic instantiation with all dependencies
+    constructor(
+        session: MavenSession,
+        pluginManager: org.apache.maven.plugin.MavenPluginManager,
+        lifecycleExecutor: LifecycleExecutor,
+        workspaceRoot: String,
+        sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
+        sharedLifecycleAnalyzer: MavenLifecycleAnalyzer,
+        sharedTestClassDiscovery: TestClassDiscovery
+    ) : super() {
+        this.session = session
+        this.pluginManager = pluginManager
+        this.lifecycleExecutor = lifecycleExecutor
+        this.workspaceRoot = workspaceRoot
+        this.sharedInputOutputAnalyzer = sharedInputOutputAnalyzer
+        this.sharedLifecycleAnalyzer = sharedLifecycleAnalyzer
+        this.sharedTestClassDiscovery = sharedTestClassDiscovery
+    }
+    
+    // Setter for project (still needed for per-project processing)
     fun setProject(project: MavenProject) {
         this.project = project
-    }
-    
-    fun setSession(session: MavenSession) {
-        this.session = session
-    }
-    
-    fun setPluginManager(pluginManager: org.apache.maven.plugin.MavenPluginManager) {
-        this.pluginManager = pluginManager
-    }
-    
-    fun setLifecycleExecutor(lifecycleExecutor: LifecycleExecutor) {
-        this.lifecycleExecutor = lifecycleExecutor
-    }
-    
-    fun setWorkspaceRoot(workspaceRoot: String) {
-        this.workspaceRoot = workspaceRoot
-    }
-    
-    // Setters for shared component instances (optimization)
-    fun setSharedInputOutputAnalyzer(analyzer: MavenInputOutputAnalyzer) {
-        this.sharedInputOutputAnalyzer = analyzer
-    }
-    
-    fun setSharedLifecycleAnalyzer(analyzer: MavenLifecycleAnalyzer) {
-        this.sharedLifecycleAnalyzer = analyzer
-    }
-    
-    fun setSharedTestClassDiscovery(discovery: TestClassDiscovery) {
-        this.sharedTestClassDiscovery = discovery
     }
 
     @Throws(MojoExecutionException::class)
