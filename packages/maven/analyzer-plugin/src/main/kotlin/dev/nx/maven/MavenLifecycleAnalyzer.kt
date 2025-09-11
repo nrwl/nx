@@ -27,109 +27,22 @@ class MavenLifecycleAnalyzer(
         val lifecycleNode = objectMapper.createObjectNode()
         
         try {
-            // Get execution plans for all major Maven lifecycles including default lifecycle
-            val lifecyclePhases = listOf("deploy", "clean", "site", "validate", "compile", "test", "package", "verify", "install")
-            val allExecutionPlans = lifecyclePhases.map { phase ->
-                lifecycleExecutor.calculateExecutionPlan(session, phase)
-            }
-            
-            // Extract phases from all lifecycles and include all standard phases
-            val phasesArray = objectMapper.createArrayNode()
             val goalsSet = LinkedHashSet<GoalInfo>() // Use LinkedHashSet to maintain order and eliminate duplicates
-            val uniquePhases = mutableSetOf<String>()
             
-            // Ensure key phases are always included, even if they have no bindings
-            val essentialPhases = listOf("verify", "integration-test", "pre-integration-test", "post-integration-test")
-            for (phase in essentialPhases) {
-                if (!uniquePhases.contains(phase)) {
-                    uniquePhases.add(phase)
-                    phasesArray.add(phase)
-                }
-            }
+            // Discover all phases and bound goals
+            val (discoveredPhases, boundGoals) = discoverPhasesAndGoals(mavenProject)
+            goalsSet.addAll(boundGoals)
             
-            // Then add any additional phases discovered from executions
-            for (executionPlan in allExecutionPlans) {
-                for (execution in executionPlan.mojoExecutions) {
-                    execution.lifecyclePhase?.let { phase ->
-                        if (!uniquePhases.contains(phase)) {
-                            uniquePhases.add(phase)
-                            phasesArray.add(phase)
-                        }
-                    }
-                    // Add discovered goals with classification
-                    goalsSet.add(GoalInfo(
-                        groupId = execution.plugin.groupId,
-                        artifactId = execution.plugin.artifactId,
-                        goal = execution.goal,
-                        phase = execution.lifecyclePhase ?: "unbound",
-                        classification = "bound"
-                    ))
-                    log.info("Discovered bound goal: ${execution.plugin.groupId}:${execution.plugin.artifactId}:${execution.goal} in phase: ${execution.lifecyclePhase}")
-                }
-            }
+            // Discover all plugins and their goals
+            val (pluginsArray, pluginGoals) = discoverPluginData(mavenProject, goalsSet)
+            goalsSet.addAll(pluginGoals)
+            
+            // Add phases to JSON
+            val phasesArray = objectMapper.createArrayNode()
+            discoveredPhases.forEach { phase -> phasesArray.add(phase) }
             lifecycleNode.put("phases", phasesArray)
             
-            // Extract plugin goals and their configurations - discover ALL plugins comprehensively
-            val pluginsArray = objectMapper.createArrayNode()
-            
-            // Collect ALL plugins from multiple sources
-            val allPlugins = mutableSetOf<org.apache.maven.model.Plugin>()
-            
-            // Add build plugins
-            mavenProject.build?.plugins?.let { allPlugins.addAll(it) }
-            
-            // Add plugins from pluginManagement (these define available plugins)
-            mavenProject.build?.pluginManagement?.plugins?.let { allPlugins.addAll(it) }
-            
-            // Add inherited plugins from parent projects
-            var currentProject: MavenProject? = mavenProject
-            while (currentProject?.parent != null) {
-                currentProject = currentProject.parent
-                currentProject.build?.plugins?.let { allPlugins.addAll(it) }
-                currentProject.build?.pluginManagement?.plugins?.let { allPlugins.addAll(it) }
-            }
-            
-            log.info("Discovered ${allPlugins.size} total plugins from all sources")
-            
-            for (plugin in allPlugins) {
-                val pluginNode = objectMapper.createObjectNode()
-                pluginNode.put("groupId", plugin.groupId)
-                pluginNode.put("artifactId", plugin.artifactId)
-                pluginNode.put("version", plugin.version)
-                
-                // Process configured executions first
-                val executionsArray = objectMapper.createArrayNode()
-                plugin.executions?.let { executions ->
-                    for (execution in executions) {
-                        val executionNode = objectMapper.createObjectNode()
-                        executionNode.put("id", execution.id)
-                        executionNode.put("phase", execution.phase)
-                        
-                        val goalsList = objectMapper.createArrayNode()
-                        for (goal in execution.goals) {
-                            goalsList.add(goal)
-                            // Add configured goals to set
-                            goalsSet.add(GoalInfo(
-                                groupId = plugin.groupId,
-                                artifactId = plugin.artifactId,
-                                goal = goal,
-                                phase = execution.phase ?: "unbound",
-                                classification = "configured",
-                                executionId = execution.id
-                            ))
-                        }
-                        executionNode.put("goals", goalsList)
-                        executionsArray.add(executionNode)
-                    }
-                }
-                pluginNode.put("executions", executionsArray)
-                pluginsArray.add(pluginNode)
-                
-                // Now discover ALL available goals from this plugin
-                discoverAllPluginGoals(plugin, mavenProject, goalsSet)
-            }
-            
-            // Convert goals set to JSON array
+            // Add goals to JSON
             val goalsArray = objectMapper.createArrayNode()
             for (goalInfo in goalsSet) {
                 val goalNode = objectMapper.createObjectNode()
@@ -148,36 +61,8 @@ class MavenLifecycleAnalyzer(
             lifecycleNode.put("goals", goalsArray)
             lifecycleNode.put("plugins", pluginsArray)
             
-            // Add common Maven phases based on packaging (including clean which is always available)
-            val commonPhases = objectMapper.createArrayNode()
-            
-            // Clean is available for all project types
-            commonPhases.add("clean")
-            
-            when (mavenProject.packaging.lowercase()) {
-                "jar", "war", "ear" -> {
-                    commonPhases.add("validate")
-                    commonPhases.add("compile")
-                    commonPhases.add("test")
-                    commonPhases.add("package")
-                    commonPhases.add("verify")
-                    commonPhases.add("install")
-                    commonPhases.add("deploy")
-                }
-                "pom" -> {
-                    commonPhases.add("validate")
-                    commonPhases.add("install")
-                    commonPhases.add("deploy")
-                }
-                "maven-plugin" -> {
-                    commonPhases.add("validate")
-                    commonPhases.add("compile")
-                    commonPhases.add("test")
-                    commonPhases.add("package")
-                    commonPhases.add("install")
-                    commonPhases.add("deploy")
-                }
-            }
+            // Add common Maven phases based on packaging
+            val commonPhases = getCommonPhases(mavenProject.packaging)
             lifecycleNode.put("commonPhases", commonPhases)
             
         } catch (e: Exception) {
@@ -186,6 +71,149 @@ class MavenLifecycleAnalyzer(
         }
         
         return lifecycleNode
+    }
+    
+    /**
+     * Discovers all plugin data including configured executions and available goals
+     */
+    private fun discoverPluginData(mavenProject: MavenProject, goalsSet: MutableSet<GoalInfo>): Pair<com.fasterxml.jackson.databind.node.ArrayNode, Set<GoalInfo>> {
+        val pluginsArray = objectMapper.createArrayNode()
+        val pluginGoals = mutableSetOf<GoalInfo>()
+        
+        // Collect ALL plugins from multiple sources
+        val allPlugins = mutableSetOf<org.apache.maven.model.Plugin>()
+        
+        // Add build plugins
+        mavenProject.build?.plugins?.let { allPlugins.addAll(it) }
+        
+        // Add plugins from pluginManagement (these define available plugins)
+        mavenProject.build?.pluginManagement?.plugins?.let { allPlugins.addAll(it) }
+        
+        // Add inherited plugins from parent projects
+        var currentProject: MavenProject? = mavenProject
+        while (currentProject?.parent != null) {
+            currentProject = currentProject.parent
+            currentProject.build?.plugins?.let { allPlugins.addAll(it) }
+            currentProject.build?.pluginManagement?.plugins?.let { allPlugins.addAll(it) }
+        }
+        
+        log.info("Discovered ${allPlugins.size} total plugins from all sources")
+        
+        for (plugin in allPlugins) {
+            val pluginNode = objectMapper.createObjectNode()
+            pluginNode.put("groupId", plugin.groupId)
+            pluginNode.put("artifactId", plugin.artifactId)
+            pluginNode.put("version", plugin.version)
+            
+            // Process configured executions first
+            val executionsArray = objectMapper.createArrayNode()
+            plugin.executions?.let { executions ->
+                for (execution in executions) {
+                    val executionNode = objectMapper.createObjectNode()
+                    executionNode.put("id", execution.id)
+                    executionNode.put("phase", execution.phase)
+                    
+                    val goalsList = objectMapper.createArrayNode()
+                    for (goal in execution.goals) {
+                        goalsList.add(goal)
+                        // Add configured goals to set
+                        pluginGoals.add(GoalInfo(
+                            groupId = plugin.groupId,
+                            artifactId = plugin.artifactId,
+                            goal = goal,
+                            phase = execution.phase ?: "unbound",
+                            classification = "configured",
+                            executionId = execution.id
+                        ))
+                    }
+                    executionNode.put("goals", goalsList)
+                    executionsArray.add(executionNode)
+                }
+            }
+            pluginNode.put("executions", executionsArray)
+            pluginsArray.add(pluginNode)
+            
+            // Now discover ALL available goals from this plugin
+            discoverAllPluginGoals(plugin, mavenProject, pluginGoals)
+        }
+        
+        return pluginsArray to pluginGoals
+    }
+    
+    /**
+     * Gets common Maven phases based on packaging type
+     */
+    private fun getCommonPhases(packaging: String): com.fasterxml.jackson.databind.node.ArrayNode {
+        val commonPhases = objectMapper.createArrayNode()
+        
+        // Clean is available for all project types
+        commonPhases.add("clean")
+        
+        when (packaging.lowercase()) {
+            "jar", "war", "ear" -> {
+                commonPhases.add("validate")
+                commonPhases.add("compile")
+                commonPhases.add("test")
+                commonPhases.add("package")
+                commonPhases.add("verify")
+                commonPhases.add("install")
+                commonPhases.add("deploy")
+            }
+            "pom" -> {
+                commonPhases.add("validate")
+                commonPhases.add("install")
+                commonPhases.add("deploy")
+            }
+            "maven-plugin" -> {
+                commonPhases.add("validate")
+                commonPhases.add("compile")
+                commonPhases.add("test")
+                commonPhases.add("package")
+                commonPhases.add("install")
+                commonPhases.add("deploy")
+            }
+        }
+        
+        return commonPhases
+    }
+    
+    /**
+     * Discovers all lifecycle phases and bound goals for a project
+     */
+    private fun discoverPhasesAndGoals(mavenProject: MavenProject): Pair<Set<String>, Set<GoalInfo>> {
+        val uniquePhases = mutableSetOf<String>()
+        val goalsSet = mutableSetOf<GoalInfo>()
+        
+        // First, ensure essential phases are always included
+        val essentialPhases = listOf("verify", "integration-test", "pre-integration-test", "post-integration-test")
+        uniquePhases.addAll(essentialPhases)
+        
+        // Get execution plans for all major Maven lifecycles
+        val lifecyclePhases = listOf("deploy", "clean", "site", "validate", "compile", "test", "package", "verify", "install")
+        val allExecutionPlans = lifecyclePhases.map { phase ->
+            lifecycleExecutor.calculateExecutionPlan(session, phase)
+        }
+        
+        // Extract phases and goals from execution plans
+        for (executionPlan in allExecutionPlans) {
+            for (execution in executionPlan.mojoExecutions) {
+                execution.lifecyclePhase?.let { phase ->
+                    uniquePhases.add(phase)
+                }
+                
+                // Add discovered goals with classification
+                goalsSet.add(GoalInfo(
+                    groupId = execution.plugin.groupId,
+                    artifactId = execution.plugin.artifactId,
+                    goal = execution.goal,
+                    phase = execution.lifecyclePhase ?: "unbound",
+                    classification = "bound"
+                ))
+                log.info("Discovered bound goal: ${execution.plugin.groupId}:${execution.plugin.artifactId}:${execution.goal} in phase: ${execution.lifecyclePhase}")
+            }
+        }
+        
+        return Pair(uniquePhases, goalsSet)
     }
     
     /**
