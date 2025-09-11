@@ -8,6 +8,7 @@ import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
+import java.io.File
 
 /**
  * Maven plugin to analyze project structure and generate JSON for Nx integration
@@ -37,6 +38,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
     @Parameter(property = "nx.workspaceRoot", defaultValue = "\${session.executionRootDirectory}")
     private lateinit var workspaceRoot: String
+    
+    private val objectMapper = ObjectMapper()
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
@@ -50,9 +53,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             log.info("Step 1: Running optimized per-project analysis...")
             val inMemoryAnalyses = executePerProjectAnalysisInMemory(allProjects)
             
-            // Step 2: Generate workspace graph from in-memory analyses  
-            log.info("Step 2: Generating workspace graph from in-memory analyses...")
-            generateWorkspaceGraphFromMemory(allProjects, inMemoryAnalyses)
+            // Step 2: Write project analyses to output file
+            log.info("Step 2: Writing project analyses to output file...")
+            writeProjectAnalysesToFile(inMemoryAnalyses)
             
             log.info("Optimized two-tier analysis completed successfully")
             
@@ -115,20 +118,28 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         return inMemoryAnalyses
     }
     
-    private fun generateWorkspaceGraphFromMemory(allProjects: List<MavenProject>, inMemoryAnalyses: Map<String, JsonNode>) {
-        val graphGenerator = NxWorkspaceGraphMojo()
+    private fun writeProjectAnalysesToFile(inMemoryAnalyses: Map<String, JsonNode>) {
+        val outputPath = if (outputFile.startsWith("/")) {
+            File(outputFile)
+        } else {
+            File(workspaceRoot, outputFile)
+        }
         
-        // Set up the workspace graph generator
-        graphGenerator.setSession(session)
-        graphGenerator.setOutputFile(outputFile)
-        graphGenerator.setWorkspaceRoot(workspaceRoot)
-        graphGenerator.setLog(log)
+        // Ensure parent directory exists
+        outputPath.parentFile?.mkdirs()
         
-        // Pass in-memory analyses (optimization)
-        graphGenerator.setInMemoryProjectAnalyses(inMemoryAnalyses)
+        // Create simple JSON structure with project analyses
+        val rootNode = objectMapper.createObjectNode()
+        val projectsNode = objectMapper.createObjectNode()
         
-        // Execute workspace graph generation with in-memory data
-        graphGenerator.execute()
+        inMemoryAnalyses.forEach { (projectName, analysis) ->
+            projectsNode.set<JsonNode>(projectName, analysis)
+        }
+        
+        rootNode.set<JsonNode>("projects", projectsNode)
+        
+        objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath, rootNode)
+        log.info("Generated project analyses: ${outputPath.absolutePath}")
     }
     
 

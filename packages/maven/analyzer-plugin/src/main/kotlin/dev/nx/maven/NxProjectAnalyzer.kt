@@ -176,7 +176,7 @@ class NxProjectAnalyzer(
         }
         projectNode.put("phases", phases)
         
-        // Add discovered plugin goals to the project node for use by NxWorkspaceGraphMojo
+        // Add discovered plugin goals to the project node
         val pluginGoalsNode = objectMapper.createArrayNode()
         discoveredGoals.forEach { pluginGoal ->
             pluginGoalsNode.add(pluginGoal)
