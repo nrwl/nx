@@ -106,9 +106,9 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo {
     }
     
     /**
-     * Analyzes the project and returns the result in memory (optimization for in-memory analysis)
+     * Analyzes the project and returns the result in memory
      */
-    fun analyzeProjectInMemory(): com.fasterxml.jackson.databind.node.ObjectNode {
+    fun analyze(): com.fasterxml.jackson.databind.node.ObjectNode {
         return analyzeSingleProject(project)
     }
 
