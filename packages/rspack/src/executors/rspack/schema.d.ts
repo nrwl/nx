@@ -5,6 +5,7 @@ export interface RspackExecutorSchema {
   assets?: Array<AssetGlobPattern | string>;
   baseHref?: string;
   buildLibsFromSource?: boolean;
+  deleteOutputPath?: boolean;
   deployUrl?: string;
   extractCss?: boolean;
   extractLicenses?: boolean;
