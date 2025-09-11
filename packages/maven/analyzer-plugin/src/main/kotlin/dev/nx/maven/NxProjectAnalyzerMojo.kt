@@ -100,7 +100,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 )
                 
                 // Get analysis directly without writing to file
-                val analysis = singleAnalyzer.analyzeProjectInMemory()
+                val analysis = singleAnalyzer.analyze()
                 val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
                 
                 projectName to analysis
