@@ -76,13 +76,10 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val setupTime = System.currentTimeMillis() - startTime
         log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
         
-        // Collect analyses in memory instead of writing to files
-        val inMemoryAnalyses = mutableMapOf<String, JsonNode>()
-        
         val projectStartTime = System.currentTimeMillis()
         
         // Process projects in parallel with separate analyzer instances
-        val analyses = allProjects.parallelStream().map { mavenProject ->
+        val inMemoryAnalyses = allProjects.parallelStream().map { mavenProject ->
             try {
                 log.info("Analyzing project: ${mavenProject.artifactId}")
                 
@@ -109,12 +106,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
                 null
             }
-        }.collect(java.util.stream.Collectors.toList()).filterNotNull()
-        
-        // Convert to map
-        analyses.forEach { (projectName, analysis) ->
-            inMemoryAnalyses[projectName] = analysis
-        }
+        }.collect(java.util.stream.Collectors.toList()).filterNotNull().toMap()
         
         val totalTime = System.currentTimeMillis() - startTime
         val analysisTime = System.currentTimeMillis() - projectStartTime
