@@ -167,5 +167,528 @@
       "projectName" : "dev.nx.maven.nx-maven-analyzer-plugin",
       "testClasses" : [ ]
     }
-  }
+  },
+  "createNodesResults" : [ [ "", {
+    "projects" : {
+      "" : {
+        "name" : "dev.nx.maven.nx-maven-analyzer-plugin",
+        "root" : "",
+        "projectType" : "library",
+        "sourceRoot" : "/src/main/java",
+        "targets" : {
+          "process-resources" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd process-resources -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "compile" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd compile -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : true,
+            "inputs" : [ {
+              "dependentTasksOutputFiles" : "**/*",
+              "transitive" : true
+            }, "{projectRoot}/target/generated-sources/annotations/**/*", "{projectRoot}/src/main/kotlin/**/*" ],
+            "outputs" : [ "{projectRoot}/target", "{projectRoot}/target/classes" ],
+            "parallelism" : true
+          },
+          "process-classes" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd process-classes -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "process-test-resources" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd process-test-resources -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "package" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd package -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : true,
+            "inputs" : [ {
+              "dependentTasksOutputFiles" : "**/*",
+              "transitive" : true
+            }, "{projectRoot}/target/classes" ],
+            "outputs" : [ "{projectRoot}/target" ],
+            "parallelism" : true
+          },
+          "install" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd install -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "deploy" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd deploy -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "clean" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd clean -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "site" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd site -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "validate" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd validate -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : true
+          },
+          "kotlin:script" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd kotlin:script -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "compiler:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd compiler:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "plugin:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd plugin:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "surefire:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd surefire:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "clean:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd clean:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "resources:copy-resources" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd resources:copy-resources -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "resources:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd resources:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "jar:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd jar:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "install:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd install:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "install:install-file" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd install:install-file -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "deploy:deploy-file" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd deploy:deploy-file -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "deploy:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd deploy:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "site:effective-site" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd site:effective-site -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "site:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd site:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "site:run" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd site:run -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "site:stage" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd site:stage -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "site:stage-deploy" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd site:stage-deploy -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "antrun:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd antrun:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "antrun:run" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd antrun:run -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "assembly:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd assembly:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "assembly:single" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd assembly:single -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:analyze" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:analyze -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:analyze-dep-mgt" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:analyze-dep-mgt -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:analyze-duplicate" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:analyze-duplicate -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:analyze-exclusions" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:analyze-exclusions -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:analyze-report" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:analyze-report -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:get" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:get -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:go-offline" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:go-offline -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:list" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:list -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:list-classes" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:list-classes -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:list-repositories" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:list-repositories -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:purge-local-repository" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:purge-local-repository -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "dependency:tree" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd dependency:tree -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:branch" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:branch -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:clean" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:clean -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:help" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:help -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:perform" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:perform -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:prepare" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:prepare -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:prepare-with-pom" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:prepare-with-pom -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:rollback" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:rollback -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:stage" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:stage -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "release:update-versions" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvnd release:update-versions -pl dev.nx.maven:nx-maven-analyzer-plugin",
+              "cwd" : "{workspaceRoot}"
+            },
+            "cache" : false,
+            "parallelism" : false
+          }
+        },
+        "metadata" : {
+          "targetGroups" : {
+            "kotlin" : [ "kotlin:script" ],
+            "compiler" : [ "compiler:help" ],
+            "plugin" : [ "plugin:help" ],
+            "surefire" : [ "surefire:help" ],
+            "clean" : [ "clean:help" ],
+            "resources" : [ "resources:copy-resources", "resources:help" ],
+            "jar" : [ "jar:help" ],
+            "install" : [ "install:help", "install:install-file" ],
+            "deploy" : [ "deploy:deploy-file", "deploy:help" ],
+            "site" : [ "site:effective-site", "site:help", "site:run", "site:stage", "site:stage-deploy" ],
+            "antrun" : [ "antrun:help", "antrun:run" ],
+            "assembly" : [ "assembly:help", "assembly:single" ],
+            "dependency" : [ "dependency:analyze", "dependency:analyze-dep-mgt", "dependency:analyze-duplicate", "dependency:analyze-exclusions", "dependency:analyze-report", "dependency:get", "dependency:go-offline", "dependency:help", "dependency:list", "dependency:list-classes", "dependency:list-repositories", "dependency:purge-local-repository", "dependency:tree" ],
+            "release" : [ "release:branch", "release:clean", "release:help", "release:perform", "release:prepare", "release:prepare-with-pom", "release:rollback", "release:stage", "release:update-versions" ],
+            "maven-phases" : [ "process-resources", "compile", "process-classes", "process-test-resources", "test-compile", "test", "package", "install", "deploy", "clean", "site", "validate", "clean" ]
+          }
+        },
+        "tags" : [ "maven:dev.nx.maven", "maven:maven-plugin" ]
+      }
+    }
+  } ] ],
+  "totalProjects" : 1,
+  "workspaceRoot" : "/home/jason/projects/triage/java/maven/packages/maven/analyzer-plugin",
+  "analysisMethod" : "optimized-parallel",
+  "analyzedProjects" : 1
 }
