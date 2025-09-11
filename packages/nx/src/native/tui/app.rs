@@ -3,11 +3,12 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use ratatui::layout::{Alignment, Rect, Size};
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Gauge, Paragraph};
+use tui_term::widget::PseudoTerminal;
 use std::collections::HashMap;
 use std::io;
 use std::sync::{Arc, Mutex};
@@ -35,7 +36,7 @@ use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::config::TuiConfig;
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::RunMode;
+use super::lifecycle::{RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -48,6 +49,7 @@ pub struct App {
     pub quit_at: Option<std::time::Instant>,
     focus: Focus,
     run_mode: RunMode,
+    tui_mode: TuiMode,
     previous_focus: Focus,
     done_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
     forced_shutdown_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
@@ -76,6 +78,7 @@ pub struct App {
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
     estimated_task_timings: HashMap<String, i64>,
+    // Note: Inline rendering is handled within this App, no separate instance needed
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,6 +90,13 @@ pub enum Focus {
 }
 
 impl App {
+    pub fn get_tui_mode(&self) -> TuiMode {
+        self.tui_mode
+    }
+    
+    fn should_use_inline_layout(&self) -> bool {
+        matches!(self.tui_mode, TuiMode::Inline)
+    }
     pub fn new(
         tasks: Vec<Task>,
         initiating_tasks: HashSet<String>,
@@ -95,6 +105,7 @@ impl App {
         tui_config: TuiConfig,
         title_text: String,
         task_graph: TaskGraph,
+        tui_mode: TuiMode,
     ) -> Result<Self> {
         let task_count = get_task_count(&task_graph);
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
@@ -126,8 +137,12 @@ impl App {
 
         let main_terminal_pane_data = TerminalPaneData::new();
 
+        // Note: Inline rendering is now handled as a mode within the main app
+        debug!("🚀 App::new - TUI mode: {:?}", tui_mode);
+
         Ok(Self {
             run_mode,
+            tui_mode,
             components,
             pinned_tasks,
             quit_at: None,
@@ -347,14 +362,15 @@ impl App {
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        debug!("Registering interactive task: {task_id}");
-        let pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
-        self.register_running_task(task_id, pty)
+        debug!("🔗 Registering interactive task: {} (mode: {:?})", task_id, self.tui_mode);
+        // Same logic for both full-screen and inline modes - the difference is in rendering, not task management
+        let pty = PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+        self.register_running_task(task_id, pty);
     }
 
     pub fn register_running_non_interactive_task(&mut self, task_id: String) {
-        debug!("Registering non-interactive task: {task_id}");
+        debug!("🔗 Registering NON-interactive task: {} (mode: {:?})", task_id, self.tui_mode);
+        debug!("❌ ISSUE: Task {} is being registered as NON-interactive - won't show in inline TUI!", task_id);
         let pty = PtyInstance::non_interactive();
         self.register_pty_instance(&task_id, pty);
         self.update_task_status(task_id.clone(), TaskStatus::InProgress);
@@ -889,6 +905,12 @@ impl App {
             Action::Render => {
                 tui.draw(|f| {
                     let area = f.area();
+                    
+                    if self.should_use_inline_layout() {
+                        self.render_inline_layout(f, area);
+                        return;
+                    }
+                    
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
                     if self.frame_area.is_none() {
                         self.frame_area = Some(area);
@@ -1645,13 +1667,17 @@ impl App {
     }
 
     pub fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
+        let is_connected = messenger.is_connected();
+        debug!("🔗 Setting console messenger: is_connected={}", is_connected);
         self.console_messenger = Some(messenger);
-        if self
-            .console_messenger
-            .as_ref()
-            .is_some_and(|c| c.is_connected())
-        {
-            self.dispatch_action(Action::ConsoleMessengerAvailable(true));
+        
+        // ALWAYS dispatch ConsoleMessengerAvailable(true) regardless of connection status
+        // The TUI should work even without Nx Console connection
+        debug!("✅ Dispatching ConsoleMessengerAvailable(true) - TUI should work with or without console connection");
+        self.dispatch_action(Action::ConsoleMessengerAvailable(true));
+        
+        if !is_connected {
+            debug!("ℹ️ Console messenger is not connected - Nx Console features will be disabled, but TUI will work normally");
         }
     }
 
@@ -1894,5 +1920,142 @@ impl App {
         let failed_deps =
             get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
         failed_deps.into_iter().next()
+    }
+
+    // Inline rendering methods
+    fn render_inline_layout(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Use simplified 3-section layout for inline mode
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(3), // Status bar
+                Constraint::Length(3), // Progress bar  
+                Constraint::Min(2),    // Main content (task list or terminal output)
+            ])
+            .split(area);
+
+        // Render status section
+        self.render_inline_status(f, chunks[0]);
+        
+        // Render progress section  
+        self.render_inline_progress(f, chunks[1]);
+        
+        // Render main content section
+        self.render_inline_main_content(f, chunks[2]);
+    }
+    
+    fn render_inline_status(&self, f: &mut ratatui::Frame, area: Rect) {
+        let current_task = self.get_current_running_task();
+        let status_text = if let Some(task_id) = current_task {
+            format!(" Running: {} ", task_id)
+        } else {
+            " Idle ".to_string()
+        };
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(20),    // Status text
+                Constraint::Length(30), // Help text  
+            ])
+            .split(area);
+
+        let status = Paragraph::new(status_text)
+            .style(Style::default().fg(THEME.primary_fg))
+            .block(Block::default()
+                .borders(Borders::ALL)
+                .title(" Status ")
+                .border_style(Style::default().fg(THEME.secondary_fg)));
+
+        let help = Paragraph::new(" Press 'q', Ctrl+C, or ESC to exit ")
+            .style(Style::default().fg(THEME.warning))
+            .block(Block::default()
+                .borders(Borders::ALL)
+                .title(" Help ")
+                .border_style(Style::default().fg(THEME.secondary_fg)));
+
+        f.render_widget(status, chunks[0]);
+        f.render_widget(help, chunks[1]);
+    }
+    
+    fn render_inline_progress(&self, f: &mut ratatui::Frame, area: Rect) {
+        let completed_count = self.get_completed_task_count();
+        let total_count = self.task_status_map.len();
+        
+        let progress = if total_count > 0 {
+            (completed_count as f64 / total_count as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let gauge = Gauge::default()
+            .block(Block::default()
+                .borders(Borders::ALL)
+                .title(" Progress ")
+                .border_style(Style::default().fg(THEME.secondary_fg)))
+            .gauge_style(Style::default().fg(THEME.success))
+            .percent(progress as u16)
+            .label(format!("{}/{} tasks", completed_count, total_count));
+
+        f.render_widget(gauge, area);
+    }
+    
+    fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Show running task output if available, otherwise show task list
+        if let Some(current_task) = self.get_current_running_task() {
+            if let Some(pty) = self.pty_instances.get(&current_task) {
+                self.render_inline_task_output(f, area, &current_task, pty);
+                return;
+            }
+        }
+        
+        // Fallback: render task list
+        self.render_inline_task_list(f, area);
+    }
+    
+    fn render_inline_task_output(&self, f: &mut ratatui::Frame, area: Rect, task_name: &str, pty: &Arc<PtyInstance>) {
+        // Simplified terminal output rendering
+        if let Some(screen) = pty.get_screen() {
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .title(format!(" {} ", task_name))
+                .border_style(Style::default().fg(THEME.primary_fg));
+                
+            let inner_area = block.inner(area);
+            f.render_widget(block, area);
+            
+            // Render terminal content (reuse existing PseudoTerminal widget)
+            let pseudo_term = PseudoTerminal::new(&*screen);
+            f.render_widget(pseudo_term, inner_area);
+        }
+    }
+    
+    fn render_inline_task_list(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Reuse existing TasksList component but in simplified mode
+        if let Some(tasks_list) = self.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>()) {
+            
+            let _ = tasks_list.draw(f, area);
+        }
+    }
+    
+    // Helper methods
+    fn get_current_running_task(&self) -> Option<String> {
+        self.task_status_map
+            .iter()
+            .find(|(_, status)| **status == TaskStatus::InProgress)
+            .map(|(id, _)| id.clone())
+    }
+    
+    fn get_completed_task_count(&self) -> usize {
+        self.task_status_map
+            .values()
+            .filter(|status| matches!(status, 
+                TaskStatus::Success | TaskStatus::Failure | 
+                TaskStatus::Skipped | TaskStatus::LocalCache |
+                TaskStatus::LocalCacheKeptExisting | TaskStatus::RemoteCache
+            ))
+            .count()
     }
 }

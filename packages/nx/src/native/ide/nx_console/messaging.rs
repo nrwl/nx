@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tokio::time::Instant;
-use tracing::trace;
+use tracing::{debug, trace};
 
 use jsonrpsee::{
     async_client::{Client, ClientBuilder},
@@ -68,17 +68,22 @@ fn throttled(operation_key: &'static str, throttle_duration: Duration) -> bool {
 impl NxConsoleMessageConnection {
     pub async fn new(workspace_root: &str) -> Self {
         let socket_path = get_full_nx_console_socket_path(workspace_root);
+        debug!("🔌 Attempting to connect to Nx Console at: {}", socket_path.display());
         let client = IpcTransport::new(&socket_path)
             .await
             .map(|transport| {
+                debug!("✅ Successfully connected to Nx Console IPC transport");
                 ClientBuilder::new().build_with_tokio(transport.writer, transport.reader)
             })
             .inspect_err(|e| {
+                debug!("❌ Could not connect to Nx Console: {}", e);
                 trace!(?socket_path, "Could not connect to Nx Console: {}", e);
             })
             .ok()
             .map(Arc::new);
 
+        let is_connected = client.is_some();
+        debug!("🏁 NxConsoleMessageConnection created: is_connected={}", is_connected);
         Self { client }
     }
 

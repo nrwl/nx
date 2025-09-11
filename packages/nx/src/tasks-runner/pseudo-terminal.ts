@@ -93,36 +93,6 @@ export class PseudoTerminal {
     return cp;
   }
 
-  runCommandWithInlineTui(
-    command: string,
-    {
-      cwd,
-      execArgv,
-      jsEnv,
-      commandLabel,
-      enableInlineTui = true,
-    }: {
-      cwd?: string;
-      execArgv?: string[];
-      jsEnv?: Record<string, string>;
-      commandLabel?: string;
-      enableInlineTui?: boolean;
-    } = {}
-  ) {
-    const cp = new PseudoTtyProcess(
-      this.rustPseudoTerminal,
-      this.rustPseudoTerminal.runCommandWithInlineTui(
-        command,
-        cwd,
-        jsEnv,
-        execArgv,
-        commandLabel,
-        enableInlineTui
-      )
-    );
-    this.childProcesses.add(cp);
-    return cp;
-  }
 
   async fork(
     id: string,
@@ -133,48 +103,29 @@ export class PseudoTerminal {
       jsEnv,
       quiet,
       commandLabel,
-      useInlineTui,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
       commandLabel?: string;
-      useInlineTui?: boolean;
     }
   ) {
     if (!this.initialized) {
       throw new Error('Call init() before forking processes');
     }
     
-    // Use inline TUI if requested (overrides instance setting)
-    const shouldUseInlineTui = useInlineTui ?? this.useInlineTui;
-    
-    let childProcess: ChildProcess;
-    if (shouldUseInlineTui) {
-      // Use the inline TUI mode
-      const command = `node ${script} ${this.pseudoIPCPath} ${id}`;
-      childProcess = this.rustPseudoTerminal.runCommandWithInlineTui(
-        command,
-        cwd,
-        jsEnv,
-        execArgv,
-        commandLabel,
-        true // enable inline TUI
-      );
-    } else {
-      // Use regular fork
-      childProcess = this.rustPseudoTerminal.fork(
-        id,
-        script,
-        this.pseudoIPCPath,
-        cwd,
-        jsEnv,
-        execArgv,
-        quiet,
-        commandLabel
-      );
-    }
+    // Use regular fork
+    const childProcess = this.rustPseudoTerminal.fork(
+      id,
+      script,
+      this.pseudoIPCPath,
+      cwd,
+      jsEnv,
+      execArgv,
+      quiet,
+      commandLabel
+    );
     
     const cp = new PseudoTtyProcessWithSend(
       this.rustPseudoTerminal,

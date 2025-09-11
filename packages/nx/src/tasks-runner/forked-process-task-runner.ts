@@ -173,8 +173,8 @@ export class ForkedProcessTaskRunner {
     }
   }
 
-  private async createPseudoTerminal(useInlineTui: boolean = false) {
-    const terminal = new PseudoTerminal(new RustPseudoTerminal(), useInlineTui);
+  private async createPseudoTerminal() {
+    const terminal = new PseudoTerminal(new RustPseudoTerminal());
 
     await terminal.init();
 
@@ -201,12 +201,7 @@ export class ForkedProcessTaskRunner {
   ): Promise<PseudoTtyProcess> {
     const childId = task.id;
     
-    // Check if we should use inline TUI mode:
-    // Use inline TUI when TUI is enabled and we're running a single task
-    const taskCount = Object.keys(taskGraph.tasks).length;
-    const useInlineTui = this.tuiEnabled && taskCount === 1;
-    
-    const pseudoTerminal = await this.createPseudoTerminal(useInlineTui);
+    const pseudoTerminal = await this.createPseudoTerminal();
     this.pseudoTerminals.add(pseudoTerminal);
     const p = await pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
@@ -214,7 +209,6 @@ export class ForkedProcessTaskRunner {
       jsEnv: env,
       quiet: !streamOutput,
       commandLabel: `nx run ${task.id}`,
-      useInlineTui,
     });
 
     p.send({

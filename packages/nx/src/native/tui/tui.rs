@@ -1,4 +1,5 @@
 use crate::native::tui::theme::THEME;
+use crate::native::tui::lifecycle::TuiMode;
 use color_eyre::eyre::Result;
 use crossterm::{
     cursor,
@@ -49,9 +50,23 @@ pub struct Tui {
 
 impl Tui {
     pub fn new() -> Result<Self> {
+        Self::new_with_options(None)
+    }
+    
+    pub fn new_with_viewport(viewport: ratatui::Viewport) -> Result<Self> {
+        Self::new_with_options(Some(ratatui::TerminalOptions { viewport }))
+    }
+    
+    fn new_with_options(options: Option<ratatui::TerminalOptions>) -> Result<Self> {
         let tick_rate = 10.0;
         let frame_rate = 60.0;
-        let terminal = ratatui::Terminal::new(Backend::new(std::io::stderr()))?;
+        let backend = Backend::new(std::io::stderr());
+        let terminal = if let Some(opts) = options {
+            ratatui::Terminal::with_options(backend, opts)?
+        } else {
+            ratatui::Terminal::new(backend)?
+        };
+        
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         let cancellation_token = CancellationToken::new();
         let task = tokio::spawn(async {});
@@ -167,11 +182,25 @@ impl Tui {
     }
 
     pub fn enter(&mut self) -> Result<()> {
+        self.enter_with_mode(TuiMode::FullScreen)
+    }
+    
+    pub fn enter_with_mode(&mut self, mode: TuiMode) -> Result<()> {
         // Ensure the theme is set before entering raw mode because it won't work properly once we're in raw mode
         let _ = THEME.is_dark_mode;
-        debug!("Enabling Raw Mode");
+        debug!("Enabling Raw Mode for {:?} mode", mode);
         crossterm::terminal::enable_raw_mode()?;
-        execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+        
+        match mode {
+            TuiMode::FullScreen => {
+                execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+            }
+            TuiMode::Inline => {
+                // For inline mode, just hide cursor - no alternate screen
+                execute!(std::io::stderr(), cursor::Hide)?;
+            }
+        }
+        
         self.start();
         Ok(())
     }

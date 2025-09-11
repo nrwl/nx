@@ -3,7 +3,6 @@ pub mod app;
 pub mod components;
 pub mod config;
 pub mod graph_utils;
-pub mod inline_tui;
 pub mod lifecycle;
 pub mod pty;
 pub mod scroll_momentum;

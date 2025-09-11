@@ -3,7 +3,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use parking_lot::Mutex;
 use std::sync::Arc;
-use tracing::debug;
+use tracing::{debug, trace};
 
 use crate::native::logger::enable_logger;
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
@@ -64,10 +64,18 @@ pub enum RunMode {
 }
 
 #[napi]
+#[derive(Debug)]
+pub enum TuiMode {
+    FullScreen,
+    Inline,
+}
+
+#[napi]
 #[derive(Clone)]
 pub struct AppLifeCycle {
     app: Arc<Mutex<App>>,
     workspace_root: Arc<String>,
+    tui_mode: TuiMode,
 }
 
 #[napi]
@@ -83,6 +91,7 @@ impl AppLifeCycle {
         title_text: String,
         workspace_root: String,
         task_graph: TaskGraph,
+        tui_mode: TuiMode,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -102,10 +111,12 @@ impl AppLifeCycle {
                     rust_tui_config,
                     title_text,
                     task_graph,
+                    tui_mode,
                 )
                 .unwrap(),
             )),
             workspace_root: Arc::new(workspace_root),
+            tui_mode,
         }
     }
 
@@ -163,24 +174,51 @@ impl AppLifeCycle {
         &self,
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
+        debug!("🚀 AppLifeCycle::__init called");
+        trace!("TUI Mode: {:?}", self.tui_mode);
+        
+        match self.tui_mode {
+            TuiMode::FullScreen => {
+                debug!("📺 Initializing FULL-SCREEN TUI");
+                self.__init_fullscreen(done_callback)
+            }
+            TuiMode::Inline => {
+                debug!("📱 Initializing INLINE TUI");
+                self.__init_inline(done_callback)
+            }
+        }
+    }
+
+    // Unified initialization method for both modes
+    fn __init_unified(
+        &self,
+        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        tui_mode: TuiMode,
+    ) -> napi::Result<()> {
         enable_logger();
-        debug!("Initializing Terminal UI");
+        debug!("Initializing Terminal UI - Mode: {:?}", tui_mode);
 
         let app_mutex = self.app.clone();
+        let workspace_root = self.workspace_root.clone();
 
-        // Initialize our Tui abstraction
-        let mut tui = Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?;
-        tui.enter()
+        // Create Tui with appropriate viewport based on mode
+        let mut tui = match tui_mode {
+            TuiMode::FullScreen => Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?,
+            TuiMode::Inline => Tui::new_with_viewport(ratatui::Viewport::Inline(8))
+                .map_err(|e| napi::Error::from_reason(e.to_string()))?,
+        };
+        
+        // Enter terminal with appropriate mode
+        tui.enter_with_mode(tui_mode)
             .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
+        // Set panic hook (identical for both modes)
         std::panic::set_hook(Box::new(move |panic_info| {
-            // Restore the terminal to a clean state
             if let Ok(mut t) = Tui::new() {
                 if let Err(r) = t.exit() {
                     debug!("Unable to exit Terminal: {:?}", r);
                 }
             }
-            // Capture detailed backtraces in development, more concise in production
             better_panic::Settings::auto()
                 .most_recent_first(false)
                 .lineno_suffix(true)
@@ -188,22 +226,19 @@ impl AppLifeCycle {
                 .create_panic_handler()(panic_info);
         }));
 
-        debug!("Initialized Terminal UI");
-
-        // Set tick and frame rates
+        // Set rates (identical for both modes)
         tui.tick_rate(10.0);
         tui.frame_rate(60.0);
 
-        // Initialize action channel
+        // Initialize action channel (identical for both modes)
         let (action_tx, mut action_rx) = tokio::sync::mpsc::unbounded_channel();
         debug!("Initialized Action Channel");
 
-        // Initialize components
+        // Initialize components (identical for both modes)
         let mut app_guard = app_mutex.lock();
-        // Store callback for cleanup
         app_guard.set_done_callback(done_callback);
-
         app_guard.register_action_handler(action_tx.clone()).ok();
+        
         for component in app_guard.components.iter_mut() {
             component.register_action_handler(action_tx.clone()).ok();
         }
@@ -216,16 +251,17 @@ impl AppLifeCycle {
 
         debug!("Initialized Components");
 
-        let workspace_root = self.workspace_root.clone();
+        // Spawn unified async task (identical for both modes!)
         napi::tokio::spawn(async move {
+            // Set up console messenger (identical for both modes)
             {
-                // set up Console Messenger in a async context
                 let connection = NxConsoleMessageConnection::new(&workspace_root).await;
                 app_mutex.lock().set_console_messenger(connection);
             }
 
+            // UNIFIED EVENT LOOP - works for both modes!
             loop {
-                // Handle events using our Tui abstraction
+                // Handle events using existing App logic
                 if let Some(event) = tui.next().await {
                     let mut app = app_mutex.lock();
                     let _ = app.handle_event(event, &action_tx);
@@ -240,7 +276,7 @@ impl AppLifeCycle {
                     }
                 }
 
-                // Process actions
+                // Process actions using existing App logic
                 while let Ok(action) = action_rx.try_recv() {
                     app_mutex.lock().handle_action(&mut tui, action, &action_tx);
                 }
@@ -249,6 +285,23 @@ impl AppLifeCycle {
 
         Ok(())
     }
+
+    // Private method for full-screen TUI initialization
+    fn __init_fullscreen(
+        &self,
+        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+    ) -> napi::Result<()> {
+        self.__init_unified(done_callback, TuiMode::FullScreen)
+    }
+
+    // Private method for inline TUI initialization (updated to use unified logic)
+    fn __init_inline(
+        &self,
+        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+    ) -> napi::Result<()> {
+        self.__init_unified(done_callback, TuiMode::Inline)
+    }
+
 
     #[napi]
     pub fn register_running_task(

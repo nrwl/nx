@@ -8,7 +8,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, tuiMode: TuiMode)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -107,8 +107,6 @@ export declare class RustPseudoTerminal {
    * this makes it possible to be backwards compatible with the old implementation
    */
   fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean, commandLabel?: string | undefined | null): ChildProcess
-  /** Run a command with inline TUI mode that shows progress below the command output */
-  runCommandWithInlineTui(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, commandLabel?: string | undefined | null, enableInlineTui?: boolean | undefined | null): ChildProcess
 }
 
 export declare class TaskDetails {
@@ -395,6 +393,11 @@ export interface TuiCliArgs {
 
 export interface TuiConfig {
   autoExit?: boolean | number | undefined
+}
+
+export declare const enum TuiMode {
+  FullScreen = 0,
+  Inline = 1
 }
 
 export interface UpdatedWorkspaceFiles {
