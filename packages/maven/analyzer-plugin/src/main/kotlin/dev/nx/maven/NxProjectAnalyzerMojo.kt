@@ -69,7 +69,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         }
     }
     
-    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>): Map<String, Pair<JsonNode, Pair<String, JsonNode>?>> {
+    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>): Map<String, Pair<String, JsonNode>?> {
         val startTime = System.currentTimeMillis()
         log.info("Creating shared component instances for optimized analysis...")
         
@@ -103,11 +103,11 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     sharedTestClassDiscovery!!
                 )
                 
-                // Get complete analysis including Nx config
-                val (analysis, nxConfig) = singleAnalyzer.analyze()
+                // Get Nx config for project
+                val nxConfig = singleAnalyzer.analyze()
                 val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
                 
-                projectName to (analysis to nxConfig)
+                projectName to nxConfig
                 
             } catch (e: Exception) {
                 log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
@@ -122,7 +122,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         return inMemoryAnalyses
     }
     
-    private fun writeProjectAnalysesToFile(inMemoryAnalyses: Map<String, Pair<JsonNode, Pair<String, JsonNode>?>>) {
+    private fun writeProjectAnalysesToFile(inMemoryAnalyses: Map<String, Pair<String, JsonNode>?>) {
         val outputPath = if (outputFile.startsWith("/")) {
             File(outputFile)
         } else {
@@ -136,11 +136,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val rootNode = objectMapper.createObjectNode()
         val projectsNode = objectMapper.createObjectNode()
         
-        // Add project analyses
-        inMemoryAnalyses.forEach { (projectName, analysisData) ->
-            val (analysis, _) = analysisData
-            projectsNode.set<JsonNode>(projectName, analysis)
-        }
+        // Skip project analyses section - all data is in createNodesResults
         rootNode.set<JsonNode>("projects", projectsNode)
         
         // Generate createNodesResults for Nx plugin consumption
@@ -157,15 +153,14 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Generated project analyses with ${inMemoryAnalyses.size} projects: ${outputPath.absolutePath}")
     }
     
-    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, Pair<JsonNode, Pair<String, JsonNode>?>>) : com.fasterxml.jackson.databind.node.ArrayNode {
+    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, Pair<String, JsonNode>?>) : com.fasterxml.jackson.databind.node.ArrayNode {
         val createNodesResults = objectMapper.createArrayNode()
         
         // Group projects by root directory (for now, assume all projects are at workspace root)
         val projects = objectMapper.createObjectNode()
         
-        inMemoryAnalyses.forEach { (projectName, analysisData) ->
+        inMemoryAnalyses.forEach { (projectName, nxConfig) ->
             try {
-                val (analysis, nxConfig) = analysisData
                 if (nxConfig != null) {
                     val (root, projectConfig) = nxConfig
                     projects.set<JsonNode>(root, projectConfig)
