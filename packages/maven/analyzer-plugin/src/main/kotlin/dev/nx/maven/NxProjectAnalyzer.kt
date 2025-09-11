@@ -30,199 +30,86 @@ class NxProjectAnalyzer(
      * Analyzes the project and returns Nx project config
      */
     fun analyze(): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
-        val projectAnalysis = analyzeSingleProject(project)
-        return generateNxProjectConfigFromAnalysis(projectAnalysis)
-    }
-
-    private fun analyzeSingleProject(mavenProject: MavenProject): ObjectNode {
-        val projectNode = objectMapper.createObjectNode()
-        
-        // Basic project information
-        projectNode.put("artifactId", mavenProject.artifactId)
-        projectNode.put("groupId", mavenProject.groupId)
-        projectNode.put("version", mavenProject.version)
-        projectNode.put("packaging", mavenProject.packaging)
-        projectNode.put("name", mavenProject.name)
-        projectNode.put("description", mavenProject.description ?: "")
-        
-        // Calculate relative path from workspace root
-        val workspaceRootPath = Paths.get(workspaceRoot)
-        val projectPath = mavenProject.basedir.toPath()
-        val relativePath = workspaceRootPath.relativize(projectPath).toString().replace('\\', '/')
-        projectNode.put("root", relativePath)
-        
-        // Project type based on packaging
-        val projectType = determineProjectType(mavenProject.packaging)
-        projectNode.put("projectType", projectType)
-        
-        // Source roots
-        val sourceRoots = objectMapper.createArrayNode()
-        mavenProject.compileSourceRoots?.forEach { sourceRoot ->
-            val relativeSourceRoot = workspaceRootPath.relativize(Paths.get(sourceRoot)).toString().replace('\\', '/')
-            sourceRoots.add(relativeSourceRoot)
-        }
-        projectNode.put("sourceRoots", sourceRoots)
-        
-        // Test source roots  
-        val testSourceRoots = objectMapper.createArrayNode()
-        mavenProject.testCompileSourceRoots?.forEach { testSourceRoot ->
-            val relativeTestRoot = workspaceRootPath.relativize(Paths.get(testSourceRoot)).toString().replace('\\', '/')
-            testSourceRoots.add(relativeTestRoot)
-        }
-        projectNode.put("testSourceRoots", testSourceRoots)
-        
-        // Dependencies (as coordinates - workspace resolution handled later)
-        val dependenciesArray = objectMapper.createArrayNode()
-        for (dependency in mavenProject.dependencies) {
-            if (listOf("compile", "provided", "test", null).contains(dependency.scope)) {
-                val depNode = objectMapper.createObjectNode()
-                depNode.put("groupId", dependency.groupId)
-                depNode.put("artifactId", dependency.artifactId)
-                depNode.put("version", dependency.version)
-                depNode.put("scope", dependency.scope ?: "compile")
-                depNode.put("coordinates", "${dependency.groupId}:${dependency.artifactId}")
-                dependenciesArray.add(depNode)
-            }
-        }
-        projectNode.put("dependencies", dependenciesArray)
-        
-        // Parent POM relationship
-        val parent = mavenProject.parent
-        if (parent != null) {
-            val parentNode = objectMapper.createObjectNode()
-            parentNode.put("groupId", parent.groupId)
-            parentNode.put("artifactId", parent.artifactId)
-            parentNode.put("version", parent.version)
-            parentNode.put("coordinates", "${parent.groupId}:${parent.artifactId}")
-            projectNode.put("parent", parentNode)
-        }
-        
-        // Use shared components if available, otherwise create new ones (backward compatibility)
-        val inputOutputAnalyzer = sharedInputOutputAnalyzer ?: MavenInputOutputAnalyzer(
-            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
-        )
-        
-        // Dynamically discover available phases using Maven's lifecycle APIs
-        val phases = objectMapper.createObjectNode()
-        val lifecycleAnalyzer = sharedLifecycleAnalyzer ?: MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
-        val lifecycleData = lifecycleAnalyzer.extractLifecycleData(mavenProject)
-        
-        // Extract discovered phases from lifecycle analysis
-        val discoveredPhases = mutableSetOf<String>()
-        lifecycleData.get("phases")?.forEach { phaseNode ->
-            discoveredPhases.add(phaseNode.asText())
-        }
-        lifecycleData.get("commonPhases")?.forEach { phaseNode ->
-            discoveredPhases.add(phaseNode.asText())
-        }
-        
-        // Extract discovered plugin goals (including unbound and development goals)
-        val discoveredGoals = mutableSetOf<String>()
-        lifecycleData.get("goals")?.forEach { goalNode ->
-            val goalData = goalNode as com.fasterxml.jackson.databind.node.ObjectNode
-            val plugin = goalData.get("plugin")?.asText()
-            val goal = goalData.get("goal")?.asText()
-            val phase = goalData.get("phase")?.asText()
-            val classification = goalData.get("classification")?.asText()
-            
-            if (plugin != null && goal != null) {
-                val shouldInclude = when {
-                    // Always include truly unbound goals
-                    phase == "unbound" -> true
-                    
-                    // Include development goals based on Maven API characteristics
-                    isDevelopmentGoal(goalData) -> true
-                    
-                    else -> false
-                }
-                
-                if (shouldInclude) {
-                    discoveredGoals.add("$plugin:$goal")
-                    log.info("Discovered ${classification ?: "unbound"} plugin goal: $plugin:$goal")
-                }
-            }
-        }
-        
-        // If no phases discovered, fall back to essential phases
-        val phasesToAnalyze = if (discoveredPhases.isNotEmpty()) {
-            discoveredPhases.toList()
-        } else {
-            listOf("validate", "compile", "test-compile", "test", "package", "clean")
-        }
-        
-        log.info("Analyzing ${phasesToAnalyze.size} phases for ${mavenProject.artifactId}: ${phasesToAnalyze.joinToString(", ")}")
-        
-        phasesToAnalyze.forEach { phase ->
-            try {
-                val analysis = inputOutputAnalyzer.analyzeCacheability(phase, mavenProject)
-                log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
-                val phaseNode = objectMapper.createObjectNode()
-                phaseNode.put("cacheable", analysis.cacheable)
-                phaseNode.put("reason", analysis.reason)
-                
-                if (analysis.cacheable) {
-                    phaseNode.put("inputs", analysis.inputs)
-                    phaseNode.put("outputs", analysis.outputs)
-                } else {
-                    // For non-cacheable phases, still include them as targets but mark as non-cacheable
-                    log.debug("Phase '$phase' is not cacheable: ${analysis.reason}")
-                }
-                
-                // Always include the phase, regardless of cacheability
-                phases.put(phase, phaseNode)
-                
-            } catch (e: Exception) {
-                log.debug("Failed to analyze phase '$phase' for project ${mavenProject.artifactId}: ${e.message}")
-            }
-        }
-        projectNode.put("phases", phases)
-        
-        // Add discovered plugin goals to the project node
-        val pluginGoalsNode = objectMapper.createArrayNode()
-        discoveredGoals.forEach { pluginGoal ->
-            pluginGoalsNode.add(pluginGoal)
-        }
-        projectNode.put("pluginGoals", pluginGoalsNode)
-        
-        // Additional metadata
-        projectNode.put("hasTests", File(mavenProject.basedir, "src/test/java").let { it.exists() && it.isDirectory })
-        projectNode.put("hasResources", File(mavenProject.basedir, "src/main/resources").let { it.exists() && it.isDirectory })
-        projectNode.put("projectName", "${mavenProject.groupId}.${mavenProject.artifactId}")
-        
-        // Discover test classes for atomization using simple string matching
-        val testClassDiscovery = sharedTestClassDiscovery ?: TestClassDiscovery()
-        val testClasses = testClassDiscovery.discoverTestClasses(mavenProject)
-        projectNode.put("testClasses", testClasses)
-        
-        log.info("Analyzed single project: ${mavenProject.artifactId} at $relativePath")
-        
-        return projectNode
-    }
-    
-    /**
-     * Generate complete Nx project configuration with targets from project analysis data
-     */
-    private fun generateNxProjectConfigFromAnalysis(projectNode: com.fasterxml.jackson.databind.node.ObjectNode): Pair<String, com.fasterxml.jackson.databind.node.ObjectNode>? {
         try {
             val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath, session)
             val mavenCommand = pathResolver.getMavenCommand()
-            val root = projectNode.get("root")?.asText() ?: return null
+            
+            // Calculate relative path from workspace root
+            val workspaceRootPath = Paths.get(workspaceRoot)
+            val projectPath = project.basedir.toPath()
+            val root = workspaceRootPath.relativize(projectPath).toString().replace('\\', '/')
             val projectName = "${project.groupId}.${project.artifactId}"
+            val projectType = determineProjectType(project.packaging)
             
             // Create Nx project configuration
             val nxProject = objectMapper.createObjectNode()
             nxProject.put("name", projectName)
             nxProject.put("root", root)
-            nxProject.put("projectType", projectNode.get("projectType")?.asText() ?: "library")
+            nxProject.put("projectType", projectType)
             nxProject.put("sourceRoot", "${root}/src/main/java")
             
-            // Generate targets from phase analysis
+            // Analyze phases and generate targets
             val targets = objectMapper.createObjectNode()
-            val phasesNode = projectNode.get("phases")
             val mavenPhaseTargets = mutableListOf<String>()
             
-            if (phasesNode != null && phasesNode.isObject) {
-                phasesNode.fields().forEach { (phase, phaseAnalysis) ->
+            // Use shared components for phase analysis
+            val inputOutputAnalyzer = sharedInputOutputAnalyzer ?: MavenInputOutputAnalyzer(
+                objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
+            )
+            val lifecycleAnalyzer = sharedLifecycleAnalyzer ?: MavenLifecycleAnalyzer(lifecycleExecutor, session, objectMapper, log, pluginManager)
+            val lifecycleData = lifecycleAnalyzer.extractLifecycleData(project)
+            
+            // Extract discovered phases from lifecycle analysis
+            val discoveredPhases = mutableSetOf<String>()
+            lifecycleData.get("phases")?.forEach { phaseNode ->
+                discoveredPhases.add(phaseNode.asText())
+            }
+            lifecycleData.get("commonPhases")?.forEach { phaseNode ->
+                discoveredPhases.add(phaseNode.asText())
+            }
+            
+            // Extract discovered plugin goals
+            val discoveredGoals = mutableSetOf<String>()
+            lifecycleData.get("goals")?.forEach { goalNode ->
+                val goalData = goalNode as com.fasterxml.jackson.databind.node.ObjectNode
+                val plugin = goalData.get("plugin")?.asText()
+                val goal = goalData.get("goal")?.asText()
+                val phase = goalData.get("phase")?.asText()
+                val classification = goalData.get("classification")?.asText()
+                
+                if (plugin != null && goal != null) {
+                    val shouldInclude = when {
+                        // Always include truly unbound goals
+                        phase == "unbound" -> true
+                        
+                        // Include development goals based on Maven API characteristics
+                        isDevelopmentGoal(goalData) -> true
+                        
+                        else -> false
+                    }
+                    
+                    if (shouldInclude) {
+                        discoveredGoals.add("$plugin:$goal")
+                        log.info("Discovered ${classification ?: "unbound"} plugin goal: $plugin:$goal")
+                    }
+                }
+            }
+            
+            // If no phases discovered, fall back to essential phases
+            val phasesToAnalyze = if (discoveredPhases.isNotEmpty()) {
+                discoveredPhases.toList()
+            } else {
+                listOf("validate", "compile", "test-compile", "test", "package", "clean")
+            }
+            
+            log.info("Analyzing ${phasesToAnalyze.size} phases for ${project.artifactId}: ${phasesToAnalyze.joinToString(", ")}")
+            
+            // Generate targets from phase analysis
+            phasesToAnalyze.forEach { phase ->
+                try {
+                    val analysis = inputOutputAnalyzer.analyzeCacheability(phase, project)
+                    log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
+                    
                     val target = objectMapper.createObjectNode()
                     target.put("executor", "nx:run-commands")
                     
@@ -232,10 +119,10 @@ class NxProjectAnalyzer(
                     target.put("options", options)
                     
                     // Copy caching info from analysis
-                    if (phaseAnalysis.get("cacheable")?.asBoolean() == true) {
+                    if (analysis.cacheable) {
                         target.put("cache", true)
-                        target.put("inputs", phaseAnalysis.get("inputs"))
-                        target.put("outputs", phaseAnalysis.get("outputs"))
+                        target.put("inputs", analysis.inputs)
+                        target.put("outputs", analysis.outputs)
                     } else {
                         target.put("cache", false)
                     }
@@ -243,18 +130,19 @@ class NxProjectAnalyzer(
                     target.put("parallelism", true)
                     targets.put(phase, target)
                     mavenPhaseTargets.add(phase)
+                    
+                } catch (e: Exception) {
+                    log.debug("Failed to analyze phase '$phase' for project ${project.artifactId}: ${e.message}")
                 }
             }
             
             // Generate targets from discovered plugin goals
-            val pluginGoalsNode = projectNode.get("pluginGoals")
             val targetGroups = objectMapper.createObjectNode()
             
-            if (pluginGoalsNode != null && pluginGoalsNode.isArray) {
+            if (discoveredGoals.isNotEmpty()) {
                 val goalsByPlugin = mutableMapOf<String, MutableList<String>>()
                 
-                pluginGoalsNode.forEach { pluginGoalNode ->
-                    val pluginGoal = pluginGoalNode.asText()
+                discoveredGoals.forEach { pluginGoal ->
                     val parts = pluginGoal.split(":")
                     if (parts.size == 2) {
                         val originalPluginName = parts[0]
@@ -293,7 +181,7 @@ class NxProjectAnalyzer(
             }
             
             // Remove test-related targets if project has no tests
-            val hasTests = projectNode.get("hasTests")?.asBoolean() ?: false
+            val hasTests = File(project.basedir, "src/test/java").let { it.exists() && it.isDirectory }
             if (!hasTests) {
                 targets.remove("test")
                 targets.remove("test-compile")
@@ -331,10 +219,12 @@ class NxProjectAnalyzer(
             tags.add("maven:${project.packaging}")
             nxProject.put("tags", tags)
             
+            log.info("Analyzed project: ${project.artifactId} at $root")
+            
             return root to nxProject
             
         } catch (e: Exception) {
-            log.error("Failed to generate Nx config for project ${project.artifactId}: ${e.message}", e)
+            log.error("Failed to analyze project ${project.artifactId}: ${e.message}", e)
             return null
         }
     }
