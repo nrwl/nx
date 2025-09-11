@@ -30,7 +30,8 @@ class MavenLifecycleAnalyzer(
             val goalsSet = LinkedHashSet<GoalInfo>() // Use LinkedHashSet to maintain order and eliminate duplicates
             
             // Discover all phases and bound goals
-            val (discoveredPhases, boundGoals) = discoverPhasesAndGoals(mavenProject)
+            val discoveredPhases = discoverPhases(mavenProject)
+            val boundGoals = discoverBoundGoals(mavenProject)
             goalsSet.addAll(boundGoals)
             
             // Discover all plugins and their goals
@@ -178,11 +179,10 @@ class MavenLifecycleAnalyzer(
     }
     
     /**
-     * Discovers all lifecycle phases and bound goals for a project
+     * Discovers all lifecycle phases for a project
      */
-    private fun discoverPhasesAndGoals(mavenProject: MavenProject): Pair<Set<String>, Set<GoalInfo>> {
+    private fun discoverPhases(mavenProject: MavenProject): Set<String> {
         val uniquePhases = mutableSetOf<String>()
-        val goalsSet = mutableSetOf<GoalInfo>()
         
         // First, ensure essential phases are always included
         val essentialPhases = listOf("verify", "integration-test", "pre-integration-test", "post-integration-test")
@@ -194,13 +194,33 @@ class MavenLifecycleAnalyzer(
             lifecycleExecutor.calculateExecutionPlan(session, phase)
         }
         
-        // Extract phases and goals from execution plans
+        // Extract phases from execution plans
         for (executionPlan in allExecutionPlans) {
             for (execution in executionPlan.mojoExecutions) {
                 execution.lifecyclePhase?.let { phase ->
                     uniquePhases.add(phase)
                 }
-                
+            }
+        }
+        
+        return uniquePhases
+    }
+    
+    /**
+     * Discovers bound goals from Maven execution plans
+     */
+    private fun discoverBoundGoals(mavenProject: MavenProject): Set<GoalInfo> {
+        val goalsSet = mutableSetOf<GoalInfo>()
+        
+        // Get execution plans for all major Maven lifecycles
+        val lifecyclePhases = listOf("deploy", "clean", "site", "validate", "compile", "test", "package", "verify", "install")
+        val allExecutionPlans = lifecyclePhases.map { phase ->
+            lifecycleExecutor.calculateExecutionPlan(session, phase)
+        }
+        
+        // Extract goals from execution plans
+        for (executionPlan in allExecutionPlans) {
+            for (execution in executionPlan.mojoExecutions) {
                 // Add discovered goals with classification
                 goalsSet.add(GoalInfo(
                     groupId = execution.plugin.groupId,
@@ -213,7 +233,7 @@ class MavenLifecycleAnalyzer(
             }
         }
         
-        return Pair(uniquePhases, goalsSet)
+        return goalsSet
     }
     
     /**
