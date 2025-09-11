@@ -89,15 +89,15 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 // Create separate analyzer instance for each project (thread-safe)
                 val singleAnalyzer = NxProjectAnalyzerSingleMojo(
                     session,
+                    mavenProject,
                     pluginManager,
                     lifecycleExecutor,
                     workspaceRoot,
+                    log,
                     sharedInputOutputAnalyzer,
                     sharedLifecycleAnalyzer,
                     sharedTestClassDiscovery
                 )
-                singleAnalyzer.setLog(log)
-                singleAnalyzer.setProject(mavenProject)
                 
                 // Get analysis directly without writing to file
                 val analysis = singleAnalyzer.analyzeProjectInMemory()
