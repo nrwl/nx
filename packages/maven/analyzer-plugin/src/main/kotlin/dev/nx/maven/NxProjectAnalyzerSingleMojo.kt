@@ -54,25 +54,24 @@ class NxProjectAnalyzerSingleMojo : AbstractMojo {
     // Constructor for programmatic instantiation with all dependencies
     constructor(
         session: MavenSession,
+        project: MavenProject,
         pluginManager: org.apache.maven.plugin.MavenPluginManager,
         lifecycleExecutor: LifecycleExecutor,
         workspaceRoot: String,
+        logger: org.apache.maven.plugin.logging.Log,
         sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
         sharedLifecycleAnalyzer: MavenLifecycleAnalyzer,
         sharedTestClassDiscovery: TestClassDiscovery
     ) : super() {
         this.session = session
+        this.project = project
         this.pluginManager = pluginManager
         this.lifecycleExecutor = lifecycleExecutor
         this.workspaceRoot = workspaceRoot
+        this.log = logger
         this.sharedInputOutputAnalyzer = sharedInputOutputAnalyzer
         this.sharedLifecycleAnalyzer = sharedLifecycleAnalyzer
         this.sharedTestClassDiscovery = sharedTestClassDiscovery
-    }
-    
-    // Setter for project (still needed for per-project processing)
-    fun setProject(project: MavenProject) {
-        this.project = project
     }
 
     @Throws(MojoExecutionException::class)
