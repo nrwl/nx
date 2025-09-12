@@ -2,6 +2,7 @@ package dev.nx.maven
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import dev.nx.maven.plugin.PluginExecutionFinder
 import org.apache.maven.model.Plugin
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.project.MavenProject
@@ -13,6 +14,7 @@ import org.apache.maven.plugin.logging.Log
 class MavenLifecycleAnalyzer(
     private val lifecycles: DefaultLifecycles,
     private val sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
+    private val pluginExecutionFinder: PluginExecutionFinder,
     private val objectMapper: ObjectMapper,
     private val log: Log,
 ) {
@@ -71,15 +73,14 @@ class MavenLifecycleAnalyzer(
 
     fun generateGoalTargets(project: MavenProject, mavenCommand: String): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
         // Extract discovered plugin goals
-        val plugins = getPlugins(project)
+        val plugins = pluginExecutionFinder.getExecutablePlugins(project)
         val targets = mutableMapOf<String, ObjectNode>()
         val targetGroups = mutableMapOf<String, List<String>>()
 
-        plugins.forEach { plugin ->
-//            log.info("Discovered plugin: ${plugin.key} with goals: ${plugin.value.joinToString(", ")}")
+        plugins.forEach { plugin: Plugin ->
             val goals = getGoals(plugin)
             val targetGroup = mutableListOf<String>()
-            var cleanPluginName = cleanPluginName(plugin)
+            val cleanPluginName = cleanPluginName(plugin)
             goals.forEach { goal ->
                 val (targetName, targetNode) = createGoalTarget(mavenCommand, project, cleanPluginName, goal)
                 targetGroup.add(targetName)
@@ -120,9 +121,6 @@ class MavenLifecycleAnalyzer(
         return result
     }
 
-    internal fun getPlugins(mavenProject: MavenProject): List<Plugin> {
-        return mavenProject.build.plugins
-    }
 
     /**
      * Clean plugin name for better target naming
