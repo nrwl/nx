@@ -12,6 +12,9 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.whenever
+import dev.nx.maven.plugin.PluginBasedAnalyzer
+import dev.nx.maven.plugin.PluginExecutionFinder
+import dev.nx.maven.MavenExpressionResolver
 import java.io.File
 import kotlin.test.*
 
@@ -26,6 +29,8 @@ class IntegrationTest {
     @Mock private lateinit var pluginManager: MavenPluginManager
     @Mock private lateinit var lifecycleExecutor: LifecycleExecutor
     @Mock private lateinit var project: MavenProject
+    @Mock private lateinit var pluginExecutionFinder: PluginExecutionFinder
+    @Mock private lateinit var expressionResolver: MavenExpressionResolver
     
     private lateinit var analyzer: MavenInputOutputAnalyzer
     private val objectMapper = ObjectMapper()
@@ -40,8 +45,9 @@ class IntegrationTest {
         
         // Create analyzer with real workspace paths
         val workspaceRoot = "/home/jason/projects/triage/java/maven"
+        val pluginAnalyzer = PluginBasedAnalyzer(log, session, pluginManager, pluginExecutionFinder, expressionResolver)
         analyzer = MavenInputOutputAnalyzer(
-            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
+            objectMapper, workspaceRoot, log, pluginAnalyzer
         )
     }
     
@@ -158,10 +164,10 @@ class IntegrationTest {
             assertDoesNotThrow("Unknown phase '$phase' should not crash analyzer") {
                 val result = analyzer.analyzeCacheability(phase, project)
                 
-                // Unknown phases should have consistent behavior
-                assertFalse(result.cacheable, "Unknown phase '$phase' should not be cacheable")
-                assertTrue(result.reason.contains("No analysis available"), 
-                    "Unknown phase '$phase' should indicate no analysis available. Got: ${result.reason}")
+                // Unknown phases with no executions are considered cacheable
+                assertTrue(result.cacheable, "Unknown phase '$phase' should be cacheable when no executions found")
+                assertTrue(result.reason.contains("No plugin executions") || result.reason.contains("Cacheable"), 
+                    "Unknown phase '$phase' should indicate no executions. Got: ${result.reason}")
                 
                 println("Unknown phase '$phase': ${result.reason}")
             }
