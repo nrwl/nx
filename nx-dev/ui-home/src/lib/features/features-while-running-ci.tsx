@@ -28,21 +28,33 @@ export function FeaturesWhileRunningCI(): ReactElement {
               Nx works with your CI provider to compress the entire validation
               process.{' '}
               <TextLink
-                href="/ci/features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                href={
+                  process.env.NEXT_PUBLIC_ASTRO_URL
+                    ? '/docs/features/ci-features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                    : '/ci/features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                }
                 className="decoration-2"
               >
                 Remote cache
               </TextLink>{' '}
               and{' '}
               <TextLink
-                href="/ci/features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                href={
+                  process.env.NEXT_PUBLIC_ASTRO_URL
+                    ? '/docs/features/ci-features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                    : '/ci/features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                }
                 className="decoration-2"
               >
                 automatic task distribution
               </TextLink>{' '}
               speed up CI, while{' '}
               <TextLink
-                href="/ci/features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features"
+                href={
+                  process.env.NEXT_PUBLIC_ASTRO_URL
+                    ? '/docs/features/ci-features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                    : '/ci/features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                }
                 className="decoration-2"
               >
                 self-healing systems

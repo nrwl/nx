@@ -55,7 +55,11 @@ export function ContactLinks(): JSX.Element {
             Get an overview of Nx's features, integrations, and how to use them.
           </p>
           <Link
-            href="/getting-started/intro"
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/getting-started/intro'
+                : '/getting-started/intro'
+            }
             title="Nx documentation"
             className="mt-2 flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-800 dark:hover:text-slate-400"
             prefetch={false}
