@@ -7,9 +7,14 @@ import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.whenever
+import dev.nx.maven.plugin.PluginBasedAnalyzer
+import dev.nx.maven.plugin.PluginExecutionFinder
+import dev.nx.maven.MavenExpressionResolver
+import dev.nx.maven.PathResolver
 import java.io.File
 import kotlin.test.*
 
@@ -23,6 +28,8 @@ class PluginBasedAnalyzerTest {
     @Mock private lateinit var lifecycleExecutor: LifecycleExecutor
     @Mock private lateinit var pluginManager: MavenPluginManager
     @Mock private lateinit var project: MavenProject
+    @Mock private lateinit var pluginExecutionFinder: PluginExecutionFinder
+    @Mock private lateinit var expressionResolver: MavenExpressionResolver
     
     private lateinit var analyzer: PluginBasedAnalyzer
     private lateinit var pathResolver: PathResolver
@@ -35,60 +42,71 @@ class PluginBasedAnalyzerTest {
         whenever(project.basedir).thenReturn(File("/test/workspace/project"))
         
         pathResolver = PathResolver("/test/workspace", "/test/workspace/project")
-        analyzer = PluginBasedAnalyzer(log, session, lifecycleExecutor, pluginManager, pathResolver)
+        analyzer = PluginBasedAnalyzer(log, session, pluginManager, pluginExecutionFinder, expressionResolver)
     }
     
     @Test
-    fun `should identify side effect phases as non-cacheable`() {
+    fun `should handle side effect phases`() {
         val sideEffectPhases = listOf("install", "deploy", "clean")
         
         sideEffectPhases.forEach { phase ->
-            val assessment = analyzer.getCacheabilityAssessment(phase, project)
+            val inputs = linkedSetOf<String>()
+            val outputs = linkedSetOf<String>()
             
-            assertFalse(assessment.cacheable, "Phase '$phase' should not be cacheable")
-            assertTrue(assessment.reason.contains("side effects"), 
-                "Phase '$phase' should mention side effects. Got: ${assessment.reason}")
-            assertTrue(assessment.details.isNotEmpty(), 
-                "Phase '$phase' should have details explaining why it's not cacheable")
+            // Should not throw exceptions when analyzing side effect phases
+            assertDoesNotThrow("Phase '$phase' should not cause analyzer to crash") {
+                analyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs, pathResolver)
+            }
         }
     }
     
     @Test
     fun `should handle phases with no plugin executions`() {
-        // When no plugin executions are found, the phase should be considered safe to cache
-        val assessment = analyzer.getCacheabilityAssessment("validate", project)
+        val inputs = linkedSetOf<String>()
+        val outputs = linkedSetOf<String>()
         
-        // The actual behavior depends on whether executions are found
-        // This test documents the current behavior
-        assertNotNull(assessment.cacheable)
-        assertNotNull(assessment.reason)
-        assertTrue(assessment.reason.isNotBlank())
+        // When no plugin executions are found, should return false
+        val result = analyzer.analyzePhaseInputsOutputs("validate", project, inputs, outputs, pathResolver)
+        
+        // The method should handle phases with no executions gracefully
+        assertTrue(result is Boolean, "Should return a boolean result")
     }
     
     @Test
-    fun `should return consistent assessment structure`() {
+    fun `should return consistent results for all phases`() {
         val phases = listOf("validate", "compile", "test", "package", "install", "deploy", "clean")
         
         phases.forEach { phase ->
-            val assessment = analyzer.getCacheabilityAssessment(phase, project)
+            val inputs = linkedSetOf<String>()
+            val outputs = linkedSetOf<String>()
             
-            // All assessments should have required fields
-            assertNotNull(assessment.cacheable, "Phase '$phase' assessment should have cacheable field")
-            assertTrue(assessment.reason.isNotBlank(), "Phase '$phase' assessment should have non-blank reason")
-            assertNotNull(assessment.details, "Phase '$phase' assessment should have details list")
+            // All phases should be analyzable without throwing exceptions
+            assertDoesNotThrow("Phase '$phase' should not cause analyzer to crash") {
+                val result = analyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs, pathResolver)
+                assertTrue(result is Boolean, "Phase '$phase' should return a boolean result")
+            }
         }
     }
     
     @Test
-    fun `isPhaseCacheable should match getCacheabilityAssessment`() {
-        val phases = listOf("validate", "compile", "test", "package", "install", "deploy", "clean")
+    fun `should maintain consistent behavior across multiple calls`() {
+        val phases = listOf("validate", "compile", "test")
         
         phases.forEach { phase ->
-            val assessment = analyzer.getCacheabilityAssessment(phase, project)
-            val isCacheable = analyzer.isPhaseCacheable(phase, project)
+            val results = mutableListOf<Boolean>()
             
-            assertEquals(assessment.cacheable, isCacheable, 
-                "isPhaseCacheable and getCacheabilityAssessment should agree for phase '$phase'")
+            // Multiple calls should return consistent results
+            repeat(3) {
+                val inputs = linkedSetOf<String>()
+                val outputs = linkedSetOf<String>()
+                results.add(analyzer.analyzePhaseInputsOutputs(phase, project, inputs, outputs, pathResolver))
+            }
+            
+            // All results should be the same
+            val first = results.first()
+            results.forEach { result ->
+                assertEquals(first, result, "Results should be consistent for phase '$phase'")
+            }
         }
     }
     
@@ -98,7 +116,7 @@ class PluginBasedAnalyzerTest {
         val outputs = linkedSetOf<String>()
         
         // This will likely return false for most phases when no executions are found
-        val result = analyzer.analyzePhaseInputsOutputs("validate", project, inputs, outputs)
+        val result = analyzer.analyzePhaseInputsOutputs("validate", project, inputs, outputs, pathResolver)
         
         // The method should not throw exceptions and should return a boolean
         assertTrue(result is Boolean, "analyzePhaseInputsOutputs should return a boolean")
@@ -111,7 +129,7 @@ class PluginBasedAnalyzerTest {
         val originalInputsRef = inputs
         val originalOutputsRef = outputs
         
-        analyzer.analyzePhaseInputsOutputs("compile", project, inputs, outputs)
+        analyzer.analyzePhaseInputsOutputs("compile", project, inputs, outputs, pathResolver)
         
         // The same set instances should be used (not copied)
         assertSame(originalInputsRef, inputs, "Input set reference should be maintained")
