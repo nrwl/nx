@@ -83,7 +83,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
             objectMapper, workspaceRoot, log, pluginAnalyzer
         )
-        val sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycles, sharedInputOutputAnalyzer, sharedPluginExecutionFinder, objectMapper, log)
+        val sharedLifecycleAnalyzer = NxTargetFactory(lifecycles, sharedInputOutputAnalyzer, sharedPluginExecutionFinder, objectMapper, log)
         val sharedTestClassDiscovery = TestClassDiscovery()
 
         val setupTime = System.currentTimeMillis() - startTime

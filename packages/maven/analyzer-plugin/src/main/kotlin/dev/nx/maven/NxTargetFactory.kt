@@ -7,18 +7,50 @@ import org.apache.maven.model.Plugin
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.project.MavenProject
 import org.apache.maven.plugin.logging.Log
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 /**
  * Collects lifecycle and plugin information directly from Maven APIs
  */
-class MavenLifecycleAnalyzer(
+class NxTargetFactory(
     private val lifecycles: DefaultLifecycles,
     private val sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
     private val pluginExecutionFinder: PluginExecutionFinder,
     private val objectMapper: ObjectMapper,
     private val log: Log,
 ) {
-    fun generatePhaseTargets(
+    fun createNxTargets(
+        mavenCommand: String,
+        project: MavenProject
+    ): Pair<ObjectNode, ObjectNode> {
+        val nxTargets = objectMapper.createObjectNode()
+
+        // Generate targets from discovered plugin goals
+        val targetGroups = objectMapper.createObjectNode()
+
+        val phaseTargets = generatePhaseTargets(project, mavenCommand)
+        val mavenPhasesGroup = objectMapper.createArrayNode()
+        phaseTargets.forEach { (phase, target) ->
+            nxTargets.set<ObjectNode>(phase, target)
+            mavenPhasesGroup.add(phase)
+        }
+        targetGroups.put("maven-phases", mavenPhasesGroup)
+
+        val (goalTargets, goalGroups) = generateGoalTargets(project, mavenCommand)
+
+        goalTargets.forEach { (goal, target) ->
+            nxTargets.set<ObjectNode>(goal, target)
+        }
+        goalGroups.forEach { (groupName, group) ->
+            val groupArray = objectMapper.createArrayNode()
+            group.forEach { goal -> groupArray.add(goal) }
+            targetGroups.put(groupName, groupArray)
+        }
+        return Pair(nxTargets, targetGroups)
+    }
+
+    private fun generatePhaseTargets(
         project: MavenProject,
         mavenCommand: String,
     ): Map<String, ObjectNode> {
@@ -39,7 +71,6 @@ class MavenLifecycleAnalyzer(
 
                 val options = objectMapper.createObjectNode()
                 options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
-                options.put("cwd", "{workspaceRoot}")
                 target.put("options", options)
 
                 // Copy caching info from analysis
@@ -61,21 +92,12 @@ class MavenLifecycleAnalyzer(
         return targets
     }
 
-    fun getPhases(): Set<String> {
-        val result = mutableSetOf<String>()
-        lifecycles.lifeCycles.forEach { lifecycle ->
-            lifecycle.phases.forEach { phase ->
-                result.add(phase)
-            }
-        }
-        return result
-    }
-
-    fun generateGoalTargets(project: MavenProject, mavenCommand: String): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
-        // Extract discovered plugin goals
-        val plugins = pluginExecutionFinder.getExecutablePlugins(project)
+    private fun generateGoalTargets(project: MavenProject, mavenCommand: String): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
         val targets = mutableMapOf<String, ObjectNode>()
         val targetGroups = mutableMapOf<String, List<String>>()
+
+        // Extract discovered plugin goals
+        val plugins = pluginExecutionFinder.getExecutablePlugins(project)
 
         plugins.forEach { plugin: Plugin ->
             val goals = getGoals(plugin)
@@ -92,7 +114,17 @@ class MavenLifecycleAnalyzer(
         return Pair(targets, targetGroups)
     }
 
-    internal fun createGoalTarget(mavenCommand: String, project: MavenProject, cleanPluginName: String, goalName: String): Pair< String, ObjectNode> {
+    private fun getPhases(): Set<String> {
+        val result = mutableSetOf<String>()
+        lifecycles.lifeCycles.forEach { lifecycle ->
+            lifecycle.phases.forEach { phase ->
+                result.add(phase)
+            }
+        }
+        return result
+    }
+
+    private fun createGoalTarget(mavenCommand: String, project: MavenProject, cleanPluginName: String, goalName: String): Pair< String, ObjectNode> {
         val target = objectMapper.createObjectNode()
 
         target.put("executor", "nx:run-commands")
@@ -110,7 +142,7 @@ class MavenLifecycleAnalyzer(
         return Pair("$cleanPluginName:$goalName", target);
     }
 
-    internal fun getGoals(plugin: Plugin): Set<String> {
+    private fun getGoals(plugin: Plugin): Set<String> {
         val result = mutableSetOf<String>()
 
         plugin.executions.forEach { execution ->
