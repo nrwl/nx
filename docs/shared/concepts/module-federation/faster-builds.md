@@ -135,16 +135,22 @@ nx serve host --open
 The above command serves `host` in development mode, whereas the remotes are built and served statically. That is,
 changes to `host` will update its bundle, but changes to remotes will not update.
 
-To run one or more remotes in development mode, use the `--devRemotes` option.
+To run one or more remotes in development mode, use the `--devRemotes` option or `run-many`.
 
 ```shell
-nx serve host --open --devRemotes="shop,cart"
+## React
+nx run-many -t serve -p "shop,cart"
+
+## Angular
+nx serve host --devRemotes="shop,cart"
 ```
 
 The above command starts the `shop` and `cart` remotes in development mode, but `about` will remain static.
 
 {% callout type="note" title="More details" %}
-Both commands serve the whole system. By passing `--devRemotes`, you configure what parts of it you will be changing.
+Note the difference in commands between React and Angular. React uses Continuous Tasks allowing remotes' `serve` target to depend on the host's `serve` target. Angular uses a single `serve` target that serves all the remotes.
+
+Both commands serve the whole system. By passing `--devRemotes` or what you pass to `-p` in `run-many`, you configure what parts of it you will be changing.
 For instance, in the example above, you can go to the about page and back. This is different from having different
 versions of the app for every team.
 {% /callout %}
@@ -155,7 +161,7 @@ To understand how Module Federation works with Nx, let's take a look at three fi
 
 ### `apps/host/project.json`
 
-The `build` target uses `@nx/webpack:webpack` for React, and `@nx/angular:webpack-browser` for Angular. This is the same
+For React, the `build` target will be inferred by the `@nx/rspack/plugin`. It will evaluate to `rspack build`, whereas for Angular the `@nx/angular:webpack-browser` executor is used. This is the same
 as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration
 file.
 
@@ -175,13 +181,62 @@ the `implicitDependencies` configuration.
 
 In the future, Nx may automatically handle this for you.
 
-### `apps/host/webpack.config.ts`
+### React: `apps/host/rspack.config.js`
+
+With React, we use Rspack by default and generate a compliant Rspack configuration file:
+
+```javascript
+import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
+import {
+  NxModuleFederationPlugin,
+  NxModuleFederationDevServerPlugin,
+} from '@nx/module-federation/rspack.js';
+import { join } from 'path';
+
+import config from './module-federation.config';
+
+export default {
+  output: {
+    path: join(__dirname, '../../dist/apps/host'),
+    publicPath: 'auto',
+  },
+  devServer: {
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: './tsconfig.app.json',
+      main: './src/main.ts',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config }),
+  ],
+};
+```
+
+### Angular: `apps/host/webpack.config.ts`
 
 The webpack configuration uses an utility function that Nx provides: `withModuleFederation`.
 
 ```javascript
-// For Angular, you'll see `@nx/angular/module-federation`
-import { withModuleFederation } from '@nx/react/module-federation';
+import { withModuleFederation } from '@nx/module-federation/angular';
 import moduleFederationConfig from './module-federation.config';
 
 export default withModuleFederation({
@@ -198,7 +253,7 @@ below. This example shows how you could use it to add the `LicenseWebpackPlugin`
 any webpack plugins you need.
 
 ```js
-import { withModuleFederation } from '@nx/angular/module-federation';
+import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { resolve } from 'path';
@@ -232,7 +287,7 @@ This file is the main configuration for the `host`, and you'll see `module-feder
 remotes as well.
 
 ```javascript
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 export const config: ModuleFederationConfig = {
   name: 'host',
@@ -273,7 +328,7 @@ the `shared: (libraryName, sharedConfig) => sharedConfig` function in your confi
 
 ```javascript
 // module-federation.config.ts
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 export const config: ModuleFederationConfig = {
   name: 'host',
@@ -376,7 +431,7 @@ Next, open up the production webpack configuration file and update the remote UR
 under `http://localhost:3000`.
 
 ```javascript {% fileName="apps/host/webpack.config.prod.js" %}
-import { withModuleFederation } from '@nx/react/module-federation';
+import { withModuleFederation } from '@nx/module-federation/angular';
 import moduleFederationConfig from './module-federation.config';
 
 export default withModuleFederation({

@@ -153,7 +153,7 @@ The key differences reside within the configuration of the Module Federation Plu
 We can see the following in the **Login** micro frontend configuration:
 
 ```ts {% fileName="apps/login/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'login',
@@ -173,7 +173,7 @@ Taking a look at each property of the configuration in turn:
 This config is then used in the `webpack.config.ts` file:
 
 ```ts {% fileName="apps/login/webpack.config.ts" %}
-import { withModuleFederation } from '@nx/angular/module-federation';
+import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 export default withModuleFederation(config, { dts: false });
@@ -182,7 +182,7 @@ export default withModuleFederation(config, { dts: false });
 We can see the following in the **Dashboard** micro frontend configuration:
 
 ```ts {% fileName="apps/dashboard/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'dashboard',
@@ -468,7 +468,7 @@ At the moment, webpack is statically building our application, telling it at bui
 Open the `module-federation.config.ts` file at the root of our `apps/dashboard/` folder and set the `remotes` property to be an empty array. It should look like this:
 
 ```ts {% fileName="apps/dashboard/module-federation.config.ts" highlightLines=[5] %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'dashboard',
