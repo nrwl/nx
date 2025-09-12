@@ -231,6 +231,58 @@ class PluginExecutionFinder(
     }
     
     /**
+     * Finds plugin executions for a phase from the provided list of plugins
+     * This allows flexible discovery from any set of plugins (executable, managed, etc.)
+     */
+    fun findExecutionsForPhaseFromPlugins(
+        phase: String, 
+        plugins: List<org.apache.maven.model.Plugin>
+    ): List<org.apache.maven.plugin.MojoExecution> {
+        val executions = mutableListOf<org.apache.maven.plugin.MojoExecution>()
+        
+        for (plugin in plugins) {
+            // Check explicit executions bound to this phase
+            for (execution in plugin.executions) {
+                if (execution.phase == phase) {
+                    for (goal in execution.goals) {
+                        try {
+                            val mojoExecution = org.apache.maven.plugin.MojoExecution(
+                                plugin,
+                                goal,
+                                execution.id
+                            )
+                            mojoExecution.lifecyclePhase = phase
+                            executions.add(mojoExecution)
+                        } catch (e: Exception) {
+                            log.debug("Failed to create execution for ${plugin.artifactId}:$goal: ${e.message}")
+                        }
+                    }
+                }
+            }
+            
+            // Check for default phase bindings
+            val defaultGoals = getDefaultGoalsForPhase(plugin.artifactId, phase)
+            if (defaultGoals.isNotEmpty() && plugin.executions.none { it.phase == phase }) {
+                for (goal in defaultGoals) {
+                    try {
+                        val mojoExecution = org.apache.maven.plugin.MojoExecution(
+                            plugin,
+                            goal,
+                            "default-$goal"
+                        )
+                        mojoExecution.lifecyclePhase = phase
+                        executions.add(mojoExecution)
+                    } catch (e: Exception) {
+                        log.debug("Failed to create default execution for ${plugin.artifactId}:$goal: ${e.message}")
+                    }
+                }
+            }
+        }
+        
+        return executions
+    }
+    
+    /**
      * Returns the default goals that a plugin executes during a specific phase
      * Based on standard Maven plugin lifecycle bindings
      */
