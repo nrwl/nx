@@ -2,10 +2,7 @@ import {
   defineRouteMiddleware,
   type StarlightRouteData,
 } from '@astrojs/starlight/route-data';
-import {
-  devkitPages,
-  ngcliAdapterPages,
-} from '../utils/devkit-content-queries';
+import { devkitPages } from '../utils/devkit-content-queries';
 import { getEntries } from 'astro:content';
 
 interface SidebarLink {
@@ -53,36 +50,6 @@ export const onRequest = defineRouteMiddleware(async (context) => {
 });
 
 async function getDevKitSection({ entry }: StarlightRouteData) {
-  const ngcliAdapterItems = await ngcliAdapterPages();
-
-  const ngcliAdapterOverview: SidebarLink = {
-    type: 'link',
-    label: 'Overview',
-    href: '/docs/reference/devkit/ngcli_adapter',
-    badge: undefined,
-    isCurrent: entry.slug === 'reference/devkit/ngcli_adapter',
-    attrs: {},
-  };
-  const ngcliAdapterRoutes = ngcliAdapterItems.map(
-    (record): SidebarLink => ({
-      type: 'link',
-      label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/ngcli_adapter/${record.params.name}`,
-      badge: undefined,
-      isCurrent:
-        entry.slug === `reference/devkit/ngcli_adapter/${record.params.name}`,
-      attrs: {},
-    })
-  );
-
-  const ngcliAdapterGroup: SidebarGroup = {
-    type: 'group',
-    label: 'Angular CLI Adapter',
-    entries: [ngcliAdapterOverview, ...ngcliAdapterRoutes],
-    collapsed: !entry.slug.startsWith('reference/devkit/ngcli_adapter'),
-    badge: undefined,
-  };
-
   const devkitOverview: SidebarLink = {
     type: 'link',
     label: 'Overview',
@@ -94,21 +61,61 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
 
   const devkitItems = await devkitPages();
 
-  const devkitRoutes = devkitItems.map(
+  const devkitOnlyItems = devkitItems.filter(
+    (item) =>
+      !item.params.slug?.startsWith('ngcli_adapter') && item.params.slug !== ''
+  );
+  const ngcliItems = devkitItems.filter(
+    (item) =>
+      item.params.slug?.startsWith('ngcli_adapter/') &&
+      item.params.slug !== 'ngcli_adapter'
+  );
+
+  const devkitRoutes = devkitOnlyItems.map(
     (record): SidebarLink => ({
       type: 'link',
       label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/${record.params.name}`,
+      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
       badge: undefined,
-      isCurrent: entry.slug === `reference/devkit/${record.params.name}`,
+      isCurrent:
+        entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
       attrs: {},
     })
   );
 
+  const ngcliOverview: SidebarLink = {
+    type: 'link',
+    label: 'Overview',
+    href: '/docs/reference/devkit/ngcli_adapter',
+    badge: undefined,
+    isCurrent: entry.slug === 'reference/devkit/ngcli_adapter',
+    attrs: {},
+  };
+
+  const ngcliRoutes = ngcliItems.map(
+    (record): SidebarLink => ({
+      type: 'link',
+      label: record.props.doc.data.title,
+      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
+      badge: undefined,
+      isCurrent:
+        entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
+      attrs: {},
+    })
+  );
+
+  const ngcliSection: SidebarGroup = {
+    type: 'group',
+    label: 'ngcli_adapter',
+    entries: [ngcliOverview, ...ngcliRoutes],
+    collapsed: !entry.slug.startsWith('reference/devkit/ngcli_adapter'),
+    badge: undefined,
+  };
+
   const devkitSection: SidebarGroup = {
     type: 'group',
     label: 'Devkit',
-    entries: [devkitOverview, ngcliAdapterGroup, ...devkitRoutes],
+    entries: [devkitOverview, ngcliSection, ...devkitRoutes],
     collapsed: !entry.slug.startsWith('reference/devkit'),
     badge: undefined,
   };
