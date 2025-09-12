@@ -21,6 +21,7 @@ const PUBLIC_CONFIG = {
 export default defineConfig({
   base: BASE,
   vite: { plugins: [tailwindcss()] },
+
   // Allow this to be configured per environment
   // Note: this happens during build time so we don't use `import.meta.env`
   site: process.env.NX_DEV_URL ?? 'https://nx.dev',
@@ -124,6 +125,7 @@ export default defineConfig({
         Sidebar: './src/components/layout/Sidebar.astro',
         TwoColumnContent: './src/components/layout/TwoColumnContent.astro',
         PageTitle: './src/components/layout/PageTitle.astro',
+        TableOfContents: './src/components/layout/TableOfContents.astro',
       },
     }),
     react(),
