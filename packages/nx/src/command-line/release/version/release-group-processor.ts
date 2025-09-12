@@ -893,7 +893,7 @@ export class ReleaseGroupProcessor {
               this.bumpedProjects.add(project);
 
               // Update any dependencies in the manifest
-              await this.updateDependenciesForProject(project);
+              await this.updateDependenciesForProject(project, 'fixed');
             }
           }
         }
@@ -912,7 +912,7 @@ export class ReleaseGroupProcessor {
             );
             // Ensure the bump for remaining projects
             this.bumpedProjects.add(project);
-            await this.updateDependenciesForProject(project);
+            await this.updateDependenciesForProject(project, 'fixed');
           }
         }
       } else {
@@ -991,7 +991,7 @@ export class ReleaseGroupProcessor {
     // Then, update dependencies for all projects in the fixed group, also in topological order
     if (bumped) {
       for (const project of sortedProjects) {
-        await this.updateDependenciesForProject(project);
+        await this.updateDependenciesForProject(project, 'fixed');
       }
     }
 
@@ -1066,7 +1066,7 @@ export class ReleaseGroupProcessor {
         projectsToUpdate.has(project) &&
         releaseGroupFilteredProjects.has(project)
       ) {
-        await this.updateDependenciesForProject(project);
+        await this.updateDependenciesForProject(project, 'independent');
       }
     }
 
@@ -1415,8 +1415,9 @@ Valid values are: ${validReleaseVersionPrefixes
   }
 
   private async updateDependenciesForProject(
-    projectName: string
-  ): Promise<void> {
+    projectName: string,
+    projectsRelationship: ReleaseGroupWithName['projectsRelationship']
+  ): Promise<Record<string, string>> {
     if (!this.allProjectsToProcess.has(projectName)) {
       throw new Error(
         `Unable to find ${projectName} in allProjectsToProcess, please report this as a bug on https://github.com/nrwl/nx/issues`
@@ -1445,6 +1446,22 @@ Valid values are: ${validReleaseVersionPrefixes
             );
           if (!currentDependencyVersion) {
             continue;
+          }
+
+          if (projectsRelationship === 'independent') {
+            const targetMatchesRequirement =
+              // Current version uses workspace: or file: protocol
+              ['workspace:', 'file:'].some((protocol) =>
+                currentDependencyVersion.startsWith(protocol)
+              ) ||
+              // Respect pinned versions - only bump dependency if target version bump satisfies current semantic version
+              semver.satisfies(
+                targetVersionData.currentVersion,
+                currentDependencyVersion
+              );
+            if (!targetMatchesRequirement) {
+              continue;
+            }
           }
           let finalPrefix = '';
           if (cachedFinalConfigForProject.versionPrefix === 'auto') {
@@ -1475,6 +1492,7 @@ Valid values are: ${validReleaseVersionPrefixes
     for (const logMessage of logMessages) {
       projectLogger.buffer(logMessage);
     }
+    return dependenciesToUpdate;
   }
 
   private async bumpVersionForProject(
@@ -1542,9 +1560,12 @@ Valid values are: ${validReleaseVersionPrefixes
     // Only update dependencies for dependents if the group's updateDependents is 'auto'
     if (updateDependents === 'auto') {
       const dependents = this.getNonImplicitDependentsForProject(projectName);
-      await this.updateDependenciesForDependents(dependents);
+      const updatedDependents = await this.updateDependenciesForDependents(
+        dependents,
+        releaseGroup.projectsRelationship
+      );
 
-      for (const dependent of dependents) {
+      for (const dependent of updatedDependents) {
         if (
           this.allProjectsToProcess.has(dependent) &&
           !this.bumpedProjects.has(dependent)
@@ -1569,16 +1590,25 @@ Valid values are: ${validReleaseVersionPrefixes
   }
 
   private async updateDependenciesForDependents(
-    dependents: string[]
-  ): Promise<void> {
+    dependents: string[],
+    projectsRelationship: ReleaseGroupWithName['projectsRelationship']
+  ): Promise<string[]> {
+    const updatedDependents = [];
     for (const dependent of dependents) {
       if (!this.allProjectsToProcess.has(dependent)) {
         throw new Error(
           `Unable to find project "${dependent}" in allProjectsToProcess, please report this as a bug on https://github.com/nrwl/nx/issues`
         );
       }
-      await this.updateDependenciesForProject(dependent);
+      const updatedDependencies = await this.updateDependenciesForProject(
+        dependent,
+        projectsRelationship
+      );
+      if (Object.keys(updatedDependencies).length > 0) {
+        updatedDependents.push(dependent);
+      }
     }
+    return updatedDependents;
   }
 
   private getOriginalDependentProjects(
