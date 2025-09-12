@@ -124,6 +124,7 @@ export default defineConfig({
         Sidebar: './src/components/layout/Sidebar.astro',
         TwoColumnContent: './src/components/layout/TwoColumnContent.astro',
         PageTitle: './src/components/layout/PageTitle.astro',
+        TableOfContents: './src/components/layout/TableOfContents.astro',
       },
     }),
     react(),
