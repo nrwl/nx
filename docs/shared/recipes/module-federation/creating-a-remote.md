@@ -32,7 +32,7 @@ CREATE apps/react/myremote/src/environments/environment.ts
 CREATE apps/react/myremote/src/favicon.ico
 CREATE apps/react/myremote/src/index.html
 CREATE apps/react/myremote/tsconfig.app.json
-CREATE apps/react/myremote/webpack.config.ts
+CREATE apps/react/myremote/rspack.config.ts
 CREATE apps/react/myremote/.babelrc
 CREATE apps/react/myremote/src/app/nx-welcome.tsx
 CREATE apps/react/myremote/src/app/app.module.css
@@ -47,7 +47,6 @@ CREATE apps/react/myremote/src/bootstrap.tsx
 CREATE apps/react/myremote/module-federation.config.ts
 CREATE apps/react/myremote/src/main.ts
 CREATE apps/react/myremote/src/remote-entry.ts
-CREATE apps/react/myremote/webpack.config.prod.ts
 UPDATE tsconfig.base.json
 ```
 
@@ -91,7 +90,7 @@ to specify that it can consume federated modules from this remote.
 {% tab label="TypeScript Config File" %}
 
 ```typescript {% fileName="apps/react/shell/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'shell',
@@ -139,7 +138,7 @@ CREATE apps/react/myremote/src/environments/environment.ts
 CREATE apps/react/myremote/src/favicon.ico
 CREATE apps/react/myremote/src/index.html
 CREATE apps/react/myremote/tsconfig.app.json
-CREATE apps/react/myremote/webpack.config.ts
+CREATE apps/react/myremote/rspack.config.ts
 CREATE apps/react/myremote/.babelrc
 CREATE apps/react/myremote/src/app/nx-welcome.tsx
 CREATE apps/react/myremote/src/app/app.module.css
@@ -154,7 +153,6 @@ CREATE apps/react/myremote/src/bootstrap.tsx
 CREATE apps/react/myremote/module-federation.config.ts
 CREATE apps/react/myremote/src/main.ts
 CREATE apps/react/myremote/src/remote-entry.ts
-CREATE apps/react/myremote/webpack.config.prod.ts
 UPDATE apps/react/shell/module-federation.config.ts
 UPDATE tsconfig.base.json
 ```
@@ -248,6 +246,10 @@ as you work on them.
 To do this, run the command:
 
 ```shell
+## React
+nx serve myremote
+
+## Angular
 nx serve host --devRemotes=myremote
 ```
 

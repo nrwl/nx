@@ -74,9 +74,8 @@ nx g @nx/angular:remote apps/about --host=shell
 {% /tabs %}
 
 That is! You can now run `nx serve shell` to develop on the `shell` application, while keeping all remotes static. To
-develop on one or more remote applications, pass the `--devRemotes` option.
-
-e.g. `nx serve shell --devRemotes=cart,shop`.
+develop on one or more remote applications, you can run `nx serve shop` or `nx run-many -t serve -p shop,cart` to start
+both remotes. The remotes' `serve` target depends on the `shell:serve` target, and therefore shell will be started automatically.
 
 ## Deployment strategies
 
@@ -85,7 +84,7 @@ How applications are deployed depends on the teams and organizational requiremen
 1. À la carte deployments - Each application is deployed according to a release schedule, and can have different cadences.
 2. Affected deployments - When changes are merged, use Nx to test and deploy the affected applications automatically.
 
-Often times, teams mix both approach so deployments to staging (or other shared environments) are automatic. Then,
+Often times, teams mix both approaches so deployments to staging (or other shared environments) are automatic. Then,
 promotion from staging to production occurs on a set cadence (e.g. weekly releases). It is also recommended to agree on
 a process to handle changes to core libraries (i.e. ones that are shared between applications). Since the core changes
 affect all applications, it also blocks all other releases, thus should not occur too frequently.
@@ -106,7 +105,7 @@ between applications.
 For example, you can create a base configuration file that only shares core libraries that _have_ to be shared.
 
 ```javascript {% fileName="module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
 const coreLibraries = new Set([
@@ -136,7 +135,7 @@ export default config;
 Then, in the `shell` and remote applications, you can extend from the base configuration.
 
 ```javascript {% fileName="apps/shell/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 import baseConfig from '../../module-federation.config';
 
 export const config: ModuleFederationConfig = {
@@ -149,7 +148,7 @@ export default config;
 ```
 
 {% callout type="note" title="More details" %}
-You can return any configuration [object that webpack's Module Federation supports](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+You can return any configuration [object that webpack/rspack's Module Federation supports](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
 {% /callout %}
 
 There are downsides to not sharing a library (such as increasing network traffic due to duplication), so consider what
