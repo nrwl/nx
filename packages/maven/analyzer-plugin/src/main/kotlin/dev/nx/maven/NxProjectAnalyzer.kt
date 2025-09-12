@@ -15,7 +15,7 @@ class NxProjectAnalyzer(
     private val project: MavenProject,
     private val workspaceRoot: String,
     private val log: org.apache.maven.plugin.logging.Log,
-    private val sharedLifecycleAnalyzer: MavenLifecycleAnalyzer,
+    private val sharedLifecycleAnalyzer: NxTargetFactory,
     private val sharedTestClassDiscovery: TestClassDiscovery
 ) {
     private val objectMapper = ObjectMapper()
@@ -43,7 +43,7 @@ class NxProjectAnalyzer(
             nxProject.put("projectType", projectType)
             nxProject.put("sourceRoot", "${root}/src/main/java")
 
-            val (nxTargets, targetGroups) = createNxTargets(mavenCommand)
+            val (nxTargets, targetGroups) = sharedLifecycleAnalyzer.createNxTargets(mavenCommand, project)
             nxProject.set<ObjectNode>("targets", nxTargets)
 
             // Project metadata including target groups
@@ -65,35 +65,6 @@ class NxProjectAnalyzer(
             log.error("Failed to analyze project ${project.artifactId}: ${e.message}", e)
             return null
         }
-    }
-
-    private fun createNxTargets(
-        mavenCommand: String,
-    ): Pair<ObjectNode, ObjectNode> {
-        val nxTargets = objectMapper.createObjectNode()
-
-        // Generate targets from discovered plugin goals
-        val targetGroups = objectMapper.createObjectNode()
-
-        val phaseTargets = sharedLifecycleAnalyzer.generatePhaseTargets(project, mavenCommand)
-        val mavenPhasesGroup = objectMapper.createArrayNode()
-        phaseTargets.forEach { (phase, target) ->
-            nxTargets.set<ObjectNode>(phase, target)
-            mavenPhasesGroup.add(phase)
-        }
-        targetGroups.put("maven-phases", mavenPhasesGroup)
-
-        val (goalTargets, goalGroups) = sharedLifecycleAnalyzer.generateGoalTargets(project, mavenCommand)
-
-        goalTargets.forEach { (goal, target) ->
-            nxTargets.set<ObjectNode>(goal, target)
-        }
-        goalGroups.forEach { (groupName, group) ->
-            val groupArray = objectMapper.createArrayNode()
-            group.forEach { goal -> groupArray.add(goal) }
-            targetGroups.put(groupName, groupArray)
-        }
-        return Pair(nxTargets, targetGroups)
     }
 
     private fun determineProjectType(packaging: String): String {
