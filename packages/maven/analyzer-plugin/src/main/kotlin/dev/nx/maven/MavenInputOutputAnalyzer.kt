@@ -18,7 +18,8 @@ class MavenInputOutputAnalyzer(
     private val log: Log,
     private val session: MavenSession,
     private val pluginManager: MavenPluginManager,
-    private val lifecycleExecutor: LifecycleExecutor
+    private val lifecycleExecutor: LifecycleExecutor,
+    private val sharedPluginBasedAnalyzer: PluginBasedAnalyzer
 ) {
     
     // Components will be created per-project to ensure correct path resolution
@@ -45,8 +46,8 @@ class MavenInputOutputAnalyzer(
         // Create project-specific path resolver to ensure {projectRoot} refers to project directory
         val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath)
         
-        // Use the new plugin-based analyzer that examines actual plugin parameters
-        val pluginAnalyzer = PluginBasedAnalyzer(log, session, lifecycleExecutor, pluginManager, pathResolver)
+        // Use the shared plugin-based analyzer that examines actual plugin parameters
+        val pluginAnalyzer = sharedPluginBasedAnalyzer
         
         val inputsSet = linkedSetOf<String>()
         val outputsSet = linkedSetOf<String>()
@@ -54,7 +55,7 @@ class MavenInputOutputAnalyzer(
         // Let plugin parameter analysis determine ALL inputs - no hardcoded assumptions
         
         // Analyze the phase using plugin parameter examination
-        val analyzed = pluginAnalyzer.analyzePhaseInputsOutputs(phase, project, inputsSet, outputsSet)
+        val analyzed = pluginAnalyzer.analyzePhaseInputsOutputs(phase, project, inputsSet, outputsSet, pathResolver)
         
         if (!analyzed) {
             // Fall back to preloaded analysis as backup
