@@ -2,17 +2,18 @@ package dev.nx.maven.plugin
 
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.LifecycleExecutor
-import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Finds plugin executions for specific Maven phases using Maven's lifecycle executor
  */
 class PluginExecutionFinder(
-    private val log: Log,
     private val lifecycleExecutor: LifecycleExecutor,
     private val session: MavenSession
 ) {
+    private val log: Logger = LoggerFactory.getLogger(PluginExecutionFinder::class.java)
     
     // Cache for expensive calculateExecutionPlan results
     // Key: "phase:packaging:groupId" (projects with same characteristics often have same execution plans)
