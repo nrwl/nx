@@ -1,12 +1,12 @@
-package dev.nx.maven
+package dev.nx.maven.plugin
 
-import com.fasterxml.jackson.databind.node.ArrayNode
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import dev.nx.maven.PathResolver
+import dev.nx.maven.MavenExpressionResolver
 
 /**
  * Analyzes Maven phases by examining the actual plugin parameters that execute during each phase
@@ -15,21 +15,20 @@ import org.apache.maven.project.MavenProject
 class PluginBasedAnalyzer(
     private val log: Log,
     private val session: MavenSession,
-    private val lifecycleExecutor: LifecycleExecutor,
     private val pluginManager: MavenPluginManager,
     private val pluginExecutionFinder: PluginExecutionFinder,
     private val expressionResolver: MavenExpressionResolver
 ) {
-    
+
     // Cache for expensive plugin descriptor loading
     // Key: "groupId:artifactId:version" (plugin coordinates)
     private val pluginDescriptorCache = mutableMapOf<String, PluginDescriptor?>()
-    
+
     /**
      * Analyzes a Maven phase by examining which plugins execute and their parameters
      */
     fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: MutableSet<String>, outputs: MutableSet<String>, pathResolver: PathResolver): Boolean {
-        
+
         log.warn("*** STARTING PHASE ANALYSIS FOR '$phase' ***")
         try {
             // Find all plugin executions that will run during this phase
@@ -39,17 +38,17 @@ class PluginBasedAnalyzer(
             executions.forEach { execution ->
                 log.warn("    - ${execution.plugin.artifactId}:${execution.goal}")
             }
-            
+
             if (executions.isEmpty()) {
                 log.debug("No executions found for phase '$phase', marking as unanalyzable")
                 return false
             }
-            
+
             // Analyze each plugin execution
             for (execution in executions) {
                 try {
                     analyzePluginExecution(execution, project, inputs, outputs, pathResolver)
-                    
+
                     // Special handling for maven-compiler-plugin - explicitly add source directories
                     if (execution.plugin.artifactId == "maven-compiler-plugin") {
                         addCompilerPluginSourceDirectories(execution, project, inputs, phase, pathResolver)
@@ -58,78 +57,78 @@ class PluginBasedAnalyzer(
                     // Silently skip failed executions
                 }
             }
-            
+
             return true
-            
+
         } catch (e: Exception) {
             log.warn("Exception analyzing phase '$phase': ${e.message}")
             e.printStackTrace()
             return false
         }
     }
-    
+
     /**
      * Analyzes a specific plugin execution to extract inputs and outputs from its parameters
      */
     private fun analyzePluginExecution(
-        execution: org.apache.maven.plugin.MojoExecution, 
-        project: MavenProject, 
-        inputs: MutableSet<String>, 
+        execution: org.apache.maven.plugin.MojoExecution,
+        project: MavenProject,
+        inputs: MutableSet<String>,
         outputs: MutableSet<String>,
         pathResolver: PathResolver
     ) {
         val plugin = execution.plugin
         val goal = execution.goal
-        
-        
+
+
         try {
             // Load plugin descriptor to get mojo information
             val pluginDescriptor = loadPluginDescriptor(plugin, project)
             if (pluginDescriptor == null) {
                 return
             }
-            
+
             // Find the specific mojo for this goal
             val mojo = pluginDescriptor.getMojo(goal)
             if (mojo == null) {
                 return
             }
-            
+
             // Analyze the mojo's parameters to find inputs and outputs
             val mojoParameterAnalyzer = MojoParameterAnalyzer(log, expressionResolver, pathResolver)
             mojoParameterAnalyzer.analyzeMojo(mojo, project, inputs, outputs)
-            
+
         } catch (e: Exception) {
             // Silently skip failed plugin executions
         }
     }
-    
+
     /**
      * Loads a plugin descriptor using Maven's plugin manager
      */
     private fun loadPluginDescriptor(plugin: org.apache.maven.model.Plugin, project: MavenProject): PluginDescriptor? {
         // Create cache key from plugin coordinates
         val cacheKey = "${plugin.groupId}:${plugin.artifactId}:${plugin.version ?: "LATEST"}"
-        
+
         // Check cache first
         if (pluginDescriptorCache.containsKey(cacheKey)) {
             val cachedDescriptor = pluginDescriptorCache[cacheKey]
             log.debug("Using cached plugin descriptor for $cacheKey")
             return cachedDescriptor
         }
-        
+
         return try {
             log.debug("Loading plugin descriptor for $cacheKey (cache miss)")
-            
+
             // Use Maven's plugin manager to load the plugin descriptor
             val descriptor = pluginManager.getPluginDescriptor(plugin, project.remotePluginRepositories, session.repositorySession)
-            
+
             // Cache the result (even if null - that's a valid cache entry)
             pluginDescriptorCache[cacheKey] = descriptor
             log.debug("Cached plugin descriptor for $cacheKey")
-            
+
             descriptor
-            
+
         } catch (e: Exception) {
             // Cache the null result to avoid retrying failed loads
             pluginDescriptorCache[cacheKey] = null
@@ -137,7 +136,7 @@ class PluginBasedAnalyzer(
             null
         }
     }
-    
+
     /**
      * Determines if a phase is cacheable based on the plugins that execute during it
      * Returns a detailed cacheability assessment with reasoning
@@ -145,7 +144,7 @@ class PluginBasedAnalyzer(
     fun isPhaseCacheable(phase: String, project: MavenProject): Boolean {
         return getCacheabilityAssessment(phase, project).cacheable
     }
-    
+
     /**
      * Provides detailed cacheability assessment with reasoning
      */
@@ -159,10 +158,10 @@ class PluginBasedAnalyzer(
                 details = listOf("Phase involves installation or deployment operations")
             )
         }
-        
+
         try {
             val executions = pluginExecutionFinder.findExecutionsForPhase(phase, project)
-            
+
             if (executions.isEmpty()) {
                 return CacheabilityAssessment(
                     cacheable = true,
@@ -170,20 +169,20 @@ class PluginBasedAnalyzer(
                     details = listOf("Phase '$phase' has no plugin executions, making it inherently cacheable")
                 )
             }
-            
+
             val details = mutableListOf<String>()
             var hasThreadSafetyIssues = false
             var hasAggregatorMojos = false
-            
+
             // Check each mojo execution for cacheability factors
             for (execution in executions) {
                 val pluginDescriptor = loadPluginDescriptor(execution.plugin, project)
                 val mojo = pluginDescriptor?.getMojo(execution.goal)
-                
+
                 if (mojo != null) {
                     val pluginArtifactId = execution.plugin.artifactId
                     log.debug("Analyzing mojo: ${pluginArtifactId}:${mojo.goal}")
-                    
+
                     // Check for side effects - create temporary analyzer just for this check
                     val tempPathResolver = PathResolver(session.executionRootDirectory ?: "", "", session)
                     val tempMojoAnalyzer = MojoParameterAnalyzer(log, expressionResolver, tempPathResolver)
@@ -195,15 +194,15 @@ class PluginBasedAnalyzer(
                             details = details + "Goal '${mojo.goal}' from plugin '${pluginArtifactId}' interacts with external systems or has non-deterministic behavior"
                         )
                     }
-                    
+
                     // For now, we'll assume all mojos are thread-safe and non-aggregator
                     // These checks can be enhanced later if needed
-                    
+
                     log.debug("Mojo ${pluginArtifactId}:${mojo.goal} appears cacheable")
                     details.add("Analyzed goal '${mojo.goal}' from '${pluginArtifactId}' - appears cacheable based on parameters")
                 }
             }
-            
+
             // Make final cacheability decision based on all factors
             val cacheable = !hasThreadSafetyIssues && !hasAggregatorMojos
             val reason = when {
@@ -211,13 +210,13 @@ class PluginBasedAnalyzer(
                 hasThreadSafetyIssues -> "Contains non-thread-safe mojos"
                 else -> "All mojos are cacheable based on parameter analysis"
             }
-            
+
             return CacheabilityAssessment(
                 cacheable = cacheable,
                 reason = reason,
                 details = details
             )
-            
+
         } catch (e: Exception) {
             return CacheabilityAssessment(
                 cacheable = false,
@@ -226,13 +225,13 @@ class PluginBasedAnalyzer(
             )
         }
     }
-    
+
     /**
      * Special handling for maven-compiler-plugin to ensure source directories are included as inputs
      */
     private fun addCompilerPluginSourceDirectories(
-        execution: org.apache.maven.plugin.MojoExecution, 
-        project: MavenProject, 
+        execution: org.apache.maven.plugin.MojoExecution,
+        project: MavenProject,
         inputs: MutableSet<String>,
         phase: String,
         pathResolver: PathResolver
@@ -256,7 +255,7 @@ class PluginBasedAnalyzer(
             }
         }
     }
-    
+
     /**
      * Data class for detailed cacheability assessment
      */
