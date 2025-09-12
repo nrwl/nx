@@ -45,6 +45,17 @@ export const metadata: Metadata = {
       'application/atom+xml': '/blog/atom.xml',
     },
   },
+  // Add robots directive when NEXT_PUBLIC_NO_INDEX is set
+  ...(process.env.NEXT_PUBLIC_NO_INDEX === 'true' && {
+    robots: {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
+  }),
 };
 
 // Viewport settings for the entire site
