@@ -318,39 +318,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--simpleName', () => {
-    it('should generate a library with a simple name', async () => {
-      await libraryGenerator(tree, {
-        simpleName: true,
-        directory: 'api/my-lib',
-        service: true,
-        controller: true,
-      });
-
-      const indexFile = tree.read('api/my-lib/src/index.ts', 'utf-8');
-
-      expect(indexFile).toContain(`export * from './lib/my-lib.module';`);
-      expect(indexFile).toContain(`export * from './lib/my-lib.service';`);
-      expect(indexFile).toContain(`export * from './lib/my-lib.controller';`);
-
-      expect(tree.exists('api/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
-
-      expect(tree.exists('api/my-lib/src/lib/my-lib.service.ts')).toBeTruthy();
-
-      expect(
-        tree.exists('api/my-lib/src/lib/my-lib.service.spec.ts')
-      ).toBeTruthy();
-
-      expect(
-        tree.exists('api/my-lib/src/lib/my-lib.controller.ts')
-      ).toBeTruthy();
-
-      expect(
-        tree.exists('api/my-lib/src/lib/my-lib.controller.spec.ts')
-      ).toBeTruthy();
-    });
-  });
-
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();

@@ -1742,22 +1742,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--simpleName', () => {
-    it('should generate a simple name', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        name: 'my-lib',
-        simpleName: true,
-        directory: 'web/my-lib',
-      });
-
-      expect(tree.read('web/my-lib/src/index.ts', 'utf-8')).toContain(
-        `export * from './lib/my-lib';`
-      );
-      expect(tree.exists('web/my-lib/src/lib/my-lib.ts')).toBeTruthy();
-    });
-  });
-
   describe('--testEnvironment', () => {
     it('should generate a vite config with testEnvironment set to node', async () => {
       await libraryGenerator(tree, {
