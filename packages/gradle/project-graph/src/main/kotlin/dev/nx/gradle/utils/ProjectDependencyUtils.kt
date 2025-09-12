@@ -2,8 +2,10 @@ package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.Dependency
 import org.gradle.api.Project
-import org.gradle.api.internal.artifacts.result.DefaultResolvedDependencyResult
-import org.gradle.internal.component.local.model.DefaultProjectComponentSelector
+
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.component.ProjectComponentSelector
+
 
 private val dependencyCache = mutableMapOf<Project, Set<Dependency>>()
 
@@ -24,11 +26,11 @@ private fun buildDependenciesForProject(project: Project): Set<Dependency> {
         .forEach { conf ->
             try {
                 conf.incoming.resolutionResult.allDependencies.forEach { dependency ->
-                    if (dependency is DefaultResolvedDependencyResult) {
+                    if (dependency is ResolvedDependencyResult) {
                         val requested = dependency.requested
-                        if (requested is DefaultProjectComponentSelector) {
+                        if (requested is ProjectComponentSelector) {
                             val dependentProject =
-                                project.findProject(requested.toIdentifier().projectPath)
+                                project.findProject(requested.projectPath)
 
                             if (
                                 dependentProject != null &&
