@@ -38,6 +38,8 @@ class TestClassDiscovery() {
     fun discoverTestClasses(project: MavenProject): List<TestClassInfo> {
         val testClasses = mutableListOf<TestClassInfo>()
 
+        log.info("Getting Test Classes for project ${project.artifactId}")
+
         // Get test source roots
         val testSourceRoots = project.getEnabledSourceRoots(ProjectScope.TEST, Language.JAVA_FAMILY)
 
