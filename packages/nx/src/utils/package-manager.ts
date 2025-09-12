@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { exec, execFile, execSync } from 'child_process';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import {
   Pair,
@@ -531,7 +531,7 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`, {
+  const { stdout } = await execAsync(`${pm} ${pkg}@${version} ${args}`, {
     windowsHide: true,
   });
   return stdout.toString().trim();
