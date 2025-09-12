@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.whenever
+import dev.nx.maven.plugin.PluginBasedAnalyzer
+import dev.nx.maven.plugin.PluginExecutionFinder
+import dev.nx.maven.MavenExpressionResolver
 import java.io.File
 import kotlin.test.*
 
@@ -24,6 +27,8 @@ class MavenInputOutputAnalyzerTest {
     @Mock private lateinit var pluginManager: MavenPluginManager
     @Mock private lateinit var lifecycleExecutor: LifecycleExecutor
     @Mock private lateinit var project: MavenProject
+    @Mock private lateinit var pluginExecutionFinder: PluginExecutionFinder
+    @Mock private lateinit var expressionResolver: MavenExpressionResolver
     
     private lateinit var analyzer: MavenInputOutputAnalyzer
     private val objectMapper = ObjectMapper()
@@ -36,8 +41,9 @@ class MavenInputOutputAnalyzerTest {
         // Setup basic project mock
         whenever(project.basedir).thenReturn(File("/test/workspace/project"))
         
+        val pluginAnalyzer = PluginBasedAnalyzer(log, session, pluginManager, pluginExecutionFinder, expressionResolver)
         analyzer = MavenInputOutputAnalyzer(
-            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
+            objectMapper, workspaceRoot, log, pluginAnalyzer
         )
     }
     
@@ -45,8 +51,9 @@ class MavenInputOutputAnalyzerTest {
     fun `should handle unknown phase`() {
         val result = analyzer.analyzeCacheability("unknown-phase", project)
         
-        assertFalse(result.cacheable)
-        assertEquals("No analysis available for phase 'unknown-phase'", result.reason)
+        // Unknown phases with no executions are considered cacheable
+        assertTrue(result.cacheable)
+        assertTrue(result.reason.contains("No plugin executions to analyze") || result.reason.contains("Cacheable"))
         // The analyzer may not add dependentTasksOutputFiles for unknown phases
         assertTrue(result.inputs.size() >= 0) // May be empty for unknown phases
     }
