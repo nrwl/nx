@@ -124,6 +124,7 @@
         <version>3.11.0</version>
         <configuration>
           <goalPrefix>nx-maven</goalPrefix>
+          <requiredMavenVersion>3.6.0</requiredMavenVersion>
         </configuration>
       </plugin>
 
