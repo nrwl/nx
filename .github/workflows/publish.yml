@@ -432,6 +432,28 @@ jobs:
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
         run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
 
+  report-pending-publish:
+    name: Report Pending Publish to Slack
+    if: ${{ github.repository_owner == 'nrwl' }}
+    needs:
+      - resolve-required-data
+      - build-freebsd
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true  # Don't fail the workflow if notification fails
+    steps:
+      - name: Send Slack notification
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
+        with:
+          status: ${{ job.status }}
+          notification_title: '📦 Publish Pending Review'
+          message_format: ${{ format('Version `{0}` is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version) }}
+          footer: '<{run_url}|View Workflow Run>'
+          mention_groups: 'U9NPA6C90' # Jason
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
   pr_failure_comment:
     # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
     if: ${{ github.repository_owner == 'nrwl' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
