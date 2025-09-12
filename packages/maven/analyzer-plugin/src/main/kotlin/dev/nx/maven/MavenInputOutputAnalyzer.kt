@@ -3,7 +3,8 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import org.apache.maven.project.MavenProject
-import org.apache.maven.plugin.logging.Log
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import dev.nx.maven.plugin.PluginBasedAnalyzer
 
 /**
@@ -13,9 +14,9 @@ import dev.nx.maven.plugin.PluginBasedAnalyzer
 class MavenInputOutputAnalyzer(
     private val objectMapper: ObjectMapper,
     private val workspaceRoot: String,
-    private val log: Log,
     private val pluginAnalyzer: PluginBasedAnalyzer
 ) {
+    private val log: Logger = LoggerFactory.getLogger(MavenInputOutputAnalyzer::class.java)
 
     // Components will be created per-project to ensure correct path resolution
 
