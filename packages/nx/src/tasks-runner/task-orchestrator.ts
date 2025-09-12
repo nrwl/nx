@@ -1027,7 +1027,7 @@ export class TaskOrchestrator {
       ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
         try {
           await t.kill();
-          this.options.lifeCycle.setTaskStatus(
+          this.options.lifeCycle.setTaskStatus?.(
             taskId,
             NativeTaskStatus.Stopped
           );
@@ -1063,7 +1063,7 @@ export class TaskOrchestrator {
         const runningTask = this.runningContinuousTasks.get(taskId);
         if (runningTask) {
           runningTask.kill();
-          this.options.lifeCycle.setTaskStatus(
+          this.options.lifeCycle.setTaskStatus?.(
             taskId,
             NativeTaskStatus.Stopped
           );
