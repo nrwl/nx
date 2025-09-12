@@ -382,3 +382,8 @@ iframe[src*='youtube'] {
 table code {
   word-wrap: break-word;
 }
+
+/* Fix tab alignment */
+[role="tablist"] {
+  align-items: end;
+}
