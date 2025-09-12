@@ -62,7 +62,11 @@ export function CallToAction(): ReactElement {
         </h2>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link
-            href="/features/enhance-AI#setting-up-nx-mcp"
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/features/enhance-ai#setting-up-nx-mcp'
+                : '/features/enhance-AI#setting-up-nx-mcp'
+            }
             title="Get started with Nx AI integration"
             prefetch={false}
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"

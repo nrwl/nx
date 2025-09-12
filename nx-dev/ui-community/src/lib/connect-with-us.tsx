@@ -20,7 +20,11 @@ export function ConnectWithUs(): JSX.Element {
           <p className="py-4">
             Looking for community plugins? Find them listed in the{' '}
             <Link
-              href="/plugin-registry"
+              href={
+                process.env.NEXT_PUBLIC_ASTRO_URL
+                  ? '/docs/plugin-registry'
+                  : '/plugin-registry'
+              }
               className="font-semibold underline"
               prefetch={false}
             >

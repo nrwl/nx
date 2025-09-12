@@ -156,7 +156,11 @@ export function ScaleYourOrganization(): ReactElement {
                     <ul className="mt-6 space-y-2 pl-4">
                       <li>
                         <Link
-                          href="/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+                          href={
+                            process.env.NEXT_PUBLIC_ASTRO_URL
+                              ? '/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud'
+                              : '/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud'
+                          }
                           prefetch={false}
                           title="Configure Conformance Rules"
                           className="text-sm/6 font-semibold"
@@ -167,7 +171,11 @@ export function ScaleYourOrganization(): ReactElement {
                       </li>
                       <li>
                         <Link
-                          href="/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
+                          href={
+                            process.env.NEXT_PUBLIC_ASTRO_URL
+                              ? '/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud'
+                              : '/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud'
+                          }
                           prefetch={false}
                           title="Publish Conformance Rules"
                           className="text-sm/6 font-semibold"

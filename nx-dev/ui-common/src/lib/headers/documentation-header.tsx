@@ -100,7 +100,9 @@ export function DocumentationHeader({
     { name: 'Nx', href: docsUrl, current: isNx },
     {
       name: 'CI',
-      href: '/ci/features',
+      href: process.env.NEXT_PUBLIC_ASTRO_URL
+        ? '/docs/features/ci-features'
+        : '/ci/features',
       current: isCI,
     },
     {
@@ -110,7 +112,9 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: '/plugin-registry',
+      href: process.env.NEXT_PUBLIC_ASTRO_URL
+        ? '/docs/plugin-registry'
+        : '/plugin-registry',
       current: isPlugins,
     },
     {
