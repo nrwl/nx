@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
+import { platform } from 'os';
 
 /*
  * Verifies that the given npm package has provenance attestations
@@ -25,7 +26,7 @@ export async function ensurePackageHasProvenance(
   const npmViewResult = JSON.parse(
     (
       await execFileAsync(
-        'npm',
+        platform() === 'win32' ? 'npm.cmd' : 'npm',
         ['view', `${packageName}@${packageVersion}`, '--json', '--silent'],
         {
           timeout: 20000,
