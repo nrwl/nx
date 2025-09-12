@@ -2661,6 +2661,11 @@
                   "file": "shared/monorepo-ci-azure"
                 },
                 {
+                  "name": "Setting up Buildkite",
+                  "id": "monorepo-ci-buildkite",
+                  "file": "shared/monorepo-ci-buildkite"
+                },
+                {
                   "name": "Setting up CircleCI",
                   "id": "monorepo-ci-circle-ci",
                   "file": "shared/monorepo-ci-circle-ci"
