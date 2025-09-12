@@ -14,7 +14,7 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
-import { isMatchingDependencyRange } from './utils/semver';
+import { isMatchingDependencyRange, isValidRange } from './utils/semver';
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,
@@ -245,10 +245,16 @@ export default class JsVersionActions extends VersionActions {
                   !this.isLocalDependencyProtocol(currentVersion)
                 ) {
                   // If the dependency is specified using a range, do some additional processing to determine whether to update the version
-                  if (!isMatchingDependencyRange(version, currentVersion)) {
+                  if (
+                    isValidRange(currentVersion) &&
+                    !isMatchingDependencyRange(version, currentVersion)
+                  ) {
                     throw new Error(
                       `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
                     );
+                  } else if (isValidRange(currentVersion)) {
+                    // it is a range, but it is valid
+                    continue;
                   }
                 }
                 json[depType][packageName] = version;
