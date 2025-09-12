@@ -384,6 +384,6 @@ table code {
 }
 
 /* Fix tab alignment */
-[role="tablist"] {
+[role='tablist'] {
   align-items: end;
 }
