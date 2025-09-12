@@ -62,6 +62,14 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- SLF4J API -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>2.0.12</version>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- Kotlin -->
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>

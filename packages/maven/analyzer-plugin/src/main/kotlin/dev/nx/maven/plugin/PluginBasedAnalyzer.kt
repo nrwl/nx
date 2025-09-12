@@ -3,8 +3,9 @@ package dev.nx.maven.plugin
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.plugin.descriptor.PluginDescriptor
-import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import dev.nx.maven.PathResolver
 import dev.nx.maven.MavenExpressionResolver
 
@@ -13,12 +14,12 @@ import dev.nx.maven.MavenExpressionResolver
  * This provides accurate input/output detection based on what plugins actually read and write
  */
 class PluginBasedAnalyzer(
-    private val log: Log,
     private val session: MavenSession,
     private val pluginManager: MavenPluginManager,
     private val pluginExecutionFinder: PluginExecutionFinder,
     private val expressionResolver: MavenExpressionResolver
 ) {
+    private val log: Logger = LoggerFactory.getLogger(PluginBasedAnalyzer::class.java)
 
     // Cache for expensive plugin descriptor loading
     // Key: "groupId:artifactId:version" (plugin coordinates)
@@ -95,7 +96,7 @@ class PluginBasedAnalyzer(
             }
 
             // Analyze the mojo's parameters to find inputs and outputs
-            val mojoParameterAnalyzer = MojoParameterAnalyzer(log, expressionResolver, pathResolver)
+            val mojoParameterAnalyzer = MojoParameterAnalyzer(expressionResolver, pathResolver)
             mojoParameterAnalyzer.analyzeMojo(mojo, project, inputs, outputs)
 
         } catch (e: Exception) {
@@ -185,7 +186,7 @@ class PluginBasedAnalyzer(
 
                     // Check for side effects - create temporary analyzer just for this check
                     val tempPathResolver = PathResolver(session.executionRootDirectory ?: "", "", session)
-                    val tempMojoAnalyzer = MojoParameterAnalyzer(log, expressionResolver, tempPathResolver)
+                    val tempMojoAnalyzer = MojoParameterAnalyzer(expressionResolver, tempPathResolver)
                     if (tempMojoAnalyzer.isSideEffectMojo(mojo)) {
                         log.warn("Mojo ${pluginArtifactId}:${mojo.goal} detected as having side effects")
                         return CacheabilityAssessment(
