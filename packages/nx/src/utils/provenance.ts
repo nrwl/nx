@@ -16,7 +16,8 @@ export async function ensurePackageHasProvenance(
 ): Promise<void> {
   // this is used for locally released versions without provenance
   // do not set this for other reasons or you might be exposed to security risks
-  if (process.env.NX_SKIP_PROVENANCE_CHECK) {
+  // also skip this check during e2e tests because those rely on local packages without provenance
+  if (process.env.NX_SKIP_PROVENANCE_CHECK || process.env.NX_E2E_RUN_E2E) {
     return;
   }
 
@@ -112,7 +113,7 @@ export const noProvenanceError = (
   packageVersion: string,
   error?: string
 ) =>
-  `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues \n Error: ${
+  `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues. To disable this check at your own risk, you can set the NX_SKIP_PROVENANCE_CHECK environment variable to true \n Error: ${
     error ?? ''
   }`;
 

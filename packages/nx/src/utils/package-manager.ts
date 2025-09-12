@@ -423,17 +423,23 @@ export function copyPackageManagerConfigurationFiles(
  * For cases where you'd want to install packages that require an `.npmrc` set up,
  * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
  * temp directory.
+ *
+ * @param skipCopy - If true, skips copying package manager configuration files to the temporary directory.
+ *                   This is useful when creating a workspace from scratch (e.g., in create-nx-workspace)
+ *                   where no existing configuration files are available to copy.
  */
-export function createTempNpmDirectory() {
+export function createTempNpmDirectory(skipCopy = false) {
   const dir = dirSync().name;
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
-  const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
-  copyPackageManagerConfigurationFiles(
-    isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
-    dir
-  );
+  if (!skipCopy) {
+    const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
+    copyPackageManagerConfigurationFiles(
+      isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
+      dir
+    );
+  }
 
   const cleanup = async () => {
     try {
