@@ -38,7 +38,7 @@
       },
       "directory": {
         "type": "string",
-        "description": "The directory to nest the app under."
+        "description": "Full path to the application folder. When using positional name argument, this path should include the application name as the final segment."
       },
       "tags": {
         "type": "string",

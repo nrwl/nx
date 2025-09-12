@@ -11,7 +11,7 @@
     "properties": {
       "directory": {
         "type": "string",
-        "description": "A directory where the package is placed.",
+        "description": "Full path to the package folder. When using positional name argument, this path should include the package name as the final segment.",
         "alias": "dir",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "Which directory do you want to create the package in?"
