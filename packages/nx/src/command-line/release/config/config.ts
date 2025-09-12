@@ -284,6 +284,7 @@ export async function createNxReleaseConfig(
     __dirname,
     '../../../../release/changelog-renderer'
   );
+
   // Helper function to create meaningful docker defaults when user opts in
   function createDockerDefaults(
     userDockerConfig: NxReleaseDockerConfiguration | true
@@ -369,6 +370,10 @@ export async function createNxReleaseConfig(
             preserveLocalDependencyProtocols:
               (userConfig.version as NxReleaseVersionConfiguration | undefined)
                 ?.preserveLocalDependencyProtocols ?? true,
+            // TODO(v22): flip default to true
+            preserveMatchingDependencyRanges:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.preserveMatchingDependencyRanges ?? false,
             logUnchangedProjects:
               (userConfig.version as NxReleaseVersionConfiguration | undefined)
                 ?.logUnchangedProjects ?? true,
