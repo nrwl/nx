@@ -23,6 +23,7 @@ describe('resolveCurrentVersion', () => {
       fallbackCurrentVersionResolver: 'disk',
       versionPrefix: 'auto',
       preserveLocalDependencyProtocols: true,
+      preserveMatchingDependencyRanges: false,
       manifestRootsToUpdate: [],
       versionActionsOptions: {},
       dockerOptions: {
@@ -43,24 +44,29 @@ describe('resolveCurrentVersion', () => {
           manifestPath: 'package.json',
         };
       }
+
       async readCurrentVersionFromRegistry() {
         return {
           currentVersion: '1.2.3',
           logText: 'https://example.com/fake-registry',
         };
       }
+
       async updateProjectVersion() {
         return [];
       }
+
       async readCurrentVersionOfDependency() {
         return {
           currentVersion: '1.2.3',
           dependencyCollection: 'dependencies',
         };
       }
+
       async isLocalDependencyProtocol() {
         return false;
       }
+
       async updateProjectDependencies() {
         return [];
       }
@@ -70,6 +76,7 @@ describe('resolveCurrentVersion', () => {
       constructor(projectName: string) {
         super(projectName);
       }
+
       override buffer(message: string) {}
     }
 
@@ -167,24 +174,29 @@ describe('resolveCurrentVersion', () => {
         async readCurrentVersionFromSourceManifest() {
           return null;
         }
+
         async readCurrentVersionFromRegistry() {
           return {
             currentVersion: '1.2.3',
             logText: 'https://example.com/fake-registry',
           };
         }
+
         async updateProjectVersion() {
           return [];
         }
+
         async readCurrentVersionOfDependency() {
           return {
             currentVersion: '1.2.3',
             dependencyCollection: 'dependencies',
           };
         }
+
         async isLocalDependencyProtocol() {
           return false;
         }
+
         async updateProjectDependencies() {
           return [];
         }
