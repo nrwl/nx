@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.project.MavenProject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Paths
 
 /**
@@ -14,11 +16,11 @@ class NxProjectAnalyzer(
     private val session: MavenSession,
     private val project: MavenProject,
     private val workspaceRoot: String,
-    private val log: org.apache.maven.plugin.logging.Log,
     private val sharedLifecycleAnalyzer: NxTargetFactory,
     private val sharedTestClassDiscovery: TestClassDiscovery
 ) {
     private val objectMapper = ObjectMapper()
+    private val log: Logger = LoggerFactory.getLogger(NxProjectAnalyzer::class.java)
 
 
     /**
