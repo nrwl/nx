@@ -70,9 +70,16 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val startTime = System.currentTimeMillis()
         log.info("Creating shared component instances for optimized analysis...")
 
+        // Create deeply shared components for maximum caching efficiency
+        val sharedExpressionResolver = MavenExpressionResolver(session, log)
+        val sharedPluginExecutionFinder = PluginExecutionFinder(log, lifecycleExecutor, session)
+        val sharedPluginBasedAnalyzer = PluginBasedAnalyzer(
+            log, session, lifecycleExecutor, pluginManager, sharedPluginExecutionFinder, sharedExpressionResolver
+        )
+        
         // Create shared component instances ONCE for all projects (major optimization)
         val sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
-            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor
+            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor, sharedPluginBasedAnalyzer
         )
         val sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycles, sharedInputOutputAnalyzer, objectMapper, log)
         val sharedTestClassDiscovery = TestClassDiscovery()
