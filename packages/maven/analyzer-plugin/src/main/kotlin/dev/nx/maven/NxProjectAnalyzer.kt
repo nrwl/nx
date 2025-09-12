@@ -3,7 +3,6 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.project.MavenProject
 import java.nio.file.Paths
 
@@ -14,8 +13,6 @@ import java.nio.file.Paths
 class NxProjectAnalyzer(
     private val session: MavenSession,
     private val project: MavenProject,
-    private val pluginManager: org.apache.maven.plugin.MavenPluginManager,
-    private val lifecycleExecutor: LifecycleExecutor,
     private val workspaceRoot: String,
     private val log: org.apache.maven.plugin.logging.Log,
     private val sharedLifecycleAnalyzer: MavenLifecycleAnalyzer,
