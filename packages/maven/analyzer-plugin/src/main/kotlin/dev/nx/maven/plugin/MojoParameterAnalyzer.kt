@@ -2,19 +2,20 @@ package dev.nx.maven.plugin
 
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
-import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import dev.nx.maven.PathResolver
 import dev.nx.maven.MavenExpressionResolver
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Analyzes Maven mojo parameters to determine inputs, outputs, and cacheability
  */
 class MojoParameterAnalyzer(
-    private val log: Log,
     private val expressionResolver: MavenExpressionResolver,
     private val pathResolver: PathResolver
 ) {
+    private val log: Logger = LoggerFactory.getLogger(MojoParameterAnalyzer::class.java)
 
     /**
      * Analyzes a mojo's parameters to find inputs and outputs
