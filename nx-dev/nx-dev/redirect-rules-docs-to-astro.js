@@ -71,7 +71,7 @@ const docsToAstroRedirects = {
   '/ci/recipes/other/cipe-affected-project-graph':
     '/docs/guides/nx-cloud/cipe-affected-project-graph',
   '/ci/reference': '/docs/reference',
-  '/ci/reference/config': '/docs/reference', // TODO: missing
+  '/ci/reference/config': '/docs/reference/nx-cloud/config',
   '/ci/reference/nx-cloud-cli': '/docs/reference/nx-cloud-cli',
   '/ci/reference/launch-templates': '/docs/reference/nx-cloud/launch-templates',
   '/ci/troubleshooting': '/docs/troubleshooting', // combined index listing
@@ -79,12 +79,12 @@ const docsToAstroRedirects = {
     '/docs/troubleshooting/ci-execution-failed',
   '/ci/recipes/enterprise/single-tenant':
     '/docs/enterprise/single-tenant/overview',
-  '/ci/reference/assignment-rules': '/docs/reference', // TODO: missing
-  '/ci/reference/custom-steps': '/docs/reference', // TODO: missing
-  '/ci/reference/custom-images': '/docs/reference', // TODO: missing
+  '/ci/reference/assignment-rules': '/docs/reference/nx-cloud/assignment-rules',
+  '/ci/reference/custom-steps': '/docs/reference/nx-cloud/custom-steps',
+  '/ci/reference/custom-images': '/docs/reference/nx-cloud/custom-images',
   '/ci/reference/env-vars': '/docs/reference/environment-variables',
-  '/ci/reference/credits-pricing': '/docs/reference', // TODO: missing
-  '/ci/reference/release-notes': '/docs/reference', // TODO: missing
+  '/ci/reference/credits-pricing': '/docs/reference/nx-cloud/credits-pricing',
+  '/ci/reference/release-notes': '/docs/reference/nx-cloud/release-notes',
 
   // ========== CONCEPTS ==========
   '/concepts': '/docs/concepts',
@@ -1805,7 +1805,7 @@ const docsToAstroRedirects = {
   // ================= CI ================
   '/ci': '/docs/getting-started/nx-cloud',
   '/ci/recipes': '/docs/guides/nx-cloud',
-  '/ci/recipes/improving-ttg': '/docs/guides/nx-cloud/setup-ci', // TODO: missing
+  '/ci/recipes/improving-ttg': '/docs/guides/nx-cloud/optimize-your-ttg',
   '/ci/recipes/set-up': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-azure': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-circle-ci': '/docs/guides/nx-cloud/setup-ci',
@@ -1824,8 +1824,8 @@ const docsToAstroRedirects = {
   '/ci/recipes/other': '/docs/guides/nx-cloud/setup-ci',
 
   // ============= SEE-ALSO =============
-  '/see-also': '/docs/getting-started/intro', // TODO: missing
-  '/see-also/sitemap': '/docs/getting-started/intro', // TODO: missing
+  '/see-also': '/docs/getting-started/intro', //  missing (but it wasn't really used i.e. ~0.01% of all traffic)
+  '/see-also/sitemap': '/docs/getting-started/intro', // missing (but it wasn't really used i.e. ~0.01% of all traffic)
 
   // ============= SHOWCASE =============
   // We removed these outdated showcase pages, but some have moved to reference (e.g. benchmarks)
@@ -1850,7 +1850,6 @@ const docsToAstroRedirects = {
   '/showcase/example-repos/mfe': '/docs/getting-started/intro',
 
   // ============ DEPRECATED ============
-  // TODO: 17 broken links
   // "/deprecated": "/docs/deprecated",
   // "/deprecated/affected-graph": "/docs/deprecated/affected-graph",
   // "/deprecated/print-affected": "/docs/deprecated/print-affected",

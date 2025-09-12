@@ -3,7 +3,7 @@ import {
   type StarlightRouteData,
 } from '@astrojs/starlight/route-data';
 import { devkitPages } from '../utils/devkit-content-queries';
-import { getEntries } from 'astro:content';
+import { getEntries, getEntry } from 'astro:content';
 
 interface SidebarLink {
   type: 'link';
@@ -40,10 +40,17 @@ export const onRequest = defineRouteMiddleware(async (context) => {
     context.locals.starlightRoute
   );
 
-  // Apply sorting to reference entries
-  const newEntries = [...commandSection, devkitSection];
+  const apiPackageSections = await getApiPackageSections(
+    context.locals.starlightRoute
+  );
+
+  // Apply sorting to reference entries  
+  const newEntries = [...commandSection, ...apiPackageSections, devkitSection];
+  
+  // Merge new entries with existing entries to preserve any that are already there
+  const existingEntries = refSection.entries as (SidebarGroup | SidebarLink)[];
   refSection.entries = sortReferenceEntries(
-    refSection.entries as (SidebarGroup | SidebarLink)[],
+    existingEntries,
     newEntries,
     desiredSectionOrder
   );
@@ -140,6 +147,55 @@ async function getCommandsSection({ entry }: StarlightRouteData) {
       isCurrent: entry.slug === slug,
     };
   });
+}
+
+async function getApiPackageSections({ entry }: StarlightRouteData) {
+  const packages = ['nx', 'plugin', 'web', 'workspace'];
+  const sections: SidebarGroup[] = [];
+
+  for (const pkg of packages) {
+    const entries: SidebarLink[] = [];
+    
+    // Try to get each doc type for this package
+    const docTypes = [
+      { id: `${pkg}-overview`, label: 'Overview', path: '' },
+      { id: `${pkg}-executors`, label: 'Executors', path: '/executors' },
+      { id: `${pkg}-generators`, label: 'Generators', path: '/generators' },
+      { id: `${pkg}-migrations`, label: 'Migrations', path: '/migrations' },
+    ];
+
+    for (const docType of docTypes) {
+      try {
+        const doc = await getEntry('nx-reference-packages', docType.id);
+        if (doc) {
+          const href = `/docs/reference/${pkg}${docType.path}`;
+          entries.push({
+            type: 'link',
+            label: docType.label,
+            href,
+            badge: undefined,
+            isCurrent: entry.slug === `reference/${pkg}${docType.path}`,
+            attrs: {},
+          });
+        }
+      } catch (e) {
+        // Doc doesn't exist, skip
+      }
+    }
+
+    if (entries.length > 0) {
+      const packageName = pkg === 'nx' ? 'nx' : `@nx/${pkg}`;
+      sections.push({
+        type: 'group',
+        label: packageName,
+        entries,
+        collapsed: !entry.slug.startsWith(`reference/${pkg}`),
+        badge: undefined,
+      });
+    }
+  }
+
+  return sections;
 }
 
 function sortReferenceEntries(
