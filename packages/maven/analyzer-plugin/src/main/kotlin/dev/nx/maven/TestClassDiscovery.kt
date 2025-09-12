@@ -1,7 +1,5 @@
 package dev.nx.maven
 
-import org.apache.maven.api.Language
-import org.apache.maven.api.ProjectScope
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -41,7 +39,7 @@ class TestClassDiscovery() {
         log.info("Getting Test Classes for project ${project.artifactId}")
 
         // Get test source roots
-        val testSourceRoots = project.getEnabledSourceRoots(ProjectScope.TEST, Language.JAVA_FAMILY)
+        val testSourceRoots = project.testCompileSourceRoots
 
         for (testSourceRoot in testSourceRoots) {
             val testDir = File(testSourceRoot.toString())
@@ -53,7 +51,7 @@ class TestClassDiscovery() {
             val javaFiles = findJavaFiles(testDir)
 
             for (javaFile in javaFiles) {
-                val testClassInfo = getTestClasses(javaFile, testDir)
+                val testClassInfo = getTestClass(javaFile, testDir)
                 if (testClassInfo != null) {
                     testClasses.add(testClassInfo)
                 }
@@ -79,7 +77,7 @@ class TestClassDiscovery() {
     /**
      * Parse a Java test file using simple string matching
      */
-    private fun getTestClasses(javaFile: File, testSourceRoot: File): TestClassInfo? {
+    private fun getTestClass(javaFile: File, testSourceRoot: File): TestClassInfo? {
         log.info("Getting Test Classes from $javaFile")
 
         val content = javaFile.readText()
@@ -152,7 +150,7 @@ class TestClassDiscovery() {
     /**
      * Check if the class content actually contains test methods
      */
-    private fun hasTestMethodsInClass(content: String, className: String): Boolean {
+    private fun hasTestMethodsInClass(content: String, @Suppress("UNUSED_PARAMETER") className: String): Boolean {
         // Simple check: look for test annotations anywhere in the file
         return testAnnotations.any { content.contains(it) }
     }
