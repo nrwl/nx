@@ -3,12 +3,11 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import dev.nx.maven.plugin.PluginExecutionFinder
-import org.apache.maven.model.Plugin
 import org.apache.maven.lifecycle.DefaultLifecycles
+import org.apache.maven.model.Plugin
 import org.apache.maven.project.MavenProject
-import org.apache.maven.plugin.logging.Log
-import kotlin.collections.component1
-import kotlin.collections.component2
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Collects lifecycle and plugin information directly from Maven APIs
@@ -18,8 +17,9 @@ class NxTargetFactory(
     private val sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
     private val pluginExecutionFinder: PluginExecutionFinder,
     private val objectMapper: ObjectMapper,
-    private val log: Log,
+    private val testClassDiscovery: TestClassDiscovery
 ) {
+    private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
     fun createNxTargets(
         mavenCommand: String,
         project: MavenProject
@@ -43,6 +43,17 @@ class NxTargetFactory(
             nxTargets.set<ObjectNode>(goal, target)
         }
         goalGroups.forEach { (groupName, group) ->
+            val groupArray = objectMapper.createArrayNode()
+            group.forEach { goal -> groupArray.add(goal) }
+            targetGroups.put(groupName, groupArray)
+        }
+
+        val (atomizedTestTargets, atomizedTestTargetGroups) = generateAtomizedTestTargets(project, mavenCommand)
+
+        atomizedTestTargets.forEach { (goal, target) ->
+            nxTargets.set<ObjectNode>(goal, target)
+        }
+        atomizedTestTargetGroups.forEach { (groupName, group) ->
             val groupArray = objectMapper.createArrayNode()
             group.forEach { goal -> groupArray.add(goal) }
             targetGroups.put(groupName, groupArray)
@@ -92,7 +103,10 @@ class NxTargetFactory(
         return targets
     }
 
-    private fun generateGoalTargets(project: MavenProject, mavenCommand: String): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
+    private fun generateGoalTargets(
+        project: MavenProject,
+        mavenCommand: String
+    ): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
         val targets = mutableMapOf<String, ObjectNode>()
         val targetGroups = mutableMapOf<String, List<String>>()
 
@@ -114,6 +128,24 @@ class NxTargetFactory(
         return Pair(targets, targetGroups)
     }
 
+    private fun generateAtomizedTestTargets(
+        project: MavenProject,
+        mavenCommand: String
+    ): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
+        val targets = mutableMapOf<String, ObjectNode>()
+        val targetGroups = mutableMapOf<String, List<String>>()
+
+        val testClasses = testClassDiscovery.discoverTestClasses(project)
+
+        testClasses.forEach { testClass ->
+            val targetName = "${testClass.packageName}.${testClass.filePath}.${testClass.className}"
+
+            log.info("Generating target for test class: $targetName'")
+        }
+
+        return Pair(targets, targetGroups)
+    }
+
     private fun getPhases(): Set<String> {
         val result = mutableSetOf<String>()
         lifecycles.lifeCycles.forEach { lifecycle ->
@@ -124,7 +156,12 @@ class NxTargetFactory(
         return result
     }
 
-    private fun createGoalTarget(mavenCommand: String, project: MavenProject, cleanPluginName: String, goalName: String): Pair< String, ObjectNode> {
+    private fun createGoalTarget(
+        mavenCommand: String,
+        project: MavenProject,
+        cleanPluginName: String,
+        goalName: String
+    ): Pair<String, ObjectNode> {
         val target = objectMapper.createObjectNode()
 
         target.put("executor", "nx:run-commands")

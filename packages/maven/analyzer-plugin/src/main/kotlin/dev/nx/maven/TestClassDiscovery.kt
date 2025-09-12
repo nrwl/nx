@@ -1,24 +1,31 @@
 package dev.nx.maven
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
+import org.apache.maven.api.Language
+import org.apache.maven.api.ProjectScope
 import org.apache.maven.project.MavenProject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
+
+data class TestClassInfo(
+    val className: String,
+    val packagePath: String,
+    val filePath: String,
+    val packageName: String
+)
 
 /**
  * Simple test class discovery utility for Maven projects
  * Uses lightweight string matching instead of complex AST parsing
  */
-class TestClassDiscovery {
+class TestClassDiscovery() {
+    private val log: Logger = LoggerFactory.getLogger(TestClassDiscovery::class.java)
 
-    private val objectMapper = ObjectMapper()
-    
     // Essential test annotations (simple string matching)
     private val testAnnotations = setOf(
         "@Test",
         "@TestTemplate",
-        "@ParameterizedTest", 
+        "@ParameterizedTest",
         "@RepeatedTest",
         "@TestFactory",
         "@org.junit.Test", // JUnit 4
@@ -28,29 +35,29 @@ class TestClassDiscovery {
     /**
      * Discover test classes in the given Maven project
      */
-    fun discoverTestClasses(project: MavenProject): ArrayNode {
-        val testClasses = objectMapper.createArrayNode()
-        
+    fun discoverTestClasses(project: MavenProject): List<TestClassInfo> {
+        val testClasses = mutableListOf<TestClassInfo>()
+
         // Get test source roots
-        val testSourceRoots = project.testCompileSourceRoots ?: emptyList()
-        
+        val testSourceRoots = project.getEnabledSourceRoots(ProjectScope.TEST, Language.JAVA_FAMILY)
+
         for (testSourceRoot in testSourceRoots) {
-            val testDir = File(testSourceRoot)
+            val testDir = File(testSourceRoot.toString())
             if (!testDir.exists() || !testDir.isDirectory) {
                 continue
             }
-            
+
             // Find all Java files recursively
             val javaFiles = findJavaFiles(testDir)
-            
+
             for (javaFile in javaFiles) {
-                val testClassInfo = parseTestFile(javaFile, testDir, project)
+                val testClassInfo = getTestClasses(javaFile, testDir)
                 if (testClassInfo != null) {
                     testClasses.add(testClassInfo)
                 }
             }
         }
-        
+
         return testClasses
     }
 
@@ -59,54 +66,49 @@ class TestClassDiscovery {
      */
     private fun findJavaFiles(directory: File): List<File> {
         val javaFiles = mutableListOf<File>()
-        
+
         directory.walkTopDown()
             .filter { it.isFile && it.name.endsWith(".java") }
             .forEach { javaFiles.add(it) }
-            
+
         return javaFiles
     }
 
     /**
      * Parse a Java test file using simple string matching
      */
-    private fun parseTestFile(javaFile: File, testSourceRoot: File, project: MavenProject): ObjectNode? {
-        try {
-            val content = javaFile.readText()
-            
-            // Quick check: does this file contain any test annotations?
-            val hasTestAnnotation = testAnnotations.any { content.contains(it) }
-            if (!hasTestAnnotation) {
-                return null
-            }
-            
-            // Extract package name (simple approach)
-            val packageName = extractPackageName(content)
-            
-            // Extract public class name (simple approach)
-            val className = extractPublicClassName(content) ?: return null
-            
-            // Double check: does this class actually have test methods?
-            if (!hasTestMethodsInClass(content, className)) {
-                return null
-            }
-            
-            // Create test class info
-            val testClassInfo = objectMapper.createObjectNode()
-            val packagePath = if (packageName.isNotEmpty()) "$packageName.$className" else className
-            val relativePath = testSourceRoot.toPath().relativize(javaFile.toPath()).toString().replace('\\', '/')
-            
-            testClassInfo.put("className", className)
-            testClassInfo.put("packagePath", packagePath)
-            testClassInfo.put("filePath", relativePath)
-            testClassInfo.put("packageName", packageName)
-            
-            return testClassInfo
-            
-        } catch (e: Exception) {
-            // Ignore errors - test discovery is optional
+    private fun getTestClasses(javaFile: File, testSourceRoot: File): TestClassInfo? {
+        log.info("Getting Test Classes from $javaFile")
+
+        val content = javaFile.readText()
+
+        // Quick check: does this file contain any test annotations?
+        val hasTestAnnotation = testAnnotations.any { content.contains(it) }
+        if (!hasTestAnnotation) {
             return null
         }
+
+        // Extract package name (simple approach)
+        val packageName = extractPackageName(content)
+
+        // Extract public class name (simple approach)
+        val className = extractPublicClassName(content) ?: return null
+
+        // Double check: does this class actually have test methods?
+        if (!hasTestMethodsInClass(content, className)) {
+            return null
+        }
+
+        // Create test class info
+        val packagePath = if (packageName.isNotEmpty()) "$packageName.$className" else className
+        val relativePath = testSourceRoot.toPath().relativize(javaFile.toPath()).toString().replace('\\', '/')
+
+        return TestClassInfo(
+            className = className,
+            packagePath = packagePath,
+            filePath = relativePath,
+            packageName = packageName
+        )
     }
 
     /**

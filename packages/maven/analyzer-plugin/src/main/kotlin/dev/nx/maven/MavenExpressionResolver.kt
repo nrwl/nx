@@ -1,16 +1,17 @@
 package dev.nx.maven
 
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Resolves Maven expressions and parameter values
  */
 class MavenExpressionResolver(
-    private val session: MavenSession,
-    private val log: Log
+    private val session: MavenSession
 ) {
+    private val log: Logger = LoggerFactory.getLogger(MavenExpressionResolver::class.java)
     
     /**
      * Resolves a mojo parameter value by trying expression, default value, and known mappings
