@@ -36,7 +36,9 @@ export function addBuildAndWatchDepsTargets(
   if (existsSync(projectJsonPath)) {
     const projectJson = readJsonFile(projectJsonPath);
     projectName = projectJson.name;
-  } else if (existsSync(packageJsonPath)) {
+  }
+
+  if (!projectName && existsSync(packageJsonPath)) {
     const packageJson = readJsonFile(packageJsonPath);
     projectName = packageJson.nx?.name ?? packageJson.name;
   }
