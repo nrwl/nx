@@ -217,8 +217,6 @@
     - [React](/technologies/react)
       - [Introduction](/technologies/react/introduction)
       - [Guides](/technologies/react/recipes)
-        - [React Native with Nx](/technologies/react/recipes/react-native)
-        - [Remix with Nx](/technologies/react/recipes/remix)
         - [React Router with Nx](/technologies/react/recipes/react-router)
         - [Use Environment Variables in React](/technologies/react/recipes/use-environment-variables-in-react)
         - [Using Tailwind CSS in React](/technologies/react/recipes/using-tailwind-css-in-react)
