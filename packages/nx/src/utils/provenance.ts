@@ -130,7 +130,7 @@ export async function ensurePackageHasProvenance(
 export class ProvenanceError extends Error {
   constructor(packageName: string, packageVersion: string, error?: string) {
     super(
-      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues \n Error: ${
+      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues. To disable this check at your own risk, you can set the NX_SKIP_PROVENANCE_CHECK environment variable to true. \n Error: ${
         error ?? ''
       }`
     );
