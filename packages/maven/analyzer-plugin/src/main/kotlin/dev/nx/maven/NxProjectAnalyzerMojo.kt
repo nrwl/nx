@@ -2,6 +2,8 @@ package dev.nx.maven
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import dev.nx.maven.plugin.PluginBasedAnalyzer
+import dev.nx.maven.plugin.PluginExecutionFinder
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.lifecycle.LifecycleExecutor
@@ -73,13 +75,13 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         // Create deeply shared components for maximum caching efficiency
         val sharedExpressionResolver = MavenExpressionResolver(session, log)
         val sharedPluginExecutionFinder = PluginExecutionFinder(log, lifecycleExecutor, session)
-        val sharedPluginBasedAnalyzer = PluginBasedAnalyzer(
-            log, session, lifecycleExecutor, pluginManager, sharedPluginExecutionFinder, sharedExpressionResolver
+        val pluginAnalyzer = PluginBasedAnalyzer(
+            log, session, pluginManager, sharedPluginExecutionFinder, sharedExpressionResolver
         )
-        
+
         // Create shared component instances ONCE for all projects (major optimization)
         val sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
-            objectMapper, workspaceRoot, log, session, pluginManager, lifecycleExecutor, sharedPluginBasedAnalyzer
+            objectMapper, workspaceRoot, log, pluginAnalyzer
         )
         val sharedLifecycleAnalyzer = MavenLifecycleAnalyzer(lifecycles, sharedInputOutputAnalyzer, objectMapper, log)
         val sharedTestClassDiscovery = TestClassDiscovery()
@@ -156,7 +158,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Generated project analyses with ${inMemoryAnalyses.size} projects: ${outputPath.absolutePath}")
     }
 
-    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, Pair<String, JsonNode>?>) : com.fasterxml.jackson.databind.node.ArrayNode {
+    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, Pair<String, JsonNode>?>): com.fasterxml.jackson.databind.node.ArrayNode {
         val createNodesResults = objectMapper.createArrayNode()
 
         // Group projects by root directory (for now, assume all projects are at workspace root)
