@@ -59,7 +59,7 @@ fn detect_editor(env_map: HashMap<String, String>) -> SupportedEditor {
         term_editor,
         SupportedEditor::VSCode | SupportedEditor::VSCodeInsiders
     ) {
-        if let Some(vscode_git_var) = get_env_var("VSCODE_GIT_ASKPASS_NODE", &env_map) {
+        if let Some(vscode_git_var) = get_env_var("VSCODE_GIT_ASKPASS", &env_map) {
             let vscode_git_var_lowercase = vscode_git_var.to_lowercase();
             if vscode_git_var_lowercase.contains("cursor") {
                 return SupportedEditor::Cursor;
