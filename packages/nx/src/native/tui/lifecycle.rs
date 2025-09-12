@@ -12,6 +12,8 @@ use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
 };
 
+use crossterm::terminal;
+
 use super::app::App;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
@@ -176,7 +178,7 @@ impl AppLifeCycle {
     ) -> napi::Result<()> {
         debug!("🚀 AppLifeCycle::__init called");
         trace!("TUI Mode: {:?}", self.tui_mode);
-        
+
         match self.tui_mode {
             TuiMode::FullScreen => {
                 debug!("📺 Initializing FULL-SCREEN TUI");
@@ -203,11 +205,19 @@ impl AppLifeCycle {
 
         // Create Tui with appropriate viewport based on mode
         let mut tui = match tui_mode {
-            TuiMode::FullScreen => Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?,
-            TuiMode::Inline => Tui::new_with_viewport(ratatui::Viewport::Inline(8))
-                .map_err(|e| napi::Error::from_reason(e.to_string()))?,
+            TuiMode::FullScreen => {
+                Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?
+            }
+            TuiMode::Inline => {
+                let inline_height = terminal::size()
+                    .map(|(_cols, rows)| rows)
+                    .expect("Failed to get terminal size");
+
+                Tui::new_with_viewport(ratatui::Viewport::Inline(inline_height))
+                    .map_err(|e| napi::Error::from_reason(e.to_string()))?
+            }
         };
-        
+
         // Enter terminal with appropriate mode
         tui.enter_with_mode(tui_mode)
             .map_err(|e| napi::Error::from_reason(e.to_string()))?;
@@ -238,7 +248,7 @@ impl AppLifeCycle {
         let mut app_guard = app_mutex.lock();
         app_guard.set_done_callback(done_callback);
         app_guard.register_action_handler(action_tx.clone()).ok();
-        
+
         for component in app_guard.components.iter_mut() {
             component.register_action_handler(action_tx.clone()).ok();
         }
@@ -301,7 +311,6 @@ impl AppLifeCycle {
     ) -> napi::Result<()> {
         self.__init_unified(done_callback, TuiMode::Inline)
     }
-
 
     #[napi]
     pub fn register_running_task(

@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 use tracing::trace;
-use tokio::runtime::Runtime;
 
 use super::child_process::ChildProcess;
 use super::os;
@@ -78,5 +76,4 @@ impl RustPseudoTerminal {
             command_label,
         )
     }
-
 }

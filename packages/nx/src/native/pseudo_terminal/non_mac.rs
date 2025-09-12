@@ -78,5 +78,4 @@ impl RustPseudoTerminal {
             command_label,
         )
     }
-
 }

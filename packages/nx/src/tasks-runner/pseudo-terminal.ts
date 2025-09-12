@@ -93,7 +93,6 @@ export class PseudoTerminal {
     return cp;
   }
 
-
   async fork(
     id: string,
     script: string,
@@ -114,7 +113,7 @@ export class PseudoTerminal {
     if (!this.initialized) {
       throw new Error('Call init() before forking processes');
     }
-    
+
     // Use regular fork
     const childProcess = this.rustPseudoTerminal.fork(
       id,
@@ -126,7 +125,7 @@ export class PseudoTerminal {
       quiet,
       commandLabel
     );
-    
+
     const cp = new PseudoTtyProcessWithSend(
       this.rustPseudoTerminal,
       childProcess,

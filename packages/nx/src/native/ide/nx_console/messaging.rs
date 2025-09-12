@@ -68,7 +68,10 @@ fn throttled(operation_key: &'static str, throttle_duration: Duration) -> bool {
 impl NxConsoleMessageConnection {
     pub async fn new(workspace_root: &str) -> Self {
         let socket_path = get_full_nx_console_socket_path(workspace_root);
-        debug!("🔌 Attempting to connect to Nx Console at: {}", socket_path.display());
+        debug!(
+            "🔌 Attempting to connect to Nx Console at: {}",
+            socket_path.display()
+        );
         let client = IpcTransport::new(&socket_path)
             .await
             .map(|transport| {
@@ -83,7 +86,10 @@ impl NxConsoleMessageConnection {
             .map(Arc::new);
 
         let is_connected = client.is_some();
-        debug!("🏁 NxConsoleMessageConnection created: is_connected={}", is_connected);
+        debug!(
+            "🏁 NxConsoleMessageConnection created: is_connected={}",
+            is_connected
+        );
         Self { client }
     }
 

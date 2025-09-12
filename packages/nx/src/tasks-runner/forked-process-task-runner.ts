@@ -200,7 +200,7 @@ export class ForkedProcessTaskRunner {
     }
   ): Promise<PseudoTtyProcess> {
     const childId = task.id;
-    
+
     const pseudoTerminal = await this.createPseudoTerminal();
     this.pseudoTerminals.add(pseudoTerminal);
     const p = await pseudoTerminal.fork(childId, forkScript, {
