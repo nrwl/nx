@@ -223,6 +223,14 @@ class PluginExecutionFinder(
     }
     
     /**
+     * Gets all plugins that are executable in the project context
+     * These are plugins declared in <build><plugins> section
+     */
+    fun getExecutablePlugins(project: MavenProject): List<org.apache.maven.model.Plugin> {
+        return project.build.plugins
+    }
+    
+    /**
      * Returns the default goals that a plugin executes during a specific phase
      * Based on standard Maven plugin lifecycle bindings
      */
