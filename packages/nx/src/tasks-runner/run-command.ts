@@ -440,6 +440,7 @@ export async function runCommand(
         argv: process.argv,
       });
 
+      const startTime = Date.now();
       const { taskResults, completed } = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
@@ -456,6 +457,7 @@ export async function runCommand(
         extraTargetDependencies,
         extraOptions
       );
+      const endTime = Date.now();
 
       const exitCode = !completed
         ? signalToCode('SIGINT')
@@ -471,6 +473,8 @@ export async function runCommand(
         workspaceRoot,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
+        startTime,
+        endTime,
       });
 
       return exitCode;
