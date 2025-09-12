@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
+import { platform } from 'os';
 
 /*
  * Verifies that the given npm package has provenance attestations
@@ -23,7 +24,7 @@ export async function ensurePackageHasProvenance(
   const execFileAsync = promisify(execFile);
   try {
     const result = await execFileAsync(
-      'npm',
+      platform() === 'win32' ? 'npm.cmd' : 'npm',
       ['view', `${packageName}@${packageVersion}`, '--json', '--silent'],
       {
         timeout: 20000,
@@ -33,12 +34,21 @@ export async function ensurePackageHasProvenance(
 
     const attURL = npmViewResult.dist?.attestations?.url;
 
-    if (!attURL) throw 'No attestation URL found';
+    if (!attURL)
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'No attestation URL found'
+      );
 
     const response = await fetch(attURL);
 
     if (!response.ok) {
-      throw `HTTP ${response.status}: ${response.statusText}`;
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        `HTTP ${response.status}: ${response.statusText}`
+      );
     }
 
     const attestations = (await response.json()) as {
@@ -62,17 +72,33 @@ export async function ensurePackageHasProvenance(
 
     // verify that provenance was actually generated from the right publishing workflow
     if (!workflowParameters) {
-      throw 'Missing workflow parameters in attestation';
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Missing workflow parameters in attestation'
+      );
     }
 
     if (workflowParameters.repository !== 'https://github.com/nrwl/nx') {
-      throw 'Repository does not match nrwl/nx';
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Repository does not match nrwl/nx'
+      );
     }
     if (workflowParameters.path !== '.github/workflows/publish.yml') {
-      throw 'Publishing workflow does not match .github/workflows/publish.yml';
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Publishing workflow does not match .github/workflows/publish.yml'
+      );
     }
     if (workflowParameters.ref !== `refs/tags/${npmViewResult.version}`) {
-      throw `Version ref does not match refs/tags/${npmViewResult.version}`;
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        `Version ref does not match refs/tags/${npmViewResult.version}`
+      );
     }
 
     // verify that provenance was generated from the exact same artifact as the one we are installing
@@ -82,11 +108,18 @@ export async function ensurePackageHasProvenance(
     ).toString('hex');
     const attestationSha = dsseEnvelopePayload.subject[0].digest.sha512;
     if (distSha !== attestationSha) {
-      throw 'Integrity hash does not match attestation hash';
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Integrity hash does not match attestation hash'
+      );
     }
     return;
   } catch (error) {
-    throw noProvenanceError(
+    if (error instanceof ProvenanceError) {
+      throw error;
+    }
+    throw new ProvenanceError(
       packageName,
       packageVersion,
       error.message || error
@@ -94,14 +127,15 @@ export async function ensurePackageHasProvenance(
   }
 }
 
-export const noProvenanceError = (
-  packageName: string,
-  packageVersion: string,
-  error?: string
-) =>
-  `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues \n Error: ${
-    error ?? ''
-  }`;
+export class ProvenanceError extends Error {
+  constructor(packageName: string, packageVersion: string, error?: string) {
+    super(
+      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues \n Error: ${
+        error ?? ''
+      }`
+    );
+  }
+}
 
 export function getNxPackageGroup(): string[] {
   const packageJsonPath = join(__dirname, '../../package.json');

@@ -531,15 +531,9 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  const execFileAsync = promisify(execFile);
-  const argsList = args.split(' ').filter((arg) => arg.length > 0);
-  const { stdout } = await execFileAsync(
-    pm,
-    ['view', `${pkg}@${version}`, ...argsList],
-    {
-      windowsHide: true,
-    }
-  );
+  const { stdout } = await execAsync(`${pm} ${pkg}@${version} ${args}`, {
+    windowsHide: true,
+  });
   return stdout.toString().trim();
 }
 
