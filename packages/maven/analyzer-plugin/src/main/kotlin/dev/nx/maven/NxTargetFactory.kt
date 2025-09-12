@@ -136,12 +136,32 @@ class NxTargetFactory(
         val targetGroups = mutableMapOf<String, List<String>>()
 
         val testClasses = testClassDiscovery.discoverTestClasses(project)
+        val testTargetNames = mutableListOf<String>()
 
         testClasses.forEach { testClass ->
-            val targetName = "${testClass.packageName}.${testClass.filePath}.${testClass.className}"
+            val targetName = "test--${testClass.packagePath}.${testClass.className}"
+
+            testTargetNames.add(targetName)
 
             log.info("Generating target for test class: $targetName'")
+            val target = objectMapper.createObjectNode()
+
+            target.put("executor", "nx:run-commands")
+
+            val options = objectMapper.createObjectNode()
+            options.put(
+                "command",
+                "$mavenCommand test -am -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className}"
+            )
+            target.put("options", options)
+
+            target.put("cache", false)
+            target.put("parallelism", false)
+
+            targets[targetName] = target
         }
+
+
 
         return Pair(targets, targetGroups)
     }
