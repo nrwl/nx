@@ -180,12 +180,6 @@
         "type": "boolean",
         "default": false
       },
-      "simpleName": {
-        "description": "Don't include the directory in the name of the module of the library.",
-        "type": "boolean",
-        "default": false,
-        "x-deprecated": "Use the --name option to provide the exact name instead. This option will be removed in Nx 22."
-      },
       "useProjectJson": {
         "type": "boolean",
         "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
