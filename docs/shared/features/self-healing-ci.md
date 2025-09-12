@@ -20,6 +20,10 @@ Nx Cloud Self-Healing CI is an **AI-powered system that automatically detects, a
 
 ## Enable Self-Healing CI
 
+{% callout title="VCS Integration Support" type="note" %}
+Currently, your Nx Cloud workspace needs to have the [GitHub VCS integration enabled](/ci/recipes/source-control-integration/github) to use self-healing ci. We are working on supporting more VCS providers!
+{% /callout %}
+
 To enable Self-Healing CI in your workspace, you'll need to connect to Nx Cloud and configure your CI pipeline.
 
 If you haven't already connected to Nx Cloud, run the following command:
