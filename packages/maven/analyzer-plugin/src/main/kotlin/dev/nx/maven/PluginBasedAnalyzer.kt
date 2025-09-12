@@ -17,13 +17,9 @@ class PluginBasedAnalyzer(
     private val session: MavenSession,
     private val lifecycleExecutor: LifecycleExecutor,
     private val pluginManager: MavenPluginManager,
-    private val pathResolver: PathResolver
+    private val pluginExecutionFinder: PluginExecutionFinder,
+    private val expressionResolver: MavenExpressionResolver
 ) {
-    
-    // Initialize component analyzers
-    private val expressionResolver = MavenExpressionResolver(session, log)
-    private val pluginExecutionFinder = PluginExecutionFinder(log, lifecycleExecutor, session)
-    private val mojoParameterAnalyzer = MojoParameterAnalyzer(log, expressionResolver, pathResolver)
     
     // Cache for expensive plugin descriptor loading
     // Key: "groupId:artifactId:version" (plugin coordinates)
@@ -32,7 +28,7 @@ class PluginBasedAnalyzer(
     /**
      * Analyzes a Maven phase by examining which plugins execute and their parameters
      */
-    fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: MutableSet<String>, outputs: MutableSet<String>): Boolean {
+    fun analyzePhaseInputsOutputs(phase: String, project: MavenProject, inputs: MutableSet<String>, outputs: MutableSet<String>, pathResolver: PathResolver): Boolean {
         
         log.warn("*** STARTING PHASE ANALYSIS FOR '$phase' ***")
         try {
@@ -52,11 +48,11 @@ class PluginBasedAnalyzer(
             // Analyze each plugin execution
             for (execution in executions) {
                 try {
-                    analyzePluginExecution(execution, project, inputs, outputs)
+                    analyzePluginExecution(execution, project, inputs, outputs, pathResolver)
                     
                     // Special handling for maven-compiler-plugin - explicitly add source directories
                     if (execution.plugin.artifactId == "maven-compiler-plugin") {
-                        addCompilerPluginSourceDirectories(execution, project, inputs, phase)
+                        addCompilerPluginSourceDirectories(execution, project, inputs, phase, pathResolver)
                     }
                 } catch (e: Exception) {
                     // Silently skip failed executions
@@ -79,7 +75,8 @@ class PluginBasedAnalyzer(
         execution: org.apache.maven.plugin.MojoExecution, 
         project: MavenProject, 
         inputs: MutableSet<String>, 
-        outputs: MutableSet<String>
+        outputs: MutableSet<String>,
+        pathResolver: PathResolver
     ) {
         val plugin = execution.plugin
         val goal = execution.goal
@@ -99,6 +96,7 @@ class PluginBasedAnalyzer(
             }
             
             // Analyze the mojo's parameters to find inputs and outputs
+            val mojoParameterAnalyzer = MojoParameterAnalyzer(log, expressionResolver, pathResolver)
             mojoParameterAnalyzer.analyzeMojo(mojo, project, inputs, outputs)
             
         } catch (e: Exception) {
@@ -186,8 +184,10 @@ class PluginBasedAnalyzer(
                     val pluginArtifactId = execution.plugin.artifactId
                     log.debug("Analyzing mojo: ${pluginArtifactId}:${mojo.goal}")
                     
-                    // Check for side effects
-                    if (mojoParameterAnalyzer.isSideEffectMojo(mojo)) {
+                    // Check for side effects - create temporary analyzer just for this check
+                    val tempPathResolver = PathResolver(session.executionRootDirectory ?: "", "", session)
+                    val tempMojoAnalyzer = MojoParameterAnalyzer(log, expressionResolver, tempPathResolver)
+                    if (tempMojoAnalyzer.isSideEffectMojo(mojo)) {
                         log.warn("Mojo ${pluginArtifactId}:${mojo.goal} detected as having side effects")
                         return CacheabilityAssessment(
                             cacheable = false,
@@ -234,7 +234,8 @@ class PluginBasedAnalyzer(
         execution: org.apache.maven.plugin.MojoExecution, 
         project: MavenProject, 
         inputs: MutableSet<String>,
-        phase: String
+        phase: String,
+        pathResolver: PathResolver
     ) {
         when (execution.goal) {
             "compile" -> {
