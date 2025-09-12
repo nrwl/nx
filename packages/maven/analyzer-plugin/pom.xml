@@ -52,27 +52,12 @@
       <version>2.16.1</version>
     </dependency>
 
-    <!-- Test dependency to verify classpath capture -->
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.11.0</version>
-    </dependency>
-
     <!-- Removed JavaParser - was causing StackOverflowError -->
 
     <!-- Maven Model -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Maven Project -->
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-embedder</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -84,48 +69,10 @@
       <version>${kotlin.version}</version>
     </dependency>
 
-    <!-- Maven Compat for PluginVersionResolver -->
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-compat</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Maven Artifact for plugin artifact creation -->
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-artifact</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Maven Build Cache Extension for native cacheability detection -->
-    <dependency>
-      <groupId>org.apache.maven.extensions</groupId>
-      <artifactId>maven-build-cache-extension</artifactId>
-      <version>1.2.0</version>
-      <optional>true</optional>
-    </dependency>
-
     <!-- Test Dependencies -->
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.10.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mockito.kotlin</groupId>
-      <artifactId>mockito-kotlin</artifactId>
-      <version>5.2.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-test-junit5</artifactId>
+      <artifactId>kotlin-test</artifactId>
       <version>${kotlin.version}</version>
       <scope>test</scope>
     </dependency>
