@@ -112,7 +112,7 @@
     <!-- JSON Serialization for Snapshots -->
     <dependency>
       <groupId>de.skuzzle.test</groupId>
-      <artifactId>snapshot-tests-jackson</artifactId>
+      <artifactId>snapshot-tests-json</artifactId>
       <version>1.11.0</version>
       <scope>test</scope>
     </dependency>
