@@ -1,6 +1,5 @@
 package dev.nx.maven
 
-import com.fasterxml.jackson.databind.node.ArrayNode
 import org.apache.maven.execution.MavenSession
 import java.io.File
 
@@ -12,13 +11,13 @@ class PathResolver(
     private val projectBaseDir: String? = null,
     private val session: MavenSession? = null
 ) {
-    
+
     /**
      * Adds an input path to the inputs collection, checking existence and formatting appropriately
      */
     fun addInputPath(path: String, inputs: MutableSet<String>) {
         // Handle classpath-style paths (multiple paths separated by : or ;)
-        val pathSeparator = System.getProperty("path.separator")
+        val pathSeparator = File.pathSeparator
         if (path.contains(pathSeparator)) {
             // Split classpath and add each path individually
             path.split(pathSeparator).forEach { singlePath ->
@@ -30,23 +29,7 @@ class PathResolver(
             addSingleInputPath(path, inputs)
         }
     }
-    
-    /**
-     * Legacy method for backward compatibility - converts ArrayNode to Set, processes, then updates ArrayNode
-     */
-    fun addInputPath(path: String, inputs: ArrayNode) {
-        val inputSet = mutableSetOf<String>()
-        // Convert existing ArrayNode to Set
-        inputs.forEach { inputSet.add(it.asText()) }
-        
-        // Add new path to Set
-        addInputPath(path, inputSet)
-        
-        // Clear ArrayNode and repopulate from Set
-        inputs.removeAll()
-        inputSet.forEach { inputs.add(it) }
-    }
-    
+
     /**
      * Adds a single input path to the inputs collection
      */
@@ -74,18 +57,7 @@ class PathResolver(
             }
         }
     }
-    
-    /**
-     * Legacy method for ArrayNode compatibility
-     */
-    private fun addSingleInputPath(path: String, inputs: ArrayNode) {
-        val inputSet = mutableSetOf<String>()
-        inputs.forEach { inputSet.add(it.asText()) }
-        addSingleInputPath(path, inputSet)
-        inputs.removeAll()
-        inputSet.forEach { inputs.add(it) }
-    }
-    
+
     /**
      * Checks if a path is an external dependency (JAR file outside the workspace)
      */
@@ -94,13 +66,13 @@ class PathResolver(
         return (file.name.endsWith(".jar") || file.name.endsWith(".war") || file.name.endsWith(".ear")) &&
                !path.startsWith(workspaceRoot)
     }
-    
+
     /**
      * Checks if a path is an inter-project dependency (output directory or JAR within the workspace)
      */
     private fun isInterProjectDependency(path: String): Boolean {
         if (!path.startsWith(workspaceRoot)) return false
-        
+
         val file = File(path)
         // Inter-project dependencies can be:
         // 1. JAR files within workspace (built artifacts)
@@ -108,31 +80,20 @@ class PathResolver(
         return (file.name.endsWith(".jar") || file.name.endsWith(".war") || file.name.endsWith(".ear")) ||
                (path.contains("/target/classes") || path.contains("/target/test-classes"))
     }
-    
+
     /**
      * Adds an output path to the outputs collection
      */
     fun addOutputPath(path: String, outputs: MutableSet<String>) {
         outputs.add(toProjectPath(path))
     }
-    
-    /**
-     * Legacy method for ArrayNode compatibility
-     */
-    fun addOutputPath(path: String, outputs: ArrayNode) {
-        val outputSet = mutableSetOf<String>()
-        outputs.forEach { outputSet.add(it.asText()) }
-        addOutputPath(path, outputSet)
-        outputs.removeAll()
-        outputSet.forEach { outputs.add(it) }
-    }
-    
+
     /**
      * Converts an absolute path to a project-relative path using Nx token format
      */
     fun toProjectPath(path: String): String = try {
         val filePath = java.nio.file.Paths.get(path)
-        
+
         // If we have a project base directory, make paths relative to the project root
         // This ensures {projectRoot} refers to the individual project's directory, not workspace root
         val baseDirPath = if (projectBaseDir != null) {
@@ -140,19 +101,19 @@ class PathResolver(
         } else {
             java.nio.file.Paths.get(workspaceRoot)
         }
-        
+
         val relativePath = baseDirPath.relativize(filePath)
         "{projectRoot}/$relativePath".replace('\\', '/')
     } catch (e: Exception) {
         "{projectRoot}/$path"
     }
-    
+
     /**
      * Determines the best Maven executable: mvnd > mvnw > mvn
      */
     fun getMavenCommand(): String {
         val root = findProjectWorkspaceRoot()
-        
+
         // First priority: Check for Maven Daemon
         try {
             val process = ProcessBuilder("mvnd", "--version")
@@ -166,7 +127,7 @@ class PathResolver(
         } catch (e: Exception) {
             // mvnd not available, continue to next option
         }
-        
+
         // Second priority: Check for Maven wrapper
         val mvnwFile = File(root, "mvnw")
         return if (mvnwFile.exists() && mvnwFile.canExecute()) {
@@ -175,7 +136,7 @@ class PathResolver(
             "mvn"
         }
     }
-    
+
     /**
      * Finds the workspace root by looking for the top-level pom.xml
      */
