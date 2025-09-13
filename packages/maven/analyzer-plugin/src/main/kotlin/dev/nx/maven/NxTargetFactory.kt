@@ -17,7 +17,8 @@ class NxTargetFactory(
     private val sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
     private val pluginExecutionFinder: PluginExecutionFinder,
     private val objectMapper: ObjectMapper,
-    private val testClassDiscovery: TestClassDiscovery
+    private val testClassDiscovery: TestClassDiscovery,
+    private val phaseAnalyzer: PhaseAnalyzer
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
     fun createNxTargets(
@@ -74,6 +75,9 @@ class NxTargetFactory(
         // Generate targets from phase analysis
         phasesToAnalyze.forEach { phase ->
             try {
+                val analysis2 = phaseAnalyzer.analyze(project, phase)
+
+
                 val analysis = sharedInputOutputAnalyzer.analyzeCacheability(phase, project)
                 log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
 
