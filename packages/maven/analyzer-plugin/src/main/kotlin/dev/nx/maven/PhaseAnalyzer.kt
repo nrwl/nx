@@ -60,11 +60,11 @@ class PhaseAnalyzer(
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
-        val analysis = analyzeParameterRole(parameter)
+        val role = analyzeParameterRole(parameter)
 
-        log.debug("Parameter analysis: ${parameter.name} -> ${analysis.role}")
+        log.debug("Parameter analysis: ${parameter.name} -> $role")
 
-        if (analysis.role == ParameterRole.UNKNOWN) {
+        if (role == ParameterRole.UNKNOWN) {
             log.debug("Skipping unknown parameter: ${parameter.name}")
             return ParameterInformation(inputs, outputs)
         }
@@ -81,7 +81,7 @@ class PhaseAnalyzer(
             return ParameterInformation(inputs, outputs)
         }
 
-        when (analysis.role) {
+        when (role) {
             ParameterRole.INPUT -> {
                 pathResolver.addInputPath(path, inputs)
                 log.debug("Added input path: $path (from parameter ${parameter.name})")
@@ -177,7 +177,7 @@ class PhaseAnalyzer(
         }
     }
 
-    private fun analyzeParameterRole(parameter: Parameter): ParameterAnalysis {
+    private fun analyzeParameterRole(parameter: Parameter): ParameterRole {
         val name = parameter.name
         val type = parameter.type
         val expression = parameter.expression ?: parameter.defaultValue ?: ""
@@ -190,111 +190,111 @@ class PhaseAnalyzer(
         when {
             expression.contains("project.compileSourceRoots") -> {
                 log.debug("Parameter $name: Maven source roots expression")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.testCompileSourceRoots") -> {
                 log.debug("Parameter $name: Maven test source roots expression")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.build.sourceDirectory") -> {
                 log.debug("Parameter $name: Maven source directory expression")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.build.testSourceDirectory") -> {
                 log.debug("Parameter $name: Maven test source directory expression")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.artifacts") -> {
                 log.debug("Parameter $name: Project artifacts dependency")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.dependencies") -> {
                 log.debug("Parameter $name: Project dependencies")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.build.resources") -> {
                 log.debug("Parameter $name: Maven resources expression")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.build.testResources") -> {
                 log.debug("Parameter $name: Maven test resources expression")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("basedir") -> {
                 log.debug("Parameter $name: Project base directory")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             expression.contains("project.build.directory") && expression.contains("target") -> {
                 log.debug("Parameter $name: Maven target directory expression")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
             expression.contains("project.build.outputDirectory") -> {
                 log.debug("Parameter $name: Maven output directory expression")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
             expression.contains("project.build.testOutputDirectory") -> {
                 log.debug("Parameter $name: Maven test output directory expression")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
             expression.contains("project.reporting.outputDirectory") -> {
                 log.debug("Parameter $name: Maven reporting output directory")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
             expression.contains("project.build.directory") -> {
                 log.debug("Parameter $name: Maven build directory expression")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
         }
 
         // Type and editability analysis (medium priority)
         if (!isEditable) {
             log.debug("Parameter $name: Non-editable parameter (likely derived from project model)")
-            return ParameterAnalysis(ParameterRole.INPUT)
+            return ParameterRole.INPUT
         }
 
         if (type.startsWith("java.util.List") && isRequired) {
             log.debug("Parameter $name: Required list parameter")
-            return ParameterAnalysis(ParameterRole.INPUT)
+            return ParameterRole.INPUT
         }
 
         // Description analysis (lowest priority)
         when {
             description.contains("read") && (description.contains("file") || description.contains("directory")) -> {
                 log.debug("Parameter $name: Description indicates reading files")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             description.contains("source") && description.contains("directory") -> {
                 log.debug("Parameter $name: Description mentions source directory")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             description.contains("input") -> {
                 log.debug("Parameter $name: Description mentions input")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             description.contains("classpath") -> {
                 log.debug("Parameter $name: Description mentions classpath")
-                return ParameterAnalysis(ParameterRole.INPUT)
+                return ParameterRole.INPUT
             }
             description.contains("output") && (description.contains("file") || description.contains("directory")) -> {
                 log.debug("Parameter $name: Description indicates output files")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
             description.contains("target") && description.contains("directory") -> {
                 log.debug("Parameter $name: Description mentions target directory")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
             description.contains("generate") -> {
                 log.debug("Parameter $name: Description mentions generating")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
             description.contains("destination") -> {
                 log.debug("Parameter $name: Description mentions destination")
-                return ParameterAnalysis(ParameterRole.OUTPUT)
+                return ParameterRole.OUTPUT
             }
         }
 
         log.debug("Parameter $name: No analysis strategy succeeded")
-        return ParameterAnalysis(ParameterRole.UNKNOWN)
+        return ParameterRole.UNKNOWN
     }
 
     private fun getMojoDescriptor(plugin: Plugin, goal: String, project: MavenProject): MojoDescriptor? {
@@ -318,10 +318,6 @@ enum class ParameterRole {
     BOTH,       // Parameter can be both input and output
     UNKNOWN     // Unable to determine parameter role
 }
-
-data class ParameterAnalysis(
-    val role: ParameterRole
-)
 
 data class ParameterInformation(
     val inputs: Set<String>,
