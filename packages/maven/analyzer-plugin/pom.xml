@@ -84,6 +84,69 @@
       <version>${kotlin.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- Maven Plugin Testing Harness -->
+    <dependency>
+      <groupId>org.apache.maven.plugin-testing</groupId>
+      <artifactId>maven-plugin-testing-harness</artifactId>
+      <version>4.0.0-alpha-2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Maven Testing Support -->
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-compat</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Snapshot Testing -->
+    <dependency>
+      <groupId>de.skuzzle.test</groupId>
+      <artifactId>snapshot-tests-junit5</artifactId>
+      <version>1.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JSON Serialization for Snapshots -->
+    <dependency>
+      <groupId>de.skuzzle.test</groupId>
+      <artifactId>snapshot-tests-jackson</artifactId>
+      <version>1.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit 5 -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- AssertJ -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.24.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Mockito -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JGit for gitignore parsing -->
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>6.8.0.202311291450-r</version>
+    </dependency>
   </dependencies>
 
   <build>
