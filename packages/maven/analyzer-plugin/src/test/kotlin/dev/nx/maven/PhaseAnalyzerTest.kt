@@ -1,52 +1,65 @@
 package dev.nx.maven
 
+import org.apache.maven.api.plugin.testing.MojoTest
+import org.apache.maven.api.plugin.testing.InjectMojo
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.model.Model
 import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.project.MavenProject
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
-import org.mockito.Mockito.mock
-import java.io.File
-import java.io.FileReader
 
 /**
- * Working unit test for PhaseAnalyzer that actually tests the functionality
+ * Working unit test for PhaseAnalyzer that uses Maven Plugin Testing Harness 4.0
  */
+@MojoTest
 class PhaseAnalyzerTest {
 
     private lateinit var analyzer: PhaseAnalyzer
+    private var gitIgnoreClassifier: GitIgnoreClassifier? = null
+
+    // Let the testing harness inject the session, plugin manager, and project
+    @InjectMojo(goal = "analyze")
+    private lateinit var session: MavenSession
+
+    @InjectMojo(goal = "analyze")
+    private lateinit var pluginManager: MavenPluginManager
+
+    @InjectMojo(goal = "analyze")
     private lateinit var testProject: MavenProject
 
     @BeforeEach
     fun setUp() {
-        // Create mock session and plugin manager for basic functionality
-        val session = mock(MavenSession::class.java)
-        val pluginManager = mock(MavenPluginManager::class.java)
+        // No need to manually load the test project - it's injected by the harness
 
-        // Load the test project
-        testProject = loadTestProject()
+        // Create GitIgnoreClassifier exactly as done in the main mojo
+        gitIgnoreClassifier = try {
+            val sessionRoot = session.executionRootDirectory?.let { java.io.File(it) }
+            if (sessionRoot != null) {
+                GitIgnoreClassifier(sessionRoot)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            println("Failed to initialize GitIgnoreClassifier: ${e.message}")
+            null
+        }
 
-        // Create PhaseAnalyzer with mock components for basic testing
+        // Create components with real session and plugin manager from testing harness
         val expressionResolver = MavenExpressionResolver(session)
         val pathResolver = PathResolver(testProject.basedir.absolutePath, testProject.basedir.absolutePath, session)
 
-        analyzer = PhaseAnalyzer(pluginManager, session, expressionResolver, pathResolver)
+        analyzer = PhaseAnalyzer(pluginManager, session, expressionResolver, pathResolver, gitIgnoreClassifier)
     }
 
-    private fun loadTestProject(): MavenProject {
-        val testPom = File("../../../impl/maven-cli/pom.xml")
-        val reader = org.apache.maven.model.io.xpp3.MavenXpp3Reader()
-        val model: Model = FileReader(testPom).use { reader.read(it) }
-
-        val project = MavenProject(model)
-        // Set file using setter method
-        project.setFile(testPom)
-        // Note: basedir will be derived from the file automatically
-
-        return project
+    @AfterEach
+    fun tearDown() {
+        // Clean up GitIgnoreClassifier resources
+        gitIgnoreClassifier?.close()
     }
+
+
 
     @Test
     fun testAnalyzeCompilePhase() {
