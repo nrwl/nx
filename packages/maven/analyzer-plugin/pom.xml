@@ -89,17 +89,11 @@
     <dependency>
       <groupId>org.apache.maven.plugin-testing</groupId>
       <artifactId>maven-plugin-testing-harness</artifactId>
-      <version>4.0.0-alpha-2</version>
+      <version>4.0.0-beta-4</version>
       <scope>test</scope>
     </dependency>
 
-    <!-- Maven Testing Support -->
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-compat</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+    
 
     <!-- Snapshot Testing -->
     <dependency>
@@ -114,6 +108,14 @@
       <groupId>de.skuzzle.test</groupId>
       <artifactId>snapshot-tests-json</artifactId>
       <version>1.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit 4 for Maven Plugin Testing Harness -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -206,7 +208,20 @@
         <version>3.2.5</version>
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
+          <!-- Run JUnit 4 tests for Maven Plugin Testing Harness -->
+          <includes>
+            <include>**/*Test.java</include>
+            <include>**/*Test.kt</include>
+          </includes>
         </configuration>
+        <dependencies>
+          <!-- Support for JUnit 4 tests (for Maven Plugin Testing Harness) -->
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit4</artifactId>
+            <version>3.2.5</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
     <sourceDirectory>src/main/kotlin</sourceDirectory>
