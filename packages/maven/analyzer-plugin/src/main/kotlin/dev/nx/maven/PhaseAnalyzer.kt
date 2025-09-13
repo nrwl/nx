@@ -18,6 +18,7 @@ class PhaseAnalyzer(
     private val pathResolver: PathResolver
 ) {
     private val log = LoggerFactory.getLogger(PhaseAnalyzer::class.java)
+    private var gitIgnoreClassifier: GitIgnoreClassifier? = null
 
     fun analyze(project: MavenProject, phase: String): PhaseInformation {
         val plugins = project.build.plugins
@@ -60,7 +61,12 @@ class PhaseAnalyzer(
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
-        val role = analyzeParameterRole(parameter)
+        // Initialize gitignore classifier if not already done
+        if (gitIgnoreClassifier == null) {
+            gitIgnoreClassifier = GitIgnoreClassifier(project.basedir)
+        }
+
+        val role = analyzeParameterRole(parameter, project)
 
         log.debug("Parameter analysis: ${parameter.name} -> $role")
 
@@ -177,7 +183,7 @@ class PhaseAnalyzer(
         }
     }
 
-    private fun analyzeParameterRole(parameter: Parameter): ParameterRole {
+    private fun analyzeParameterRole(parameter: Parameter, project: MavenProject): ParameterRole {
         val name = parameter.name
         val type = parameter.type
         val expression = parameter.expression ?: parameter.defaultValue ?: ""
@@ -293,6 +299,22 @@ class PhaseAnalyzer(
             }
         }
 
+        // NEW: Check gitignore status as final fallback strategy
+        val resolvedPath = expressionResolver.resolveParameterValue(
+            name,
+            parameter.defaultValue,
+            expression,
+            project
+        )
+        
+        if (resolvedPath != null) {
+            val gitIgnoreRole = gitIgnoreClassifier?.classifyPath(resolvedPath)
+            if (gitIgnoreRole != null) {
+                log.debug("Parameter $name: Gitignore classification suggests $gitIgnoreRole")
+                return gitIgnoreRole
+            }
+        }
+
         log.debug("Parameter $name: No analysis strategy succeeded")
         return ParameterRole.UNKNOWN
     }
@@ -309,6 +331,13 @@ class PhaseAnalyzer(
             log.warn("Failed to get MojoDescriptor for plugin ${plugin.artifactId} and goal $goal: ${e.message}")
             null
         }
+    }
+    
+    /**
+     * Clean up resources, especially Git repository handles
+     */
+    fun close() {
+        gitIgnoreClassifier?.close()
     }
 }
 
