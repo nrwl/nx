@@ -75,11 +75,11 @@ class NxTargetFactory(
         // Generate targets from phase analysis
         phasesToAnalyze.forEach { phase ->
             try {
-                val analysis2 = phaseAnalyzer.analyze(project, phase)
+                val analysis = phaseAnalyzer.analyze(project, phase)
 
 
-                val analysis = sharedInputOutputAnalyzer.analyzeCacheability(phase, project)
-                log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
+//                val analysis = sharedInputOutputAnalyzer.analyzeCacheability(phase, project)
+//                log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
 
                 val target = objectMapper.createObjectNode()
                 target.put("executor", "nx:run-commands")
@@ -89,7 +89,7 @@ class NxTargetFactory(
                 target.put("options", options)
 
                 // Copy caching info from analysis
-                if (analysis.cacheable) {
+                if (analysis) {
                     target.put("cache", true)
                     target.put("inputs", analysis.inputs)
                     target.put("outputs", analysis.outputs)
