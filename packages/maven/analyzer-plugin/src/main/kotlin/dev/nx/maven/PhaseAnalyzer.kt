@@ -15,22 +15,10 @@ class PhaseAnalyzer(
     private val pluginManager: MavenPluginManager,
     private val session: MavenSession,
     private val expressionResolver: MavenExpressionResolver,
-    private val pathResolver: PathResolver
+    private val pathResolver: PathResolver,
+    private val gitIgnoreClassifier: GitIgnoreClassifier? = null
 ) {
     private val log = LoggerFactory.getLogger(PhaseAnalyzer::class.java)
-
-    // Create one GitIgnoreClassifier per session using execution root directory
-    private val gitIgnoreClassifier: GitIgnoreClassifier? = try {
-        val sessionRoot = session.executionRootDirectory?.let { java.io.File(it) }
-        if (sessionRoot != null) {
-            GitIgnoreClassifier(sessionRoot)
-        } else {
-            null
-        }
-    } catch (e: Exception) {
-        log.debug("Failed to initialize GitIgnoreClassifier: ${e.message}")
-        null
-    }
 
     fun analyze(project: MavenProject, phase: String): PhaseInformation {
         val plugins = project.build.plugins
@@ -381,12 +369,6 @@ class PhaseAnalyzer(
         }
     }
 
-    /**
-     * Clean up resources, especially Git repository handles
-     */
-    fun close() {
-        gitIgnoreClassifier?.close()
-    }
 }
 
 enum class ParameterRole {
