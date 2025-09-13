@@ -1,19 +1,15 @@
 package dev.nx.maven
 
-import org.apache.maven.project.MavenProject
-import org.apache.maven.plugin.descriptor.PluginDescriptor
-import org.apache.maven.plugin.descriptor.MojoDescriptor
-import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.model.Plugin
+import org.apache.maven.plugin.MavenPluginManager
+import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
+import org.apache.maven.project.MavenProject
 import org.slf4j.LoggerFactory
-import dev.nx.maven.MavenExpressionResolver
-import dev.nx.maven.PathResolver
-
 
 /**
- * Handles path resolution, Maven command detection, and input/output path formatting for Nx
+ * Analyzes Maven phases to determine inputs, outputs, and thread safety
  */
 class PhaseAnalyzer(
     private val pluginManager: MavenPluginManager,
@@ -21,84 +17,12 @@ class PhaseAnalyzer(
     private val expressionResolver: MavenExpressionResolver,
     private val pathResolver: PathResolver
 ) {
-    val log = LoggerFactory.getLogger(PhaseAnalyzer::class.java)
-
-    // Plugin knowledge base for common Maven plugins
-    private val pluginKnowledge = mapOf(
-        // Maven Compiler Plugin
-        "maven-compiler-plugin:compile" to mapOf(
-            "source" to ParameterAnalysis(ParameterRole.INPUT, "Java source version"),
-            "target" to ParameterAnalysis(ParameterRole.INPUT, "Java target version"),
-            "compileSourceRoots" to ParameterAnalysis(ParameterRole.INPUT, "Source root directories"),
-            "outputDirectory" to ParameterAnalysis(ParameterRole.OUTPUT, "Compiled classes output"),
-            "classpathElements" to ParameterAnalysis(ParameterRole.INPUT, "Compilation classpath")
-        ),
-        "maven-compiler-plugin:testCompile" to mapOf(
-            "testSource" to ParameterAnalysis(ParameterRole.INPUT, "Java test source version"),
-            "testTarget" to ParameterAnalysis(ParameterRole.INPUT, "Java test target version"),
-            "testCompileSourceRoots" to ParameterAnalysis(ParameterRole.INPUT, "Test source directories"),
-            "testOutputDirectory" to ParameterAnalysis(ParameterRole.OUTPUT, "Compiled test classes output"),
-            "testClasspathElements" to ParameterAnalysis(ParameterRole.INPUT, "Test compilation classpath")
-        ),
-
-        // Maven Surefire Plugin (Testing)
-        "maven-surefire-plugin:test" to mapOf(
-            "testSourceDirectory" to ParameterAnalysis(ParameterRole.INPUT, "Test source directory"),
-            "testClassesDirectory" to ParameterAnalysis(ParameterRole.INPUT, "Compiled test classes"),
-            "reportsDirectory" to ParameterAnalysis(ParameterRole.OUTPUT, "Test reports output"),
-            "testClasspathElements" to ParameterAnalysis(ParameterRole.INPUT, "Test runtime classpath"),
-            "includes" to ParameterAnalysis(ParameterRole.INPUT, "Test include patterns"),
-            "excludes" to ParameterAnalysis(ParameterRole.INPUT, "Test exclude patterns")
-        ),
-
-        // Maven Resources Plugin
-        "maven-resources-plugin:resources" to mapOf(
-            "resources" to ParameterAnalysis(ParameterRole.INPUT, "Resource directories"),
-            "outputDirectory" to ParameterAnalysis(ParameterRole.OUTPUT, "Resources output directory")
-        ),
-        "maven-resources-plugin:testResources" to mapOf(
-            "testResources" to ParameterAnalysis(ParameterRole.INPUT, "Test resource directories"),
-            "testOutputDirectory" to ParameterAnalysis(ParameterRole.OUTPUT, "Test resources output")
-        ),
-
-        // Maven JAR Plugin
-        "maven-jar-plugin:jar" to mapOf(
-            "classesDirectory" to ParameterAnalysis(ParameterRole.INPUT, "Compiled classes directory"),
-            "outputDirectory" to ParameterAnalysis(ParameterRole.OUTPUT, "JAR output directory"),
-            "finalName" to ParameterAnalysis(ParameterRole.OUTPUT, "JAR file name")
-        ),
-
-        // Maven Clean Plugin
-        "maven-clean-plugin:clean" to mapOf(
-            "directory" to ParameterAnalysis(ParameterRole.OUTPUT, "Directory to clean"),
-            "filesets" to ParameterAnalysis(ParameterRole.OUTPUT, "File sets to clean")
-        ),
-
-        // Maven Install Plugin
-        "maven-install-plugin:install" to mapOf(
-            "file" to ParameterAnalysis(ParameterRole.INPUT, "Artifact file to install"),
-            "localRepository" to ParameterAnalysis(ParameterRole.OUTPUT, "Local repository location")
-        ),
-
-        // Maven Deploy Plugin
-        "maven-deploy-plugin:deploy" to mapOf(
-            "file" to ParameterAnalysis(ParameterRole.INPUT, "Artifact file to deploy"),
-            "repositoryId" to ParameterAnalysis(ParameterRole.INPUT, "Target repository ID"),
-            "url" to ParameterAnalysis(ParameterRole.INPUT, "Repository URL")
-        )
-    )
-
-    /**
-     * Checks the plugin knowledge base for known parameter roles
-     */
-    private fun checkKnowledgeBase(plugin: Plugin, goal: String, parameterName: String): ParameterAnalysis? {
-        val pluginKey = "${plugin.artifactId}:$goal"
-        return pluginKnowledge[pluginKey]?.get(parameterName)
-    }
+    private val log = LoggerFactory.getLogger(PhaseAnalyzer::class.java)
 
     fun analyze(project: MavenProject, phase: String): PhaseInformation {
         val plugins = project.build.plugins
         var isThreadSafe = true
+        var isCacheable = true
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
@@ -114,7 +38,11 @@ class PhaseAnalyzer(
             if (!descriptor.isThreadSafe) {
                 isThreadSafe = false
             }
-            
+
+            if (!isMojoCacheable(descriptor)) {
+                isCacheable = false
+            }
+
             descriptor.parameters?.forEach { parameter ->
                 val paramInfo = analyzeParameterWithConfidence(parameter, project)
                 inputs.addAll(paramInfo.inputs)
@@ -122,89 +50,251 @@ class PhaseAnalyzer(
             }
         }
 
-        return PhaseInformation(isThreadSafe, inputs, outputs)
+        return PhaseInformation(isThreadSafe, isCacheable, inputs, outputs)
     }
 
     /**
-     * Analyzes parameter using combined strategy with confidence scoring
+     * Analyzes parameter to determine inputs and outputs
      */
     private fun analyzeParameterWithConfidence(parameter: Parameter, project: MavenProject): ParameterInformation {
-        val name = parameter.name
-        val type = parameter.type
-        
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
-        
-        val analysis = analyzeParameterRole(parameter, project)
-        
-        log.debug("Parameter analysis: $name -> ${analysis.role} (reason: ${analysis.reason})")
+
+        val analysis = analyzeParameterRole(parameter)
+
+        log.debug("Parameter analysis: ${parameter.name} -> ${analysis.role}")
 
         if (analysis.role == ParameterRole.UNKNOWN) {
-            log.debug("Skipping unknown parameter: $name")
+            log.debug("Skipping unknown parameter: ${parameter.name}")
             return ParameterInformation(inputs, outputs)
         }
 
         val path = expressionResolver.resolveParameterValue(
-            name, 
-            parameter.defaultValue, 
-            parameter.expression, 
+            parameter.name,
+            parameter.defaultValue,
+            parameter.expression,
             project
         )
-        
+
         if (path == null) {
-            log.debug("Parameter $name resolved to null path")
+            log.debug("Parameter ${parameter.name} resolved to null path")
             return ParameterInformation(inputs, outputs)
         }
 
         when (analysis.role) {
             ParameterRole.INPUT -> {
                 pathResolver.addInputPath(path, inputs)
-                log.debug("Added input path: $path (from parameter $name)")
+                log.debug("Added input path: $path (from parameter ${parameter.name})")
             }
             ParameterRole.OUTPUT -> {
                 pathResolver.addOutputPath(path, outputs)
-                log.debug("Added output path: $path (from parameter $name)")
+                log.debug("Added output path: $path (from parameter ${parameter.name})")
             }
             ParameterRole.BOTH -> {
                 pathResolver.addInputPath(path, inputs)
                 pathResolver.addOutputPath(path, outputs)
-                log.debug("Added input/output path: $path (from parameter $name)")
+                log.debug("Added input/output path: $path (from parameter ${parameter.name})")
             }
             ParameterRole.UNKNOWN -> {
-                // Won't reach here due to the early return above
+                // Won't reach here due to early return above
             }
         }
-        
+
         return ParameterInformation(inputs, outputs)
     }
 
     /**
-     * Comprehensive parameter role analysis using multiple strategies
+     * Determines if a mojo can be safely cached based on its characteristics
      */
-    private fun analyzeParameterRole(parameter: Parameter, project: MavenProject): ParameterAnalysis {
-        // Strategy 1: Check plugin knowledge base (highest confidence)
-        // Note: We don't have plugin/goal context here, so we'll skip this for now
-        // In a real implementation, we'd pass this context through
-        
-        // Strategy 2: Analyze Maven expression (high confidence)
-        val exprAnalysis = analyzeByExpression(parameter)
-        if (exprAnalysis.role != ParameterRole.UNKNOWN) {
-            return exprAnalysis
+    private fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
+        val goal = descriptor.goal
+        val artifactId = descriptor.pluginDescriptor?.artifactId ?: ""
+
+        // Known non-cacheable plugins/goals
+        val nonCacheablePatterns = listOf(
+            // Network/deployment operations
+            "deploy", "install", "release", "site-deploy",
+            // Interactive/time-sensitive operations  
+            "exec", "run", "start", "stop",
+            // Cleaning operations
+            "clean",
+            // IDE integration
+            "eclipse", "idea",
+            // Help/info operations
+            "help", "dependency:tree", "versions:display"
+        )
+
+        // Check if goal matches non-cacheable patterns
+        if (nonCacheablePatterns.any { pattern -> 
+            goal.contains(pattern, ignoreCase = true) || 
+            artifactId.contains(pattern, ignoreCase = true) 
+        }) {
+            log.debug("Mojo $artifactId:$goal marked as non-cacheable due to goal/plugin pattern")
+            return false
         }
-        
-        // Strategy 3: Use type and editability analysis (medium confidence)
-        val typeAnalysis = analyzeByType(parameter)
-        if (typeAnalysis != null) {
-            return typeAnalysis
+
+        // Check for network-related parameters
+        descriptor.parameters?.forEach { parameter ->
+            val name = parameter.name.lowercase()
+            val description = parameter.description?.lowercase() ?: ""
+            
+            if (hasNetworkIndicators(name, description)) {
+                log.debug("Mojo $artifactId:$goal marked as non-cacheable due to network parameter: ${parameter.name}")
+                return false
+            }
         }
-        
-        // Strategy 4: Fall back to description analysis (low confidence)
-        val descAnalysis = analyzeByDescription(parameter)
-        if (descAnalysis.role != ParameterRole.UNKNOWN) {
-            return descAnalysis
+
+        // Check for time-sensitive operations
+        if (hasTimeSensitiveIndicators(goal, artifactId)) {
+            log.debug("Mojo $artifactId:$goal marked as non-cacheable due to time-sensitive operation")
+            return false
         }
+
+        log.debug("Mojo $artifactId:$goal appears cacheable")
+        return true
+    }
+
+    private fun hasNetworkIndicators(name: String, description: String): Boolean {
+        val networkKeywords = listOf(
+            "url", "server", "host", "port", "repository", "endpoint",
+            "deploy", "upload", "download", "remote", "publish"
+        )
         
-        return ParameterAnalysis(ParameterRole.UNKNOWN, "No analysis strategy succeeded")
+        return networkKeywords.any { keyword ->
+            name.contains(keyword) || description.contains(keyword)
+        }
+    }
+
+    private fun hasTimeSensitiveIndicators(goal: String, artifactId: String): Boolean {
+        val timeSensitiveKeywords = listOf(
+            "timestamp", "buildnumber", "time", "date",
+            "git-commit", "scm", "build-info"
+        )
+        
+        return timeSensitiveKeywords.any { keyword ->
+            goal.contains(keyword, ignoreCase = true) || 
+            artifactId.contains(keyword, ignoreCase = true)
+        }
+    }
+
+    private fun analyzeParameterRole(parameter: Parameter): ParameterAnalysis {
+        val name = parameter.name
+        val type = parameter.type
+        val expression = parameter.expression ?: parameter.defaultValue ?: ""
+        val description = parameter.description?.lowercase() ?: ""
+        val isEditable = parameter.isEditable
+        val isRequired = parameter.isRequired
+        val alias = parameter.alias
+
+        // Analyze Maven expressions (highest priority)
+        when {
+            expression.contains("project.compileSourceRoots") -> {
+                log.debug("Parameter $name: Maven source roots expression")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.testCompileSourceRoots") -> {
+                log.debug("Parameter $name: Maven test source roots expression")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.build.sourceDirectory") -> {
+                log.debug("Parameter $name: Maven source directory expression")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.build.testSourceDirectory") -> {
+                log.debug("Parameter $name: Maven test source directory expression")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.artifacts") -> {
+                log.debug("Parameter $name: Project artifacts dependency")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.dependencies") -> {
+                log.debug("Parameter $name: Project dependencies")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.build.resources") -> {
+                log.debug("Parameter $name: Maven resources expression")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.build.testResources") -> {
+                log.debug("Parameter $name: Maven test resources expression")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("basedir") -> {
+                log.debug("Parameter $name: Project base directory")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            expression.contains("project.build.directory") && expression.contains("target") -> {
+                log.debug("Parameter $name: Maven target directory expression")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+            expression.contains("project.build.outputDirectory") -> {
+                log.debug("Parameter $name: Maven output directory expression")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+            expression.contains("project.build.testOutputDirectory") -> {
+                log.debug("Parameter $name: Maven test output directory expression")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+            expression.contains("project.reporting.outputDirectory") -> {
+                log.debug("Parameter $name: Maven reporting output directory")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+            expression.contains("project.build.directory") -> {
+                log.debug("Parameter $name: Maven build directory expression")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+        }
+
+        // Type and editability analysis (medium priority)
+        if (!isEditable) {
+            log.debug("Parameter $name: Non-editable parameter (likely derived from project model)")
+            return ParameterAnalysis(ParameterRole.INPUT)
+        }
+
+        if (type.startsWith("java.util.List") && isRequired) {
+            log.debug("Parameter $name: Required list parameter")
+            return ParameterAnalysis(ParameterRole.INPUT)
+        }
+
+        // Description analysis (lowest priority)
+        when {
+            description.contains("read") && (description.contains("file") || description.contains("directory")) -> {
+                log.debug("Parameter $name: Description indicates reading files")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            description.contains("source") && description.contains("directory") -> {
+                log.debug("Parameter $name: Description mentions source directory")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            description.contains("input") -> {
+                log.debug("Parameter $name: Description mentions input")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            description.contains("classpath") -> {
+                log.debug("Parameter $name: Description mentions classpath")
+                return ParameterAnalysis(ParameterRole.INPUT)
+            }
+            description.contains("output") && (description.contains("file") || description.contains("directory")) -> {
+                log.debug("Parameter $name: Description indicates output files")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+            description.contains("target") && description.contains("directory") -> {
+                log.debug("Parameter $name: Description mentions target directory")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+            description.contains("generate") -> {
+                log.debug("Parameter $name: Description mentions generating")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+            description.contains("destination") -> {
+                log.debug("Parameter $name: Description mentions destination")
+                return ParameterAnalysis(ParameterRole.OUTPUT)
+            }
+        }
+
+        log.debug("Parameter $name: No analysis strategy succeeded")
+        return ParameterAnalysis(ParameterRole.UNKNOWN)
     }
 
     private fun getMojoDescriptor(plugin: Plugin, goal: String, project: MavenProject): MojoDescriptor? {
@@ -220,125 +310,17 @@ class PhaseAnalyzer(
             null
         }
     }
-
-
-    /**
-     * Analyzes parameter role based on Maven expressions and default values
-     */
-    private fun analyzeByExpression(parameter: Parameter): ParameterAnalysis {
-        val expr = parameter.expression ?: parameter.defaultValue
-        if (expr.isNullOrEmpty()) {
-            return ParameterAnalysis(ParameterRole.UNKNOWN, "No expression or default value")
-        }
-
-        return when {
-            // Input patterns in expressions
-            expr.contains("project.compileSourceRoots") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Maven source roots expression")
-            expr.contains("project.testCompileSourceRoots") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Maven test source roots expression")
-            expr.contains("project.build.sourceDirectory") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Maven source directory expression")
-            expr.contains("project.build.testSourceDirectory") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Maven test source directory expression")
-            expr.contains("project.artifacts") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Project artifacts dependency")
-            expr.contains("project.dependencies") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Project dependencies")
-            expr.contains("project.build.resources") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Maven resources expression")
-            expr.contains("project.build.testResources") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Maven test resources expression")
-            expr.contains("basedir") -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Project base directory")
-
-            // Output patterns in expressions
-            expr.contains("project.build.directory") && expr.contains("target") ->
-                ParameterAnalysis(ParameterRole.OUTPUT, "Maven target directory expression")
-            expr.contains("project.build.outputDirectory") -> 
-                ParameterAnalysis(ParameterRole.OUTPUT, "Maven output directory expression")
-            expr.contains("project.build.testOutputDirectory") -> 
-                ParameterAnalysis(ParameterRole.OUTPUT, "Maven test output directory expression")
-            expr.contains("project.reporting.outputDirectory") -> 
-                ParameterAnalysis(ParameterRole.OUTPUT, "Maven reporting output directory")
-            expr.contains("project.build.directory") -> 
-                ParameterAnalysis(ParameterRole.OUTPUT, "Maven build directory expression")
-
-            else -> ParameterAnalysis(ParameterRole.UNKNOWN, "Expression not recognized")
-        }
-    }
-
-    /**
-     * Analyzes parameter role based on type and editability
-     */
-    private fun analyzeByType(parameter: Parameter): ParameterAnalysis? {
-        val type = parameter.type ?: return null
-
-        // Non-editable parameters are typically inputs (derived from project model)
-        if (!parameter.isEditable) {
-            return ParameterAnalysis(
-                ParameterRole.INPUT, 
-                "Non-editable parameter (likely derived from project model)"
-            )
-        }
-
-        return when {
-            // Collection types with specific patterns
-            type.startsWith("java.util.List") && parameter.required -> 
-                ParameterAnalysis(ParameterRole.INPUT, "Required list parameter")
-            
-            // File types need further analysis by name/expression
-            type == "java.io.File" || type == "java.nio.file.Path" -> null
-            
-            else -> null
-        }
-    }
-
-    /**
-     * Analyzes parameter role based on description text
-     */
-    private fun analyzeByDescription(parameter: Parameter): ParameterAnalysis {
-        val description = parameter.description?.lowercase() ?: ""
-        if (description.isEmpty()) {
-            return ParameterAnalysis(ParameterRole.UNKNOWN, "No description available")
-        }
-
-        return when {
-            // Input indicators in description
-            description.contains("read") && (description.contains("file") || description.contains("directory")) ->
-                ParameterAnalysis(ParameterRole.INPUT, "Description indicates reading files")
-            description.contains("source") && description.contains("directory") ->
-                ParameterAnalysis(ParameterRole.INPUT, "Description mentions source directory")
-            description.contains("input") ->
-                ParameterAnalysis(ParameterRole.INPUT, "Description mentions input")
-            description.contains("classpath") ->
-                ParameterAnalysis(ParameterRole.INPUT, "Description mentions classpath")
-
-            // Output indicators in description
-            description.contains("output") && (description.contains("file") || description.contains("directory")) ->
-                ParameterAnalysis(ParameterRole.OUTPUT, "Description indicates output files")
-            description.contains("target") && description.contains("directory") ->
-                ParameterAnalysis(ParameterRole.OUTPUT, "Description mentions target directory")
-            description.contains("generate") ->
-                ParameterAnalysis(ParameterRole.OUTPUT, "Description mentions generating")
-            description.contains("destination") ->
-                ParameterAnalysis(ParameterRole.OUTPUT, "Description mentions destination")
-
-            else -> ParameterAnalysis(ParameterRole.UNKNOWN, "Description not conclusive")
-        }
-    }
 }
 
 enum class ParameterRole {
     INPUT,      // Parameter represents input files/data
-    OUTPUT,     // Parameter represents output files/data  
+    OUTPUT,     // Parameter represents output files/data
     BOTH,       // Parameter can be both input and output
     UNKNOWN     // Unable to determine parameter role
 }
 
 data class ParameterAnalysis(
-    val role: ParameterRole,
-    val reason: String
+    val role: ParameterRole
 )
 
 data class ParameterInformation(
@@ -348,6 +330,7 @@ data class ParameterInformation(
 
 data class PhaseInformation(
     val isThreadSafe: Boolean,
+    val isCacheable: Boolean,
     val inputs: Set<String>,
     val outputs: Set<String>
 )
