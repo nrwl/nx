@@ -1,6 +1,8 @@
 package dev.nx.maven
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import dev.nx.maven.plugin.PluginExecutionFinder
 import org.apache.maven.lifecycle.DefaultLifecycles
@@ -89,15 +91,23 @@ class NxTargetFactory(
                 target.put("options", options)
 
                 // Copy caching info from analysis
-                if (analysis) {
+                if (analysis.isCacheable) {
                     target.put("cache", true)
-                    target.put("inputs", analysis.inputs)
-                    target.put("outputs", analysis.outputs)
+
+                    // Convert inputs to JsonNode array
+                    val inputsArray = objectMapper.createArrayNode()
+                    analysis.inputs.forEach { input -> inputsArray.add(input) }
+                    target.set<ArrayNode>("inputs", inputsArray)
+
+                    // Convert outputs to JsonNode array
+                    val outputsArray = objectMapper.createArrayNode()
+                    analysis.outputs.forEach { output -> outputsArray.add(output) }
+                    target.set<ArrayNode>("outputs", outputsArray)
                 } else {
                     target.put("cache", false)
                 }
 
-                target.put("parallelism", true)
+                target.put("parallelism", analysis.isThreadSafe)
                 targets[phase] = target
 
             } catch (e: Exception) {
