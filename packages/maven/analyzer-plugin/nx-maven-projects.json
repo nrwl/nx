@@ -8,16 +8,13 @@
         "projectType" : "library",
         "sourceRoot" : "/src/main/java",
         "targets" : {
-          "before:clean" : {
+          "pre-clean" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn before:clean -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn pre-clean -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -29,55 +26,13 @@
             "cache" : false,
             "parallelism" : true
           },
-          "after:clean" : {
+          "post-clean" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:clean -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn post-clean -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:all" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:all -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:initialize" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:initialize -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:validate" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:validate -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -87,23 +42,7 @@
               "command" : "mvn validate -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "after:validate" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:validate -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -113,113 +52,44 @@
               "command" : "mvn initialize -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
-          "after:initialize" : {
+          "generate-sources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:initialize -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn generate-sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
-          "before:build" : {
+          "process-sources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn before:build -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:sources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "sources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "after:sources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn process-sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : false,
             "parallelism" : true
           },
-          "before:resources" : {
+          "generate-resources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn before:resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn generate-resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
-          "resources" : {
+          "process-resources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn process-resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : false,
-            "parallelism" : true
-          },
-          "after:resources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : false,
-            "parallelism" : true
-          },
-          "before:compile" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:compile -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
             "parallelism" : true
           },
           "compile" : {
@@ -227,145 +97,53 @@
             "options" : {
               "command" : "mvn compile -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            }, "{projectRoot}/target/generated-sources/annotations/**/*", "{projectRoot}/src/main/kotlin/**/*" ],
-            "outputs" : [ "{projectRoot}/target", "{projectRoot}/target/classes" ],
+            "cache" : false,
             "parallelism" : true
           },
-          "after:compile" : {
+          "process-classes" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:compile -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn process-classes -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : false,
             "parallelism" : true
           },
-          "before:ready" : {
+          "generate-test-sources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn before:ready -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn generate-test-sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
-          "ready" : {
+          "process-test-sources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn ready -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn process-test-sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
-          "after:ready" : {
+          "generate-test-resources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:ready -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn generate-test-resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
-          "before:test-sources" : {
+          "process-test-resources" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn before:test-sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "test-sources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn test-sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "after:test-sources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:test-sources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:test-resources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:test-resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "test-resources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn test-resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "after:test-resources" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:test-resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn process-test-resources -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : false,
-            "parallelism" : true
-          },
-          "before:test-compile" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:test-compile -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
             "parallelism" : true
           },
           "test-compile" : {
@@ -373,37 +151,16 @@
             "options" : {
               "command" : "mvn test-compile -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            }, "{projectRoot}/target/generated-test-sources/test-annotations/**/*", "{projectRoot}/src/test/kotlin/**/*" ],
-            "outputs" : [ "{projectRoot}/target", "{projectRoot}/target/test-classes" ],
+            "cache" : false,
             "parallelism" : true
           },
-          "after:test-compile" : {
+          "process-test-classes" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:test-compile -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn process-test-classes -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:test" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -415,68 +172,13 @@
             "cache" : false,
             "parallelism" : true
           },
-          "after:test" : {
+          "prepare-package" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn prepare-package -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:unit-test" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:unit-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "unit-test" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn unit-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "after:unit-test" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:unit-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:package" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:package -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -485,76 +187,16 @@
             "options" : {
               "command" : "mvn package -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            }, "{projectRoot}/target/classes" ],
-            "outputs" : [ "{projectRoot}/target" ],
+            "cache" : false,
             "parallelism" : true
           },
-          "after:package" : {
+          "pre-integration-test" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:package -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn pre-integration-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "build" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn build -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "after:build" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:build -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:verify" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:verify -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:integration-test" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:integration-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -564,23 +206,17 @@
               "command" : "mvn integration-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
-          "after:integration-test" : {
+          "post-integration-test" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:integration-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn post-integration-test -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -589,32 +225,8 @@
             "options" : {
               "command" : "mvn verify -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
-            "cache" : false,
-            "parallelism" : true
-          },
-          "after:verify" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:verify -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:install" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:install -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -626,32 +238,6 @@
             "cache" : false,
             "parallelism" : true
           },
-          "after:install" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:install -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:deploy" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:deploy -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
           "deploy" : {
             "executor" : "nx:run-commands",
             "options" : {
@@ -660,55 +246,13 @@
             "cache" : false,
             "parallelism" : true
           },
-          "after:deploy" : {
+          "pre-site" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:deploy -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn pre-site -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "all" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn all -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "after:all" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:all -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:site" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:site -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -720,29 +264,13 @@
             "cache" : false,
             "parallelism" : true
           },
-          "after:site" : {
+          "post-site" : {
             "executor" : "nx:run-commands",
             "options" : {
-              "command" : "mvn after:site -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+              "command" : "mvn post-site -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
-          },
-          "before:site-deploy" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn before:site-deploy -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
+            "inputs" : [ ],
             "outputs" : [ ],
             "parallelism" : true
           },
@@ -752,20 +280,7 @@
               "command" : "mvn site-deploy -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
             },
             "cache" : false,
-            "parallelism" : true
-          },
-          "after:site-deploy" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn after:site-deploy -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : true,
-            "inputs" : [ {
-              "dependentTasksOutputFiles" : "**/*",
-              "transitive" : true
-            } ],
-            "outputs" : [ ],
-            "parallelism" : true
+            "parallelism" : false
           },
           "remote-resources:process" : {
             "executor" : "nx:run-commands",
@@ -887,22 +402,6 @@
             "cache" : false,
             "parallelism" : false
           },
-          "jar:jar" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn jar:jar -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : false,
-            "parallelism" : false
-          },
-          "install:install" : {
-            "executor" : "nx:run-commands",
-            "options" : {
-              "command" : "mvn install:install -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
-            },
-            "cache" : false,
-            "parallelism" : false
-          },
           "resources:testResources" : {
             "executor" : "nx:run-commands",
             "options" : {
@@ -919,6 +418,22 @@
             "cache" : false,
             "parallelism" : false
           },
+          "jar:jar" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn jar:jar -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
+          "install:install" : {
+            "executor" : "nx:run-commands",
+            "options" : {
+              "command" : "mvn install:install -am -pl dev.nx.maven:nx-maven-analyzer-plugin"
+            },
+            "cache" : false,
+            "parallelism" : false
+          },
           "deploy:deploy" : {
             "executor" : "nx:run-commands",
             "options" : {
@@ -930,7 +445,7 @@
         },
         "metadata" : {
           "targetGroups" : {
-            "maven-phases" : [ "before:clean", "clean", "after:clean", "before:all", "before:initialize", "before:validate", "validate", "after:validate", "initialize", "after:initialize", "before:build", "before:sources", "sources", "after:sources", "before:resources", "resources", "after:resources", "before:compile", "compile", "after:compile", "before:ready", "ready", "after:ready", "before:test-sources", "test-sources", "after:test-sources", "before:test-resources", "test-resources", "after:test-resources", "before:test-compile", "test-compile", "after:test-compile", "before:test", "test", "after:test", "before:unit-test", "unit-test", "after:unit-test", "before:package", "package", "after:package", "build", "after:build", "before:verify", "before:integration-test", "integration-test", "after:integration-test", "verify", "after:verify", "before:install", "install", "after:install", "before:deploy", "deploy", "after:deploy", "all", "after:all", "before:site", "site", "after:site", "before:site-deploy", "site-deploy", "after:site-deploy" ],
+            "maven-phases" : [ "pre-clean", "clean", "post-clean", "validate", "initialize", "generate-sources", "process-sources", "generate-resources", "process-resources", "compile", "process-classes", "generate-test-sources", "process-test-sources", "generate-test-resources", "process-test-resources", "test-compile", "process-test-classes", "test", "prepare-package", "package", "pre-integration-test", "integration-test", "post-integration-test", "verify", "install", "deploy", "pre-site", "site", "post-site", "site-deploy" ],
             "remote-resources" : [ "remote-resources:process" ],
             "checkstyle" : [ "checkstyle:check" ],
             "enforcer" : [ "enforcer:enforce" ],
@@ -950,9 +465,9 @@
             "plugin" : [ "plugin:addPluginArtifactMetadata", "plugin:descriptor" ],
             "surefire" : [ "surefire:test" ],
             "clean" : [ "clean:clean" ],
+            "resources" : [ "resources:testResources", "resources:resources" ],
             "jar" : [ "jar:jar" ],
             "install" : [ "install:install" ],
-            "resources" : [ "resources:testResources", "resources:resources" ],
             "deploy" : [ "deploy:deploy" ]
           }
         },
