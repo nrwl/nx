@@ -53,13 +53,26 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Analyzing Maven projects using optimized two-tier approach...")
         log.info("Parameters: outputFile='$outputFile', workspaceRoot='$workspaceRoot'")
 
+        // Create GitIgnoreClassifier once for the entire session
+        val gitIgnoreClassifier: GitIgnoreClassifier? = try {
+            val sessionRoot = session.executionRootDirectory?.let { java.io.File(it) }
+            if (sessionRoot != null) {
+                GitIgnoreClassifier(sessionRoot)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            log.debug("Failed to initialize GitIgnoreClassifier: ${e.message}")
+            null
+        }
+
         try {
             val allProjects = session.allProjects
             log.info("Found ${allProjects.size} Maven projects")
 
             // Step 1: Execute per-project analysis for all projects (in-memory)
             log.info("Step 1: Running optimized per-project analysis...")
-            val inMemoryAnalyses = executePerProjectAnalysisInMemory(allProjects)
+            val inMemoryAnalyses = executePerProjectAnalysisInMemory(allProjects, gitIgnoreClassifier)
 
             // Step 2: Write project analyses to output file
             log.info("Step 2: Writing project analyses to output file...")
@@ -69,10 +82,13 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         } catch (e: Exception) {
             throw MojoExecutionException("Failed to execute optimized two-tier Maven analysis", e)
+        } finally {
+            // Clean up GitIgnoreClassifier resources
+            gitIgnoreClassifier?.close()
         }
     }
 
-    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>): Map<String, Pair<String, JsonNode>?> {
+    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>, gitIgnoreClassifier: GitIgnoreClassifier?): Map<String, Pair<String, JsonNode>?> {
         val startTime = System.currentTimeMillis()
         log.info("Creating shared component instances for optimized analysis...")
 
@@ -89,7 +105,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         )
         val pathResolver = PathResolver(workspaceRoot)
 
-        val phaseAnalyzer = PhaseAnalyzer(pluginManager, session, sharedExpressionResolver, pathResolver)
+        val phaseAnalyzer = PhaseAnalyzer(pluginManager, session, sharedExpressionResolver, pathResolver, gitIgnoreClassifier)
         val sharedTestClassDiscovery = TestClassDiscovery()
 
         val sharedLifecycleAnalyzer = NxTargetFactory(lifecycles, sharedInputOutputAnalyzer, sharedPluginExecutionFinder, objectMapper, sharedTestClassDiscovery, phaseAnalyzer)
