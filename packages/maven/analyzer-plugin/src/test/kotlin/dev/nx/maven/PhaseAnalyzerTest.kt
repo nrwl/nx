@@ -14,7 +14,7 @@ import java.io.FileReader
 /**
  * Working unit test for PhaseAnalyzer that actually tests the functionality
  */
-class WorkingPhaseAnalyzerTest {
+class PhaseAnalyzerTest {
 
     private lateinit var analyzer: PhaseAnalyzer
     private lateinit var testProject: MavenProject
@@ -36,7 +36,7 @@ class WorkingPhaseAnalyzerTest {
     }
 
     private fun loadTestProject(): MavenProject {
-        val testPom = File("src/test/resources/phase-analyzer-tests/full-lifecycle-project/pom.xml")
+        val testPom = File("../../../impl/maven-cli/pom.xml")
         val reader = org.apache.maven.model.io.xpp3.MavenXpp3Reader()
         val model: Model = FileReader(testPom).use { reader.read(it) }
 
