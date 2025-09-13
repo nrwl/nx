@@ -18,12 +18,24 @@ class PhaseAnalyzer(
     private val pathResolver: PathResolver
 ) {
     private val log = LoggerFactory.getLogger(PhaseAnalyzer::class.java)
-    private var gitIgnoreClassifier: GitIgnoreClassifier? = null
+
+    // Create one GitIgnoreClassifier per session using execution root directory
+    private val gitIgnoreClassifier: GitIgnoreClassifier? = try {
+        val sessionRoot = session.executionRootDirectory?.let { java.io.File(it) }
+        if (sessionRoot != null) {
+            GitIgnoreClassifier(sessionRoot)
+        } else {
+            null
+        }
+    } catch (e: Exception) {
+        log.debug("Failed to initialize GitIgnoreClassifier: ${e.message}")
+        null
+    }
 
     fun analyze(project: MavenProject, phase: String): PhaseInformation {
         val plugins = project.build.plugins
         var isThreadSafe = true
-        var isCacheable = true
+        var isCacheable = isPhaseCacheable(phase)
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
@@ -45,7 +57,7 @@ class PhaseAnalyzer(
             }
 
             descriptor.parameters?.forEach { parameter ->
-                val paramInfo = analyzeParameterWithConfidence(parameter, project)
+                val paramInfo = analyzeParameterInputsOutputs(parameter, project)
                 inputs.addAll(paramInfo.inputs)
                 outputs.addAll(paramInfo.outputs)
             }
@@ -53,18 +65,54 @@ class PhaseAnalyzer(
 
         return PhaseInformation(isThreadSafe, isCacheable, inputs, outputs)
     }
+    
+    /**
+     * Determines if a phase is inherently cacheable based on its name and purpose
+     */
+    private fun isPhaseCacheable(phase: String): Boolean {
+        // Phases that are inherently non-cacheable due to side effects
+        val nonCacheablePhases = setOf(
+            // Clean lifecycle - modifies filesystem
+            "pre-clean", "clean", "post-clean",
+            
+            // Deployment phases - network operations, side effects
+            "install", "deploy", "site-deploy",
+            
+            // Interactive/execution phases
+            "exec", "run"
+        )
+        
+        if (nonCacheablePhases.contains(phase)) {
+            log.debug("Phase '$phase' is inherently non-cacheable")
+            return false
+        }
+        
+        // Additional pattern-based checks
+        when {
+            phase.contains("deploy", ignoreCase = true) -> {
+                log.debug("Phase '$phase' contains 'deploy' - marking as non-cacheable")
+                return false
+            }
+            phase.contains("install", ignoreCase = true) -> {
+                log.debug("Phase '$phase' contains 'install' - marking as non-cacheable")  
+                return false
+            }
+            phase.contains("clean", ignoreCase = true) -> {
+                log.debug("Phase '$phase' contains 'clean' - marking as non-cacheable")
+                return false
+            }
+        }
+        
+        log.debug("Phase '$phase' appears cacheable by default")
+        return true
+    }
 
     /**
      * Analyzes parameter to determine inputs and outputs
      */
-    private fun analyzeParameterWithConfidence(parameter: Parameter, project: MavenProject): ParameterInformation {
+    private fun analyzeParameterInputsOutputs(parameter: Parameter, project: MavenProject): ParameterInformation {
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
-
-        // Initialize gitignore classifier if not already done
-        if (gitIgnoreClassifier == null) {
-            gitIgnoreClassifier = GitIgnoreClassifier(project.basedir)
-        }
 
         val role = analyzeParameterRole(parameter, project)
 
@@ -120,7 +168,7 @@ class PhaseAnalyzer(
         val nonCacheablePatterns = listOf(
             // Network/deployment operations
             "deploy", "install", "release", "site-deploy",
-            // Interactive/time-sensitive operations  
+            // Interactive/time-sensitive operations
             "exec", "run", "start", "stop",
             // Cleaning operations
             "clean",
@@ -131,9 +179,9 @@ class PhaseAnalyzer(
         )
 
         // Check if goal matches non-cacheable patterns
-        if (nonCacheablePatterns.any { pattern -> 
-            goal.contains(pattern, ignoreCase = true) || 
-            artifactId.contains(pattern, ignoreCase = true) 
+        if (nonCacheablePatterns.any { pattern ->
+            goal.contains(pattern, ignoreCase = true) ||
+            artifactId.contains(pattern, ignoreCase = true)
         }) {
             log.debug("Mojo $artifactId:$goal marked as non-cacheable due to goal/plugin pattern")
             return false
@@ -143,7 +191,7 @@ class PhaseAnalyzer(
         descriptor.parameters?.forEach { parameter ->
             val name = parameter.name.lowercase()
             val description = parameter.description?.lowercase() ?: ""
-            
+
             if (hasNetworkIndicators(name, description)) {
                 log.debug("Mojo $artifactId:$goal marked as non-cacheable due to network parameter: ${parameter.name}")
                 return false
@@ -165,7 +213,7 @@ class PhaseAnalyzer(
             "url", "server", "host", "port", "repository", "endpoint",
             "deploy", "upload", "download", "remote", "publish"
         )
-        
+
         return networkKeywords.any { keyword ->
             name.contains(keyword) || description.contains(keyword)
         }
@@ -176,9 +224,9 @@ class PhaseAnalyzer(
             "timestamp", "buildnumber", "time", "date",
             "git-commit", "scm", "build-info"
         )
-        
+
         return timeSensitiveKeywords.any { keyword ->
-            goal.contains(keyword, ignoreCase = true) || 
+            goal.contains(keyword, ignoreCase = true) ||
             artifactId.contains(keyword, ignoreCase = true)
         }
     }
@@ -306,7 +354,7 @@ class PhaseAnalyzer(
             expression,
             project
         )
-        
+
         if (resolvedPath != null) {
             val gitIgnoreRole = gitIgnoreClassifier?.classifyPath(resolvedPath)
             if (gitIgnoreRole != null) {
@@ -332,7 +380,7 @@ class PhaseAnalyzer(
             null
         }
     }
-    
+
     /**
      * Clean up resources, especially Git repository handles
      */
