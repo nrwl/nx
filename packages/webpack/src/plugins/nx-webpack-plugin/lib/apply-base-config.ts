@@ -371,7 +371,7 @@ function applyNxDependentConfig(
     plugins.push(new StatsJsonPlugin());
   }
 
-  const externals = [];
+  const externals = options.mergeExternals ? config.externals : [];
   if (options.target === 'node' && options.externalDependencies === 'all') {
     const modulesDir = `${options.root}/node_modules`;
 
