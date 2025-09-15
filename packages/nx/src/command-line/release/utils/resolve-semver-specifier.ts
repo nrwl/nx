@@ -11,6 +11,7 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
   projectGraph: ProjectGraph,
   projectNames: string[],
+  projectToDependencies: Map<string, Set<string>>,
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): Promise<string | null> {
   const commits = await getGitDiff(from);
@@ -18,7 +19,8 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   const relevantCommits = await getCommitsRelevantToProjects(
     projectGraph,
     parsedCommits,
-    projectNames
+    projectNames,
+    projectToDependencies
   );
   return determineSemverChange(relevantCommits, conventionalCommitsConfig);
 }

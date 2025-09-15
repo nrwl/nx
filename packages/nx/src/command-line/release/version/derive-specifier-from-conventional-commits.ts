@@ -15,6 +15,7 @@ export async function deriveSpecifierFromConventionalCommits(
   projectLogger: ProjectLogger,
   releaseGroup: ReleaseGroupWithName,
   projectGraphNode: ProjectGraphProjectNode,
+  projectToDependencies: Map<string, Set<string>>,
   // NOTE: This TODO was carried over from the original version generator.
   //
   // TODO: reevaluate this prerelease logic/workflow for independent projects
@@ -53,6 +54,7 @@ export async function deriveSpecifierFromConventionalCommits(
     previousVersionRef,
     projectGraph,
     affectedProjects,
+    projectToDependencies,
     nxReleaseConfig.conventionalCommits
   );
 
