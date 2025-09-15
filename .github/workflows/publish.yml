@@ -450,7 +450,7 @@ jobs:
           notification_title: '📦 Publish Pending Review'
           message_format: ${{ format('Version `{0}` is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version) }}
           footer: '<{run_url}|View Workflow Run>'
-          mention_groups: 'U9NPA6C90' # Jason
+          mention_users: 'U9NPA6C90' # Jason
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
