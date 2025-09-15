@@ -189,6 +189,7 @@ export async function generateWorkspaceFiles(
     directory: options.directory,
     writeNxCloudRules: options.nxCloud !== 'skip',
     packageVersion: 'latest',
+    agents: ['claude', 'gemini'],
   });
 
   const [packageMajor] = packageManagerVersion.split('.');

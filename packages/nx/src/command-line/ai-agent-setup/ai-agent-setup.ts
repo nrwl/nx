@@ -10,8 +10,7 @@ import {
 } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { output } from '../../utils/output';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { generate } from '../generate/generate';
+
 import { AiAgentSetupOptions } from './command-object';
 import { runNxAsync } from '../../utils/child-process';
 
@@ -26,7 +25,7 @@ type Agent = (typeof availableAgents)[number];
 
 export async function aiAgentSetupHandler(
   args: AiAgentSetupOptions
-): Promise<number> {
+): Promise<void> {
   // Use environment variable to force local execution
   if (process.env.NX_AI_FILES_USE_LOCAL === 'true') {
     return await aiAgentSetupHandlerImpl(args);
@@ -81,7 +80,7 @@ async function getLatestHandlerUsingInstall(): Promise<
 
 export async function aiAgentSetupHandlerImpl(
   args: AiAgentSetupOptions
-): Promise<number> {
+): Promise<void> {
   let selectedAgents: string[] = args.agents || [];
 
   // If no agents provided and interactive mode, prompt for selection
@@ -99,8 +98,7 @@ export async function aiAgentSetupHandlerImpl(
       });
       selectedAgents = response.agents;
     } catch (e) {
-      console.error('Selection cancelled');
-      return 1;
+      return;
     }
   }
 
@@ -109,38 +107,38 @@ export async function aiAgentSetupHandlerImpl(
       title: 'No agents selected',
       bodyLines: ['Please select at least one AI agent to set up.'],
     });
-    return 1;
+    return;
   }
 
   output.log({
     title: 'Setting up AI agents',
-    bodyLines: [`Selected agents: ${selectedAgents.join(', ')}`],
   });
 
   try {
     // Call the existing generator
     // For now, it will generate the same files regardless of the selected agents
     // The generator can be enhanced later to handle different agents
-    const result = await runNxAsync('generate ');
+    await runNxAsync(
+      `generate @nx/workspace:set-up-ai-agents --agents ${selectedAgents.join(
+        ','
+      )}`
+    );
 
-    if (result === 0) {
-      output.success({
-        title: 'AI agents set up successfully',
-        bodyLines: [
-          `Configuration files have been created for: ${selectedAgents.join(
-            ', '
-          )}`,
-          'You can now use these AI agents with your Nx workspace.',
-        ],
-      });
-    }
+    output.success({
+      title: 'AI agents set up successfully',
+      bodyLines: [
+        `Configuration files have been created for: ${selectedAgents.join(
+          ', '
+        )}`,
+        'You can now use these AI agents with your Nx workspace.',
+      ],
+    });
 
-    return result;
+    return;
   } catch (e) {
     output.error({
       title: 'Failed to set up AI agents',
       bodyLines: [e.message],
     });
-    return 1;
   }
 }
