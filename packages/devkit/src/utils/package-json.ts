@@ -1,21 +1,14 @@
 import { clean, coerce, gt } from 'semver';
 
-import { execSync } from 'child_process';
-import { writeFileSync } from 'fs';
 import {
-  detectPackageManager,
   GeneratorCallback,
-  getPackageManagerCommand,
-  getPackageManagerVersion,
-  PackageManager,
   readJson,
   Tree,
   updateJson,
   workspaceRoot,
 } from 'nx/src/devkit-exports';
-import { createTempNpmDirectory } from 'packages/nx/src/devkit-internals';
+import { installPackageToTmp } from 'nx/src/devkit-internals';
 import { join } from 'path';
-import { dirSync } from 'tmp';
 import { installPackagesTask } from '../tasks/install-packages-task';
 import Module = require('module');
 
@@ -486,39 +479,7 @@ export function ensurePackage<T extends any = any>(
     );
   }
 
-  const { dir: tempDir } = createTempNpmDirectory?.() ?? {
-    dir: dirSync().name,
-  };
-
-  console.log(`Fetching ${pkg}...`);
-  const packageManager = detectPackageManager();
-  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  generatePackageManagerFiles(tempDir, packageManager);
-  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
-  if (preInstallCommand) {
-    // ensure package.json and repo in tmp folder is set to a proper package manager state
-    execSync(preInstallCommand, {
-      cwd: tempDir,
-      stdio: isVerbose ? 'inherit' : 'ignore',
-      windowsHide: false,
-    });
-  }
-  const pmCommands = getPackageManagerCommand(packageManager);
-  let addCommand = pmCommands.addDev;
-  if (packageManager === 'pnpm') {
-    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
-  }
-
-  execSync(
-    `${addCommand} ${pkg}@${requiredVersion} ${
-      pmCommands.ignoreScriptsFlag ?? ''
-    }`,
-    {
-      cwd: tempDir,
-      stdio: isVerbose ? 'inherit' : 'ignore',
-      windowsHide: false,
-    }
-  );
+  const { tempDir } = installPackageToTmp(pkg, requiredVersion);
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));
@@ -542,27 +503,6 @@ export function ensurePackage<T extends any = any>(
       return null;
     }
     throw e;
-  }
-}
-
-/**
- * Generates necessary files needed for the package manager to work
- * and for the node_modules to be accessible.
- */
-function generatePackageManagerFiles(
-  root: string,
-  packageManager: PackageManager = detectPackageManager()
-) {
-  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
-  switch (packageManager) {
-    case 'yarn':
-      if (+pmMajor >= 2) {
-        writeFileSync(
-          join(root, '.yarnrc.yml'),
-          'nodeLinker: node-modules\nenableScripts: false'
-        );
-      }
-      break;
   }
 }
 

@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -10,9 +10,15 @@ import { mergeTargetConfigurations } from '../project-graph/utils/project-config
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
 import {
+  createTempNpmDirectory,
+  detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
+  PackageManager,
   PackageManagerCommands,
 } from './package-manager';
+import { dirSync } from 'tmp';
+import { execSync } from 'child_process';
 
 export interface NxProjectPackageJsonConfiguration
   extends Partial<ProjectConfiguration> {
@@ -328,4 +334,72 @@ export function readModulePackageJson(
     packageJson,
     path: packageJsonPath,
   };
+}
+
+export function installPackageToTmp(
+  pkg: string,
+  requiredVersion: string
+): {
+  tempDir: string;
+  cleanup: () => void;
+} {
+  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
+    dir: dirSync().name,
+  };
+
+  console.log(`Fetching ${pkg}...`);
+  const packageManager = detectPackageManager();
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  generatePackageManagerFiles(tempDir, packageManager);
+  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
+  if (preInstallCommand) {
+    // ensure package.json and repo in tmp folder is set to a proper package manager state
+    execSync(preInstallCommand, {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+      windowsHide: false,
+    });
+  }
+  const pmCommands = getPackageManagerCommand(packageManager);
+  let addCommand = pmCommands.addDev;
+  if (packageManager === 'pnpm') {
+    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
+  }
+
+  execSync(
+    `${addCommand} ${pkg}@${requiredVersion} ${
+      pmCommands.ignoreScriptsFlag ?? ''
+    }`,
+    {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+      windowsHide: false,
+    }
+  );
+
+  return {
+    tempDir,
+    cleanup,
+  };
+}
+
+/**
+ * Generates necessary files needed for the package manager to work
+ * and for the node_modules to be accessible.
+ */
+function generatePackageManagerFiles(
+  root: string,
+  packageManager: PackageManager = detectPackageManager()
+) {
+  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
+  switch (packageManager) {
+    case 'yarn':
+      if (+pmMajor >= 2) {
+        writeFileSync(
+          join(root, '.yarnrc.yml'),
+          'nodeLinker: node-modules\nenableScripts: false'
+        );
+      }
+      break;
+  }
 }

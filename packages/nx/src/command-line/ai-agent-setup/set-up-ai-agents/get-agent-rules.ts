@@ -1,6 +1,6 @@
 export function getAgentRules(nxCloud: boolean) {
   return `
-# General Guidelines for working with Nx BBBCCDDDEEFF30
+# General Guidelines for working with Nx
 
 - When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through \`nx\` (i.e. \`nx run\`, \`nx run-many\`, \`nx affected\`) instead of using the underlying tooling directly
 - You have access to the Nx MCP server and its tools, use them to help the user
