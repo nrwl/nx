@@ -440,6 +440,26 @@
     ],
     "migrations": [
       {
+        "description": "Update the @angular/cli package version to ~20.3.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-3-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-3-0",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-angular-cli-version-20-3-0",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.6.1-package-updates.json",
+        "hidden": false,
+        "name": "21.6.1-package-updates",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.6.1-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Update the @angular/cli package version to ~20.2.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-2-0.json",
         "hidden": false,
