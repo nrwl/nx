@@ -102,10 +102,17 @@ fun processTargetsForProject(
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
-      // Group task under its group if available
+      // Apply target name override if applicable
+      val targetName = if (task.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+        targetNameOverrides["testTargetName"]!!
+      } else {
+        task.name
+      }
+
+      // Group task under its group if available, using the overridden name
       task.group
           ?.takeIf { it.isNotBlank() }
-          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(task.name) }
+          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(targetName) }
 
       val target =
           processTask(
@@ -117,7 +124,7 @@ fun processTargetsForProject(
               dependencies,
               targetNameOverrides)
 
-      targets[task.name] = target
+      targets[targetName] = target
 
       if (hasCiTestTarget && task.name.startsWith("compileTest")) {
         addTestCiTargets(
