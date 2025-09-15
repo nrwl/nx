@@ -93,8 +93,6 @@
       <scope>test</scope>
     </dependency>
 
-    
-
     <!-- Snapshot Testing -->
     <dependency>
       <groupId>de.skuzzle.test</groupId>
