@@ -18,7 +18,7 @@
     "packageVersion": {
       "type": "string",
       "description": "The version of the package to use",
-      "default": "next"
+      "default": "latest"
     }
   },
   "required": ["directory"]
