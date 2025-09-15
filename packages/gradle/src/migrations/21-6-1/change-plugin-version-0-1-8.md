@@ -1,4 +1,4 @@
-[change-plugin-version-0-1-8.ts](change-plugin-version-0-1-8.ts)#### Change dev.nx.gradle.project-graph to version 0.1.8
+#### Change dev.nx.gradle.project-graph to version 0.1.8
 
 Change dev.nx.gradle.project-graph to version 0.1.8 in build file
 

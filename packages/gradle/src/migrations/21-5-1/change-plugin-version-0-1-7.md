@@ -1,4 +1,4 @@
-[change-plugin-version-0-1-7.ts](change-plugin-version-0-1-7.ts)#### Change dev.nx.gradle.project-graph to version 0.1.7
+#### Change dev.nx.gradle.project-graph to version 0.1.7
 
 Change dev.nx.gradle.project-graph to version 0.1.7 in build file
 
