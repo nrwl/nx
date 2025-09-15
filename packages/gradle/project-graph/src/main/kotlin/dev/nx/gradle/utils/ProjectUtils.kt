@@ -88,19 +88,13 @@ fun processTargetsForProject(
   logger.info("${Date()} ${project}: Process targets")
 
   val ciTestTargetName = targetNameOverrides["ciTestTargetName"]
-  val ciIntTestTargetName = targetNameOverrides["ciIntTestTargetName"]
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
-  val intTestTargetName = targetNameOverrides.getOrDefault("intTestTargetName", "intTest")
 
   val testTasks = project.getTasksByName("test", false)
-  val intTestTasks = project.getTasksByName("intTest", false)
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
-  val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
 
   logger.info(
       "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetName, testTasks.size=${testTasks.size}, atomized=$atomized)")
-  logger.info(
-      "${project.name}: hasCiIntTestTarget = $hasCiIntTestTarget (ciIntTestTargetName=$ciIntTestTargetName, intTestTasks.size=${intTestTasks.size}, atomized=$atomized)")
 
   project.tasks.forEach { task ->
     try {
@@ -139,20 +133,7 @@ fun processTargetsForProject(
             ciTestTargetName)
       }
 
-      if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
-        addTestCiTargets(
-            task.inputs.sourceFiles,
-            projectBuildPath,
-            intTestTasks.first(),
-            intTestTargetName,
-            targets,
-            targetGroups,
-            projectRoot,
-            workspaceRoot,
-            ciIntTestTargetName)
-      }
-
-      if (ciTestTargetName != null || ciIntTestTargetName != null) {
+      if (ciTestTargetName != null) {
         val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
         if (task.name == "check") {
           val replacedDependencies =
@@ -160,9 +141,6 @@ fun processTargetsForProject(
                 val dependsOn = dep.toString()
                 if (hasCiTestTarget && dependsOn == "${project.name}:$testTargetName") {
                   "${project.name}:$ciTestTargetName"
-                } else if (hasCiIntTestTarget &&
-                    dependsOn == "${project.name}:$intTestTargetName") {
-                  "${project.name}:$ciIntTestTargetName"
                 } else {
                   dep
                 }
