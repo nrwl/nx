@@ -4,6 +4,7 @@ import dev.nx.gradle.data.*
 import java.io.File
 import java.util.*
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 
 /** Loops through a project and populate dependencies and nodes for each target */
 fun createNodeForProject(
@@ -90,7 +91,7 @@ fun processTargetsForProject(
   val ciTestTargetName = targetNameOverrides["ciTestTargetName"]
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
 
-  val testTasks = project.getTasksByName("test", false)
+  val testTasks = project.tasks.withType(Test::class.java)
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
 
   logger.info(
@@ -101,12 +102,10 @@ fun processTargetsForProject(
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
-      val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
-
       // Group task under its group if available
       task.group
           ?.takeIf { it.isNotBlank() }
-          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(taskName) }
+          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(task.name) }
 
       val target =
           processTask(
@@ -118,7 +117,7 @@ fun processTargetsForProject(
               dependencies,
               targetNameOverrides)
 
-      targets[taskName] = target
+      targets[task.name] = target
 
       if (hasCiTestTarget && task.name.startsWith("compileTest")) {
         addTestCiTargets(
