@@ -1,8 +1,15 @@
 import { join, resolve } from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../../generators/tree';
 import { updateJson, writeJson } from '../../../generators/utils/json';
-import { ensurePackageAsync } from '../../../utils/ensure-package';
+import {
+  createTempNpmDirectory,
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../../utils/package-manager';
+import { ensurePackageHasProvenance } from '../../../utils/provenance';
 import { getAgentRules } from './get-agent-rules';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -23,20 +30,21 @@ export async function setupAiAgentsGenerator(
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
   }
 
+  await ensurePackageHasProvenance('nx', normalizedOptions.packageVersion);
+
   try {
-    // Load the 'nx/src/index' module to get the setupAiAgentsGenerator export
-    await ensurePackageAsync('nx', normalizedOptions.packageVersion);
-
-    // After ensuring the package is installed, require the specific module path
-    const nxModule = require('nx/src/index');
-
-    const { setupAiAgentsGenerator: latestSetupAiAgentsGenerator } = nxModule;
-
-    if (!latestSetupAiAgentsGenerator) {
-      return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
-    }
-
-    return await latestSetupAiAgentsGenerator(tree, normalizedOptions, true);
+    const getLatestGeneratorResult = await getLatestGeneratorUsingInstall(
+      normalizedOptions
+    );
+    const { module: latestGeneratorModule, cleanup } = getLatestGeneratorResult;
+    const setupAiAgentsGeneratorResult =
+      await latestGeneratorModule.setupAiAgentsGenerator(
+        tree,
+        normalizedOptions,
+        true
+      );
+    await cleanup();
+    return setupAiAgentsGeneratorResult;
   } catch (error) {
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
   }
@@ -50,6 +58,37 @@ function normalizeOptions(
     writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
   };
+}
+
+async function getLatestGeneratorUsingInstall(
+  options: NormalizedSetupAiAgentsGeneratorSchema
+): Promise<{ module: any; cleanup: () => Promise<void> } | undefined> {
+  const { dir, cleanup } = createTempNpmDirectory(true);
+
+  try {
+    // Get package manager command
+    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
+
+    // Install the package
+    await promisify(exec)(
+      `${pmc.add} nx@${options.packageVersion}`,
+      {
+        cwd: dir,
+      }
+    );
+
+    let modulePath = join(
+      dir,
+      'node_modules',
+      'nx',
+      'src/command-line/ai-agent-setup/set-up-ai-agents/set-up-ai-agents.js'
+    );
+
+    return { module: await import(modulePath), cleanup };
+  } catch {
+    await cleanup();
+    return undefined;
+  }
 }
 
 export async function setupAiAgentsGeneratorImpl(
