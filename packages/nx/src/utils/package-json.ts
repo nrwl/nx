@@ -345,6 +345,7 @@ export function installPackageToTmp(
 } {
   const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
     dir: dirSync().name,
+    cleanup: () => {},
   };
 
   console.log(`Fetching ${pkg}...`);

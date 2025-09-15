@@ -29,7 +29,7 @@ export async function setupAiAgentsGenerator(
   try {
     const { tempDir, cleanup } = installPackageToTmp(
       'nx',
-      options.packageVersion
+      normalizedOptions.packageVersion
     );
 
     let modulePath = join(
@@ -62,29 +62,10 @@ function normalizeOptions(
   };
 }
 
-async function getLatestGeneratorUsingInstall(
-  options: NormalizedSetupAiAgentsGeneratorSchema
-): Promise<{ module: any; cleanup: () => void } | undefined> {
-  try {
-  } catch {
-    return undefined;
-  }
-}
-
 export async function setupAiAgentsGeneratorImpl(
   tree: Tree,
   options: NormalizedSetupAiAgentsGeneratorSchema
 ) {
-  appendFileSync(
-    '/Users/maxkless/Projects/nx-3/tmp/ai.log',
-    `setup ai agents impl - local nx version ${
-      JSON.parse(
-        readFileSync(resolve(__dirname, '../../../../', 'package.json'), {
-          encoding: 'utf-8',
-        })
-      ).version
-    }\n`
-  );
   const claudePath = join(options.directory, 'CLAUDE.md');
   if (!tree.exists(claudePath)) {
     tree.write(claudePath, getAgentRules(options.writeNxCloudRules));
