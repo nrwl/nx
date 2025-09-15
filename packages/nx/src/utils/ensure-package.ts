@@ -11,6 +11,8 @@ import { join } from 'path';
 import { workspaceRoot } from './workspace-root';
 import Module = require('module');
 import { Tree } from '../generators/tree';
+import { ensurePackageHasProvenance } from './provenance';
+import { execSync } from 'child_process';
 
 const packageMapCache = new Map<string, any>();
 
@@ -158,6 +160,14 @@ export function ensurePackage<T extends any = any>(
     }
     throw e;
   }
+}
+
+export async function ensurePackageAsync<T extends any = any>(
+  pkg: string,
+  version: string
+): Promise<T> {
+  await ensurePackageHasProvenance(pkg, version);
+  return await ensurePackage(pkg, version);
 }
 
 /**

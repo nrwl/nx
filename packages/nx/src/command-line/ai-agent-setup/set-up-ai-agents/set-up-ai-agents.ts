@@ -1,26 +1,27 @@
-import { exec } from 'child_process';
-import {
-  createTempNpmDirectory,
-  detectPackageManager,
-  getPackageManagerCommand,
-} from '../../../utils/package-manager';
+import { join, resolve } from 'path';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { Tree } from '../../../generators/tree';
+import { updateJson, writeJson } from '../../../generators/utils/json';
+import { ensurePackageAsync } from '../../../utils/ensure-package';
 import { ensurePackageHasProvenance } from '../../../utils/provenance';
-import { updateJson } from '../../../generators/utils/json';
-import { join } from 'path';
-import { promisify } from 'util';
+import { getAgentRules } from './get-agent-rules';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
-import { getAgentRules } from './get-agent-rules';
-import { Tree } from '../../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { appendFileSync, readFileSync } from 'fs';
 
 export async function setupAiAgentsGenerator(
   tree: Tree,
   options: SetupAiAgentsGeneratorSchema,
   inner = false
 ) {
+  appendFileSync(
+    '/Users/maxkless/Projects/nx-3/tmp/ai.log',
+    `calling setupAiAgentsGenerator ${JSON.stringify(
+      options
+    )}, inner ${inner}\n`
+  );
   const normalizedOptions: NormalizedSetupAiAgentsGeneratorSchema =
     normalizeOptions(options);
 
@@ -29,25 +30,20 @@ export async function setupAiAgentsGenerator(
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
   }
 
-  await ensurePackageHasProvenance(
-    '@nx/workspace',
-    normalizedOptions.packageVersion
-  );
-
   try {
-    const getLatestGeneratorResult = await getLatestGeneratorUsingInstall(
-      normalizedOptions
+    const packageResult = await ensurePackageAsync<any>(
+      'nx',
+      normalizedOptions.packageVersion
     );
-    const { module: latestGeneratorModule, cleanup } = getLatestGeneratorResult;
-    const setupAiAgentsGeneratorResult =
-      await latestGeneratorModule.setupAiAgentsGenerator(
-        tree,
-        normalizedOptions,
-        true
-      );
-    await cleanup();
-    return setupAiAgentsGeneratorResult;
+    appendFileSync('/Users/maxkless/Projects/nx-3/tmp/ai.log', packageResult);
+    const { setupAiAgentsGenerator: latestSetupAiAgentsGenerator } =
+      packageResult;
+    return await latestSetupAiAgentsGenerator(tree, normalizedOptions, true);
   } catch (error) {
+    appendFileSync(
+      '/Users/maxkless/Projects/nx-3/tmp/ai.log',
+      error.message || String(error)
+    );
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
   }
 }
@@ -62,42 +58,24 @@ function normalizeOptions(
   };
 }
 
-async function getLatestGeneratorUsingInstall(
-  options: NormalizedSetupAiAgentsGeneratorSchema
-): Promise<{ module: any; cleanup: () => Promise<void> } | undefined> {
-  const { dir, cleanup } = createTempNpmDirectory(true);
-
-  try {
-    // Get package manager command
-    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
-
-    // Install the package
-    await promisify(exec)(
-      `${pmc.add} @nx/workspace@${options.packageVersion}`,
-      {
-        cwd: dir,
-      }
-    );
-
-    let modulePath = join(
-      dir,
-      'node_modules',
-      '@nx',
-      'workspace',
-      'src/generators/set-up-ai-agents/set-up-ai-agents.js'
-    );
-
-    return { module: await import(modulePath), cleanup };
-  } catch {
-    await cleanup();
-    return undefined;
-  }
-}
-
 export async function setupAiAgentsGeneratorImpl(
   tree: Tree,
   options: NormalizedSetupAiAgentsGeneratorSchema
 ) {
+  appendFileSync(
+    '/Users/maxkless/Projects/nx-3/tmp/ai.log',
+    `setup ai agents impl\n`
+  );
+  appendFileSync(
+    '/Users/maxkless/Projects/nx-3/tmp/ai.log',
+    `local nx version ${
+      JSON.parse(
+        readFileSync(resolve(__dirname, '../../../../', 'package.json'), {
+          encoding: 'utf-8',
+        })
+      ).version
+    }\n`
+  );
   const claudePath = join(options.directory, 'CLAUDE.md');
   if (!tree.exists(claudePath)) {
     tree.write(claudePath, getAgentRules(options.writeNxCloudRules));
@@ -107,9 +85,16 @@ export async function setupAiAgentsGeneratorImpl(
     tree.write(agentsPath, getAgentRules(options.writeNxCloudRules));
   }
 
-  updateJson(tree, join(options.directory, '.mcp.json'), mcpConfigUpdater);
+  const mcpJsonPath = join(options.directory, '.mcp.json');
+  if (!tree.exists(mcpJsonPath)) {
+    writeJson(tree, mcpJsonPath, {});
+  }
+  updateJson(tree, mcpJsonPath, mcpConfigUpdater);
 
   const geminiPath = join(options.directory, '.gemini', 'settings.json');
+  if (!tree.exists(geminiPath)) {
+    writeJson(tree, geminiPath, {});
+  }
   updateJson(tree, geminiPath, mcpConfigUpdater);
 
   // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups

@@ -188,7 +188,7 @@ export async function generateWorkspaceFiles(
   await setupAiAgentsGenerator(tree, {
     directory: options.directory,
     writeNxCloudRules: options.nxCloud !== 'skip',
-    packageVersion: 'latest',
+    packageVersion: 'next',
   });
 
   const [packageMajor] = packageManagerVersion.split('.');
