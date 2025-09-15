@@ -1,6 +1,6 @@
-[change-plugin-version-0-1-7.ts](change-plugin-version-0-1-7.ts)#### Change dev.nx.gradle.project-graph to version 0.1.7
+[change-plugin-version-0-1-8.ts](change-plugin-version-0-1-8.ts)#### Change dev.nx.gradle.project-graph to version 0.1.8
 
-Change dev.nx.gradle.project-graph to version 0.1.7 in build file
+Change dev.nx.gradle.project-graph to version 0.1.8 in build file
 
 #### Sample Code Changes
 
@@ -18,7 +18,7 @@ plugins {
 
 ```{% fileName="build.gradle" %}
 plugins {
-    id "dev.nx.gradle.project-graph" version "0.1.7"
+    id "dev.nx.gradle.project-graph" version "0.1.8"
 }
 ```
 

@@ -10,5 +10,5 @@
   "path": "/packages/gradle",
   "schema": null,
   "type": "migration",
-  "examplesFile": "#### Change dev.nx.gradle.project-graph to version 0.1.7\n\nChange dev.nx.gradle.project-graph to version 0.1.7 in build file\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```{% fileName=\"build.gradle\" %}\nplugins {\n\tid \"dev.nx.gradle.project-graph\" version \"0.1.0\"\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```{% fileName=\"build.gradle\" %}\nplugins {\n    id \"dev.nx.gradle.project-graph\" version \"0.1.7\"\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+  "examplesFile": "[change-plugin-version-0-1-7.ts](change-plugin-version-0-1-7.ts)#### Change dev.nx.gradle.project-graph to version 0.1.7\n\nChange dev.nx.gradle.project-graph to version 0.1.7 in build file\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```{% fileName=\"build.gradle\" %}\nplugins {\n\tid \"dev.nx.gradle.project-graph\" version \"0.1.0\"\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```{% fileName=\"build.gradle\" %}\nplugins {\n    id \"dev.nx.gradle.project-graph\" version \"0.1.7\"\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }
