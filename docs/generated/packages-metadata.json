@@ -460,6 +460,26 @@
         "type": "migration"
       },
       {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.6.1-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.6.1-angular-eslint-package-updates",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.6.1-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.6.1-@angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.6.1-@angular-eslint-package-updates",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.6.1-@angular-eslint-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Update the @angular/cli package version to ~20.2.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-2-0.json",
         "hidden": false,
