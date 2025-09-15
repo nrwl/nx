@@ -3,7 +3,6 @@ import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/i
 import { Tree } from '../../../generators/tree';
 import { updateJson, writeJson } from '../../../generators/utils/json';
 import { ensurePackageAsync } from '../../../utils/ensure-package';
-import { ensurePackageHasProvenance } from '../../../utils/provenance';
 import { getAgentRules } from './get-agent-rules';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -16,12 +15,6 @@ export async function setupAiAgentsGenerator(
   options: SetupAiAgentsGeneratorSchema,
   inner = false
 ) {
-  appendFileSync(
-    '/Users/maxkless/Projects/nx-3/tmp/ai.log',
-    `calling setupAiAgentsGenerator ${JSON.stringify(
-      options
-    )}, inner ${inner}\n`
-  );
   const normalizedOptions: NormalizedSetupAiAgentsGeneratorSchema =
     normalizeOptions(options);
 
@@ -31,19 +24,20 @@ export async function setupAiAgentsGenerator(
   }
 
   try {
-    const packageResult = await ensurePackageAsync<any>(
-      'nx',
-      normalizedOptions.packageVersion
-    );
-    appendFileSync('/Users/maxkless/Projects/nx-3/tmp/ai.log', packageResult);
-    const { setupAiAgentsGenerator: latestSetupAiAgentsGenerator } =
-      packageResult;
+    // Load the 'nx/src/index' module to get the setupAiAgentsGenerator export
+    await ensurePackageAsync('nx', normalizedOptions.packageVersion);
+
+    // After ensuring the package is installed, require the specific module path
+    const nxModule = require('nx/src/index');
+
+    const { setupAiAgentsGenerator: latestSetupAiAgentsGenerator } = nxModule;
+
+    if (!latestSetupAiAgentsGenerator) {
+      return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
+    }
+
     return await latestSetupAiAgentsGenerator(tree, normalizedOptions, true);
   } catch (error) {
-    appendFileSync(
-      '/Users/maxkless/Projects/nx-3/tmp/ai.log',
-      error.message || String(error)
-    );
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
   }
 }
@@ -64,11 +58,7 @@ export async function setupAiAgentsGeneratorImpl(
 ) {
   appendFileSync(
     '/Users/maxkless/Projects/nx-3/tmp/ai.log',
-    `setup ai agents impl\n`
-  );
-  appendFileSync(
-    '/Users/maxkless/Projects/nx-3/tmp/ai.log',
-    `local nx version ${
+    `setup ai agents impl - local nx version ${
       JSON.parse(
         readFileSync(resolve(__dirname, '../../../../', 'package.json'), {
           encoding: 'utf-8',
