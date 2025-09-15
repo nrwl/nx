@@ -77,6 +77,7 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
         "targetName": "e2e",
         "ciTargetName": "e2e-ci",
         "componentTestingTargetName": "component-test",
+        "ciComponentTestingTargetName": "component-test-ci",
         "openTargetName": "open-cypress"
       }
     }
@@ -84,7 +85,15 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-The `targetName`, `ciTargetName`, `componentTestingTargetName`, and `open-cypress` options control the names of the inferred Cypress tasks. The default names are `e2e`, `e2e-ci`, `component-test`, and `open-cypress`.
+The options shown above control the names of the inferred Cypress tasks. The following table shows the default values for each option:
+
+| Option                         | Default                                       |
+| ------------------------------ | --------------------------------------------- |
+| `targetName`                   | `"e2e"`                                       |
+| `ciTargetName`                 | `"e2e-ci"`                                    |
+| `componentTestingTargetName`   | `"component-test"`                            |
+| `ciComponentTestingTargetName` | `undefined` (task is not inferred by default) |
+| `openTargetName`               | `"open-cypress"`                              |
 
 ### Splitting E2E tasks by file
 
@@ -115,6 +124,31 @@ export default defineConfig({
 {% callout type="note" title="Using setupNodeEvents function" %}
 If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/technologies/test-tools/cypress/recipes/cypress-setup-node-events) for more details.
 {% /callout %}
+
+### Splitting Component Testing Tasks by File
+
+{% callout type="note" title="Available since Nx 21.6.1" %}
+Splitting component testing tasks by file is available since Nx 21.6.1.
+{% /callout %}
+
+The `@nx/cypress/plugin` can also automatically split your component testing tasks by file. To enable it, set the `ciComponentTestingTargetName` option of the `@nx/cypress/plugin` in your `nx.json` file. It will look something like this:
+
+```json {% fileName="nx.json" highlightLines=[9] %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci",
+        "componentTestingTargetName": "component-test",
+        "ciComponentTestingTargetName": "component-test-ci",
+        "openTargetName": "open-cypress"
+      }
+    }
+  ]
+}
+```
 
 ## E2E Testing
 
