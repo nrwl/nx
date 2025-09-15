@@ -17,7 +17,6 @@ export async function ensurePackageHasProvenance(
 ): Promise<void> {
   // this is used for locally released versions without provenance
   // do not set this for other reasons or you might be exposed to security risks
-  // also skip this check during e2e tests because those rely on local packages without provenance
   if (process.env.NX_SKIP_PROVENANCE_CHECK) {
     return;
   }
