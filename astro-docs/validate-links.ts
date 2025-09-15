@@ -10,6 +10,9 @@ const ignoredLinks = [
   // TODO: caleb make this nx api reference page
   '/docs/reference/nx/executors',
   'NxPowerpack-Trial-v1.1.pdf',
+  '/blog/',
+  '/launch-nx',
+  '/contact',
 ];
 
 // These are more so until we cut over and can modify production file links
