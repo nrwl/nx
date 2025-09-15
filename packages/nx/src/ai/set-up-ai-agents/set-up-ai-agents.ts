@@ -23,9 +23,9 @@ export async function setupAiAgentsGenerator(
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
   }
 
-  await ensurePackageHasProvenance('nx', normalizedOptions.packageVersion);
-
   try {
+    await ensurePackageHasProvenance('nx', normalizedOptions.packageVersion);
+
     const { tempDir, cleanup } = installPackageToTmp(
       'nx',
       normalizedOptions.packageVersion
