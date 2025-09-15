@@ -21,13 +21,13 @@
       "packageVersion": {
         "type": "string",
         "description": "The version of the package to use",
-        "default": "next"
+        "default": "latest"
       }
     },
     "required": ["directory"],
     "presets": []
   },
-  "description": "Sets, up the Nx MCP & rule files for common AI Agents",
+  "description": "Sets up the Nx MCP & rule files for common AI Agents",
   "hidden": true,
   "implementation": "/packages/nx/src/ai/set-up-ai-agents/set-up-ai-agents.ts",
   "aliases": [],

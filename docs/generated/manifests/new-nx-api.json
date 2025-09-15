@@ -3669,7 +3669,7 @@
         "type": "generator"
       },
       "/reference/core-api/nx/generators/set-up-ai-agents": {
-        "description": "Sets, up the Nx MCP & rule files for common AI Agents",
+        "description": "Sets up the Nx MCP & rule files for common AI Agents",
         "file": "generated/packages/nx/generators/set-up-ai-agents.json",
         "hidden": true,
         "name": "set-up-ai-agents",
