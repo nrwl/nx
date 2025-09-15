@@ -45,7 +45,7 @@ class PhaseAnalyzer(
             }
 
             descriptor.parameters?.forEach { parameter ->
-                val paramInfo = analyzeParameterInputsOutputs(parameter, project)
+                val paramInfo = analyzeParameterInputsOutputs(descriptor, parameter, project)
                 inputs.addAll(paramInfo.inputs)
                 outputs.addAll(paramInfo.outputs)
             }
@@ -98,7 +98,7 @@ class PhaseAnalyzer(
     /**
      * Analyzes parameter to determine inputs and outputs
      */
-    private fun analyzeParameterInputsOutputs(parameter: Parameter, project: MavenProject): ParameterInformation {
+    private fun analyzeParameterInputsOutputs(descriptor: MojoDescriptor, parameter: Parameter, project: MavenProject): ParameterInformation {
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
