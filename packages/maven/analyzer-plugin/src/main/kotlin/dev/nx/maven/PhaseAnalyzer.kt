@@ -53,7 +53,7 @@ class PhaseAnalyzer(
 
         return PhaseInformation(isThreadSafe, isCacheable, inputs, outputs)
     }
-    
+
     /**
      * Determines if a phase is inherently cacheable based on its name and purpose
      */
@@ -62,19 +62,19 @@ class PhaseAnalyzer(
         val nonCacheablePhases = setOf(
             // Clean lifecycle - modifies filesystem
             "pre-clean", "clean", "post-clean",
-            
+
             // Deployment phases - network operations, side effects
             "install", "deploy", "site-deploy",
-            
+
             // Interactive/execution phases
             "exec", "run"
         )
-        
+
         if (nonCacheablePhases.contains(phase)) {
             log.debug("Phase '$phase' is inherently non-cacheable")
             return false
         }
-        
+
         // Additional pattern-based checks
         when {
             phase.contains("deploy", ignoreCase = true) -> {
@@ -82,7 +82,7 @@ class PhaseAnalyzer(
                 return false
             }
             phase.contains("install", ignoreCase = true) -> {
-                log.debug("Phase '$phase' contains 'install' - marking as non-cacheable")  
+                log.debug("Phase '$phase' contains 'install' - marking as non-cacheable")
                 return false
             }
             phase.contains("clean", ignoreCase = true) -> {
@@ -90,7 +90,7 @@ class PhaseAnalyzer(
                 return false
             }
         }
-        
+
         log.debug("Phase '$phase' appears cacheable by default")
         return true
     }
@@ -126,11 +126,11 @@ class PhaseAnalyzer(
         when (role) {
             ParameterRole.INPUT -> {
                 pathResolver.addInputPath(path, inputs)
-                log.debug("Added input path: $path (from parameter ${parameter.name})")
+                log.info("Added input path: $path (from parameter ${parameter.name})")
             }
             ParameterRole.OUTPUT -> {
                 pathResolver.addOutputPath(path, outputs)
-                log.debug("Added output path: $path (from parameter ${parameter.name})")
+                log.info("Added output path: $path (from parameter ${parameter.name})")
             }
             ParameterRole.BOTH -> {
                 pathResolver.addInputPath(path, inputs)
