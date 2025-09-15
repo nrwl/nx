@@ -14,7 +14,6 @@ fun addTestCiTargets(
     testFiles: FileCollection,
     projectBuildPath: String,
     testTask: Task,
-    testTargetName: String,
     targets: NxTargets,
     targetGroups: TargetGroups,
     projectRoot: String,

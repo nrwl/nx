@@ -3,6 +3,7 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.*
 import java.io.File
 import kotlin.test.*
+import org.gradle.api.tasks.testing.Test as GradleTest
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -28,7 +29,7 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.tasks.register("test").get().apply {
+        project.tasks.register("test", GradleTest::class.java).get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
@@ -132,7 +133,7 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.tasks.register("test").get().apply {
+        project.tasks.register("test", GradleTest::class.java).get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
