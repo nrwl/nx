@@ -1,5 +1,4 @@
 import { clean, coerce, gt } from 'semver';
-
 import {
   GeneratorCallback,
   readJson,
@@ -10,7 +9,7 @@ import {
 import { installPackageToTmp } from 'nx/src/devkit-internals';
 import { join } from 'path';
 import { installPackagesTask } from '../tasks/install-packages-task';
-import Module = require('module');
+import { Module } from 'module';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {

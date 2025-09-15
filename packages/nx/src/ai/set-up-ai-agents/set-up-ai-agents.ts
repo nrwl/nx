@@ -1,10 +1,9 @@
-import { appendFileSync, readFileSync } from 'fs';
-import { join, resolve } from 'path';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { Tree } from '../../../generators/tree';
-import { updateJson, writeJson } from '../../../generators/utils/json';
-import { installPackageToTmp } from '../../../utils/package-json';
-import { ensurePackageHasProvenance } from '../../../utils/provenance';
+import { join } from 'path';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { Tree } from '../../generators/tree';
+import { updateJson, writeJson } from '../../generators/utils/json';
+import { installPackageToTmp } from '../../utils/package-json';
+import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { getAgentRules } from './get-agent-rules';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -36,7 +35,7 @@ export async function setupAiAgentsGenerator(
       tempDir,
       'node_modules',
       'nx',
-      'src/command-line/ai-agent-setup/set-up-ai-agents/set-up-ai-agents.js'
+      'src/ai/set-up-ai-agents/set-up-ai-agents.js'
     );
 
     const module = await import(modulePath);

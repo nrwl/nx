@@ -16,7 +16,7 @@ import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import type { NormalizedSchema } from './new';
-import { setupAiAgentsGenerator } from 'nx/src/command-line/ai-agent-setup/set-up-ai-agents/set-up-ai-agents';
+import { setupAiAgentsGenerator } from 'nx/src/ai/set-up-ai-agents/set-up-ai-agents';
 
 type PresetInfo = {
   generateAppCmd?: string;

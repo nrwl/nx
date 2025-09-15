@@ -3980,7 +3980,26 @@
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Connect a workspace to Nx Cloud",
+        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
+        "hidden": false,
+        "name": "connect-to-nx-cloud",
+        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+        "path": "nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      },
+      {
+        "description": "Sets, up the Nx MCP & rule files for common AI Agents",
+        "file": "generated/packages/nx/generators/set-up-ai-agents.json",
+        "hidden": true,
+        "name": "set-up-ai-agents",
+        "originalFilePath": "/packages/nx/src/ai/set-up-ai-agents/schema.json",
+        "path": "nx/generators/set-up-ai-agents",
+        "type": "generator"
+      }
+    ],
     "migrations": [
       {
         "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",

@@ -7,8 +7,8 @@
       "x-hidden": true
     },
     "set-up-ai-agents": {
-      "factory": "./src/generators/set-up-ai-agents/set-up-ai-agents",
-      "schema": "./src/generators/set-up-ai-agents/schema.json",
+      "factory": "./src/ai/set-up-ai-agents/set-up-ai-agents",
+      "schema": "./src/ai/set-up-ai-agents/schema.json",
       "description": "Sets, up the Nx MCP & rule files for common AI Agents",
       "hidden": true
     }
