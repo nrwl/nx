@@ -120,11 +120,6 @@ export {
 } from './utils/package-manager';
 
 /**
- * @category Package Manager
- */
-export { ensurePackage } from './utils/ensure-package';
-
-/**
  * @category Commands
  */
 export type { Target } from './command-line/run/run';

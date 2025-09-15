@@ -57,6 +57,7 @@ export { readTargetOptions } from './src/executors/read-target-options';
 export {
   addDependenciesToPackageJson,
   removeDependenciesFromPackageJson,
+  ensurePackage,
   NX_VERSION,
 } from './src/utils/package-json';
 

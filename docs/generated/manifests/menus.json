@@ -5708,23 +5708,6 @@
                     "disableCollapsible": false
                   },
                   {
-                    "id": "generators",
-                    "path": "/reference/core-api/nx/generators",
-                    "name": "generators",
-                    "children": [
-                      {
-                        "id": "connect-to-nx-cloud",
-                        "path": "/reference/core-api/nx/generators/connect-to-nx-cloud",
-                        "name": "connect-to-nx-cloud",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
-                    "disableCollapsible": false
-                  },
-                  {
                     "id": "migrations",
                     "path": "/reference/core-api/nx/migrations",
                     "name": "migrations",
@@ -5864,14 +5847,6 @@
                         "id": "infer-targets",
                         "path": "/reference/core-api/workspace/generators/infer-targets",
                         "name": "infer-targets",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "set-up-ai-agents",
-                        "path": "/reference/core-api/workspace/generators/set-up-ai-agents",
-                        "name": "set-up-ai-agents",
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false

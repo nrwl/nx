@@ -70,12 +70,9 @@ async function getLatestGeneratorUsingInstall(
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
     // Install the package
-    await promisify(exec)(
-      `${pmc.add} nx@${options.packageVersion}`,
-      {
-        cwd: dir,
-      }
-    );
+    await promisify(exec)(`${pmc.add} nx@${options.packageVersion}`, {
+      cwd: dir,
+    });
 
     let modulePath = join(
       dir,

@@ -3658,17 +3658,7 @@
         "type": "executor"
       }
     },
-    "generators": {
-      "/reference/core-api/nx/generators/connect-to-nx-cloud": {
-        "description": "Connect a workspace to Nx Cloud",
-        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
-        "hidden": false,
-        "name": "connect-to-nx-cloud",
-        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
-        "path": "/reference/core-api/nx/generators/connect-to-nx-cloud",
-        "type": "generator"
-      }
-    },
+    "generators": {},
     "migrations": {
       "/reference/core-api/nx/migrations/21-1-0-add-ignore-entries-for-nx-rule-files": {
         "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
@@ -5950,15 +5940,6 @@
         "name": "infer-targets",
         "originalFilePath": "/packages/workspace/src/generators/infer-targets/schema.json",
         "path": "/reference/core-api/workspace/generators/infer-targets",
-        "type": "generator"
-      },
-      "/reference/core-api/workspace/generators/set-up-ai-agents": {
-        "description": "Sets up the Nx MCP & rule files for common AI Agents",
-        "file": "generated/packages/workspace/generators/set-up-ai-agents.json",
-        "hidden": true,
-        "name": "set-up-ai-agents",
-        "originalFilePath": "/packages/workspace/src/generators/set-up-ai-agents/schema.json",
-        "path": "/reference/core-api/workspace/generators/set-up-ai-agents",
         "type": "generator"
       }
     },
