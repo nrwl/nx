@@ -33,6 +33,9 @@ class PhaseAnalyzer(
                 plugin.executions
                     .filter { execution -> execution.phase == phase }
                     .flatMap { execution ->
+
+                        log.info("Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}")
+
                         execution.goals }
                     .mapNotNull { goal -> getMojoDescriptor(plugin, goal, project) }
             }
