@@ -156,7 +156,9 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
     description: null,
-    href: '/docs/getting-started/tutorials',
+    href: process.env.NEXT_PUBLIC_ASTRO_URL
+      ? '/docs/getting-started/tutorials'
+      : '/getting-started/tutorials',
     icon: AcademicCapIcon,
     isNew: false,
     isHighlight: false,
@@ -212,9 +214,9 @@ export const learnItems: MenuItem[] = [
 ];
 export const eventItems: MenuItem[] = [
   {
-    name: 'Live Streams',
+    name: 'Nx Live',
     description: null,
-    href: 'https://www.youtube.com/@nxdevtools/streams',
+    href: 'https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5',
     icon: VideoCameraIcon,
     isNew: false,
     isHighlight: false,

@@ -69,7 +69,7 @@ export const onRequest = defineRouteMiddleware(async (context) => {
   const changelogLink: SidebarLink = {
     type: 'link',
     label: 'Changelog',
-    href: '/changelog',
+    href: `${process.env.NX_DEV_URL ?? 'https://nx.dev'}/changelog`,
     badge: undefined,
     isCurrent: false, // This is on Next.js
     attrs: {},
@@ -305,9 +305,9 @@ const desiredSectionOrder = [
   '.nxignore',
   'Environment Variables',
   'Glossary',
-  'Plugin Registry',
-  'Changelog',
   'Releases',
+  'Changelog',
   'Node.js and TypeScript Compatibility',
+  'Plugin Registry',
   'create-nx-workspace', // auto generated
 ];
