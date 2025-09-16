@@ -3,14 +3,7 @@ name: publish
 on:
   # Automated schedule - canary releases from master
   schedule:
-    - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
-  # Manual trigger - PR releases or dry-runs (based on workflow inputs)
-  workflow_dispatch:
-    inputs:
-      pr:
-        description: "PR Number - If set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
-        required: false
-        type: number
+    - cron: "0 20 * * 1-5" # Monday - Friday, at 20:00 UTC (8pm UTC)
   release:
     types: [ published ]
 
@@ -21,8 +14,8 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 20.19.0
-  PNPM_VERSION: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  NODE_VERSION: 22.16.0
+  PNPM_VERSION: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -35,11 +28,6 @@ jobs:
   # - release:
   #   - We are running a full release which is based on the tag that triggered the release event, we can use default
   #     ref resolution in actions/checkout. The exact version will be generated within scripts/nx-release.ts.
-  #
-  # - workflow_dispatch:
-  #   - We are either running a dry-run on the current branch, in which case the version will be statica and we can use
-  #     default ref resolution in actions/checkout, or we are creating a PR release for the given PR number, in which case
-  #     we should generate an applicable version number within publish-resolve-data.js and use a custom ref of the PR branch name.
   resolve-required-data:
     name: Resolve Required Data
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -47,35 +35,25 @@ jobs:
     outputs:
       version: ${{ steps.script.outputs.version }}
       dry_run_flag: ${{ steps.script.outputs.dry_run_flag }}
-      success_comment: ${{ steps.script.outputs.success_comment }}
       publish_branch: ${{ steps.script.outputs.publish_branch }}
-      ref: ${{ steps.script.outputs.ref }}
-      repo: ${{ steps.script.outputs.repo }}
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # Set up pnpm and node so that we can verify our setup and that the NPM_TOKEN secret will work later
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
 
-      # Ensure that the NPM_TOKEN secret is still valid before wasting any time deriving data or building projects
-      - name: Check NPM Credentials
-        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
-
       - name: Resolve and set checkout and version data to use for release
         id: script
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           PR_NUMBER: ${{ github.event.inputs.pr }}
         with:
@@ -83,36 +61,6 @@ jobs:
           script: |
             const script = require('${{ github.workspace }}/scripts/publish-resolve-data.js');
             await script({ github, context, core });
-
-      - name: (PR Release Only) Check out latest master
-        if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@v4
-        with:
-          # Check out the latest master branch to get its copy of nx-release.ts
-          repository: nrwl/nx
-          ref: master
-          path: latest-master-checkout
-
-      - name: (PR Release Only) Check out PR branch
-        if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@v4
-        with:
-          # Check out the PR branch to get its copy of nx-release.ts
-          repository: ${{ steps.script.outputs.repo }}
-          ref: ${{ steps.script.outputs.ref }}
-          path: pr-branch-checkout
-
-      - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
-        if: ${{ steps.script.outputs.ref != '' }}
-        env:
-          FILE_TO_COMPARE: "scripts/nx-release.ts"
-        run: |
-          if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
-            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
-            exit 1
-          else
-            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
-          fi
 
   build:
     needs: [ resolve-required-data ]
@@ -140,23 +88,50 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: |-
-              set -e &&
-              npm i -g pnpm@9.8.0 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              rustup target add aarch64-unknown-linux-gnu &&
+            build: |
+              set -e
+              apt-get update
+
+              curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+              apt-get install -y nodejs=22.16.0-1nodesource1
+            
+              export PATH="/usr/local/bin:$PATH"
+              node --version
+              npm --version
+            
+              npm i -g pnpm@${PNPM_VERSION} --force
+              pnpm --version
+            
+              pnpm install --frozen-lockfile
+              rustup target add x86_64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: |-
-              set -e &&
-              npm i -g pnpm@9.8.0 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              rustup target add x86_64-unknown-linux-musl &&
-              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
+            build: |
+              bash -c "
+                set -e
+                echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
+                apk add --no-cache curl xz
+
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                tar -xJf node.tar.xz
+                mv node-v22.16.0-linux-x64-musl /usr/local/node
+            
+                export PATH=\"/usr/local/node/bin:\$PATH\"
+            
+                echo Node: \$(node -v)
+                echo NPM: \$(npm -v)
+            
+                # Install PNPM
+                npm i -g pnpm@${PNPM_VERSION} --force
+                pnpm --version
+            
+                # Install deps and run native build
+                pnpm install --frozen-lockfile
+                rustup target add x86_64-unknown-linux-musl
+                pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
+              "
           - host: macos-13
             target: aarch64-apple-darwin
             setup: |-
@@ -171,12 +146,22 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
-            build: |-
-              set -e &&
-              npm i -g pnpm@9.8.0 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              rustup target add aarch64-unknown-linux-gnu &&
+            build: |
+              set -e
+              apt-get update
+            
+              curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+              apt-get install -y nodejs=22.16.0-1nodesource1
+            
+              export PATH="/usr/local/bin:$PATH"
+              node --version
+              npm --version
+            
+              npm i -g pnpm@${PNPM_VERSION} --force
+              pnpm --version
+            
+              pnpm install --frozen-lockfile
+              rustup target add aarch64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
@@ -198,32 +183,46 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: |-
-              set -e &&
-              rustup target add aarch64-unknown-linux-musl &&
-              npm i -g pnpm@9.8.0 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
+            build: |
+              bash -c "
+                set -e
+                echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
+                apk add --no-cache curl xz
+            
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                tar -xJf node.tar.xz
+                mv node-v22.16.0-linux-x64-musl /usr/local/node
+            
+                export PATH=\"/usr/local/node/bin:\$PATH\"
+            
+                echo Node: \$(node -v)
+                echo NPM: \$(npm -v)
+            
+                # Install PNPM
+                npm i -g pnpm@${PNPM_VERSION} --force
+                pnpm --version
+            
+                # Install deps and run native build
+                pnpm install --frozen-lockfile
+                rustup target add aarch64-unknown-linux-musl  
+                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl  
+              "
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             setup: |-
               rustup target add aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@18
+    name: stable - ${{ matrix.settings.target }} - node@22.16.0
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -231,13 +230,14 @@ jobs:
           cache: 'pnpm'
 
       - name: Install
-        uses: dtolnay/rust-toolchain@stable
+        uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
         if: ${{ !matrix.settings.docker }}
         with:
-          targets: ${{ matrix.settings.target }}
+          target: ${{ matrix.settings.target }}
+          rustflags: ''
 
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -247,7 +247,7 @@ jobs:
             target/
           key: ${{ matrix.settings.target }}-cargo-registry
 
-      - uses: goto-bus-stop/setup-zig@v2
+      - uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
         with:
           version: 0.10.0
@@ -268,7 +268,7 @@ jobs:
         timeout-minutes: 30
 
       - name: Setup node x86
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -277,7 +277,7 @@ jobs:
           architecture: x86
 
       - name: Build in docker
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         if: ${{ matrix.settings.docker }}
         with:
           image: ${{ matrix.settings.docker }}
@@ -290,12 +290,12 @@ jobs:
         shell: bash
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
-            packages/**/*.node
-            packages/**/*.wasm
+            packages/nx/src/native/*.node
+            packages/nx/src/native/*.wasm
           if-no-files-found: error
 
   build-freebsd:
@@ -305,30 +305,28 @@ jobs:
     name: Build FreeBSD
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Build
         id: build
-        uses: cross-platform-actions/action@v0.25.0
+        uses: cross-platform-actions/action@462ed697694d2ac9aa49e1225f395f7bb6dd49fe # v0.29.0
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
           NX_PREFER_TS_NODE: true
           PLAYWRIGHT_BROWSERS_PATH: 0
+          NODE_VERSION: 22.16.0
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION
           shell: bash
           run: |
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git
-            sudo npm install --location=global --ignore-scripts pnpm@9.8.0
+            sudo npm install --location=global --ignore-scripts pnpm@10.11.1
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -343,8 +341,11 @@ jobs:
             whoami
             env
             freebsd-version
+            echo "Installing dependencies"
             pnpm install --frozen-lockfile --ignore-scripts
+            echo "Building FreeBSD bindings"
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            echo "Cleaning up"
             pnpm nx reset
             rm -rf node_modules
             rm -rf dist
@@ -353,16 +354,18 @@ jobs:
             echo "COMPLETE"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bindings-freebsd
-          path: packages/**/*.node
+          path: |
+            packages/nx/src/native/*.node
           if-no-files-found: error
 
   publish:
     if: ${{ github.repository_owner == 'nrwl' }}
     name: Publish
     runs-on: ubuntu-latest
+    environment: npm-registry
     permissions:
       id-token: write
       contents: write
@@ -373,31 +376,29 @@ jobs:
       - build
     env:
       GH_TOKEN: ${{ github.token }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_CONFIG_PROVENANCE: true
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
+     
+      - name: Use npm 11.5.2
+        run: npm install -g npm@11.5.2
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           path: artifacts
 
@@ -431,21 +432,27 @@ jobs:
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
         run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
 
-      - name: (PR Release Only) Create comment for successful PR release
-        if: success() && github.event.inputs.pr
-        uses: actions/github-script@v7
-        env:
-          SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
+  report-pending-publish:
+    name: Report Pending Publish to Slack
+    if: ${{ github.repository_owner == 'nrwl' }}
+    needs:
+      - resolve-required-data
+      - build-freebsd
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true  # Don't fail the workflow if notification fails
+    steps:
+      - name: Send Slack notification
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const successComment = JSON.parse(process.env.SUCCESS_COMMENT);
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ github.event.inputs.pr }},
-              body: successComment
-            });
+          status: ${{ job.status }}
+          notification_title: '📦 Publish Pending Review'
+          message_format: ${{ format('Version `{0}` is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version) }}
+          footer: '<{run_url}|View Workflow Run>'
+          mention_users: 'U9NPA6C90' # Jason
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   pr_failure_comment:
     # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
@@ -455,7 +462,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create comment for failed PR release
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # This script is intentionally kept inline (and e.g. not generated in publish-resolve-data.js)

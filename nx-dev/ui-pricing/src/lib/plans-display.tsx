@@ -2,9 +2,9 @@
 import { ReactElement } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function PlansDisplay(): ReactElement {
   return (
@@ -86,10 +86,35 @@ export function PlansDisplay(): ReactElement {
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
+                    <Link
+                      href="/ai"
+                      target="_blank"
+                      title="Check our AI integrations and how to use them"
+                      onClick={() =>
+                        sendCustomEvent(
+                          'learn-ai-integrations-click',
+                          'plans-table',
+                          'pricing-plans'
+                        )
+                      }
+                      className="font-medium underline decoration-dotted"
+                    >
+                      AI integrations
+                    </Link>
+                  </li>
+                  <li className="flex items-center justify-start gap-x-2 py-2.5">
+                    <CheckCircleIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    />
                     <span>
                       Remote caching with{' '}
                       <Link
-                        href="/ci/features/remote-cache"
+                        href={
+                          process.env.NEXT_PUBLIC_ASTRO_URL
+                            ? '/docs/features/ci-features/remote-cache'
+                            : '/ci/features/remote-cache'
+                        }
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
                         onClick={() =>
@@ -113,7 +138,11 @@ export function PlansDisplay(): ReactElement {
                     <span>
                       Distributed task execution with{' '}
                       <Link
-                        href="/ci/features/distribute-task-execution"
+                        href={
+                          process.env.NEXT_PUBLIC_ASTRO_URL
+                            ? '/docs/features/ci-features/distribute-task-execution'
+                            : '/ci/features/distribute-task-execution'
+                        }
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
                         onClick={() =>
@@ -205,7 +234,7 @@ export function PlansDisplay(): ReactElement {
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <Link
-                    href="/nx-cloud#ai-for-your-ci"
+                    href="/ai"
                     target="_blank"
                     title="Check our AI integrations and how to use them"
                     onClick={() =>
@@ -283,7 +312,7 @@ export function PlansDisplay(): ReactElement {
                   variant="secondary"
                   onClick={() =>
                     sendCustomEvent(
-                      'request-enterprise-trial',
+                      'request-trial-click',
                       'plans-table',
                       'pricing-plans'
                     )

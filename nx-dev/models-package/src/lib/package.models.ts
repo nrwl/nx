@@ -1,11 +1,10 @@
-import { DocumentMetadata } from '@nx/nx-dev/models-document';
+import { DocumentMetadata } from '@nx/nx-dev-models-document';
 /**
  * To generate base json-schema models, you need to run the following command:
  * `npx json2ts nx-dev/models-package/src/lib/json-schema.draft-07.json > nx-dev/models-package/src/lib/json-schema.model.ts`
  */
 import { JsonSchema1 } from './json-schema.models';
 
-export type PackageContentTypes = 'documents' | 'executors' | 'generators';
 export interface FileMetadata {
   description: string;
   file: string;
@@ -66,6 +65,7 @@ export interface ProcessedPackageMetadata {
   name: string;
   packageName: string;
   path: string;
+  introPath: string;
   root: string;
   source: string;
 }

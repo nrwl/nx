@@ -44,6 +44,7 @@ import {
 import { NxRemixGeneratorSchema } from './schema';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -63,6 +64,11 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    _options.addPlugin,
+    _options.useTsSolution
+  );
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {
       skipFormat: true,
@@ -70,7 +76,7 @@ export async function remixApplicationGeneratorInternal(
     }),
     await jsInitGenerator(tree, {
       skipFormat: true,
-      addTsPlugin: _options.useTsSolution,
+      addTsPlugin,
       formatter: _options.formatter,
       platform: 'web',
     }),

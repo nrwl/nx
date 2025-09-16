@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -75,7 +75,6 @@
               "sass",
               "sass-loader",
               "style-loader",
-              "stylus-loader",
               "swc-loader",
               "tsconfig-paths-webpack-plugin",
               "webpack",

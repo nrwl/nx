@@ -10,16 +10,21 @@ export let dynamicImport = new Function(
 );
 
 export async function loadConfigFile<T extends object = any>(
-  configFilePath: string
+  configFilePath: string,
+  tsconfigFileNames?: string[]
 ): Promise<T> {
   const extension = extname(configFilePath);
-  const module = await loadModule(configFilePath, extension);
+  const module = await loadModule(configFilePath, extension, tsconfigFileNames);
   return module.default ?? module;
 }
 
-async function loadModule(path: string, extension: string): Promise<any> {
+async function loadModule(
+  path: string,
+  extension: string,
+  tsconfigFileNames?: string[]
+): Promise<any> {
   if (isTypeScriptFile(extension)) {
-    return await loadTypeScriptModule(path, extension);
+    return await loadTypeScriptModule(path, extension, tsconfigFileNames);
   }
   return await loadJavaScriptModule(path, extension);
 }
@@ -30,9 +35,10 @@ function isTypeScriptFile(extension: string): boolean {
 
 async function loadTypeScriptModule(
   path: string,
-  extension: string
+  extension: string,
+  tsconfigFileNames?: string[]
 ): Promise<any> {
-  const tsConfigPath = getTypeScriptConfigPath(path);
+  const tsConfigPath = getTypeScriptConfigPath(path, tsconfigFileNames);
 
   if (tsConfigPath) {
     const unregisterTsProject = registerTsProject(tsConfigPath);
@@ -46,10 +52,16 @@ async function loadTypeScriptModule(
   return await loadModuleByExtension(path, extension);
 }
 
-function getTypeScriptConfigPath(path: string): string | null {
+function getTypeScriptConfigPath(
+  path: string,
+  tsconfigFileNames?: string[]
+): string | null {
   const siblingFiles = readdirSync(dirname(path));
-  return siblingFiles.includes('tsconfig.json')
-    ? join(dirname(path), 'tsconfig.json')
+  const tsConfigFileName = (tsconfigFileNames ?? ['tsconfig.json']).find(
+    (name) => siblingFiles.includes(name)
+  );
+  return tsConfigFileName
+    ? join(dirname(path), tsConfigFileName)
     : getRootTsConfigPath();
 }
 
@@ -110,7 +122,7 @@ async function load(path: string): Promise<any> {
   try {
     // Try using `require` first, which works for CJS modules.
     // Modules are CJS unless it is named `.mjs` or `package.json` sets type to "module".
-    return loadCommonJS(path);
+    return await loadCommonJS(path);
   } catch (e: any) {
     if (e.code === 'ERR_REQUIRE_ESM') {
       // If `require` fails to load ESM, try dynamic `import()`. ESM requires file url protocol for handling absolute paths.

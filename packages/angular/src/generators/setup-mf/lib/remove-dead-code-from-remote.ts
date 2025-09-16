@@ -1,15 +1,23 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
-import { Schema } from '../schema';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { NormalizedOptions } from '../schema';
 
-export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
+export function removeDeadCodeFromRemote(
+  tree: Tree,
+  options: NormalizedOptions
+) {
   const projectName = options.appName;
   const project = readProjectConfiguration(tree, projectName);
+  const sourceRoot = getProjectSourceRoot(project, tree);
+
+  const { appComponentInfo, nxWelcomeComponentInfo, entryModuleFileName } =
+    options;
 
   ['css', 'less', 'scss', 'sass'].forEach((style) => {
     const pathToComponentStyle = joinPathFragments(
-      project.sourceRoot,
-      `app/app.component.${style}`
+      sourceRoot,
+      `app/${appComponentInfo.extensionlessFileName}.${style}`
     );
     if (tree.exists(pathToComponentStyle)) {
       tree.delete(pathToComponentStyle);
@@ -17,23 +25,26 @@ export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
   });
 
   tree.rename(
-    joinPathFragments(project.sourceRoot, 'app/nx-welcome.component.ts'),
+    nxWelcomeComponentInfo.path,
     joinPathFragments(
-      project.sourceRoot,
-      'app/remote-entry/nx-welcome.component.ts'
+      sourceRoot,
+      `app/remote-entry/${nxWelcomeComponentInfo.fileName}`
     )
   );
   tree.delete(
-    joinPathFragments(project.sourceRoot, 'app/app.component.spec.ts')
+    joinPathFragments(
+      sourceRoot,
+      `app/${appComponentInfo.extensionlessFileName}.spec.ts`
+    )
   );
-  tree.delete(joinPathFragments(project.sourceRoot, 'app/app.component.html'));
-
-  const pathToAppComponent = joinPathFragments(
-    project.sourceRoot,
-    'app/app.component.ts'
+  tree.delete(
+    joinPathFragments(
+      sourceRoot,
+      `app/${appComponentInfo.extensionlessFileName}.html`
+    )
   );
   if (!options.standalone) {
-    const componentContents = tree.read(pathToAppComponent, 'utf-8');
+    const componentContents = tree.read(appComponentInfo.path, 'utf-8');
     const isInlineTemplate = !componentContents.includes('templateUrl');
 
     const component =
@@ -43,33 +54,37 @@ export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
       `template: '<router-outlet></router-outlet>'
 
 })
-export class AppComponent {}`;
+export class ${appComponentInfo.symbolName} {}`;
 
-    tree.write(pathToAppComponent, component);
+    tree.write(appComponentInfo.path, component);
 
+    let modulePath = joinPathFragments(sourceRoot, 'app/app.module.ts');
+    if (!tree.exists(modulePath)) {
+      modulePath = joinPathFragments(sourceRoot, 'app/app-module.ts');
+    }
     tree.write(
-      joinPathFragments(project.sourceRoot, 'app/app.module.ts'),
+      modulePath,
       `import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { ${appComponentInfo.symbolName} } from './${appComponentInfo.extensionlessFileName}';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [${appComponentInfo.symbolName}],
   imports: [
     BrowserModule,
     RouterModule.forRoot([{
       path: '',
-      loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)
+      loadChildren: () => import('./remote-entry/${entryModuleFileName}').then(m => m.RemoteEntryModule)
     }], { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],
-  bootstrap: [AppComponent],
+  bootstrap: [${appComponentInfo.symbolName}],
 })
 export class AppModule {}`
     );
   } else {
-    tree.delete(pathToAppComponent);
+    tree.delete(appComponentInfo.path);
 
     const pathToIndexHtml = project.targets.build.options.index;
     const indexContents = tree.read(pathToIndexHtml, 'utf-8');

@@ -3,10 +3,10 @@ import {
   WhyJoinNx,
   CurrentOpenings,
   WhatWeOffer,
-} from '@nx/nx-dev/ui-careers';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-careers';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 
-import { fetchJobsList } from '@nx/nx-dev/data-access-careers/node-only';
+import { fetchJobsList } from '@nx/nx-dev-data-access-careers/node-only';
 import { Metadata } from 'next';
 
 async function getData() {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],

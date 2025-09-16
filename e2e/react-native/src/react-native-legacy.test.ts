@@ -14,7 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
@@ -52,6 +52,25 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should build for web', async () => {
     expect(() => runCLI(`build ${appName}`)).not.toThrow();
+  });
+
+  it('should have dependencies synced after React Native app creation', () => {
+    // Check that the app's package.json exists
+    checkFilesExist(`apps/${appName}/package.json`);
+
+    // Read the app's package.json
+    const appPackageJson = readJson(`apps/${appName}/package.json`);
+
+    // Verify that the app package.json has dependencies section
+    expect(appPackageJson.dependencies).toBeDefined();
+
+    // Verify that essential React Native dependencies are automatically synced
+    expect(appPackageJson.dependencies).toEqual(
+      expect.objectContaining({
+        react: '*',
+        'react-native': '*',
+      })
+    );
   });
 
   it('should test and lint', async () => {
@@ -172,7 +191,7 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName}/.storybook/main.ts`,
@@ -296,7 +315,7 @@ describe('@nx/react-native (legacy)', () => {
     }
 
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName2} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName2}/.storybook/main.ts`,

@@ -13,6 +13,7 @@ import { createNodesV2 } from '../../../plugins/plugin';
 import {
   expoCliVersion,
   expoVersion,
+  metroVersion,
   nxVersion,
   reactDomVersion,
   reactNativeVersion,
@@ -96,6 +97,8 @@ export function updateDependencies(host: Tree, schema: Schema) {
     {
       '@nx/expo': nxVersion,
       '@expo/cli': expoCliVersion,
+      'metro-config': metroVersion,
+      'metro-resolver': metroVersion,
     },
     undefined,
     schema.keepExistingVersions

@@ -11,6 +11,7 @@ import { Schema } from './schema';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -27,7 +28,9 @@ export async function detoxApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ) {
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
   const jsInitTask = await jsInitGenerator(host, {
+    addTsPlugin,
     skipFormat: true,
   });
 

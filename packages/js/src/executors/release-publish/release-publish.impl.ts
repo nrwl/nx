@@ -1,5 +1,6 @@
 import {
   detectPackageManager,
+  getPackageManagerCommand,
   ExecutorContext,
   readJsonFile,
 } from '@nx/devkit';
@@ -204,10 +205,10 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
               )
             ) {
               console.error('npm dist-tag add error:');
-              if (stdoutData.error.summary) {
+              if (stdoutData.error?.summary) {
                 console.error(stdoutData.error.summary);
               }
-              if (stdoutData.error.detail) {
+              if (stdoutData.error?.detail) {
                 console.error(stdoutData.error.detail);
               }
 
@@ -263,14 +264,9 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
    * to running from the package root directly), then special attention should be paid to the fact that npm/pnpm publish will nest its
    * JSON output under the name of the package in that case (and it would need to be handled below).
    */
+  const pmCommand = getPackageManagerCommand(pm);
   const publishCommandSegments = [
-    pm === 'bun'
-      ? // Unlike npm, bun publish does not support a custom registryConfigKey option
-        `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`
-      : pm === 'pnpm'
-      ? // Unlike npm, pnpm publish does not support a custom registryConfigKey option, and will error on uncommitted changes by default if --no-git-checks is not set
-        `pnpm publish "${packageRoot}" --json --registry="${registry}" --tag=${tag} --no-git-checks`
-      : `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+    pmCommand.publish(packageRoot, registry, registryConfigKey, tag),
   ];
 
   if (options.otp) {

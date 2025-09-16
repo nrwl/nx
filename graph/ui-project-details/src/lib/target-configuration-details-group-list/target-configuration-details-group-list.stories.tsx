@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import {
   TargetConfigurationGroupList,
   TargetConfigurationGroupListProps,
 } from './target-configuration-details-group-list';
-import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
+import { ExpandedTargetsProvider } from '../expanded-targets-provider';
 
 const meta: Meta<typeof TargetConfigurationGroupList> = {
   component: TargetConfigurationGroupList,

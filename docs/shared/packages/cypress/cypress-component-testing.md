@@ -6,14 +6,14 @@ description: Learn how to set up and use Cypress component testing in your Nx wo
 # Cypress Component Testing
 
 > Component testing requires Cypress v10 and above.
-> See our [guide for more information](/recipes/cypress/cypress-v11-migration) to migrate to Cypress v10.
+> See our [guide for more information](/technologies/test-tools/cypress/recipes/cypress-v11-migration) to migrate to Cypress v10.
 
-Unlike [E2E testing](/nx-api/cypress), component testing does not create a new project. Instead, Cypress component testing is added
-directly to a project, like [Jest](/nx-api/jest)
+Unlike [E2E testing](/technologies/test-tools/cypress/introduction), component testing does not create a new project. Instead, Cypress component testing is added
+directly to a project, like [Jest](/technologies/test-tools/jest/introduction)
 
 ## Add Component Testing to a Project
 
-> Currently only [@nx/react](/nx-api/react/generators/cypress-component-configuration), [@nx/angular](/nx-api/angular/generators/cypress-component-configuration), and [@nx/next](/nx-api/next/generators/cypress-component-configuration) plugins support component testing
+> Currently only [@nx/react](/technologies/react/api/generators/cypress-component-configuration), [@nx/angular](/technologies/angular/api/generators/cypress-component-configuration), and [@nx/next](/technologies/react/next/api/generators/cypress-component-configuration) plugins support component testing
 
 Use the `cypress-component-configuration` generator from the respective plugin to add component testing to a project.
 
@@ -29,7 +29,7 @@ You can optionally pass in `--generate-tests` to create component tests for all 
 
 Component testing supports both applications and libraries. By default, the generator attempts to find the build target for you based on the project's dependent apps. But you can manually specify the build target to use via the `--build-target` option. Note, in most cases, the build target will be from a different project than the one being configured. The only case where the build targets are from the same project is when the component tests are being added to an application.
 
-> Note: The [@nx/next:cypress-component-configuration generator](/nx-api/next/generators/cypress-component-configuration) doesn't require a build target
+> Note: The [@nx/next:cypress-component-configuration generator](/technologies/react/next/api/generators/cypress-component-configuration) doesn't require a build target
 
 ```shell
 nx g @nx/react:cypress-component-configuration --project=your-project --build-target=my-react-app:build
@@ -70,6 +70,42 @@ terminal. Screenshots and videos will be accessible in `dist/cypress/libs/your-l
 With, `nx component-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.
 
 Running Cypress with `--watch` is a great way to iterate on your components since cypress will rerun your tests as you make those changes validating the new behavior.
+
+## Splitting Component Testing Tasks by File
+
+{% callout type="note" title="Available since Nx 21.6.1" %}
+Splitting component testing tasks by file is available since Nx 21.6.1.
+{% /callout %}
+
+Nx provides powerful features for [distributing tasks in CI](/ci/features/distribute-task-execution), including [splitting tasks by file](/ci/features/split-e2e-tasks) (also known as atomization). The `@nx/cypress` plugin facilitates this for Cypress projects, allowing you to run your tests more efficiently in your Continuous Integration (CI) environment.
+
+To enable component testing task splitting, set the `ciComponentTestingTargetName` option of the `@nx/cypress/plugin` in your `nx.json` file. It will look something like this:
+
+```json {% fileName="nx.json" highlightLines=[9] %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci",
+        "componentTestingTargetName": "component-test",
+        "ciComponentTestingTargetName": "component-test-ci",
+        "openTargetName": "open-cypress"
+      }
+    }
+  ]
+}
+```
+
+The plugin will infer the `component-test-ci` task, which depends on individual component testing tasks for each file. You can then replace the `component-test` task with the `component-test-ci` task in your CI configuration to run your tests in a distributed fashion:
+
+```diff {% fileName=".github/workflows/ci.yaml" %}
+-     - run: pnpm exec nx affected -t lint test build component-test
++     - run: pnpm exec nx affected -t lint test build component-test-ci
+```
+
+You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
 
 ## More Information
 

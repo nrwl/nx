@@ -13,13 +13,12 @@ export const TabContext = createContext('');
 export const SELECTED_TAB_KEY = 'selectedTab';
 export const TAB_SELECTED_EVENT = 'tabSelectedEvent';
 
-export function Tabs({
-  labels,
-  children,
-}: {
+export type TabsProps = {
   labels: string[];
   children: ReactNode;
-}) {
+};
+
+export function Tabs({ labels, children }: TabsProps) {
   const [currentTab, setCurrentTab] = useState<string>(labels[0]);
 
   useEffect(() => {
@@ -89,13 +88,12 @@ export function Tabs({
   );
 }
 
-export function Tab({
-  label,
-  children,
-}: {
+export type TabProps = {
   label: string;
   children: ReactNode;
-}) {
+};
+
+export function Tab({ label, children }: TabProps) {
   const currentTab = useContext(TabContext);
   const isActive = label === currentTab;
 

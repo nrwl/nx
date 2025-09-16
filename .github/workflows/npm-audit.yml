@@ -14,11 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
-          version: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+          version: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
       - name: Run a security audit
         run: pnpm dlx audit-ci --critical --report-type summary
@@ -30,7 +30,7 @@ jobs:
     name: Report status
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v2
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
           status: ${{ needs.audit.result }}
           message_format: '{emoji} Audit has {status_message}'

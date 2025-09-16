@@ -10,7 +10,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -148,17 +148,17 @@ describe('nx release preserve local dependency protocols', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "exports": {
       "dependencies": {
       -     "@proj/{project-name}": "workspace:*"
       +     "@proj/{project-name}": "0.1.0"
       }
       }
       +
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "0.1.0",
-      "scripts": {
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -193,13 +193,13 @@ describe('nx release preserve local dependency protocols', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
-      }
-      +
+      "exports": {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
+      }
+      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -219,6 +219,10 @@ describe('nx release preserve local dependency protocols', () => {
         {
           dependencies: {
             @proj/{project-name}: workspace:*,
+          },
+          exports: {
+            .: ./index.js,
+            ./package.json: ./package.json,
           },
           name: @proj/{project-name},
           scripts: {
@@ -288,6 +292,10 @@ describe('nx release preserve local dependency protocols', () => {
         {
           dependencies: {
             @proj/{project-name}: workspace:*,
+          },
+          exports: {
+            .: ./index.js,
+            ./package.json: ./package.json,
           },
           name: @proj/{project-name},
           scripts: {

@@ -43,6 +43,7 @@ import { releaseVersionLegacy } from './version-legacy';
 import { ReleaseGroupProcessor } from './version/release-group-processor';
 import { SemverBumpType } from './version/version-actions';
 import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
+import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -170,6 +171,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         Object.keys(projectGraph.nodes),
         args.verbose
       );
+
+      // Validate version plans against the filter after resolution
+      const versionPlanValidationError =
+        validateResolvedVersionPlansAgainstFilter(
+          releaseGroups,
+          releaseGroupToFilteredProjects
+        );
+      if (versionPlanValidationError) {
+        output.error(versionPlanValidationError);
+        process.exit(1);
+      }
     } else {
       if (args.verbose && releaseGroups.some((g) => !!g.versionPlans)) {
         console.log(
@@ -186,7 +198,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     /**
      * Run any configured top level pre-version command
      */
-    runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
+    runPreVersionCommand(nxReleaseConfig.version?.preVersionCommand, {
       dryRun: args.dryRun,
       verbose: args.verbose,
     });
@@ -196,7 +208,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     for (const releaseGroup of releaseGroups) {
       runPreVersionCommand(
-        releaseGroup.version.groupPreVersionCommand,
+        releaseGroup.version?.groupPreVersionCommand,
         {
           dryRun: args.dryRun,
           verbose: args.verbose,
@@ -258,6 +270,64 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     await formatChangedFilesWithPrettierIfAvailable(tree, { silent: true });
 
+    printAndFlushChanges(tree, !!args.dryRun);
+
+    const { changedFiles: changed, deletedFiles: deleted } =
+      await processor.afterAllProjectsVersioned({
+        ...(nxReleaseConfig.version as NxReleaseVersionConfiguration)
+          .versionActionsOptions,
+        ...(args.versionActionsOptionsOverrides ?? {}),
+      });
+    changed.forEach((f) => additionalChangedFiles.add(f));
+    deleted.forEach((f) => additionalDeletedFiles.add(f));
+
+    // After all version actions have run, process docker projects as a layer above
+    if (nxReleaseConfig.docker?.preVersionCommand) {
+      /**
+       * Run any configured top level docker pre-version command
+       */
+      runPreVersionCommand(
+        nxReleaseConfig.docker.preVersionCommand,
+        {
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        },
+        undefined,
+        true
+      );
+    }
+
+    /**
+     * Run any configured docker pre-version command for the selected release groups
+     */
+    for (const releaseGroup of releaseGroups) {
+      if (releaseGroup.docker?.groupPreVersionCommand) {
+        runPreVersionCommand(
+          releaseGroup.docker.groupPreVersionCommand,
+          {
+            dryRun: args.dryRun,
+            verbose: args.verbose,
+          },
+          releaseGroup,
+          true
+        );
+      }
+    }
+
+    // TODO(colum): Remove when Docker support is no longer experimental
+    if (nxReleaseConfig.docker || releaseGroups.some((rg) => rg.docker)) {
+      output.warn({
+        title: 'Warning',
+        bodyLines: [
+          `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`,
+        ],
+      });
+    }
+    await processor.processDockerProjects(
+      args.dockerVersionScheme,
+      args.dockerVersion
+    );
+
     const versionData = processor.getVersionData();
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -270,17 +340,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           )
         : [];
     handleDuplicateGitTags(gitTagValues);
-
-    printAndFlushChanges(tree, !!args.dryRun);
-
-    const { changedFiles: changed, deletedFiles: deleted } =
-      await processor.afterAllProjectsVersioned({
-        ...(nxReleaseConfig.version as NxReleaseVersionConfiguration)
-          .versionActionsOptions,
-        ...(args.versionActionsOptionsOverrides ?? {}),
-      });
-    changed.forEach((f) => additionalChangedFiles.add(f));
-    deleted.forEach((f) => additionalDeletedFiles.add(f));
 
     // Only applicable when there is a single release group with a fixed relationship
     let workspaceVersion: string | null | undefined = undefined;
@@ -413,7 +472,8 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
 function runPreVersionCommand(
   preVersionCommand: string,
   { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
-  releaseGroup?: ReleaseGroupWithName
+  releaseGroup?: ReleaseGroupWithName,
+  dockerPreVersionCommand: boolean = false
 ) {
   if (!preVersionCommand) {
     return;
@@ -421,8 +481,12 @@ function runPreVersionCommand(
 
   output.logSingleLine(
     releaseGroup
-      ? `Executing release group pre-version command for "${releaseGroup.name}"`
-      : `Executing pre-version command`
+      ? `Executing${
+          dockerPreVersionCommand ? ` docker` : ` release group`
+        } pre-version command for "${releaseGroup.name}"`
+      : `Executing${
+          dockerPreVersionCommand ? ` docker` : ``
+        } pre-version command`
   );
   if (verbose) {
     console.log(`Executing the following pre-version command:`);

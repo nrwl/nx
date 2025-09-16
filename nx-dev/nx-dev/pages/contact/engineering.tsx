@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
-import { TalkToOurEngineeringTeam } from '@nx/nx-dev/ui-contact';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
+import { TalkToOurEngineeringTeam } from '@nx/nx-dev-ui-contact';
 
 export function EngineeringTeam(): JSX.Element {
   const router = useRouter();
@@ -21,7 +21,7 @@ export function EngineeringTeam(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

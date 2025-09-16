@@ -10,7 +10,7 @@ const config: StorybookConfig = {
     '../**/*.@(mdx|stories.@(js|jsx|ts|tsx))' <% } else { %>
     '../<%= projectDirectory %>/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'
   <% } %>],
-  addons: ['@storybook/addon-essentials' <% if(interactionTests) { %>, '@storybook/addon-interactions' <% } %><% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %>],
+  addons: [<% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %>],
   framework: {
     name: '<%= uiFramework %>',
     options: {

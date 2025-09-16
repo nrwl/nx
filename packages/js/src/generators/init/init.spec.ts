@@ -108,14 +108,14 @@ describe('js init generator', () => {
 
   it('should not overwrite installed typescript version when is a supported version', async () => {
     updateJson(tree, 'package.json', (json) => {
-      json.devDependencies = { ...json.devDependencies, typescript: '~5.2.0' };
+      json.devDependencies = { ...json.devDependencies, typescript: '~5.4.0' };
       return json;
     });
 
     await init(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['typescript']).toBe('~5.2.0');
+    expect(packageJson.devDependencies['typescript']).toBe('~5.4.0');
     expect(packageJson.devDependencies['typescript']).not.toBe(
       typescriptVersion
     );
@@ -209,7 +209,7 @@ describe('js init generator', () => {
           "skipLibCheck": true,
           "strict": true,
           "target": "es2022",
-          "customConditions": ["development"]
+          "customConditions": ["@proj/source"]
         }
       }
       "

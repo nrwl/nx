@@ -7,6 +7,21 @@
   "include": [],
   "references": [
     {
+      "path": "../../packages/nx"
+    },
+    {
+      "path": "../../packages/js"
+    },
+    {
+      "path": "../../packages/plugin"
+    },
+    {
+      "path": "../../packages/eslint"
+    },
+    {
+      "path": "../../packages/devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

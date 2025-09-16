@@ -192,11 +192,13 @@ export type NxPluginV2<TOptions = unknown> = {
 export type PreTasksExecutionContext = {
   readonly workspaceRoot: string;
   readonly nxJsonConfiguration: NxJsonConfiguration;
+  readonly argv: string[];
 };
 export type PostTasksExecutionContext = {
   readonly workspaceRoot: string;
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly taskResults: TaskResults;
+  readonly argv: string[];
 };
 
 export type PreTasksExecution<TOptions = unknown> = (

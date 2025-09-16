@@ -1,12 +1,12 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode, TargetConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
+import { Tooltip } from '@nx/graph-ui-common';
 import { TagList } from '../tag-list/tag-list';
 import { OwnersList } from '../owners-list/owners-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
@@ -57,7 +57,9 @@ export const ProjectDetails = ({
       [
         ...(projectData.metadata?.technologies ?? []),
         ...Object.values(projectData.targets ?? {})
-          .map((target) => target?.metadata?.technologies)
+          .map(
+            (target: TargetConfiguration<any>) => target?.metadata?.technologies
+          )
           .flat(),
       ].filter(Boolean)
     ),

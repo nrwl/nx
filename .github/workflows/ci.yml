@@ -11,6 +11,7 @@ on:
 
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  PNPM_HOME: ~/.pnpm
 
 jobs:
   main-linux:
@@ -30,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
@@ -40,7 +41,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
 
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
         with:
           main-branch-name: 'master'
 
@@ -53,27 +54,37 @@ jobs:
           sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
 
       - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
+        uses: browser-actions/setup-chrome@2dbff04819ebbfd5c974947148805a825b8a07fd # v2.1.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
+        with:
+          rustflags: ''
+
+      - name: Setup Java
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4.4.3
 
       - name: Install project dependencies
         run: |
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
 
       - name: Check Documentation
         run: pnpm nx documentation
@@ -102,6 +113,9 @@ jobs:
             wait "$pid"
           done
         timeout-minutes: 100
+      - name: Fix CI
+        run: pnpm nx-cloud fix-ci
+        if: failure()
 
   main-macos:
     runs-on: macos-latest
@@ -125,7 +139,7 @@ jobs:
         if: always()
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
@@ -135,7 +149,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
 
       - name: Restore Homebrew packages
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             /opt/homebrew
@@ -144,35 +158,132 @@ jobs:
 
       - name: Configure Detox Environment, Install applesimutils
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-          xcrun simctl shutdown all && xcrun simctl erase all
-        timeout-minutes: 20
+          # Ensure Xcode command line tools are installed and configured
+          xcode-select --print-path || sudo xcode-select --reset
+          sudo xcode-select -s /Applications/Xcode.app
+          
+          # Install or update applesimutils with error handling
+          if ! brew list applesimutils &>/dev/null; then
+            echo "Installing applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
+              echo "Failed to install applesimutils, retrying with update..."
+              brew update
+              HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
+            }
+          else
+            echo "Updating applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade applesimutils || true
+          fi
+          
+          # Verify applesimutils installation
+          applesimutils --version || (echo "applesimutils installation failed" && exit 1)
+          
+          # Configure environment for M-series Mac
+          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+          echo "PLATFORM_NAME=iOS Simulator" >> $GITHUB_ENV
+          
+          # Set additional environment variables for better debugging
+          echo "DETOX_DISABLE_TELEMETRY=1" >> $GITHUB_ENV
+          echo "DETOX_LOG_LEVEL=trace" >> $GITHUB_ENV
+          
+          # Verify Xcode installation
+          xcodebuild -version
+          
+          # List available simulators
+          xcrun simctl list devices available
+        timeout-minutes: 10
+        continue-on-error: false
+  
+      - name: Reset iOS Simulators
+        id: reset-simulators
+        run: |
+          echo "Resetting iOS Simulators..."
+          
+          # Kill simulator processes
+          sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+          killall "Simulator" 2>/dev/null || true
+          killall "iOS Simulator" 2>/dev/null || true
+          
+          # Wait for processes to terminate
+          sleep 3
+          
+          # Shutdown and erase all simulators (ignore failures)
+          xcrun simctl shutdown all 2>/dev/null || true
+          sleep 5
+          xcrun simctl erase all 2>/dev/null || true
+          
+          # If erase failed, try the nuclear option
+          if xcrun simctl list devices | grep -q "Booted" 2>/dev/null; then
+            echo "Standard reset failed, using nuclear option..."
+            rm -rf ~/Library/Developer/CoreSimulator/Devices/* 2>/dev/null || true
+            launchctl remove com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+            sleep 3
+          fi
+          
+          # Clean up additional directories
+          rm -rf ~/Library/Developer/CoreSimulator/Caches/* 2>/dev/null || true
+          rm -rf ~/Library/Logs/CoreSimulator/* 2>/dev/null || true
+          rm -rf ~/Library/Developer/Xcode/DerivedData/* 2>/dev/null || true
+          
+          echo "Simulator reset completed"
+        timeout-minutes: 5
+        continue-on-error: true
+
+      - name: Verify Simulator Reset
+        if: ${{ steps.reset-simulators.outcome == 'success' }}
+        run: |
+          # Verify CoreSimulator service restarted
+          pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
+          
+          # Check simulator list is clean
+          xcrun simctl list devices
+          
+          # Verify simulator runtime paths exist and are writable
+          test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
+          touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
+          rm ~/Library/Developer/CoreSimulator/Devices/test
+        timeout-minutes: 5
+
+      - name: Diagnose Simulator Reset Failure
+        if: ${{ steps.reset-simulators.outcome == 'failure' }}
+        run: |
+          echo "Simulator reset failed. Collecting diagnostic information..."
+          xcrun simctl list
+          echo "Checking simulator logs..."
+          ls -la ~/Library/Logs/CoreSimulator/ || echo "No simulator logs found"
 
       - name: Save Homebrew Cache
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             /opt/homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
+        with:
+          rustflags: ''
 
       - name: Install project dependencies
         run: |
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
         with:
           main-branch-name: 'master'
 

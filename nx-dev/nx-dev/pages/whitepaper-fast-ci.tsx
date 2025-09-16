@@ -6,17 +6,17 @@ import {
   Header,
   HubspotForm,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import {
   CapitalOneIcon,
   CaterpillarIcon,
   RoyalBankOfCanadaIcon,
   ShopifyIcon,
   SiriusxmAlternateIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import { type ReactElement } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();
@@ -36,7 +36,7 @@ export function WhitePaperFastCI(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

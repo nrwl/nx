@@ -1,30 +1,28 @@
 import {
   useNavigate,
-  useParams,
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
 import { TaskList } from './task-list';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type {
-  ProjectGraphClientResponse,
-  TaskGraphClientResponse,
-} from 'nx/src/command-line/graph/graph';
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useMemo } from 'react';
-import { getGraphService } from '../machines/graph.service';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
-import { Dropdown } from '@nx/graph/legacy/components';
-import { useRouteConstructor } from '@nx/graph/legacy/shared';
+import { MultiSelect, MultiSelectOption, Spinner } from '@nx/graph-ui-common';
+import {
+  useRouteConstructor,
+  type TaskGraphClientResponse,
+} from '@nx/graph-shared';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ShowHideAll } from '../ui-components/show-hide-all';
 import { createTaskName } from '../util';
+import { useTaskGraphContext } from '@nx/graph/tasks';
 
-export function TasksSidebar() {
-  const graphService = getGraphService();
+function TasksSidebarInner() {
+  const { send } = useTaskGraphContext();
   const navigate = useNavigate();
-  const params = useParams();
   const createRoute = useRouteConstructor();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,52 +33,83 @@ export function TasksSidebar() {
   ) as ProjectGraphClientResponse & { targets: string[] };
   const workspaceLayout = selectedWorkspaceRouteData.layout;
 
-  const routeData = useRouteLoaderData(
-    'selectedTarget'
-  ) as TaskGraphClientResponse;
-  const { taskGraphs, errors } = routeData;
+  const allTasksRouteData = useRouteLoaderData(
+    'allTasks'
+  ) as TaskGraphClientResponse | null;
+
+  const tasksRouteData = useRouteLoaderData(
+    'tasks'
+  ) as TaskGraphClientResponse | null;
+
+  // Use tasks data if available, otherwise empty defaults
+  const { taskGraph, error } = useMemo(() => {
+    return (allTasksRouteData ||
+      tasksRouteData || {
+        taskGraph: {
+          tasks: {},
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
+        error: null,
+      }) as TaskGraphClientResponse;
+  }, [tasksRouteData, allTasksRouteData]);
   let { projects, targets } = selectedWorkspaceRouteData;
 
-  const selectedTarget = params['selectedTarget'] ?? targets[0];
+  const selectedTargets = useMemo(() => {
+    const targetsParam = searchParams.get('targets');
+    return targetsParam ? targetsParam.split(' ').filter(Boolean) : [];
+  }, [searchParams]);
 
   const currentRoute = useCurrentPath();
-  const isAllRoute =
-    currentRoute.currentPath === `/tasks/${selectedTarget}/all`;
+  const isAllRoute = currentRoute.currentPath === '/tasks/all';
 
-  const allProjectsWithTargetAndNoErrors = projects.filter(
-    (project) =>
-      project.data.targets?.hasOwnProperty(selectedTarget) &&
-      !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
-  );
-
-  const selectedProjects = useMemo(
+  const allProjectsWithTargetsAndNoErrors = useMemo(
     () =>
-      isAllRoute
-        ? allProjectsWithTargetAndNoErrors.map(({ name }) => name)
-        : searchParams.get('projects')?.split(' ') ?? [],
-    [allProjectsWithTargetAndNoErrors, searchParams, isAllRoute]
+      projects.filter(
+        (project) =>
+          selectedTargets.length > 0 &&
+          selectedTargets.some((target) =>
+            project.data.targets?.hasOwnProperty(target)
+          ) &&
+          !error // If there's a global error, exclude all projects
+      ),
+    [projects, selectedTargets, error]
   );
 
-  function selectTarget(target: string) {
-    if (target === selectedTarget) return;
+  const selectedProjects = useMemo(() => {
+    return isAllRoute
+      ? allProjectsWithTargetsAndNoErrors
+      : projects.filter((project) =>
+          (searchParams.get('projects') ?? '').split(' ').includes(project.name)
+        );
+  }, [allProjectsWithTargetsAndNoErrors, searchParams, isAllRoute]);
 
+  const selectedProjectNames = useMemo(
+    () => selectedProjects.map((project) => project.name),
+    [selectedProjects]
+  );
+
+  function updateSelectedTargets(newTargets: string[]) {
     hideAllProjects();
+    const newParams = new URLSearchParams(searchParams);
 
-    if (params['selectedTarget']) {
-      navigate({
-        pathname: `../${encodeURIComponent(target)}`,
-        search: searchParams.toString(),
-      });
+    if (newTargets.length > 0) {
+      newParams.set('targets', newTargets.join(' '));
     } else {
-      navigate({
-        pathname: `${encodeURIComponent(target)}`,
-        search: searchParams.toString(),
-      });
+      newParams.delete('targets');
     }
+
+    navigate(
+      createRoute(
+        { pathname: '/tasks', search: newParams.toString() },
+        () => newParams
+      )
+    );
   }
 
   function toggleProject(project: string) {
-    if (selectedProjects.includes(project)) {
+    if (selectedProjectNames.includes(project)) {
       deselectProject(project);
     } else {
       selectProject(project);
@@ -88,104 +117,106 @@ export function TasksSidebar() {
   }
 
   function selectProject(project: string) {
-    const newSelectedProjects = [...selectedProjects, project];
+    const newSelectedProjects = [...selectedProjectNames, project];
     const allProjectsSelected =
-      newSelectedProjects.length === allProjectsWithTargetAndNoErrors.length;
+      newSelectedProjects.length === allProjectsWithTargetsAndNoErrors.length;
+
+    const newParams = new URLSearchParams(searchParams);
     if (allProjectsSelected) {
-      searchParams.delete('projects');
+      newParams.delete('projects');
     } else {
-      searchParams.set('projects', newSelectedProjects.join(' '));
+      newParams.set('projects', newSelectedProjects.join(' '));
     }
 
     navigate(
       createRoute(
         {
-          pathname: allProjectsSelected
-            ? `/tasks/${encodeURIComponent(selectedTarget)}/all`
-            : `/tasks/${encodeURIComponent(selectedTarget)}`,
-          search: searchParams.toString(),
+          pathname: allProjectsSelected ? '/tasks/all' : '/tasks',
+          search: newParams.toString(),
         },
-        false
+        () => newParams
       )
     );
   }
 
   function deselectProject(project: string) {
-    const newSelectedProjects = selectedProjects.filter(
+    const newSelectedProjects = selectedProjectNames.filter(
       (selectedProject) => selectedProject !== project
     );
+
+    const newParams = new URLSearchParams(searchParams);
     if (newSelectedProjects.length === 0) {
-      searchParams.delete('projects');
+      newParams.delete('projects');
     } else {
-      searchParams.set('projects', newSelectedProjects.join(' '));
+      newParams.set('projects', newSelectedProjects.join(' '));
     }
+
     navigate(
       createRoute(
-        {
-          pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
-          search: searchParams.toString(),
-        },
-        false
+        { pathname: '/tasks', search: newParams.toString() },
+        () => newParams
       )
     );
   }
 
   function selectAllProjects() {
-    searchParams.delete('projects');
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('projects');
     navigate(
       createRoute(
-        {
-          pathname: `/tasks/${encodeURIComponent(selectedTarget)}/all`,
-          search: searchParams.toString(),
-        },
-        false
+        { pathname: '/tasks/all', search: newParams.toString() },
+        () => newParams
       )
     );
   }
 
   function hideAllProjects() {
-    searchParams.delete('projects');
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('projects');
     navigate(
       createRoute(
         {
-          pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
-          search: searchParams.toString(),
+          pathname: '/tasks',
+          search: newParams.toString(),
         },
-        false
+        () => newParams
       )
     );
   }
 
   useEffect(() => {
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphSetProjects',
+    send({
+      type: 'initGraph',
       projects: selectedWorkspaceRouteData.projects,
-      taskGraphs,
+      taskGraph,
     });
-  }, [selectedWorkspaceRouteData]);
+  }, [selectedWorkspaceRouteData, send, taskGraph]);
 
   useEffect(() => {
-    if (groupByProject) {
-      graphService.handleTaskEvent({
-        type: 'setGroupByProject',
-        groupByProject: true,
-      });
-    } else {
-      graphService.handleTaskEvent({
-        type: 'setGroupByProject',
-        groupByProject: false,
-      });
-    }
-  }, [searchParams]);
+    send({
+      type: 'mergeGraph',
+      projects: selectedWorkspaceRouteData.projects,
+      taskGraph,
+    });
+  }, [selectedWorkspaceRouteData, taskGraph, isAllRoute, send]);
 
   useEffect(() => {
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphSetTasks',
-      taskIds: selectedProjects.map((p) => createTaskName(p, selectedTarget)),
-    });
-  }, [graphService, selectedProjects, selectedTarget]);
+    send({ type: 'toggleGroupByProject', groupByProject });
+  }, [groupByProject, send]);
 
-  function groupByProjectChanged(checked) {
+  useEffect(() => {
+    const taskIds = selectedProjects.flatMap((project) =>
+      selectedTargets.map((target) => {
+        const resolvedConfiguration =
+          project.data.targets?.[target]?.defaultConfiguration;
+        return createTaskName(project.name, target, resolvedConfiguration);
+      })
+    );
+
+    send({ type: 'show', taskIds });
+  }, [selectedProjects, selectedTargets, send]);
+
+  function groupByProjectChanged(checked: boolean) {
     setSearchParams(
       (currentSearchParams) => {
         if (checked) {
@@ -208,7 +239,8 @@ export function TasksSidebar() {
         showAffected={() => {}}
         hasAffected={false}
         label="tasks"
-      ></ShowHideAll>
+        isShowingAll={isAllRoute}
+      />
 
       <CheckboxPanel
         checked={groupByProject}
@@ -220,32 +252,43 @@ export function TasksSidebar() {
 
       <TaskList
         projects={projects}
-        selectedProjects={selectedProjects}
+        selectedProjects={selectedProjectNames}
         workspaceLayout={workspaceLayout}
-        selectedTarget={selectedTarget}
+        selectedTargets={selectedTargets}
         toggleProject={toggleProject}
-        errors={errors}
+        error={error}
       >
         <label
-          htmlFor="selectedTarget"
+          htmlFor="selectedTargets"
           className="my-2 block text-sm font-medium text-gray-700"
         >
-          Target Name
+          Target Names
         </label>
-        <Dropdown
-          id="selectedTarget"
+        <MultiSelect
+          id="selectedTargets"
           className="w-full"
-          data-cy="selected-target-dropdown"
-          defaultValue={selectedTarget}
-          onChange={(event) => selectTarget(event.currentTarget.value)}
-        >
-          {targets.map((target) => (
-            <option key={target} value={target}>
-              {target}
-            </option>
-          ))}
-        </Dropdown>
+          options={targets.map(
+            (target): MultiSelectOption => ({ value: target, label: target })
+          )}
+          value={selectedTargets}
+          onChange={updateSelectedTargets}
+          placeholder="Select targets..."
+        />
       </TaskList>
     </>
   );
+}
+
+export function TasksSidebar() {
+  const { graphClient } = useTaskGraphContext();
+
+  if (!graphClient) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  return <TasksSidebarInner />;
 }

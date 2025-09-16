@@ -1,6 +1,6 @@
 import { PlayCircleIcon, PlayIcon } from '@heroicons/react/24/solid';
 import { Schema } from '@markdoc/markdoc';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export const youtube: Schema = {
   render: 'YouTube',
@@ -96,14 +96,16 @@ const youtubeIcon = (
   </svg>
 );
 
-export function YouTube(props: {
+export type YouTubeProps = {
   title: string;
   caption?: string;
   src: string;
   width?: string;
   disableRoundedCorners?: boolean;
   imageOnly?: boolean;
-}): JSX.Element {
+};
+
+export function YouTube(props: YouTubeProps): JSX.Element {
   return (
     <div className="text-center">
       {' '}
@@ -122,7 +124,7 @@ export function YouTube(props: {
               {
                 'rounded-lg shadow-lg': !props.disableRoundedCorners,
               },
-              'border-2 border-slate-200 hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700'
+              'aspect-video border-2 border-slate-200 hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700'
             )}
           />
         </a>
@@ -133,8 +135,7 @@ export function YouTube(props: {
           width={props.width || '100%'}
           allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           loading="lazy"
-          credentialless="true"
-          className={cx({
+          className={cx('aspect-video', {
             'rounded-lg shadow-lg': !props.disableRoundedCorners,
           })}
         />

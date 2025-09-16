@@ -1,18 +1,24 @@
-import { appendFileSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
+import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
 import runCommands, {
   interpolateArgsIntoCommand,
   LARGE_BUFFER,
 } from './run-commands.impl';
-import { env } from 'npm-run-path';
 
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
 }
 
-function readFile(f: string) {
-  return readFileSync(f).toString().replace(/\s/g, '');
+function readFile(
+  f: string,
+  { preserveWhitespace }: { preserveWhitespace: boolean } = {
+    preserveWhitespace: false,
+  }
+) {
+  const fileContents = readFileSync(f).toString();
+  return preserveWhitespace ? fileContents : fileContents.replace(/\s/g, '');
 }
 
 describe('Run Commands', () => {
@@ -20,6 +26,18 @@ describe('Run Commands', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('should handle empty commands array', async () => {
+    const result = await runCommands(
+      {
+        commands: [],
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result.success).toEqual(true);
+    expect(result.terminalOutput).toEqual('');
   });
 
   it('should interpolate provided --args', async () => {
@@ -209,6 +227,21 @@ describe('Run Commands', () => {
       expect(readFile(f)).toEqual(expected);
     }
   );
+
+  it('should interpolate {args} to contain all provided args', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: `echo {args} >> ${f}`,
+        __unparsed__: [`--publish 8080:80`, `--expose 80`],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f, { preserveWhitespace: true }).trim()).toEqual(
+      `--publish 8080:80 --expose 80`
+    );
+  });
 
   it('should run commands serially', async () => {
     const f = fileSync().name;
@@ -682,7 +715,7 @@ describe('Run Commands', () => {
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(normalize(readFile(f))).toBe(root);
+      expect(normalize(readFile(f))).toBe(normalize(root));
     });
 
     it('should run the task in the specified cwd relative to the workspace root when cwd is not an absolute path', async () => {
@@ -706,7 +739,7 @@ describe('Run Commands', () => {
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(normalize(readFile(f))).toBe(childFolder);
+      expect(normalize(readFile(f))).toBe(normalize(childFolder));
     });
 
     it('should terminate properly with an error if the cwd is not valid', async () => {
@@ -750,7 +783,7 @@ describe('Run Commands', () => {
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(normalize(readFile(f))).toBe(childFolder);
+      expect(normalize(readFile(f))).toBe(normalize(childFolder));
     });
 
     it('should add node_modules/.bins to the env for the cwd', async () => {
@@ -774,9 +807,11 @@ describe('Run Commands', () => {
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toContain(
-        `${childFolder}/node_modules/.bin`
+        normalize(`${childFolder}/node_modules/.bin`)
       );
-      expect(normalize(readFile(f))).toContain(`${root}/node_modules/.bin`);
+      expect(normalize(readFile(f))).toContain(
+        normalize(`${root}/node_modules/.bin`)
+      );
     });
   });
 
@@ -923,6 +958,102 @@ describe('Run Commands', () => {
           `no such file or directory, open '/somePath/.fakeEnv'`
         );
       }
+    });
+  });
+
+  describe('fail-fast behavior in parallel execution', () => {
+    it('should exit immediately when one parallel command fails', async () => {
+      const startTime = Date.now();
+
+      const result = await runCommands(
+        {
+          commands: [
+            `echo "command1" && exit 1`, // Fails immediately
+            `echo "command2" && sleep 2`, // Would take 2 seconds if not terminated
+          ],
+          parallel: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result.success).toBe(false);
+      const duration = Date.now() - startTime;
+      // Should complete quickly (fail-fast), not wait for 2 seconds
+      expect(duration).toBeLessThan(500);
+    });
+
+    it('should handle multiple simultaneous failures in parallel commands', async () => {
+      const result = await runCommands(
+        {
+          commands: [
+            `echo "fail1" && exit 1`,
+            `echo "fail2" && exit 2`,
+            `echo "fail3" && exit 3`,
+          ],
+          parallel: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should succeed when all parallel commands succeed', async () => {
+      const result = await runCommands(
+        {
+          commands: [`echo "success1"`, `echo "success2"`, `echo "success3"`],
+          parallel: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should terminate remaining processes when one fails in parallel', async () => {
+      const f = fileSync().name;
+      const flagFile = fileSync().name;
+
+      const result = await runCommands(
+        {
+          commands: [
+            `echo "quick" >> ${f} && exit 1`, // Fails immediately
+            `sleep 0.5 && echo "should_not_appear" >> ${flagFile}`, // Should be terminated
+          ],
+          parallel: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result.success).toBe(false);
+      expect(readFile(flagFile)).toBe(''); // didn't write should_not_appear
+    });
+
+    it('should handle process cleanup correctly on failure', async () => {
+      const startTime = Date.now();
+
+      const result = await runCommands(
+        {
+          commands: [
+            'exit 1', // Fail immediately
+            'sleep 2', // Long-running process
+            'sleep 2', // Another long-running process
+            'sleep 2', // Yet another long-running process
+          ],
+          parallel: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result.success).toBe(false);
+      const duration = Date.now() - startTime;
+      // Should complete quickly after failure and cleanup
+      expect(duration).toBeLessThan(500);
     });
   });
 });

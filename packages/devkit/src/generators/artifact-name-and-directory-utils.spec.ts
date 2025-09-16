@@ -135,6 +135,29 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     });
   });
 
+  it('should support receiving a suffix separator', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    const result = await determineArtifactNameAndDirectoryOptions(tree, {
+      suffix: 'component',
+      suffixSeparator: '-',
+      path: 'apps/app1/myComponent',
+    });
+
+    expect(result).toStrictEqual({
+      artifactName: 'myComponent',
+      directory: 'apps/app1',
+      fileName: 'myComponent-component',
+      filePath: 'apps/app1/myComponent-component.ts',
+      fileExtension: 'ts',
+      fileExtensionType: 'ts',
+      project: 'app1',
+    });
+  });
+
   it('should support receiving the full file path including the file extension', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',

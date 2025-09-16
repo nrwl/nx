@@ -5,6 +5,7 @@ import {
   names,
   offsetFromRoot,
 } from '@nx/devkit';
+import { join } from 'path';
 import type { NormalizedOptions } from '../schema';
 
 export function createFiles(tree: Tree, options: NormalizedOptions): void {
@@ -17,7 +18,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
   };
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '..', 'files', 'common'),
+    join(__dirname, '..', 'files', 'common'),
     options.projectRoot,
     substitutions
   );
@@ -25,7 +26,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
   if (options.controller) {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, '..', 'files', 'controller'),
+      join(__dirname, '..', 'files', 'controller'),
       options.projectRoot,
       substitutions
     );
@@ -45,7 +46,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
   if (options.service) {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, '..', 'files', 'service'),
+      join(__dirname, '..', 'files', 'service'),
       options.projectRoot,
       substitutions
     );

@@ -1,0 +1,85 @@
+---
+title: What is Nx?
+description: 'Nx is an AI-first build platform that connects everything from your editor to CI Helping you deliver fast, without breaking things.'
+sidebar:
+  order: 1
+  label: Introduction
+---
+
+Nx is a powerful, open source, technology-agnostic build platform designed to efficiently manage codebases of any scale. From small single projects to large enterprise monorepos, Nx provides the platform to **efficiently get from starting a feature in your editor to a green PR**.
+
+As teams and codebases grow, productivity bottlenecks multiply: build times increase, CI becomes flaky, and code sharing becomes complex. **Nx reduces friction across your entire development cycle.**
+
+{% youtube src="https://youtu.be/pbAQErStl9o" title="What is Nx?" width="100%" /%}
+
+## Start small, extend as you grow
+
+Nx is built in a modular fashion, allowing you to adopt as little or as much as you'd like at any moment in your development lifecycle. You can **start with just the core and add additional capabilities incrementally** as your needs grow and complexity increases.
+
+At the **foundation is Nx Core**, a Rust-based, technology-agnostic task runner. Nx Core creates a knowledge graph of your workspace, understanding project relationships and dependencies. This enables highly optimized and fast task execution regardless of technology stack. It runs `package.json` scripts in [TypeScript monorepos](/docs/technologies/typescript/introduction) or Gradle tasks in [Java projects](/docs/technologies/java/introduction) or [can be extended](/docs/extending-nx/intro) to meet your project's specific needs.
+
+{% callout type="deepdive" title="What do you mean by \"running NPM scripts\"?" %}
+
+At the very core, Nx is a super fast, intelligent task runner. Let's take the example of an NPM workspace. This could be a project's `package.json`:
+
+```json
+// package.json
+{
+  "name": "my-project",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  }
+}
+```
+
+Then you can simply add Nx to your root `package.json`:
+
+```json
+// package.json
+{
+  "devDependencies": {
+    "nx": "latest"
+  }
+}
+```
+
+And once that's done, you can run your tasks via Nx.
+
+```shell {% frame="none" %}
+nx build my-project
+```
+
+This will execute the `build` script from `my-project`'s `package.json`, equivalent to running `npm run build` in that project directory.
+
+Similarly you [can run tasks across all projects](/docs/features/run-tasks), just specific ones or just those from projects you touched.
+
+From there, you can gradually enhance your setup by adding features like [task caching](/docs/features/cache-task-results), adding [plugins](/docs/technologies), optimizing your CI via [task distribution](/docs/features/ci-features/distribute-task-execution), and many more powerful capabilities as your needs grow.
+
+{% /callout %}
+
+Nx Core provides everything you need to get started and works perfectly on its own. 
+**When you're ready for more, the Nx platform offers additional capabilities you can adopt incrementally**. 
+Extend your setup with [**Nx Cloud**](/docs/getting-started/nx-cloud) for remote caching, distributed task execution, and [**AI-powered self-healing CI**](/docs/features/ci-features/self-healing-ci) that automatically detects, analyzes, and fixes CI failures. 
+Integrate [**Nx Console**](/docs/getting-started/editor-setup) with your editor for powerful autocomplete, project graph visualization, CI notifications, and an MCP to [make your AI coding assistant smarter](/docs/features/enhance-ai). 
+Add [**Nx Plugins**](/docs/technologies) for technology-specific automation and DX improvements, or build custom platform capabilities using [Nx Devkit](/docs/extending-nx/intro).
+
+## Where to go from here?
+
+{% cardgrid %}
+
+{% linkcard title="Nx quickstart" description="Dive right in with our quickstart steps to create your first project or add Nx to your existing one."  href="/docs/quickstart"  /%}
+
+{% linkcard title="Explore Technologies" description="Explore Nx's technology integrations and how it can support your specific stack."  href="/docs/technologies" /%}
+
+{% linkcard title="Step by step with our tutorials" description="Learn more about Nx through hands-on tutorials for different technology stacks."  href="/docs/getting-started/tutorials" /%}
+
+{% linkcard title="Learn with our video courses" description="Dive deeper with comprehensive video courses that walk you through Nx concepts."  href="https://nx.dev/courses" /%}
+
+{% linkcard title="Dive deep into Nx features" description="Discover all the powerful features that Nx provides to streamline your workflow."  href="/docs/features" /%}
+
+{% linkcard title="Understand underlying concepts" description="Improve your understanding of the core concepts of how Nx works under the hood."  href="/docs/concepts" /%}
+
+{% /cardgrid %}
+
+**Stay up to date** with our latest news by [⭐️ starring us on Github](https://github.com/nrwl/nx), [subscribing to our Youtube channel](https://www.youtube.com/@nxdevtools), [joining our Discord](https://go.nx.dev/community), [subscribing to our monthly tech newsletter](https://go.nrwl.io/nx-newsletter) or follow us [on X](https://x.com/nxdevtools), [Bluesky](https://bsky.app/profile/nx.dev) and [LinkedIn](https://www.linkedin.com/company/nxdevtools).

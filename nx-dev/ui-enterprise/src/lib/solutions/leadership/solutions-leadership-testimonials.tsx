@@ -4,15 +4,15 @@ import {
   HetznerCloudIcon,
   PayfitIcon,
   SiriusxmAlternateIcon,
-} from '@nx/nx-dev/ui-icons';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-icons';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function SolutionsLeadershipTestimonials(): ReactElement {
   return (
     <div className="border border-slate-100 bg-slate-50 px-6 py-24 sm:px-6 sm:py-32 lg:px-8 dark:border-slate-900 dark:bg-slate-900/[0.8]">
       <div className="mx-auto max-w-5xl text-center">
         <SectionHeading as="h2" variant="title" id="testimonials">
-          Hear from developers like you
+          Don't just take our word for it.
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           Don't just take our word for it. See how Nx transforms development for

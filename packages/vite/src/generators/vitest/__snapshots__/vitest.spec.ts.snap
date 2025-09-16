@@ -1,17 +1,18 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`vitest generator angular should generate src/test-setup.ts 1`] = `
-"import '@analogjs/vitest-angular/setup-zone';
+"import '@angular/compiler';
+import '@analogjs/vitest-angular/setup-zone';
 
 import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from '@angular/platform-browser/testing';
 import { getTestBed } from '@angular/core/testing';
 
 getTestBed().initTestEnvironment(
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting()
+  BrowserTestingModule,
+  platformBrowserTesting()
 );
 "
 `;
@@ -32,6 +33,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'my-test-angular-app',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -66,6 +68,7 @@ export default defineConfig(() => ({
     'import.meta.vitest': undefined,
   },
   test: {
+    name: 'my-test-react-app',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -105,6 +108,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'react-lib-nonb-jest',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -135,6 +139,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'my-test-react-app',
     watch: false,
     globals: true,
     environment: 'jsdom',

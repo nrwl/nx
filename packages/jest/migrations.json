@@ -16,6 +16,22 @@
       "version": "21.0.0-beta.10",
       "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
       "implementation": "./src/migrations/update-21-0-0/remove-tsconfig-option-from-jest-executor"
+    },
+    "rename-test-path-pattern": {
+      "version": "21.3.0-beta.3",
+      "requires": {
+        "jest": ">=30.0.0"
+      },
+      "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
+      "implementation": "./src/migrations/update-21-3-0/rename-test-path-pattern"
+    },
+    "replace-removed-matcher-aliases": {
+      "version": "21.3.0-beta.3",
+      "requires": {
+        "jest": ">=30.0.0"
+      },
+      "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+      "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases"
     }
   },
   "packageJsonUpdates": {
@@ -58,6 +74,66 @@
         "babel-jest": {
           "version": "~29.7.0",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.3.0": {
+      "version": "21.3.0-beta.3",
+      "x-prompt": "Do you want to update the Jest version to v30?",
+      "packages": {
+        "jest": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expect": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@jest/globals": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-jasmine2": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-jsdom": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc/jest": {
+          "version": "~0.2.38",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.3.3": {
+      "version": "21.3.3-beta.0",
+      "packages": {
+        "ts-jest": {
+          "version": "~29.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.3.3-jest-util": {
+      "version": "21.3.3-beta.3",
+      "requires": {
+        "jest": ">=30.0.0 <31.0.0",
+        "ts-jest": ">=29.4.0"
+      },
+      "packages": {
+        "jest-util": {
+          "version": "~30.0.0",
+          "addToPackageJson": "devDependencies"
         }
       }
     }

@@ -12,6 +12,7 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
@@ -23,6 +24,7 @@ interface NormalizedSchema {
   tsConfigPaths: string[];
   skipPackageJson?: boolean;
   addPlugin?: boolean;
+  buildable?: boolean;
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -38,9 +40,42 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
     addPlugin: options.addPlugin,
+    addPackageJsonDependencyChecks: options.buildable,
   });
 
   tasks.push(lintTask);
+
+  // Add ignored dependencies and files to dependency-checks rule
+  if (isEslintConfigSupported(host)) {
+    updateOverrideInLintConfig(
+      host,
+      options.projectRoot,
+      (override) => Boolean(override.rules?.['@nx/dependency-checks']),
+      (override) => {
+        const rule = override.rules['@nx/dependency-checks'];
+        if (Array.isArray(rule) && rule.length > 1) {
+          // Ensure ignoredDependencies array exists
+          if (!rule[1].ignoredDependencies) {
+            rule[1].ignoredDependencies = [];
+          }
+
+          // Add ignored dependencies if they don't already exist
+          const ignoredDeps = [
+            '@nx/jest',
+            '@nx/rollup',
+            '@rollup/plugin-url',
+            '@svgr/rollup',
+          ];
+          for (const dep of ignoredDeps) {
+            if (!rule[1].ignoredDependencies.includes(dep)) {
+              rule[1].ignoredDependencies.push(dep);
+            }
+          }
+        }
+        return override;
+      }
+    );
+  }
 
   if (isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {

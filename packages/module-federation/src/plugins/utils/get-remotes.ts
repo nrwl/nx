@@ -29,7 +29,9 @@ export function getRemotes(
   const knownDynamicRemotes = normalizedDynamicRemotes.filter(
     (r) => projectGraph.nodes[r]
   );
-
+  knownDynamicRemotes.forEach((r) =>
+    collectRemoteProjects(r, collectedRemotes, projectGraph)
+  );
   const remotePorts = [...collectedRemotes, ...knownDynamicRemotes].map(
     (r) => projectGraph.nodes[r].data.targets['serve'].options.port
   );
@@ -55,17 +57,16 @@ function extractRemoteProjectsFromConfig(
     );
 
     if (moduleFederationManifestJson) {
-      // This should have shape of
-      // {
-      //   "remoteName": "remoteLocation",
-      // }
+      /**
+       *
+       * This should have shape of
+       * {
+       *   "remoteName": "remoteLocation",
+       * }
+       * But users might have their own, enforce only that the key is the remote name
+       */
       const parsedManifest = JSON.parse(moduleFederationManifestJson);
-      if (
-        Object.keys(parsedManifest).every(
-          (key) =>
-            typeof key === 'string' && typeof parsedManifest[key] === 'string'
-        )
-      ) {
+      if (Object.keys(parsedManifest).every((key) => typeof key === 'string')) {
         dynamicRemotes.push(...Object.keys(parsedManifest));
       }
     }

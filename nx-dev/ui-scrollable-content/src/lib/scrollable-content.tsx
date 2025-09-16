@@ -1,7 +1,7 @@
 import type { JSX, ReactNode, UIEvent } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 interface ScrollViewProps {
   children?: ReactNode;
@@ -27,8 +27,17 @@ export function ScrollableContent(props: ScrollViewProps): JSX.Element {
   const router = useRouter();
   const scrollDepth = useRef(0);
   const shouldTrackScroll = useRef(true);
+  const [isClient, setIsClient] = useState(false);
+  const [currentPath, setCurrentPath] = useState<string>('');
 
   useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
+
+  useEffect((): (() => void) | void => {
+    if (!isClient) return;
+
     if (!props.resetScrollOnNavigation) {
       scrollDepth.current = 0;
       return;
@@ -53,7 +62,7 @@ export function ScrollableContent(props: ScrollViewProps): JSX.Element {
 
     router.events.on('routeChangeComplete', handleRouteChange);
     return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [props.resetScrollOnNavigation, router, wrapperElement]);
+  }, [props.resetScrollOnNavigation, router, wrapperElement, isClient]);
 
   const handleScroll = (evt: UIEvent<HTMLDivElement>) => {
     if (!shouldTrackScroll.current) return;
@@ -64,7 +73,7 @@ export function ScrollableContent(props: ScrollViewProps): JSX.Element {
     // If a user already viewed 90% of the page we don't need to know they went back to 50%.
     if (depth > scrollDepth.current) {
       scrollDepth.current = depth;
-      sendCustomEvent(`scroll_${depth}`, 'scroll', router.asPath);
+      sendCustomEvent(`scroll_${depth}`, 'scroll', currentPath);
     }
   };
 

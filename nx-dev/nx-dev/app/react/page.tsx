@@ -1,11 +1,11 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   CallToAction,
   Features,
   GettingStarted,
   Hero,
-} from '@nx/nx-dev/ui-react';
-import { NxBenefitsVideo } from '@nx/nx-dev/ui-react';
+} from '@nx/nx-dev-ui-react';
+import { NxBenefitsVideo } from '@nx/nx-dev-ui-react';
 
 import type { Metadata } from 'next';
 

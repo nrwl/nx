@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { TargetTechnologies } from './target-technologies';
 
 const meta: Meta<typeof TargetTechnologies> = {
@@ -11,6 +11,7 @@ type Story = StoryObj<typeof TargetTechnologies>;
 
 export const Simple: Story = {
   args: {
-    technologies: ['react', 'angular'],
+    technologies: ['react', 'angular', 'docker'],
+    showTooltip: false,
   },
 };

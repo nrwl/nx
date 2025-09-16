@@ -25,10 +25,11 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "React application generator."
+      "description": "React application generator.",
+      "x-deprecated": "This generator will be removed in Nx 22. Please use the equivalent generator for your application type instead."
     },
     "convert-webpack": {
-      "alias": "convert-to-rspack",
+      "aliases": ["convert-to-rspack"],
       "factory": "./src/generators/convert-webpack/convert-webpack",
       "schema": "./src/generators/convert-webpack/schema.json",
       "description": "Convert a webpack application to use rspack."

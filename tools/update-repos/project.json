@@ -1,0 +1,56 @@
+{
+  "name": "update-repos",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/update-repos/src",
+  "projectType": "library",
+  "targets": {
+    "setup-update-repos": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
+      "options": {
+        "command": "node dist/update-repos/src/setup-repos.js"
+      }
+    },
+    "update-nx-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
+      "options": {
+        "command": "node dist/update-repos/src/update-repo.js nx"
+      }
+    },
+    "update-ocean-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
+      "options": {
+        "command": "node dist/update-repos/src/update-repo.js ocean"
+      }
+    },
+    "update-nx-examples-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
+      "options": {
+        "command": "node dist/update-repos/src/update-repo.js nx-examples"
+      }
+    },
+    "update-nx-console-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
+      "options": {
+        "command": "node dist/update-repos/src/update-repo.js nx-console"
+      }
+    },
+    "update-all-repos": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "update-nx-repo",
+        "update-ocean-repo",
+        "update-nx-examples-repo",
+        "update-nx-console-repo"
+      ],
+      "options": {
+        "command": "echo '🎉 All repositories updated successfully!'"
+      }
+    }
+  },
+  "tags": ["npm:private"]
+}

@@ -1,5 +1,6 @@
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -16,9 +17,10 @@ export async function withModuleFederation(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
+  const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
-    await getModuleFederationConfig(options);
+    await getModuleFederationConfig(options, undefined, 'webpack');
 
   return (config, ctx) => {
     config.output.uniqueName = options.name;
@@ -27,6 +29,10 @@ export async function withModuleFederation(
     config.output.scriptType = 'text/javascript';
     config.optimization = {
       ...(config.optimization ?? {}),
+      runtimeChunk:
+        isDevServer && !options.exposes
+          ? config.optimization?.runtimeChunk ?? undefined
+          : false,
     };
 
     if (
@@ -39,7 +45,7 @@ export async function withModuleFederation(
 
     config.plugins.push(
       new ModuleFederationPlugin({
-        name: options.name.replace(/-/g, '_'),
+        name: normalizeProjectName(options.name),
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,
@@ -67,7 +73,6 @@ export async function withModuleFederation(
                 ),
               ]
             : configOverride?.runtimePlugins,
-        virtualRuntimeEntry: true,
       }),
       sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
     );

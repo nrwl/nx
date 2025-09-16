@@ -18,11 +18,23 @@ import {
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 
 export function applyDefaultEagerPackages(
-  sharedConfig: Record<string, SharedLibraryConfig>
+  sharedConfig: Record<string, SharedLibraryConfig>,
+  useRspack = false
 ) {
   const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = [
     '@angular/localize',
     '@angular/localize/init',
+    ...(useRspack
+      ? [
+          '@angular/core',
+          '@angular/core/primitives/signals',
+          '@angular/core/event-dispatch',
+          '@angular/core/rxjs-interop',
+          '@angular/common',
+          '@angular/common/http',
+          '@angular/platform-browser',
+        ]
+      : []),
   ];
   for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
     if (!sharedConfig[pkg]) {
@@ -37,6 +49,7 @@ export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
   'zone.js',
   '@nx/angular/mf',
   '@nrwl/angular/mf',
+  '@nx/angular-rspack',
 ];
 export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/core',
@@ -44,9 +57,16 @@ export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/common',
 ];
 
-export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
+export function getFunctionDeterminateRemoteUrl(
+  isServer: boolean = false,
+  useRspack = false
+) {
   const target = 'serve';
-  const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.mjs';
+  const remoteEntry = isServer
+    ? 'server/remoteEntry.js'
+    : useRspack
+    ? 'remoteEntry.js'
+    : 'remoteEntry.mjs';
 
   return function (remote: string) {
     const mappedStaticRemotesFromEnv = process.env
@@ -78,7 +98,7 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
       serveTarget.options?.host ??
       `http${serveTarget.options.ssl ? 's' : ''}://localhost`;
     const port = serveTarget.options?.port ?? 4201;
-    return `${
+    return `${useRspack ? `${remote}@` : ''}${
       host.endsWith('/') ? host.slice(0, -1) : host
     }:${port}/${remoteEntry}`;
   };
@@ -89,7 +109,8 @@ export async function getModuleFederationConfig(
   options: {
     isServer: boolean;
     determineRemoteUrl?: (remote: string) => string;
-  } = { isServer: false }
+  } = { isServer: false },
+  bundler: 'rspack' | 'webpack' = 'rspack'
 ) {
   let projectGraph: ProjectGraph;
   try {
@@ -119,7 +140,9 @@ export async function getModuleFederationConfig(
   }
 
   const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries
+    dependencies.workspaceLibraries,
+    undefined,
+    bundler
   );
 
   const npmPackages = sharePackages(
@@ -162,5 +185,85 @@ export async function getModuleFederationConfig(
     !mfConfig.remotes || mfConfig.remotes.length === 0
       ? {}
       : mapRemotesFunction(mfConfig.remotes, 'mjs', determineRemoteUrlFn);
+  return { sharedLibraries, sharedDependencies, mappedRemotes };
+}
+
+export function getModuleFederationConfigSync(
+  mfConfig: ModuleFederationConfig,
+  options: {
+    isServer: boolean;
+    determineRemoteUrl?: (remote: string) => string;
+  } = { isServer: false },
+  useRspack = false
+) {
+  const projectGraph: ProjectGraph = readCachedProjectGraph();
+
+  if (!projectGraph.nodes[mfConfig.name]?.data) {
+    throw Error(
+      `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`
+    );
+  }
+
+  const dependencies = getDependentPackagesForProject(
+    projectGraph,
+    mfConfig.name
+  );
+
+  if (mfConfig.shared) {
+    dependencies.workspaceLibraries = dependencies.workspaceLibraries.filter(
+      (lib) => mfConfig.shared(lib.importKey, {}) !== false
+    );
+    dependencies.npmPackages = dependencies.npmPackages.filter(
+      (pkg) => mfConfig.shared(pkg, {}) !== false
+    );
+  }
+
+  const sharedLibraries = shareWorkspaceLibraries(
+    dependencies.workspaceLibraries
+  );
+
+  const npmPackages = sharePackages(
+    Array.from(
+      new Set([
+        ...dependencies.npmPackages.filter(
+          (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
+        ),
+      ])
+    )
+  );
+
+  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
+    if (pkgName in npmPackages) {
+      delete npmPackages[pkgName];
+    }
+  });
+
+  const sharedDependencies = {
+    ...sharedLibraries.getLibraries(
+      projectGraph.nodes[mfConfig.name].data.root
+    ),
+    ...npmPackages,
+  };
+
+  applyDefaultEagerPackages(sharedDependencies, useRspack);
+  applySharedFunction(sharedDependencies, mfConfig.shared);
+  applyAdditionalShared(
+    sharedDependencies,
+    mfConfig.additionalShared,
+    projectGraph
+  );
+  const determineRemoteUrlFn =
+    options.determineRemoteUrl ||
+    getFunctionDeterminateRemoteUrl(options.isServer, useRspack);
+
+  const mapRemotesFunction = options.isServer ? mapRemotesForSSR : mapRemotes;
+  const mappedRemotes =
+    !mfConfig.remotes || mfConfig.remotes.length === 0
+      ? {}
+      : mapRemotesFunction(
+          mfConfig.remotes,
+          useRspack ? 'js' : 'mjs',
+          determineRemoteUrlFn
+        );
   return { sharedLibraries, sharedDependencies, mappedRemotes };
 }

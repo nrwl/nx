@@ -1,0 +1,38 @@
+---
+title: Express Plugin for Nx
+description: Learn how to use the @nx/express plugin to create and manage Express applications in your Nx workspace, including setup and common guides.
+sidebar:
+  label: Introduction
+---
+
+[Express](https://expressjs.com/) is a mature, minimal, and an open source web framework for making web applications and
+apis.
+
+## Create a New Workspace
+
+To create a new workspace with a pre-created Express app, run the following command:
+
+```shell {% frame="none" %}
+ npx create-nx-workspace --preset=express
+```
+
+## Setting Up @nx/express
+
+### Installation
+
+{% aside type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/express` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+{% /aside %}
+
+In any Nx workspace, you can install `@nx/express` by running the following command:
+
+```shell {% frame="none" %}
+nx add @nx/express
+```
+
+This will install the correct version of `@nx/express`.
+
+## Guides
+
+- [Set Up Application Proxies](/docs/technologies/node/guides/application-proxies)
+- [Wait For Tasks To Finish](/docs/technologies/node/guides/wait-for-tasks)

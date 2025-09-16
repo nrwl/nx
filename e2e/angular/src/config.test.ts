@@ -6,14 +6,16 @@ import {
   runCLI,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('angular.json v1 config', () => {
   const app1 = uniq('app1');
 
   beforeAll(() => {
     newProject({ packages: ['@nx/angular'] });
-    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
+    runCLI(
+      `generate @nx/angular:app ${app1} --bundler=webpack --no-interactive`
+    );
     // reset workspace to use v1 config
     updateFile(`angular.json`, angularV1Json(app1));
     removeFile(`${app1}/project.json`);

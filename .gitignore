@@ -2,8 +2,8 @@ node_modules
 /.idea
 /.fleet
 /.vscode
-/.cursor
 dist
+out-tsc
 /build
 /coverage
 ./test
@@ -13,7 +13,8 @@ tmp
 jest.debug.config.js
 .tool-versions
 /.nx-cache
-/.nx
+/.nx/cache
+/.nx/workspace-data
 /.verdaccio/build/local-registry
 /graph/client/src/assets/environment.js
 /graph/client/src/assets/dev/environment.js
@@ -36,6 +37,7 @@ CHANGELOG.md
 .next
 out
 
+
 # Angular Cache
 .angular
 
@@ -50,8 +52,6 @@ out
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
-.nx
-!.nx/workflows
 
 .cargo/.package-cache
 .cargo/bin/
@@ -73,5 +73,49 @@ storybook-static
 .gradle
 .kotlin
 
+.claude/settings.local.json
+
 .cursor/rules/nx-rules.mdc
+.cursor/mcp.json
 .github/instructions/nx.instructions.md
+
+# Added by Claude Task Master
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.specstory/**
+.cursorindexingignore
+# OS specific
+# Task files
+/tasks.json
+/tasks
+
+# Upstream docs local configuration (machine-specific)
+.upstreamdocs.local.json
+
+astro-docs/.netlify
+
+# Angular Rspack Specific Options
+packages/angular-rspack/coverage
+packages/angular-rspack-compiler/coverage
+
+# Angular Rspack Packages use a template to generate the correct README
+packages/angular-rspack/README.md
+packages/angular-rspack-compiler/README.md
+
+test-output

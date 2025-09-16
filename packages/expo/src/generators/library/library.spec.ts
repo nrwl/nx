@@ -134,6 +134,7 @@ describe('lib', () => {
             "jest.config.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
+            "jest.resolver.js",
           ],
           "extends": "./tsconfig.json",
           "include": [
@@ -247,7 +248,7 @@ describe('lib', () => {
   });
 
   describe('--unit-test-runner', () => {
-    it('should not generate test configuration', async () => {
+    it('should not generate test configuration or install test dependencies when unitTestRunner is none', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         unitTestRunner: 'none',
@@ -267,9 +268,36 @@ describe('lib', () => {
           "targets": {},
         }
       `);
+      const packageJson = readJson(appTree, 'package.json');
+      expect(
+        packageJson.devDependencies['react-test-renderer']
+      ).toBeUndefined();
+      expect(
+        packageJson.devDependencies['@testing-library/react-native']
+      ).toBeUndefined();
+      expect(
+        packageJson.devDependencies['@testing-library/jest-native']
+      ).toBeUndefined();
+      expect(packageJson.devDependencies['jest-expo']).toBeUndefined();
     });
 
-    it('should generate test configuration', async () => {
+    it('should not reference tsconfig.spec.json when unitTestRunner is none', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        unitTestRunner: 'none',
+      });
+
+      const tsconfigJson = readJson(appTree, 'my-lib/tsconfig.json');
+      expect(tsconfigJson.references).toEqual([
+        {
+          path: './tsconfig.lib.json',
+        },
+      ]);
+
+      expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
+    });
+
+    it('should generate test configuration and install test dependencies when unitTestRunner is jest', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         unitTestRunner: 'jest',
@@ -297,7 +325,8 @@ describe('lib', () => {
             "src/**/*.spec.js",
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
-            "src/**/*.d.ts"
+            "src/**/*.d.ts",
+            "jest.resolver.js"
           ]
         }
         "
@@ -306,7 +335,7 @@ describe('lib', () => {
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
-          resolver: '@nx/jest/plugins/resolver',
+          resolver: require.resolve('./jest.resolver.js'),
           preset: 'jest-expo',
           moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -314,19 +343,24 @@ describe('lib', () => {
             '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock',
           },
           transform: {
-            '.[jt]sx?$': [
+            '\\\\.[jt]sx?$': [
               'babel-jest',
               {
                 configFile: __dirname + '/.babelrc.js',
               },
             ],
-            '^.+.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
+            '^.+\\\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
               require.resolve('jest-expo/src/preset/assetFileTransformer.js'),
           },
           coverageDirectory: '../coverage/my-lib',
         };
         "
       `);
+      const packageJson = readJson(appTree, 'package.json');
+      expect(
+        packageJson.devDependencies['@testing-library/react-native']
+      ).toBeDefined();
+      expect(packageJson.devDependencies['jest-expo']).toBeDefined();
     });
   });
 
@@ -340,6 +374,16 @@ describe('lib', () => {
       expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
       expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
+
+    it('should add @nx/rollup to devDependencies', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+      });
+
+      const packageJson = readJson(appTree, 'package.json');
+      expect(packageJson.devDependencies['@nx/rollup']).toBeDefined();
+    });
   });
 
   describe('--publishable', () => {
@@ -352,6 +396,17 @@ describe('lib', () => {
 
       expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
       expect(hasRollupPlugin(appTree)).toBeTruthy();
+    });
+
+    it('should add @nx/rollup to devDependencies', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        publishable: true,
+        importPath: '@proj/my-lib',
+      });
+
+      const packageJson = readJson(appTree, 'package.json');
+      expect(packageJson.devDependencies['@nx/rollup']).toBeDefined();
     });
 
     it('should fail if no importPath is provided with publishable', async () => {
@@ -465,7 +520,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(appTree, 'tsconfig.json', {
@@ -504,8 +559,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "0.76.3",
+            "react": "19.0.0",
+            "react-native": "0.79.3",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -563,12 +618,13 @@ describe('lib', () => {
             "**/*.test.jsx",
             "**/*.spec.jsx",
             "src/test-setup.ts",
-            "jest.config.ts",
-            "src/**/*.spec.ts",
-            "src/**/*.test.ts",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "jest.resolver.js",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -584,8 +640,6 @@ describe('lib', () => {
         {
           "compilerOptions": {
             "jsx": "react-jsx",
-            "module": "esnext",
-            "moduleResolution": "bundler",
             "outDir": "./out-tsc/jest",
             "types": [
               "jest",
@@ -607,11 +661,7 @@ describe('lib', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
-          ],
-          "references": [
-            {
-              "path": "./tsconfig.lib.json",
-            },
+            "jest.resolver.js",
           ],
         }
       `);
@@ -629,8 +679,8 @@ describe('lib', () => {
         {
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.cjs.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
@@ -640,8 +690,8 @@ describe('lib', () => {
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "0.76.3",
+            "react": "19.0.0",
+            "react-native": "0.79.3",
           },
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",
@@ -649,7 +699,7 @@ describe('lib', () => {
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(appTree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

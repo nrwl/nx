@@ -1,4 +1,4 @@
-import { redirect, RouteObject, json } from 'react-router-dom';
+import { redirect, RouteObject, json, LoaderFunction } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
 import { Shell } from './shell';
@@ -10,14 +10,14 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
-/* eslint-enable @nx/enforce-module-boundaries */
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
-import { ProjectDetailsPage } from '@nx/graph-internal/project-details';
+import { ProjectDetailsPage } from '@nx/graph-internal-project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';
+import { taskGraphClientCache } from './task-graph-client-cache';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -34,6 +34,10 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
+
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
 
   projectGraphDataService.setTaskInputsUrl?.(workspaceInfo.taskInputsUrl);
 
@@ -57,21 +61,94 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   return { ...projectGraph, targets, sourceMaps };
 };
 
-const taskDataLoader = async (selectedWorkspaceId: string) => {
-  const workspaceInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId
-  );
-
-  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
-};
-
 const sourceMapsLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
+
   return await projectGraphDataService.getSourceMaps(
     workspaceInfo.sourceMapsUrl
+  );
+};
+
+const tasksLoader: LoaderFunction = async ({ params, request }) => {
+  const selectedWorkspaceId =
+    params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
+
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
+
+  // bust the task graph cache if workspaceId changes
+  taskGraphClientCache.setWorkspace(selectedWorkspaceId);
+
+  const requestUrl = new URL(request.url);
+  const targetsParam = requestUrl.searchParams.get('targets');
+  const projectsParam = requestUrl.searchParams.get('projects');
+
+  const selectedTargets = targetsParam
+    ? targetsParam.split(' ').filter(Boolean)
+    : [];
+  const requestedProjects = projectsParam
+    ? projectsParam.split(' ').filter(Boolean)
+    : undefined;
+
+  // if no targets are selected, empty taskGraph response
+  if (selectedTargets.length === 0) {
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      error: null,
+    };
+  }
+
+  const isAllRoute = requestUrl.pathname.endsWith('/all');
+
+  // if we don't request any projects and we're not on the "all" route,
+  // we return empty taskGraph response. consumers need to select projects
+  if (!requestedProjects && !isAllRoute) {
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      error: null,
+    };
+  }
+
+  // Check if we have cached data for this exact combination
+  const { cached, missingTargets, missingProjects } =
+    taskGraphClientCache.getCached(selectedTargets, requestedProjects);
+
+  if (cached) return cached;
+
+  const response = await projectGraphDataService.getSpecificTaskGraph(
+    workspaceInfo.taskGraphUrl,
+    missingProjects,
+    missingTargets
+  );
+
+  if (response.error) return response;
+
+  // only merge if we don't have error
+  return taskGraphClientCache.mergeTaskGraph(
+    response,
+    missingTargets,
+    missingProjects
   );
 };
 
@@ -140,19 +217,29 @@ const childRoutes: RouteObject[] = [
     ],
   },
   {
-    loader: async ({ request, params }) => {
-      const selectedWorkspaceId =
-        params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
-      return taskDataLoader(selectedWorkspaceId);
-    },
     path: 'tasks',
-    id: 'selectedTarget',
+    id: 'tasks',
     errorElement: <TasksSidebarErrorBoundary />,
-    shouldRevalidate: ({ currentParams, nextParams }) => {
-      return (
+    loader: tasksLoader,
+    shouldRevalidate: ({ currentParams, nextParams, currentUrl, nextUrl }) => {
+      // Always revalidate if workspace changes
+      if (
         !currentParams.selectedWorkspaceId ||
         currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
-      );
+      ) {
+        return true;
+      }
+
+      // Revalidate if query parameters change (targets or projects)
+      const currentSearchParams = new URLSearchParams(currentUrl.search);
+      const nextSearchParams = new URLSearchParams(nextUrl.search);
+
+      const currentTargets = currentSearchParams.get('targets');
+      const nextTargets = nextSearchParams.get('targets');
+      const currentProjects = currentSearchParams.get('projects');
+      const nextProjects = nextSearchParams.get('projects');
+
+      return currentTargets !== nextTargets || currentProjects !== nextProjects;
     },
     children: [
       {
@@ -160,14 +247,37 @@ const childRoutes: RouteObject[] = [
         element: <TasksSidebar />,
       },
       {
-        path: ':selectedTarget',
+        path: 'all',
+        id: 'allTasks',
+        loader: tasksLoader,
+        shouldRevalidate: ({
+          currentParams,
+          nextParams,
+          currentUrl,
+          nextUrl,
+        }) => {
+          // Always revalidate if workspace changes
+          if (
+            !currentParams.selectedWorkspaceId ||
+            currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
+          ) {
+            return true;
+          }
+
+          // Revalidate if query parameters change (targets or projects)
+          const currentSearchParams = new URLSearchParams(currentUrl.search);
+          const nextSearchParams = new URLSearchParams(nextUrl.search);
+
+          const currentTargets = currentSearchParams.get('targets');
+          const nextTargets = nextSearchParams.get('targets');
+          const currentProjects = currentSearchParams.get('projects');
+          const nextProjects = nextSearchParams.get('projects');
+
+          return (
+            currentTargets !== nextTargets || currentProjects !== nextProjects
+          );
+        },
         element: <TasksSidebar />,
-        children: [
-          {
-            path: 'all',
-            element: <TasksSidebar />,
-          },
-        ],
       },
     ],
   },
@@ -195,7 +305,7 @@ export const devRoutes: RouteObject[] = [
             currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
           );
         },
-        loader: async ({ request, params }) => {
+        loader: async ({ params }) => {
           const selectedWorkspaceId =
             params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
           return workspaceDataLoader(selectedWorkspaceId);

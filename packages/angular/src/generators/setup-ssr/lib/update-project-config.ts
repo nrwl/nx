@@ -11,6 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
@@ -48,12 +49,18 @@ export function updateProjectConfigForApplicationBuilder(
       delete outputPath.browser;
     } else {
       outputPath = outputPath.base;
+      if (buildTarget.outputs && buildTarget.outputs.length > 0) {
+        buildTarget.outputs = buildTarget.outputs.map((output) =>
+          output === '{options.outputPath.base}'
+            ? '{options.outputPath}'
+            : output
+        );
+      }
     }
   }
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  const sourceRoot =
-    project.sourceRoot ?? joinPathFragments(project.root, 'src');
+  const sourceRoot = getProjectSourceRoot(project, tree);
 
   buildTarget.options ??= {};
   buildTarget.options.outputPath = outputPath;
@@ -96,8 +103,7 @@ export function updateProjectConfigForBrowserBuilder(
   }
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  const sourceRoot =
-    projectConfig.sourceRoot ?? joinPathFragments(projectConfig.root, 'src');
+  const sourceRoot = getProjectSourceRoot(projectConfig, tree);
 
   projectConfig.targets.server = {
     dependsOn: ['build'],

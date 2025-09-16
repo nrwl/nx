@@ -1,78 +1,81 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+// nx-ignore-next-line
 import { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 import type { AutomaticMigrationState } from './types';
 
-// this is where the ui should start off on
-// we assume completed migrations in the past are reviewed
 export function findFirstIncompleteMigration(
   migrations: MigrationDetailsWithId[],
   nxConsoleMetadata: MigrationsJsonMetadata
 ) {
   return (
-    migrations.find(
-      (migration) =>
-        nxConsoleMetadata.completedMigrations?.[migration.id]?.type !==
-          'successful' &&
-        nxConsoleMetadata.completedMigrations?.[migration.id]?.type !==
-          'skipped'
-    ) ?? migrations[0]
+    migrations.find((migration) => {
+      const type = nxConsoleMetadata.completedMigrations?.[migration.id]?.type;
+      return type !== 'successful' && type !== 'skipped';
+    }) ?? migrations[0]
   );
 }
 
-export function currentMigrationHasSucceeded(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  const completedMigration =
-    ctx.nxConsoleMetadata?.completedMigrations?.[ctx.currentMigration.id];
-  return completedMigration?.type === 'successful';
+export function getMigrationType(
+  ctx: AutomaticMigrationState,
+  migrationId: string
+) {
+  return ctx.nxConsoleMetadata?.completedMigrations?.[migrationId]?.type;
+}
+
+export function getCurrentMigrationType(ctx: AutomaticMigrationState) {
+  if (!ctx.currentMigration) return undefined;
+  return getMigrationType(ctx, ctx.currentMigration.id);
+}
+
+export function getMigrationCompletedData(
+  ctx: AutomaticMigrationState,
+  migrationId: string
+) {
+  return ctx.nxConsoleMetadata?.completedMigrations?.[migrationId];
+}
+
+export function getCurrentMigrationCompletedData(ctx: AutomaticMigrationState) {
+  if (!ctx.currentMigration) return undefined;
+  return getMigrationCompletedData(ctx, ctx.currentMigration.id);
 }
 
 export function currentMigrationHasChanges(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  const completedMigration =
-    ctx.nxConsoleMetadata?.completedMigrations?.[ctx.currentMigration.id];
+  const completed = getCurrentMigrationCompletedData(ctx);
   return (
-    completedMigration?.type === 'successful' &&
-    completedMigration.changedFiles.length > 0
+    completed?.type === 'successful' &&
+    (completed.changedFiles?.length ?? 0) > 0
   );
-}
-
-export function currentMigrationIsSkipped(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  const completedMigration =
-    ctx.nxConsoleMetadata?.completedMigrations?.[ctx.currentMigration.id];
-  return completedMigration?.type === 'skipped';
 }
 
 export function currentMigrationIsReviewed(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  return ctx.reviewedMigrations.includes(ctx.currentMigration.id);
-}
-
-export function currentMigrationCanLeaveReview(ctx: AutomaticMigrationState) {
   return (
-    currentMigrationIsReviewed(ctx) ||
-    currentMigrationIsSkipped(ctx) ||
-    (currentMigrationHasSucceeded(ctx) && !currentMigrationHasChanges(ctx))
+    !!ctx.currentMigration &&
+    ctx.reviewedMigrations.includes(ctx.currentMigration.id)
   );
 }
 
-export function currentMigrationHasFailed(
-  ctx: AutomaticMigrationState
-): boolean {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  const completedMigration =
-    ctx.nxConsoleMetadata?.completedMigrations?.[ctx.currentMigration.id];
-  return completedMigration?.type === 'failed';
+export function currentMigrationCanLeaveReview(ctx: AutomaticMigrationState) {
+  const type = getCurrentMigrationType(ctx);
+  return (
+    currentMigrationIsReviewed(ctx) ||
+    type === 'skipped' ||
+    (type === 'successful' && !currentMigrationHasChanges(ctx))
+  );
+}
+
+export function isMigrationRunning(
+  ctx: AutomaticMigrationState,
+  migrationId: string
+) {
+  return (
+    ctx.nxConsoleMetadata?.runningMigrations?.includes(migrationId) ?? false
+  );
+}
+
+export function currentMigrationIsRunning(ctx: AutomaticMigrationState) {
+  if (!ctx.currentMigration) return false;
+  return isMigrationRunning(ctx, ctx.currentMigration.id);
 }

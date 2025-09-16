@@ -17,7 +17,7 @@
       "style": {
         "type": "string",
         "description": "The style solution to use.",
-        "enum": ["none", "css", "scss", "less", "styl"]
+        "enum": ["none", "css", "scss", "less"]
       },
       "rootProject": { "type": "boolean", "x-priority": "internal" },
       "keepExistingVersions": {

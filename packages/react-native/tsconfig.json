@@ -4,10 +4,25 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../react"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "../detox"
+    },
+    {
+      "path": "../rollup"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

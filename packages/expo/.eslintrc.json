@@ -1,7 +1,7 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": [
@@ -25,7 +25,9 @@
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
               "nx",
+              "@nx/jest",
               "@nx/rollup",
+              "@nx/web",
               "@nx/webpack",
               "@nx/cypress",
               "@nx/playwright",

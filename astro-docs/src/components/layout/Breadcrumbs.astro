@@ -1,0 +1,70 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import { getCollection } from 'astro:content';
+
+const { pathname } = Astro.url;
+
+const cleanedPath = pathname.split('?')[0];
+
+const allDocs = await getCollection('docs');
+
+const pathSegments = cleanedPath.split('/').filter(Boolean);
+
+type Crumb = {
+  id: string;
+  name: string;
+  href: string;
+  current: boolean;
+}
+
+function findDocByPath (path: string) {
+  return allDocs.find(d => d.id === `${path}.mdoc`)
+      ?? allDocs.find(d => d.id === `${path}/index.mdoc`);
+}
+
+function createNameFromSegment(segment: string): string {
+    segment = segment.split('#')[0];
+    return segment
+        .split('-')
+        .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(' ');
+}
+
+const crumbs: Crumb[] = pathSegments.map((segment, index) => {
+  const docPath = pathSegments.slice(0, index + 1).join('/');
+  const doc = findDocByPath(docPath);
+  const name = doc?.data?.sidebar?.label || doc?.data?.title || createNameFromSegment(segment);
+  // If `base` is set in config, don't include it in breadcrumbs
+  if (index === 0 && import.meta.env.BASE_URL) return null;
+  return {
+    id: segment,
+    name,
+    href: `/${docPath}`,
+    current: index === pathSegments.length - 1,
+  };
+}).filter(Boolean);
+---
+
+
+<nav class="not-content flex mb-4" aria-label="Breadcrumb">
+  <ol role="list" class="flex m-0 p-0 flex-wrap items-center space-x-2 text-sm">
+    {crumbs.map((crumb, index) => (
+      <li class="flex items-center">
+        {index > 0 && (
+          <Icon name="right-caret" class="w-5 h-5 ml-2 mr-2"/>
+        )}
+        <a
+          href={crumb.href}
+          class={`no-underline text-sm${
+            crumb.current 
+              ? ' text-slate-900 dark:text-slate-100 font-semibold'
+          : ' text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700 dark:hover:text-slate-200'
+          } transition-colors`}
+          aria-current={crumb.current ? 'page' : undefined}
+        >
+          {crumb.name}
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>

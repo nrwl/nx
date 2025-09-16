@@ -1,0 +1,54 @@
+---
+title: Nx Cloud AI
+sidebar:
+  order: 100
+---
+
+Nx Cloud AI offers a suite of features designed to **enhance your development workflow with AI-driven capabilities**. These tools assist in troubleshooting, optimizing resource allocation, and improving your overall development process.
+
+- **[Explain with AI](/docs/features/ci-features/explain-with-ai)** - This feature uses AI to provide detailed explanations about failed tasks.
+
+## Enable Nx Cloud AI Features
+
+To enable AI features for your organization, go to your organization's settings on [Nx Cloud](https://cloud.nx.app/orgs?utm_source=nx.dev&utm_campaign=ai) and select the organization where you want to enable AI.
+
+In the **settings** menu, find the "AI Features" section and toggle it to "On".
+
+![enable ai features](../../../../assets/features/ci-features/ai-features.png)
+
+Ensure that you **accept the AI terms** to start using the AI features.
+
+{% aside type="note" title="AI Features Availability" %}
+
+AI features are available only for the [Nx Cloud Team plan](https://nx.dev/pricing).
+
+{% /aside %}
+
+### Enable AI Features for Enterprise On-Prem Installations
+
+To enable AI features for enterprise on-prem installations, add the following configuration to your `helm-values.yaml` file:
+
+```yaml
+nxApi
+  deployment:
+    env:
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+
+frontend
+  deployment:
+    env:
+      - name: OPENAI_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: open-ai-secrets
+            key: OPENAI_SECRET_KEY
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+```
+
+Ensure your OpenAI secret key is correctly configured to provide the necessary credits for `gpt-3.5-turbo` and `gpt-4`.
+
+### Regional Availability
+
+This feature is not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use this feature by providing their own OpenAI secret key and enabling the required environment variables.

@@ -19,9 +19,12 @@ import { join } from 'path';
 import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
+import { LineAwareWriter } from './lib/line-aware-writer';
+import { createCoalescingDebounce } from './lib/coalescing-debounce';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+import { detectModuleFormat } from './lib/detect-module-format';
 
 interface ActiveTask {
   id: string;
@@ -32,32 +35,7 @@ interface ActiveTask {
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
 
-function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
-  let timeoutId: NodeJS.Timeout;
-  let pendingPromise: Promise<T> | null = null;
-
-  return () => {
-    clearTimeout(timeoutId);
-
-    if (!pendingPromise) {
-      pendingPromise = new Promise<T>((resolve, reject) => {
-        timeoutId = setTimeout(() => {
-          fn()
-            .then((result) => {
-              pendingPromise = null;
-              resolve(result);
-            })
-            .catch((error) => {
-              pendingPromise = null;
-              reject(error);
-            });
-        }, wait);
-      });
-    }
-
-    return pendingPromise;
-  };
-}
+const globalLineAwareWriter = new LineAwareWriter();
 
 export async function* nodeExecutor(
   options: NodeExecutorOptions,
@@ -109,6 +87,17 @@ export async function* nodeExecutor(
     buildTargetExecutor
   );
 
+  // Detect module format for the project
+  const moduleFormat = detectModuleFormat({
+    projectRoot: project.data.root,
+    workspaceRoot: context.root,
+    tsConfig:
+      buildOptions.tsConfig ||
+      join(context.root, project.data.root, 'tsconfig.json'),
+    main: buildOptions.main || fileToRun,
+    buildOptions,
+  });
+
   let additionalExitHandler: null | (() => void) = null;
   let currentTask: ActiveTask = null;
   const tasks: ActiveTask[] = [];
@@ -122,12 +111,27 @@ export async function* nodeExecutor(
 
       const previousTask = currentTask;
       const task = tasks.shift();
+
+      if (previousTask && !previousTask.killed) {
+        previousTask.killed = true;
+
+        if (previousTask.childProcess?.connected) {
+          previousTask.childProcess.disconnect();
+        }
+
+        previousTask.childProcess?.removeAllListeners();
+
+        await previousTask.stop('SIGTERM');
+
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+
       currentTask = task;
-      await previousTask?.stop('SIGTERM');
+      globalLineAwareWriter.setActiveProcess(task.id);
       await task.start();
     };
 
-    const debouncedProcessQueue = debounce(
+    const debouncedProcessQueue = createCoalescingDebounce(
       processQueue,
       options.debounce ?? 1_000
     );
@@ -136,6 +140,14 @@ export async function* nodeExecutor(
       childProcess: null | ChildProcess,
       buildResult: Promise<{ success: boolean }>
     ) => {
+      for (const task of tasks) {
+        if (!task.killed) {
+          task.killed = true;
+          await task.stop('SIGTERM');
+        }
+      }
+      tasks.length = 0;
+
       const task: ActiveTask = {
         id: randomUUID(),
         killed: false,
@@ -158,17 +170,21 @@ export async function* nodeExecutor(
             }
           }
 
-          // Before running the program, check if the task has been killed (by a new change during watch).
           if (task.killed) return;
 
           // Run the program
           task.promise = new Promise<void>((resolve, reject) => {
+            const loaderFile =
+              moduleFormat === 'esm'
+                ? 'node-with-esm-loader'
+                : 'node-with-require-overrides';
+
             task.childProcess = fork(
-              joinPathFragments(__dirname, 'node-with-require-overrides'),
+              join(__dirname, loaderFile),
               options.args ?? [],
               {
                 execArgv: getExecArgv(options),
-                stdio: [0, 1, 'pipe', 'ipc'],
+                stdio: [0, 'pipe', 'pipe', 'ipc'],
                 env: {
                   ...process.env,
                   NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
@@ -177,15 +193,18 @@ export async function* nodeExecutor(
               }
             );
 
+            task.childProcess.stdout?.on('data', (data) => {
+              globalLineAwareWriter.write(data, task.id);
+            });
+
             const handleStdErr = (data) => {
-              // Don't log out error if task is killed and new one has started.
-              // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
-              // Log the error in normal mode
               if (!options.watch || !task.killed) {
-                logger.error(data.toString());
+                if (task.id === globalLineAwareWriter.currentProcessId) {
+                  logger.error(data.toString());
+                }
               }
             };
-            task.childProcess.stderr.on('data', handleStdErr);
+            task.childProcess.stderr?.on('data', handleStdErr);
             task.childProcess.once('exit', (code) => {
               task.childProcess.off('data', handleStdErr);
               if (options.watch && !task.killed) {
@@ -197,7 +216,7 @@ export async function* nodeExecutor(
                 if (code !== 0) {
                   error(new Error(`Process exited with code ${code}`));
                 } else {
-                  done();
+                  resolve(done());
                 }
               }
               resolve();
@@ -208,16 +227,26 @@ export async function* nodeExecutor(
         },
         stop: async (signal = 'SIGTERM') => {
           task.killed = true;
-          // Request termination and wait for process to finish gracefully.
-          // NOTE: `childProcess` may not have been set yet if the task did not have a chance to start.
-          // e.g. multiple file change events in a short time (like git checkout).
+
           if (task.childProcess) {
+            if (task.childProcess.stdout) {
+              task.childProcess.stdout.pause();
+            }
+            if (task.childProcess.stderr) {
+              task.childProcess.stderr.pause();
+            }
+
+            if (task.childProcess.connected) {
+              task.childProcess.disconnect();
+            }
+
+            task.childProcess.removeAllListeners();
+
             await killTree(task.childProcess.pid, signal);
           }
-          try {
-            await task.promise;
-          } catch {
-            // Doesn't matter if task fails, we just need to wait until it finishes.
+
+          if (task.id === globalLineAwareWriter.currentProcessId) {
+            globalLineAwareWriter.setActiveProcess(null);
           }
         },
       };
@@ -226,8 +255,18 @@ export async function* nodeExecutor(
     };
 
     const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
-      additionalExitHandler?.();
-      await currentTask?.stop(signal);
+      debouncedProcessQueue.cancel();
+
+      globalLineAwareWriter.flush();
+
+      if (typeof additionalExitHandler === 'function') {
+        additionalExitHandler();
+      }
+
+      if (typeof currentTask?.stop === 'function') {
+        await currentTask.stop(signal);
+      }
+
       for (const task of tasks) {
         await task.stop(signal);
       }
@@ -276,7 +315,7 @@ export async function* nodeExecutor(
           });
         });
         await addToQueue(childProcess, whenReady);
-        await debouncedProcessQueue();
+        await debouncedProcessQueue.trigger();
       };
       if (isDaemonEnabled()) {
         additionalExitHandler = await daemonClient.registerFileWatcher(
@@ -319,8 +358,10 @@ export async function* nodeExecutor(
       while (true) {
         const event = await output.next();
         await addToQueue(null, Promise.resolve(event.value));
-        await debouncedProcessQueue();
-        if (event.done || !options.watch) {
+        await debouncedProcessQueue.trigger();
+        if (event.done && !options.watch) {
+          next({ success: true });
+          done();
           break;
         }
       }

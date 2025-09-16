@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
-import { TrialNxEnterprise } from '@nx/nx-dev/ui-enterprise';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
+import { TrialNxEnterprise } from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
 
 export function EnterpriseTrial(): ReactElement {
@@ -22,7 +22,7 @@ export function EnterpriseTrial(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

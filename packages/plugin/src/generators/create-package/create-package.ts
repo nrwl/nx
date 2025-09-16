@@ -14,7 +14,10 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { tsLibVersion } from '@nx/js/src/utils/versions';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from 'nx/src/utils/versions';
@@ -214,7 +217,7 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
   generateFiles(
     host,
     joinPathFragments(__dirname, './files/e2e'),
-    e2eProjectConfiguration.sourceRoot,
+    getProjectSourceRoot(e2eProjectConfiguration, host),
     {
       pluginName: options.project,
       cliName: options.name,

@@ -4,9 +4,14 @@
   "sourceRoot": "packages/nest",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/nest/README.md"],
+      "command": "node ./scripts/copy-readme.js nest"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/nest",
@@ -42,10 +47,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/nest/README.md"],
-      "command": "node ./scripts/copy-readme.js nest"
     }
   },
   "implicitDependencies": ["node", "eslint"]

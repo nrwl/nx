@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { ReleaseType, valid } from 'semver';
+import { prerelease, ReleaseType } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
@@ -62,12 +62,18 @@ import { createRemoteReleaseClient } from './utils/remote-release-clients/remote
 import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
+  areAllVersionPlanProjectsFiltered,
+  validateResolvedVersionPlansAgainstFilter,
+} from './utils/version-plan-utils';
+import {
   ReleaseVersion,
   VersionData,
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  shouldPreferDockerVersionForReleaseGroup,
   handleDuplicateGitTags,
+  isPrerelease,
   noDiffInChangelogMessage,
 } from './utils/shared';
 
@@ -195,6 +201,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       args.verbose
     );
 
+    // Validate version plans against the filter after resolution
+    const versionPlanValidationError =
+      validateResolvedVersionPlansAgainstFilter(
+        releaseGroups,
+        releaseGroupToFilteredProjects
+      );
+    if (versionPlanValidationError) {
+      output.error(versionPlanValidationError);
+      process.exit(1);
+    }
+
     if (args.deleteVersionPlans === undefined) {
       // default to deleting version plans in this command instead of after versioning
       args.deleteVersionPlans = true;
@@ -242,6 +259,21 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const to = args.to || 'HEAD';
     const toSHA = await getCommitHash(to);
     const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
+
+    /**
+     * Extract the preid from the workspace version and the project versions
+     */
+    const workspacePreid: string | undefined = workspaceChangelogVersion
+      ? extractPreid(workspaceChangelogVersion)
+      : undefined;
+
+    const projectsPreid: { [projectName: string]: string | undefined } =
+      Object.fromEntries(
+        Object.entries(projectsVersionData).map(([projectName, v]) => [
+          projectName,
+          v.newVersion ? extractPreid(v.newVersion) : undefined,
+        ])
+      );
 
     /**
      * Protect the user against attempting to create a new commit when recreating an old release changelog,
@@ -343,7 +375,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           await getLatestGitTagForPattern(
             nxReleaseConfig.releaseTagPattern,
             {},
-            nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen
+            {
+              checkAllBranchesWhen:
+                nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+              preid:
+                workspacePreid ??
+                projectsPreid?.[Object.keys(projectsPreid)[0]],
+              releaseTagPatternRequireSemver:
+                nxReleaseConfig.releaseTagPatternRequireSemver,
+              releaseTagPatternStrictPreid:
+                nxReleaseConfig.releaseTagPatternStrictPreid,
+            }
           )
         )?.tag;
       if (!workspaceChangelogFromRef) {
@@ -527,24 +569,32 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
-                  releaseGroup.releaseTagPatternCheckAllBranchesWhen
+                  {
+                    checkAllBranchesWhen:
+                      releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    preid: projectsPreid[project.name],
+                    releaseTagPatternRequireSemver:
+                      releaseGroup.releaseTagPatternRequireSemver,
+                    releaseTagPatternStrictPreid:
+                      releaseGroup.releaseTagPatternStrictPreid,
+                  }
                 )
               )?.tag;
 
             if (!fromRef && useAutomaticFromRef) {
               const firstCommit = await getFirstGitCommit();
-              const allCommits = await getCommits(firstCommit, toSHA);
-              const commitsForProject = allCommits.filter((c) =>
-                c.affectedFiles.find((f) => f.startsWith(project.data.root))
-              );
+              commits = await filterProjectCommits({
+                fromSHA: firstCommit,
+                toSHA,
+                projectPath: project.data.root,
+              });
 
-              fromRef = commitsForProject[0]?.shortHash;
+              fromRef = commits[0]?.shortHash;
               if (args.verbose) {
                 console.log(
                   `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
                 );
               }
-              commits = commitsForProject;
             }
 
             if (!fromRef && !commits) {
@@ -554,7 +604,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             }
 
             if (!commits) {
-              commits = await getCommits(fromRef, toSHA);
+              commits = await filterProjectCommits({
+                fromSHA: fromRef,
+                toSHA,
+                projectPath: project.data.root,
+              });
             }
 
             const { fileMap } = await createFileMapUsingProjectGraph(
@@ -665,7 +719,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               await getLatestGitTagForPattern(
                 releaseGroup.releaseTagPattern,
                 {},
-                releaseGroup.releaseTagPatternCheckAllBranchesWhen
+                {
+                  checkAllBranchesWhen:
+                    releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                  preid:
+                    workspacePreid ??
+                    projectsPreid?.[Object.keys(projectsPreid)[0]],
+                  releaseTagPatternRequireSemver:
+                    releaseGroup.releaseTagPatternRequireSemver,
+                  releaseTagPatternStrictPreid:
+                    releaseGroup.releaseTagPatternStrictPreid,
+                }
               )
             )?.tag;
           if (!fromRef) {
@@ -750,7 +814,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       postGitTasks,
       commitMessageValues,
       gitTagValues,
-      releaseGroups
+      releaseGroups,
+      releaseGroupToFilteredProjects
     );
 
     return {
@@ -774,18 +839,6 @@ function resolveChangelogVersions(
     );
   }
 
-  /**
-   * TODO: revaluate this assumption holistically in a dedicated PR when we add support for calver
-   * (e.g. the Release class also uses semver utils to check if prerelease).
-   *
-   * Right now, the given version must be valid semver in order to proceed
-   */
-  if (args.version && !valid(args.version)) {
-    throw new Error(
-      `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`
-    );
-  }
-
   const versionData: VersionData = releaseGroups.reduce(
     (versionData, releaseGroup) => {
       const releaseGroupProjectNames = Array.from(
@@ -794,6 +847,7 @@ function resolveChangelogVersions(
       for (const projectName of releaseGroupProjectNames) {
         if (!args.versionData) {
           versionData[projectName] = {
+            dockerVersion: args.version,
             newVersion: args.version,
             currentVersion: '', // not relevant within changelog/commit generation
             dependentProjects: [], // not relevant within changelog/commit generation
@@ -843,7 +897,8 @@ async function applyChangesAndExit(
   postGitTasks: PostGitTask[],
   commitMessageValues: string[],
   gitTagValues: string[],
-  releaseGroups: ReleaseGroupWithName[]
+  releaseGroups: ReleaseGroupWithName[],
+  releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>
 ) {
   let latestCommit = toSHA;
 
@@ -899,8 +954,23 @@ async function applyChangesAndExit(
   if (args.deleteVersionPlans) {
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
+      const filteredProjects = releaseGroupToFilteredProjects.get(group);
+
       if (group.resolvedVersionPlans) {
-        group.resolvedVersionPlans.forEach((plan) => {
+        // Check each version plan individually to see if it should be deleted
+        const plansToDelete = [];
+
+        for (const plan of group.resolvedVersionPlans) {
+          // Only delete if ALL projects in the version plan are being filtered/released
+          if (
+            areAllVersionPlanProjectsFiltered(plan, group, filteredProjects)
+          ) {
+            plansToDelete.push(plan);
+          }
+        }
+
+        // Delete the plans that only affect filtered projects
+        plansToDelete.forEach((plan) => {
           if (!args.dryRun) {
             rmSync(plan.absolutePath, { recursive: true, force: true });
             if (args.verbose) {
@@ -1209,13 +1279,19 @@ async function generateChangelogForProjects({
      */
     if (
       !projectsVersionData[project.name] ||
-      projectsVersionData[project.name].newVersion === null
+      (projectsVersionData[project.name].newVersion === null &&
+        !projectsVersionData[project.name].dockerVersion)
     ) {
       continue;
     }
 
+    const preferDockerVersion =
+      shouldPreferDockerVersionForReleaseGroup(releaseGroup);
     const releaseVersion = new ReleaseVersion({
-      version: projectsVersionData[project.name].newVersion,
+      version:
+        preferDockerVersion && projectsVersionData[project.name].dockerVersion
+          ? projectsVersionData[project.name].dockerVersion
+          : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTagPattern,
       projectName: project.name,
     });
@@ -1349,6 +1425,21 @@ async function getCommits(
   return parseCommits(rawCommits);
 }
 
+async function filterProjectCommits({
+  fromSHA,
+  toSHA,
+  projectPath,
+}: {
+  fromSHA: string;
+  toSHA: string;
+  projectPath: string;
+}) {
+  const allCommits = await getCommits(fromSHA, toSHA);
+  return allCommits.filter((c) =>
+    c.affectedFiles.find((f) => f.startsWith(projectPath))
+  );
+}
+
 function filterHiddenChanges(
   changes: ChangelogChange[],
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
@@ -1435,4 +1526,23 @@ function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
     default:
       throw new Error(`Invalid semver bump type: ${bump}`);
   }
+}
+
+function extractPreid(version: string): string | undefined {
+  if (!isPrerelease(version)) {
+    return undefined;
+  }
+
+  const preid = prerelease(version)?.[0];
+  if (typeof preid === 'string') {
+    if (preid.trim() === '') {
+      return undefined;
+    }
+
+    return preid;
+  }
+  if (typeof preid === 'number') {
+    return preid.toString();
+  }
+  return undefined;
 }

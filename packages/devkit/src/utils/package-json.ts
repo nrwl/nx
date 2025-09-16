@@ -503,16 +503,22 @@ export function ensurePackage<T extends any = any>(
       windowsHide: false,
     });
   }
-  let addCommand = getPackageManagerCommand(packageManager).addDev;
+  const pmCommands = getPackageManagerCommand(packageManager);
+  let addCommand = pmCommands.addDev;
   if (packageManager === 'pnpm') {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
   }
 
-  execSync(`${addCommand} ${pkg}@${requiredVersion}`, {
-    cwd: tempDir,
-    stdio: isVerbose ? 'inherit' : 'ignore',
-    windowsHide: false,
-  });
+  execSync(
+    `${addCommand} ${pkg}@${requiredVersion} ${
+      pmCommands.ignoreScriptsFlag ?? ''
+    }`,
+    {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+      windowsHide: false,
+    }
+  );
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));

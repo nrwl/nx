@@ -1,6 +1,7 @@
-import type {
-  ModuleFederationConfig,
-  NxModuleFederationConfigOverride,
+import {
+  normalizeProjectName,
+  type ModuleFederationConfig,
+  type NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
@@ -12,9 +13,14 @@ export async function withModuleFederation(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
+  // This is required to ensure that the webpack version used by the Angular CLI is used
+  process.env['FEDERATION_WEBPACK_PATH'] = require.resolve('webpack', {
+    paths: [require.resolve('@angular-devkit/build-angular')],
+  });
+  const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options);
+    await getModuleFederationConfig(options, undefined, 'webpack');
 
   return (config) => {
     const updatedConfig = {
@@ -26,6 +32,10 @@ export async function withModuleFederation(
       },
       optimization: {
         ...(config.optimization ?? {}),
+        runtimeChunk:
+          isDevServer && !options.exposes
+            ? config.optimization?.runtimeChunk ?? undefined
+            : false,
       },
       resolve: {
         ...(config.resolve ?? {}),
@@ -41,7 +51,7 @@ export async function withModuleFederation(
       plugins: [
         ...(config.plugins ?? []),
         new ModuleFederationPlugin({
-          name: options.name.replace(/-/g, '_'),
+          name: normalizeProjectName(options.name),
           filename: 'remoteEntry.mjs',
           exposes: options.exposes,
           remotes: mappedRemotes,
@@ -65,7 +75,6 @@ export async function withModuleFederation(
                   ),
                 ]
               : configOverride?.runtimePlugins,
-          virtualRuntimeEntry: true,
         }),
         sharedLibraries.getReplacementPlugin(),
       ],

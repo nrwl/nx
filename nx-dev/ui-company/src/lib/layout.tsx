@@ -1,4 +1,4 @@
-import { Header, Footer } from '@nx/nx-dev/ui-common';
+import { Header, Footer } from '@nx/nx-dev-ui-common';
 
 export function Layout({
   children,

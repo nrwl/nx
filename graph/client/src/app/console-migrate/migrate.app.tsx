@@ -6,7 +6,7 @@ import { type FileChange } from 'nx/src/devkit-exports';
 import { MigrateUI } from '@nx/graph-migrate';
 /* eslint-enable @nx/enforce-module-boundaries */
 
-import { getExternalApiService } from '@nx/graph/legacy/shared';
+import { getExternalApiService } from '@nx/graph-shared';
 import { useSelector } from '@xstate/react';
 import { Interpreter } from 'xstate';
 import { MigrateEvents, MigrateState } from './migrate.machine';
@@ -106,6 +106,13 @@ export function MigrateApp({
     });
   };
 
+  const onStopMigration = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'stop-migration',
+      payload: { migration },
+    });
+  };
+
   return (
     <MigrateUI
       migrations={migrations}
@@ -119,6 +126,7 @@ export function MigrateApp({
       onUndoMigration={onUndoMigration}
       onViewImplementation={onViewImplementation}
       onViewDocumentation={onViewDocumentation}
+      onStopMigration={onStopMigration}
     ></MigrateUI>
   );
 }

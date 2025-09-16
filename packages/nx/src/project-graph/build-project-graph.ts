@@ -45,6 +45,7 @@ import {
   mergeMetadata,
 } from './utils/project-configuration-utils';
 import { DelayedSpinner } from '../utils/delayed-spinner';
+import { hashObject } from '../hasher/file-hasher';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -121,6 +122,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   }
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
+  const externalNodesHash = hashExternalNodes(externalNodes);
 
   let filesToProcess: FileMap;
   let cachedFileData: CachedFileData;
@@ -131,7 +133,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       packageJsonDeps,
       projects,
       nxJson,
-      rootTsConfig
+      rootTsConfig,
+      externalNodesHash
     );
   if (useCacheData) {
     const fromCache = extractCachedFileData(fileMap, fileMapCache);
@@ -167,7 +170,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       nxJson,
       packageJsonDeps,
       fileMap,
-      rootTsConfig
+      rootTsConfig,
+      externalNodesHash
     );
   } catch (e) {
     // we need to include the workspace validity errors in the final error
@@ -518,4 +522,15 @@ export async function applyProjectMetadata(
   );
 
   return { errors, graph };
+}
+
+function hashExternalNodes(
+  externalNodes: Record<string, ProjectGraphExternalNode>
+): string {
+  return hashObject(
+    Object.entries(externalNodes).reduce((acc, [name, node]) => {
+      acc[name] = node.data.version;
+      return acc;
+    }, {})
+  );
 }

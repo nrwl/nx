@@ -27,12 +27,14 @@ import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { execSync } from 'node:child_process';
+import { join } from 'node:path';
 import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -48,11 +50,16 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    true, // nuxt always adds plugins
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -104,25 +111,24 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, './files/base'),
-    options.appProjectRoot,
-    {
-      ...options,
-      offsetFromRoot: projectOffsetFromRoot,
-      title: options.projectName,
-      dot: '.',
-      tmpl: '',
-      style: options.style,
-      projectRoot: options.appProjectRoot,
-      hasVitest: options.unitTestRunner === 'vitest',
-    }
-  );
+  generateFiles(tree, join(__dirname, './files/base'), options.appProjectRoot, {
+    ...options,
+    offsetFromRoot: projectOffsetFromRoot,
+    relativePathToRootTsConfig: getRelativePathToRootTsConfig(
+      tree,
+      options.appProjectRoot
+    ),
+    title: options.projectName,
+    dot: '.',
+    tmpl: '',
+    style: options.style,
+    projectRoot: options.appProjectRoot,
+    hasVitest: options.unitTestRunner === 'vitest',
+  });
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
+    join(__dirname, './files/nx-welcome', onBoardingStatus),
     options.appProjectRoot,
     {
       ...options,

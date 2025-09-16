@@ -1,8 +1,8 @@
-import { FeedContainer } from '@nx/nx-dev/feature-ai';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+import { FeedContainer } from '@nx/nx-dev-feature-ai';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export default function AiDocs(): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -21,6 +21,22 @@ export default function AiDocs(): JSX.Element {
           maxSnippet: -1,
           maxImagePreview: 'none',
           maxVideoPreview: -1,
+        }}
+        openGraph={{
+          url: 'https://nx.dev/ai-chat',
+          title: 'Nx AI Chat',
+          description: 'AI chat powered by Nx docs.',
+          images: [
+            {
+              url: 'https://nx.dev/socials/nx-media.png',
+              width: 800,
+              height: 421,
+              alt: 'Nx: Smart Repos · Fast Builds',
+              type: 'image/png',
+            },
+          ],
+          siteName: 'Nx',
+          type: 'website',
         }}
       />
       <div

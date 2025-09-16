@@ -223,6 +223,15 @@ async function runPublishOnProjects(
     overrides.firstRelease = args.firstRelease;
   }
 
+  /**
+   * If using the `nx release` command, or possibly via the programmatic API, versionData will be passed through from the version subcommand.
+   * Provide it automatically to the publish executor options with a clear namespace to avoid userland conflicts.
+   * It will be filtered out of the final terminal output lifecycle to avoid cluttering the terminal.
+   */
+  if (args.versionData) {
+    overrides.nxReleaseVersionData = args.versionData;
+  }
+
   const requiredTargetName = 'nx-release-publish';
 
   if (args.graph) {
@@ -257,13 +266,16 @@ async function runPublishOnProjects(
       `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:\n${[
         ...projectsToRun.map((p) => `- ${p.name}`),
         '',
-        `This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically.`,
+        `This is usually caused by either`,
+        `- not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically`,
+        `- having "private": true set in your package.json, which prevents the target from being created`,
       ].join('\n')}\n`
     );
   }
   await runPreTasksExecution({
     workspaceRoot,
     nxJsonConfiguration: nxJson,
+    argv: process.argv,
   });
 
   /**
@@ -298,6 +310,7 @@ async function runPublishOnProjects(
     taskResults,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
+    argv: process.argv,
   });
 
   return publishProjectsResult;

@@ -4,7 +4,7 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { ReactElement } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 const features = [
@@ -59,7 +59,11 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/features/enhance-AI"
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/features/enhance-ai'
+                : '/features/enhance-AI'
+            }
             title="Learn about Enhancing your LLM"
             className="text-sm/6 font-semibold"
           >

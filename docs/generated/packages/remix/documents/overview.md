@@ -3,6 +3,8 @@ title: Overview of the Nx Remix Plugin
 description: The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries within an Nx workspace.
 ---
 
+# @nx/remix
+
 The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries
 within an Nx workspace. It provides:
 

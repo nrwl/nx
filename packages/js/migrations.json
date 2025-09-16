@@ -1,5 +1,11 @@
 {
-  "generators": {},
+  "generators": {
+    "migrate-development-custom-condition": {
+      "version": "21.5.0-beta.2",
+      "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
+      "factory": "./src/migrations/update-21-5-0/migrate-development-custom-condition"
+    }
+  },
   "packageJsonUpdates": {
     "19.0.0": {
       "version": "19.0.0-beta.0",
@@ -80,6 +86,32 @@
       "packages": {
         "@swc/cli": {
           "version": "~0.6.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.2.0": {
+      "version": "21.2.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.8?",
+      "requires": {
+        "typescript": ">=5.7.0 <5.8.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.8.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.5.0": {
+      "version": "21.5.0-beta.2",
+      "x-prompt": "Do you want to update to TypeScript v5.9?",
+      "requires": {
+        "typescript": ">=5.8.0 <5.9.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.9.2",
           "alwaysAddToPackageJson": false
         }
       }

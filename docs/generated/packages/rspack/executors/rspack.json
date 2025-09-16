@@ -13,6 +13,11 @@
         "description": "The platform to target (e.g. web, node).",
         "enum": ["web", "node"]
       },
+      "deleteOutputPath": {
+        "type": "boolean",
+        "description": "Delete the output path before building.",
+        "default": true
+      },
       "main": { "type": "string", "description": "The main entry file." },
       "outputPath": {
         "type": "string",
@@ -245,7 +250,7 @@
                   "type": "string",
                   "description": "The file to include.",
                   "x-completion-type": "file",
-                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
                 },
                 "bundleName": {
                   "type": "string",
@@ -264,7 +269,7 @@
               "type": "string",
               "description": "The file to include.",
               "x-completion-type": "file",
-              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
             }
           ]
         }
@@ -316,7 +321,7 @@
                   "type": "string",
                   "description": "The file to include.",
                   "x-completion-type": "file",
-                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
                 },
                 "bundleName": {
                   "type": "string",
@@ -335,7 +340,7 @@
               "type": "string",
               "description": "The file to include.",
               "x-completion-type": "file",
-              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
             }
           ]
         }
@@ -409,7 +414,7 @@
                 "type": "string",
                 "description": "The file to include.",
                 "x-completion-type": "file",
-                "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
               },
               "bundleName": {
                 "type": "string",
@@ -428,7 +433,7 @@
             "type": "string",
             "description": "The file to include.",
             "x-completion-type": "file",
-            "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+            "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
           }
         ]
       },

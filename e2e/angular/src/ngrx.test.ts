@@ -1,13 +1,12 @@
 import {
   cleanupProject,
   expectTestsPass,
-  getSelectedPackageManager,
   newProject,
   readJson,
   runCLI,
   runCLIAsync,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Angular Package', () => {
   describe('ngrx', () => {
@@ -26,7 +25,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root --minimal=false`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app-module.ts --root --minimal=false`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
@@ -38,15 +37,12 @@ describe('Angular Package', () => {
       // Generate feature library and ngrx state within that library
       runCLI(`g @nx/angular:lib ${mylib} --prefix=fl --no-standalone`);
       runCLI(
-        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts --facade`
+        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}-module.ts --facade`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-      // TODO: remove this condition
-      if (getSelectedPackageManager() !== 'pnpm') {
-        expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-      }
+      expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
 
     it('should work with creators', async () => {
@@ -57,7 +53,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app-module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -73,15 +69,12 @@ describe('Angular Package', () => {
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}-module.ts ${flags}`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-      // TODO: remove this condition
-      if (getSelectedPackageManager() !== 'pnpm') {
-        expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-      }
+      expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
 
     it('should work with creators using --module', async () => {
@@ -92,7 +85,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app-module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -108,15 +101,12 @@ describe('Angular Package', () => {
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nx/angular:ngrx flights --module=${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --module=${mylib}/src/lib/${mylib}-module.ts ${flags}`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-      // TODO: remove this condition
-      if (getSelectedPackageManager() !== 'pnpm') {
-        expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-      }
+      expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
   });
 });

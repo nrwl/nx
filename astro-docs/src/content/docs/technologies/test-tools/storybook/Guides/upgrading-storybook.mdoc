@@ -1,0 +1,58 @@
+---
+title: Upgrading Storybook using the Storybook CLI
+description: This guide shows you how to upgrade Storybook in your Nx workspace using the Storybook CLI.
+sidebar:
+  label: Upgrading Storybook using the Storybook CLI
+---
+
+[Storybook provides an upgrade command](https://storybook.js.org/docs/react/configure/upgrading) that allows you to upgrade your Storybook dependencies and configuration files.
+
+## Using the Storybook CLI to upgrade
+
+### Upgrade Storybook
+
+In the root directory of your workspace, run:
+
+```shell {% frame="none" %}
+npx storybook@latest upgrade
+```
+
+### Let Nx handle the migrations
+
+After you run the Storybook CLI upgrade command, Nx will automatically run any necessary migrations to update your Storybook configuration files and dependencies.
+
+## Manual upgrade path
+
+If you prefer to upgrade manually, you can:
+
+1. Update your Storybook dependencies in your `package.json`
+2. Run `npm install` or your preferred package manager
+3. Update your Storybook configuration files according to the [Storybook migration guide](https://storybook.js.org/docs/react/migration-guide)
+
+## Nx Storybook migrations
+
+Nx provides migrations for major Storybook updates. These migrations are automatically triggered when you update your Nx version. The migrations help with:
+
+- Updating Storybook configuration files
+- Updating dependencies
+- Migrating to new Storybook features
+- Fixing breaking changes
+
+## Troubleshooting upgrades
+
+If you encounter issues during the upgrade:
+
+1. Check the [Storybook migration guide](https://storybook.js.org/docs/react/migration-guide) for framework-specific changes
+2. Review the [Nx Storybook documentation](/docs/technologies/test-tools/storybook/introduction) for Nx-specific configurations
+3. Check the console output for specific error messages and fix them accordingly
+
+## Upgrading to Storybook 7+
+
+For major version upgrades (like Storybook 6 to 7), make sure to:
+
+1. Review the breaking changes in the [Storybook release notes](https://storybook.js.org/blog/)
+2. Update your stories to use the new APIs if needed
+3. Test your Storybook instances after the upgrade
+4. Update any custom configurations or addons
+
+Remember to test your Storybook instances thoroughly after any upgrade to ensure everything works as expected.

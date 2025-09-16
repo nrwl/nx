@@ -122,33 +122,48 @@ export class ParallelRunningTasks implements RunningTask {
         cb(code, terminalOutput);
       }
     } else {
-      const results = await Promise.all(
+      const runningProcesses = new Set<RunningNodeProcess>();
+      let hasFailure = false;
+      let failureDetails: {
+        childProcess: RunningNodeProcess;
+        code: number;
+        terminalOutput: string;
+      } | null = null;
+      const terminalOutputs = new Map<RunningNodeProcess, string>();
+
+      await Promise.allSettled(
         this.childProcesses.map(async (childProcess) => {
+          runningProcesses.add(childProcess);
+
           childProcess.onOutput((terminalOutput) => {
             for (const cb of this.outputCallbacks) {
               cb(terminalOutput);
             }
           });
-          const result = await childProcess.getResults();
-          return {
-            childProcess,
-            result,
-          };
+
+          const { code, terminalOutput } = await childProcess.getResults();
+          terminalOutputs.set(childProcess, terminalOutput);
+
+          if (code !== 0 && !hasFailure) {
+            hasFailure = true;
+            failureDetails = { childProcess, code, terminalOutput };
+
+            // Immediately terminate all other running processes
+            await this.terminateRemainingProcesses(
+              runningProcesses,
+              childProcess
+            );
+          }
+
+          runningProcesses.delete(childProcess);
         })
       );
 
-      let terminalOutput = results
-        .map((r) => r.result.terminalOutput)
-        .join('\r\n');
+      let terminalOutput = Array.from(terminalOutputs.values()).join('\r\n');
 
-      const failed = results.filter((result) => result.result.code !== 0);
-      if (failed.length > 0) {
-        const output = failed
-          .map(
-            (failedResult) =>
-              `Warning: command "${failedResult.childProcess.command}" exited with non-zero status code`
-          )
-          .join('\r\n');
+      if (hasFailure && failureDetails) {
+        // Add failure message
+        const output = `Warning: command "${failureDetails.childProcess.command}" exited with non-zero status code`;
         terminalOutput += output;
         if (this.streamOutput) {
           process.stderr.write(output);
@@ -162,6 +177,41 @@ export class ParallelRunningTasks implements RunningTask {
           cb(0, terminalOutput);
         }
       }
+    }
+  }
+
+  private async terminateRemainingProcesses(
+    runningProcesses: Set<RunningNodeProcess>,
+    failedProcess: RunningNodeProcess
+  ): Promise<void> {
+    const terminationPromises: Promise<void>[] = [];
+
+    const processesToTerminate = [...runningProcesses].filter(
+      (p) => p !== failedProcess
+    );
+    for (const process of processesToTerminate) {
+      runningProcesses.delete(process);
+
+      // Terminate the process
+      terminationPromises.push(
+        process.kill('SIGTERM').catch((err) => {
+          // Log error but don't fail the entire operation
+          if (this.streamOutput) {
+            console.error(
+              `Failed to terminate process "${process.command}":`,
+              err
+            );
+          }
+        })
+      );
+    }
+
+    // Wait for all terminations to complete with a timeout
+    if (terminationPromises.length > 0) {
+      await Promise.race([
+        Promise.all(terminationPromises),
+        new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
+      ]);
     }
   }
 }
@@ -359,21 +409,15 @@ class RunningNodeProcess implements RunningTask {
 
   kill(signal?: NodeJS.Signals): Promise<void> {
     return new Promise<void>((res, rej) => {
-      if (process.platform === 'win32') {
-        if (this.childProcess.kill(signal)) {
-          res();
+      treeKill(this.childProcess.pid, signal, (err) => {
+        // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
+        // Ignore the errors, otherwise we will log them unnecessarily.
+        if (err && process.platform !== 'win32') {
+          rej(err);
         } else {
-          rej('Unable to kill process');
+          res();
         }
-      } else {
-        treeKill(this.childProcess.pid, signal, (err) => {
-          if (err) {
-            rej(err);
-          } else {
-            res();
-          }
-        });
-      }
+      });
     });
   }
 
@@ -439,6 +483,25 @@ class RunningNodeProcess implements RunningTask {
           cb(code, this.terminalOutput);
         }
       }
+    });
+    // Terminate any task processes on exit
+    process.on('exit', () => {
+      this.childProcess.kill();
+    });
+    process.on('SIGINT', () => {
+      this.childProcess.kill('SIGTERM');
+      // we exit here because we don't need to write anything to cache.
+      process.exit(signalToCode('SIGINT'));
+    });
+    process.on('SIGTERM', () => {
+      this.childProcess.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.on('SIGHUP', () => {
+      this.childProcess.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
     });
   }
 }

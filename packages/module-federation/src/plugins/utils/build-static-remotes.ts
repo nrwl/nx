@@ -18,7 +18,7 @@ export async function buildStaticRemotes(
   const mappedLocationOfRemotes: Record<string, string> = {};
   for (const app of remotes) {
     mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${
-      options.host
+      options.host ?? 'localhost'
     }:${options.staticRemotesPort}/${staticRemotesConfig[app].urlSegment}`;
   }
 
@@ -35,6 +35,10 @@ export async function buildStaticRemotes(
       {
         cwd: workspaceRoot,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        env: {
+          ...process.env,
+          WEBPACK_SERVE: 'false',
+        },
       }
     );
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'

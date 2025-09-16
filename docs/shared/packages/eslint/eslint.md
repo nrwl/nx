@@ -3,6 +3,8 @@ title: ESLint Plugin for Nx
 description: Learn how to set up and use the @nx/eslint plugin to integrate ESLint with Nx, enabling caching and providing code generators for ESLint configuration.
 ---
 
+# @nx/eslint
+
 The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. It allows you to run ESLint through Nx with caching enabled. It also includes code generators to help you set up ESLint in your workspace.
 
 ## Setting Up @nx/eslint
@@ -73,8 +75,8 @@ nx lint my-project
 
 ## Utils
 
-- [convert-to-flat-config](/nx-api/eslint/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
+- [convert-to-flat-config](/technologies/eslint/api/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
 
 ## ESLint plugin
 
-Read about our dedicated ESLint plugin - [eslint-plugin-nx](/nx-api/eslint-plugin/documents/overview).
+Read about our dedicated ESLint plugin - [eslint-plugin-nx](/technologies/eslint/eslint-plugin).

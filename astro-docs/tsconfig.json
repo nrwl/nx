@@ -1,0 +1,36 @@
+{
+  "extends": "../tsconfig.base.json",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "strict": true
+  },
+  "references": [
+    {
+      "path": "../nx-dev/ui-markdoc"
+    },
+    {
+      "path": "../nx-dev/ui-icons"
+    },
+    {
+      "path": "../nx-dev/ui-common"
+    },
+    {
+      "path": "./tsconfig.e2e.json"
+    }
+  ]
+}

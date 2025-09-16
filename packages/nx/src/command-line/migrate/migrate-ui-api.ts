@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync, spawn, ChildProcess } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { MigrationDetailsWithId } from '../../config/misc-interfaces';
@@ -8,10 +8,14 @@ import {
   readMigrationCollection,
 } from './migrate';
 
+let currentMigrationProcess: ChildProcess | null = null;
+let currentMigrationId: string | null = null;
+let migrationCancelled = false;
+
 export type MigrationsJsonMetadata = {
   completedMigrations?: Record<
     string,
-    SuccessfulMigration | FailedMigration | SkippedMigration
+    SuccessfulMigration | FailedMigration | SkippedMigration | StoppedMigration
   >;
   runningMigrations?: string[];
   initialGitRef?: {
@@ -38,6 +42,12 @@ export type FailedMigration = {
 
 export type SkippedMigration = {
   type: 'skipped';
+};
+
+export type StoppedMigration = {
+  type: 'stopped';
+  name: string;
+  error: string;
 };
 
 export function recordInitialMigrationMetadata(
@@ -121,6 +131,10 @@ export async function runSingleMigration(
   }
 ) {
   try {
+    // Set current migration tracking
+    currentMigrationId = migration.id;
+    migrationCancelled = false;
+
     modifyMigrationsJsonMetadata(
       workspacePath,
       addRunningMigration(migration.id)
@@ -131,32 +145,76 @@ export async function runSingleMigration(
       encoding: 'utf-8',
     }).trim();
 
-    // For Migrate UI, this current module is loaded either from:
-    // 1. The CLI path to the migrated modules. The version of Nx is of the user's choosing. This may or may not have the new migrate API, so Console will check that `runSingleMigration` exists before using it.
-    // 2. Bundled into Console, so the version is fixed to what we build Console with.
-    const updatedMigrateModule = await import('./migrate.js');
+    // Run migration in a separate process so it can be cancelled
+    const runMigrationProcessPath = require.resolve(
+      './run-migration-process.js'
+    );
 
-    const { changes: fileChanges, nextSteps } =
-      await updatedMigrateModule.runNxOrAngularMigration(
+    const migrationProcess = spawn(
+      'node',
+      [
+        runMigrationProcessPath,
         workspacePath,
-        migration,
-        false,
-        configuration.createCommits,
+        migration.id,
+        migration.package,
+        migration.name,
+        migration.version,
+        configuration.createCommits.toString(),
         configuration.commitPrefix || 'chore: [nx migration] ',
-        undefined,
-        true
-      );
+      ],
+      {
+        cwd: workspacePath,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }
+    );
 
-    const gitRefAfter = execSync('git rev-parse HEAD', {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-    }).trim();
+    // Track the process for cancellation
+    currentMigrationProcess = migrationProcess;
+
+    // Handle process output
+    let output = '';
+    migrationProcess.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    migrationProcess.stderr.on('data', (data) => {
+      console.error('Migration stderr:', data.toString());
+    });
+
+    // Wait for the process to complete
+    const exitCode = await new Promise<number>((resolve, reject) => {
+      migrationProcess.on('close', (code) => {
+        resolve(code);
+      });
+
+      migrationProcess.on('error', (error) => {
+        reject(error);
+      });
+    });
+
+    currentMigrationProcess = null;
+
+    if (exitCode !== 0) {
+      throw new Error(`Migration process exited with code ${exitCode}`);
+    }
+
+    // Parse the result from the migration process (extract the JSON output)
+    const jsonStr = output
+      .trim()
+      .split('\n')
+      .find((line) => line.startsWith('{'));
+    const result = JSON.parse(jsonStr);
+    if (result.type === 'error') {
+      throw new Error(result.message);
+    }
+
+    const { fileChanges, gitRefAfter, nextSteps } = result;
 
     modifyMigrationsJsonMetadata(
       workspacePath,
       addSuccessfulMigration(
         migration.id,
-        fileChanges.map((change) => ({
+        fileChanges.map((change: FileChange) => ({
           path: change.path,
           type: change.type,
         })),
@@ -166,10 +224,14 @@ export async function runSingleMigration(
     );
 
     if (gitRefBefore !== gitRefAfter) {
-      execSync('git add migrations.json', {
-        cwd: workspacePath,
-        encoding: 'utf-8',
-      });
+      try {
+        execSync('git add migrations.json', {
+          cwd: workspacePath,
+          encoding: 'utf-8',
+        });
+      } catch (e) {
+        // do nothing, this will fail if it's gitignored
+      }
       execSync('git commit --amend --no-verify --no-edit', {
         cwd: workspacePath,
         encoding: 'utf-8',
@@ -186,20 +248,36 @@ export async function runSingleMigration(
       );
     }
   } catch (e) {
-    modifyMigrationsJsonMetadata(
-      workspacePath,
-      addFailedMigration(migration.id, e.message)
-    );
+    // Check if migration was cancelled/stopped
+    if (migrationCancelled && currentMigrationId === migration.id) {
+      // Migration was stopped by user, don't add as failed since it's already marked as stopped
+      console.log(`Migration ${migration.id} was stopped by user`);
+    } else {
+      // Migration failed normally
+      modifyMigrationsJsonMetadata(
+        workspacePath,
+        addFailedMigration(migration.id, e.message)
+      );
+    }
   } finally {
+    // Clear the tracking variables
+    currentMigrationProcess = null;
+    currentMigrationId = null;
+    migrationCancelled = false;
+
     modifyMigrationsJsonMetadata(
       workspacePath,
       removeRunningMigration(migration.id)
     );
 
-    execSync('git add migrations.json', {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-    });
+    try {
+      execSync('git add migrations.json', {
+        cwd: workspacePath,
+        encoding: 'utf-8',
+      });
+    } catch (e) {
+      // do nothing, this will fail if it's gitignored
+    }
   }
 }
 
@@ -312,6 +390,24 @@ export function addSkippedMigration(id: string) {
   };
 }
 
+export function addStoppedMigration(id: string, error: string) {
+  return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
+    const copied = { ...migrationsJsonMetadata };
+    if (!copied.completedMigrations) {
+      copied.completedMigrations = {};
+    }
+    copied.completedMigrations = {
+      ...copied.completedMigrations,
+      [id]: {
+        type: 'stopped',
+        name: id,
+        error,
+      },
+    };
+    return copied;
+  };
+}
+
 function addRunningMigration(id: string) {
   return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
     migrationsJsonMetadata.runningMigrations = [
@@ -326,9 +422,6 @@ function removeRunningMigration(id: string) {
   return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
     migrationsJsonMetadata.runningMigrations =
       migrationsJsonMetadata.runningMigrations?.filter((n) => n !== id);
-    if (migrationsJsonMetadata.runningMigrations?.length === 0) {
-      delete migrationsJsonMetadata.runningMigrations;
-    }
     return migrationsJsonMetadata;
   };
 }
@@ -354,5 +447,43 @@ export function undoMigration(workspacePath: string, id: string) {
       type: 'skipped',
     };
     return migrationsJsonMetadata;
+  };
+}
+
+export function killMigrationProcess(
+  migrationId: string,
+  workspacePath?: string
+): boolean {
+  try {
+    if (workspacePath) {
+      modifyMigrationsJsonMetadata(workspacePath, stopMigration(migrationId));
+    }
+
+    // Check if this is the currently running migration and kill the process
+    if (currentMigrationId === migrationId && currentMigrationProcess) {
+      currentMigrationProcess.kill('SIGTERM');
+      // Some processes may not respond to SIGTERM immediately,
+      // so we give it a short timeout before forcefully killing it
+      setTimeout(() => {
+        if (currentMigrationProcess && !currentMigrationProcess.killed) {
+          currentMigrationProcess.kill('SIGKILL');
+        }
+      }, 2000);
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Failed to stop migration ${migrationId}:`, error);
+    return false;
+  }
+}
+
+export function stopMigration(migrationId: string) {
+  return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
+    const updated = addStoppedMigration(
+      migrationId,
+      'Migration was stopped by user'
+    )(migrationsJsonMetadata);
+    return removeRunningMigration(migrationId)(updated);
   };
 }

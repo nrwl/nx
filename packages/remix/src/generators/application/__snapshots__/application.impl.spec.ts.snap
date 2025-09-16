@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Remix Application Integrated Repo --directory should create the application correctly 1`] = `
 "import {
@@ -262,6 +262,7 @@ export default defineConfig(() => ({
   // },
   test: {
     setupFiles: ['test-setup.ts'],
+    name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -465,6 +466,7 @@ export default defineConfig(() => ({
   // },
   test: {
     setupFiles: ['test-setup.ts'],
+    name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',

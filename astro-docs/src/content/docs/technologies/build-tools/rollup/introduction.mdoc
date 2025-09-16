@@ -1,0 +1,36 @@
+---
+title: Overview of the Nx Rollup Plugin
+description: The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+sidebar:
+  label: Introduction
+---
+
+The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+
+## Setting Up @nx/rollup
+
+### Installation
+
+{% aside type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/rollup` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+{% /aside %}
+
+In any Nx workspace, you can install `@nx/rollup` by running the following command:
+
+```shell frame="none"
+nx add @nx/rollup
+```
+
+This will install the correct version of `@nx/rollup`.
+
+## Using @nx/rollup
+
+### Generate a new project using Rollup
+
+You can generate a new library that uses Rollup with the following command:
+
+```bash frame="none"
+nx g @nx/js:lib mylib --bundler=rollup
+```
+
+This will create a new library configured to use Rollup for building.

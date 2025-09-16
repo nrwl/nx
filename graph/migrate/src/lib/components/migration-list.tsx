@@ -1,14 +1,29 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
+// nx-ignore-next-line
 import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { useCallback, useMemo, useState } from 'react';
 import { MigrationCard } from './migration-card';
+import type { Interpreter } from 'xstate';
+import type {
+  AutomaticMigrationState,
+  AutomaticMigrationEvents,
+} from '../state/automatic/types';
 
 export function MigrationList(props: {
+  actor: Interpreter<
+    AutomaticMigrationState,
+    any,
+    AutomaticMigrationEvents,
+    any,
+    any
+  >;
   migrations: MigrationDetailsWithId[];
   nxConsoleMetadata: MigrationsJsonMetadata;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
@@ -133,6 +148,7 @@ export function MigrationList(props: {
       <div>
         {props.migrations.map((migration) => (
           <MigrationCard
+            actor={props.actor}
             key={migration.id}
             migration={migration}
             nxConsoleMetadata={props.nxConsoleMetadata}

@@ -1,3 +1,5 @@
+import type { BuilderContext } from '@angular-devkit/architect';
+import type { ServerBuilderOutput } from '@angular-devkit/build-angular';
 import {
   joinPathFragments,
   normalizePath,
@@ -7,14 +9,36 @@ import { existsSync } from 'fs';
 import { relative } from 'path';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { Schema } from './schema';
+// This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
+const Module = require('module');
+
+const originalResolveFilename = Module._resolveFilename;
+const patchedWebpackPath = require.resolve('webpack', {
+  paths: [require.resolve('@angular-devkit/build-angular')],
+});
+
+// Override the resolve function
+Module._resolveFilename = function (request, parent, isMain, options) {
+  // Intercept webpack specifically
+  if (request === 'webpack') {
+    // Force webpack to resolve from your specific path
+    return patchedWebpackPath;
+  }
+
+  // For all other modules, use the original resolver
+  return originalResolveFilename.call(this, request, parent, isMain, options);
+};
 
 function buildServerApp(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext
-): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
+  context: BuilderContext
+): Observable<ServerBuilderOutput> {
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
+
   const { buildLibsFromSource, customWebpackConfig, ...delegateOptions } =
     options;
   // If there is a path to custom webpack config
@@ -47,7 +71,7 @@ function buildServerApp(
 
 function buildServerAppWithCustomWebpackConfiguration(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext,
+  context: BuilderContext,
   pathToWebpackConfig: string
 ) {
   return from(import('@angular-devkit/build-angular')).pipe(
@@ -89,8 +113,8 @@ function buildServerAppWithCustomWebpackConfiguration(
 
 export function executeWebpackServerBuilder(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext
-): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
+  context: BuilderContext
+): Observable<ServerBuilderOutput> {
   options.buildLibsFromSource ??= true;
 
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;

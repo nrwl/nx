@@ -8,7 +8,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import * as http from 'http';
+import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
 import * as open from 'open';
@@ -20,8 +20,9 @@ import {
   join,
   parse,
   relative,
-} from 'path';
-import { performance } from 'perf_hooks';
+} from 'node:path';
+import * as net from 'node:net';
+import { performance } from 'node:perf_hooks';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
 import {
   FileData,
@@ -34,7 +35,6 @@ import { writeJsonFile } from '../../utils/fileutils';
 import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-import { Server } from 'net';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
@@ -47,7 +47,7 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph } from '../../native';
+import { HashPlanner, transferProjectGraph, NxJson } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -84,9 +84,9 @@ export interface ProjectGraphClientResponse {
 }
 
 export interface TaskGraphClientResponse {
-  taskGraphs: Record<string, TaskGraph>;
+  taskGraph: TaskGraph;
   plans?: Record<string, string[]>;
-  errors: Record<string, string>;
+  error?: string | null;
 }
 
 export interface ExpandedTaskInputsReponse {
@@ -239,6 +239,7 @@ function filterGraph(
 export async function generateGraph(
   args: {
     file?: string;
+    print?: boolean;
     host?: string;
     port?: number;
     groupByFolder?: boolean;
@@ -254,20 +255,6 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  if (
-    Array.isArray(args.targets) &&
-    args.targets.length > 1 &&
-    args.file &&
-    !(args.file === 'stdout' || args.file.endsWith('.json'))
-  ) {
-    output.warn({
-      title: 'Showing Multiple Targets is not supported yet',
-      bodyLines: [
-        `Only the task graph for "${args.targets[0]}" tasks will be shown`,
-      ],
-    });
-  }
-
   if (args.view === 'project-details' && !args.focus) {
     output.error({
       title: `The project details view requires the --focus option.`,
@@ -285,11 +272,6 @@ export async function generateGraph(
     });
     process.exit(1);
   }
-
-  // TODO: Graph Client should support multiple targets
-  const target = Array.isArray(args.targets && args.targets.length >= 1)
-    ? args.targets[0]
-    : args.targets;
 
   let rawGraph: ProjectGraph;
   let sourceMaps: ConfigurationSourceMaps;
@@ -352,7 +334,7 @@ export async function generateGraph(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: args.file !== 'stdout' },
+          { printWarnings: !args.print && args.file !== 'stdout' },
           readNxJson()
         ).nxArgs,
         rawGraph
@@ -389,25 +371,24 @@ export async function generateGraph(
     args.exclude || []
   );
 
-  if (args.file) {
-    // stdout is a magical constant that doesn't actually write a file
-    if (args.file === 'stdout') {
-      console.log(
-        JSON.stringify(
-          await createJsonOutput(
-            prunedGraph,
-            rawGraph,
-            args.projects,
-            args.targets
-          ),
-          null,
-          2
-        )
-      );
-      await output.drain();
-      process.exit(0);
-    }
+  if (args.print || args.file === 'stdout') {
+    console.log(
+      JSON.stringify(
+        await createJsonOutput(
+          prunedGraph,
+          rawGraph,
+          args.projects,
+          args.targets
+        ),
+        null,
+        2
+      )
+    );
+    await output.drain();
+    process.exit(0);
+  }
 
+  if (args.file) {
     const workspaceFolder = workspaceRoot;
     const ext = extname(args.file);
     const fullFilePath = isAbsolute(args.file)
@@ -432,7 +413,13 @@ export async function generateGraph(
       const { projectGraphClientResponse } =
         await createProjectGraphAndSourceMapClientResponse(affectedProjects);
 
-      const taskGraphClientResponse = await createTaskGraphClientResponse();
+      const taskGraphClientResponse = args.targets
+        ? await createTaskGraphForTargetsAndProjects(
+            args.targets,
+            args.projects
+          )
+        : await createTaskGraphClientResponse();
+
       const taskInputsReponse = await createExpandedTaskInputResponse(
         taskGraphClientResponse,
         projectGraphClientResponse
@@ -490,17 +477,29 @@ export async function generateGraph(
       !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
 
-    const { app, url } = await startServer(
-      html,
-      environmentJs,
-      args.host || '127.0.0.1',
-      args.port || 4211,
-      args.watch,
-      affectedProjects,
-      args.focus,
-      args.groupByFolder,
-      args.exclude
-    );
+    let app: net.Server;
+    let url: URL;
+    try {
+      const result = await startServer(
+        html,
+        environmentJs,
+        args.host || '127.0.0.1',
+        args.port || 4211,
+        args.watch,
+        affectedProjects,
+        args.focus,
+        args.groupByFolder,
+        args.exclude
+      );
+      app = result.app;
+      url = result.url;
+    } catch (err) {
+      output.error({
+        title: 'Failed to start graph server',
+        bodyLines: [err.message],
+      });
+      process.exit(1);
+    }
 
     url.pathname = args.view;
 
@@ -508,9 +507,14 @@ export async function generateGraph(
       url.pathname += '/' + encodeURIComponent(args.focus);
     }
 
-    if (target) {
-      url.pathname += '/' + target;
+    // Add targets as query parameters for tasks view
+    if (args.view === 'tasks' && args.targets && args.targets.length > 0) {
+      const targets = Array.isArray(args.targets)
+        ? args.targets
+        : [args.targets];
+      url.searchParams.append('targets', targets.join(' '));
     }
+
     if (args.all) {
       url.pathname += '/all';
     } else if (args.projects) {
@@ -537,6 +541,33 @@ export async function generateGraph(
       app.once('close', res);
     });
   }
+}
+
+function findAvailablePort(
+  startPort: number,
+  host: string = '127.0.0.1'
+): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+
+    server.listen(startPort, host, () => {
+      const port = (server.address() as net.AddressInfo).port;
+      server.close(() => {
+        resolve(port);
+      });
+    });
+
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        // Port is in use, try the next one
+        findAvailablePort(startPort + 1, host)
+          .then(resolve)
+          .catch(reject);
+      } else {
+        reject(err);
+      }
+    });
+  });
 }
 
 async function startServer(
@@ -591,9 +622,31 @@ async function startServer(
     }
 
     if (sanitizePath === 'task-graph.json') {
+      const projectsParam = parsedUrl.searchParams.get('projects');
+      const targetsParam = parsedUrl.searchParams.get('targets');
+      const configuration = parsedUrl.searchParams.get('configuration');
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(await createTaskGraphClientResponse()));
-      return;
+
+      if (targetsParam) {
+        const targetNames = targetsParam.split(' ').filter(Boolean);
+        const projectNames = projectsParam
+          ? projectsParam.split(' ').filter(Boolean)
+          : undefined;
+
+        return res.end(
+          JSON.stringify(
+            await createTaskGraphForTargetsAndProjects(
+              targetNames,
+              projectNames,
+              configuration
+            )
+          )
+        );
+      }
+
+      // load all task graphs if there's no targets specified
+      return res.end(JSON.stringify(await createTaskGraphClientResponse()));
     }
 
     if (sanitizePath === 'task-inputs.json') {
@@ -676,9 +729,21 @@ async function startServer(
   process.on('SIGINT', () => handleTermination(128 + 2));
   process.on('SIGTERM', () => handleTermination(128 + 15));
 
-  return new Promise<{ app: Server; url: URL }>((res) => {
-    app.listen(port, host, () => {
-      res({ app, url: new URL(`http://${host}:${port}`) });
+  // Find an available port starting from the requested port
+  const availablePort = await findAvailablePort(port, host);
+
+  return new Promise<{ app: net.Server; url: URL }>((res, rej) => {
+    app.on('error', (err: NodeJS.ErrnoException) => {
+      rej(err);
+    });
+
+    app.listen(availablePort, host, () => {
+      if (availablePort !== port) {
+        output.note({
+          title: `Port ${port} was already in use, using port ${availablePort} instead`,
+        });
+      }
+      res({ app, url: new URL(`http://${host}:${availablePort}`) });
     });
   });
 }
@@ -756,6 +821,8 @@ function createFileWatcher() {
 
           currentProjectGraphClientResponse = projectGraphClientResponse;
           currentSourceMapsClientResponse = sourceMapResponse;
+          // Clear task graph cache when project graph changes
+          clearTaskGraphCache();
         } else {
           output.note({ title: 'No graph changes found.' });
         }
@@ -809,8 +876,8 @@ async function createProjectGraphAndSourceMapClientResponse(
   }
 
   let graph = pruneExternalNodes(projectGraph);
-  let fileMap: ProjectFileMap | undefined =
-    readFileMapCache()?.fileMap.projectFileMap;
+  const fileMap: ProjectFileMap =
+    readFileMapCache()?.fileMap.projectFileMap || {};
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 
@@ -883,44 +950,75 @@ async function createTaskGraphClientResponse(
   const nxJson = readNxJson();
 
   performance.mark('task graph generation:start');
-  const taskGraphs = getAllTaskGraphsForWorkspace(graph);
-  performance.mark('task graph generation:end');
 
-  const planner = new HashPlanner(
-    nxJson,
-    transferProjectGraph(transformProjectGraphForRust(graph))
-  );
-  performance.mark('task hash plan generation:start');
-  const plans: Record<string, string[]> = {};
-  for (const individualTaskGraph of Object.values(taskGraphs.taskGraphs)) {
-    for (const task of Object.values(individualTaskGraph.tasks)) {
-      if (plans[task.id]) {
-        continue;
-      }
+  const projects = Object.keys(graph.nodes);
+  const allTargets = new Set<string>();
 
-      plans[task.id] = planner.getPlans([task.id], individualTaskGraph)[
-        task.id
-      ];
-    }
+  for (const projectName in graph.nodes) {
+    const project = graph.nodes[projectName];
+    Object.keys(project.data.targets ?? {}).forEach((target) => {
+      allTargets.add(target);
+    });
   }
-  performance.mark('task hash plan generation:end');
 
-  performance.measure(
-    'task graph generation',
-    'task graph generation:start',
-    'task graph generation:end'
-  );
+  const targets = Array.from(allTargets);
 
-  performance.measure(
-    'task hash plan generation',
-    'task hash plan generation:start',
-    'task hash plan generation:end'
-  );
+  try {
+    const taskGraph = createTaskGraph(
+      graph,
+      {},
+      projects,
+      targets,
+      undefined,
+      {}
+    );
 
-  return {
-    ...taskGraphs,
-    plans,
-  };
+    performance.mark('task graph generation:end');
+
+    const planner = new HashPlanner(
+      nxJson,
+      transferProjectGraph(transformProjectGraphForRust(graph))
+    );
+    performance.mark('task hash plan generation:start');
+
+    const taskIds = Object.keys(taskGraph.tasks);
+    const plans =
+      taskIds.length > 0 ? planner.getPlans(taskIds, taskGraph) : {};
+
+    performance.mark('task hash plan generation:end');
+
+    performance.measure(
+      'task graph generation',
+      'task graph generation:start',
+      'task graph generation:end'
+    );
+
+    performance.measure(
+      'task hash plan generation',
+      'task hash plan generation:start',
+      'task hash plan generation:end'
+    );
+
+    return { taskGraph, plans, error: null };
+  } catch (err) {
+    performance.mark('task graph generation:end');
+    performance.measure(
+      'task graph generation (failed)',
+      'task graph generation:start',
+      'task graph generation:end'
+    );
+
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      plans: {},
+      error: err.message,
+    };
+  }
 }
 
 async function createExpandedTaskInputResponse(
@@ -953,106 +1051,148 @@ async function createExpandedTaskInputResponse(
   return response;
 }
 
-function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
-  taskGraphs: Record<string, TaskGraph>;
-  errors: Record<string, string>;
-} {
-  const taskGraphs: Record<string, TaskGraph> = {};
-  const taskGraphErrors: Record<string, string> = {};
+// Performance optimized functions for lazy loading task graphs
 
-  // TODO(cammisuli): improve performance here. Cache results or something.
-  for (const projectName in projectGraph.nodes) {
-    const project = projectGraph.nodes[projectName];
-    const targets = Object.keys(project.data.targets ?? {});
+// In-memory cache for task graphs to avoid regeneration
+const taskGraphCache = new Map<string, TaskGraphClientResponse>();
 
-    targets.forEach((target) => {
-      const taskId = createTaskId(projectName, target);
-      try {
-        taskGraphs[taskId] = createTaskGraph(
-          projectGraph,
-          {},
-          [projectName],
-          [target],
-          undefined,
-          {}
-        );
-      } catch (err) {
-        taskGraphs[taskId] = {
-          tasks: {},
-          dependencies: {},
-          continuousDependencies: {},
-          roots: [],
-        };
+// In-memory cache for expanded task inputs to avoid regeneration
+const expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
 
-        taskGraphErrors[taskId] = err.message;
-      }
-
-      const configurations = Object.keys(
-        project.data.targets[target]?.configurations || {}
-      );
-
-      if (configurations.length > 0) {
-        configurations.forEach((configuration) => {
-          const taskId = createTaskId(projectName, target, configuration);
-          try {
-            taskGraphs[taskId] = createTaskGraph(
-              projectGraph,
-              {},
-              [projectName],
-              [target],
-              configuration,
-              {}
-            );
-          } catch (err) {
-            taskGraphs[taskId] = {
-              tasks: {},
-              dependencies: {},
-              continuousDependencies: {},
-              roots: [],
-            };
-
-            taskGraphErrors[taskId] = err.message;
-          }
-        });
-      }
-    });
-  }
-
-  return { taskGraphs, errors: taskGraphErrors };
+// Clear cache when project graph changes
+function clearTaskGraphCache() {
+  taskGraphCache.clear();
+  expandedTaskInputsCache.clear();
 }
 
-function createTaskId(
-  projectId: string,
-  targetId: string,
-  configurationId?: string
-) {
-  if (configurationId) {
-    return `${projectId}:${targetId}:${configurationId}`;
+/**
+ * Creates a single task graph for multiple projects with multiple targets
+ * If no projects specified, returns graph for all projects with the targets
+ */
+async function createTaskGraphForTargetsAndProjects(
+  targetNames: string[],
+  projectNames?: string[],
+  configuration?: string
+): Promise<TaskGraphClientResponse> {
+  // Get project graph
+  let graph: ProjectGraph;
+  try {
+    graph = await createProjectGraphAsync({ exitOnError: false });
+  } catch (e) {
+    if (e instanceof ProjectGraphError) {
+      graph = e.getPartialProjectGraph();
+    }
+  }
+  const nxJson = readNxJson();
+
+  performance.mark(`task graph generation:start`);
+
+  let projectsToUse: string[];
+  if (projectNames && projectNames.length > 0) {
+    projectsToUse = projectNames;
   } else {
-    return `${projectId}:${targetId}`;
+    // Get all projects that have at least one of the targets
+    projectsToUse = Object.entries(graph.nodes)
+      .filter(([_, project]) =>
+        targetNames.some((targetName) => project.data.targets?.[targetName])
+      )
+      .map(([projectName]) => projectName);
+  }
+
+  try {
+    // Create single task graph
+    const taskGraph = createTaskGraph(
+      graph,
+      {},
+      projectsToUse,
+      targetNames,
+      configuration,
+      {}
+    );
+
+    performance.mark(`task graph generation:end`);
+
+    const planner = new HashPlanner(
+      nxJson,
+      transferProjectGraph(transformProjectGraphForRust(graph))
+    );
+    performance.mark('task hash plan generation:start');
+
+    const taskIds = Object.keys(taskGraph.tasks);
+    const plans =
+      taskIds.length > 0 ? planner.getPlans(taskIds, taskGraph) : {};
+
+    performance.mark('task hash plan generation:end');
+
+    performance.measure(
+      `task graph generation for ${targetNames.join(', ')}`,
+      `task graph generation:start`,
+      `task graph generation:end`
+    );
+    performance.measure(
+      'task hash plan generation',
+      'task hash plan generation:start',
+      'task hash plan generation:end'
+    );
+
+    return { taskGraph, plans, error: null };
+  } catch (err) {
+    performance.mark(`task graph generation:end`);
+    performance.measure(
+      `task graph generation for ${targetNames.join(', ')} (failed)`,
+      `task graph generation:start`,
+      `task graph generation:end`
+    );
+
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      plans: {},
+      error: err.message,
+    };
   }
 }
 
 async function getExpandedTaskInputs(
   taskId: string
 ): Promise<Record<string, string[]>> {
-  const [project] = taskId.split(':');
-  const taskGraphResponse = await createTaskGraphClientResponse(false);
+  // Check cache first
+  if (expandedTaskInputsCache.has(taskId)) {
+    return expandedTaskInputsCache.get(taskId)!;
+  }
+
+  // Use the optimized version that only creates the specific task graph needed
+  const [projectName, targetName, configuration] = taskId.split(':');
+  const taskGraphResponse = await createTaskGraphForTargetsAndProjects(
+    [targetName],
+    [projectName],
+    configuration
+  );
 
   const allWorkspaceFiles = await allFileData();
 
-  const inputs = taskGraphResponse.plans[taskId];
+  const inputs = taskGraphResponse.plans?.[taskId];
+  let result: Record<string, string[]> = {};
+
   if (inputs) {
-    return expandInputs(
+    result = expandInputs(
       inputs,
       currentProjectGraphClientResponse.projects.find(
-        (p) => p.name === project
+        (p) => p.name === projectName
       ),
       allWorkspaceFiles,
       currentProjectGraphClientResponse
     );
   }
-  return {};
+
+  // Cache the result
+  expandedTaskInputsCache.set(taskId, result);
+
+  return result;
 }
 
 function expandInputs(
@@ -1125,7 +1265,7 @@ function expandInputs(
       const projectInputExpanded = {
         [fileSetProject.name]: filterUsingGlobPatterns(
           fileSetProject.data.root,
-          depGraphClientResponse.fileMap[fileSetProject.name],
+          depGraphClientResponse.fileMap[fileSetProject.name] || [],
           fileSets
         ).map((f) => f.file),
       };

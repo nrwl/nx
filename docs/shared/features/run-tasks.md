@@ -3,7 +3,7 @@ title: 'Run Tasks'
 description: 'Learn how to use Nx task runner to efficiently manage and execute tasks across multiple projects in your monorepo, including parallel execution and caching.'
 ---
 
-# Tasks
+# Run Tasks
 
 {% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
 
@@ -138,7 +138,7 @@ npx nx run-many -t build lint test -p header footer
 
 Nx parallelizes these tasks, ensuring they **run in the correct order based on their dependencies** and [task pipeline configuration](/concepts/task-pipeline-configuration). You can also [control how many tasks run in parallel at once](/recipes/running-tasks/run-tasks-in-parallel).
 
-Learn more about the [run-many](/nx-api/nx/documents/run-many) command.
+Learn more about the [run-many](/reference/core-api/nx/documents/run-many) command.
 
 ### Run Tasks on Projects Affected by a PR
 
@@ -218,7 +218,7 @@ However, you need to specify for which targets this ordering is important. In th
 }
 ```
 
-This means that if we run `nx build myreactapp`, Nx will first execute `build` on `modules-shared-ui` and `modules-products` before running `build` on `myreactapp`.
+This means that if we run `nx build myreactapp`, Nx will first execute `build` on `shared-ui` and `feat-products` before running `build` on `myreactapp`.
 
 You can define these task dependencies globally for your workspace in `nx.json` or individually in each project's `project.json` file.
 
@@ -250,7 +250,7 @@ Sometimes, you need tasks that apply to the entire codebase rather than a single
 
 > Note the `nx: {}` property on the `package.json`. This is necessary to inform Nx about this root-level project. The property can also be expanded to specify cache inputs and outputs.
 
-If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/nx-api/nx/documents/exec) command:
+If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/reference/core-api/nx/documents/exec) command:
 
 ```json {% fileName="package.json" %}
 {

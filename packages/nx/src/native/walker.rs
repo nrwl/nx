@@ -4,8 +4,9 @@ use std::path::{Path, PathBuf};
 
 use crate::native::glob::build_glob_set;
 
+#[cfg(not(target_arch = "wasm32"))]
 use crate::native::logger::enable_logger;
-use crate::native::utils::{Normalize, get_mod_time};
+use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -130,7 +131,7 @@ where
 
             if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
                 return Continue;
-            }
+            };
 
             let Ok(file_path) = dir_entry.path().strip_prefix(directory) else {
                 return Continue;
@@ -175,8 +176,20 @@ where
     let mut walker = WalkBuilder::new(&directory);
     walker.require_git(false);
     walker.hidden(false);
-    walker.git_ignore(use_ignores);
+
     if use_ignores {
+        // Handle parent .gitignore files based on git repository boundaries
+        if let Some(gitignore_paths) = parent_gitignore_files(&directory) {
+            // Workspace is git root or nested in git repo - use manual parent traversal
+            walker.parents(false);
+            for gitignore_path in gitignore_paths {
+                walker.add_ignore(gitignore_path);
+            }
+        } else {
+            // No git repo found - use automatic parent traversal for backwards compatibility
+            walker.parents(true);
+        }
+
         walker.add_custom_ignore_filename(".nxignore");
     }
 
@@ -313,5 +326,109 @@ nested/child-two/
                 "v1/packages/pkg-b/pkg-b.txt"
             )
         );
+    }
+
+    #[test]
+    fn ignores_parent_gitignore_when_workspace_is_git_root() {
+        let parent_temp = assert_fs::TempDir::new().unwrap();
+        parent_temp.child(".gitignore").write_str("*").unwrap();
+        parent_temp.child("workspace/.git").touch().unwrap();
+        parent_temp
+            .child("workspace/file1.txt")
+            .write_str("test")
+            .unwrap();
+        parent_temp
+            .child("workspace/project.json")
+            .write_str("test")
+            .unwrap();
+
+        let workspace_path = parent_temp.path().join("workspace");
+        let mut files: Vec<_> = nx_walker(&workspace_path, true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        assert_eq!(
+            files,
+            vec!["file1.txt".to_string(), "project.json".to_string()]
+        );
+    }
+
+    #[test]
+    fn respects_gitignore_within_git_repo_but_not_above() {
+        let temp_dir = assert_fs::TempDir::new().unwrap();
+
+        // Create a .gitignore file above the git repository (should be ignored)
+        temp_dir
+            .child(".gitignore")
+            .write_str("ignored_by_parent.txt")
+            .unwrap();
+
+        // Create the git repository root
+        temp_dir.child("repo/.git").touch().unwrap();
+
+        // Create a .gitignore file within the git repository (should be respected)
+        temp_dir
+            .child("repo/.gitignore")
+            .write_str("ignored_by_repo.txt")
+            .unwrap();
+
+        // Create test files
+        temp_dir
+            .child("repo/workspace/file1.txt")
+            .write_str("test")
+            .unwrap();
+        temp_dir
+            .child("repo/workspace/project.json")
+            .write_str("test")
+            .unwrap();
+        temp_dir
+            .child("repo/workspace/ignored_by_parent.txt")
+            .write_str("test")
+            .unwrap();
+        temp_dir
+            .child("repo/workspace/ignored_by_repo.txt")
+            .write_str("test")
+            .unwrap();
+
+        let workspace_path = temp_dir.path().join("repo/workspace");
+        let mut files: Vec<_> = nx_walker(&workspace_path, true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        // Should include ignored_by_parent.txt (parent .gitignore is ignored)
+        // Should exclude ignored_by_repo.txt (repo .gitignore is respected)
+        assert_eq!(
+            files,
+            vec![
+                "file1.txt".to_string(),
+                "ignored_by_parent.txt".to_string(),
+                "project.json".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn respects_parent_gitignore_when_no_git_repo_found() {
+        let parent_temp = assert_fs::TempDir::new().unwrap();
+        parent_temp.child(".gitignore").write_str("*").unwrap();
+        parent_temp
+            .child("workspace/file1.txt")
+            .write_str("test")
+            .unwrap();
+        parent_temp
+            .child("workspace/project.json")
+            .write_str("test")
+            .unwrap();
+
+        let workspace_path = parent_temp.path().join("workspace");
+        let mut files: Vec<_> = nx_walker(&workspace_path, true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        // All files should be ignored by parent .gitignore since no git repo was found
+        assert!(files.is_empty());
     }
 }

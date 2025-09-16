@@ -40,6 +40,7 @@
       "type": "string",
       "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests.",
+      "x-prompt": "Which unit test runner would you like to use?",
       "default": "none",
       "x-priority": "important"
     },

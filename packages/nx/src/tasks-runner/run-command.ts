@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import * as ora from 'ora';
+const ora = require('ora');
 import type { Observable } from 'rxjs';
 import {
   NxJsonConfiguration,
@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logError, logInfo, RunMode } from '../native';
+import { logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -200,7 +200,8 @@ async function getTerminalOutputLifeCycle(
         nxArgs ?? {},
         nxJson.tui ?? {},
         titleText,
-        workspaceRoot
+        workspaceRoot,
+        taskGraph
       );
       lifeCycles.unshift(appLifeCycle);
 
@@ -216,13 +217,13 @@ async function getTerminalOutputLifeCycle(
         // @ts-ignore
         return (chunk, encoding, callback) => {
           if (isError) {
-            logError(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()
             );
           } else {
-            logInfo(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()
@@ -436,6 +437,7 @@ export async function runCommand(
       await runPreTasksExecution({
         workspaceRoot,
         nxJsonConfiguration: nxJson,
+        argv: process.argv,
       });
 
       const { taskResults, completed } = await runCommandForTasks(
@@ -468,6 +470,7 @@ export async function runCommand(
         taskResults,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
+        argv: process.argv,
       });
 
       return exitCode;
@@ -1046,9 +1049,7 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
   const historyLifeCycle = getTasksHistoryLifeCycle();
-  if (historyLifeCycle) {
-    lifeCycles.push(historyLifeCycle);
-  }
+  lifeCycles.push(historyLifeCycle);
   return lifeCycles;
 }
 
@@ -1154,6 +1155,18 @@ function getTasksRunnerPath(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>
 ) {
+  // If running inside of Codex, there will be no internet access, so we cannot use the cloud runner, regardless of other config.
+  // We can infer this scenario by checking for certain environment variables defined in their base image: https://github.com/openai/codex-universal
+  if (process.env.CODEX_ENV_NODE_VERSION) {
+    output.warn({
+      title: 'Codex environment detected, using default tasks runner',
+      bodyLines: [
+        'Codex does not have internet access when it runs tasks, so Nx will use the default tasks runner and only leverage local caching.',
+      ],
+    });
+    return defaultTasksRunnerPath;
+  }
+
   const isCloudRunner =
     // No tasksRunnerOptions for given --runner
     nxJson.nxCloudAccessToken ||
@@ -1163,6 +1176,7 @@ function getTasksRunnerPath(
       nxJson.tasksRunnerOptions?.[runner]?.runner
     ) ||
     // Cloud access token specified in env var.
+    process.env.NX_CLOUD_AUTH_TOKEN ||
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;

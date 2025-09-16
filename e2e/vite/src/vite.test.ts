@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 import { names } from '@nx/devkit';
 

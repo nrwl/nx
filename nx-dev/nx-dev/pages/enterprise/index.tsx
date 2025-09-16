@@ -13,20 +13,38 @@ import {
   Security,
   TestimonialCarousel,
   VmwareTestimonial,
-} from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-enterprise';
 import { ReactElement } from 'react';
+import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function Enterprise(): ReactElement {
   const router = useRouter();
 
+  const scrollCTAConfig: ButtonLinkProps[] = [
+    {
+      href: '/enterprise/trial',
+      variant: 'primary',
+      size: 'small',
+      title: 'Request a free trial',
+      children: 'Request a free trial',
+      onClick: () =>
+        sendCustomEvent(
+          'request-trial-click',
+          'scrolling-header-cta',
+          'enterprise'
+        ),
+    },
+  ];
+
   return (
     <>
       <NextSeo
-        title="Solving the Performance Paradox, get speed and scale"
+        title="Develop like an enterprise. Deliver like a startup."
         description="Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Solving the Performance Paradox, get speed and scale',
+          title: 'Develop like an enterprise. Deliver like a startup.',
           description:
             "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
           images: [
@@ -34,7 +52,7 @@ export function Enterprise(): ReactElement {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -42,7 +60,7 @@ export function Enterprise(): ReactElement {
           type: 'website',
         }}
       />
-      <EnterpriseLayout>
+      <EnterpriseLayout scrollCTAConfig={scrollCTAConfig}>
         <div>
           <Hero />
           <CustomerLogos />

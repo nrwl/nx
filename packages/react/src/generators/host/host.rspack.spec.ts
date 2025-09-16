@@ -125,6 +125,12 @@ describe('hostGenerator', () => {
       expect(tree.exists('test/src/bootstrap.jsx')).toBeTruthy();
       expect(tree.exists('test/src/main.jsx')).toBeTruthy();
       expect(tree.exists('test/src/app/app.jsx')).toBeTruthy();
+      // as no remotes provided, dynamic federation helper should not be included
+      expect(tree.read('test/src/app/app.jsx', 'utf-8')).not.toEqual(
+        expect.stringContaining(
+          `import { loadRemote } from '@module-federation/enhanced/runtime';`
+        )
+      );
     });
 
     it('should generate host files and configs when --js=false', async () => {
@@ -355,7 +361,7 @@ describe('hostGenerator', () => {
           typescriptConfiguration: false,
           bundler: 'rspack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${remote}.`);
     });
 
     it('should generate create files with dynamic host', async () => {
@@ -376,14 +382,14 @@ describe('hostGenerator', () => {
 
       expect(tree.read('myhostapp/src/main.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { init } from '@module-federation/enhanced/runtime';
+        "import { registerRemotes } from '@module-federation/enhanced/runtime';
 
         fetch('/assets/module-federation.manifest.json')
           .then((res) => res.json())
           .then((remotes: Record<string, string>) =>
             Object.entries(remotes).map(([name, entry]) => ({ name, entry }))
           )
-          .then((remotes) => init({ name: 'myhostapp', remotes }))
+          .then((remotes) => registerRemotes(remotes))
           .then(() => import('./bootstrap').catch((err) => console.error(err)));
         "
       `);

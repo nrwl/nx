@@ -214,6 +214,7 @@ describe('application generator', () => {
             },
           },
           test: {
+            name: '@proj/test',
             watch: false,
             globals: true,
             environment: 'jsdom',

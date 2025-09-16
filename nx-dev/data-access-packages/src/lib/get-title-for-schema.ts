@@ -1,4 +1,4 @@
-import { JsonSchema1 } from '@nx/nx-dev/models-package';
+import { JsonSchema1 } from '@nx/nx-dev-models-package';
 
 export function getTitleForSchema(
   reference: string,

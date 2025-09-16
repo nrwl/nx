@@ -37,7 +37,7 @@ export async function addE2e(
     e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve-static`,
-    e2eCiBaseUrl: `http://localhost:4200`,
+    e2eCiBaseUrl: `http://localhost:${options.port ?? 4200}`,
     e2eDevServerTarget: `${options.projectName}:serve`,
   };
 
@@ -81,7 +81,9 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200
+          options.devServerPort ?? 4200,
+          // If the user manually sets the port, then use it for dev and preview
+          options.port
         )
       : await getViteE2EWebServerInfo(
           tree,
@@ -91,7 +93,9 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200
+          options.devServerPort ?? 4200,
+          // If the user manually sets the port, then use it for dev and preview
+          options.port
         );
   } else if (options.bundler === 'rsbuild') {
     ensurePackage('@nx/rsbuild', nxVersion);

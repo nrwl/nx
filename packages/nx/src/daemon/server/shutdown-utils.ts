@@ -128,4 +128,5 @@ export async function respondWithErrorAndExit(
 
   // Respond with the original error
   await respondToClient(socket, serializeResult(error, null, null), null);
+  process.exit(1);
 }

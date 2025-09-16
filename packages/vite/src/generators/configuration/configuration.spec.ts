@@ -296,7 +296,7 @@ describe('@nx/vite:configuration', () => {
             'error',
             {
               ignoredFiles: [
-                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
                 '{projectRoot}/vite.config.{js,ts,mjs,mts}',
               ],
             },
@@ -341,7 +341,7 @@ describe('@nx/vite:configuration', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -371,8 +371,8 @@ describe('@nx/vite:configuration', () => {
         {
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -388,7 +388,7 @@ describe('@nx/vite:configuration', () => {
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

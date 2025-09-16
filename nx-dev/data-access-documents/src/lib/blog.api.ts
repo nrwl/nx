@@ -1,6 +1,6 @@
 import { readFileSync, accessSync, constants } from 'fs';
 import { join, basename, parse, resolve } from 'path';
-import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
+import { extractFrontmatter } from '@nx/nx-dev-ui-markdoc';
 import { sortPosts } from './blog.util';
 import { BlogPostDataEntry } from './blog.model';
 import { readFile, readdir } from 'fs/promises';
@@ -66,7 +66,8 @@ export class BlogApi {
           : null,
         tags: frontmatter.tags ?? [],
         reposts: frontmatter.reposts ?? [],
-        pinned: frontmatter.pinned ?? false,
+        // Do not default to 'false' so you can 'unpin' a blog post
+        pinned: frontmatter.pinned ?? null,
         ogImage: image,
         ogImageType: type,
         filePath,

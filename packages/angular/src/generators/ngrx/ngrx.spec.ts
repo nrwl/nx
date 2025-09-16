@@ -25,7 +25,7 @@ describe('ngrx', () => {
   const defaultOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    parent: 'myapp/src/app/app.module.ts',
+    parent: 'myapp/src/app/app-module.ts',
     name: 'users',
     skipFormat: true,
   };
@@ -41,7 +41,7 @@ describe('ngrx', () => {
   const defaultModuleOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    module: 'myapp/src/app/app.module.ts',
+    module: 'myapp/src/app/app-module.ts',
     name: 'users',
     skipFormat: true,
   };
@@ -54,32 +54,32 @@ describe('ngrx', () => {
   describe('NgModule Syntax', () => {
     beforeEach(() => {
       jest.clearAllMocks();
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       createApp(tree, 'myapp');
       appConfig = getAppConfig();
       statePath = `${dirname(appConfig.appModule)}/+state`;
     });
 
     it('should error when the module could not be found', async () => {
-      const modulePath = 'not-existing.module.ts';
+      const modulePath = 'not-existing-module.ts';
 
       await expect(
         ngrxGenerator(tree, {
           ...defaultOptions,
           module: modulePath,
         })
-      ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
+      ).rejects.toThrow(`Module does not exist: ${modulePath}.`);
     });
 
     it('should error when the module could not be found using --module', async () => {
-      const modulePath = 'not-existing.module.ts';
+      const modulePath = 'not-existing-module.ts';
 
       await expect(
         ngrxGenerator(tree, {
           ...defaultOptions,
           module: modulePath,
         })
-      ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
+      ).rejects.toThrow(`Module does not exist: ${modulePath}.`);
     });
 
     it('should add an empty root module when minimal and root are set to true', async () => {
@@ -90,7 +90,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -123,7 +123,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -135,7 +135,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -144,12 +144,12 @@ describe('ngrx', () => {
 
       await ngrxGenerator(tree, {
         ...defaultOptions,
-        module: 'no-router-app/src/app/app.module.ts',
+        module: 'no-router-app/src/app/app-module.ts',
         root: true,
       });
 
       const appModule = tree.read(
-        'no-router-app/src/app/app.module.ts',
+        'no-router-app/src/app/app-module.ts',
         'utf-8'
       );
       expect(appModule).not.toContain('StoreRouterConnectingModule.forRoot()');
@@ -163,7 +163,7 @@ describe('ngrx', () => {
         facade: true,
       });
 
-      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).toContain(
+      expect(tree.read('myapp/src/app/app-module.ts', 'utf-8')).toContain(
         'providers: [UsersFacade]'
       );
     });
@@ -176,7 +176,7 @@ describe('ngrx', () => {
         facade: false,
       });
 
-      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
+      expect(tree.read('myapp/src/app/app-module.ts', 'utf-8')).not.toContain(
         'providers: [UsersFacade]'
       );
     });
@@ -189,7 +189,7 @@ describe('ngrx', () => {
         facade: true,
       });
 
-      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
+      expect(tree.read('myapp/src/app/app-module.ts', 'utf-8')).not.toContain(
         'providers: [UsersFacade]'
       );
     });
@@ -208,7 +208,7 @@ describe('ngrx', () => {
       expectFileToExist('myapp/src/app/+state/users.selectors.ts');
       expectFileToExist('myapp/src/app/+state/users.selectors.spec.ts');
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -426,7 +426,7 @@ describe('ngrx', () => {
 
       expect(devkit.formatFiles).toHaveBeenCalled();
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')
@@ -512,23 +512,20 @@ describe('ngrx', () => {
   describe('Standalone APIs', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'my-app',
         standalone: true,
         routing: true,
         skipFormat: true,
       });
-      tree.write(
-        'my-app/src/app/app.component.html',
-        '<router-outlet></router-outlet>'
-      );
+      tree.write('my-app/src/app/app.html', '<router-outlet></router-outlet>');
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
-export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
+export const appRoutes: Routes = [{ path: '', component: NxWelcome }];
 `
       );
     });
@@ -543,7 +540,7 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
           ...defaultStandaloneOptions,
           parent: parentPath,
         })
-      ).rejects.toThrowError(`Parent does not exist: ${parentPath}.`);
+      ).rejects.toThrow(`Parent does not exist: ${parentPath}.`);
     });
 
     it('should add an empty provideStore when minimal and root are set to true', async () => {
@@ -601,9 +598,9 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
-export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];
+export const appRoutes: Routes = [{ path: 'home', component: NxWelcome }];
 `
       );
 
@@ -664,7 +661,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
   describe('angular compat support', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'myapp',
         standalone: false,
@@ -674,35 +671,35 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '17.0.0',
+          '@angular/core': '18.0.0',
         },
       }));
     });
 
-    it('should install the ngrx 17 packages', async () => {
+    it('should install the ngrx 18 packages', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV17.ngrxVersion
+        backwardCompatibleVersions.angularV18.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV17.ngrxVersion
+        backwardCompatibleVersions.angularV18.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV17.ngrxVersion
+        backwardCompatibleVersions.angularV18.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV17.ngrxVersion
+        backwardCompatibleVersions.angularV18.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV17.ngrxVersion
+        backwardCompatibleVersions.angularV18.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV17.ngrxVersion
+        backwardCompatibleVersions.angularV18.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV17.ngrxVersion
+        backwardCompatibleVersions.angularV18.ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
@@ -710,7 +707,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
 
   describe('rxjs v6 support', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'myapp',
         standalone: false,
@@ -731,6 +728,114 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
       expect(
         tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
       ).toMatchSnapshot();
+    });
+
+    it('should generate the ngrx facade tests using the "first" operator', async () => {
+      await ngrxGenerator(tree, { ...defaultOptions, facade: true });
+
+      expect(tree.read('myapp/src/app/+state/users.facade.spec.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { TestBed } from '@angular/core/testing';
+        import { EffectsModule } from '@ngrx/effects';
+        import { StoreModule, Store } from '@ngrx/store';
+        import { first } from 'rxjs/operators';
+
+        import * as UsersActions from './users.actions';
+        import { UsersEffects } from './users.effects';
+        import { UsersFacade } from './users.facade';
+        import { UsersEntity } from './users.models';
+        import {
+          USERS_FEATURE_KEY,
+          UsersState,
+          initialUsersState,
+          usersReducer
+        } from './users.reducer';
+        import * as UsersSelectors from './users.selectors';
+
+        interface TestSchema {
+          users: UsersState;
+        }
+
+        describe('UsersFacade', () => {
+          let facade: UsersFacade;
+          let store: Store<TestSchema>;
+          const createUsersEntity = (id: string, name = ''): UsersEntity => ({
+            id,
+            name: name || \`name-\${id}\`
+          });
+
+          describe('used in NgModule', () => {
+            beforeEach(() => {
+              @NgModule({
+                imports: [
+                  StoreModule.forFeature(USERS_FEATURE_KEY, usersReducer),
+                  EffectsModule.forFeature([UsersEffects])
+                ],
+                providers: [UsersFacade]
+              })
+              class CustomFeatureModule {}
+
+              @NgModule({
+                imports: [
+                  StoreModule.forRoot({}),
+                  EffectsModule.forRoot([]),
+                  CustomFeatureModule,
+                ]
+              })
+              class RootModule {}
+              TestBed.configureTestingModule({ imports: [RootModule] });
+
+              store = TestBed.inject(Store);
+              facade = TestBed.inject(UsersFacade);
+            });
+
+            /**
+             * The initially generated facade::loadAll() returns empty array
+             */
+            it('loadAll() should return empty list with loaded == true', async () => {
+              let list = await facade.allUsers$.pipe(first()).toPromise();
+              let isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(0);
+              expect(isLoaded).toBe(false);
+
+              facade.init();
+
+              list = await facade.allUsers$.pipe(first()).toPromise();
+              isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(0);
+              expect(isLoaded).toBe(true);
+            });
+
+            /**
+             * Use \`loadUsersSuccess\` to manually update list
+             */
+            it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
+              let list = await facade.allUsers$.pipe(first()).toPromise();
+              let isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(0);
+              expect(isLoaded).toBe(false);
+
+              store.dispatch(UsersActions.loadUsersSuccess({
+                users: [
+                  createUsersEntity('AAA'),
+                  createUsersEntity('BBB')
+                ]})
+              );
+
+              list = await facade.allUsers$.pipe(first()).toPromise();
+              isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(2);
+              expect(isLoaded).toBe(true);
+            });
+          });
+        });
+        "
+      `);
     });
   });
 });

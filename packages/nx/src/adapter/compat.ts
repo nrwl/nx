@@ -45,6 +45,8 @@ export const allowedProjectExtensions = [
   'release',
   'includedScripts',
   'metadata',
+  'owners',
+  'nxCloudImplicitDependencies',
 ] as const;
 
 // If we pass props on the workspace that angular doesn't know about,
@@ -84,6 +86,7 @@ export const allowedWorkspaceExtensions = [
   'useLegacyCache',
   'maxCacheSize',
   'tui',
+  'owners',
 ] as const;
 
 if (!patched) {
@@ -110,6 +113,10 @@ if (!patched) {
   try {
     require('@angular-devkit/build-angular/src/utils/version').assertCompatibleAngularVersion =
       () => {};
+  } catch (e) {}
+
+  try {
+    require('@angular/build/private').assertCompatibleAngularVersion = () => {};
   } catch (e) {}
 
   patched = true;

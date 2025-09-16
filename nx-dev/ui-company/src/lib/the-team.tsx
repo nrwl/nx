@@ -1,4 +1,4 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 
 const teamMembers = [
@@ -6,6 +6,11 @@ const teamMembers = [
     name: 'Altan Stalker',
     title: 'Architect',
     imageUrl: 'altan-stalker.avif',
+  },
+  {
+    name: 'Andrew Glidden',
+    title: 'Account Executive',
+    imageUrl: 'andrew-glidden.avif',
   },
   {
     name: 'Austin Fahsl',
@@ -34,7 +39,7 @@ const teamMembers = [
   },
   {
     name: 'Colum Ferry',
-    title: 'Senior Engineer',
+    title: 'Architect',
     imageUrl: 'colum-ferry.avif',
   },
   {
@@ -48,9 +53,9 @@ const teamMembers = [
     imageUrl: 'craigory-coppola.avif',
   },
   {
-    name: 'Emily Xiong',
+    name: 'Dillon Chanis',
     title: 'Senior Engineer',
-    imageUrl: 'emily-xiong.avif',
+    imageUrl: 'dillon-chanis.avif',
   },
   {
     name: 'Drew Romney',
@@ -61,11 +66,6 @@ const teamMembers = [
     name: 'Heidi Grütter',
     title: 'Director of Product Marketing',
     imageUrl: 'heidi-grutter.avif',
-  },
-  {
-    name: 'Isaac Mann',
-    title: 'Architect',
-    imageUrl: 'isaac-mann.avif',
   },
   {
     name: 'Jack Butler',
@@ -118,11 +118,6 @@ const teamMembers = [
     imageUrl: 'juri-strumpflohner.avif',
   },
   {
-    name: 'Katerina Skroumpelou',
-    title: 'Senior Engineer',
-    imageUrl: 'katerina-skroumpelou.avif',
-  },
-  {
     name: 'Leosvel Perez Espinosa',
     title: 'Senior Engineer',
     imageUrl: 'leosvel-perez-espinosa.avif',
@@ -143,11 +138,6 @@ const teamMembers = [
     imageUrl: 'mark-lindsey.avif',
   },
   {
-    name: 'Mike Hartington',
-    title: 'Director of Developer Relations',
-    imageUrl: 'mike-hartington.avif',
-  },
-  {
     name: 'Miroslav Jonas',
     title: 'Developer Productivity Engineer',
     imageUrl: 'miroslav-jonas.avif',
@@ -158,11 +148,6 @@ const teamMembers = [
     imageUrl: 'nate-bohn.avif',
   },
   {
-    name: 'Nicholas Cunningham',
-    title: 'Senior Engineer',
-    imageUrl: 'nicholas-cunningham.avif',
-  },
-  {
     name: 'Nicole Oliver',
     title: 'Senior Engineer',
     imageUrl: 'nicole-oliver.avif',
@@ -171,11 +156,6 @@ const teamMembers = [
     name: 'Patrick Mariglia',
     title: 'Software Engineer',
     imageUrl: 'patrick-mariglia.avif',
-  },
-  {
-    name: 'Phillip Dacosta',
-    title: 'Software Engineer',
-    imageUrl: 'phillip-dacosta.avif',
   },
   {
     name: 'Philip Fulcher',
@@ -198,13 +178,13 @@ const teamMembers = [
     imageUrl: 'steven-nance.avif',
   },
   {
-    name: 'Whitney Loy',
-    title: 'Operations Manager',
-    imageUrl: 'whitney-loy.avif',
+    name: 'Szymon Wojciechowski',
+    title: 'Senior Engineer',
+    imageUrl: 'szymon-wojciechowski.avif',
   },
   {
     name: 'Zack DeRose',
-    title: 'Architect',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'zack-derose.avif',
   },
 ];

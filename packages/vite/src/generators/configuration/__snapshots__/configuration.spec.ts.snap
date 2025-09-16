@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 1`] = `
 "/// <reference types='vitest' />
@@ -17,6 +17,7 @@ export default defineConfig(() => ({
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+      pathsToAliases: false,
     }),
   ],
   // Uncomment this if you are using workers.
@@ -47,6 +48,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
+    name: 'my-lib',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -188,6 +190,7 @@ export default defineConfig(() => ({
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+      pathsToAliases: false,
     }),
   ],
   // Uncomment this if you are using workers.
@@ -240,6 +243,7 @@ export default defineConfig(() => ({
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+      pathsToAliases: false,
     }),
   ],
   // Uncomment this if you are using workers.
@@ -270,6 +274,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
+    name: 'react-lib-nonb-jest',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -324,6 +329,7 @@ export default defineConfig({
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+      pathsToAliases: false,
     }),
   ],
 
@@ -480,6 +486,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
+    name: 'my-test-react-app',
     watch: false,
     globals: true,
     environment: 'jsdom',

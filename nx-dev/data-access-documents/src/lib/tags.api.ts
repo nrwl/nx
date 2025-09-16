@@ -1,4 +1,4 @@
-import { RelatedDocument } from '@nx/nx-dev/models-document';
+import { RelatedDocument } from '@nx/nx-dev-models-document';
 
 export class TagsApi {
   private readonly manifest: Record<string, RelatedDocument[]>;

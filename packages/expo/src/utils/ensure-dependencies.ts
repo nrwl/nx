@@ -11,41 +11,47 @@ import {
   expoMetroRuntimeVersion,
   expoSplashScreenVersion,
   expoStatusBarVersion,
+  expoSystemUiVersion,
   jestExpoVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeWebVersion,
-  reactTestRendererVersion,
-  testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesReactVersion,
 } from './versions';
 
-export function ensureDependencies(host: Tree): GeneratorCallback {
+export function ensureDependencies(
+  host: Tree,
+  unitTestRunner: 'jest' | 'none'
+): GeneratorCallback {
+  const devDependencies: Record<string, string> = {
+    '@types/react': typesReactVersion,
+    'babel-preset-expo': babelPresetExpoVersion,
+  };
+
   const isPnpm = detectPackageManager(host.root) === 'pnpm';
+  if (isPnpm) {
+    devDependencies['@babel/runtime'] = babelRuntimeVersion; // @babel/runtime is used by react-native-svg
+  }
+
+  if (unitTestRunner === 'jest') {
+    devDependencies['@testing-library/react-native'] =
+      testingLibraryReactNativeVersion;
+    devDependencies['jest-expo'] = jestExpoVersion;
+  }
+
   return addDependenciesToPackageJson(
     host,
     {
       'expo-splash-screen': expoSplashScreenVersion,
       'expo-status-bar': expoStatusBarVersion,
+      'expo-system-ui': expoSystemUiVersion,
       'react-native-web': reactNativeWebVersion,
       '@expo/metro-config': expoMetroConfigVersion,
       '@expo/metro-runtime': expoMetroRuntimeVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
     },
-    {
-      '@types/react': typesReactVersion,
-      'react-test-renderer': reactTestRendererVersion,
-      '@testing-library/react-native': testingLibraryReactNativeVersion,
-      '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'jest-expo': jestExpoVersion,
-      'babel-preset-expo': babelPresetExpoVersion,
-      ...(isPnpm
-        ? {
-            '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
-          }
-        : {}),
-    }
+    devDependencies
   );
 }

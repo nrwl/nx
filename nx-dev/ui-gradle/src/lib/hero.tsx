@@ -4,8 +4,8 @@ import {
   SectionHeading,
   Strong,
   SectionDescription,
-} from '@nx/nx-dev/ui-common';
-import { JavaIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { JavaIcon } from '@nx/nx-dev-ui-icons';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { ReactElement } from 'react';
 
@@ -25,8 +25,8 @@ export function Hero(): ReactElement {
         </SectionHeading>
         <SectionDescription as="h2" className="mt-6">
           Get distributed tasks, intelligent caching, and target affected
-          packages to optimize your build process and CI pipeline. Support for{' '}
-          <Strong>Gradle</Strong> and <Strong>Maven</Strong> (coming soon)
+          packages to optimize your build process and CI pipeline for{' '}
+          <Strong>Java</Strong> projects.
         </SectionDescription>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
@@ -76,7 +76,7 @@ export function GettingStarted(): ReactElement {
         <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 ">
           <GetStartedCard
             title="Install Nx"
-            command="brew tap nrwl/nx && brew install nx"
+            command="brew install nx"
             description="Get the <code>nx</code> executable from homebrew"
           />
           <GetStartedCard

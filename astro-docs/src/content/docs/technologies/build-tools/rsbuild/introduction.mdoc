@@ -1,0 +1,36 @@
+---
+title: Overview of the Nx Rsbuild Plugin
+description: The Nx Plugin for Rsbuild contains executors and generators that support building applications using Rsbuild.
+sidebar:
+  label: Introduction
+---
+
+The Nx Plugin for Rsbuild contains executors and generators that support building applications using Rsbuild.
+
+## Setting Up @nx/rsbuild
+
+### Installation
+
+{% aside type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/rsbuild` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+{% /aside %}
+
+In any Nx workspace, you can install `@nx/rsbuild` by running the following command:
+
+```shell frame="none"
+nx add @nx/rsbuild
+```
+
+This will install the correct version of `@nx/rsbuild`.
+
+## Using @nx/rsbuild
+
+### Generate a new project using Rsbuild
+
+You can generate a new application that uses Rsbuild with the following command:
+
+```bash frame="none"
+nx g @nx/react:app myapp --bundler=rsbuild
+```
+
+This will create a new application configured to use Rsbuild for building.

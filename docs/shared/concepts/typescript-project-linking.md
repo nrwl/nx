@@ -190,7 +190,7 @@ Each project's `tsconfig.lib.json` file extends the project's `tsconfig.json` fi
 
 ```jsonc {% fileName="packages/cart/tsconfig.lib.json" %}
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     // Any overrides
   },
@@ -212,7 +212,7 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 
 ```jsonc {% fileName="packages/cart/tsconfig.spec.json" %}
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     // Any overrides
   },

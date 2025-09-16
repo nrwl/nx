@@ -15,7 +15,7 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -35,7 +35,11 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit"
+    "@nx/devkit": "workspace:*",
+    "toml-eslint-parser": "^0.10.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

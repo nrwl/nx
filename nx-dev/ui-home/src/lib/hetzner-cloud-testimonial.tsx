@@ -1,19 +1,20 @@
+'use client';
 import { ComponentProps, ReactElement, useState } from 'react';
 import {
   Button,
   ButtonLink,
   SectionDescription,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { HetznerCloudIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { HetznerCloudIcon } from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { VideoModal } from '@nx/nx-dev/ui-common/src/lib/video-modal';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { VideoModal } from '@nx/nx-dev-ui-common/src/lib/video-modal';
 
 function PlayButton({
   className,
@@ -182,6 +183,13 @@ export function HetznerCloudTestimonial(): ReactElement {
                   title="Learn about Nx Enterprise"
                   variant="secondary"
                   size="small"
+                  onClick={() =>
+                    sendCustomEvent(
+                      'enterprise-click',
+                      'hetzner-cloud-testimonial',
+                      'homepage'
+                    )
+                  }
                 >
                   Learn about Nx Enterprise
                 </ButtonLink>
@@ -189,6 +197,13 @@ export function HetznerCloudTestimonial(): ReactElement {
                   href="/customers"
                   prefetch={false}
                   className="text-sm/6 font-semibold"
+                  onClick={() =>
+                    sendCustomEvent(
+                      'customers-click',
+                      'hetzner-cloud-testimonial',
+                      'homepage'
+                    )
+                  }
                 >
                   See our customers <span aria-hidden="true">→</span>
                 </Link>

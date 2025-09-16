@@ -10,6 +10,7 @@ import {
   jitiVersion,
   nxVersion,
   viteV5Version,
+  viteV6Version,
   viteVersion,
 } from '../../../utils/versions';
 import { InitGeneratorSchema } from '../schema';
@@ -26,7 +27,11 @@ export async function checkDependenciesInstalled(
     {
       '@nx/vite': nxVersion,
       '@nx/web': nxVersion,
-      vite: schema.useViteV5 ? viteV5Version : viteVersion,
+      vite: schema.useViteV5
+        ? viteV5Version
+        : schema.useViteV6
+        ? viteV6Version
+        : viteVersion,
       vitest: vitest,
       '@vitest/ui': vitest,
       jiti: jitiVersion,

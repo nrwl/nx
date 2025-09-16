@@ -1,6 +1,7 @@
 import {
   detectPackageManager,
   ExecutorContext,
+  isWorkspacesEnabled,
   names,
   PackageManager,
   readJsonFile,
@@ -121,11 +122,7 @@ function copyPackageJsonAndLock(
   const packageJson = pathResolve(workspaceRoot, 'package.json');
   const rootPackageJson = readJsonFile<PackageJson>(packageJson);
   // do not copy package.json and lock file if workspaces are enabled
-  if (
-    (packageManager === 'pnpm' &&
-      existsSync(pathResolve(workspaceRoot, 'pnpm-workspace.yaml'))) ||
-    rootPackageJson.workspaces
-  ) {
+  if (isWorkspacesEnabled(packageManager, workspaceRoot)) {
     // no resource taken, no resource cleaned up
     return () => {};
   }

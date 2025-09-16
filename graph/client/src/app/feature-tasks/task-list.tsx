@@ -2,15 +2,11 @@
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 /* eslint-enable @nx/enforce-module-boundaries */
-import {
-  createTaskName,
-  getProjectsByType,
-  groupProjectsByDirectory,
-} from '../util';
+import { getProjectsByType, groupProjectsByDirectory } from '../util';
 import { WorkspaceLayout } from '../interfaces';
 import { ExclamationCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph-ui-common';
 import { TaskGraphErrorTooltip } from './task-graph-error-tooltip';
 
 interface SidebarProject {
@@ -109,40 +105,45 @@ function SubProjectList({
 function mapToSidebarProjectWithTasks(
   project: ProjectGraphProjectNode,
   selectedProjects: string[],
-  selectedTarget: string,
-  errors: Record<string, string>
+  selectedTargets: string[],
+  error: string | null
 ): SidebarProject {
-  const taskId = createTaskName(project.name, selectedTarget);
+  // If there's a global error, show it for the project
+  const hasError = error !== null;
 
   return {
     projectGraphNode: project,
     isSelected: selectedProjects.includes(project.name),
-    error: errors?.[taskId] ?? null,
+    error: hasError ? error : null,
   };
 }
 
 export interface TaskListProps {
   projects: ProjectGraphProjectNode[];
   workspaceLayout: WorkspaceLayout;
-  selectedTarget: string;
+  selectedTargets: string[];
   selectedProjects: string[];
   toggleProject: (projectName: string) => void;
   children: ReactNode | ReactNode[];
-  errors: Record<string, string>;
+  error: string | null;
 }
 
 export function TaskList({
   projects,
   workspaceLayout,
-  selectedTarget,
+  selectedTargets,
   selectedProjects,
   toggleProject,
   children,
-  errors,
+  error,
 }: TaskListProps) {
   const filteredProjects = projects
-    .filter((project) =>
-      (project.data as any).targets?.hasOwnProperty(selectedTarget)
+    .filter(
+      (project) =>
+        selectedTargets.length > 0 &&
+        selectedTargets.some((target) =>
+          (project.data as any).targets?.hasOwnProperty(target)
+        )
     )
     .sort((a, b) => a.name.localeCompare(b.name));
   const appProjects = getProjectsByType('app', filteredProjects);
@@ -182,8 +183,8 @@ export function TaskList({
               mapToSidebarProjectWithTasks(
                 project,
                 selectedProjects,
-                selectedTarget,
-                errors
+                selectedTargets,
+                error
               )
             )}
             toggleTask={toggleProject}
@@ -204,8 +205,8 @@ export function TaskList({
               mapToSidebarProjectWithTasks(
                 project,
                 selectedProjects,
-                selectedTarget,
-                errors
+                selectedTargets,
+                error
               )
             )}
             toggleTask={toggleProject}
@@ -226,8 +227,8 @@ export function TaskList({
               mapToSidebarProjectWithTasks(
                 project,
                 selectedProjects,
-                selectedTarget,
-                errors
+                selectedTargets,
+                error
               )
             )}
             toggleTask={toggleProject}

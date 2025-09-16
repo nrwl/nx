@@ -1,8 +1,10 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-
 /* eslint-enable @nx/enforce-module-boundaries */
 
 import {
@@ -18,17 +20,35 @@ import {
 } from '@heroicons/react/24/outline';
 import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
-import { Collapsible } from '@nx/graph/ui-common';
+import { Collapsible } from '@nx/graph-ui-common';
 import { twMerge } from 'tailwind-merge';
+import type { Interpreter } from 'xstate';
+import type {
+  AutomaticMigrationState,
+  AutomaticMigrationEvents,
+} from '../state/automatic/types';
+import { useSelector } from '@xstate/react';
+import {
+  getMigrationType,
+  isMigrationRunning,
+} from '../state/automatic/selectors';
 
 export interface MigrationTimelineProps {
+  actor: Interpreter<
+    AutomaticMigrationState,
+    any,
+    AutomaticMigrationEvents,
+    any,
+    any
+  >;
+
   migrations: MigrationDetailsWithId[];
   nxConsoleMetadata: MigrationsJsonMetadata;
   currentMigrationIndex: number;
-  currentMigrationRunning?: boolean;
   currentMigrationFailed?: boolean;
   currentMigrationSuccess?: boolean;
   currentMigrationHasChanges?: boolean;
+  currentMigrationStopped?: boolean;
   isDone?: boolean;
   isInit: boolean;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
@@ -45,13 +65,14 @@ export interface MigrationTimelineProps {
 }
 
 export function MigrationTimeline({
+  actor,
   migrations,
   nxConsoleMetadata,
   currentMigrationIndex,
-  currentMigrationRunning,
   currentMigrationFailed,
   currentMigrationSuccess,
   currentMigrationHasChanges,
+  currentMigrationStopped,
   onRunMigration,
   onSkipMigration,
   onUndoMigration,
@@ -92,10 +113,26 @@ export function MigrationTimeline({
 
   // Auto-expand when entering a failed migration or requires review
   useEffect(() => {
-    if (currentMigrationFailed || currentMigrationHasChanges) {
+    if (
+      currentMigrationFailed ||
+      currentMigrationHasChanges ||
+      currentMigrationStopped
+    ) {
       toggleMigrationExpanded(currentMigration.id, true);
+    } else if (
+      !currentMigrationFailed &&
+      !currentMigrationHasChanges &&
+      !currentMigrationStopped
+    ) {
+      // Collapse the migration when it's no longer failed, stopped, or needing review
+      toggleMigrationExpanded(currentMigration.id, false);
     }
-  }, [currentMigrationHasChanges, currentMigrationFailed, currentMigration]);
+  }, [
+    currentMigrationHasChanges,
+    currentMigrationFailed,
+    currentMigration,
+    currentMigrationStopped,
+  ]);
 
   const toggleMigrationExpanded = (migrationId: string, state?: boolean) => {
     setExpandedMigrations((prev) => ({
@@ -167,8 +204,8 @@ export function MigrationTimeline({
               {visiblePastMigrations.map((migration) => (
                 <div key={migration.id} className="relative mb-6 w-full">
                   <MigrationStateCircle
+                    actor={actor}
                     migration={migration}
-                    nxConsoleMetadata={nxConsoleMetadata}
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
@@ -227,6 +264,7 @@ export function MigrationTimeline({
                       className="mt-2 w-full rounded-md border border-slate-300 p-3"
                     >
                       <MigrationCard
+                        actor={actor}
                         migration={migration}
                         isExpanded={expandedMigrations[migration.id]}
                         nxConsoleMetadata={nxConsoleMetadata}
@@ -273,13 +311,12 @@ export function MigrationTimeline({
             {/* TODO: Change this to be a clickable element li, button etc... */}
             <div>
               <MigrationStateCircle
+                actor={actor}
                 migration={migrations[currentMigrationIndex]}
-                nxConsoleMetadata={nxConsoleMetadata}
                 needsAttention={
                   currentMigrationHasChanges &&
                   !expandedMigrations[currentMigration.id]
                 }
-                isRunning={currentMigrationRunning}
                 onClick={() => toggleMigrationExpanded(currentMigration.id)}
               />
               <div
@@ -372,12 +409,12 @@ export function MigrationTimeline({
                 >
                   {/* Migration Card */}
                   <MigrationCard
+                    actor={actor}
                     ref={currentMigrationRef}
                     migration={currentMigration}
                     isExpanded={expandedMigrations[currentMigration.id]}
                     nxConsoleMetadata={nxConsoleMetadata}
                     onFileClick={(file) => onFileClick(currentMigration, file)}
-                    forceIsRunning={currentMigrationRunning}
                     onViewImplementation={() =>
                       onViewImplementation(currentMigration)
                     }
@@ -396,8 +433,8 @@ export function MigrationTimeline({
               {visibleFutureMigrations.map((migration) => (
                 <div key={migration.id} className="relative mt-6 w-full">
                   <MigrationStateCircle
+                    actor={actor}
                     migration={migration}
-                    nxConsoleMetadata={nxConsoleMetadata}
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
@@ -452,6 +489,7 @@ export function MigrationTimeline({
                       className="mt-2 w-full rounded-md border border-slate-300/50 p-3"
                     >
                       <MigrationCard
+                        actor={actor}
                         migration={migration}
                         nxConsoleMetadata={nxConsoleMetadata}
                         isExpanded={expandedMigrations[migration.id]}
@@ -538,17 +576,21 @@ function TimelineButton({ icon: Icon, onClick }: TimelineButtonProps) {
 }
 
 interface MigrationStateCircleProps {
+  actor: Interpreter<
+    AutomaticMigrationState,
+    any,
+    AutomaticMigrationEvents,
+    any,
+    any
+  >;
   migration: MigrationDetailsWithId;
-  nxConsoleMetadata: MigrationsJsonMetadata;
-  isRunning?: boolean;
   needsAttention?: boolean;
   onClick: () => void;
 }
 
 function MigrationStateCircle({
+  actor,
   migration,
-  nxConsoleMetadata,
-  isRunning,
   needsAttention,
   onClick,
 }: MigrationStateCircleProps) {
@@ -556,26 +598,45 @@ function MigrationStateCircle({
   let textColor = '';
   let Icon = null;
 
+  const isSkipped = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'skipped'
+  );
+
+  const isRunning = useSelector(actor, (state) =>
+    isMigrationRunning(state.context, migration.id)
+  );
+  const isStopped = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'stopped'
+  );
+  const isFailed = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'failed'
+  );
+  const isSuccess = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'successful'
+  );
   // Check if this migration is in the completed migrations
-  const completedMigration =
-    nxConsoleMetadata.completedMigrations?.[migration.id];
 
-  const isSkipped = completedMigration?.type === 'skipped';
-  const isError = completedMigration?.type === 'failed';
-  const isSuccess = completedMigration?.type === 'successful';
-
-  if (isSkipped) {
-    bgColor = 'bg-slate-300';
-    textColor = 'text-slate-700';
-    Icon = MinusIcon;
-  } else if (isError) {
-    bgColor = 'bg-red-500';
-    textColor = 'text-white';
-    Icon = ExclamationCircleIcon;
-  } else if (isRunning) {
+  if (isRunning) {
+    // Prioritize running state - show spinner even if metadata still shows stopped
     bgColor = 'bg-blue-500';
     textColor = 'text-white';
     Icon = ClockIcon;
+  } else if (isSkipped) {
+    bgColor = 'bg-slate-300';
+    textColor = 'text-slate-700';
+    Icon = MinusIcon;
+  } else if (isFailed) {
+    bgColor = 'bg-red-500';
+    textColor = 'text-white';
+    Icon = ExclamationCircleIcon;
+  } else if (isStopped) {
+    bgColor = 'bg-yellow-500';
+    textColor = 'text-white';
+    Icon = XMarkIcon;
   } else if (isSuccess) {
     bgColor = 'bg-green-500';
     textColor = 'text-white';

@@ -27,10 +27,10 @@ Nx **restores terminal output, along with the files and artifacts** created from
 To use **Nx Replay**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
 
 ## Why use Remote Caching (Nx Replay)?
 
@@ -79,8 +79,6 @@ Nx Replay automatically syncs the remote cache to the local cache folder. As suc
 ### Can I self-host my remote cache?
 
 If you're an enterprise and have special restrictions, [reach out to us](/enterprise/trial). Our enterprise plan includes various hosting options, from dedicated EU region hosting, to single-tenant and also on-premise.
-
-If you still want to manage and self-host the cache on your own, have a look at [our self-hosting options](/recipes/running-tasks/self-hosted-caching).
 
 ### How can I skip Nx Cloud caching?
 

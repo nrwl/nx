@@ -1,11 +1,13 @@
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import { satisfies, gte } from 'semver';
 import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { reverse } from '../../../project-graph/operators';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 /**
  * Prune project graph's external nodes and their dependencies
@@ -16,10 +18,25 @@ export function pruneProjectGraph(
   prunedPackageJson: PackageJson
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
+  const workspacePackages = getWorkspacePackagesFromGraph(graph);
+  const combinedDependencies = normalizeDependencies(
+    prunedPackageJson,
+    graph,
+    workspacePackages
+  );
 
-  const combinedDependencies = normalizeDependencies(prunedPackageJson, graph);
+  addNodesAndDependencies(
+    graph,
+    combinedDependencies,
+    workspacePackages,
+    builder
+  );
 
-  addNodesAndDependencies(graph, combinedDependencies, builder);
+  for (const project of workspacePackages.values()) {
+    const node = graph.nodes[project.name];
+    builder.addNode(node);
+  }
+
   // for NPM (as well as the graph consistency)
   // we need to distinguish between hoisted and non-hoisted dependencies
   rehoistNodes(graph, combinedDependencies, builder);
@@ -29,7 +46,11 @@ export function pruneProjectGraph(
 
 // ensure that dependency ranges from package.json (e.g. ^1.0.0)
 // are replaced with the actual version based on the available nodes (e.g. 1.0.1)
-function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
+function normalizeDependencies(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  workspacePackages: Map<string, ProjectGraphProjectNode>
+) {
   const {
     dependencies,
     devDependencies,
@@ -59,6 +80,9 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
       const node = findNodeMatchingVersion(graph, packageName, versionRange);
       if (node) {
         combinedDependencies[packageName] = node.data.version;
+      } else if (workspacePackages.has(packageName)) {
+        // workspace module, leave as is
+        combinedDependencies[packageName] = versionRange;
       } else {
         throw new Error(
           `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`
@@ -69,7 +93,7 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
   return combinedDependencies;
 }
 
-function findNodeMatchingVersion(
+export function findNodeMatchingVersion(
   graph: ProjectGraph,
   packageName: string,
   versionExpr: string
@@ -96,16 +120,25 @@ function findNodeMatchingVersion(
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
 }
 
-function addNodesAndDependencies(
+export function addNodesAndDependencies(
   graph: ProjectGraph,
   packageJsonDeps: Record<string, string>,
+  workspacePackages: Map<string, ProjectGraphProjectNode>,
   builder: ProjectGraphBuilder
 ) {
   Object.entries(packageJsonDeps).forEach(([name, version]) => {
     const node =
       graph.externalNodes[`npm:${name}@${version}`] ||
       graph.externalNodes[`npm:${name}`];
-    traverseNode(graph, builder, node);
+    if (node) {
+      traverseNode(graph, builder, node);
+    } else if (workspacePackages.has(name)) {
+      // Workspace Node
+      const node = graph.nodes[name];
+      if (node) {
+        traverseWorkspaceNode(graph, builder, node);
+      }
+    }
   });
 }
 
@@ -125,7 +158,20 @@ function traverseNode(
   });
 }
 
-function rehoistNodes(
+function traverseWorkspaceNode(
+  graph: ProjectGraph,
+  builder: ProjectGraphBuilder,
+  node: ProjectGraphProjectNode
+) {
+  graph.dependencies[node.name]?.forEach((dep) => {
+    const depNode = graph.externalNodes[dep.target];
+    if (depNode) {
+      traverseNode(graph, builder, depNode);
+    }
+  });
+}
+
+export function rehoistNodes(
   graph: ProjectGraph,
   packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder
@@ -146,6 +192,11 @@ function rehoistNodes(
       }
     }
   });
+
+  if (!packagesToRehoist.size) {
+    return;
+  }
+
   // invert dependencies for easier traversal back
   const invertedGraph = reverse(builder.graph);
   const invBuilder = new ProjectGraphBuilder(invertedGraph, {});

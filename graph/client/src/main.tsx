@@ -25,6 +25,7 @@ import { ProjectDetailsApp } from './app/console-project-details/project-details
 import { interpret } from 'xstate';
 import { MigrateApp } from './app/console-migrate/migrate.app';
 import { migrateMachine } from './app/console-migrate/migrate.machine';
+import { ThemeProvider } from '@nx/graph-internal-ui-render-config';
 
 if (window.__NX_RENDER_GRAPH__ === false) {
   window.externalApi = new ExternalApiImpl();
@@ -44,7 +45,9 @@ if (window.__NX_RENDER_GRAPH__ === false) {
 
     render(
       <StrictMode>
-        <ProjectDetailsApp service={service} />
+        <ThemeProvider>
+          <ProjectDetailsApp service={service} />
+        </ThemeProvider>
       </StrictMode>,
       document.getElementById('app')
     );
@@ -59,7 +62,9 @@ if (window.__NX_RENDER_GRAPH__ === false) {
   }) => {
     render(
       <StrictMode>
-        <ErrorPage {...data} />
+        <ThemeProvider>
+          <ErrorPage {...data} />
+        </ThemeProvider>
       </StrictMode>,
       document.getElementById('app')
     );
@@ -78,7 +83,9 @@ if (window.__NX_RENDER_GRAPH__ === false) {
 
     render(
       <StrictMode>
-        <MigrateApp service={service} />
+        <ThemeProvider>
+          <MigrateApp service={service} />
+        </ThemeProvider>
       </StrictMode>,
       document.getElementById('app')
     );

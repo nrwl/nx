@@ -1,4 +1,4 @@
-import { readJson, runCLI as _runCLI } from '@nx/e2e/utils';
+import { readJson, runCLI as _runCLI } from '@nx/e2e-utils';
 import { join } from 'path';
 
 export function readPort(appName: string): number {

@@ -14,6 +14,7 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
+import { isMatchingDependencyRange, isValidRange } from './utils/semver';
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,
@@ -111,7 +112,15 @@ export default class JsVersionActions extends VersionActions {
             if (error) {
               return reject(error);
             }
-            if (stderr) {
+            // Only reject on stderr if it contains actual errors, not just npm warnings
+            // npm 11+ writes "npm warn" messages to stderr even on successful commands
+            if (
+              stderr &&
+              !stderr
+                .trim()
+                .split('\n')
+                .every((line) => line.startsWith('npm warn'))
+            ) {
               return reject(stderr);
             }
             return resolve(stdout.trim());
@@ -201,6 +210,14 @@ export default class JsVersionActions extends VersionActions {
           'peerDependencies',
           'optionalDependencies',
         ];
+        // TODO(v22): Flip this to all by default
+        const preserveMatchingDependencyRanges =
+          this.finalConfigForProject.preserveMatchingDependencyRanges === true
+            ? dependencyTypes
+            : this.finalConfigForProject.preserveMatchingDependencyRanges ===
+              false
+            ? []
+            : this.finalConfigForProject.preserveMatchingDependencyRanges || [];
 
         for (const depType of dependencyTypes) {
           if (json[depType]) {
@@ -223,6 +240,22 @@ export default class JsVersionActions extends VersionActions {
                   // Reduce the count appropriately to avoid confusing user-facing logs
                   numDependenciesToUpdate--;
                   continue;
+                } else if (
+                  preserveMatchingDependencyRanges.includes(depType) &&
+                  !this.isLocalDependencyProtocol(currentVersion)
+                ) {
+                  // If the dependency is specified using a range, do some additional processing to determine whether to update the version
+                  if (
+                    isValidRange(currentVersion) &&
+                    !isMatchingDependencyRange(version, currentVersion)
+                  ) {
+                    throw new Error(
+                      `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
+                    );
+                  } else if (isValidRange(currentVersion)) {
+                    // it is a range, but it is valid
+                    continue;
+                  }
                 }
                 json[depType][packageName] = version;
               }

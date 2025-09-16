@@ -143,9 +143,8 @@ export class TargetProjectLocator {
     }
 
     if (this.tsConfig.config) {
-      // TODO(meeroslav): this block is probably obsolete
-      // and existed only because of the incomplete `paths` matching
-      // if import cannot be matched using tsconfig `paths` the compilation would fail anyway
+      // TODO: this can be removed once we rework resolveImportWithRequire below
+      // to properly handle ESM (exports, imports, conditions)
       const resolvedProject = this.resolveImportWithTypescript(
         importExpr,
         filePath
@@ -369,8 +368,15 @@ export class TargetProjectLocator {
     filePath: string
   ): string | undefined {
     let resolvedModule: string;
-    if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
-      resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
+    const projectName = findProjectForPath(filePath, this.projectRootMappings);
+    const cacheScope = projectName
+      ? // fall back to the project name if the project root can't be determined
+        this.nodes[projectName]?.data?.root || projectName
+      : // fall back to the file path if the project can't be determined
+        filePath;
+    const cacheKey = `${normalizedImportExpr}__${cacheScope}`;
+    if (this.typescriptResolutionCache.has(cacheKey)) {
+      resolvedModule = this.typescriptResolutionCache.get(cacheKey);
     } else {
       resolvedModule = resolveModuleByImport(
         normalizedImportExpr,
@@ -378,19 +384,31 @@ export class TargetProjectLocator {
         this.tsConfig.absolutePath
       );
       this.typescriptResolutionCache.set(
-        normalizedImportExpr,
+        cacheKey,
         resolvedModule ? resolvedModule : null
       );
     }
 
-    // TODO: vsavkin temporary workaround. Remove it once we reworking handling of npm packages.
-    if (resolvedModule && resolvedModule.indexOf('node_modules/') === -1) {
-      const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
-      if (resolvedProject) {
-        return resolvedProject;
-      }
+    if (!resolvedModule) {
+      return;
     }
-    return;
+
+    const nodeModulesIndex = resolvedModule.lastIndexOf('node_modules/');
+    if (nodeModulesIndex === -1) {
+      const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
+      return resolvedProject;
+    }
+
+    // strip the node_modules/ prefix from the resolved module path
+    const packagePath = resolvedModule.substring(
+      nodeModulesIndex + 'node_modules/'.length
+    );
+    const externalProject = this.findNpmProjectFromImport(
+      packagePath,
+      filePath
+    );
+
+    return externalProject;
   }
 
   private resolveImportWithRequire(
@@ -414,9 +432,13 @@ export class TargetProjectLocator {
     ) {
       return undefined;
     }
-    const normalizedResolvedModule = resolvedModule.startsWith('./')
+    let normalizedResolvedModule = resolvedModule.startsWith('./')
       ? resolvedModule.substring(2)
       : resolvedModule;
+    // Remove trailing slash to ensure proper project matching
+    if (normalizedResolvedModule.endsWith('/')) {
+      normalizedResolvedModule = normalizedResolvedModule.slice(0, -1);
+    }
     const importedProject = this.findMatchingProjectFiles(
       normalizedResolvedModule
     );

@@ -1,23 +1,28 @@
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "allowJs": false,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
     "lib": ["ES2022", "dom"]
   },
   "files": [],
   "include": [],
   "references": [
     {
+      "path": "../../nx-dev/ui-fence"
+    },
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "../ui-code-block"
+    },
+    {
       "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    },
-    {
-      "path": "./tsconfig.storybook.json"
     }
   ],
   "extends": "../../tsconfig.base.json"

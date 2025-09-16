@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { exec, execSync } from 'child_process';
+import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { dirname, join } from 'path';
 import {
@@ -61,12 +61,15 @@ import { handleErrors } from '../../utils/handle-errors';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
-} from '../connect/connect-to-nx-cloud';
+} from '../nx-cloud/connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
 import { existsSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import {
+  getNxInstallationPath,
+  getNxRequirePaths,
+} from '../../utils/installation-directory';
 import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
@@ -76,6 +79,10 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import {
+  ensurePackageHasProvenance,
+  getNxPackageGroup,
+} from '../../utils/provenance';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -227,6 +234,9 @@ export class Migrator {
       )) {
         if (
           this.areRequirementsMet(packageUpdate.requires) &&
+          !this.areIncompatiblePackagesPresent(
+            packageUpdate.incompatibleWith
+          ) &&
           (!this.interactive ||
             (await this.runPackageJsonUpdatesConfirmationPrompt(
               packageUpdate,
@@ -312,7 +322,8 @@ export class Migrator {
     const shouldCheckUpdates = Object.values(packageJsonUpdates).some(
       (packageJsonUpdate) =>
         (this.interactive && packageJsonUpdate['x-prompt']) ||
-        Object.keys(packageJsonUpdate.requires ?? {}).length
+        Object.keys(packageJsonUpdate.requires ?? {}).length ||
+        Object.keys(packageJsonUpdate.incompatibleWith ?? {}).length
     );
 
     if (shouldCheckUpdates) {
@@ -463,7 +474,9 @@ export class Migrator {
           filtered[packageName] = {
             version: packageUpdate.version,
             addToPackageJson: packageUpdate.alwaysAddToPackageJson
-              ? 'dependencies'
+              ? typeof packageUpdate.alwaysAddToPackageJson === 'string'
+                ? packageUpdate.alwaysAddToPackageJson
+                : 'dependencies'
               : packageUpdate.addToPackageJson || false,
           };
         }
@@ -510,6 +523,31 @@ export class Migrator {
     }
 
     return Object.entries(requirements).every(([pkgName, versionRange]) => {
+      if (this.packageUpdates[pkgName]) {
+        return satisfies(
+          cleanSemver(this.packageUpdates[pkgName].version),
+          versionRange,
+          { includePrerelease: true }
+        );
+      }
+
+      return (
+        this.getPkgVersion(pkgName) &&
+        satisfies(this.getPkgVersion(pkgName), versionRange, {
+          includePrerelease: true,
+        })
+      );
+    });
+  }
+
+  private areIncompatiblePackagesPresent(
+    incompatibleWith: PackageJsonUpdates[string]['incompatibleWith']
+  ): boolean {
+    if (!incompatibleWith || !Object.keys(incompatibleWith).length) {
+      return false;
+    }
+
+    return Object.entries(incompatibleWith).some(([pkgName, versionRange]) => {
       if (this.packageUpdates[pkgName]) {
         return satisfies(
           cleanSemver(this.packageUpdates[pkgName].version),
@@ -956,6 +994,9 @@ async function getPackageMigrationsUsingRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
+  if (getNxPackageGroup().includes(packageName)) {
+    await ensurePackageHasProvenance(packageName, packageVersion);
+  }
   // check if there are migrations in the packages by looking at the
   // registry directly
   const migrationsConfig = await getPackageMigrationsConfigFromRegistry(
@@ -1068,6 +1109,10 @@ async function getPackageMigrationsUsingInstall(
   const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
+
+  if (getNxPackageGroup().includes(packageName)) {
+    await ensurePackageHasProvenance(packageName, packageVersion);
+  }
 
   try {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
@@ -1430,10 +1475,13 @@ function runInstall(nxWorkspaceRoot?: string) {
   if (packageManager ?? detectPackageManager() === 'npm') {
     process.env.npm_config_legacy_peer_deps ??= 'true';
   }
+  const installCommand = `${pmCommands.install} ${
+    pmCommands.ignoreScriptsFlag ?? ''
+  }`;
   output.log({
-    title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
+    title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
-  execSync(pmCommands.install, {
+  execSync(installCommand, {
     stdio: [0, 1, 2],
     windowsHide: false,
     cwd: nxWorkspaceRoot ?? process.cwd(),
@@ -1758,14 +1806,14 @@ export async function migrate(
   });
 }
 
-export function runMigration() {
+export async function runMigration() {
   const runLocalMigrate = () => {
     runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
   if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-    const p = nxCliPath();
+    const p = await nxCliPath();
     if (p === null) {
       runLocalMigrate();
     } else {
@@ -1833,8 +1881,12 @@ export function getImplementationPath(
   return { path: implPath, fnSymbol };
 }
 
-export function nxCliPath(nxWorkspaceRoot?: string) {
+export async function nxCliPath(nxWorkspaceRoot?: string) {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
+  await ensurePackageHasProvenance('nx', version);
+
   try {
     const packageManager = detectPackageManager();
     const pmc = getPackageManagerCommand(packageManager);
@@ -1847,30 +1899,39 @@ export function nxCliPath(nxWorkspaceRoot?: string) {
       },
       license: 'MIT',
     });
+    const root = nxWorkspaceRoot ?? workspaceRoot;
+    const isNonJs = !existsSync(join(root, 'package.json'));
     copyPackageManagerConfigurationFiles(
-      nxWorkspaceRoot ?? workspaceRoot,
+      isNonJs ? getNxInstallationPath(root) : root,
       tmpDir
     );
+
+    // Let's print the output of the install process to the console when verbose
+    // is enabled, so it's easier to debug issues with the installation process
+    const stdio: StdioOptions = isVerbose
+      ? ['ignore', 'inherit', 'inherit']
+      : 'ignore';
+
     if (pmc.preInstall) {
       // ensure package.json and repo in tmp folder is set to a proper package manager state
       execSync(pmc.preInstall, {
         cwd: tmpDir,
-        stdio: ['ignore', 'ignore', 'ignore'],
+        stdio,
         windowsHide: false,
       });
       // if it's berry ensure we set the node_linker to node-modules
       if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
         execSync('yarn config set nodeLinker node-modules', {
           cwd: tmpDir,
-          stdio: ['ignore', 'ignore', 'ignore'],
+          stdio,
           windowsHide: false,
         });
       }
     }
 
-    execSync(pmc.install, {
+    execSync(`${pmc.install} ${pmc.ignoreScriptsFlag ?? ''}`, {
       cwd: tmpDir,
-      stdio: ['ignore', 'ignore', 'ignore'],
+      stdio,
       windowsHide: false,
     });
 
@@ -1883,7 +1944,7 @@ export function nxCliPath(nxWorkspaceRoot?: string) {
     console.error(
       `Failed to install the ${version} version of the migration script. Using the current version.`
     );
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    if (isVerbose) {
       console.error(e);
     }
     return null;

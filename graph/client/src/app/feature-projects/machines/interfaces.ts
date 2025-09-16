@@ -1,14 +1,21 @@
 import { CompositeNode, GraphPerfReport } from '../../interfaces';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import {
+import type {
   ProjectFileMap,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+} from '@nx/devkit';
 /* eslint-enable @nx/enforce-module-boundaries */
+import {
+  ProjectGraphClient,
+  ProjectGraphClientScratchData,
+  ProjectGraphEvent,
+  ProjectGraphHandleEventResult,
+  ProjectGraphRenderScratchData,
+} from '@nx/graph/projects';
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
-import { GraphRenderEvents } from '../../machines/interfaces';
+import { RenderGraphConfigEvent, RenderGraphScratchData } from '@nx/graph';
 
 // The hierarchical schema for the states
 export interface ProjectGraphSchema {
@@ -24,13 +31,28 @@ export interface ProjectGraphSchema {
 
 export type TracingAlgorithmType = 'shortest' | 'all';
 
+export interface ProjectGraphClientActor {
+  graphClient: ProjectGraphClient;
+  send: (
+    ...events: ProjectGraphEvent[]
+  ) => ProjectGraphHandleEventResult | undefined;
+  sendRenderConfigEvent: (event: RenderGraphConfigEvent) => void;
+}
+
 // The events that the machine handles
 export type ProjectGraphMachineEvents =
+  | ProjectGraphEvent
+  | RenderGraphConfigEvent
   | {
-      type: 'setSelectedProjectsFromGraph';
-      selectedProjectNames: string[];
-      perfReport: GraphPerfReport;
-      compositeNodes: Array<CompositeNode>;
+      type: 'setGraphClient';
+      graphClient: ProjectGraphClientActor;
+    }
+  | {
+      type: 'setGraphClientState';
+      state: {
+        renderScratchData: RenderGraphScratchData<ProjectGraphRenderScratchData>;
+        scratchData: ProjectGraphClientScratchData;
+      };
     }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
@@ -52,7 +74,7 @@ export type ProjectGraphMachineEvents =
   | { type: 'setSearchDepthEnabled'; searchDepthEnabled: boolean }
   | { type: 'setSearchDepth'; searchDepth: number }
   | { type: 'focusProject'; projectName: string }
-  | { type: 'unfocusProject' }
+  | { type: 'unfocusNode' }
   | { type: 'filterByText'; search: string }
   | { type: 'clearTextFilter' }
   | {
@@ -65,12 +87,6 @@ export type ProjectGraphMachineEvents =
         libsDir: string;
         appsDir: string;
       };
-    }
-  | {
-      type: 'updateGraph';
-      projects: ProjectGraphProjectNode[];
-      dependencies: Record<string, ProjectGraphDependency[]>;
-      fileMap: ProjectFileMap;
     }
   | { type: 'enableCompositeGraph'; context: string | null }
   | { type: 'setCompositeContext'; context: string | null }
@@ -95,7 +111,8 @@ export interface ProjectGraphContext {
     libsDir: string;
     appsDir: string;
   };
-  graphActor: ActorRef<GraphRenderEvents>;
+  graphActor: ActorRef<ProjectGraphEvent | RenderGraphConfigEvent>;
+
   lastPerfReport: GraphPerfReport;
   fileMap: ProjectFileMap;
   tracing: {

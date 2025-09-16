@@ -520,7 +520,7 @@ module.exports = [
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -552,6 +552,7 @@ module.exports = [
           //  plugins: [ nxViteTsPaths() ],
           // },
           test: {
+            name: '@proj/my-lib',
             watch: false,
             globals: true,
             environment: 'jsdom',
@@ -745,7 +746,7 @@ module.exports = [
           "exports": {
             "./package.json": "./package.json",
             ".": {
-              "development": "./src/index.ts",
+              "@proj/source": "./src/index.ts",
               "types": "./dist/index.d.ts",
               "import": "./dist/index.js",
               "default": "./dist/index.js"
@@ -756,7 +757,7 @@ module.exports = [
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

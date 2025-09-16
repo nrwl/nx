@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nx/devkit';
+import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 
 expect.addSnapshotSerializer({
@@ -134,7 +134,7 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.1",
-        "scripts": {
+        "exports": {
 
 
         NX   Staging changed files with git
@@ -162,7 +162,7 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.2",
-        "scripts": {
+        "exports": {
 
         }
         +
@@ -200,13 +200,13 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.3",
-        "scripts": {
+        "exports": {
 
 
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-package.2",
         +   "version": "999.9.9",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "0.0.0"
@@ -249,7 +249,7 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-version-git-operations-test.1",
         +   "version": "999.9.9-version-git-operations-test.2",
-        "scripts": {
+        "exports": {
 
 
         Skipped lock file update because {package-manager} workspaces are not enabled.
@@ -340,24 +340,24 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-package.3",
         +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
-
-
-        "name": "@proj/{project-name}",
-        -   "version": "999.9.9",
-        +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
-
-        "dependencies": {
-        -     "@proj/{project-name}": "999.9.9-package.3"
-        +     "@proj/{project-name}": "999.9.9-version-git-operations-test.3"
-        }
+        "exports": {
 
 
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-version-git-operations-test.2",
         +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
+        "exports": {
+
+
+        "name": "@proj/{project-name}",
+        -   "version": "999.9.9",
+        +   "version": "999.9.9-version-git-operations-test.3",
+        "exports": {
+
+        "dependencies": {
+        -     "@proj/{project-name}": "999.9.9-package.3"
+        +     "@proj/{project-name}": "999.9.9-version-git-operations-test.3"
+        }
 
 
         Skipped lock file update because {package-manager} workspaces are not enabled.
@@ -572,7 +572,7 @@ describe('nx release - independent projects', () => {
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(updatedHeadSHA);
 
       // Disable git commit and tag operations for the changelog command via config
-      updateJson('nx.json', (json) => {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
         return {
           ...json,
           release: {
@@ -906,7 +906,7 @@ describe('nx release - independent projects', () => {
       expect(
         releaseOutput.match(new RegExp(`New version 1\.4\.1 written`, 'g'))
           .length
-      ).toEqual(1);
+      ).toEqual(2);
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.6\.1 written`, 'g'))

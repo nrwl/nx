@@ -86,7 +86,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -141,7 +140,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -199,7 +197,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -257,7 +254,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -313,7 +309,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -372,7 +367,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -432,7 +426,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -452,7 +445,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -474,7 +466,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -535,7 +526,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -598,7 +588,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "typecheck": {
                   "cache": true,
@@ -679,7 +668,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -744,7 +732,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -811,7 +798,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -878,7 +864,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -950,7 +935,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1029,7 +1013,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1106,7 +1089,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1189,7 +1171,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1267,7 +1248,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1359,7 +1339,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1465,7 +1444,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1523,7 +1501,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 },
               },
               "libs/my-lib/nested-project": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1608,7 +1585,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1874,7 +1850,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -1949,7 +1924,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2014,7 +1988,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2086,7 +2059,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -2188,7 +2160,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2293,7 +2264,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2352,7 +2322,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 },
               },
               "libs/my-lib/nested-project": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2418,7 +2387,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2484,7 +2452,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2561,7 +2528,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2627,7 +2593,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2689,7 +2654,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "typecheck": {
                     "cache": true,
@@ -2758,7 +2722,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2781,7 +2744,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2807,7 +2769,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2831,7 +2792,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2862,7 +2822,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {},
             },
           },
@@ -2896,7 +2855,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -2974,7 +2932,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3050,7 +3007,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3129,7 +3085,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3206,7 +3161,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3274,7 +3228,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "my-build": {
                   "cache": true,
@@ -3342,7 +3295,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
-              "projectType": "library",
               "targets": {
                 "build": {
                   "cache": true,
@@ -3429,7 +3381,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3501,7 +3452,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3571,7 +3521,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3646,7 +3595,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3725,7 +3673,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3805,7 +3752,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3893,7 +3839,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -3974,7 +3919,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4071,7 +4015,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4158,7 +4101,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4241,7 +4183,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4506,7 +4447,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4576,7 +4516,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4648,7 +4587,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4713,7 +4651,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4800,7 +4737,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4878,7 +4814,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -4949,7 +4884,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5031,7 +4965,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5102,7 +5035,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5170,7 +5102,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
-                "projectType": "library",
                 "targets": {
                   "build": {
                     "cache": true,
@@ -5217,6 +5148,946 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }
         `);
       });
+    });
+  });
+
+  describe('isValidPackageJsonBuildConfig', () => {
+    it('should consider a package buildable when main points to transpiled output outside source folder', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'src' },
+          include: ['typescript/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'src/index.js',
+        }),
+        'libs/my-lib/typescript/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/typescript/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/src",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should consider a package buildable when main points to transpiled output with include patterns', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'lib' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'lib/index.js',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/src/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/lib",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not consider a package buildable when main points to source file', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'dist' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'src/index.ts',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {},
+            },
+          },
+        }
+      `);
+    });
+
+    it('should consider a package buildable when main points to source file when skipBuildCheck is true', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'dist' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'src/index.ts',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: {
+            skipBuildCheck: true,
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/src/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should handle relative paths correctly when main points to transpiled output', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: '../build/my-lib' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: '../build/my-lib/index.js',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/src/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{workspaceRoot}/libs/build/my-lib",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should handle absolute paths correctly when main points to transpiled output', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'dist' },
+          include: ['source/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: '/libs/my-lib/dist/index.js',
+        }),
+        'libs/my-lib/source/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/source/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not consider package buildable when absolute path points to source file', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'dist' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: '/libs/my-lib/src/index.ts',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {},
+            },
+          },
+        }
+      `);
+    });
+
+    it('should handle glob patterns with ** and single *', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'compiled' },
+          include: ['**/src/**/*.ts', 'utils/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'compiled/index.js',
+        }),
+        'libs/my-lib/nested/src/index.ts': 'export const hello = "world";',
+        'libs/my-lib/utils/helper.ts': 'export const helper = () => {};',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/**/src/**/*.ts",
+                    "{projectRoot}/utils/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/compiled",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should consider package buildable when outDir is outside project and main export points to outDir', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: '../../../external-build' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: '../../../external-build/index.js',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/src/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "external-build",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should consider package buildable when outDir is within project and main points to file inside outDir', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'dist' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'dist/index.js',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/src/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not consider package buildable when outDir is within project but main points to source file', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'dist' },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'src/index.ts',
+        }),
+        'libs/my-lib/src/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {},
+            },
+          },
+        }
+      `);
+    });
+
+    it('should consider package buildable when main points to JS build output', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'build' },
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'build/index.js',
+        }),
+        'libs/my-lib/lib/index.ts': 'export const hello = "world";',
+        'libs/my-lib/build/index.js': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/build",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not consider package buildable when main points to TS source file', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'build' },
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'lib/index.ts',
+        }),
+        'libs/my-lib/lib/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {},
+            },
+          },
+        }
+      `);
+    });
+
+    it('should consider package buildable when main points to build output even with TS extension', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'build' },
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'build/index.ts',
+        }),
+        'libs/my-lib/lib/index.ts': 'export const hello = "world";',
+        'libs/my-lib/build/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/build",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not consider package buildable when main matches include pattern', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: {},
+          include: ['lib/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'lib/index.ts',
+        }),
+        'libs/my-lib/lib/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {},
+            },
+          },
+        }
+      `);
+    });
+
+    it('should consider package buildable when main does not match include pattern', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': '{}',
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: {},
+          include: ['lib/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'generated/index.ts',
+        }),
+        'libs/my-lib/lib/index.ts': 'export const hello = "world";',
+        'libs/my-lib/generated/index.ts': 'export const hello = "world";',
+      });
+
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/lib/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/**/*.js",
+                    "{projectRoot}/**/*.cjs",
+                    "{projectRoot}/**/*.mjs",
+                    "{projectRoot}/**/*.jsx",
+                    "{projectRoot}/**/*.js.map",
+                    "{projectRoot}/**/*.jsx.map",
+                    "{projectRoot}/**/*.d.ts",
+                    "{projectRoot}/**/*.d.cts",
+                    "{projectRoot}/**/*.d.mts",
+                    "{projectRoot}/**/*.d.ts.map",
+                    "{projectRoot}/**/*.d.cts.map",
+                    "{projectRoot}/**/*.d.mts.map",
+                    "{projectRoot}/tsconfig.lib.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
     });
   });
 });

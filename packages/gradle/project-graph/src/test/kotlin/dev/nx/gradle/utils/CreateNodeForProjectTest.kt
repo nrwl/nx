@@ -1,25 +1,27 @@
 package dev.nx.gradle.utils
 
-import dev.nx.gradle.data.*
+import java.io.File
 import kotlin.test.*
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 class CreateNodeForProjectTest {
 
   @Test
-  fun `should return GradleNodeReport with targets and metadata`() {
+  fun `should return GradleNodeReport with targets and metadata`(@TempDir workspaceDir: File) {
     // Arrange
-    val workspaceRoot = createTempDir("workspace").absolutePath
-    val projectDir = createTempDir("project")
+    val workspaceRoot = workspaceDir.absolutePath
+    val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
     val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
 
     // Create a couple of dummy tasks
-    project.task("compileJava").apply {
+    project.tasks.register("compileJava").get().apply {
       group = "build"
       description = "Compiles Java sources"
     }
 
-    project.task("test").apply {
+    project.tasks.register("test").get().apply {
       group = "verification"
       description = "Runs the tests"
     }
@@ -32,7 +34,7 @@ class CreateNodeForProjectTest {
             project = project,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            cwd = "{projectRoot}")
+            atomized = true)
 
     // Assert
     val projectRoot = project.projectDir.absolutePath

@@ -6,10 +6,11 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { ArrayLiteralExpression } from 'typescript';
 import { insertImport } from '@nx/js';
-import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ArrayLiteralExpression } from 'typescript';
+import { addRoute } from '../../../utils/nx-devkit/route-utils';
 
 let tsModule: typeof import('typescript');
 
@@ -51,7 +52,7 @@ export function addRemoteToHost(tree: Tree, options: AddRemoteOptions) {
         tree,
         options,
         pathToMFManifest,
-        hostProject.sourceRoot
+        getProjectSourceRoot(hostProject, tree)
       );
     }
 
@@ -72,7 +73,7 @@ function getDynamicManifestFile(
   return [
     joinPathFragments(project.root, 'public/module-federation.manifest.json'),
     joinPathFragments(
-      project.sourceRoot,
+      getProjectSourceRoot(project, tree),
       'assets/module-federation.manifest.json'
     ),
   ].find((path) => tree.exists(path));
@@ -145,8 +146,9 @@ function addLazyLoadedRouteToHostAppModule(
     tsModule = ensureTypescript();
   }
   const hostAppConfig = readProjectConfiguration(tree, options.host);
+  const sourceRoot = getProjectSourceRoot(hostAppConfig, tree);
 
-  const pathToHostRootRouting = `${hostAppConfig.sourceRoot}/app/app.routes.ts`;
+  const pathToHostRootRouting = `${sourceRoot}/app/app.routes.ts`;
 
   if (!tree.exists(pathToHostRootRouting)) {
     return;
@@ -165,7 +167,7 @@ function addLazyLoadedRouteToHostAppModule(
   const usingLegacyDynamicFederation =
     hostFederationType === 'dynamic' &&
     tree
-      .read(`${hostAppConfig.sourceRoot}/main.ts`, 'utf-8')
+      .read(`${sourceRoot}/main.ts`, 'utf-8')
       .includes('setRemoteDefinitions(');
 
   if (hostFederationType === 'dynamic') {
@@ -207,10 +209,20 @@ function addLazyLoadedRouteToHostAppModule(
     }`
   );
 
-  const pathToAppComponentTemplate = joinPathFragments(
-    hostAppConfig.sourceRoot,
+  let pathToAppComponentTemplate = joinPathFragments(
+    sourceRoot,
     'app/app.component.html'
   );
+  const candidatePaths = [
+    pathToAppComponentTemplate,
+    joinPathFragments(sourceRoot, 'app/app.html'),
+  ];
+  for (const path of candidatePaths) {
+    if (tree.exists(path)) {
+      pathToAppComponentTemplate = path;
+      break;
+    }
+  }
   const appComponent = tree.read(pathToAppComponentTemplate, 'utf-8');
   if (
     appComponent.includes(`<ul class="remote-menu">`) &&

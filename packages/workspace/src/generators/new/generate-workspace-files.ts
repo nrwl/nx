@@ -2,19 +2,20 @@ import {
   generateFiles,
   getPackageManagerVersion,
   names,
-  NxJsonConfiguration,
-  PackageManager,
-  Tree,
+  type NxJsonConfiguration,
+  type PackageManager,
+  type Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { join } from 'path';
-import { Preset } from '../utils/presets';
-import { deduceDefaultBase } from '../../utilities/default-base';
-import { NormalizedSchema } from './new';
 import { connectToNxCloud } from 'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
+import { join } from 'path';
+import { gte } from 'semver';
+import { deduceDefaultBase } from '../../utilities/default-base';
+import { nxVersion } from '../../utils/versions';
+import { Preset } from '../utils/presets';
+import type { NormalizedSchema } from './new';
 
 type PresetInfo = {
   generateAppCmd?: string;
@@ -185,7 +186,11 @@ export async function generateWorkspaceFiles(
 
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
-    createNpmrc(tree, options);
+    if (gte(packageManagerVersion, '10.6.0')) {
+      addPnpmSettings(tree, options);
+    } else {
+      createNpmrc(tree, options);
+    }
   } else if (options.packageManager === 'yarn') {
     if (+packageMajor >= 2) {
       createYarnrcYml(tree, options);
@@ -293,7 +298,7 @@ async function createReadme(
   };
 
   const nxCloudOnboardingUrl = nxCloudToken
-    ? await createNxCloudOnboardingURL('readme', nxCloudToken)
+    ? await createNxCloudOnboardingURL('readme', nxCloudToken, undefined, false)
     : null;
 
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
@@ -319,6 +324,15 @@ async function createReadme(
 }
 
 // ensure that pnpm install add all the missing peer deps
+
+function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
+  tree.write(
+    join(options.directory, 'pnpm-workspace.yaml'),
+    `autoInstallPeers: true
+strictPeerDependencies: false
+`
+  );
+}
 
 function createNpmrc(tree: Tree, options: NormalizedSchema) {
   tree.write(
@@ -415,12 +429,21 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
   ) {
     const workspaces = options.workspaceGlobs ?? ['packages/*'];
     if (options.packageManager === 'pnpm') {
-      tree.write(
-        join(options.directory, 'pnpm-workspace.yaml'),
-        `packages: 
+      const pnpmWorkspacePath = join(options.directory, 'pnpm-workspace.yaml');
+
+      let content = `packages:
   ${workspaces.map((workspace) => `- "${workspace}"`).join('\n  ')}
-`
-      );
+`;
+
+      if (tree.exists(pnpmWorkspacePath)) {
+        // already added to set the peer deps settings for pnpm 10.6.0+
+        const existingContent = tree.read(pnpmWorkspacePath, 'utf-8');
+        if (existingContent.trim().length) {
+          content = `${content}\n${existingContent}`;
+        }
+      }
+
+      tree.write(pnpmWorkspacePath, content);
     } else {
       updateJson(tree, join(options.directory, 'package.json'), (json) => {
         json.workspaces = workspaces;

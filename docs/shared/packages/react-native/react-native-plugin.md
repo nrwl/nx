@@ -3,6 +3,8 @@ title: Overview of the Nx React Native Plugin
 description: The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. This page also explains how to configure React Native on your Nx workspace.
 ---
 
+# @nx/react-native
+
 React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
 
 The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:
@@ -128,15 +130,13 @@ Replace `<component-directory>` with the directory where you want to place the c
 
 The Nx CLI provides the [`migrate` command](/features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
 
-#### Use upgrade-native Generator
+#### Use upgrade command
 
-To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/nx-api/react-native/generators/upgrade-native) generator:
+To upgrade native iOS and Android code:
 
 ```shell
-nx generate @nx/react-native:upgrade-native apps/<your-app-name>
+nx upgrade <your-app-name>
 ```
-
-This is a command that will replace the iOS and Android native code folder entirely.
 
 #### Upgrade Manually
 
@@ -194,5 +194,5 @@ The build artifacts will be located under `<your app folder>/android/app/build`.
 
 ## More Documentation
 
-- [Using Detox](/nx-api/detox)
-- [Using Jest](/nx-api/jest)
+- [Using Detox](/technologies/test-tools/detox/introduction)
+- [Using Jest](/technologies/test-tools/jest/introduction)

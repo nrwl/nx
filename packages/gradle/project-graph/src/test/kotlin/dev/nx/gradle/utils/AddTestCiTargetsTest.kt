@@ -9,21 +9,21 @@ import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 class AddTestCiTargetsTest {
 
   private lateinit var project: Project
   private lateinit var testTask: Task
-  private lateinit var workspaceRoot: File
+  @TempDir lateinit var workspaceRoot: File
   private lateinit var projectRoot: File
 
   @BeforeEach
   fun setup() {
-    workspaceRoot = createTempDir("workspace")
     projectRoot = File(workspaceRoot, "project-a").apply { mkdirs() }
 
     project = ProjectBuilder.builder().withProjectDir(projectRoot).build()
-    testTask = project.task("test")
+    testTask = project.tasks.register("test").get()
   }
 
   @Test
@@ -31,13 +31,13 @@ class AddTestCiTargetsTest {
     val testFile1 =
         File(projectRoot, "src/test/kotlin/MyFirstTest.kt").apply {
           parentFile.mkdirs()
-          writeText("@Test class MyFirstTest")
+          writeText("class MyFirstTest { @Test fun testMethod() {} }")
         }
 
     val testFile2 =
         File(projectRoot, "src/test/kotlin/AnotherTest.kt").apply {
           parentFile.mkdirs()
-          writeText("@Test class AnotherTest")
+          writeText("class AnotherTest { @Test fun testMethod() {} }")
         }
 
     val testFiles = project.files(testFile1, testFile2)
@@ -91,5 +91,96 @@ class AddTestCiTargetsTest {
     }
 
     assertEquals("nx:noop", parentCi["executor"])
+  }
+
+  @Test
+  fun `should try compiled test analysis first then fallback to regex`() {
+    val testFile =
+        File(projectRoot, "src/test/kotlin/DefaultTest.kt").apply {
+          parentFile.mkdirs()
+          writeText("class DefaultTest { @Test fun testMethod() {} }")
+        }
+
+    val testFiles = project.files(testFile)
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciTestTargetName = "ci"
+
+    // Always tries compiled test analysis first, then falls back to regex
+    addTestCiTargets(
+        testFiles = testFiles,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        testTargetName = "test",
+        targets = targets,
+        targetGroups = targetGroups,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        ciTestTargetName = ciTestTargetName)
+
+    // Should create targets using regex-based approach since no compiled classes exist
+    assertTrue(targets.containsKey("ci--DefaultTest"))
+    assertTrue(targets.containsKey("ci"))
+  }
+
+  @Test
+  fun `should skip abstract test classes`() {
+    val abstractTestFile =
+        File(projectRoot, "src/test/java/AbstractTest.java").apply {
+          parentFile.mkdirs()
+          writeText(
+              """
+                package com.example;
+                import org.junit.jupiter.api.Test;
+                
+                abstract class AbstractTest {
+                    @Test
+                    void testMethod() {}
+                }
+              """
+                  .trimIndent())
+        }
+
+    val concreteTestFile =
+        File(projectRoot, "src/test/java/ConcreteTest.java").apply {
+          parentFile.mkdirs()
+          writeText(
+              """
+                package com.example;
+                import org.junit.jupiter.api.Test;
+                
+                class ConcreteTest {
+                    @Test
+                    void testMethod() {}
+                }
+              """
+                  .trimIndent())
+        }
+
+    val testFiles = project.files(abstractTestFile, concreteTestFile)
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciTestTargetName = "ci"
+
+    addTestCiTargets(
+        testFiles = testFiles,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        testTargetName = "test",
+        targets = targets,
+        targetGroups = targetGroups,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        ciTestTargetName = ciTestTargetName)
+
+    // Abstract class should not create a CI target
+    assertTrue(
+        !targets.containsKey("ci--AbstractTest"),
+        "Abstract test classes should not create CI targets")
+
+    // Concrete class should create a CI target
+    assertTrue(
+        targets.containsKey("ci--ConcreteTest"), "Concrete test classes should create CI targets")
+    assertTrue(targets.containsKey("ci"))
   }
 }

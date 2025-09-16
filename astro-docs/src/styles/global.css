@@ -1,0 +1,411 @@
+@layer base, starlight, theme, components, utilities;
+
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@source '../../node_modules/@nx/nx-dev-*';
+
+/* Custom styles for Nx documentation */
+
+:root {
+  --sl-sidebar-width: var(--container-2xs);
+}
+
+[data-has-sidebar] {
+  --sl-content-inline-start: 0;
+}
+
+@media (min-width: 50em) {
+  [data-has-sidebar] {
+    --sl-content-inline-start: var(--container-2xs);
+  }
+}
+/* Dark mode colors. */
+
+:root[data-theme='dark'] {
+  --sl-color-bg: var(--color-slate-900);
+  --sl-color-bg-nav: var(--color-slate-800);
+  --sl-color-bg-sidebar: var(--color-slate-900);
+  --sl-color-hairline: var(--color-slate-700);
+  --sl-color-hairline-shade: var(--color-slate-700);
+  --sl-color-accent-low: var(--color-sky-800);
+  --sl-color-accent: var(--color-sky-400);
+  --sl-color-accent-high: var(--color-sky-300);
+  --sl-color-text-accent: var(--color-sky-400);
+  --sl-color-gray-1: var(--color-slate-100);
+  --sl-color-gray-2: var(--color-slate-200);
+  --sl-color-gray-3: var(--color-slate-300);
+  --sl-color-gray-4: var(--color-slate-500);
+  --sl-color-gray-5: var(--color-slate-700);
+  --sl-color-gray-6: var(--color-slate-800);
+  --sl-badge-success-bg: var(--color-green-950);
+  --sl-badge-success-border: var(--color-green-600);
+  --sl-badge-success-text: var(--color-green-200);
+  --sl-badge-tip-bg: var(--color-indigo-900);
+  --sl-badge-tip-border: var(--color-indigo-600);
+  --sl-badge-tip-text: var(--color-indigo-200);
+  --sl-badge-note-bg: var(--color-blue-950);
+  --sl-badge-note-border: var(--color-blue-600);
+  --sl-badge-note-text: var(--color-blue-200);
+  --sl-badge-caution-bg: var(--color-yellow-800);
+  --sl-badge-caution-border: var(--color-yellow-600);
+  --sl-badge-caution-text: var(--color-yellow-100);
+}
+
+/* Light mode colors. */
+:root[data-theme='light'] {
+  --sl-color-bg: var(--color-white);
+  --sl-color-bg-nav: var(--color-slate-50);
+  --sl-color-bg-sidebar: var(--color-white);
+  --sl-color-hairline: var(--color-slate-300);
+  --sl-color-hairline-shade: var(--color-slate-300);
+  --sl-color-accent-low: var(--color-sky-100);
+  --sl-color-accent: var(--color-sky-600);
+  --sl-color-accent-high: var(--color-sky-700);
+  --sl-color-text-accent: var(--color-sky-600);
+  --sl-color-gray-1: var(--color-slate-900);
+  --sl-color-gray-2: var(--color-slate-800);
+  --sl-color-gray-3: var(--color-slate-600);
+  --sl-color-gray-4: var(--color-slate-500);
+  --sl-color-gray-5: var(--color-slate-300);
+  --sl-color-gray-6: var(--color-slate-200);
+  --sl-badge-success-bg: var(--color-green-50);
+  --sl-badge-success-border: var(--color-green-300);
+  --sl-badge-success-text: var(--color-green-600);
+  --sl-badge-tip-bg: var(--color-indigo-50);
+  --sl-badge-tip-border: var(--color-indigo-300);
+  --sl-badge-tip-text: var(--color-blue-600);
+  --sl-badge-note-bg: var(--color-blue-50);
+  --sl-badge-note-border: var(--color-blue-300);
+  --sl-badge-note-text: var(--color-blue-600);
+  --sl-badge-caution-bg: var(--color-yellow-50);
+  --sl-badge-caution-border: var(--color-yellow-300);
+  --sl-badge-caution-text: var(--color-yellow-600);
+}
+
+/* Adaptive icons, like GitHub logo, etc. */
+[data-theme='dark'] .adaptive-icon {
+  filter: invert(1);
+}
+
+[data-theme='light'] .adaptive-icon {
+  fill: black;
+}
+
+/* Custom font for code blocks */
+@font-face {
+  font-family: 'Input Mono';
+  src: url('/docs/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('/docs/fonts/InputMono-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apply custom font to code elements */
+code,
+pre {
+  font-family: 'Input Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* Rounded corners for code blocks and UI elements using CSS layers */
+@layer components {
+  /* Standalone code blocks (without headers) */
+  pre:not(figure pre) {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  /* Figure containers should have overall rounded corners */
+  figure:has(pre) {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  /* Header/title bar for code blocks should only have top corners rounded */
+  figure > div:first-child:has(+ pre),
+  figure > div:first-child:has(+ code),
+  figure > figcaption:first-child,
+  figure > div[class*='header'],
+  figure > div[class*='title'] {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  /* Code content when it has a header should only have bottom corners rounded */
+  figure:not(.has-title):not(.is-terminal) > pre {
+    border-radius: var(--radius-lg);
+    margin: 0;
+    overflow: hidden;
+  }
+
+  /* If title exists, make sure code block does not have top corners rounded */
+  figure.is-terminal > pre,
+  figure.has-title > pre {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    margin: 0;
+    overflow: hidden;
+  }
+
+  /* Ensure inner code elements don't overflow */
+  figure pre code {
+    border-radius: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  /* Inline code */
+  :not(pre) > code {
+    border-radius: var(--radius-sm);
+  }
+
+  /* Search bar and inputs */
+  input[type='search'],
+  input[type='text'],
+  .search-input,
+  [data-pagefind-ui] input {
+    border-radius: var(--radius-lg);
+  }
+
+  /* Buttons */
+  button,
+  .button,
+  a[role='button'] {
+    border-radius: var(--radius-md);
+  }
+
+  /* Cards and panels */
+  .card,
+  .panel,
+  .content-panel {
+    border-radius: var(--radius-lg);
+  }
+
+  /* Callouts and alerts */
+  .callout,
+  .alert,
+  .note,
+  .tip,
+  .warning,
+  .caution,
+  aside {
+    border-radius: var(--radius-lg);
+  }
+
+  /* Align TOC with sidebar styling */
+  starlight-toc ul {
+    line-height: var(--leading-relaxed);
+  }
+
+  starlight-toc li {
+    margin-bottom: var(--spacing);
+  }
+
+  starlight-toc a {
+    color: var(--sl-color-gray-4);
+    font-size: var(--text-sm);
+    display: block;
+  }
+
+  starlight-toc a[aria-current='true'] {
+    color: var(--sl-color-text-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* Override Starlight Aside component colors to match Nx design system */
+  /* Note type - Slate/gray theme */
+  :global([data-aside-type='note']) {
+    --sl-color-aside-bg: theme('colors.slate.50');
+    --sl-color-aside-border: theme('colors.slate.200');
+    --sl-color-aside-text: theme('colors.slate.700');
+    --sl-color-aside-title: theme('colors.slate.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='note']) {
+    --sl-color-aside-bg: rgb(30 41 59 / 0.4); /* slate-800/40 */
+    --sl-color-aside-border: theme('colors.slate.700');
+    --sl-color-aside-text: theme('colors.slate.400');
+    --sl-color-aside-title: theme('colors.slate.300');
+  }
+
+  /* Tip type - Green theme (check) */
+  :global([data-aside-type='tip']) {
+    --sl-color-aside-bg: theme('colors.green.50');
+    --sl-color-aside-border: theme('colors.green.200');
+    --sl-color-aside-text: theme('colors.green.700');
+    --sl-color-aside-title: theme('colors.green.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='tip']) {
+    --sl-color-aside-bg: rgb(20 83 45 / 0.3); /* green-900/30 */
+    --sl-color-aside-border: theme('colors.green.800');
+    --sl-color-aside-text: theme('colors.green.400');
+    --sl-color-aside-title: theme('colors.green.400');
+  }
+
+  /* Caution type - Yellow theme (warning) */
+  :global([data-aside-type='caution']) {
+    --sl-color-aside-bg: theme('colors.yellow.50');
+    --sl-color-aside-border: theme('colors.yellow.200');
+    --sl-color-aside-text: theme('colors.yellow.700');
+    --sl-color-aside-title: theme('colors.yellow.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='caution']) {
+    --sl-color-aside-bg: rgb(113 63 18 / 0.3); /* yellow-900/30 */
+    --sl-color-aside-border: theme('colors.yellow.800');
+    --sl-color-aside-text: theme('colors.yellow.400');
+    --sl-color-aside-title: theme('colors.yellow.400');
+  }
+
+  /* Danger type - Red theme */
+  :global([data-aside-type='danger']) {
+    --sl-color-aside-bg: theme('colors.red.50');
+    --sl-color-aside-border: theme('colors.red.200');
+    --sl-color-aside-text: theme('colors.red.700');
+    --sl-color-aside-title: theme('colors.red.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='danger']) {
+    --sl-color-aside-bg: rgb(127 29 29 / 0.3); /* red-900/30 */
+    --sl-color-aside-border: theme('colors.red.800');
+    --sl-color-aside-text: theme('colors.red.400');
+    --sl-color-aside-title: theme('colors.red.400');
+  }
+
+  /* Override Starlight Badge component colors */
+  /* Success/Tip variant - Green theme */
+  :global(.sl-badge.success),
+  :global(.sl-badge.tip) {
+    --sl-color-bg-badge: theme('colors.green.50');
+    --sl-color-border-badge: theme('colors.green.200');
+    --sl-color-text-badge: theme('colors.green.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.success),
+  :global([data-theme='dark'] .sl-badge.tip) {
+    --sl-color-bg-badge: rgb(20 83 45 / 0.3); /* green-900/30 */
+    --sl-color-border-badge: theme('colors.green.800');
+    --sl-color-text-badge: theme('colors.green.400');
+  }
+
+  /* Caution variant - Yellow theme */
+  :global(.sl-badge.caution) {
+    --sl-color-bg-badge: theme('colors.yellow.50');
+    --sl-color-border-badge: theme('colors.yellow.200');
+    --sl-color-text-badge: theme('colors.yellow.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.caution) {
+    --sl-color-bg-badge: rgb(113 63 18 / 0.3); /* yellow-900/30 */
+    --sl-color-border-badge: theme('colors.yellow.800');
+    --sl-color-text-badge: theme('colors.yellow.400');
+  }
+
+  /* Danger variant - Red theme */
+  :global(.sl-badge.danger) {
+    --sl-color-bg-badge: theme('colors.red.50');
+    --sl-color-border-badge: theme('colors.red.200');
+    --sl-color-text-badge: theme('colors.red.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.danger) {
+    --sl-color-bg-badge: rgb(127 29 29 / 0.3); /* red-900/30 */
+    --sl-color-border-badge: theme('colors.red.800');
+    --sl-color-text-badge: theme('colors.red.400');
+  }
+
+  /* Note variant - Slate/gray theme */
+  :global(.sl-badge.note) {
+    --sl-color-bg-badge: theme('colors.slate.50');
+    --sl-color-border-badge: theme('colors.slate.200');
+    --sl-color-text-badge: theme('colors.slate.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.note) {
+    --sl-color-bg-badge: rgb(30 41 59 / 0.4); /* slate-800/40 */
+    --sl-color-border-badge: theme('colors.slate.700');
+    --sl-color-text-badge: theme('colors.slate.400');
+  }
+
+  starlight-menu-button button {
+    color: theme('colors.slate.600');
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  [data-theme='dark'] starlight-menu-button button {
+    color: theme('colors.slate.200');
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  starlight-menu-button button[aria-expanded='true'] {
+    background-color: theme('colors.white');
+    box-shadow: none;
+  }
+
+  [data-theme='dark'] starlight-menu-button button[aria-expanded='true'] {
+    background-color: theme('colors.slate.900');
+    box-shadow: none;
+  }
+} /* end component layer */
+
+/* Additional custom styles can be added here */
+
+/* For deepdive callouts that are still used, need to space out content */
+.callout div:not(:last-child),
+.callout p:not(:last-child) {
+  @apply mb-4;
+}
+
+/* Align top with breadcrumbs */
+.right-sidebar-panel {
+  @apply pt-6;
+}
+
+/* Anchor link styles for headings */
+.anchor-link {
+  opacity: 0;
+  text-decoration: none;
+  margin-left: 0.5em;
+  font-weight: normal;
+  color: var(--sl-color-gray-3);
+  transition: opacity 0.2s ease;
+}
+
+h1:hover .anchor-link,
+h2:hover .anchor-link,
+h3:hover .anchor-link,
+h4:hover .anchor-link,
+h5:hover .anchor-link,
+h6:hover .anchor-link {
+  opacity: 1;
+}
+
+.anchor-link:hover {
+  color: var(--sl-color-accent);
+}
+
+.right-sidebar {
+  border-inline-start: none;
+}
+
+.content-panel + .content-panel {
+  border-top: 0;
+}
+
+iframe[src*='youtube'] {
+  aspect-ratio: 16 / 9;
+}
+
+table code {
+  word-wrap: break-word;
+}
+
+/* Fix tab alignment */
+[role='tablist'] {
+  align-items: end;
+}

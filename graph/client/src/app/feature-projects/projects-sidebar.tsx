@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getProjectGraphService } from '../machines/get-services';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { FocusedPanel } from '../ui-components/focused-panel';
@@ -9,7 +9,7 @@ import {
   collapseEdgesSelector,
   compositeContextSelector,
   compositeGraphEnabledSelector,
-  focusedProjectNameSelector,
+  focusedProjectIdSelector,
   getTracingInfo,
   groupByFolderSelector,
   hasAffectedProjectsSelector,
@@ -22,7 +22,6 @@ import { GroupByFolderPanel } from './panels/group-by-folder-panel';
 import { SearchDepth } from './panels/search-depth';
 import { TextFilterPanel } from './panels/text-filter-panel';
 import { TracingPanel } from './panels/tracing-panel';
-import { ProjectList } from './project-list';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
@@ -33,7 +32,7 @@ import {
   useEnvironmentConfig,
   usePoll,
   useRouteConstructor,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
 import {
   useNavigate,
   useParams,
@@ -44,13 +43,15 @@ import { useCurrentPath } from '../hooks/use-current-path';
 import { ProjectDetailsModal } from '../ui-components/project-details-modal';
 import { CompositeGraphPanel } from './panels/composite-graph-panel';
 import { CompositeContextPanel } from '../ui-components/composite-context-panel';
-import { getGraphService } from '../machines/graph.service';
+import { useProjectGraphContext } from '@nx/graph/projects';
+import { Spinner } from '@nx/graph-ui-common';
+import { ProjectList } from './project-list';
 
-export function ProjectsSidebar(): JSX.Element {
+function ProjectsSidebarInner() {
   const environmentConfig = useEnvironmentConfig();
-  const graphService = getGraphService();
+
   const projectGraphService = getProjectGraphService();
-  const focusedProject = useProjectGraphSelector(focusedProjectNameSelector);
+  const focusedProject = useProjectGraphSelector(focusedProjectIdSelector);
   const searchDepthInfo = useProjectGraphSelector(searchDepthSelector);
   const includePath = useProjectGraphSelector(includePathSelector);
   const textFilter = useProjectGraphSelector(textFilterSelector);
@@ -62,16 +63,24 @@ export function ProjectsSidebar(): JSX.Element {
   const compositeEnabled = useProjectGraphSelector(
     compositeGraphEnabledSelector
   );
-
   const compositeContext = useProjectGraphSelector(compositeContextSelector);
 
   const isTracing = projectGraphService.getSnapshot().matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
   const projectGraphDataService = getProjectGraphDataService();
 
+  const { handleEventResult } = useProjectGraphContext();
   const routeParams = useParams();
   const currentRoute = useCurrentPath();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const focusedProjectName = useMemo(() => {
+    const focusedProjectNode = handleEventResult.nodes.find(
+      (project) => project.id === focusedProject
+    );
+    if (!focusedProjectNode) return '';
+    return focusedProjectNode.name;
+  }, [handleEventResult.projects, focusedProject]);
 
   const selectedProjectRouteData = useRouteLoaderData(
     'selectedWorkspace'
@@ -82,18 +91,8 @@ export function ProjectsSidebar(): JSX.Element {
   const routeConstructor = useRouteConstructor();
 
   function resetFocus() {
-    projectGraphService.send({ type: 'unfocusProject' });
+    projectGraphService.send({ type: 'unfocusNode' });
     navigate(routeConstructor('/projects', true));
-  }
-
-  function resetCompositeContext() {
-    projectGraphService.send({ type: 'enableCompositeGraph', context: null });
-    navigate(
-      routeConstructor(
-        { pathname: '/projects', search: '?composite=true' },
-        true
-      )
-    );
   }
 
   function showAllProjects() {
@@ -108,7 +107,7 @@ export function ProjectsSidebar(): JSX.Element {
   }
 
   function hideAllProjects() {
-    projectGraphService.send({ type: 'deselectAll' });
+    projectGraphService.send({ type: 'hideAll' });
     navigate(
       routeConstructor('/projects', (searchParams) => {
         if (searchParams.has('composite')) {
@@ -225,8 +224,18 @@ export function ProjectsSidebar(): JSX.Element {
   }
 
   function resetTraceEnd() {
+    if (!tracingInfo.start) {
+      console.warn('[Nx Graph] no tracing start set.');
+      return;
+    }
+
     projectGraphService.send({ type: 'clearTraceEnd' });
-    navigate(routeConstructor('/projects', true));
+    navigate(
+      routeConstructor(
+        `/projects/trace/${encodeURIComponent(tracingInfo.start)}`,
+        true
+      )
+    );
   }
 
   function setAlgorithm(algorithm: TracingAlgorithmType) {
@@ -238,45 +247,37 @@ export function ProjectsSidebar(): JSX.Element {
   }
 
   useEffect(() => {
-    return graphService.listen((event) => {
-      if (event.type === 'CompositeNodeDblClick') {
-        projectGraphService.send({
-          type: event.data.expanded
-            ? 'collapseCompositeNode'
-            : 'expandCompositeNode',
-          id: event.id,
-        });
-      }
-    });
-  }, []);
-
-  useEffect(() => {
     projectGraphService.send({
-      type: 'setProjects',
-      projects: selectedProjectRouteData.projects,
+      type: 'initGraph',
       dependencies: selectedProjectRouteData.dependencies,
+      projects: selectedProjectRouteData.projects,
       fileMap: selectedProjectRouteData.fileMap,
       affectedProjects: selectedProjectRouteData.affected,
-      workspaceLayout: selectedProjectRouteData.layout,
     });
   }, [selectedProjectRouteData]);
 
   useEffect(() => {
     switch (currentRoute.currentPath) {
       case '/projects/all':
-        projectGraphService.send({ type: 'selectAll' });
+        projectGraphService.send({ type: 'showAll', autoExpand: false });
         break;
       case '/projects/affected':
-        projectGraphService.send({ type: 'selectAffected' });
+        projectGraphService.send({ type: 'showAffected', autoExpand: false });
         break;
     }
   }, [currentRoute]);
 
   useEffect(() => {
     if (routeParams.focusedProject) {
+      const nodeId = routeParams.focusedProject.includes('composite-project')
+        ? routeParams.focusedProject
+        : `project-${routeParams.focusedProject}`;
+
       projectGraphService.send({
-        type: 'focusProject',
-        projectName: routeParams.focusedProject,
+        type: 'focusNode',
+        nodeId,
+        reset: true,
+        variant: 'legacy',
       });
     }
 
@@ -297,37 +298,39 @@ export function ProjectsSidebar(): JSX.Element {
   useEffect(() => {
     if (searchParams.has('groupByFolder') && groupByFolder === false) {
       projectGraphService.send({
-        type: 'setGroupByFolder',
+        type: 'toggleGroupByFolder',
         groupByFolder: true,
       });
     } else if (!searchParams.has('groupByFolder') && groupByFolder === true) {
       projectGraphService.send({
-        type: 'setGroupByFolder',
+        type: 'toggleGroupByFolder',
         groupByFolder: false,
       });
     }
 
     if (searchParams.has('collapseEdges') && collapseEdges === false) {
       projectGraphService.send({
-        type: 'setCollapseEdges',
+        type: 'toggleCollapseEdges',
         collapseEdges: true,
       });
     } else if (!searchParams.has('collapseEdges') && collapseEdges === true) {
       projectGraphService.send({
-        type: 'setCollapseEdges',
+        type: 'toggleCollapseEdges',
         collapseEdges: false,
       });
     }
 
-    if (searchParams.has('composite')) {
-      const compositeParam = searchParams.get('composite');
+    if (searchParams.has('composite') && !compositeEnabled) {
       projectGraphService.send({
-        type: 'enableCompositeGraph',
-        context: compositeParam === 'true' ? null : compositeParam,
+        type: 'toggleCompositeGraph',
+        composite: true,
       });
+      projectGraphService.send({ type: 'showAll', autoExpand: true });
     } else if (!searchParams.has('composite') && compositeEnabled) {
-      projectGraphService.send({ type: 'disableCompositeGraph' });
-      navigate(routeConstructor('/projects', true));
+      projectGraphService.send({
+        type: 'toggleCompositeGraph',
+        composite: false,
+      });
     }
 
     if (searchParams.has('searchDepth')) {
@@ -384,12 +387,14 @@ export function ProjectsSidebar(): JSX.Element {
       if (response.hash === lastHash) {
         return;
       }
+
       projectGraphService.send({
         type: 'updateGraph',
         projects: response.projects,
         dependencies: response.dependencies,
         fileMap: response.fileMap,
       });
+
       setLastHash(response.hash);
     },
     5000,
@@ -398,7 +403,7 @@ export function ProjectsSidebar(): JSX.Element {
 
   const updateTextFilter = useCallback(
     (textFilter: string) => {
-      projectGraphService.send({ type: 'filterByText', search: textFilter });
+      projectGraphService.send({ type: 'filter', filterBy: textFilter });
       navigate(routeConstructor('/projects', true));
     },
     [projectGraphService]
@@ -411,15 +416,15 @@ export function ProjectsSidebar(): JSX.Element {
       {compositeEnabled && compositeContext ? (
         <CompositeContextPanel
           compositeContext={compositeContext}
-          reset={resetCompositeContext}
+          reset={() => {}}
         />
       ) : null}
 
-      {focusedProject ? (
+      {focusedProjectName ? (
         <FocusedPanel
-          focusedLabel={focusedProject}
+          focusedLabel={focusedProjectName}
           resetFocus={resetFocus}
-        ></FocusedPanel>
+        />
       ) : null}
 
       {isTracing ? (
@@ -430,7 +435,7 @@ export function ProjectsSidebar(): JSX.Element {
           setAlgorithm={setAlgorithm}
           resetStart={resetTraceStart}
           resetEnd={resetTraceEnd}
-        ></TracingPanel>
+        />
       ) : null}
 
       <TextFilterPanel
@@ -439,7 +444,7 @@ export function ProjectsSidebar(): JSX.Element {
         textFilter={textFilter}
         toggleIncludeLibsInPathChange={includeLibsInPathChange}
         updateTextFilter={updateTextFilter}
-      ></TextFilterPanel>
+      />
 
       <div>
         <ShowHideAll
@@ -448,14 +453,14 @@ export function ProjectsSidebar(): JSX.Element {
           showAffected={showAffectedProjects}
           hasAffected={hasAffectedProjects}
           label="projects"
-        ></ShowHideAll>
+        />
 
         <GroupByFolderPanel
           groupByFolder={groupByFolder}
           groupByFolderChanged={groupByFolderChanged}
           disabled={compositeEnabled}
           disabledDescription="Group by folder is not available when composite graph is enabled"
-        ></GroupByFolderPanel>
+        />
 
         <SearchDepth
           searchDepth={searchDepthInfo.searchDepth}
@@ -463,12 +468,12 @@ export function ProjectsSidebar(): JSX.Element {
           searchDepthFilterEnabledChange={searchDepthFilterEnabledChange}
           incrementDepthFilter={incrementDepthFilter}
           decrementDepthFilter={decrementDepthFilter}
-        ></SearchDepth>
+        />
 
         <CompositeGraphPanel
           compositeEnabled={compositeEnabled}
           compositeEnabledChanged={compositeEnabledChanged}
-        ></CompositeGraphPanel>
+        />
 
         <ExperimentalFeature>
           <div className="mx-4 mt-8 flex flex-col gap-4 rounded-lg border-2 border-dashed border-purple-500 p-4 shadow-lg dark:border-purple-600 dark:bg-[#0B1221]">
@@ -478,14 +483,42 @@ export function ProjectsSidebar(): JSX.Element {
             <CollapseEdgesPanel
               collapseEdges={collapseEdges}
               collapseEdgesChanged={collapseEdgesChanged}
-            ></CollapseEdgesPanel>
+              disabled={!groupByFolder}
+            />
           </div>
         </ExperimentalFeature>
       </div>
 
       {environmentConfig.environment !== 'nx-console' ? (
-        <ProjectList></ProjectList>
+        <ProjectList handleEventResult={handleEventResult} />
       ) : null}
     </>
   );
+}
+
+export function ProjectsSidebar(): JSX.Element {
+  const { graphClient, send, sendRenderConfigEvent } = useProjectGraphContext();
+  const projectGraphService = getProjectGraphService();
+  const graphActor = useProjectGraphSelector(
+    (state) => state.context.graphActor
+  );
+
+  useEffect(() => {
+    if (!graphClient) return;
+
+    projectGraphService.send({
+      type: 'setGraphClient',
+      graphClient: { graphClient, send, sendRenderConfigEvent },
+    });
+  }, [graphClient]);
+
+  if (!graphClient || !graphActor) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  return <ProjectsSidebarInner />;
 }

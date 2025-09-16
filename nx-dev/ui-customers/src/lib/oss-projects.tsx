@@ -1,4 +1,4 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import {
   AwsIcon,
   CypressIcon,
@@ -16,7 +16,7 @@ import {
   StrapiIcon,
   TanstackIcon,
   TypescriptEslintIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export function OssProjects(): JSX.Element {
   return (

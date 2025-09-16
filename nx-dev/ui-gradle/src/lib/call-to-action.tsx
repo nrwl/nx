@@ -1,6 +1,6 @@
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import { GradleIcon } from '@nx/nx-dev/ui-icons';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
+import { GradleIcon } from '@nx/nx-dev-ui-icons';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import React, { ReactElement } from 'react';
 import Link from 'next/link';
 
@@ -104,18 +104,34 @@ export function CallToAction(): ReactElement {
         <h3 className="mt-16 text-3xl font-medium tracking-tight text-slate-950 dark:text-white">
           Looking for Maven?
         </h3>
-        <p className="mt-8"> Maven support is coming soon. </p>
-        <p className="mt-4">
-          Join the Nx Community Discord to be notified when it is released.{' '}
+        <p className="mt-8">
+          {' '}
+          Maven support is coming soon. Follow our blog and social media to be
+          notified when it is released.{' '}
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link
-            href="https://go.nx.dev/community"
-            title="Join the Nx Community Discord"
+            href="/blog"
+            title="Read the blog"
             prefetch={false}
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            Join Us On Discord{' '}
+            Read the blog{' '}
+            <span
+              aria-hidden="true"
+              className="inline-block transition group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </Link>
+
+          <Link
+            href="/community"
+            title="Follow us on social media"
+            prefetch={false}
+            className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+          >
+            Follow us on social media{' '}
             <span
               aria-hidden="true"
               className="inline-block transition group-hover:translate-x-1"

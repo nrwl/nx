@@ -23,24 +23,28 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index",
+  "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/react": "workspace:*",
     "ajv": "^8.12.0",
     "enhanced-resolve": "^5.8.3",
-    "glob": "7.1.4",
     "ignore": "^5.0.4",
-    "metro-config": "~0.80.4",
-    "metro-resolver": "~0.80.4",
     "picocolors": "^1.1.0",
+    "tinyglobby": "^0.2.12",
     "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/react": "file:../react",
-    "@nx/workspace": "file:../workspace"
+    "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "metro-config": ">= 0.82.0",
+    "metro-resolver": ">= 0.82.0"
+  },
+  "optionalDependencies": {
+    "@nx/detox": "workspace:*",
+    "@nx/rollup": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {

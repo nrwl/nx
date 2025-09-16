@@ -21,8 +21,6 @@ pub enum Action {
     UnpinTask(String, usize),
     UnpinAllTasks,
     SortTasks,
-    NextPage,
-    PreviousPage,
     NextTask,
     PreviousTask,
     SetSpacebarMode(bool),
@@ -37,4 +35,5 @@ pub enum Action {
     ToggleDebugMode,
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
+    EndCommand,
 }

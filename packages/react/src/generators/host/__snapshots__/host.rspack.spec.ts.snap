@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`hostGenerator bundler=rspack should generate host files and configs for SSR 1`] = `
 "// @ts-check
@@ -116,9 +116,9 @@ module.exports = {
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=true 1`] = `
-"import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
-import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
-import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';
+"import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
+import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack.js';
 import { join } from 'path';
 
 import config from './module-federation.config';

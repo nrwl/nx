@@ -37,11 +37,17 @@ import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
-import { Tweet, tweet } from '@nx/nx-dev/ui-common';
-import { YouTube, youtube } from '@nx/nx-dev/ui-common';
-import { CourseVideo } from '@nx/nx-dev/ui-common';
+import { Step, Steps } from './lib/tags/steps.component';
+import { step, steps } from './lib/tags/steps.schema';
 import { courseVideo } from './lib/tags/course-video.schema';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
+import {
+  CourseVideo,
+  YouTube,
+  Tweet,
+  youtube,
+  tweet,
+} from '@nx/nx-dev-ui-common';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
@@ -87,6 +93,8 @@ export const getMarkdocCustomConfig = (
       'short-embeds': shortEmbeds,
       'short-video': shortVideo,
       'side-by-side': sideBySide,
+      step,
+      steps,
       tab,
       tabs,
       testimonial,
@@ -120,6 +128,8 @@ export const getMarkdocCustomConfig = (
     ShortEmbeds,
     ShortVideo,
     SideBySide,
+    Step,
+    Steps,
     Tab,
     Tabs,
     TableOfContents,
@@ -180,4 +190,4 @@ export const renderMarkdown: (
   };
 };
 
-export { Metrics, VideoLink, GithubRepository, CourseVideo };
+export { Metrics, VideoLink, GithubRepository /*, CourseVideo*/ };

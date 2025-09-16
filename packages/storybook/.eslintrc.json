@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -39,17 +39,11 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": [
-              "nx",
-              "typescript",
-              "@nx/web", // Just types used
-              "@storybook/core-server",
-              "@storybook/types"
-            ]
+            "ignoredDependencies": ["nx", "typescript", "@nx/web"]
           }
         ]
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

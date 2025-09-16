@@ -1,7 +1,6 @@
-import { ExternalApi, getExternalApiService } from '@nx/graph/legacy/shared';
+import { ExternalApi, getExternalApiService } from '@nx/graph-shared';
 import { getRouter } from './get-router';
 import { getProjectGraphService } from './machines/get-services';
-import { getGraphService } from './machines/graph.service';
 
 export class ExternalApiImpl extends ExternalApi {
   _projectGraphService = getProjectGraphService();
@@ -12,7 +11,6 @@ export class ExternalApiImpl extends ExternalApi {
       }
     });
   });
-  _graphService = getGraphService();
 
   router = getRouter();
   externalApiService = getExternalApiService();
@@ -100,14 +98,16 @@ export class ExternalApiImpl extends ExternalApi {
 
   focusTarget(projectName: string, targetName: string) {
     this.router.navigate(
-      `/tasks/${encodeURIComponent(targetName)}?projects=${encodeURIComponent(
-        projectName
-      )}`
+      `/tasks?targets=${encodeURIComponent(
+        targetName
+      )}&projects=${encodeURIComponent(projectName)}`
     );
   }
 
   selectAllTargetsByName(targetName: string) {
-    this.router.navigate(`/tasks/${encodeURIComponent(targetName)}/all`);
+    this.router.navigate(
+      `/tasks/all?targets=${encodeURIComponent(targetName)}`
+    );
   }
 
   enableExperimentalFeatures() {

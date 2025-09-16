@@ -5,6 +5,7 @@ import type { Styles } from '../utils/types';
 export interface Schema {
   directory: string;
   name?: string;
+  bundler?: 'webpack' | 'rspack';
   host?: string;
   port?: number;
   setParserOptionsProject?: boolean;

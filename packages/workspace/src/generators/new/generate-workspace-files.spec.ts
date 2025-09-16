@@ -1,12 +1,17 @@
-import type { NxJsonConfiguration, Tree } from '@nx/devkit';
-import { formatFiles, readJson } from '@nx/devkit';
-import Ajv from 'ajv';
-import { generateWorkspaceFiles } from './generate-workspace-files';
+import * as devkit from '@nx/devkit';
+import {
+  formatFiles,
+  readJson,
+  type NxJsonConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
-import { Preset } from '../utils/presets';
-import * as nxSchema from 'nx/schemas/nx-schema.json';
+import Ajv from 'ajv';
 import { mkdirSync, writeFileSync } from 'fs';
+import * as nxSchema from 'nx/schemas/nx-schema.json';
 import { join } from 'path';
+import { Preset } from '../utils/presets';
+import { generateWorkspaceFiles } from './generate-workspace-files';
 
 jest.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
@@ -21,7 +26,7 @@ jest.mock(
 );
 jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
   ...jest.requireActual('nx/src/nx-cloud/utilities/url-shorten'),
-  createNxCloudOnboardingURL: async (source, token) => {
+  createNxCloudOnboardingURL: async (source, token, meta, forceManual) => {
     return `https://test.nx.app/connect?source=${source}&token=${token}`;
   },
 }));
@@ -33,6 +38,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     tree = createTree();
     // we need an actual path for the package manager version check
     tree.root = process.cwd();
+    jest.clearAllMocks();
   });
 
   it('should create files', async () => {
@@ -318,8 +324,63 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     `);
   });
 
-  it('should create workspaces from workspaceGlobs (pnpm)', async () => {
-    tree.write('/proj/package.json', JSON.stringify({}));
+  it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm <7', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('6.1.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.NPM,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaceGlobs: ['apps/*', 'packages/*'],
+    });
+
+    const packageJson = tree.read('proj/pnpm-workspace.yaml', 'utf-8');
+    expect(packageJson).toMatchInlineSnapshot(`
+      "packages:
+        - "apps/*"
+        - "packages/*"
+      "
+    `);
+    expect(tree.exists('proj/.npmrc')).toBeFalsy();
+  });
+
+  it('should configure the pnpm settings in pnpm-workspace.yaml and .npmrc for pnpm >7 <10.6.0', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('9.1.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.NPM,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaceGlobs: ['apps/*', 'packages/*'],
+    });
+
+    const packageJson = tree.read('proj/pnpm-workspace.yaml', 'utf-8');
+    expect(packageJson).toMatchInlineSnapshot(`
+      "packages:
+        - "apps/*"
+        - "packages/*"
+      "
+    `);
+    const npmrc = tree.read('proj/.npmrc', 'utf-8');
+    expect(npmrc).toMatchInlineSnapshot(`
+      "strict-peer-dependencies=false
+      auto-install-peers=true
+      "
+    `);
+  });
+
+  it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm 10.6.0+', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
+
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
@@ -332,10 +393,14 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
     const packageJson = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
     expect(packageJson).toMatchInlineSnapshot(`
-      "packages: 
+      "packages:
         - "apps/*"
         - "packages/*"
+
+      autoInstallPeers: true
+      strictPeerDependencies: false
       "
     `);
+    expect(tree.exists('proj/.npmrc')).toBeFalsy();
   });
 });

@@ -6,8 +6,8 @@ import {
   Transition,
 } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { SectionHeading, Strong } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
 import Link from 'next/link';
 import { ReactElement } from 'react';
@@ -41,6 +41,7 @@ export function Faq(): ReactElement {
             <Link
               href="/deprecated/custom-tasks-runner#deprecating-custom-tasks-runner"
               title="See documentation"
+              prefetch={false}
               className="font-semibold"
             >
               documented here.
@@ -66,8 +67,38 @@ export function Faq(): ReactElement {
           thus giving you the flexibility to adapt it to your custom
           authentication requirements.{' '}
           <Link
-            href="/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server"
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/guides/tasks--caching/self-hosted-caching#build-your-own-caching-server'
+                : '/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server'
+            }
             title="Learn more"
+            prefetch={false}
+            className="font-semibold"
+          >
+            Learn more here.
+          </Link>
+        </p>
+      ),
+    },
+    {
+      question:
+        'What cache poisoning vulnerabilities affect self-hosted solutions?',
+      answerJson:
+        'CREEP (Cache Race-condition Exploit Enables Poisoning) is a critical vulnerability (CVE-2025-36852) that affects self-hosted remote cache solutions. <br /> It allows any developer with pull request access to inject malicious code into your production builds through a race condition in the caching system. The attack is undetectable because it happens during artifact creation, before any security measures take effect.',
+      answerUi: (
+        <p>
+          CREEP (Cache Race-condition Exploit Enables Poisoning) is a critical
+          vulnerability (CVE-2025-36852) that affects self-hosted remote cache
+          solutions. <br /> It allows any developer with pull request access to
+          inject malicious code into your production builds through a race
+          condition in the caching system. The attack is undetectable because it
+          happens during artifact creation, before any security measures take
+          effect.{' '}
+          <Link
+            href="/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep"
+            title="Learn more"
+            prefetch={false}
             className="font-semibold"
           >
             Learn more here.
@@ -91,6 +122,7 @@ export function Faq(): ReactElement {
           <Link
             href="/enterprise/security"
             title="Learn more"
+            prefetch={false}
             className="font-semibold"
           >
             Learn more here.
@@ -111,37 +143,34 @@ export function Faq(): ReactElement {
       answerUi: (
         <>
           <p>
-            Nx Cloud includes{' '}
-            <Strong>enterprise-grade security features</Strong> designed to give
-            organizations more control over access and data protection.
+            Nx Cloud includes enterprise-grade security features designed to
+            give organizations more control over access and data protection.
           </p>
           <ul className="mt-4 list-disc space-y-2 px-4">
             <li>
-              <Strong>Access Management</Strong>: Nx Cloud supports{' '}
-              <Strong>individual user authentication</Strong> tied to personal
-              accounts, enabling precise control over who can access cached
-              data. If a user leaves the company or changes roles, their access
-              can be revoked immediately — without impacting others.
+              Access Management: Nx Cloud supports individual user
+              authentication tied to personal accounts, enabling precise control
+              over who can access cached data. If a user leaves the company or
+              changes roles, their access can be revoked immediately — without
+              impacting others.
             </li>
             <li>
-              <Strong>Personal Access Tokens</Strong>: Teams can issue and
-              revoke multiple access tokens, allowing fine-grained control over
-              automation and integrations.
+              Personal Access Tokens: Teams can issue and revoke multiple access
+              tokens, allowing fine-grained control over automation and
+              integrations.
             </li>
             <li>
-              <Strong>No Cache Overrides</Strong>: Nx Cloud prevents
-              unauthorized cache modifications.
+              No Cache Overrides: Nx Cloud prevents unauthorized cache
+              modifications.
             </li>
             <li>
-              <Strong>SOC 2 Compliance</Strong>: Nx Cloud is SOC 2 certified,
-              demonstrating a high standard for security, availability, and
-              confidentiality.
+              SOC 2 Compliance Nx Cloud is SOC 2 certified, demonstrating a high
+              standard for security, availability, and confidentiality.
             </li>
             <li>
-              <Strong>Secure Deployment Options</Strong>: Nx Cloud though{' '}
-              <Strong>Nx Enterprise</Strong>, includes{' '}
-              <Strong>single-tenant or on-prem options</Strong> for teams
-              needing full control over their data storage and access policies.
+              Secure Deployment Options Nx Cloud though Nx Enterprise includes{' '}
+              single-tenant or on-prem options for teams needing full control
+              over their data storage and access policies.
             </li>
           </ul>
         </>

@@ -533,6 +533,23 @@ describe('lib', () => {
     });
   });
 
+  describe('--routing', () => {
+    it('should be able to generate a library with routing', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        routing: true,
+      });
+
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toContain('react-router-dom');
+
+      expect(content).toMatch(/<Link\s*to="\/">my-lib root<\/Link>/);
+      expect(content).toMatch(
+        /<Route\s*path="\/"\s*element={<div>This is the my-lib root route.<\/div>} \/>/
+      );
+    });
+  });
+
   describe('--buildable', () => {
     it('should default to rollup bundler', async () => {
       await libraryGenerator(tree, {
@@ -941,7 +958,7 @@ module.exports = withNx(
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -1000,6 +1017,7 @@ module.exports = withNx(
             },
           },
           test: {
+            name: '@proj/mylib',
             watch: false,
             globals: true,
             environment: 'jsdom',
@@ -1248,8 +1266,8 @@ module.exports = withNx(
         {
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.esm.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
@@ -1269,7 +1287,7 @@ module.exports = withNx(
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

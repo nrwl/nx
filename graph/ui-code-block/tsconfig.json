@@ -1,22 +1,15 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "allowJs": false,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true
+    "jsx": "react-jsx"
   },
   "files": [],
   "include": [],
   "references": [
     {
+      "path": "../ui-common"
+    },
+    {
       "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    },
-    {
-      "path": "./tsconfig.storybook.json"
     }
   ],
   "extends": "../../tsconfig.base.json"

@@ -17,12 +17,12 @@ Angular application(s).
 
 ## Generating a Remote
 
-To generate a remote application in your workspace, run the following command:
+To generate a remote application in your workspace, cd into the right folder and run the following command:
 
 {% tabs %}
 {% tab label="React" %}
 
-```{% command="nx g @nx/react:remote apps/react/myremote" %}
+```{% command="nx g @nx/react:remote --name=myremote" %}
 NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
@@ -32,7 +32,7 @@ CREATE apps/react/myremote/src/environments/environment.ts
 CREATE apps/react/myremote/src/favicon.ico
 CREATE apps/react/myremote/src/index.html
 CREATE apps/react/myremote/tsconfig.app.json
-CREATE apps/react/myremote/webpack.config.ts
+CREATE apps/react/myremote/rspack.config.ts
 CREATE apps/react/myremote/.babelrc
 CREATE apps/react/myremote/src/app/nx-welcome.tsx
 CREATE apps/react/myremote/src/app/app.module.css
@@ -47,7 +47,6 @@ CREATE apps/react/myremote/src/bootstrap.tsx
 CREATE apps/react/myremote/module-federation.config.ts
 CREATE apps/react/myremote/src/main.ts
 CREATE apps/react/myremote/src/remote-entry.ts
-CREATE apps/react/myremote/webpack.config.prod.ts
 UPDATE tsconfig.base.json
 ```
 
@@ -63,18 +62,17 @@ CREATE apps/angular/myremote/src/favicon.ico
 CREATE apps/angular/myremote/src/index.html
 CREATE apps/angular/myremote/src/styles.css
 CREATE apps/angular/myremote/tsconfig.app.json
-CREATE apps/angular/myremote/tsconfig.editor.json
 CREATE apps/angular/myremote/tsconfig.json
-CREATE apps/angular/myremote/src/app/app.component.ts
+CREATE apps/angular/myremote/src/app/app.ts
 CREATE apps/angular/myremote/src/app/app.routes.ts
 CREATE apps/angular/myremote/src/main.ts
 CREATE apps/angular/myremote/.eslintrc.json
 CREATE apps/angular/myremote/jest.config.ts
 CREATE apps/angular/myremote/src/test-setup.ts
 CREATE apps/angular/myremote/tsconfig.spec.json
-CREATE apps/angular/myremote/src/app/remote-entry/entry.component.ts
+CREATE apps/angular/myremote/src/app/remote-entry/entry.ts
 CREATE apps/angular/myremote/src/app/remote-entry/entry.routes.ts
-CREATE apps/angular/myremote/src/app/remote-entry/nx-welcome.component.ts
+CREATE apps/angular/myremote/src/app/remote-entry/nx-welcome.ts
 CREATE apps/angular/myremote/module-federation.config.ts
 CREATE apps/angular/myremote/webpack.config.ts
 CREATE apps/angular/myremote/webpack.prod.config.ts
@@ -92,7 +90,7 @@ to specify that it can consume federated modules from this remote.
 {% tab label="TypeScript Config File" %}
 
 ```typescript {% fileName="apps/react/shell/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'shell',
@@ -117,7 +115,7 @@ module.exports = {
 
 {% callout type="note" title="Creating a Host" %}
 If you do not already have a host application in your workspace, look at
-the [Create a Host Recipe](/recipes/module-federation/create-a-host) for more information on how to achieve
+the [Create a Host Recipe](/technologies/module-federation/recipes/create-a-host) for more information on how to achieve
 this.
 {% /callout %}
 
@@ -140,7 +138,7 @@ CREATE apps/react/myremote/src/environments/environment.ts
 CREATE apps/react/myremote/src/favicon.ico
 CREATE apps/react/myremote/src/index.html
 CREATE apps/react/myremote/tsconfig.app.json
-CREATE apps/react/myremote/webpack.config.ts
+CREATE apps/react/myremote/rspack.config.ts
 CREATE apps/react/myremote/.babelrc
 CREATE apps/react/myremote/src/app/nx-welcome.tsx
 CREATE apps/react/myremote/src/app/app.module.css
@@ -155,7 +153,6 @@ CREATE apps/react/myremote/src/bootstrap.tsx
 CREATE apps/react/myremote/module-federation.config.ts
 CREATE apps/react/myremote/src/main.ts
 CREATE apps/react/myremote/src/remote-entry.ts
-CREATE apps/react/myremote/webpack.config.prod.ts
 UPDATE apps/react/shell/module-federation.config.ts
 UPDATE tsconfig.base.json
 ```
@@ -172,18 +169,17 @@ CREATE apps/angular/myremote/src/favicon.ico
 CREATE apps/angular/myremote/src/index.html
 CREATE apps/angular/myremote/src/styles.css
 CREATE apps/angular/myremote/tsconfig.app.json
-CREATE apps/angular/myremote/tsconfig.editor.json
 CREATE apps/angular/myremote/tsconfig.json
-CREATE apps/angular/myremote/src/app/app.component.ts
+CREATE apps/angular/myremote/src/app/app.ts
 CREATE apps/angular/myremote/src/app/app.routes.ts
 CREATE apps/angular/myremote/src/main.ts
 CREATE apps/angular/myremote/.eslintrc.json
 CREATE apps/angular/myremote/jest.config.ts
 CREATE apps/angular/myremote/src/test-setup.ts
 CREATE apps/angular/myremote/tsconfig.spec.json
-CREATE apps/angular/myremote/src/app/remote-entry/entry.component.ts
+CREATE apps/angular/myremote/src/app/remote-entry/entry.ts
 CREATE apps/angular/myremote/src/app/remote-entry/entry.routes.ts
-CREATE apps/angular/myremote/src/app/remote-entry/nx-welcome.component.ts
+CREATE apps/angular/myremote/src/app/remote-entry/nx-welcome.ts
 CREATE apps/angular/myremote/module-federation.config.ts
 CREATE apps/angular/myremote/webpack.config.ts
 CREATE apps/angular/myremote/webpack.prod.config.ts
@@ -250,6 +246,10 @@ as you work on them.
 To do this, run the command:
 
 ```shell
+## React
+nx serve myremote
+
+## Angular
 nx serve host --devRemotes=myremote
 ```
 

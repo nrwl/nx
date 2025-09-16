@@ -6,7 +6,8 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+  getAvailablePort,
+} from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
 
@@ -24,9 +25,10 @@ describe('React Rspack Module Federation Misc', () => {
     it('should generate host and remote apps in webpack, convert to rspack and use playwright for e2es', async () => {
       const shell = uniq('shell');
       const remote1 = uniq('remote1');
+      const shellPort = await getAvailablePort();
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote1} --bundler=webpack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
       );
 
       runCLI(
@@ -77,9 +79,10 @@ describe('React Rspack Module Federation Misc', () => {
       const shell = uniq('shell');
       const remote1 = uniq('remote1');
       const remote2 = uniq('remote2');
+      const shellPort = await getAvailablePort();
 
       runCLI(
-        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
       );
 
       runCLI(
@@ -137,8 +140,10 @@ describe('React Rspack Module Federation Misc', () => {
       const shell = uniq('shell');
       const remote1 = uniq('remote1');
       const remote2 = uniq('remote2');
+      const shellPort = await getAvailablePort();
+
       runCLI(
-        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=rspack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
       );
 
       runCLI(

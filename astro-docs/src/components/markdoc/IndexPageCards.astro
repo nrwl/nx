@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import Cards from './Cards.astro';
+import LinkCard from './LinkCard.astro';
+
+export interface Props {
+  path: string;
+}
+
+const { path: rawPath } = Astro.props;
+// make sure paths are normalized to url slugs 
+// i.e. features/CI Features -> features/ci-features
+const path = rawPath.replace(/\s/, '-').toLowerCase();
+
+const allDocs = await getCollection('docs');
+
+const childPages = allDocs.filter(doc => {
+  if (!doc.id.startsWith(`${path}/`)) return false;
+  
+  // Skip the current index
+  if (doc.id === `${path}/index.mdoc`) return false;
+  
+  const relativePath = doc.id.slice(path.length + 1);
+  const pathParts = relativePath.split('/');
+  
+  // We're looking for:
+  // - Direct child files like "automate-updating-dependencies.mdoc" (1 part)
+  // - Subdirectory index files like "angular/index.mdoc" (2 parts, second is index.mdoc)
+  
+  if (pathParts.length === 1) {
+    // Direct child file
+    return true;
+  } else if (pathParts.length === 2 && pathParts[1] === 'index.mdoc') {
+    // Subdirectory with index.mdoc
+    return true;
+  }
+  
+  return false;
+});
+
+const sortedPages = childPages.sort((a, b) => {
+  const orderA = a.data.sidebar?.order ?? 999;
+  const orderB = b.data.sidebar?.order ?? 999;
+  if (orderA !== orderB) return orderA - orderB;
+  return (a.data.title || a.id).localeCompare(b.data.title || b.id);
+});
+
+const processedPages = sortedPages.map(page => {
+  let href = `/${page.id.replace('.mdoc', '')}`;
+  
+  // Check if this is a subdirectory index page
+  const fileName = page.id.split('/').pop()?.replace('.mdoc', '');
+  const isIndexPage = fileName === 'index';
+  
+  const title = page.data.sidebar?.label || page.data.title || 'Untitled';
+
+  // Ensure href is never undefined
+  if (!href || href === '/') {
+    console.warn(`Invalid href for page: ${page.id}`);
+    href = '#';
+  }
+  
+  return {
+    title,
+    description: page.data.description || '',
+    // all routes are prefixed with /docs
+    href:  href.startsWith('/') ? `/docs${href}` : `/docs/${href}`
+  };
+}).filter(page => page.href !== '#'); // Filter out any pages with invalid hrefs
+---
+
+{processedPages.length > 0 ? (
+  <Cards>
+    {processedPages.map(page => (
+      <LinkCard 
+        title={page.title}
+        description={page.description}
+        href={page.href}
+        type="documentation"
+      />
+    ))}
+  </Cards>
+) : (
+  <p>No pages found in this section.</p>
+)}

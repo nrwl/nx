@@ -1,10 +1,27 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
+import type { ProjectGraphDependency } from '@nx/devkit';
+// nx-ignore-next-line
 import type {
-  ProjectGraphDependency,
+  FileDataDependency,
   ProjectGraphProjectNode,
-} from '@nx/devkit';
+} from 'nx/src/config/project-graph';
 /* eslint-enable @nx/enforce-module-boundaries */
+
+import type { ProjectUINode, CompositeProjectUINode } from '@nx/graph/projects';
+
+// New interfaces for updated ProjectList
+export interface SidebarProjectUINode {
+  projectUINode: ProjectUINode;
+  isSelected: boolean;
+}
+
+export interface SidebarCompositeUINode {
+  compositeUINode: CompositeProjectUINode;
+  isSelected: boolean;
+}
+
+export type DirectoryProjectUIRecord = Record<string, SidebarProjectUINode[]>;
 
 export function parseParentDirectoriesFromFilePath(
   path: string,
@@ -50,6 +67,49 @@ export function hasPath(
   return false;
 }
 
+export function getProjectUINodesByType(
+  type: string,
+  projectUINodes: ProjectUINode[]
+): ProjectUINode[] {
+  return projectUINodes
+    .filter((node) => node.metadata.projectType === type)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function groupProjectUINodesByDirectory(
+  projectUINodes: ProjectUINode[],
+  selectedProjects: string[],
+  workspaceLayout: { appsDir: string; libsDir: string }
+): DirectoryProjectUIRecord {
+  let groups: DirectoryProjectUIRecord = {};
+
+  for (const projectUINode of projectUINodes) {
+    const workspaceRoot =
+      projectUINode.metadata.projectType === 'app' ||
+      projectUINode.metadata.projectType === 'e2e'
+        ? workspaceLayout.appsDir
+        : workspaceLayout.libsDir;
+
+    const directories = parseParentDirectoriesFromFilePath(
+      projectUINode.metadata.root,
+      workspaceRoot
+    );
+
+    const directory = directories.join('/');
+
+    if (!groups.hasOwnProperty(directory)) {
+      groups[directory] = [];
+    }
+
+    groups[directory].push({
+      projectUINode,
+      isSelected: selectedProjects.includes(projectUINode.name),
+    });
+  }
+
+  return groups;
+}
+
 export function getProjectsByType(
   type: string,
   projects: ProjectGraphProjectNode[]
@@ -92,8 +152,14 @@ export function createTaskName(
   configuration?: string
 ) {
   if (configuration) {
-    return `${project}:${target}:${configuration}`;
+    return `task-${project}:${target}:${configuration}`;
   } else {
-    return `${project}:${target}`;
+    return `task-${project}:${target}`;
   }
+}
+
+export function extractDependencyTarget(dependency: FileDataDependency) {
+  if (typeof dependency === 'string') return dependency;
+  if (dependency.length === 2) return dependency[0];
+  return dependency[1];
 }

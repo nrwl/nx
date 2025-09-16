@@ -6,10 +6,11 @@ import {
   Transition,
 } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
 import Link from 'next/link';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { ReactElement } from 'react';
 
 export function SolutionsFaq(): ReactElement {
@@ -32,12 +33,12 @@ export function SolutionsFaq(): ReactElement {
     {
       question: 'Do I need to migrate to Nx all at once?',
       answerJson:
-        'Not at all. Nx can be incrementally adopted. You can start with just your team – and expand at your own pace.',
+        'Not at all. Nx can be incrementally adopted. You can start with just your team — and expand at your own pace.',
       answerUi: (
         <>
           <p>
             Not at all. Nx can be incrementally adopted. You can start with just
-            your team – and expand at your own pace.
+            your team — and expand at your own pace.
           </p>
         </>
       ),
@@ -87,6 +88,13 @@ export function SolutionsFaq(): ReactElement {
                 href="/contact"
                 title="Reach out to the team"
                 className="font-semibold"
+                onClick={() =>
+                  sendCustomEvent(
+                    'contact-click',
+                    'solutions-faq-more-questions',
+                    'solutions'
+                  )
+                }
               >
                 If you don't find what you're looking for, feel free to reach
                 out.

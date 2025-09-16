@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import {
   SourcemapInfoToolTip,
   SourcemapInfoToolTipProps,
 } from './sourcemap-info-tooltip';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph-ui-common';
 
 const meta: Meta<typeof SourcemapInfoToolTip> = {
   component: SourcemapInfoToolTip,

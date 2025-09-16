@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework jest 1`] = `
 "/// <reference types="vitest" />
@@ -24,7 +24,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -67,7 +67,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -102,6 +102,7 @@ export default defineConfig(() => ({
   // },
   test: {
     setupFiles: ['./src/test-setup.ts'],
+    name: 'storybook-test',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -121,7 +122,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {

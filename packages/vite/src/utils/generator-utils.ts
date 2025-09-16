@@ -378,6 +378,8 @@ export interface ViteConfigFileOptions {
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
   setupFile?: string;
   useEsmExtension?: boolean;
+  port?: number;
+  previewPort?: number;
 }
 
 export function createOrEditViteConfig(
@@ -394,8 +396,8 @@ export function createOrEditViteConfig(
     ? `${projectRoot}/vitest.config.${extension}`
     : `${projectRoot}/vite.config.${extension}`;
 
-  const isUsingTsPlugin = isUsingTsSolutionSetup(tree);
-  const buildOutDir = isUsingTsPlugin
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  const buildOutDir = isTsSolutionSetup
     ? './dist'
     : projectRoot === '.'
     ? `./dist/${options.project}`
@@ -446,7 +448,7 @@ export function createOrEditViteConfig(
     );
   }
 
-  if (!isUsingTsPlugin) {
+  if (!isTsSolutionSetup) {
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
@@ -456,11 +458,13 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })`
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json')${
+        !isTsSolutionSetup ? ', pathsToAliases: false' : ''
+      } })`
     );
   }
 
-  const reportsDirectory = isUsingTsPlugin
+  const reportsDirectory = isTsSolutionSetup
     ? './test-output/vitest/coverage'
     : projectRoot === '.'
     ? `./coverage/${options.project}`
@@ -468,6 +472,7 @@ export function createOrEditViteConfig(
 
   const testOption = options.includeVitest
     ? `  test: {
+    name: '${options.project}',
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
@@ -501,7 +506,7 @@ ${
     : options.includeLib
     ? ''
     : `  server:{
-    port: 4200,
+    port: ${options.port ?? 4200},
     host: 'localhost',
   },`;
 
@@ -510,7 +515,7 @@ ${
     : options.includeLib
     ? ''
     : `  preview:{
-    port: 4300,
+    port: ${options.previewPort ?? 4300},
     host: 'localhost',
   },`;
 

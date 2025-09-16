@@ -1,15 +1,15 @@
-import { getBasicNxCloudSection } from '@nx/nx-dev/data-access-menu';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
-import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+import { getBasicNxCloudSection } from '@nx/nx-dev-data-access-menu';
+import { DocViewer } from '@nx/nx-dev-feature-doc-viewer';
+import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev-models-document';
+import { Menu, MenuItem } from '@nx/nx-dev-models-menu';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { GetStaticProps } from 'next';
 import { ciApi } from '../../lib/ci.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
 import { fetchGithubStarCount } from '../../lib/githubStars.api';
-import { ScrollableContent } from '@nx/ui-scrollable-content';
+import { ScrollableContent } from '@nx/nx-dev-ui-scrollable-content';
 
 export default function CloudRoot({
   document,
@@ -64,20 +64,29 @@ export default function CloudRoot({
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const document = ciApi.generateRootDocumentIndex({
-    name: 'ci',
-    description: 'Learn about using Nx in CI',
-  });
-  return {
-    props: {
-      document,
-      widgetData: {
-        githubStarsCount: await fetchGithubStarCount(),
+  try {
+    const document = ciApi.generateRootDocumentIndex({
+      name: 'ci',
+      description: 'Learn about using Nx in CI',
+    });
+    return {
+      props: {
+        document,
+        widgetData: {
+          githubStarsCount: await fetchGithubStarCount(),
+        },
+        menu: menusApi.getMenu('ci', ''),
+        relatedDocuments: document.tags
+          .map((t) => tagsApi.getAssociatedItems(t))
+          .flat(),
       },
-      menu: menusApi.getMenu('ci', ''),
-      relatedDocuments: document.tags
-        .map((t) => tagsApi.getAssociatedItems(t))
-        .flat(),
-    },
-  };
+    };
+  } catch {
+    return {
+      notFound: true,
+      props: {
+        statusCode: 404,
+      },
+    };
+  }
 };

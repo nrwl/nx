@@ -458,7 +458,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(appTree, 'tsconfig.json', {
@@ -499,8 +499,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "~0.76.3",
+            "react": "19.0.0",
+            "react-native": "~0.79.3",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -618,22 +618,22 @@ describe('lib', () => {
           "exports": {
             "./package.json": "./package.json",
             ".": {
-              "development": "./src/index.ts",
+              "@proj/source": "./src/index.ts",
               "types": "./dist/index.esm.d.ts",
               "import": "./dist/index.esm.js",
               "default": "./dist/index.cjs.js"
             }
           },
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "~0.76.3"
+            "react": "19.0.0",
+            "react-native": "~0.79.3"
           }
         }
         "
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(appTree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

@@ -4,7 +4,7 @@ import { clean, coerce, major } from 'semver';
 
 export const nxVersion = require('../../package.json').version;
 export const eslintPluginCypressVersion = '^3.5.0';
-export const typesNodeVersion = '18.16.9';
+export const typesNodeVersion = '20.19.9';
 export const cypressViteDevServerVersion = '^6.0.3';
 export const cypressVersion = '^14.2.1';
 export const cypressWebpackVersion = '^4.0.2';
@@ -13,7 +13,10 @@ export const htmlWebpackPluginVersion = '^5.5.0';
 
 const latestVersions: Omit<
   typeof import('./versions'),
-  'versions' | 'getInstalledCypressMajorVersion' | 'assertMinimumCypressVersion'
+  | 'versions'
+  | 'getInstalledCypressVersion'
+  | 'getInstalledCypressMajorVersion'
+  | 'assertMinimumCypressVersion'
 > = {
   nxVersion,
   eslintPluginCypressVersion,
@@ -25,26 +28,27 @@ const latestVersions: Omit<
   htmlWebpackPluginVersion,
 };
 
-export function versions(
-  tree: Tree,
-  cypressMajorVersion = getInstalledCypressMajorVersion(tree)
-) {
-  if (!cypressMajorVersion) {
+export function versions(tree: Tree) {
+  const installedCypressVersion = getInstalledCypressVersion(tree);
+  if (!installedCypressVersion) {
+    return latestVersions;
+  }
+
+  const cypressMajorVersion = major(installedCypressVersion);
+  if (cypressMajorVersion === 14) {
     return latestVersions;
   }
 
   if (cypressMajorVersion > 14) {
-    throw new Error(`Unsupported Cypress version: ${cypressVersion}`);
-  }
-
-  if (cypressMajorVersion === 14) {
-    return latestVersions;
+    throw new Error(
+      `You're currently using an unsupported Cypress version: ${installedCypressVersion}. Supported versions are v13 and v14.`
+    );
   }
 
   return {
     nxVersion,
     eslintPluginCypressVersion: '^3.5.0',
-    typesNodeVersion: '18.16.9',
+    typesNodeVersion: '20.19.9',
     cypressViteDevServerVersion: '^2.2.1',
     cypressVersion: '^13.13.0',
     cypressWebpackVersion: '^3.8.0',
@@ -53,7 +57,7 @@ export function versions(
   };
 }
 
-export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
+export function getInstalledCypressVersion(tree?: Tree): string | null {
   try {
     let version: string | null;
 
@@ -63,10 +67,16 @@ export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
       version = getCypressVersionFromFileSystem();
     }
 
-    return version ? major(version) : null;
+    return version;
   } catch {
     return null;
   }
+}
+
+export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
+  const installedCypressVersion = getInstalledCypressVersion(tree);
+
+  return installedCypressVersion ? major(installedCypressVersion) : null;
 }
 
 export function assertMinimumCypressVersion(

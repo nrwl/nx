@@ -1,0 +1,82 @@
+{
+  "name": "astro-docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
+  "targets": {
+    "serve": {
+      "continuous": true,
+      "dependsOn": [
+        {
+          "projects": ["devkit", "create-nx-workspace"],
+          "target": "build"
+        }
+      ],
+      "command": "astro dev",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "build": {
+      "dependsOn": [
+        {
+          "projects": ["devkit", "create-nx-workspace"],
+          "target": "build"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/.astro",
+        "{projectRoot}/.netlify"
+      ],
+      "command": "astro build",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "preview": {
+      "dependsOn": ["build"],
+      "command": "astro preview",
+      "continuous": true,
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "astro": {
+      "command": "astro",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "test": {
+      "dependsOn": ["validate-links"],
+      "command": "echo done"
+    },
+    "pw-e2e": {
+      "dependsOn": ["serve"],
+      "parallelism": true
+    },
+    "e2e-ci--**/*": {
+      "dependsOn": ["preview"],
+      "parallelism": true
+    },
+    "show-report": {
+      "command": "playwright show-report dist/astro-docs/playwright-report"
+    },
+    "validate-links": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/astro.config.mjs",
+        "{projectRoot}/sidebar.mts",
+        "{projectRoot}/markdoc.config.mjs",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/package.json"
+      ],
+      "command": "npx tsx validate-links.ts",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    }
+  }
+}

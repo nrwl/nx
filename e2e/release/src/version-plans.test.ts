@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nx/devkit';
+import { NxJsonConfiguration, readJsonFile, workspaceRoot } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ensureDir, readdirSync, writeFile } from 'fs-extra';
 import { join } from 'path';
 
@@ -459,7 +459,11 @@ Update the independent packages with a patch, preminor, and prerelease.
     expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBe(true);
     expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBe(true);
 
-    packageInstall('yargs', null, 'latest', 'dev');
+    // Reference the same version of yargs as nx uses to avoid compatibility issues
+    const nxPackageJson = readJsonFile(
+      join(workspaceRoot, 'packages/nx/package.json')
+    );
+    packageInstall('yargs', null, nxPackageJson.dependencies.yargs, 'dev');
 
     await writeFile(
       tmpProjPath('release.js'),
@@ -950,7 +954,7 @@ Update packages in both groups with a mix #2
     );
 
     expect(versionResult).toContain(
-      `git add ${pkg5}/package.json ${pkg4}/package.json ${pkg3}/package.json ${pkg2}/package.json ${pkg1}/package.json`
+      `git add ${pkg1}/package.json ${pkg2}/package.json ${pkg3}/package.json ${pkg4}/package.json ${pkg5}/package.json`
     );
 
     expect(readdirSync(versionPlansDir).length).toEqual(2);

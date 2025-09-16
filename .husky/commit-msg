@@ -1,0 +1,1 @@
+node ./scripts/commit-lint.js "$1"

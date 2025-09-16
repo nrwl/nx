@@ -1,7 +1,7 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*", "**/__fixtures__/**/*"],
+  "ignorePatterns": ["!**/*", "**/__fixtures__/**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -102,9 +102,12 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              // the nx/bin/nx module must handle global vs local installation thus we have require('nx/...') in there
+              "nx",
               "typescript",
               "@nrwl/angular",
               "@angular-devkit/build-angular",
+              "@angular/build",
               "@angular-devkit/core",
               "@angular-devkit/architect",
               "@swc/core", //Optional, used in JS analysis if available
@@ -135,6 +138,8 @@
               // Powerpack plugin conditionally available dynamically at runtime
               "@nx/powerpack-conformance",
               "@nx/conformance",
+              // Nx Docker plugin conditionally available dynamically at runtime
+              "@nx/docker",
               // Only used in test-utils at the time of writing
               "@ltd/j-toml"
             ]

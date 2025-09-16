@@ -16,6 +16,10 @@
     {
       "command": "nx g app apps/myapp --routing",
       "description": "Set up React Router"
+    },
+    {
+      "command": "nx g app apps/myapp --port=3000",
+      "description": "Set up the dev server to use port 3000"
     }
   ],
   "type": "object",
@@ -33,7 +37,7 @@
     "name": {
       "description": "The name of the application.",
       "type": "string",
-      "pattern": "^[a-zA-Z][^:]*$",
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
       "x-priority": "important"
     },
     "style": {
@@ -196,6 +200,12 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "port": {
+      "type": "number",
+      "description": "The port to use for the development server",
+      "x-prompt": "Which port would you like to use for the dev server?",
+      "default": 4200
     }
   },
   "required": ["directory"],

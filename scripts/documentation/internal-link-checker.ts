@@ -82,16 +82,25 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
   const parser = new XMLParser();
   const sitemapIndex: {
     sitemapindex: {
-      sitemap: {
+      sitemap: Array<{
         loc: string;
-      };
+      }>;
     };
   } = parser.parse(readFileContents(join(directoryPath, filename)));
+
+  const internalSitemap = sitemapIndex.sitemapindex.sitemap.find(
+    // astro sitemap adds a new item into the sitemap entries with <domain>/docs/sitemap-index.xml.
+    // we already validate the sitemap links insite astro. no need to do it in nextjs
+    (s) => !s.loc.endsWith('/docs/sitemap-index.xml')
+  );
+  if (!internalSitemap) {
+    console.warn(join(directoryPath, filename), sitemapIndex);
+    throw new Error('Unable to find sitemap location for nx.dev');
+  }
+
+  console.log('Using sitemap with url: ', internalSitemap.loc);
   return [
-    join(
-      directoryPath,
-      sitemapIndex.sitemapindex.sitemap.loc.replace('https://nx.dev', '')
-    ),
+    join(directoryPath, internalSitemap.loc.replace('https://nx.dev', '')),
   ];
 }
 
@@ -160,7 +169,8 @@ const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
   (manifestFileName) => readApiJson(manifestFileName)
 );
 const ignoreAnchorUrls = [
-  '/nx-api',
+  '/reference/core-api',
+  '/technologies',
   '/nx-cloud',
   '/blog',
   '/pricing',
@@ -173,12 +183,6 @@ const errors: Array<{ file: string; link: string }> = [];
 const localLinkErrors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
-    if (
-      link.includes('/nx-api/angular-rspack') ||
-      link.includes('/nx-api/angular-rsbuild')
-    ) {
-      continue;
-    }
     if (
       link.startsWith('https://nx.dev') ||
       link.startsWith('https://nx-dev')

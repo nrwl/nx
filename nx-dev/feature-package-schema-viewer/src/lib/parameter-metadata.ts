@@ -1,4 +1,4 @@
-import { JsonSchema } from '@nx/nx-dev/models-package';
+import { JsonSchema } from '@nx/nx-dev-models-package';
 import { slugify } from './slugify.utils';
 
 interface ParameterMetadata {

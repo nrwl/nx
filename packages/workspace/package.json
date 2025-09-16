@@ -19,7 +19,7 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -38,13 +38,17 @@
     }
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
+    "@nx/devkit": "workspace:*",
     "@zkochan/js-yaml": "0.0.7",
     "chalk": "^4.1.0",
     "enquirer": "~2.3.6",
     "picomatch": "4.0.2",
+    "semver": "^7.6.3",
     "tslib": "^2.3.0",
     "yargs-parser": "21.1.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

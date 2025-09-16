@@ -9,8 +9,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
-import * as http from 'http';
+} from '@nx/e2e-utils';
 import { checkApp } from './utils';
 
 describe('Next.js Applications', () => {
@@ -240,20 +239,3 @@ describe('Next.js Applications', () => {
     expect(postBuildPagesContent).toMatchSnapshot();
   });
 });
-
-function getData(port, path = ''): Promise<any> {
-  return new Promise((resolve, reject) => {
-    http
-      .get(`http://localhost:${port}${path}`, (res) => {
-        expect(res.statusCode).toEqual(200);
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.once('end', () => {
-          resolve(data);
-        });
-      })
-      .on('error', (err) => reject(err));
-  });
-}

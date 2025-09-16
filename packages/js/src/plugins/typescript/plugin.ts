@@ -17,7 +17,14 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+} from 'node:fs';
 import {
   basename,
   dirname,
@@ -54,6 +61,7 @@ export interface TscPluginOptions {
         configName?: string;
         buildDepsName?: string;
         watchDepsName?: string;
+        skipBuildCheck?: boolean;
       };
   verboseOutput?: boolean;
 }
@@ -71,6 +79,7 @@ interface NormalizedPluginOptions {
         configName: string;
         buildDepsName?: string;
         watchDepsName?: string;
+        skipBuildCheck?: boolean;
       };
   verboseOutput: boolean;
 }
@@ -122,7 +131,20 @@ function readTsConfigCacheData(): Record<string, TsconfigCacheData> {
 }
 
 function writeToCache<T extends object>(cachePath: string, data: T) {
-  writeJsonFile(cachePath, data, { spaces: 0 });
+  const maxAttempts = 5;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const unique = (Math.random().toString(16) + '00000000').slice(2, 10);
+    const tempPath = `${cachePath}.${process.pid}.${unique}.tmp`;
+    try {
+      writeJsonFile(tempPath, data, { spaces: 0 });
+      renameSync(tempPath, cachePath);
+      return;
+    } catch {
+      try {
+        unlinkSync(tempPath);
+      } catch {}
+    }
+  }
 }
 function writeTsConfigCache(data: Record<string, TsconfigCacheData>) {
   writeToCache(TS_CONFIG_CACHE_PATH, {
@@ -186,7 +208,6 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
           return {
             projects: {
               [projectRoot]: {
-                projectType: 'library',
                 targets,
               },
             },
@@ -449,11 +470,12 @@ function buildTscTargets(
         );
         if (
           context.configFiles.some((f) => f === buildConfigPath) &&
-          isValidPackageJsonBuildConfig(
-            retrieveTsConfigFromCache(buildConfigPath, context.workspaceRoot),
-            context.workspaceRoot,
-            projectRoot
-          )
+          (options.build.skipBuildCheck ||
+            isValidPackageJsonBuildConfig(
+              retrieveTsConfigFromCache(buildConfigPath, context.workspaceRoot),
+              context.workspaceRoot,
+              projectRoot
+            ))
         ) {
           dependsOn.unshift(options.build.targetName);
         }
@@ -499,7 +521,12 @@ function buildTscTargets(
   if (
     options.build &&
     basename(configFilePath) === options.build.configName &&
-    isValidPackageJsonBuildConfig(tsConfig, context.workspaceRoot, projectRoot)
+    (options.build.skipBuildCheck ||
+      isValidPackageJsonBuildConfig(
+        tsConfig,
+        context.workspaceRoot,
+        projectRoot
+      ))
   ) {
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
@@ -1282,6 +1309,7 @@ function normalizePluginOptions(
     configName: defaultBuildConfigName,
     buildDepsName: 'build-deps',
     watchDepsName: 'watch-deps',
+    skipBuildCheck: false,
   };
   // Build target is not enabled by default
   if (!pluginOptions.build) {
@@ -1292,6 +1320,7 @@ function normalizePluginOptions(
       configName: pluginOptions.build.configName ?? defaultBuildConfigName,
       buildDepsName: pluginOptions.build.buildDepsName ?? 'build-deps',
       watchDepsName: pluginOptions.build.watchDepsName ?? 'watch-deps',
+      skipBuildCheck: pluginOptions.build.skipBuildCheck ?? false,
     };
   }
 

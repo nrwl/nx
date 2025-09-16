@@ -434,6 +434,126 @@ describe('Multiple Release Groups', () => {
     });
   });
 
+  describe('Three related groups, all fixed relationship, just JS', () => {
+    it('should correctly version projects across transitive group boundaries', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+            group1 ({ "projectsRelationship": "fixed" }):
+              - pkg-a@1.0.0 [js]
+                -> depends on pkg-c
+              - pkg-b@1.0.0 [js]
+            group2 ({ "projectsRelationship": "fixed" }):
+              - pkg-c@2.0.0 [js]
+                -> depends on pkg-e
+              - pkg-d@2.0.0 [js]
+            group3 ({ "projectsRelationship": "fixed" }):
+              - pkg-e@3.0.0 [js]
+              - pkg-f@3.0.0 [js]
+          `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // pkg-e has a bump, which should cause pkg-f to bump because they are in a fixed group
+          // pkg-c depends on pkg-e so should also bump, and pkg-d is in a fixed group with pkg-c so should also bump
+          // pkg-a depends on pkg-c so should also bump, and pkg-b is in a fixed group with pkg-a so should also bump
+          if (projectName === 'pkg-e') return 'patch';
+          return 'none';
+        }
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+        }
+      );
+
+      await processor.init();
+      await processor.processGroups();
+
+      expect(mockResolveVersionActionsForProject).toHaveBeenCalledTimes(6);
+
+      expect(tree.read('pkg-a/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-a",
+          "version": "1.0.1",
+          "dependencies": {
+            "pkg-c": "2.0.1"
+          }
+        }
+        "
+      `);
+      expect(tree.read('pkg-b/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-b",
+          "version": "1.0.1"
+        }
+        "
+      `);
+      expect(tree.read('pkg-c/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-c",
+          "version": "2.0.1",
+          "dependencies": {
+            "pkg-e": "3.0.1"
+          }
+        }
+        "
+      `);
+      expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-d",
+          "version": "2.0.1"
+        }
+        "
+      `);
+      expect(tree.read('pkg-e/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-e",
+          "version": "3.0.1"
+        }
+        "
+      `);
+      expect(tree.read('pkg-f/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-f",
+          "version": "3.0.1"
+        }
+        "
+      `);
+
+      const versionData = processor.getVersionData();
+      expect(versionData['pkg-a'].newVersion).toEqual('1.0.1');
+      expect(versionData['pkg-b'].newVersion).toEqual('1.0.1');
+      expect(versionData['pkg-c'].newVersion).toEqual('2.0.1');
+      expect(versionData['pkg-d'].newVersion).toEqual('2.0.1');
+      expect(versionData['pkg-e'].newVersion).toEqual('3.0.1');
+      expect(versionData['pkg-f'].newVersion).toEqual('3.0.1');
+    });
+  });
+
   describe('Two related groups, both independent relationship, just JS', () => {
     const graphDefinition = `
       group1 ({ "projectsRelationship": "independent" }):

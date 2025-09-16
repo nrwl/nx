@@ -28,17 +28,6 @@
         "x-prompt": "What category does this rule belong to?",
         "x-priority": "important"
       },
-      "reporter": {
-        "type": "string",
-        "enum": [
-          "project-reporter",
-          "project-files-reporter",
-          "non-project-files-reporter"
-        ],
-        "description": "The reporter of the rule.",
-        "x-prompt": "What reporter do you want to use for this rule?",
-        "x-priority": "important"
-      },
       "description": {
         "type": "string",
         "description": "The description of the rule.",
@@ -47,7 +36,7 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name", "directory", "category", "reporter"],
+    "required": ["name", "directory", "category"],
     "presets": []
   },
   "description": "Create a new conformance rule",

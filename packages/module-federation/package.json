@@ -24,18 +24,21 @@
   "main": "index.js",
   "executors": "./executors.json",
   "dependencies": {
-    "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/web": "file:../web",
-    "picocolors": "^1.1.0",
-    "webpack": "^5.88.0",
+    "@module-federation/enhanced": "^0.18.0",
+    "@module-federation/node": "^2.7.11",
+    "@module-federation/sdk": "^0.18.0",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/web": "workspace:*",
     "@rspack/core": "^1.3.8",
-    "@module-federation/enhanced": "^0.9.0",
-    "@module-federation/node": "^2.6.26",
-    "@module-federation/sdk": "^0.9.0",
     "express": "^4.21.2",
-    "http-proxy-middleware": "^3.0.3"
+    "http-proxy-middleware": "^3.0.5",
+    "picocolors": "^1.1.0",
+    "tslib": "^2.3.0",
+    "webpack": "^5.101.3"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

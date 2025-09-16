@@ -1,5 +1,5 @@
 'use client';
-import { useTheme } from '@nx/nx-dev/ui-theme';
+import { useTheme } from '@nx/nx-dev-ui-theme';
 import dynamic from 'next/dynamic';
 import { ReactElement, useEffect, useState } from 'react';
 
@@ -20,22 +20,45 @@ export function Loading() {
  * dynamic() can't be used inside of React rendering as it needs to be marked
  * in the top level of the module for preloading to work, similar to React.lazy.
  */
-const NxProjectGraphViz = dynamic(
+const NxDevProjectGraph = dynamic(
   () =>
-    import('@nx/graph/legacy/graph').then((module) => module.NxProjectGraphViz),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  }
+    import('../graphs/project-graph').then(
+      (module) => module.NxDevProjectGraph
+    ),
+  { ssr: false, loading: () => <Loading /> }
 );
-const NxTaskGraphViz = dynamic(
-  () =>
-    import('@nx/graph/legacy/graph').then((module) => module.NxTaskGraphViz),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  }
+const NxDevTaskGraph = dynamic(
+  () => import('../graphs/task-graph').then((module) => module.NxDevTaskGraph),
+  { ssr: false, loading: () => <Loading /> }
 );
+
+function getInitialPropsForAstro(children: ReactElement) {
+  if (!children || !children.hasOwnProperty('props') || !children.props.value)
+    return null;
+  try {
+    return parseAstroHtmlWrappedJson(children.props.value.toString() as any);
+  } catch {
+    return null;
+  }
+}
+
+function parseAstroHtmlWrappedJson(htmlString: string) {
+  const cleanedString = htmlString
+    .trim()
+    .replace(/^<\w>|<\/\w>$/g, '')
+    .trim()
+    .replace(/&quot;/g, '"');
+  return JSON.parse(cleanedString);
+}
+
+export type GraphProps = {
+  height: string;
+  title: string;
+  type: 'project' | 'task';
+  jsonFile?: string;
+  children: ReactElement;
+  isAstro?: boolean;
+};
 
 export function Graph({
   height,
@@ -43,15 +66,12 @@ export function Graph({
   type,
   jsonFile,
   children,
-}: {
-  height: string;
-  title: string;
-  type: 'project' | 'task';
-  jsonFile?: string;
-  children: ReactElement;
-}): JSX.Element {
+  isAstro = false,
+}: GraphProps): JSX.Element {
   const [theme] = useTheme();
-  const [parsedProps, setParsedProps] = useState<any>();
+  const [parsedProps, setParsedProps] = useState<any>(
+    isAstro ? getInitialPropsForAstro(children) : null
+  );
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
       headers: {
@@ -61,6 +81,7 @@ export function Graph({
     });
     setParsedProps(await response.json());
   };
+
   useEffect(() => {
     if (jsonFile) {
       getData(jsonFile);
@@ -89,40 +110,36 @@ export function Graph({
       );
     }
   }
-  if (!parsedProps) {
-    return <Loading />;
-  }
 
-  return (
-    <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+  return parsedProps ? (
+    <div className="not-content w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
         {title}
       </div>
-      {type === 'project' ? (
-        <div style={{ height }}>
-          <NxProjectGraphViz
-            renderMode="nx-docs"
-            groupByFolder={false}
+
+      <div style={{ height }}>
+        {type === 'project' ? (
+          <NxDevProjectGraph
             theme={theme}
             projects={parsedProps.projects}
-            composite={parsedProps.composite}
-            fileMap={{}}
-            workspaceLayout={parsedProps.workspaceLayout}
             dependencies={parsedProps.dependencies}
-            affectedProjectIds={parsedProps.affectedProjectIds}
-            enableTooltips={parsedProps.enableTooltips}
+            affectedProjects={parsedProps.affectedProjectIds}
+            enableContextMenu={parsedProps.enableTooltips}
+            composite={parsedProps.composite}
           />
-        </div>
-      ) : (
-        <NxTaskGraphViz
-          height={height}
-          theme={theme}
-          projects={parsedProps.projects}
-          taskGraphs={parsedProps.taskGraphs}
-          taskId={parsedProps.taskId}
-          enableTooltips={parsedProps.enableTooltips}
-        />
-      )}
+        ) : (
+          <NxDevTaskGraph
+            theme={theme}
+            projects={parsedProps.projects}
+            taskGraph={parsedProps.taskGraph}
+            taskId={parsedProps.taskId}
+            taskIds={parsedProps.taskIds}
+            enableContextMenu={parsedProps.enableTooltips}
+          />
+        )}
+      </div>
     </div>
+  ) : (
+    <Loading />
   );
 }

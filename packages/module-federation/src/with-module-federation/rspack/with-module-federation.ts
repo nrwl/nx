@@ -3,10 +3,10 @@ import type { Configuration } from '@rspack/core';
 import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import { type ExecutorContext } from '@nx/devkit';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -24,6 +24,7 @@ export async function withModuleFederation(
       return config;
     };
   }
+  const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     getModuleFederationConfig(options);
@@ -42,6 +43,10 @@ export async function withModuleFederation(
 
     config.optimization = {
       ...(config.optimization ?? {}),
+      runtimeChunk:
+        isDevServer && !options.exposes
+          ? config.optimization?.runtimeChunk ?? undefined
+          : false,
     };
 
     if (
@@ -54,7 +59,7 @@ export async function withModuleFederation(
 
     config.plugins.push(
       new ModuleFederationPlugin({
-        name: options.name.replace(/-/g, '_'),
+        name: normalizeProjectName(options.name),
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,
@@ -82,7 +87,6 @@ export async function withModuleFederation(
                 ),
               ]
             : configOverride?.runtimePlugins,
-        virtualRuntimeEntry: true,
       }),
       sharedLibraries.getReplacementPlugin()
     );

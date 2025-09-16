@@ -9,7 +9,7 @@ import {
   Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import { ReactElement } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 const features = [
@@ -23,7 +23,11 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/remote-cache"
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/features/ci-features/remote-cache'
+                : '/ci/features/remote-cache'
+            }
             title="Learn more about Nx Replay"
             className="text-sm/6 font-semibold"
           >

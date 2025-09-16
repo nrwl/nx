@@ -4,9 +4,9 @@ import {
   DocumentationHeader,
   Footer,
   SidebarContainer,
-} from '@nx/nx-dev/ui-common';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { Octokit } from 'octokit';
@@ -14,8 +14,8 @@ import { compare, parse } from 'semver';
 import { changeLogApi } from '../lib/changelog.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { menusApi } from '../lib/menus.api';
-import { MenuItem } from '@nx/nx-dev/models-menu';
-import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
+import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
 import Link from 'next/link';
 
 interface ChangelogEntry {
@@ -97,11 +97,24 @@ async function fetchGithubRelease(
 export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  // do 2 fetches of 100 records, which should be enough releases to display
-  const githubReleases = [
-    ...(await fetchGithubRelease(octokit, 1)),
-    ...(await fetchGithubRelease(octokit, 2)),
-  ];
+  let githubReleases: GithubReleaseData[] = [];
+
+  try {
+    // do 2 fetches of 100 records, which should be enough releases to display
+    githubReleases = [
+      ...(await fetchGithubRelease(octokit, 1)),
+      ...(await fetchGithubRelease(octokit, 2)),
+    ];
+  } catch (error: unknown) {
+    if (!error || typeof error !== 'object' || !('status' in error))
+      throw error;
+
+    if (error.status === 401) {
+      throw new Error(
+        'The GitHub token is invalid or has expired. Please provide a new Personal Access Token (PAT) via the GITHUB_TOKEN environment variable.'
+      );
+    }
+  }
 
   const releasesByMinorVersion: {
     [tag_name: string]: ChangelogEntry;
@@ -207,11 +220,11 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
           description: 'Learn about all the changes',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
-              type: 'image/jpeg',
+              alt: 'Nx: Smart Repos · Fast Builds',
+              type: 'image/png',
             },
           ],
           siteName: 'Nx',
@@ -242,7 +255,11 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
               All the Nx goodies in one page, sorted by release. See our{' '}
               <Link
                 className="underline"
-                href="/reference/releases"
+                href={
+                  process.env.NEXT_PUBLIC_ASTRO_URL
+                    ? '/docs/reference/releases'
+                    : '/reference/releases'
+                }
                 prefetch={false}
               >
                 release page
