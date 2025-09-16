@@ -2,7 +2,6 @@ package dev.nx.maven
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import dev.nx.maven.plugin.PluginBasedAnalyzer
 import dev.nx.maven.plugin.PluginExecutionFinder
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
@@ -95,20 +94,16 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         // Create deeply shared components for maximum caching efficiency
         val sharedExpressionResolver = MavenExpressionResolver(session)
         val sharedPluginExecutionFinder = PluginExecutionFinder(lifecycleExecutor, session)
-        val pluginAnalyzer = PluginBasedAnalyzer(
-            session, pluginManager, sharedPluginExecutionFinder, sharedExpressionResolver
-        )
+
 
         // Create shared component instances ONCE for all projects (major optimization)
-        val sharedInputOutputAnalyzer = MavenInputOutputAnalyzer(
-            objectMapper, workspaceRoot, pluginAnalyzer
-        )
+
         val pathResolver = PathResolver(workspaceRoot)
 
         val phaseAnalyzer = PhaseAnalyzer(pluginManager, session, sharedExpressionResolver, pathResolver, gitIgnoreClassifier)
         val sharedTestClassDiscovery = TestClassDiscovery()
 
-        val sharedLifecycleAnalyzer = NxTargetFactory(lifecycles, sharedInputOutputAnalyzer, sharedPluginExecutionFinder, objectMapper, sharedTestClassDiscovery, phaseAnalyzer)
+        val sharedLifecycleAnalyzer = NxTargetFactory(lifecycles, sharedPluginExecutionFinder, objectMapper, sharedTestClassDiscovery, phaseAnalyzer)
 
         // Resolve Maven command once for all projects
         val mavenCommandStart = System.currentTimeMillis()
@@ -128,11 +123,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
                 // Create separate analyzer instance for each project (thread-safe)
                 val singleAnalyzer = NxProjectAnalyzer(
-                    session,
                     mavenProject,
                     workspaceRoot,
                     sharedLifecycleAnalyzer,
-                    sharedTestClassDiscovery,
                     mavenCommand
                 )
 
