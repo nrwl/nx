@@ -68,6 +68,8 @@ class PhaseAnalyzer(
             }
         }
 
+        log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
+
         return PhaseInformation(isThreadSafe, isCacheable, inputs, outputs)
     }
 
