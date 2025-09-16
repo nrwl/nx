@@ -19,9 +19,6 @@
     },
     "rename-test-path-pattern": {
       "version": "21.3.0-beta.3",
-      "requires": {
-        "jest": ">=30.0.0"
-      },
       "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
       "implementation": "./src/migrations/update-21-3-0/rename-test-path-pattern"
     },
@@ -80,6 +77,9 @@
     "21.3.0": {
       "version": "21.3.0-beta.3",
       "x-prompt": "Do you want to update the Jest version to v30?",
+      "incompatibleWith": {
+        "@angular-devkit/build-angular": "*"
+      },
       "packages": {
         "jest": {
           "version": "~30.0.0",
