@@ -2,6 +2,7 @@ package dev.nx.maven
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import dev.nx.maven.plugin.PluginExecutionFinder
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
@@ -87,7 +88,10 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         }
     }
 
-    private fun executePerProjectAnalysisInMemory(allProjects: List<MavenProject>, gitIgnoreClassifier: GitIgnoreClassifier?): Map<String, Pair<String, JsonNode>?> {
+    private fun executePerProjectAnalysisInMemory(
+        allProjects: List<MavenProject>,
+        gitIgnoreClassifier: GitIgnoreClassifier?
+    ): List<ProjectAnalysis> {
         val startTime = System.currentTimeMillis()
         log.info("Creating shared component instances for optimized analysis...")
 
@@ -100,10 +104,17 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         val pathResolver = PathResolver(workspaceRoot)
 
-        val phaseAnalyzer = PhaseAnalyzer(pluginManager, session, sharedExpressionResolver, pathResolver, gitIgnoreClassifier)
+        val phaseAnalyzer =
+            PhaseAnalyzer(pluginManager, session, sharedExpressionResolver, pathResolver, gitIgnoreClassifier)
         val sharedTestClassDiscovery = TestClassDiscovery()
 
-        val sharedLifecycleAnalyzer = NxTargetFactory(lifecycles, sharedPluginExecutionFinder, objectMapper, sharedTestClassDiscovery, phaseAnalyzer)
+        val sharedLifecycleAnalyzer = NxTargetFactory(
+            lifecycles,
+            sharedPluginExecutionFinder,
+            objectMapper,
+            sharedTestClassDiscovery,
+            phaseAnalyzer
+        )
 
         // Resolve Maven command once for all projects
         val mavenCommandStart = System.currentTimeMillis()
@@ -131,15 +142,14 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
                 // Get Nx config for project
                 val nxConfig = singleAnalyzer.analyze()
-                val projectName = "${mavenProject.groupId}.${mavenProject.artifactId}"
 
-                projectName to nxConfig
+                nxConfig
 
             } catch (e: Exception) {
                 log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
                 null
             }
-        }.collect(java.util.stream.Collectors.toList()).filterNotNull().toMap()
+        }.collect(java.util.stream.Collectors.toList()).filterNotNull()
 
         val totalTime = System.currentTimeMillis() - startTime
         val analysisTime = System.currentTimeMillis() - projectStartTime
@@ -148,7 +158,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         return inMemoryAnalyses
     }
 
-    private fun writeProjectAnalysesToFile(inMemoryAnalyses: Map<String, Pair<String, JsonNode>?>) {
+    private fun writeProjectAnalysesToFile(inMemoryAnalyses: List<ProjectAnalysis>) {
         val outputPath = if (outputFile.startsWith("/")) {
             File(outputFile)
         } else {
@@ -169,6 +179,10 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val createNodesResults = generateCreateNodesResults(inMemoryAnalyses)
         rootNode.set<JsonNode>("createNodesResults", createNodesResults)
 
+
+        val createDependenciesResults = generateCreateDependenciesResults(inMemoryAnalyses)
+        rootNode.set<JsonNode>("createDependenciesResults", createDependenciesResults)
+
         // Add metadata
         rootNode.put("totalProjects", inMemoryAnalyses.size)
         rootNode.put("workspaceRoot", workspaceRoot)
@@ -179,31 +193,35 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Generated project analyses with ${inMemoryAnalyses.size} projects: ${outputPath.absolutePath}")
     }
 
-    private fun generateCreateNodesResults(inMemoryAnalyses: Map<String, Pair<String, JsonNode>?>): com.fasterxml.jackson.databind.node.ArrayNode {
+    private fun generateCreateDependenciesResults(projectAnalyses: List<ProjectAnalysis>): ArrayNode {
+        val result = objectMapper.createArrayNode()
+        projectAnalyses.forEach { analysis ->
+            analysis.dependencies.forEach { dependency -> result.add(dependency) }
+        }
+        return result
+    }
+
+    private fun generateCreateNodesResults(inMemoryAnalyses: List<ProjectAnalysis>): com.fasterxml.jackson.databind.node.ArrayNode {
         val createNodesResults = objectMapper.createArrayNode()
 
-        // Group projects by root directory (for now, assume all projects are at workspace root)
-        val projects = objectMapper.createObjectNode()
+        inMemoryAnalyses.forEach { analysis ->
+            val resultTuple = objectMapper.createArrayNode()
+            resultTuple.add(analysis.pomFile.relativeTo(File(workspaceRoot)).path) // Root path (workspace root)
 
-        inMemoryAnalyses.forEach { (projectName, nxConfig) ->
-            try {
-                if (nxConfig != null) {
-                    val (root, projectConfig) = nxConfig
-                    projects.set<JsonNode>(root, projectConfig)
-                }
-            } catch (e: Exception) {
-                log.warn("Failed to generate Nx config for project $projectName: ${e.message}")
-            }
+            // Group projects by root directory (for now, assume all projects are at workspace root)
+            val projects = objectMapper.createObjectNode()
+
+            val root = analysis.root
+            val project = analysis.project
+
+            val projectsWrapper = objectMapper.createObjectNode()
+            projects.set<JsonNode>(root, project)
+            projectsWrapper.set<JsonNode>("projects", projects)
+            resultTuple.add(projectsWrapper)
+
+            createNodesResults.add(resultTuple)
         }
 
-        // Create the createNodesResults structure: [root, {projects: {...}}]
-        val resultTuple = objectMapper.createArrayNode()
-        resultTuple.add("") // Root path (workspace root)
-        val projectsWrapper = objectMapper.createObjectNode()
-        projectsWrapper.set<JsonNode>("projects", projects)
-        resultTuple.add(projectsWrapper)
-
-        createNodesResults.add(resultTuple)
         return createNodesResults
     }
 

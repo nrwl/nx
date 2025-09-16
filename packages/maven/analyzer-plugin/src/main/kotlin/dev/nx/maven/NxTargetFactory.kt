@@ -78,10 +78,6 @@ class NxTargetFactory(
             try {
                 val analysis = phaseAnalyzer.analyze(project, phase)
 
-
-//                val analysis = sharedInputOutputAnalyzer.analyzeCacheability(phase, project)
-//                log.warn("Phase '$phase' analysis result: cacheable=${analysis.cacheable}, reason='${analysis.reason}'")
-
                 val target = objectMapper.createObjectNode()
                 target.put("executor", "nx:run-commands")
 
