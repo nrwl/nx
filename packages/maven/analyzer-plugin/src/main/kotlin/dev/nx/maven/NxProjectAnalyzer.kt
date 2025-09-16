@@ -2,7 +2,6 @@ package dev.nx.maven
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import org.apache.maven.execution.MavenSession
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,11 +12,9 @@ import java.nio.file.Paths
  * This is a simplified, per-project analyzer that doesn't require cross-project coordination
  */
 class NxProjectAnalyzer(
-    private val session: MavenSession,
     private val project: MavenProject,
     private val workspaceRoot: String,
     private val sharedLifecycleAnalyzer: NxTargetFactory,
-    private val sharedTestClassDiscovery: TestClassDiscovery,
     private val mavenCommand: String
 ) {
     private val objectMapper = ObjectMapper()
@@ -31,12 +28,6 @@ class NxProjectAnalyzer(
         val startTime = System.currentTimeMillis()
         try {
             log.info("Starting analysis for project: ${project.artifactId}")
-
-            val pathResolverStart = System.currentTimeMillis()
-            val pathResolver = PathResolver(workspaceRoot, project.basedir.absolutePath, session)
-            val pathResolverTime = System.currentTimeMillis() - pathResolverStart
-            log.info("PathResolver initialization took ${pathResolverTime}ms for project: ${project.artifactId}")
-
 
             // Calculate relative path from workspace root
             val pathCalculationStart = System.currentTimeMillis()

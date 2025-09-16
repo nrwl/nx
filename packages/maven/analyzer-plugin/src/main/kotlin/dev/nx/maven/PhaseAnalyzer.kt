@@ -7,8 +7,6 @@ import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
 import org.apache.maven.project.MavenProject
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Analyzes Maven phases to determine inputs, outputs, and thread safety
@@ -24,41 +22,50 @@ class PhaseAnalyzer(
 
     fun analyze(project: MavenProject, phase: String): PhaseInformation {
 
-        project.artifacts.forEach {
-            artifact -> println(artifact)
-        }
         val plugins = project.build.plugins
-        val isThreadSafe = AtomicBoolean(true)
-        val isCacheable = AtomicBoolean(isPhaseCacheable(phase))
-        val inputs = ConcurrentHashMap.newKeySet<String>()
-        val outputs = ConcurrentHashMap.newKeySet<String>()
+        var isThreadSafe = true
+        var isCacheable = isPhaseCacheable(phase)
+        val inputs = mutableSetOf<String>()
+        val outputs = mutableSetOf<String>()
 
         val mojoDescriptors = plugins
             .flatMap { plugin ->
                 plugin.executions
                     .filter { execution -> execution.phase == phase }
-                    .flatMap { execution -> execution.goals }
+                    .flatMap { execution ->
+                        execution.goals }
                     .mapNotNull { goal -> getMojoDescriptor(plugin, goal, project) }
             }
 
-        mojoDescriptors.parallelStream().forEach { descriptor ->
-            if (!descriptor.isThreadSafe) {
-                isThreadSafe.set(false)
-            }
+        // Transform all descriptors to analysis results in parallel, then aggregate on main thread
+        val analysisResults = mojoDescriptors.parallelStream().map { descriptor ->
+            val descriptorThreadSafe = descriptor.isThreadSafe
+            val descriptorCacheable = isMojoCacheable(descriptor)
 
-            if (!isMojoCacheable(descriptor)) {
-                isCacheable.set(false)
-            }
-
-            descriptor.parameters?.parallelStream()?.forEach { parameter ->
+            val parameterInfos = descriptor.parameters?.parallelStream()?.map { parameter ->
                 val paramInfo = analyzeParameterInputsOutputs(descriptor, parameter, project)
+                log.info("Parameter analysis: ${descriptor.phase} ${parameter.name} -> ${paramInfo}")
+                paramInfo
+            }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
+
+            MojoAnalysisResult(descriptorThreadSafe, descriptorCacheable, parameterInfos)
+        }.collect(java.util.stream.Collectors.toList())
+
+        // Aggregate results on main thread (no synchronization needed)
+        analysisResults.forEach { result ->
+            if (!result.isThreadSafe) {
+                isThreadSafe = false
+            }
+            if (!result.isCacheable) {
+                isCacheable = false
+            }
+            result.parameterInfos.forEach { paramInfo ->
                 inputs.addAll(paramInfo.inputs)
                 outputs.addAll(paramInfo.outputs)
-                log.info("Parameter analysis: ${descriptor.phase} ${parameter.name} -> ${paramInfo}")
             }
         }
 
-        return PhaseInformation(isThreadSafe.get(), isCacheable.get(), inputs, outputs)
+        return PhaseInformation(isThreadSafe, isCacheable, inputs, outputs)
     }
 
     /**
@@ -387,6 +394,12 @@ enum class ParameterRole {
 data class ParameterInformation(
     val inputs: Set<String>,
     val outputs: Set<String>
+)
+
+data class MojoAnalysisResult(
+    val isThreadSafe: Boolean,
+    val isCacheable: Boolean,
+    val parameterInfos: List<ParameterInformation>
 )
 
 data class PhaseInformation(

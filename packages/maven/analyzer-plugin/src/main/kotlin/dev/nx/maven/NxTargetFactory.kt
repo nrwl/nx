@@ -1,6 +1,5 @@
 package dev.nx.maven
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory
  */
 class NxTargetFactory(
     private val lifecycles: DefaultLifecycles,
-    private val sharedInputOutputAnalyzer: MavenInputOutputAnalyzer,
     private val pluginExecutionFinder: PluginExecutionFinder,
     private val objectMapper: ObjectMapper,
     private val testClassDiscovery: TestClassDiscovery,
