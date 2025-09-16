@@ -156,16 +156,8 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
     description: null,
-    href: '/getting-started/intro#learn-nx',
+    href: '/docs/getting-started/tutorials',
     icon: AcademicCapIcon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Code examples for your stack',
-    description: null,
-    href: '/showcase/example-repos',
-    icon: CodeBracketIcon,
     isNew: false,
     isHighlight: false,
   },
@@ -219,14 +211,6 @@ export const learnItems: MenuItem[] = [
   },
 ];
 export const eventItems: MenuItem[] = [
-  {
-    name: 'Office Hours',
-    description: null,
-    href: 'https://go.nx.dev/office-hours',
-    icon: DiscordIcon,
-    isNew: false,
-    isHighlight: false,
-  },
   {
     name: 'Live Streams',
     description: null,
