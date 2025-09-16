@@ -1,5 +1,5 @@
 {
-  "name": "maven-analyzer-plugin",
+  "name": "dev.nx.maven:nx-maven-analyzer-plugin",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/analyzer-plugin/src",
   "projectType": "library",
