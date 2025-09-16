@@ -1,18 +1,11 @@
-import { exec } from 'child_process';
 import { prompt } from 'enquirer';
 import { join } from 'path';
-import { promisify } from 'util';
-import { readNxJson } from '../../config/nx-json';
-import {
-  createTempNpmDirectory,
-  detectPackageManager,
-  getPackageManagerCommand,
-} from '../../utils/package-manager';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { output } from '../../utils/output';
+import { ensurePackageHasProvenance } from '../../utils/provenance';
 
-import { AiAgentSetupOptions } from './command-object';
+import { installPackageToTmp } from '../../devkit-internals';
 import { runNxAsync } from '../../utils/child-process';
+import { AiAgentSetupOptions } from './command-object';
 
 const availableAgents = [
   'claude',
@@ -31,50 +24,24 @@ export async function aiAgentSetupHandler(
     return await aiAgentSetupHandlerImpl(args);
   }
 
-  await ensurePackageHasProvenance('@nx/nx', 'latest');
-
   try {
-    const getLatestHandlerResult = await getLatestHandlerUsingInstall();
-    const { module: latestHandlerModule, cleanup } = getLatestHandlerResult;
-    const aiAgentSetupResult =
-      await latestHandlerModule.aiAgentSetupHandlerImpl(args);
-    await cleanup();
-    return aiAgentSetupResult;
-  } catch (error) {
-    // Fall back to local implementation
-    return aiAgentSetupHandlerImpl(args);
-  }
-}
-
-async function getLatestHandlerUsingInstall(): Promise<
-  | {
-      module: any;
-      cleanup: () => Promise<void>;
-    }
-  | undefined
-> {
-  const { dir, cleanup } = createTempNpmDirectory(true);
-
-  try {
-    // Get package manager command
-    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
-
-    // Install the package
-    await promisify(exec)(`${pmc.add} nx@latest`, {
-      cwd: dir,
-    });
+    await ensurePackageHasProvenance('nx', 'latest');
+    const { tempDir, cleanup } = installPackageToTmp('nx', 'latest');
 
     let modulePath = join(
-      dir,
+      tempDir,
       'node_modules',
       'nx',
       'src/command-line/ai-agent-setup/ai-agent-setup.js'
     );
 
-    return { module: await import(modulePath), cleanup };
-  } catch {
-    await cleanup();
-    return undefined;
+    const module = await import(modulePath);
+    const aiAgentSetupResult = await module.aiAgentSetupHandlerImpl(args);
+    cleanup();
+    return aiAgentSetupResult;
+  } catch (error) {
+    // Fall back to local implementation
+    return aiAgentSetupHandlerImpl(args);
   }
 }
 

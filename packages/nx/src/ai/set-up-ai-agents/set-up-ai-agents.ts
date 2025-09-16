@@ -58,6 +58,13 @@ function normalizeOptions(
     directory: options.directory,
     writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
+    agents: options.agents ?? [
+      'claude',
+      'codex',
+      'copilot',
+      'cursor',
+      'gemini',
+    ],
   };
 }
 
