@@ -148,11 +148,15 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { bootstrapApplication } from '@angular/platform-browser';
+        "import {
+          BootstrapContext,
+          bootstrapApplication,
+        } from '@angular/platform-browser';
         import { App } from './app/app';
         import { config } from './app/app.config.server';
 
-        const bootstrap = () => bootstrapApplication(App, config);
+        const bootstrap = (context: BootstrapContext) =>
+          bootstrapApplication(App, config, context);
 
         export default bootstrap;
         "
@@ -437,11 +441,12 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { bootstrapApplication } from '@angular/platform-browser';
+        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
         import { App } from './app/app';
         import { config } from './app/app.config.server';
 
-        const bootstrap = () => bootstrapApplication(App, config);
+        const bootstrap = (context: BootstrapContext) =>
+          bootstrapApplication(App, config, context);
 
         export default bootstrap;
         "
@@ -1052,6 +1057,99 @@ describe('setupSSR', () => {
         'src/main.server.ts',
         'src/server.ts',
       ]);
+    });
+
+    it.each`
+      angularVersion
+      ${'19.2.16'}
+      ${'18.2.21'}
+    `(
+      'should use "BootstrapContext" in the main.server.ts file when angular version is $angularVersion',
+      async ({ angularVersion }) => {
+        const tree = createTreeWithEmptyWorkspace();
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: { '@angular/core': angularVersion },
+        }));
+        await generateTestApplication(tree, {
+          directory: 'app1',
+          skipFormat: true,
+        });
+
+        await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+        expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+          .toMatchInlineSnapshot(`
+        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
+        import { AppComponent } from './app/app.component';
+        import { config } from './app/app.config.server';
+
+        const bootstrap = (context: BootstrapContext) =>
+          bootstrapApplication(AppComponent, config, context);
+
+        export default bootstrap;
+        "
+        `);
+      }
+    );
+
+    it.each`
+      angularVersion
+      ${'19.2.15'}
+      ${'18.2.20'}
+    `(
+      'should not use "BootstrapContext" in the main.server.ts file when angular version is $angularVersion',
+      async ({ angularVersion }) => {
+        const tree = createTreeWithEmptyWorkspace();
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: { '@angular/core': angularVersion },
+        }));
+        await generateTestApplication(tree, {
+          directory: 'app1',
+          skipFormat: true,
+        });
+
+        await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+        expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+          .toMatchInlineSnapshot(`
+        "import { bootstrapApplication } from '@angular/platform-browser';
+        import { AppComponent } from './app/app.component';
+        import { config } from './app/app.config.server';
+
+        const bootstrap = () => bootstrapApplication(AppComponent, config);
+
+        export default bootstrap;
+        "
+        `);
+      }
+    );
+
+    it('should not use "BootstrapContext" in the main.server.ts file when using an angular v20 version lower than 20.3.0', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '20.2.1' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { bootstrapApplication } from '@angular/platform-browser';
+        import { App } from './app/app';
+        import { config } from './app/app.config.server';
+
+        const bootstrap = () => bootstrapApplication(App, config);
+
+        export default bootstrap;
+        "
+        `);
     });
   });
 });

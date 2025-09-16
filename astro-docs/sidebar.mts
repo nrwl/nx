@@ -13,12 +13,12 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     autogenerate: { directory: 'features', collapsed: true },
   },
   {
-    label: 'Guides',
+    label: 'Core Guides',
     collapsed: true,
     autogenerate: { directory: 'guides', collapsed: true },
   },
   {
-    label: 'Concepts',
+    label: 'Core Concepts',
     collapsed: true,
     autogenerate: { directory: 'concepts', collapsed: true },
   },
@@ -39,10 +39,12 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           ...getPluginItems('angular'),
           {
             label: 'Angular Rspack',
+            collapsed: true,
             items: getPluginItems('angular-rspack', 'angular'),
           },
           {
             label: 'Angular Rsbuild',
+            collapsed: true,
             items: getPluginItems('angular-rsbuild', 'angular'),
           },
         ],

@@ -45,6 +45,7 @@ export interface FinalConfigForProject {
   fallbackCurrentVersionResolver: NxReleaseVersionConfiguration['fallbackCurrentVersionResolver'];
   versionPrefix: NxReleaseVersionConfiguration['versionPrefix'];
   preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
+  preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   // Consistently expanded to the object form for easier processing in VersionActions
   manifestRootsToUpdate: Array<Exclude<ManifestRootToUpdate, string>>;
@@ -1336,6 +1337,12 @@ Valid values are: ${validReleaseVersionPrefixes
       releaseGroupVersionConfig?.preserveLocalDependencyProtocols ??
       true;
 
+    // TODO(v22): flip to true by default
+    const preserveMatchingDependencyRanges =
+      projectVersionConfig?.preserveMatchingDependencyRanges ??
+      releaseGroupVersionConfig?.preserveMatchingDependencyRanges ??
+      false;
+
     /**
      * fallbackCurrentVersionResolver, defaults to disk when performing a first release, otherwise undefined
      */
@@ -1380,6 +1387,7 @@ Valid values are: ${validReleaseVersionPrefixes
       fallbackCurrentVersionResolver,
       versionPrefix,
       preserveLocalDependencyProtocols,
+      preserveMatchingDependencyRanges,
       versionActionsOptions,
       manifestRootsToUpdate,
       dockerOptions,

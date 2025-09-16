@@ -126,9 +126,9 @@ Finally, commit and push all the changes to GitHub and proceed with finishing yo
 
 > Nx Cloud provides self-healing CI, remote caching and many other features. [Learn more about Nx Cloud features](/ci/features).
 
-Click the link printing in your terminal, or you can connect your existing workspace to Nx Cloud:
+Click the link printing in your terminal, or you can [finish setup in Nx Cloud](https://cloud.nx.app/setup/connect-workspace/github/select)
 
-{% call-to-action variant="gradient-alt" title="Finish Nx Cloud Setup ☁️" url="https://cloud.nx.app/setup/connect-workspace/github/select" description="Nx Cloud needs to be setup to complete the tutorial" /%}
+{% call-to-action variant="simple" title="Finish Nx Cloud Setup" url="https://cloud.nx.app/setup/connect-workspace/github/select" /%}
 
 ### Verify your setup
 

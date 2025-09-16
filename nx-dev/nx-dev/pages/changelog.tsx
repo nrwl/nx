@@ -255,7 +255,11 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
               All the Nx goodies in one page, sorted by release. See our{' '}
               <Link
                 className="underline"
-                href="/reference/releases"
+                href={
+                  process.env.NEXT_PUBLIC_ASTRO_URL
+                    ? '/docs/reference/releases'
+                    : '/reference/releases'
+                }
                 prefetch={false}
               >
                 release page

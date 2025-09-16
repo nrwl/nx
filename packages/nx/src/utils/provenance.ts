@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
+import { platform } from 'os';
 
 /*
  * Verifies that the given npm package has provenance attestations
@@ -21,106 +22,131 @@ export async function ensurePackageHasProvenance(
   }
 
   const execFileAsync = promisify(execFile);
+  try {
+    const result = await execFileAsync(
+      platform() === 'win32' ? 'npm.cmd' : 'npm',
+      ['view', `${packageName}@${packageVersion}`, '--json', '--silent'],
+      {
+        timeout: 20000,
+      }
+    );
+    const npmViewResult = JSON.parse(result.stdout.trim());
 
-  const npmViewResult = JSON.parse(
-    (
-      await execFileAsync(
-        'npm',
-        ['view', `${packageName}@${packageVersion}`, '--json', '--silent'],
-        {
-          timeout: 20000,
-        }
-      )
-    ).stdout.trim()
-  );
+    const attURL = npmViewResult.dist?.attestations?.url;
 
-  const attURL = npmViewResult.dist?.attestations?.url;
+    if (!attURL)
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'No attestation URL found'
+      );
 
-  if (!attURL)
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'No attestation URL found'
+    const response = await fetch(attURL);
+
+    if (!response.ok) {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        `HTTP ${response.status}: ${response.statusText}`
+      );
+    }
+
+    const attestations = (await response.json()) as {
+      attestations: Attestation[];
+    };
+
+    const provenanceAttestation = attestations?.attestations?.find(
+      (a) => a.predicateType === 'https://slsa.dev/provenance/v1'
     );
 
-  const attestations = (await (await fetch(attURL)).json()) as {
-    attestations: Attestation[];
-  };
-
-  const provenanceAttestation = attestations?.attestations?.find(
-    (a) => a.predicateType === 'https://slsa.dev/provenance/v1'
-  );
-  if (!provenanceAttestation)
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'No provenance attestation found'
+    const dsseEnvelopePayload = JSON.parse(
+      Buffer.from(
+        provenanceAttestation.bundle.dsseEnvelope.payload,
+        'base64'
+      ).toString()
     );
 
-  const dsseEnvelopePayload = JSON.parse(
-    Buffer.from(
-      provenanceAttestation.bundle.dsseEnvelope.payload,
+    const workflowParameters =
+      dsseEnvelopePayload?.predicate?.buildDefinition?.externalParameters
+        ?.workflow;
+
+    // verify that provenance was actually generated from the right publishing workflow
+    if (!workflowParameters) {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Missing workflow parameters in attestation'
+      );
+    }
+
+    if (workflowParameters.repository !== 'https://github.com/nrwl/nx') {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Repository does not match nrwl/nx'
+      );
+    }
+    if (workflowParameters.path !== '.github/workflows/publish.yml') {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Publishing workflow does not match .github/workflows/publish.yml'
+      );
+    }
+    if (workflowParameters.ref !== `refs/tags/${npmViewResult.version}`) {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        `Version ref does not match refs/tags/${npmViewResult.version}`
+      );
+    }
+
+    // verify that provenance was generated from the exact same artifact as the one we are installing
+    const distSha = Buffer.from(
+      npmViewResult.dist.integrity.replace('sha512-', ''),
       'base64'
-    ).toString()
-  );
-
-  const workflowParameters =
-    dsseEnvelopePayload?.predicate?.buildDefinition?.externalParameters
-      ?.workflow;
-
-  // verify that provenance was actually generated from the right publishing workflow
-  if (workflowParameters?.repository !== 'https://github.com/nrwl/nx') {
-    throw noProvenanceError(
+    ).toString('hex');
+    const attestationSha = dsseEnvelopePayload.subject[0].digest.sha512;
+    if (distSha !== attestationSha) {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Integrity hash does not match attestation hash'
+      );
+    }
+    return;
+  } catch (error) {
+    if (error instanceof ProvenanceError) {
+      throw error;
+    }
+    throw new ProvenanceError(
       packageName,
       packageVersion,
-      'Repository does not match nrwl/nx'
+      error.message || error
     );
   }
-  if (workflowParameters?.path !== '.github/workflows/publish.yml') {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Publishing workflow does not match .github/workflows/publish.yml'
-    );
-  }
-  if (workflowParameters?.ref !== `refs/tags/${npmViewResult.version}`) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      `Version ref does not match refs/tags/${npmViewResult.version}`
-    );
-  }
-
-  // verify that provenance was generated from the exact same artifact as the one we are installing
-  const distSha = Buffer.from(
-    npmViewResult.dist.integrity.replace('sha512-', ''),
-    'base64'
-  ).toString('hex');
-  const attestationSha = dsseEnvelopePayload?.subject[0]?.digest.sha512;
-  if (distSha !== attestationSha) {
-    throw noProvenanceError(
-      packageName,
-      packageVersion,
-      'Integrity hash does not match attestation hash'
-    );
-  }
-  return;
 }
 
-export const noProvenanceError = (
-  packageName: string,
-  packageVersion: string,
-  error?: string
-) =>
-  `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues \n Error: ${
-    error ?? ''
-  }`;
+export class ProvenanceError extends Error {
+  constructor(packageName: string, packageVersion: string, error?: string) {
+    super(
+      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues. To disable this check at your own risk, you can set the NX_SKIP_PROVENANCE_CHECK environment variable to true. \n Error: ${
+        error ?? ''
+      }`
+    );
+  }
+}
 
 export function getNxPackageGroup(): string[] {
   const packageJsonPath = join(__dirname, '../../package.json');
   const packageJson = readJsonFile(packageJsonPath);
+
+  if (!packageJson['nx-migrations']?.packageGroup) {
+    return ['nx'];
+  }
+
   const packages = packageJson['nx-migrations'].packageGroup.filter(
-    (dep) => typeof dep === 'string' && dep.startsWith('@nx/')
+    (dep: any) => typeof dep === 'string' && dep.startsWith('@nx/')
   );
   packages.push('nx');
   return packages;

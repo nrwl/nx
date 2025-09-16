@@ -1478,6 +1478,11 @@ const nxModuleFederationConceptsRedirects = {
   '/concepts/module-federation/:slug*':
     '/technologies/module-federation/concepts/:slug*',
 };
+const contentDedupeRedirects = {
+  '/technologies/react/recipes/react-native':
+    '/technologies/react/react-native/introduction',
+  '/technologies/react/recipes/remix': '/technologies/react/remix/introduction',
+};
 
 const gettingStartedRedirects = {
   '/getting-started/why-nx': '/getting-started/intro',
@@ -1543,6 +1548,7 @@ module.exports = {
   pricingRedirects,
   ciTutorialRedirects,
   dockerReleaseRedirect,
+  contentDedupeRedirects,
   // Only enable these redirects if the new docs are enabled
   docsToAstroRedirects: process.env['NEXT_PUBLIC_ASTRO_URL']
     ? docsToAstroRedirects

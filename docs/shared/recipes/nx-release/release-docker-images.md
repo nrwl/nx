@@ -139,6 +139,15 @@ Or if you don't have a `package.json` (e.g. for non-JS projects), set it in `pro
 
 You should replace `acme` with your organization or username for the Docker registry that you are logged into.
 
+{% callout title="Docker Image Reference Override" type="note" %}
+The `release.docker.registryUrl` option can be used to override the Docker registry URL. This is useful if you want to push to a private registry like GitHub Container Registry.
+
+If you need even more control during CI/CD pipelines, for example if you target different registries for different environments, you can use the `NX_DOCKER_IMAGE_REF` environment variable.
+Note that the value you set this to will need to include the `repositoryName` and `version`. e.g. `NX_DOCKER_IMAGE_REF=ghcr.io/acme/api:2508.16.1`.
+
+Versioning will continue to work as normal.
+{% /callout %}
+
 ## Your First Docker Release
 
 Dry run your first Docker release with calendar versioning:

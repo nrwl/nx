@@ -5,6 +5,12 @@
       "schema": "./src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
       "description": "Connect a workspace to Nx Cloud",
       "x-hidden": true
+    },
+    "set-up-ai-agents": {
+      "factory": "./src/ai/set-up-ai-agents/set-up-ai-agents",
+      "schema": "./src/ai/set-up-ai-agents/schema.json",
+      "description": "Sets up the Nx MCP & rule files for common AI Agents",
+      "hidden": true
     }
   }
 }

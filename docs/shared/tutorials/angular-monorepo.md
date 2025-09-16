@@ -23,9 +23,9 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 ### Step 1: Creating a new Nx Angular workspace
 
-Let's create your workspace. The setup process takes about 2 minutes and will configure Angular, testing, and CI/CD automatically.
+Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/angular/github) with our Angular preset to get started quickly.
 
-{% call-to-action variant="default" title="Create Angular Workspace in 2 Minutes ⚡" url="https://cloud.nx.app/create-nx-workspace/angular/github" description="Skip the setup hassle - Get coding instantly with pre-configured CI/CD" /%}
+{% call-to-action variant="default" title="Create Angular Workspace" url="https://cloud.nx.app/create-nx-workspace/angular/github" /%}
 
 ### Step 2: Verify Your Setup
 

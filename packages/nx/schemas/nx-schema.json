@@ -858,6 +858,20 @@
             "description": "Whether to preserve local dependency protocols (e.g. file references, or the `workspace:` protocol in package.json files) of local dependencies when updating them during versioning. This was false by default in legacy versioning, but is true by default now.",
             "default": true
           },
+          "preserveMatchingDependencyRanges": {
+            "type": ["boolean", "array"],
+            "description": "Whether to preserve matching dependency ranges when updating them during versioning. This is false by default. (e.g. The new version will be '1.2.0' and the current version range in dependents is already '^1.0.0'. Therefore, the manifest file is not updated.)",
+            "default": false,
+            "items": {
+              "type": "string",
+              "enum": [
+                "dependencies",
+                "devDependencies",
+                "peerDependencies",
+                "optionalDependencies"
+              ]
+            }
+          },
           "versionActions": {
             "type": "string",
             "description": "The path to the version actions implementation to use for releasing all projects by default. This can also be overridden on the release group and project levels.",

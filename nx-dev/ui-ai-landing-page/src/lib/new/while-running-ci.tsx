@@ -18,7 +18,11 @@ const features: FeatureCardProps[] = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/flaky-tasks"
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/features/ci-features/flaky-tasks'
+                : '/ci/features/flaky-tasks'
+            }
             title="How to identify and rerun flaky tasks"
             className="text-sm/6 font-semibold"
           >
@@ -72,7 +76,11 @@ const features: FeatureCardProps[] = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/dynamic-agents"
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/features/ci-features/dynamic-agents'
+                : '/ci/features/dynamic-agents'
+            }
             title="How to setup dynamic agents"
             className="text-sm/6 font-semibold"
           >

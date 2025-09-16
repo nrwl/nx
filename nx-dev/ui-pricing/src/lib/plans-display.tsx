@@ -110,7 +110,11 @@ export function PlansDisplay(): ReactElement {
                     <span>
                       Remote caching with{' '}
                       <Link
-                        href="/ci/features/remote-cache"
+                        href={
+                          process.env.NEXT_PUBLIC_ASTRO_URL
+                            ? '/docs/features/ci-features/remote-cache'
+                            : '/ci/features/remote-cache'
+                        }
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
                         onClick={() =>
@@ -134,7 +138,11 @@ export function PlansDisplay(): ReactElement {
                     <span>
                       Distributed task execution with{' '}
                       <Link
-                        href="/ci/features/distribute-task-execution"
+                        href={
+                          process.env.NEXT_PUBLIC_ASTRO_URL
+                            ? '/docs/features/ci-features/distribute-task-execution'
+                            : '/ci/features/distribute-task-execution'
+                        }
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
                         onClick={() =>

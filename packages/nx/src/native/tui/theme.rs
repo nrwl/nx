@@ -2,7 +2,7 @@
 #![allow(clippy::disallowed_types)]
 
 // This is the only file we should use the `ratatui::style::Color` type in
-use ratatui::style::{Color, Style};
+use ratatui::style::Color;
 use std::sync::LazyLock;
 use terminal_colorsaurus::{ColorScheme, QueryOptions, color_scheme};
 use tracing::debug;

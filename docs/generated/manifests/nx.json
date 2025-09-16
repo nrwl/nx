@@ -3888,28 +3888,6 @@
             "file": "",
             "itemList": [
               {
-                "id": "react-native",
-                "name": "React Native with Nx",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/guides/react-native",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/technologies/react/recipes/react-native",
-                "tags": []
-              },
-              {
-                "id": "remix",
-                "name": "Remix with Nx",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/guides/remix",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/technologies/react/recipes/remix",
-                "tags": []
-              },
-              {
                 "id": "react-router",
                 "name": "React Router with Nx",
                 "description": "",
@@ -6814,28 +6792,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "react-native",
-            "name": "React Native with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/react-native",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/technologies/react/recipes/react-native",
-            "tags": []
-          },
-          {
-            "id": "remix",
-            "name": "Remix with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/remix",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/technologies/react/recipes/remix",
-            "tags": []
-          },
-          {
             "id": "react-router",
             "name": "React Router with Nx",
             "description": "",
@@ -7144,28 +7100,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "react-native",
-        "name": "React Native with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/react-native",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/react/recipes/react-native",
-        "tags": []
-      },
-      {
-        "id": "remix",
-        "name": "Remix with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/remix",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/react/recipes/remix",
-        "tags": []
-      },
-      {
         "id": "react-router",
         "name": "React Router with Nx",
         "description": "",
@@ -7245,28 +7179,6 @@
     ],
     "isExternal": false,
     "path": "/technologies/react/recipes",
-    "tags": []
-  },
-  "/technologies/react/recipes/react-native": {
-    "id": "react-native",
-    "name": "React Native with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/react-native",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/technologies/react/recipes/react-native",
-    "tags": []
-  },
-  "/technologies/react/recipes/remix": {
-    "id": "remix",
-    "name": "Remix with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/remix",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/technologies/react/recipes/remix",
     "tags": []
   },
   "/technologies/react/recipes/react-router": {

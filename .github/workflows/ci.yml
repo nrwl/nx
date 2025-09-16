@@ -69,6 +69,8 @@ jobs:
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
+        with:
+          rustflags: ''
 
       - name: Setup Java
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
@@ -272,6 +274,8 @@ jobs:
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
+        with:
+          rustflags: ''
 
       - name: Install project dependencies
         run: |

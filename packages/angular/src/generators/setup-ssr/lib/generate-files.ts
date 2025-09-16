@@ -33,7 +33,8 @@ export function generateSSRFiles(
     return;
   }
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo(tree);
   const baseFilesPath = join(__dirname, '..', 'files');
   let pathToFiles: string;
   if (angularMajorVersion >= 20) {
@@ -76,6 +77,13 @@ export function generateSSRFiles(
     project
   );
   const moduleTypeSeparator = getModuleTypeSeparator(tree);
+  const useBootstrapContext =
+    // https://github.com/angular/angular-cli/releases/tag/20.3.0
+    gte(angularVersion, '20.3.0') ||
+    // https://github.com/angular/angular-cli/releases/tag/19.2.16
+    (angularMajorVersion === 19 && gte(angularVersion, '19.2.16')) ||
+    // https://github.com/angular/angular-cli/releases/tag/18.2.21
+    (angularMajorVersion === 18 && gte(angularVersion, '18.2.21'));
 
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,
@@ -86,6 +94,7 @@ export function generateSSRFiles(
     appFileName: appComponentInfo.extensionlessFileName,
     appSymbolName: appComponentInfo.symbolName,
     moduleTypeSeparator,
+    useBootstrapContext,
     tpl: '',
   });
 

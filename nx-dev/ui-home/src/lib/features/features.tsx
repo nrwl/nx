@@ -15,7 +15,13 @@ export function Features(): ReactElement {
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           Whether you're a startup shipping fast or managing enterprise{' '}
-          <TextLink href="/concepts/decisions/why-monorepos?utm_medium=website&utm_campaign=homepage_links&utm_content=features">
+          <TextLink
+            href={
+              process.env.NEXT_PUBLIC_ASTRO_URL
+                ? '/docs/concepts/decisions/why-monorepos?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                : '/concepts/decisions/why-monorepos?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+            }
+          >
             monorepos
           </TextLink>{' '}
           with thousands of projects, Nx lets you focus on what matters and

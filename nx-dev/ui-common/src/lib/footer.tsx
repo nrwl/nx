@@ -12,8 +12,13 @@ const navigation = {
   ],
   nxCloud: [
     { name: 'App', href: 'https://cloud.nx.app' },
-    { name: 'Docs', href: '/ci/features' },
-    { name: 'Pricing', href: '/pricing' },
+    {
+      name: 'Docs',
+      href: process.env.NEXT_PUBLIC_ASTRO_URL
+        ? '/docs/features/ci-features'
+        : '/ci/features',
+    },
+    { name: 'Pricing', href: '/nx-cloud#plans' },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
   solutions: [

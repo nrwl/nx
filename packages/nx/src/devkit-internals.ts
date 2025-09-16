@@ -20,7 +20,10 @@ export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
 export { stripIndent } from './utils/logger';
-export { readModulePackageJson } from './utils/package-json';
+export {
+  readModulePackageJson,
+  installPackageToTmp,
+} from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
 export {

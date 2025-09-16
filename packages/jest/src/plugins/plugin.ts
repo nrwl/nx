@@ -31,6 +31,7 @@ import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { normalize } from 'node:path';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 import { major } from 'semver';
+import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const pmc = getPackageManagerCommand();
 
@@ -493,10 +494,13 @@ async function buildJestTargets(
         context.workspaceRoot
       )) as typeof import('jest');
       const source = new jest.SearchSource(jestContext);
-      const specs = await source.getTestPaths(
-        config.globalConfig,
-        config.projectConfig
-      );
+
+      const jestVersion = getInstalledJestMajorVersion()!;
+      const specs =
+        jestVersion >= 30
+          ? await source.getTestPaths(config.globalConfig, config.projectConfig)
+          : // @ts-expect-error Jest v29 doesn't have the projectConfig parameter
+            await source.getTestPaths(config.globalConfig);
 
       const testPaths = new Set(specs.tests.map(({ path }) => path));
 

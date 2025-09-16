@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "SetupAiAgents",
+  "title": "Set Up AI Agents",
+  "description": "Sets up the Nx MCP & rule files for common AI Agents.",
+  "type": "object",
+  "properties": {
+    "directory": {
+      "type": "string",
+      "description": "Directory where the AI agent configuration files will be generated",
+      "default": "."
+    },
+    "writeNxCloudRules": {
+      "type": "boolean",
+      "description": "Whether to write Nx Cloud rules",
+      "default": false
+    },
+    "packageVersion": {
+      "type": "string",
+      "description": "The version of the package to use",
+      "default": "latest"
+    }
+  },
+  "required": ["directory"]
+}

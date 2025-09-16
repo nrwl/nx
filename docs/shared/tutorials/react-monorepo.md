@@ -23,9 +23,9 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 ### Step 1: Creating a new Nx React workspace
 
-Let's create your workspace. The setup process takes about 2 minutes and will configure React, testing, and CI/CD automatically.
+Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/react/github) with our React preset to get started quickly.
 
-{% call-to-action variant="inverted" title="Start Building React Apps 10x Faster →" url="https://cloud.nx.app/create-nx-workspace/react/github" description="Zero-config setup with caching, testing, and CI ready out of the box" /%}
+{% call-to-action variant="simple" title="Create Workspace" url="https://cloud.nx.app/create-nx-workspace/react/github" /%}
 
 ### Step 2: Verify Your Setup
 

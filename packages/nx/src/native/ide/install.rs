@@ -177,6 +177,17 @@ pub fn get_install_command() -> Option<&'static str> {
                 Some("code")
             }
         }
+        SupportedEditor::VSCodeInsiders => {
+            debug!("Installing Nx Console extension for VS Code Insiders");
+            #[cfg(target_os = "windows")]
+            {
+                Some("code-insiders.cmd")
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                Some("code-insiders")
+            }
+        }
         SupportedEditor::Cursor => {
             debug!("Installing Nx Console extension for Cursor");
             if cfg!(target_os = "windows") {

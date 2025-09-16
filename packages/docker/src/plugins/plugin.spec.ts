@@ -63,6 +63,10 @@ describe('@nx/docker', () => {
                 "targets": {
                   "docker:build": {
                     "command": "docker build .",
+                    "dependsOn": [
+                      "build",
+                      "^build",
+                    ],
                     "inputs": [
                       "production",
                       "^production",
@@ -170,6 +174,10 @@ describe('@nx/docker', () => {
                 "targets": {
                   "docker:build": {
                     "command": "docker build .",
+                    "dependsOn": [
+                      "build",
+                      "^build",
+                    ],
                     "inputs": [
                       "default",
                       "^default",
@@ -273,6 +281,10 @@ describe('@nx/docker', () => {
                 "targets": {
                   "build-docker": {
                     "command": "docker build .",
+                    "dependsOn": [
+                      "build",
+                      "^build",
+                    ],
                     "inputs": [
                       "production",
                       "^production",
@@ -373,6 +385,10 @@ describe('@nx/docker', () => {
                 "targets": {
                   "docker:build": {
                     "command": "docker build .",
+                    "dependsOn": [
+                      "build",
+                      "^build",
+                    ],
                     "inputs": [
                       "production",
                       "^production",
@@ -530,6 +546,10 @@ describe('@nx/docker', () => {
                 "targets": {
                   "docker:build": {
                     "command": "docker build .",
+                    "dependsOn": [
+                      "build",
+                      "^build",
+                    ],
                     "inputs": [
                       "production",
                       "^production",

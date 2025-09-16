@@ -175,10 +175,31 @@ const currentVersion = versions.find(v => v.current);
 		{shouldRenderSearch && <Search />}
 	</div>
 	<div class="hidden md:flex items-center gap-4 print:hidden">
-		<div class="flex items-center gap-4">
+		<!-- CTA Buttons - Hide on screens smaller than xl (1280px) -->
+		<div class="hidden xl:flex items-center gap-2">
+			<a 
+				href="https://nx.dev/contact"
+				class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
+				title="Contact Us"
+			>
+				Contact
+			</a>
+			<a 
+				href="https://cloud.nx.app?utm_source=nx-dev&utm_medium=header"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
+				title="Login to Nx Cloud"
+			>
+				Login
+			</a>
+		</div>
+		<!-- Social Icons - Hide on screens smaller than 2xl (1536px) -->
+		<div class="hidden 2xl:flex items-center gap-4">
 			<SocialIcons />
 		</div>
 		<div class="after:content-[''] after:h-8 after:border-l after:border-slate-200 dark:after:border-slate-700"></div>
+		<!-- Theme Switcher - Always visible (highest priority) -->
 		<ThemeSelect />
 	</div>
 </div>

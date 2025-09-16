@@ -53,6 +53,7 @@ impl NxTaskHistory {
                 FOREIGN KEY (hash) REFERENCES task_details (hash)
             );
             CREATE INDEX IF NOT EXISTS hash_idx ON task_history (hash);
+            CREATE INDEX IF NOT EXISTS status_idx ON task_history (status);
             COMMIT;
             ",
             )
@@ -133,7 +134,7 @@ impl NxTaskHistory {
                     AVG(end - start) AS duration
                     FROM task_history
                         JOIN task_details ON task_history.hash = task_details.hash
-                    WHERE target_string in rarray(?1)
+                    WHERE target_string in rarray(?1) AND status = 'success'
                     GROUP BY target_string
                 ",
             )?
