@@ -19,46 +19,51 @@ class NxTargetFactory(
     private val phaseAnalyzer: PhaseAnalyzer
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
+
     fun createNxTargets(
-        mavenCommand: String,
-        project: MavenProject
+        mavenCommand: String, project: MavenProject
     ): Pair<ObjectNode, ObjectNode> {
         val nxTargets = objectMapper.createObjectNode()
-
-        // Generate targets from discovered plugin goals
-        val targetGroups = objectMapper.createObjectNode()
+        val targetGroups = mutableMapOf<String, List<String>>()
 
         val phaseTargets = generatePhaseTargets(project, mavenCommand)
-        val mavenPhasesGroup = objectMapper.createArrayNode()
+        val mavenPhasesGroup = mutableListOf<String>()
         phaseTargets.forEach { (phase, target) ->
             nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
             mavenPhasesGroup.add(phase)
         }
-        targetGroups.put("maven-phases", mavenPhasesGroup)
+        targetGroups["maven-phases"] = mavenPhasesGroup
 
-        val (goalTargets, goalGroups) = generateGoalTargets(project, mavenCommand)
-
-        goalTargets.forEach { (goal, target) ->
-            nxTargets.set<ObjectNode>(goal, target)
+        // Extract discovered plugin goals
+        val plugins = getExecutablePlugins(project)
+        plugins.forEach { plugin: Plugin ->
+            val goals = getGoals(plugin)
+            val pluginTargetGroup = mutableListOf<String>()
+            val cleanPluginName = cleanPluginName(plugin)
+            goals.forEach { goal ->
+                val goalTargetName = "$cleanPluginName:$goal"
+                val goalTarget = createGoalTarget(mavenCommand, project, cleanPluginName, goal)
+                pluginTargetGroup.add(goalTargetName)
+                nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+            }
+            targetGroups[cleanPluginName] = pluginTargetGroup
         }
-        goalGroups.forEach { (groupName, group) ->
-            val groupArray = objectMapper.createArrayNode()
-            group.forEach { goal -> groupArray.add(goal) }
-            targetGroups.put(groupName, groupArray)
-        }
 
-        val (atomizedTestTargets, atomizedTestTargetGroups) = generateAtomizedTestTargets(project, mavenCommand)
+        val atomizedTestTargets = generateAtomizedTestTargets(project, mavenCommand)
 
         atomizedTestTargets.forEach { (goal, target) ->
-            nxTargets.set<ObjectNode>(goal, target)
+            nxTargets.set<ObjectNode>(goal, target.toJSON(objectMapper))
         }
-        atomizedTestTargetGroups.forEach { (groupName, group) ->
-            val groupArray = objectMapper.createArrayNode()
-            group.forEach { goal -> groupArray.add(goal) }
-            targetGroups.put(groupName, groupArray)
+        targetGroups["verify-ci"] = atomizedTestTargets.keys.toList()
+
+        val targetGroupsJson = objectMapper.createObjectNode()
+        targetGroups.forEach { (groupName, targets) ->
+            val targetsArray = objectMapper.createArrayNode()
+            targets.forEach { target -> targetsArray.add(target) }
+            targetGroupsJson.set<ArrayNode>(groupName, targetsArray)
         }
 
-        return Pair(nxTargets, targetGroups)
+        return Pair(nxTargets, targetGroupsJson)
     }
 
     private fun generatePhaseTargets(
@@ -79,16 +84,14 @@ class NxTargetFactory(
     }
 
     private fun createPhaseTarget(
-        project: MavenProject,
-        phase: String,
-        mavenCommand: String
+        project: MavenProject, phase: String, mavenCommand: String
     ): NxTarget {
         val analysis = phaseAnalyzer.analyze(project, phase)
 
 
         val options = objectMapper.createObjectNode()
         options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
-        val target = NxTarget(phase, "nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
 
         // Copy caching info from analysis
         if (analysis.isCacheable) {
@@ -107,82 +110,45 @@ class NxTargetFactory(
         return target
     }
 
-    private fun generateGoalTargets(
-        project: MavenProject,
-        mavenCommand: String
-    ): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
-        val targets = mutableMapOf<String, ObjectNode>()
-        val targetGroups = mutableMapOf<String, List<String>>()
-
-        // Extract discovered plugin goals
-        val plugins = getExecutablePlugins(project)
-
-        plugins.forEach { plugin: Plugin ->
-            val goals = getGoals(plugin)
-            val targetGroup = mutableListOf<String>()
-            val cleanPluginName = cleanPluginName(plugin)
-            goals.forEach { goal ->
-                val (targetName, targetNode) = createGoalTarget(mavenCommand, project, cleanPluginName, goal)
-                targetGroup.add(targetName)
-                targets[targetName] = targetNode
-            }
-            targetGroups[cleanPluginName] = targetGroup
-        }
-
-        return Pair(targets, targetGroups)
-    }
-
     private fun getExecutablePlugins(project: MavenProject): List<Plugin> {
         return project.build.plugins
     }
 
     private fun generateAtomizedTestTargets(
-        project: MavenProject,
-        mavenCommand: String
-    ): Pair<Map<String, ObjectNode>, Map<String, List<String>>> {
-        val targets = mutableMapOf<String, ObjectNode>()
-        val targetGroups = mutableMapOf<String, List<String>>()
+        project: MavenProject, mavenCommand: String
+    ): Map<String, NxTarget> {
+        val targets = mutableMapOf<String, NxTarget>()
 
         val testClasses = testClassDiscovery.discoverTestClasses(project)
-        val testTargetNames = mutableListOf<String>()
+        val verifyCiTargetGroup = mutableListOf<String>()
 
-        val verifyCiTarget = objectMapper.createObjectNode()
-        verifyCiTarget.put("executor", "nx:noop")
-        verifyCiTarget.put("cache", true)
-        val dependsOn = objectMapper.createArrayNode()
+        val verifyCiTarget = NxTarget("nx:noop", null, true, false)
+        val verifyCiDependsOn = objectMapper.createArrayNode()
 
-        dependsOn.add("package")
+        verifyCiDependsOn.add("package")
 
         testClasses.forEach { testClass ->
             val targetName = "test--${testClass.packagePath}.${testClass.className}"
 
-            testTargetNames.add(targetName)
+            verifyCiTargetGroup.add(targetName)
 
             log.info("Generating target for test class: $targetName'")
-            val target = objectMapper.createObjectNode()
-
-            target.put("executor", "nx:run-commands")
 
             val options = objectMapper.createObjectNode()
             options.put(
                 "command",
                 "$mavenCommand test -am -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className} -Dsurefire.failIfNoSpecifiedTests=false"
             )
-            target.put("options", options)
+            val target = NxTarget("nx:run-commands", options, false, false)
 
-            target.put("cache", false)
-            target.put("parallelism", false)
-
-            dependsOn.add(targetName)
+            verifyCiDependsOn.add(targetName)
             targets[targetName] = target
         }
 
-        verifyCiTarget.put("dependsOn", dependsOn)
+        verifyCiTarget.dependsOn = verifyCiDependsOn
         targets["verify-ci"] = verifyCiTarget
 
-
-
-        return Pair(targets, targetGroups)
+        return targets
     }
 
     private fun getPhases(): Set<String> {
@@ -196,26 +162,14 @@ class NxTargetFactory(
     }
 
     private fun createGoalTarget(
-        mavenCommand: String,
-        project: MavenProject,
-        cleanPluginName: String,
-        goalName: String
-    ): Pair<String, ObjectNode> {
-        val target = objectMapper.createObjectNode()
-
-        target.put("executor", "nx:run-commands")
-
+        mavenCommand: String, project: MavenProject, cleanPluginName: String, goalName: String
+    ): NxTarget {
         val options = objectMapper.createObjectNode()
         options.put(
-            "command",
-            "$mavenCommand $cleanPluginName:$goalName -am -pl ${project.groupId}:${project.artifactId}"
+            "command", "$mavenCommand $cleanPluginName:$goalName -am -pl ${project.groupId}:${project.artifactId}"
         )
-        target.put("options", options)
 
-        target.put("cache", false)
-        target.put("parallelism", false)
-
-        return Pair("$cleanPluginName:$goalName", target);
+        return NxTarget("nx:run-commands", options, false, false)
     }
 
     private fun getGoals(plugin: Plugin): Set<String> {
@@ -235,17 +189,13 @@ class NxTargetFactory(
      */
     private fun cleanPluginName(plugin: Plugin): String {
         val fullPluginName = "${plugin.groupId}.${plugin.artifactId}"
-        return fullPluginName
-            .replace("org.apache.maven.plugins.", "")
-            .replace("maven-", "")
-            .replace("-plugin", "")
+        return fullPluginName.replace("org.apache.maven.plugins.", "").replace("maven-", "").replace("-plugin", "")
     }
 }
 
 data class NxTarget(
-    val name: String,
     val executor: String,
-    val options: ObjectNode,
+    val options: ObjectNode?,
     val cache: Boolean,
     val parallelism: Boolean,
     var dependsOn: ArrayNode? = null,
@@ -255,7 +205,9 @@ data class NxTarget(
     fun toJSON(objectMapper: ObjectMapper): ObjectNode {
         val node = objectMapper.createObjectNode()
         node.put("executor", executor)
-        node.set<ObjectNode>("options", options)
+        if (options != null) {
+            node.set<ObjectNode>("options", options)
+        }
         node.put("cache", cache)
         node.put("parallelism", parallelism)
 
