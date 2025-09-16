@@ -2,6 +2,7 @@
   "name": "21.3.0-package-updates",
   "version": "21.3.0-beta.3",
   "x-prompt": "Do you want to update the Jest version to v30?",
+  "incompatibleWith": { "@angular-devkit/build-angular": "*" },
   "packages": {
     "jest": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
     "@types/jest": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
