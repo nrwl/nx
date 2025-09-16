@@ -26,25 +26,42 @@ class NxTargetFactory(
         val nxTargets = objectMapper.createObjectNode()
         val targetGroups = mutableMapOf<String, List<String>>()
 
-        val phaseTargets = generatePhaseTargets(project, mavenCommand)
-        val mavenPhasesGroup = mutableListOf<String>()
-        phaseTargets.forEach { (phase, target) ->
-            nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
-            mavenPhasesGroup.add(phase)
+        val phaseTargets = mutableMapOf<String, NxTarget>()
+        // Extract discovered phases from lifecycle analysis
+        lifecycles.lifeCycles.forEach { lifecycle ->
+            log.info("Analyzing ${lifecycle.phases.size} phases for ${project.artifactId}: ${lifecycle.phases.joinToString(", ")}")
+            lifecycle.phases.forEachIndexed { index, phase ->
+                val target =  createPhaseTarget(project, phase, mavenCommand)
+
+                // find previous phase and add to dependsOn
+                if (index > 1) {
+                    val previousPhase = lifecycle.phases[index - 1]
+                    target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
+                    target.dependsOn?.add(previousPhase)
+                }
+
+                phaseTargets[phase] = target;
+
+            }
         }
-        targetGroups["maven-phases"] = mavenPhasesGroup
 
         // Extract discovered plugin goals
         val plugins = getExecutablePlugins(project)
         plugins.forEach { plugin: Plugin ->
-            val goals = getGoals(plugin)
-            val pluginTargetGroup = mutableListOf<String>()
             val cleanPluginName = cleanPluginName(plugin)
-            goals.forEach { goal ->
-                val goalTargetName = "$cleanPluginName:$goal"
-                val goalTarget = createGoalTarget(mavenCommand, project, cleanPluginName, goal)
-                pluginTargetGroup.add(goalTargetName)
-                nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+            val pluginTargetGroup = mutableListOf<String>()
+            plugin.executions.forEach { execution ->
+                execution.goals.forEach { goal ->
+                    val goalTargetName = "$cleanPluginName:$goal"
+                    val goalTarget = createGoalTarget(mavenCommand, project, cleanPluginName, goal)
+
+                    val phaseTarget = phaseTargets[execution.phase]
+                    phaseTarget?.dependsOn = phaseTarget?.dependsOn ?: objectMapper.createArrayNode()
+                    phaseTarget?.dependsOn?.add(goalTargetName)
+
+                    pluginTargetGroup.add(goalTargetName)
+                    nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+                }
             }
             targetGroups[cleanPluginName] = pluginTargetGroup
         }
@@ -56,6 +73,13 @@ class NxTargetFactory(
         }
         targetGroups["verify-ci"] = atomizedTestTargets.keys.toList()
 
+        val mavenPhasesGroup = mutableListOf<String>()
+        phaseTargets.forEach { (phase, target) ->
+            nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
+            mavenPhasesGroup.add(phase)
+        }
+        targetGroups["maven-phases"] = mavenPhasesGroup
+
         val targetGroupsJson = objectMapper.createObjectNode()
         targetGroups.forEach { (groupName, targets) ->
             val targetsArray = objectMapper.createArrayNode()
@@ -66,32 +90,16 @@ class NxTargetFactory(
         return Pair(nxTargets, targetGroupsJson)
     }
 
-    private fun generatePhaseTargets(
-        project: MavenProject,
-        mavenCommand: String,
-    ): Map<String, NxTarget> {
-        val targets = mutableMapOf<String, NxTarget>()
-        // Extract discovered phases from lifecycle analysis
-        val phasesToAnalyze = getPhases()
-
-        log.info("Analyzing ${phasesToAnalyze.size} phases for ${project.artifactId}: ${phasesToAnalyze.joinToString(", ")}")
-
-        // Generate targets from phase analysis
-        phasesToAnalyze.forEach { phase ->
-            targets[phase] = createPhaseTarget(project, phase, mavenCommand)
-        }
-        return targets
-    }
-
     private fun createPhaseTarget(
         project: MavenProject, phase: String, mavenCommand: String
     ): NxTarget {
         val analysis = phaseAnalyzer.analyze(project, phase)
 
 
-        val options = objectMapper.createObjectNode()
-        options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
-        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+//        val options = objectMapper.createObjectNode()
+//        options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
+//        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+        val target = NxTarget("nx:noop", null, analysis.isCacheable, analysis.isThreadSafe)
 
         val dependsOn = objectMapper.createArrayNode()
         dependsOn.add("^$phase")
@@ -155,16 +163,6 @@ class NxTargetFactory(
         return targets
     }
 
-    private fun getPhases(): Set<String> {
-        val result = mutableSetOf<String>()
-        lifecycles.lifeCycles.forEach { lifecycle ->
-            lifecycle.phases.forEach { phase ->
-                result.add(phase)
-            }
-        }
-        return result
-    }
-
     private fun createGoalTarget(
         mavenCommand: String, project: MavenProject, cleanPluginName: String, goalName: String
     ): NxTarget {
@@ -174,17 +172,6 @@ class NxTargetFactory(
         )
 
         return NxTarget("nx:run-commands", options, false, false)
-    }
-
-    private fun getGoals(plugin: Plugin): Set<String> {
-        val result = mutableSetOf<String>()
-
-        plugin.executions.forEach { execution ->
-            execution.goals.forEach { goal ->
-                result.add(goal)
-            }
-        }
-        return result
     }
 
 
