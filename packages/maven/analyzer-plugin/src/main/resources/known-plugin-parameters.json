@@ -1,0 +1,335 @@
+{
+  "plugins": {
+    "maven-compiler-plugin": {
+      "goals": {
+        "compile": {
+          "inputParameters": [
+            "compileSourceRoots",
+            "sourceDirectory",
+            "annotationProcessorPaths",
+            "source",
+            "encoding",
+            "includes",
+            "excludes",
+            "classpath",
+            "compileClasspath"
+          ],
+          "outputParameters": [
+            "outputDirectory",
+            "generatedSourcesDirectory",
+            "target"
+          ]
+        },
+        "testCompile": {
+          "inputParameters": [
+            "testCompileSourceRoots",
+            "testSourceDirectory",
+            "testIncludes",
+            "testExcludes",
+            "testClasspath"
+          ],
+          "outputParameters": [
+            "testOutputDirectory"
+          ]
+        }
+      }
+    },
+    "maven-surefire-plugin": {
+      "goals": {
+        "test": {
+          "inputParameters": [
+            "testSourceDirectory",
+            "testClassesDirectory",
+            "testOutputDirectory",
+            "classesDirectory",
+            "includes",
+            "excludes",
+            "test",
+            "suiteXmlFiles",
+            "testClasspath",
+            "additionalClasspathElements"
+          ],
+          "outputParameters": [
+            "reportsDirectory"
+          ]
+        }
+      }
+    },
+    "maven-jar-plugin": {
+      "goals": {
+        "jar": {
+          "inputParameters": [
+            "classesDirectory",
+            "includes",
+            "excludes",
+            "manifestFile"
+          ],
+          "outputParameters": [
+            "outputDirectory",
+            "archive",
+            "finalName"
+          ]
+        },
+        "test-jar": {
+          "inputParameters": [
+            "testClassesDirectory"
+          ],
+          "outputParameters": [
+            "outputDirectory",
+            "archive"
+          ]
+        }
+      }
+    },
+    "maven-war-plugin": {
+      "goals": {
+        "war": {
+          "inputParameters": [
+            "warSourceDirectory",
+            "webXml",
+            "classesDirectory",
+            "overlays",
+            "webResources"
+          ],
+          "outputParameters": [
+            "outputDirectory",
+            "archive",
+            "finalName"
+          ]
+        }
+      }
+    },
+    "maven-resources-plugin": {
+      "goals": {
+        "resources": {
+          "inputParameters": [
+            "resources",
+            "encoding",
+            "filters",
+            "includeEmptyDirs",
+            "filtering"
+          ],
+          "outputParameters": [
+            "outputDirectory"
+          ]
+        },
+        "testResources": {
+          "inputParameters": [
+            "testResources",
+            "encoding",
+            "filters"
+          ],
+          "outputParameters": [
+            "testOutputDirectory"
+          ]
+        },
+        "copy-resources": {
+          "inputParameters": [
+            "resources"
+          ],
+          "outputParameters": [
+            "outputDirectory"
+          ]
+        }
+      }
+    },
+    "maven-clean-plugin": {
+      "goals": {
+        "clean": {
+          "inputParameters": [],
+          "outputParameters": [
+            "directory",
+            "filesets",
+            "excludeDefaultDirectories"
+          ]
+        }
+      }
+    },
+    "maven-install-plugin": {
+      "goals": {
+        "install": {
+          "inputParameters": [
+            "file",
+            "pomFile"
+          ],
+          "outputParameters": [
+            "localRepositoryPath"
+          ]
+        },
+        "install-file": {
+          "inputParameters": [
+            "file",
+            "pomFile"
+          ],
+          "outputParameters": [
+            "localRepositoryPath"
+          ]
+        }
+      }
+    },
+    "maven-deploy-plugin": {
+      "goals": {
+        "deploy": {
+          "inputParameters": [
+            "file",
+            "pomFile"
+          ],
+          "outputParameters": [
+            "url",
+            "repositoryId"
+          ]
+        },
+        "deploy-file": {
+          "inputParameters": [
+            "file",
+            "pomFile"
+          ],
+          "outputParameters": [
+            "url",
+            "repositoryId"
+          ]
+        }
+      }
+    },
+    "maven-failsafe-plugin": {
+      "goals": {
+        "integration-test": {
+          "inputParameters": [
+            "testSourceDirectory",
+            "testClassesDirectory",
+            "classesDirectory",
+            "includes",
+            "excludes",
+            "testClasspath"
+          ],
+          "outputParameters": [
+            "reportsDirectory"
+          ]
+        },
+        "verify": {
+          "inputParameters": [
+            "reportsDirectory",
+            "summaryFile"
+          ],
+          "outputParameters": []
+        }
+      }
+    },
+    "maven-site-plugin": {
+      "goals": {
+        "site": {
+          "inputParameters": [
+            "siteDirectory",
+            "reportPlugins"
+          ],
+          "outputParameters": [
+            "outputDirectory",
+            "reportingOutputDirectory"
+          ]
+        },
+        "deploy": {
+          "inputParameters": [
+            "outputDirectory",
+            "siteDirectory"
+          ],
+          "outputParameters": []
+        }
+      }
+    },
+    "maven-assembly-plugin": {
+      "goals": {
+        "single": {
+          "inputParameters": [
+            "descriptors",
+            "descriptorRefs"
+          ],
+          "outputParameters": [
+            "outputDirectory",
+            "workDirectory",
+            "tarLongFileMode",
+            "finalName"
+          ]
+        }
+      }
+    },
+    "maven-dependency-plugin": {
+      "goals": {
+        "copy": {
+          "inputParameters": [
+            "artifactItems"
+          ],
+          "outputParameters": [
+            "outputDirectory"
+          ]
+        },
+        "copy-dependencies": {
+          "inputParameters": [
+            "includeScope",
+            "excludeScope"
+          ],
+          "outputParameters": [
+            "outputDirectory"
+          ]
+        },
+        "unpack": {
+          "inputParameters": [
+            "artifactItems"
+          ],
+          "outputParameters": [
+            "outputDirectory"
+          ]
+        },
+        "unpack-dependencies": {
+          "inputParameters": [
+            "includes",
+            "excludes"
+          ],
+          "outputParameters": [
+            "outputDirectory"
+          ]
+        }
+      }
+    },
+    "jacoco-maven-plugin": {
+      "goals": {
+        "prepare-agent": {
+          "inputParameters": [],
+          "outputParameters": [
+            "destFile",
+            "propertyName"
+          ]
+        },
+        "report": {
+          "inputParameters": [
+            "dataFile"
+          ],
+          "outputParameters": [
+            "outputDirectory"
+          ]
+        }
+      }
+    },
+    "spring-boot-maven-plugin": {
+      "goals": {
+        "repackage": {
+          "inputParameters": [
+            "mainClass"
+          ],
+          "outputParameters": [
+            "outputDirectory",
+            "finalName",
+            "classifier"
+          ]
+        },
+        "run": {
+          "inputParameters": [
+            "classesDirectory",
+            "testClassesDirectory",
+            "mainClass"
+          ],
+          "outputParameters": []
+        }
+      }
+    }
+  }
+}
