@@ -156,6 +156,8 @@ class NxTargetFactory(
         verifyCiTarget.put("cache", true)
         val dependsOn = objectMapper.createArrayNode()
 
+        dependsOn.add("package")
+
         testClasses.forEach { testClass ->
             val targetName = "test--${testClass.packagePath}.${testClass.className}"
 
