@@ -57,7 +57,7 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
   const mavenExecutable = detectMavenExecutable();
 
   const mavenArgs = [
-    'dev.nx.maven:nx-maven-analyzer-plugin:analyze',
+    'dev.nx.maven:nx-maven-analyzer-plugin:1.0.0-SNAPSHOT:analyze',
     `-DoutputFile=${outputFile}`,
     `-DworkspaceRoot=${workspaceRoot}`,
     '--batch-mode',
