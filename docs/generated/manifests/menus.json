@@ -5719,6 +5719,14 @@
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false
+                      },
+                      {
+                        "id": "set-up-ai-agents",
+                        "path": "/reference/core-api/nx/generators/set-up-ai-agents",
+                        "name": "set-up-ai-agents",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
                       }
                     ],
                     "isExternal": false,

@@ -509,16 +509,6 @@
         "path": "/technologies/angular/api/migrations/21.4.0-ngrx-package-updates",
         "type": "migration"
       },
-      "/technologies/angular/api/migrations/21.3.5-jest-package-updates": {
-        "description": "",
-        "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
-        "hidden": false,
-        "name": "21.3.5-jest-package-updates",
-        "version": "21.3.5-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/21.3.5-jest-package-updates",
-        "type": "migration"
-      },
       "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0": {
         "description": "Update the @angular/cli package version to ~20.1.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
@@ -3716,6 +3706,15 @@
         "name": "connect-to-nx-cloud",
         "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
         "path": "/reference/core-api/nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      },
+      "/reference/core-api/nx/generators/set-up-ai-agents": {
+        "description": "Sets up the Nx MCP & rule files for common AI Agents",
+        "file": "generated/packages/nx/generators/set-up-ai-agents.json",
+        "hidden": true,
+        "name": "set-up-ai-agents",
+        "originalFilePath": "/packages/nx/src/ai/set-up-ai-agents/schema.json",
+        "path": "/reference/core-api/nx/generators/set-up-ai-agents",
         "type": "generator"
       }
     },

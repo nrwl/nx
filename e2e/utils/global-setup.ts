@@ -52,6 +52,8 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.YARN_NPM_REGISTRY_SERVER = registry;
     process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
 
+    process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
+
     global.e2eTeardown = () => {
       execSync(
         `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,

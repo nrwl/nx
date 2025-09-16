@@ -691,6 +691,7 @@
           - [run-script](/reference/core-api/nx/executors/run-script)
         - [generators](/reference/core-api/nx/generators)
           - [connect-to-nx-cloud](/reference/core-api/nx/generators/connect-to-nx-cloud)
+          - [set-up-ai-agents](/reference/core-api/nx/generators/set-up-ai-agents)
         - [migrations](/reference/core-api/nx/migrations)
       - [workspace](/reference/core-api/workspace)
         - [documents](/reference/core-api/workspace/documents)
