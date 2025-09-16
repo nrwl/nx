@@ -6,6 +6,7 @@ import {
   type PluginItem,
   type PluginMigrationItem,
 } from './plugin-schema-parser';
+import { stripMarkdocTags } from './strip-markdoc-tags';
 
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
@@ -30,7 +31,8 @@ export function generateMigrationItem(name: string, item: any): string {
   if (config.fullPath) {
     const maybeExampleMdFile = config.fullPath + '.md';
     if (existsSync(maybeExampleMdFile)) {
-      markdown += `${readFileSync(maybeExampleMdFile, 'utf-8')}\n\n`;
+      const rawContent = readFileSync(maybeExampleMdFile, 'utf-8');
+      markdown += `${stripMarkdocTags(rawContent)}\n\n`;
     }
   }
 

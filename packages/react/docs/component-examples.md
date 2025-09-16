@@ -40,3 +40,4 @@ nx g @nx/react:component libs/ui/src/my-component --classComponent
 ```
 
 {% /tab %}
+{% /tabs %}
