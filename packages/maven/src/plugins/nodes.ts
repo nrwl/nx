@@ -28,20 +28,15 @@ export const createNodesV2: CreateNodesV2 = [
       return [];
     }
 
-    try {
-      // Try to get cached data first (skip cache if in verbose mode)
-      let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
+  // Try to get cached data first (skip cache if in verbose mode)
+  let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
 
-      // If no cached data or cache is stale, run fresh Maven analysis
-      if (!mavenData) {
-        mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
-      }
+  // If no cached data or cache is stale, run fresh Maven analysis
+  if (!mavenData) {
+    mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
+  }
 
-      // Return createNodesResults (atomization now handled in Kotlin)
-      return mavenData.createNodesResults || [];
-    } catch (error) {
-      console.warn('Maven analysis failed:', error instanceof Error ? error.message : error);
-      throw new Error('Maven analysis failed');
-    }
+  // Return createNodesResults (atomization now handled in Kotlin)
+  return mavenData.createNodesResults || [];
   },
 ];
