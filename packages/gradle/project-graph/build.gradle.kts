@@ -3,7 +3,7 @@ plugins {
   `maven-publish`
   signing
   id("com.ncorti.ktfmt.gradle") version "+"
-  id("dev.nx.gradle.project-graph") version "0.1.4"
+  id("dev.nx.gradle.project-graph") version "0.1.7"
   id("org.jetbrains.kotlin.jvm") version "2.1.20"
   id("com.gradle.plugin-publish") version "1.2.1"
 }
