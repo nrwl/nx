@@ -171,7 +171,7 @@ class NxTargetFactory(
             val options = objectMapper.createObjectNode()
             options.put(
                 "command",
-                "$mavenCommand test -am -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className}"
+                "$mavenCommand test -am -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className} -Dsurefire.failIfNoSpecifiedTests=false"
             )
             target.put("options", options)
 
