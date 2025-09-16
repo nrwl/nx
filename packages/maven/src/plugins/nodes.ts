@@ -13,9 +13,9 @@ export const createNodesV2: CreateNodesV2 = [
   '**/pom.xml',
   async (configFiles, options, context): Promise<CreateNodesResultV2> => {
     const opts: MavenPluginOptions = {...DEFAULT_OPTIONS, ...(options as MavenPluginOptions)};
-    
-    // Check for verbose logging from multiple sources  
-    const isVerbose = opts.verbose || 
+
+    // Check for verbose logging from multiple sources
+    const isVerbose = opts.verbose ||
                      process.env.NX_VERBOSE_LOGGING === 'true';
 
     if (isVerbose) {
@@ -31,17 +31,17 @@ export const createNodesV2: CreateNodesV2 = [
     try {
       // Try to get cached data first (skip cache if in verbose mode)
       let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
-      
+
       // If no cached data or cache is stale, run fresh Maven analysis
       if (!mavenData) {
         mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
       }
-      
+
       // Return createNodesResults (atomization now handled in Kotlin)
       return mavenData.createNodesResults || [];
     } catch (error) {
       console.warn('Maven analysis failed:', error instanceof Error ? error.message : error);
-      return [];
+      throw new Error('Maven analysis failed');
     }
   },
 ];
