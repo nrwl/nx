@@ -110,6 +110,12 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         val sharedLifecycleAnalyzer = NxTargetFactory(lifecycles, sharedInputOutputAnalyzer, sharedPluginExecutionFinder, objectMapper, sharedTestClassDiscovery, phaseAnalyzer)
 
+        // Resolve Maven command once for all projects
+        val mavenCommandStart = System.currentTimeMillis()
+        val mavenCommand = MavenCommandResolver.getMavenCommand(workspaceRoot)
+        val mavenCommandTime = System.currentTimeMillis() - mavenCommandStart
+        log.info("Maven command resolved to '$mavenCommand' in ${mavenCommandTime}ms")
+
         val setupTime = System.currentTimeMillis() - startTime
         log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
 
@@ -126,7 +132,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                     mavenProject,
                     workspaceRoot,
                     sharedLifecycleAnalyzer,
-                    sharedTestClassDiscovery
+                    sharedTestClassDiscovery,
+                    mavenCommand
                 )
 
                 // Get Nx config for project
