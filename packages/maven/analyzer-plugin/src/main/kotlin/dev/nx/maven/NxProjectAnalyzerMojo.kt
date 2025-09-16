@@ -3,7 +3,6 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
-import dev.nx.maven.plugin.PluginExecutionFinder
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.lifecycle.LifecycleExecutor
@@ -97,8 +96,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         // Create deeply shared components for maximum caching efficiency
         val sharedExpressionResolver = MavenExpressionResolver(session)
-        val sharedPluginExecutionFinder = PluginExecutionFinder(lifecycleExecutor, session)
-
 
         // Create shared component instances ONCE for all projects (major optimization)
 
@@ -110,7 +107,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         val sharedLifecycleAnalyzer = NxTargetFactory(
             lifecycles,
-            sharedPluginExecutionFinder,
             objectMapper,
             sharedTestClassDiscovery,
             phaseAnalyzer
