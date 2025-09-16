@@ -4,6 +4,7 @@ import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.concurrent.ConcurrentLinkedQueue
 
 data class TestClassInfo(
     val className: String,
@@ -34,23 +35,23 @@ class TestClassDiscovery() {
      * Discover test classes in the given Maven project
      */
     fun discoverTestClasses(project: MavenProject): List<TestClassInfo> {
-        val testClasses = mutableListOf<TestClassInfo>()
+        val testClasses = ConcurrentLinkedQueue<TestClassInfo>()
 
         log.info("Getting Test Classes for project ${project.artifactId}")
 
         // Get test source roots
         val testSourceRoots = project.testCompileSourceRoots
 
-        for (testSourceRoot in testSourceRoots) {
+        testSourceRoots.parallelStream().forEach { testSourceRoot ->
             val testDir = File(testSourceRoot.toString())
             if (!testDir.exists() || !testDir.isDirectory) {
-                continue
+                return@forEach
             }
 
             // Find all Java files recursively
             val javaFiles = findJavaFiles(testDir)
 
-            for (javaFile in javaFiles) {
+            javaFiles.parallelStream().forEach { javaFile ->
                 val testClassInfo = getTestClass(javaFile, testDir)
                 if (testClassInfo != null) {
                     testClasses.add(testClassInfo)
@@ -58,7 +59,7 @@ class TestClassDiscovery() {
             }
         }
 
-        return testClasses
+        return testClasses.toList()
     }
 
     /**

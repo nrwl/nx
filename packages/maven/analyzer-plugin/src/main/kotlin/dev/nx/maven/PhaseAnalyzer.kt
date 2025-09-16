@@ -7,6 +7,8 @@ import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
 import org.apache.maven.project.MavenProject
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Analyzes Maven phases to determine inputs, outputs, and thread safety
@@ -21,11 +23,15 @@ class PhaseAnalyzer(
     private val log = LoggerFactory.getLogger(PhaseAnalyzer::class.java)
 
     fun analyze(project: MavenProject, phase: String): PhaseInformation {
+
+        project.artifacts.forEach {
+            artifact -> println(artifact)
+        }
         val plugins = project.build.plugins
-        var isThreadSafe = true
-        var isCacheable = isPhaseCacheable(phase)
-        val inputs = mutableSetOf<String>()
-        val outputs = mutableSetOf<String>()
+        val isThreadSafe = AtomicBoolean(true)
+        val isCacheable = AtomicBoolean(isPhaseCacheable(phase))
+        val inputs = ConcurrentHashMap.newKeySet<String>()
+        val outputs = ConcurrentHashMap.newKeySet<String>()
 
         val mojoDescriptors = plugins
             .flatMap { plugin ->
@@ -35,23 +41,24 @@ class PhaseAnalyzer(
                     .mapNotNull { goal -> getMojoDescriptor(plugin, goal, project) }
             }
 
-        mojoDescriptors.forEach { descriptor ->
+        mojoDescriptors.parallelStream().forEach { descriptor ->
             if (!descriptor.isThreadSafe) {
-                isThreadSafe = false
+                isThreadSafe.set(false)
             }
 
             if (!isMojoCacheable(descriptor)) {
-                isCacheable = false
+                isCacheable.set(false)
             }
 
-            descriptor.parameters?.forEach { parameter ->
+            descriptor.parameters?.parallelStream()?.forEach { parameter ->
                 val paramInfo = analyzeParameterInputsOutputs(descriptor, parameter, project)
                 inputs.addAll(paramInfo.inputs)
                 outputs.addAll(paramInfo.outputs)
+                log.info("Parameter analysis: ${descriptor.phase} ${parameter.name} -> ${paramInfo}")
             }
         }
 
-        return PhaseInformation(isThreadSafe, isCacheable, inputs, outputs)
+        return PhaseInformation(isThreadSafe.get(), isCacheable.get(), inputs, outputs)
     }
 
     /**
@@ -104,7 +111,6 @@ class PhaseAnalyzer(
 
         val role = analyzeParameterRole(parameter, project)
 
-        log.debug("Parameter analysis: ${parameter.name} -> $role")
 
         if (role == ParameterRole.UNKNOWN) {
             log.debug("Skipping unknown parameter: ${parameter.name}")
@@ -155,7 +161,7 @@ class PhaseAnalyzer(
         // Known non-cacheable plugins/goals
         val nonCacheablePatterns = listOf(
             // Network/deployment operations
-            "deploy", "install", "release", "site-deploy",
+            "deploy", "release", "site-deploy",
             // Interactive/time-sensitive operations
             "exec", "run", "start", "stop",
             // Cleaning operations
