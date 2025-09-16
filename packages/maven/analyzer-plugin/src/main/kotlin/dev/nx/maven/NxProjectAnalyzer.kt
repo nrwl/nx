@@ -1,10 +1,12 @@
 package dev.nx.maven
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.nio.file.Paths
 
 /**
@@ -24,61 +26,73 @@ class NxProjectAnalyzer(
     /**
      * Analyzes the project and returns Nx project config
      */
-    fun analyze(): Pair<String, ObjectNode>? {
+    fun analyze(): ProjectAnalysis {
         val startTime = System.currentTimeMillis()
-        try {
-            log.info("Starting analysis for project: ${project.artifactId}")
+        log.info("Starting analysis for project: ${project.artifactId}")
 
-            // Calculate relative path from workspace root
-            val pathCalculationStart = System.currentTimeMillis()
-            val workspaceRootPath = Paths.get(workspaceRoot)
-            val projectPath = project.basedir.toPath()
-            val root = workspaceRootPath.relativize(projectPath).toString().replace('\\', '/')
-            val projectName = "${project.groupId}.${project.artifactId}"
-            val projectType = determineProjectType(project.packaging)
-            val pathCalculationTime = System.currentTimeMillis() - pathCalculationStart
-            log.info("Path calculation took ${pathCalculationTime}ms for project: ${project.artifactId}")
+        // Calculate relative path from workspace root
+        val pathCalculationStart = System.currentTimeMillis()
+        val workspaceRootPath = Paths.get(workspaceRoot)
+        val projectPath = project.basedir.toPath()
+        val root = workspaceRootPath.relativize(projectPath).toString().replace('\\', '/')
+        val projectName = "${project.groupId}:${project.artifactId}"
+        val projectType = determineProjectType(project.packaging)
+        val pathCalculationTime = System.currentTimeMillis() - pathCalculationStart
+        log.info("Path calculation took ${pathCalculationTime}ms for project: ${project.artifactId}")
 
-            // Create Nx project configuration
-            val configCreationStart = System.currentTimeMillis()
-            val nxProject = objectMapper.createObjectNode()
-            nxProject.put("name", projectName)
-            nxProject.put("root", root)
-            nxProject.put("projectType", projectType)
-            nxProject.put("sourceRoot", "${root}/src/main/java")
-            val configCreationTime = System.currentTimeMillis() - configCreationStart
-            log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
+        // Create Nx project configuration
+        val configCreationStart = System.currentTimeMillis()
+        val nxProject = objectMapper.createObjectNode()
+        nxProject.put("name", projectName)
+        nxProject.put("root", root)
+        nxProject.put("projectType", projectType)
+        nxProject.put("sourceRoot", "${root}/src/main/java")
+        val configCreationTime = System.currentTimeMillis() - configCreationStart
+        log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
 
-            val targetAnalysisStart = System.currentTimeMillis()
-            val (nxTargets, targetGroups) = sharedLifecycleAnalyzer.createNxTargets(mavenCommand, project)
-            val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
-            log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
+        val targetAnalysisStart = System.currentTimeMillis()
+        val (nxTargets, targetGroups) = sharedLifecycleAnalyzer.createNxTargets(mavenCommand, project)
+        val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
+        log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
 
-            nxProject.set<ObjectNode>("targets", nxTargets)
+        nxProject.set<ObjectNode>("targets", nxTargets)
 
-            // Project metadata including target groups
-            val metadataStart = System.currentTimeMillis()
-            val projectMetadata = objectMapper.createObjectNode()
-            projectMetadata.put("targetGroups", targetGroups)
-            nxProject.put("metadata", projectMetadata)
+        // Project metadata including target groups
+        val metadataStart = System.currentTimeMillis()
+        val projectMetadata = objectMapper.createObjectNode()
+        projectMetadata.put("targetGroups", targetGroups)
+        nxProject.put("metadata", projectMetadata)
 
-            // Tags
-            val tags = objectMapper.createArrayNode()
-            tags.add("maven:${project.groupId}")
-            tags.add("maven:${project.packaging}")
-            nxProject.put("tags", tags)
-            val metadataTime = System.currentTimeMillis() - metadataStart
-            log.info("Metadata and tags creation took ${metadataTime}ms for project: ${project.artifactId}")
+        // Tags
+        val tags = objectMapper.createArrayNode()
+        tags.add("maven:${project.groupId}")
+        tags.add("maven:${project.packaging}")
+        nxProject.put("tags", tags)
+        val metadataTime = System.currentTimeMillis() - metadataStart
+        log.info("Metadata and tags creation took ${metadataTime}ms for project: ${project.artifactId}")
 
-            val totalTime = System.currentTimeMillis() - startTime
-            log.info("Analyzed project: ${project.artifactId} at $root in ${totalTime}ms")
+        val totalTime = System.currentTimeMillis() - startTime
+        log.info("Analyzed project: ${project.artifactId} at $root in ${totalTime}ms")
 
-            return root to nxProject
 
-        } catch (e: Exception) {
-            log.error("Failed to analyze project ${project.artifactId}: ${e.message}", e)
-            return null
+        val dependencies = project.dependencies.map { dependency ->
+            NxDependency(
+                NxDependencyType.Static,
+                projectName,
+                "${dependency.groupId}:${dependency.artifactId}",
+                project.file
+            )
+        }.map { nxDependency ->
+            val dependency = objectMapper.createObjectNode()
+
+            dependency.put("type", nxDependency.type.name.lowercase())
+            dependency.put("source", nxDependency.source)
+            dependency.put("target", nxDependency.target)
+            dependency.put("sourceFile", nxDependency.sourceFile.relativeTo(File(workspaceRoot)).path)
+            dependency
         }
+
+        return ProjectAnalysis(project.file, root, nxProject, dependencies)
     }
 
     private fun determineProjectType(packaging: String): String {
@@ -89,4 +103,12 @@ class NxProjectAnalyzer(
             else -> "library"
         }
     }
+}
+
+data class ProjectAnalysis(val pomFile: File, val root: String, val project: JsonNode, val dependencies: List<JsonNode>)
+
+data class NxDependency(val type: NxDependencyType, val source: String, val target: String, val sourceFile: File)
+
+enum class NxDependencyType {
+    Implicit, Static, Dynamic
 }
