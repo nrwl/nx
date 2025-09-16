@@ -203,10 +203,10 @@ class PhaseAnalyzer(
 //        }
 
         // Check for time-sensitive operations
-        if (hasTimeSensitiveIndicators(goal, artifactId)) {
-            log.info("Mojo $artifactId:$goal marked as non-cacheable due to time-sensitive operation")
-            return false
-        }
+//        if (hasTimeSensitiveIndicators(goal, artifactId)) {
+//            log.info("Mojo $artifactId:$goal marked as non-cacheable due to time-sensitive operation")
+//            return false
+//        }
 
         log.info("Mojo $artifactId:$goal appears cacheable")
         return true
