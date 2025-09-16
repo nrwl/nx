@@ -121,7 +121,7 @@ class PhaseAnalyzer(
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
-        val role = analyzeParameterRole(parameter, project)
+        val role = analyzeParameterRole(descriptor, parameter, project)
 
 
         if (role == ParameterRole.UNKNOWN) {
@@ -237,7 +237,7 @@ class PhaseAnalyzer(
         }
     }
 
-    private fun analyzeParameterRole(parameter: Parameter, project: MavenProject): ParameterRole {
+    private fun analyzeParameterRole(descriptor: MojoDescriptor, parameter: Parameter, project: MavenProject): ParameterRole {
         val name = parameter.name
         val type = parameter.type
         val expression = parameter.expression ?: parameter.defaultValue ?: ""
@@ -246,7 +246,16 @@ class PhaseAnalyzer(
         val isRequired = parameter.isRequired
         val alias = parameter.alias
 
-        // Analyze Maven expressions (highest priority)
+        // Check plugin knowledge first (highest priority)
+        val pluginArtifactId = descriptor.pluginDescriptor?.artifactId
+        val goal = descriptor.goal
+        val knownRole = PluginKnowledge.getInstance().getParameterRole(pluginArtifactId, goal, name)
+        if (knownRole != null) {
+            log.debug("Parameter $name: Found in plugin knowledge for $pluginArtifactId:$goal -> $knownRole")
+            return knownRole
+        }
+
+        // Analyze Maven expressions (second priority)
         when {
             expression.contains("project.compileSourceRoots") -> {
                 log.debug("Parameter $name: Maven source roots expression")
