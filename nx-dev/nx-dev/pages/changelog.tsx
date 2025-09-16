@@ -129,7 +129,24 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
         return;
       }
 
-      if (semverVersion?.patch === 0) {
+      const malwareImpactedVersions = [
+        '21.5',
+        '20.9',
+        '20.10',
+        '21.6',
+        '20.11',
+        '21.7',
+        '21.8',
+        '20.12',
+      ];
+      const onMalwareImpactedVersion = malwareImpactedVersions.includes(
+        `${semverVersion.major}.${semverVersion.minor}`
+      );
+
+      if (
+        semverVersion?.patch === 0 ||
+        (semverVersion?.patch === 1 && onMalwareImpactedVersion)
+      ) {
         // this is a minor or major
         releasesByMinorVersion[release.tag_name] = {
           version: release.tag_name,
@@ -140,7 +157,9 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
         };
       } else {
         // find a corresponding minor version & add "release" to the patches array of it
-        const minorVersion = `${semverVersion.major}.${semverVersion.minor}.0`;
+        const minorVersion = onMalwareImpactedVersion
+          ? `${semverVersion.major}.${semverVersion.minor}.1`
+          : `${semverVersion.major}.${semverVersion.minor}.0`;
         const minorRelease = releasesByMinorVersion[minorVersion];
         if (minorRelease) {
           minorRelease.patches = minorRelease.patches || [];
