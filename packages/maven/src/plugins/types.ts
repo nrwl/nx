@@ -1,4 +1,6 @@
-import { TargetConfiguration, ProjectConfiguration } from '@nx/devkit';
+import {TargetConfiguration, ProjectConfiguration, CreateDependencies, CreateNodesResultV2} from '@nx/devkit';
+import {PluginCreateDependenciesResult} from "nx/src/project-graph/plugins/isolation/messaging";
+import type {RawProjectGraphDependency} from "nx/src/project-graph/project-graph-builder";
 
 export interface MavenPluginOptions {
   buildTargetName?: string;
@@ -18,14 +20,14 @@ export const DEFAULT_OPTIONS: MavenPluginOptions = {
 // TypeScript only needs the final Nx format using official @nx/devkit types
 
 export interface MavenAnalysisData {
-  createNodesResults: CreateNodesResult[];
+    createNodesResults: CreateNodesResultV2;
+    createDependenciesResults: RawProjectGraphDependency[];
   generatedAt?: number;
   workspaceRoot?: string;
   totalProjects?: number;
 }
 
 // Nx-specific types for the createNodesResults format using official types
-export type CreateNodesResult = [string, ProjectsWrapper]; // [root path, projects wrapper]
 
 export interface ProjectsWrapper {
   projects: Record<string, ProjectConfiguration>;
