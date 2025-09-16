@@ -3,7 +3,6 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import dev.nx.maven.plugin.PluginExecutionFinder
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
 import org.apache.maven.project.MavenProject
@@ -15,7 +14,6 @@ import org.slf4j.LoggerFactory
  */
 class NxTargetFactory(
     private val lifecycles: DefaultLifecycles,
-    private val pluginExecutionFinder: PluginExecutionFinder,
     private val objectMapper: ObjectMapper,
     private val testClassDiscovery: TestClassDiscovery,
     private val phaseAnalyzer: PhaseAnalyzer
@@ -120,7 +118,7 @@ class NxTargetFactory(
         val targetGroups = mutableMapOf<String, List<String>>()
 
         // Extract discovered plugin goals
-        val plugins = pluginExecutionFinder.getExecutablePlugins(project)
+        val plugins = getExecutablePlugins(project)
 
         plugins.forEach { plugin: Plugin ->
             val goals = getGoals(plugin)
@@ -135,6 +133,10 @@ class NxTargetFactory(
         }
 
         return Pair(targets, targetGroups)
+    }
+
+    private fun getExecutablePlugins(project: MavenProject): List<Plugin> {
+        return project.build.plugins
     }
 
     private fun generateAtomizedTestTargets(
