@@ -59,7 +59,31 @@ class NxTargetFactory(
             group.forEach { goal -> groupArray.add(goal) }
             targetGroups.put(groupName, groupArray)
         }
+
+        val verifyCiTarget = generateVerifyCiTarget(atomizedTestTargets)
+
         return Pair(nxTargets, targetGroups)
+    }
+
+    private fun generateVerifyCiTarget(atomizedTestTargets: Map<String, ObjectNode>): ObjectNode {
+        val target = objectMapper.createObjectNode()
+        target.put("executor", "nx:noop")
+
+        val options = objectMapper.createObjectNode()
+
+        target.put("cache", false)
+        target.put("parallelism", false)
+
+        val dependsOn = objectMapper.createArrayNode()
+        dependsOn.add("verify-project")
+
+        atomizedTestTargets.forEach { (targetName, _) ->
+            dependsOn.add(targetName)
+        }
+
+
+
+        return target
     }
 
     private fun generatePhaseTargets(
@@ -150,6 +174,11 @@ class NxTargetFactory(
         val testClasses = testClassDiscovery.discoverTestClasses(project)
         val testTargetNames = mutableListOf<String>()
 
+        val verifyCiTarget = objectMapper.createObjectNode()
+        verifyCiTarget.put("executor", "nx:noop")
+        verifyCiTarget.put("cache", true)
+        val dependsOn = objectMapper.createArrayNode()
+
         testClasses.forEach { testClass ->
             val targetName = "test--${testClass.packagePath}.${testClass.className}"
 
@@ -170,8 +199,12 @@ class NxTargetFactory(
             target.put("cache", false)
             target.put("parallelism", false)
 
+            dependsOn.add(targetName)
             targets[targetName] = target
         }
+
+        verifyCiTarget.put("dependsOn", dependsOn)
+        targets["verify-ci"] = verifyCiTarget
 
 
 
