@@ -60,30 +60,7 @@ class NxTargetFactory(
             targetGroups.put(groupName, groupArray)
         }
 
-        val verifyCiTarget = generateVerifyCiTarget(atomizedTestTargets)
-
         return Pair(nxTargets, targetGroups)
-    }
-
-    private fun generateVerifyCiTarget(atomizedTestTargets: Map<String, ObjectNode>): ObjectNode {
-        val target = objectMapper.createObjectNode()
-        target.put("executor", "nx:noop")
-
-        val options = objectMapper.createObjectNode()
-
-        target.put("cache", false)
-        target.put("parallelism", false)
-
-        val dependsOn = objectMapper.createArrayNode()
-        dependsOn.add("verify-project")
-
-        atomizedTestTargets.forEach { (targetName, _) ->
-            dependsOn.add(targetName)
-        }
-
-
-
-        return target
     }
 
     private fun generatePhaseTargets(
