@@ -186,39 +186,60 @@ const projectDetailsLoader = async (
   };
 };
 
+const tasksRouteObject: RouteObject = {
+  element: <TasksShell />,
+  errorElement: <TasksSidebarErrorBoundary />,
+  loader: tasksLoader,
+  shouldRevalidate: ({ currentParams, nextParams, currentUrl, nextUrl }) => {
+    // Always revalidate if workspace changes
+    if (
+      !currentParams.selectedWorkspaceId ||
+      currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
+    ) {
+      return true;
+    }
+
+    // Revalidate if query parameters change (targets or projects)
+    const currentSearchParams = new URLSearchParams(currentUrl.search);
+    const nextSearchParams = new URLSearchParams(nextUrl.search);
+
+    const currentTargets = currentSearchParams.get('targets');
+    const nextTargets = nextSearchParams.get('targets');
+    const currentProjects = currentSearchParams.get('projects');
+    const nextProjects = nextSearchParams.get('projects');
+
+    return currentTargets !== nextTargets || currentProjects !== nextProjects;
+  },
+};
+
 const childRoutes: RouteObject[] = [
-  { path: 'projects', element: <ProjectsShell /> },
+  {
+    path: 'projects',
+    element: <ProjectsShell />,
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (!url.searchParams.has('rawGraph')) {
+        return null;
+      }
+      handleRawGraphQueryParam(url.searchParams);
+      return redirect(`${url.pathname}?${url.searchParams.toString()}`);
+    },
+  },
   {
     path: 'tasks',
     id: 'tasks',
-    element: <TasksShell />,
-    errorElement: <TasksSidebarErrorBoundary />,
-    loader: tasksLoader,
-    shouldRevalidate: ({ currentParams, nextParams, currentUrl, nextUrl }) => {
-      // Always revalidate if workspace changes
-      if (
-        !currentParams.selectedWorkspaceId ||
-        currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
-      ) {
-        return true;
-      }
-
-      // Revalidate if query parameters change (targets or projects)
-      const currentSearchParams = new URLSearchParams(currentUrl.search);
-      const nextSearchParams = new URLSearchParams(nextUrl.search);
-
-      const currentTargets = currentSearchParams.get('targets');
-      const nextTargets = nextSearchParams.get('targets');
-      const currentProjects = currentSearchParams.get('projects');
-      const nextProjects = nextSearchParams.get('projects');
-
-      return currentTargets !== nextTargets || currentProjects !== nextProjects;
-    },
+    ...tasksRouteObject,
+  },
+  {
+    path: 'tasks/all',
+    id: 'tasksAll',
+    ...tasksRouteObject,
   },
 ];
 
 function handleRawGraphQueryParam(searchParams: URLSearchParams) {
   const rawGraph = searchParams.get('rawGraph');
+
   // nothing to do here, bail
   if (!rawGraph) return;
 
@@ -239,7 +260,7 @@ export const devRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        loader: async ({ request }) => {
+        loader: ({ request }) => {
           const { searchParams } = new URL(request.url);
           handleRawGraphQueryParam(searchParams);
           return redirect(

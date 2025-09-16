@@ -8,11 +8,7 @@ import type {
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 
 /* eslint-enable @nx/enforce-module-boundaries */
-import {
-  useTaskGraphContext,
-  NxGraphTaskGraphProvider,
-  TaskGraphHandleEventResult,
-} from '@nx/graph/tasks';
+import { useTaskGraphContext, NxGraphTaskGraphProvider } from '@nx/graph/tasks';
 import {
   getExternalApiService,
   getProjectGraphDataService,
@@ -112,6 +108,13 @@ function TasksShellInner() {
     'selectedWorkspace'
   ) as ProjectGraphClientResponse & { targets: string[] };
   const tasksRouteData = useRouteLoaderData('tasks') as TaskGraphClientResponse;
+  const allTasksRouteData = useRouteLoaderData(
+    'tasksAll'
+  ) as TaskGraphClientResponse;
+
+  const tasksData = useMemo(() => {
+    return allTasksRouteData || tasksRouteData;
+  }, [allTasksRouteData, tasksRouteData]);
 
   const selectedTargets = useMemo(() => {
     const targetsParam = searchParams.get('targets');
@@ -126,13 +129,9 @@ function TasksShellInner() {
           selectedTargets.some((target) =>
             project.data.targets?.hasOwnProperty(target)
           ) &&
-          !tasksRouteData.error // If there's a global error, exclude all projects
+          !tasksData.error // If there's a global error, exclude all projects
       ),
-    [
-      selectedWorkspaceLoaderData.projects,
-      selectedTargets,
-      tasksRouteData.error,
-    ]
+    [selectedWorkspaceLoaderData.projects, selectedTargets, tasksData.error]
   );
 
   const selectedProjects = useMemo(
@@ -164,7 +163,7 @@ function TasksShellInner() {
     send({
       type: 'initGraph',
       projects: selectedWorkspaceLoaderData.projects,
-      taskGraph: tasksRouteData.taskGraph,
+      taskGraph: tasksData.taskGraph,
     });
   }, [orchestrator]);
 
@@ -174,9 +173,9 @@ function TasksShellInner() {
     send({
       type: 'mergeGraph',
       projects: selectedWorkspaceLoaderData.projects,
-      taskGraph: tasksRouteData.taskGraph,
+      taskGraph: tasksData.taskGraph,
     });
-  }, [orchestrator, tasksRouteData.taskGraph]);
+  }, [orchestrator, tasksData.taskGraph]);
 
   useEffect(() => {
     sendRendererConfigEvent({ type: 'themeChange', theme: resolvedTheme });
@@ -326,7 +325,7 @@ function TasksShellInner() {
         ></div>
 
         <NxGraphToolbar toolbarClassName="border-slate-300 dark:border-slate-700 divide-slate-300 dark:divide-slate-700 z-50 divide-x">
-          <NxGraphToolbarItemGroup>
+          <NxGraphToolbarItemGroup className="pr-0">
             <NxGraphThemeTool
               theme={theme}
               setTheme={setTheme}
@@ -343,13 +342,13 @@ function TasksShellInner() {
               toolPopoverPanelItemActiveClassName="text-slate-200 bg-sky-500 dark:bg-sky-600"
             />
           </NxGraphToolbarItemGroup>
-          <NxGraphToolbarItemGroup>
+          <NxGraphToolbarItemGroup className="pl-2 pr-0">
             <NxGraphGroupByProjectTool
               toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
-              toolActiveClassName="bg-sky-500 dark:bg-sky-600 text-white"
+              toolActiveClassName="bg-sky-500 dark:bg-sky-600 text-white dark:text-white"
             />
           </NxGraphToolbarItemGroup>
-          <NxGraphToolbarItemGroup last>
+          <NxGraphToolbarItemGroup last className="pl-2">
             <NxGraphResetLayoutTool toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600" />
             <NxGraphResetGraphTool toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600" />
             <NxGraphShareTool
@@ -373,7 +372,7 @@ function TasksShellInner() {
             selectedTargets={selectedTargets}
             selectedProjects={selectedProjectNames}
             allProjects={allProjectsWithTargetsAndNoErrors}
-            error={tasksRouteData.error}
+            error={tasksData.error}
             onTargetsSelectionChange={onTargetsSelectionChange}
             onToggleProject={onToggleProject}
           />
@@ -411,7 +410,7 @@ function TasksShellInner() {
                 selectedTargets={selectedTargets}
                 selectedProjects={selectedProjectNames}
                 allProjects={allProjectsWithTargetsAndNoErrors}
-                error={tasksRouteData.error}
+                error={tasksData.error}
                 onTargetsSelectionChange={onTargetsSelectionChange}
                 onToggleProject={onToggleProject}
               />

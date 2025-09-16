@@ -323,19 +323,19 @@ export async function generateGraph(
     }
   }
 
-  if (args.affected) {
-    affectedProjects = (
-      await getAffectedGraphNodes(
-        splitArgsIntoNxArgsAndOverrides(
-          args,
-          'affected',
-          { printWarnings: !args.print && args.file !== 'stdout' },
-          readNxJson()
-        ).nxArgs,
-        rawGraph
-      )
-    ).map((n) => n.name);
-  }
+  affectedProjects = (
+    await getAffectedGraphNodes(
+      splitArgsIntoNxArgsAndOverrides(
+        args,
+        'affected',
+        {
+          printWarnings: args.affected && !args.print && args.file !== 'stdout',
+        },
+        readNxJson()
+      ).nxArgs,
+      rawGraph
+    )
+  ).map((n) => n.name);
 
   if (args.exclude) {
     const invalidExcludes: string[] = [];
@@ -501,12 +501,15 @@ export async function generateGraph(
     url.pathname = args.view;
 
     if (args.focus) {
-      // url.pathname += '/' + encodeURIComponent(args.focus);
-      graphState ??= { c: {} };
-      graphState['s'] = {
-        type: 'focused',
-        nodeId: `project-${encodeURIComponent(args.focus)}`,
-      };
+      if (args.view === 'project-details') {
+        url.pathname += '/' + encodeURIComponent(args.focus);
+      } else if (args.view === 'projects') {
+        graphState ??= { c: {} };
+        graphState['s'] = {
+          type: 'focused',
+          nodeId: encodeURIComponent(`project-${args.focus}`),
+        };
+      }
     }
 
     // Add targets as query parameters for tasks view
@@ -532,16 +535,16 @@ export async function generateGraph(
         ...(graphState['c'] as Record<string, unknown>),
         showMode: 'affected',
       };
-      // url.pathname += '/affected';
+    }
+
+    if (args.view === 'project-details') {
+      // if we're in project-details view, rawGraph ain't needed
+      graphState = undefined;
     }
 
     if (graphState) {
       url.searchParams.set('rawGraph', JSON.stringify(graphState));
     }
-
-    // if (args.groupByFolder) {
-    //   url.searchParams.append('groupByFolder', 'true');
-    // }
 
     output.success({
       title: `Project graph started at ${url.toString()}`,

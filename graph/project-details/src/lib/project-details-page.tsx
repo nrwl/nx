@@ -62,7 +62,7 @@ export function ProjectDetailsPage() {
 
   return (
     <ExpandedTargetsProvider>
-      <div className="flex w-full flex-col justify-center text-slate-700 dark:text-slate-400">
+      <div className="flex h-fit w-full flex-col justify-center text-slate-700 dark:text-slate-400">
         <ScrollRestoration />
         {environment !== 'nx-console' ? (
           <ProjectDetailsHeader />

@@ -49,7 +49,6 @@ import {
   NxGraphPanel,
   NxGraphPanelItemGroup,
   NxGraphDependencyDistanceControl,
-  NxGraphTraceControl,
   NxGraphProjectListControl,
   NxGraphCompositeProjectNodePanelHeader,
   NxGraphProjectEdgePanelHeader,
@@ -58,22 +57,11 @@ import {
   NxGraphCompositeProjectEdgePanelContent,
   NxGraphProjectEdgePanelContent,
 } from '@nx/graph/ui';
-import {
-  ElementData,
-  ProjectNodeData,
-  ProjectNodeScratchData,
-  ProjectRendererConfig,
-  useRendererEvents,
-} from '@nx/graph';
-import {
-  ArrowLeftCircleIcon,
-  DocumentMagnifyingGlassIcon,
-  PencilSquareIcon,
-  QueueListIcon,
-} from '@heroicons/react/24/outline';
+import { ElementData, useRendererEvents } from '@nx/graph';
+import { ArrowLeftCircleIcon } from '@heroicons/react/24/outline';
 import { ErrorToast } from '@nx/graph-ui-common';
 import classNames from 'classnames';
-import { Button, Tab, TabGroup, TabList } from '@headlessui/react';
+import { Tab, TabGroup, TabList } from '@headlessui/react';
 import { useCurrentPath } from '../hooks/use-current-path';
 
 export function ProjectsShell() {
@@ -97,10 +85,13 @@ export function ProjectsShell() {
 
   return (
     <>
-      <NxGraphProjectGraphProvider renderPlatform={renderPlatform}>
-        <ProjectsShellInner />
-      </NxGraphProjectGraphProvider>
-      <ErrorToast errors={errors} />
+      {errors && errors.length > 0 ? (
+        <ErrorToast errors={errors} />
+      ) : (
+        <NxGraphProjectGraphProvider renderPlatform={renderPlatform}>
+          <ProjectsShellInner />
+        </NxGraphProjectGraphProvider>
+      )}
     </>
   );
 }
@@ -171,10 +162,7 @@ function ProjectsShellInner() {
           autoExpand: 15,
           rankDir,
           theme: resolvedTheme,
-          showMode:
-            selectedWorkspaceLoaderData.affected.length > 0
-              ? 'affected'
-              : 'all',
+          showMode: 'all',
         }),
       },
       { type: 'showAll' }
@@ -251,13 +239,6 @@ function ProjectsShellInner() {
         fileMap: response.fileMap,
         affectedProjects: response.affected,
       });
-
-      if (response.affected.length > 0) {
-        send({
-          type: 'updateRendererConfig',
-          updater: () => ({ key: 'showMode', value: 'affected' }),
-        });
-      }
 
       setLastHash(response.hash);
     },
@@ -347,11 +328,12 @@ function ProjectsShellInner() {
               <>
                 <NxGraphGroupByFolderTool
                   toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
-                  toolActiveClassName="bg-sky-500 dark:bg-sky-600 text-white"
+                  toolActiveClassName="bg-sky-500 dark:bg-sky-600 text-white dark:text-white"
                 />
                 <NxGraphCollapseEdgesTool
                   toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
-                  toolActiveClassName="bg-sky-500 dark:bg-sky-600 text-white"
+                  toolActiveClassName="bg-sky-500 dark:bg-sky-600 text-white dark:text-white"
+                  toolDisabledClassName="opacity-50 cursor-not-allowed hover:bg-transparent hover:text-slate-400 dark:hover:text-slate-600 border-slate-300 dark:border-slate-600"
                 />
               </>
             )}
@@ -472,6 +454,10 @@ function ProjectsShellInner() {
                 dependencyItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                 dependentItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                 emptyItemListClassName="text-slate-600 dark:text-slate-400"
+                traceAlgorithmButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
+                traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white hover:bg-sky-600 dark:hover:bg-sky-700 border-sky-500 dark:border-sky-600"
+                traceableProjectItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 justify-between"
+                traceableProjectSelectedItemClassName="bg-sky-500/10 dark:bg-sky-600/10 text-slate-900 dark:text-slate-100"
                 onViewProjectDetailsClick={() =>
                   onViewProjectDetailsClick(element)
                 }
@@ -559,18 +545,6 @@ function ProjectGraphControlsPanel({
           />
         </NxGraphPanelItemGroup>
       ) : null}
-      {handleEventResult.state.type === 'tracing' ||
-      handleEventResult.state.type === 'traceStart' ? (
-        <NxGraphPanelItemGroup>
-          <NxGraphTraceControl
-            controlLabelClassName="text-slate-900 dark:text-slate-100"
-            controlDescriptionClassName="text-slate-600 dark:text-slate-400"
-            traceAlgorithmButtonClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white"
-            traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white"
-            cancelTraceButtonClassName="bg-red-500 dark:bg-red-600 text-white"
-          />
-        </NxGraphPanelItemGroup>
-      ) : null}
       <NxGraphPanelItemGroup last>
         <NxGraphProjectListControl
           projectItemClassName={({ rendered }) =>
@@ -582,12 +556,8 @@ function ProjectGraphControlsPanel({
             'hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-500 dark:hover:text-sky-400'
           }
           searchInputClassName="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600 focus:border-transparent focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-sky-400/20 focus:outline-none data-[focus]:border-sky-500 dark:data-[focus]:border-sky-400 data-[focus]:ring-2 data-[focus]:ring-sky-500/20 dark:data-[focus]:ring-sky-400/20"
-          searchInputFilterIconClassName={(active) =>
-            active
-              ? 'bg-sky-500 dark:bg-sky-600 text-white hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300'
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white'
-          }
-          searchInputDescriptionClassName="text-slate-600 dark:text-slate-400"
+          searchInputClearButtonClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white border-slate-300 dark:border-slate-600"
+          searchInputIncludeButtonClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white border-slate-300 dark:border-slate-600"
           projectListEmptyClassName="text-slate-600 dark:text-slate-400"
           projectSectionHeaderClassName="text-slate-900 dark:text-slate-100"
         />
