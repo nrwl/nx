@@ -5,9 +5,14 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
 
 /* eslint-enable @nx/enforce-module-boundaries */
-import { useTaskGraphContext, NxGraphTaskGraphProvider } from '@nx/graph/tasks';
+import {
+  useTaskGraphContext,
+  NxGraphTaskGraphProvider,
+  TaskGraphHandleEventResult,
+} from '@nx/graph/tasks';
 import {
   getExternalApiService,
   getProjectGraphDataService,
@@ -362,103 +367,57 @@ function TasksShellInner() {
           </h4>
         </NxGraphEmpty>
 
-        <div className="absolute bottom-0 left-0 top-4 z-50 flex flex-col">
-          <TabGroup className="mb-2 ml-4 min-w-96 max-w-96">
-            <TabList className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-              <Tab
-                className={classNames(
-                  'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
-                  currentPath === '/projects'
-                    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
-                )}
-                onClick={() => navigate('../projects')}
-              >
-                Projects
-              </Tab>
-              <Tab
-                className={classNames(
-                  'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
-                  currentPath === '/tasks'
-                    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
-                )}
-              >
-                Tasks
-              </Tab>
-            </TabList>
-          </TabGroup>
-          <div className="relative flex-1">
-            <NxGraphPanel
-              anchor="left"
-              closable={false}
-              initialOpen
-              panelContainerClassName="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-              panelHeaderClassName="border-slate-300 dark:border-slate-700"
-              panelCloseButtonClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
-              panelContentContainerClassName="divide-slate-300 dark:divide-slate-700"
-              panelTriggerButtonClassName="border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-            >
-              <NxGraphDropdownMultiselect
-                items={selectedWorkspaceLoaderData.targets.map((target) => ({
-                  id: target,
-                  name: target,
-                }))}
-                selectedIds={selectedTargets}
-                onSelectionChange={onTargetsSelectionChange}
-                containerClassName="bg-white dark:bg-slate-800"
-                triggerClassName="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-600"
-                triggerPlaceholderClassName="text-slate-500 dark:text-slate-400"
-                triggerChevronClassName="text-slate-500 dark:text-slate-400"
-                selectedChipClassName="bg-sky-100 dark:bg-sky-800 text-sky-900 dark:text-sky-100 border-sky-200 dark:border-sky-700"
-                selectedCountClassName="text-slate-700 dark:text-slate-300"
-                chipRemoveButtonClassName="text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-100"
-                dropdownClassName="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
-                dropdownContentClassName="bg-white dark:bg-slate-800"
-                multiselectContainerClassName="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
-                multiselectFilterInputClassName="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-                multiselectEmptyStateClassName="text-slate-500 dark:text-slate-400"
-                multiselectListClassName="bg-white dark:bg-slate-800"
-                multiselectListItemClassName="hover:bg-slate-50 dark:hover:bg-slate-700"
-                multiselectCheckboxClassName="text-sky-600 dark:text-sky-400"
-                multiselectLabelClassName="text-slate-900 dark:text-slate-100"
+        {handleEventResult.rendererConfig.platform === 'nx-console' ? (
+          <TaskGraphControlsPanel
+            targets={selectedWorkspaceLoaderData.targets}
+            selectedTargets={selectedTargets}
+            selectedProjects={selectedProjectNames}
+            allProjects={allProjectsWithTargetsAndNoErrors}
+            error={tasksRouteData.error}
+            onTargetsSelectionChange={onTargetsSelectionChange}
+            onToggleProject={onToggleProject}
+          />
+        ) : (
+          <div className="absolute bottom-0 left-0 top-4 z-50 flex flex-col">
+            <TabGroup className="mb-2 ml-4 min-w-96 max-w-96">
+              <TabList className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                <Tab
+                  className={classNames(
+                    'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
+                    currentPath === '/projects'
+                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
+                  )}
+                  onClick={() => navigate('../projects')}
+                >
+                  Projects
+                </Tab>
+                <Tab
+                  className={classNames(
+                    'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
+                    currentPath === '/tasks'
+                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
+                  )}
+                >
+                  Tasks
+                </Tab>
+              </TabList>
+            </TabGroup>
+            <div className="relative flex-1">
+              <TaskGraphControlsPanel
+                closable={false}
+                targets={selectedWorkspaceLoaderData.targets}
+                selectedTargets={selectedTargets}
+                selectedProjects={selectedProjectNames}
+                allProjects={allProjectsWithTargetsAndNoErrors}
+                error={tasksRouteData.error}
+                onTargetsSelectionChange={onTargetsSelectionChange}
+                onToggleProject={onToggleProject}
               />
-              <NxGraphProjectListControl
-                projects={allProjectsWithTargetsAndNoErrors.map((p) => ({
-                  type: p.type,
-                  id: p.data.name,
-                  name: p.data.name,
-                  selected: selectedProjectNames.includes(p.name),
-                  rendered: false,
-                  affected: false,
-                }))}
-                projectListEmptyClassName="text-slate-500 dark:text-slate-400"
-                projectSectionHeaderClassName="text-slate-700 dark:text-slate-300"
-                searchInputClassName="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
-              >
-                {(props) => (
-                  <NxGraphCustomProjectItem
-                    project={props.project}
-                    error={tasksRouteData.error}
-                    onToggle={() => {
-                      onToggleProject(
-                        props.project.name,
-                        props.project.selected
-                      );
-                    }}
-                    projectItemClassName={({ selected }) =>
-                      classNames(
-                        'hover:bg-slate-100 dark:hover:bg-slate-700',
-                        selected ? 'opacity-100' : 'opacity-70'
-                      )
-                    }
-                    projectNameClassName="text-slate-900 dark:text-slate-100 dark:hover:bg-slate-700"
-                  />
-                )}
-              </NxGraphProjectListControl>
-            </NxGraphPanel>
+            </div>
           </div>
-        </div>
+        )}
 
         <NxGraphElementPanel
           element={element}
@@ -591,5 +550,94 @@ function TaskNodeDetails({ element, platform }: TaskNodeDetailsProps) {
         </>
       )}
     </NxGraphTaskNodePanelContent>
+  );
+}
+
+interface TaskGraphControlsPanelProps {
+  targets: string[];
+  selectedTargets: string[];
+  selectedProjects: string[];
+
+  allProjects: ProjectGraphProjectNode[];
+  closable?: boolean;
+  error?: string;
+
+  onTargetsSelectionChange: (selectedIds: string[]) => void;
+  onToggleProject: (projectName: string, isSelected: boolean) => void;
+}
+
+function TaskGraphControlsPanel({
+  targets,
+  selectedTargets,
+  selectedProjects,
+  closable = true,
+  allProjects,
+  error = '',
+  onTargetsSelectionChange,
+  onToggleProject,
+}: TaskGraphControlsPanelProps) {
+  return (
+    <NxGraphPanel
+      anchor="left"
+      closable={closable}
+      initialOpen
+      panelContainerClassName="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+      panelHeaderClassName="border-slate-300 dark:border-slate-700"
+      panelCloseButtonClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
+      panelContentContainerClassName="divide-slate-300 dark:divide-slate-700"
+      panelTriggerButtonClassName="border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+    >
+      <NxGraphDropdownMultiselect
+        items={targets.map((target) => ({ id: target, name: target }))}
+        selectedIds={selectedTargets}
+        onSelectionChange={onTargetsSelectionChange}
+        containerClassName="bg-white dark:bg-slate-800"
+        triggerClassName="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-600"
+        triggerPlaceholderClassName="text-slate-500 dark:text-slate-400"
+        triggerChevronClassName="text-slate-500 dark:text-slate-400"
+        selectedChipClassName="bg-sky-100 dark:bg-sky-800 text-sky-900 dark:text-sky-100 border-sky-200 dark:border-sky-700"
+        selectedCountClassName="text-slate-700 dark:text-slate-300"
+        chipRemoveButtonClassName="text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-100"
+        dropdownClassName="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+        dropdownContentClassName="bg-white dark:bg-slate-800"
+        multiselectContainerClassName="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+        multiselectFilterInputClassName="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+        multiselectEmptyStateClassName="text-slate-500 dark:text-slate-400"
+        multiselectListClassName="bg-white dark:bg-slate-800"
+        multiselectListItemClassName="hover:bg-slate-50 dark:hover:bg-slate-700"
+        multiselectCheckboxClassName="text-sky-600 dark:text-sky-400"
+        multiselectLabelClassName="text-slate-900 dark:text-slate-100"
+      />
+      <NxGraphProjectListControl
+        projects={allProjects.map((p) => ({
+          type: p.type,
+          id: p.data.name,
+          name: p.data.name,
+          selected: selectedProjects.includes(p.name),
+          rendered: false,
+          affected: false,
+        }))}
+        projectListEmptyClassName="text-slate-500 dark:text-slate-400"
+        projectSectionHeaderClassName="text-slate-700 dark:text-slate-300"
+        searchInputClassName="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+      >
+        {(props) => (
+          <NxGraphCustomProjectItem
+            project={props.project}
+            error={error}
+            onToggle={() => {
+              onToggleProject(props.project.name, props.project.selected);
+            }}
+            projectItemClassName={({ selected }) =>
+              classNames(
+                'hover:bg-slate-100 dark:hover:bg-slate-700',
+                selected ? 'opacity-100' : 'opacity-70'
+              )
+            }
+            projectNameClassName="text-slate-900 dark:text-slate-100 dark:hover:bg-slate-700"
+          />
+        )}
+      </NxGraphProjectListControl>
+    </NxGraphPanel>
   );
 }
