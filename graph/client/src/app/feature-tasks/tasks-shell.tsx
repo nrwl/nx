@@ -200,7 +200,16 @@ function TasksShellInner() {
       return;
     }
 
-    restoreGraphState(graphState);
+    const result = restoreGraphState(graphState);
+    if (!result) return;
+
+    if (result.rendererConfig.rankDir !== rankDir) {
+      setRankDir(result.rendererConfig.rankDir);
+    }
+
+    if (result.rendererConfig.theme !== resolvedTheme) {
+      setTheme(result.rendererConfig.theme);
+    }
   }, [graphState, orchestrator]);
 
   useEffect(() => {
@@ -317,14 +326,14 @@ function TasksShellInner() {
               theme={theme}
               setTheme={setTheme}
               toolPopoverButtonClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
-              toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+              toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 z-50"
               toolPopoverPanelItemClassName="hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-slate-200 dark:text-slate-300"
               toolPopoverPanelItemActiveClassName="text-slate-200 bg-sky-500 dark:bg-sky-600"
             />
             <NxGraphRankDirTool
               onRankDirChange={setRankDir}
               toolPopoverButtonClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
-              toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+              toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 z-50"
               toolPopoverPanelItemClassName="hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-slate-200 dark:text-slate-300"
               toolPopoverPanelItemActiveClassName="text-slate-200 bg-sky-500 dark:bg-sky-600"
             />
@@ -340,13 +349,13 @@ function TasksShellInner() {
             <NxGraphResetGraphTool toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600" />
             <NxGraphShareTool
               toolPopoverButtonClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
-              toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+              toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 z-50"
               toolPopoverPanelItemClassName="hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-slate-200 dark:text-slate-300"
             />
           </NxGraphToolbarItemGroup>
         </NxGraphToolbar>
 
-        <NxGraphEmpty className="flex items-center gap-2 bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-300">
+        <NxGraphEmpty className="z-30 flex items-center gap-2 bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-300">
           <ArrowLeftCircleIcon className="h-6 w-6 text-slate-600 dark:text-slate-400" />
           <h4 className="text-slate-700 dark:text-slate-300">
             No tasks found for the current graph configuration.
@@ -573,10 +582,12 @@ function TaskNodeDetails({ element, platform }: TaskNodeDetailsProps) {
             <span className="text-sm">View in Project Details</span>
           </NxGraphActionButton>
 
-          <NxGraphActionButton onClick={onRunTaskClick}>
-            <PlayIcon className="h-4 w-4" />
-            <span className="text-sm">Run task</span>
-          </NxGraphActionButton>
+          {platform === 'nx-console' ? (
+            <NxGraphActionButton onClick={onRunTaskClick}>
+              <PlayIcon className="h-4 w-4" />
+              <span className="text-sm">Run task</span>
+            </NxGraphActionButton>
+          ) : null}
         </>
       )}
     </NxGraphTaskNodePanelContent>

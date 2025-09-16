@@ -25,6 +25,7 @@ import {
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
   NxGraphProjectGraphProvider,
+  ProjectGraphHandleEventResult,
   useProjectGraphContext,
 } from '@nx/graph/projects';
 import {
@@ -200,7 +201,10 @@ function ProjectsShellInner() {
       setRankDir(result.rendererConfig.rankDir);
     }
 
-    if (result.rendererConfig.theme !== resolvedTheme) {
+    if (
+      result.rendererConfig.platform !== 'nx-console' &&
+      result.rendererConfig.theme !== resolvedTheme
+    ) {
       setTheme(result.rendererConfig.theme);
     }
   }, [graphState, orchestrator]);
@@ -305,14 +309,16 @@ function ProjectsShellInner() {
 
         <NxGraphToolbar toolbarClassName="border-slate-300 dark:border-slate-700 divide-slate-300 dark:divide-slate-700 z-50 divide-x">
           <NxGraphToolbarItemGroup className="pr-0">
-            <NxGraphThemeTool
-              theme={theme}
-              setTheme={setTheme}
-              toolPopoverButtonClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
-              toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 z-50"
-              toolPopoverPanelItemClassName="hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-slate-200 dark:text-slate-300"
-              toolPopoverPanelItemActiveClassName="text-slate-200 bg-sky-500 dark:bg-sky-600"
-            />
+            {handleEventResult.rendererConfig.platform !== 'nx-console' ? (
+              <NxGraphThemeTool
+                theme={theme}
+                setTheme={setTheme}
+                toolPopoverButtonClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
+                toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 z-50"
+                toolPopoverPanelItemClassName="hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-slate-200 dark:text-slate-300"
+                toolPopoverPanelItemActiveClassName="text-slate-200 bg-sky-500 dark:bg-sky-600"
+              />
+            ) : null}
             <NxGraphRankDirTool
               onRankDirChange={setRankDir}
               toolPopoverButtonClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
@@ -367,91 +373,45 @@ function ProjectsShellInner() {
           </h4>
         </NxGraphEmpty>
 
-        <div className="absolute bottom-0 left-0 top-4 flex flex-col">
-          <div className="mb-2 ml-4 min-w-96 max-w-96">
-            <TabGroup>
-              <TabList className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-                <Tab
-                  className={classNames(
-                    'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
-                    currentPath === '/projects'
-                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
-                  )}
-                >
-                  Projects
-                </Tab>
-                <Tab
-                  className={classNames(
-                    'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
-                    currentPath === '/tasks'
-                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
-                  )}
-                  onClick={() => navigate('../tasks')}
-                >
-                  Tasks
-                </Tab>
-              </TabList>
-            </TabGroup>
+        {handleEventResult.rendererConfig.platform === 'nx-console' ? (
+          <ProjectGraphControlsPanel handleEventResult={handleEventResult} />
+        ) : (
+          <div className="absolute bottom-0 left-0 top-4 flex flex-col">
+            <div className="mb-2 ml-4 min-w-96 max-w-96">
+              <TabGroup>
+                <TabList className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                  <Tab
+                    className={classNames(
+                      'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
+                      currentPath === '/projects'
+                        ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
+                    )}
+                  >
+                    Projects
+                  </Tab>
+                  <Tab
+                    className={classNames(
+                      'text-md flex-1 rounded-md px-3 py-1.5 font-medium transition-colors',
+                      currentPath === '/tasks'
+                        ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100'
+                    )}
+                    onClick={() => navigate('../tasks')}
+                  >
+                    Tasks
+                  </Tab>
+                </TabList>
+              </TabGroup>
+            </div>
+            <div className="relative flex-1">
+              <ProjectGraphControlsPanel
+                handleEventResult={handleEventResult}
+                closable={false}
+              />
+            </div>
           </div>
-          <div className="relative flex-1">
-            <NxGraphPanel
-              anchor="left"
-              closable={false}
-              initialOpen
-              panelContainerClassName="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-              panelHeaderClassName="border-slate-300 dark:border-slate-700"
-              panelCloseButtonClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
-              panelContentContainerClassName="divide-slate-300 dark:divide-slate-700"
-              panelTriggerButtonClassName="border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-            >
-              {handleEventResult.state.type === 'focused' ? (
-                <NxGraphPanelItemGroup>
-                  <NxGraphDependencyDistanceControl
-                    controlLabelClassName="text-slate-900 dark:text-slate-100"
-                    controlDescriptionClassName="text-slate-600 dark:text-slate-400"
-                    controlInputClassName="border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-sky-500 dark:focus:border-sky-400 focus:ring-sky-500/20 dark:focus:ring-sky-400/20"
-                    removeFocusButtonClassName="bg-red-500 dark:bg-red-600 text-white"
-                  />
-                </NxGraphPanelItemGroup>
-              ) : null}
-              {handleEventResult.state.type === 'tracing' ||
-              handleEventResult.state.type === 'traceStart' ? (
-                <NxGraphPanelItemGroup>
-                  <NxGraphTraceControl
-                    controlLabelClassName="text-slate-900 dark:text-slate-100"
-                    controlDescriptionClassName="text-slate-600 dark:text-slate-400"
-                    traceAlgorithmButtonClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white"
-                    traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white"
-                    cancelTraceButtonClassName="bg-red-500 dark:bg-red-600 text-white"
-                  />
-                </NxGraphPanelItemGroup>
-              ) : null}
-              <NxGraphPanelItemGroup last>
-                <NxGraphProjectListControl
-                  projectItemClassName={({ rendered }) =>
-                    rendered
-                      ? 'text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700'
-                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-                  }
-                  projectItemSelectIconClassName={() =>
-                    'hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-500 dark:hover:text-sky-400'
-                  }
-                  searchInputClassName="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600 focus:border-transparent focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-sky-400/20 focus:outline-none data-[focus]:border-sky-500 dark:data-[focus]:border-sky-400 data-[focus]:ring-2 data-[focus]:ring-sky-500/20 dark:data-[focus]:ring-sky-400/20"
-                  searchInputFilterIconClassName={(active) =>
-                    active
-                      ? 'bg-sky-500 dark:bg-sky-600 text-white hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300'
-                      : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white'
-                  }
-                  searchInputDescriptionClassName="text-slate-600 dark:text-slate-400"
-                  projectListEmptyClassName="text-slate-600 dark:text-slate-400"
-                  projectSectionHeaderClassName="text-slate-900 dark:text-slate-100"
-                />
-              </NxGraphPanelItemGroup>
-            </NxGraphPanel>
-          </div>
-        </div>
+        )}
 
         <NxGraphElementPanel
           element={element}
@@ -568,5 +528,70 @@ function ProjectsShellInner() {
         </NxGraphElementPanel>
       </div>
     </div>
+  );
+}
+
+function ProjectGraphControlsPanel({
+  handleEventResult,
+  closable = true,
+}: {
+  handleEventResult: ProjectGraphHandleEventResult;
+  closable?: boolean;
+}) {
+  return (
+    <NxGraphPanel
+      anchor="left"
+      closable={closable}
+      initialOpen
+      panelContainerClassName="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+      panelHeaderClassName="border-slate-300 dark:border-slate-700"
+      panelCloseButtonClassName="hover:bg-slate-100 dark:hover:bg-slate-700"
+      panelContentContainerClassName="divide-slate-300 dark:divide-slate-700"
+      panelTriggerButtonClassName="border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+    >
+      {handleEventResult.state.type === 'focused' ? (
+        <NxGraphPanelItemGroup>
+          <NxGraphDependencyDistanceControl
+            controlLabelClassName="text-slate-900 dark:text-slate-100"
+            controlDescriptionClassName="text-slate-600 dark:text-slate-400"
+            controlInputClassName="border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-sky-500 dark:focus:border-sky-400 focus:ring-sky-500/20 dark:focus:ring-sky-400/20"
+            removeFocusButtonClassName="bg-red-500 dark:bg-red-600 text-white"
+          />
+        </NxGraphPanelItemGroup>
+      ) : null}
+      {handleEventResult.state.type === 'tracing' ||
+      handleEventResult.state.type === 'traceStart' ? (
+        <NxGraphPanelItemGroup>
+          <NxGraphTraceControl
+            controlLabelClassName="text-slate-900 dark:text-slate-100"
+            controlDescriptionClassName="text-slate-600 dark:text-slate-400"
+            traceAlgorithmButtonClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white"
+            traceAlgorithmActiveButtonClassName="bg-sky-500 dark:bg-sky-600 text-white"
+            cancelTraceButtonClassName="bg-red-500 dark:bg-red-600 text-white"
+          />
+        </NxGraphPanelItemGroup>
+      ) : null}
+      <NxGraphPanelItemGroup last>
+        <NxGraphProjectListControl
+          projectItemClassName={({ rendered }) =>
+            rendered
+              ? 'text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700'
+              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+          }
+          projectItemSelectIconClassName={() =>
+            'hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-500 dark:hover:text-sky-400'
+          }
+          searchInputClassName="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600 focus:border-transparent focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-sky-400/20 focus:outline-none data-[focus]:border-sky-500 dark:data-[focus]:border-sky-400 data-[focus]:ring-2 data-[focus]:ring-sky-500/20 dark:data-[focus]:ring-sky-400/20"
+          searchInputFilterIconClassName={(active) =>
+            active
+              ? 'bg-sky-500 dark:bg-sky-600 text-white hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300'
+              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white'
+          }
+          searchInputDescriptionClassName="text-slate-600 dark:text-slate-400"
+          projectListEmptyClassName="text-slate-600 dark:text-slate-400"
+          projectSectionHeaderClassName="text-slate-900 dark:text-slate-100"
+        />
+      </NxGraphPanelItemGroup>
+    </NxGraphPanel>
   );
 }
