@@ -31,7 +31,7 @@ class NxTargetFactory(
         val phaseTargets = generatePhaseTargets(project, mavenCommand)
         val mavenPhasesGroup = objectMapper.createArrayNode()
         phaseTargets.forEach { (phase, target) ->
-            nxTargets.set<ObjectNode>(phase, target)
+            nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
             mavenPhasesGroup.add(phase)
         }
         targetGroups.put("maven-phases", mavenPhasesGroup)
@@ -64,8 +64,8 @@ class NxTargetFactory(
     private fun generatePhaseTargets(
         project: MavenProject,
         mavenCommand: String,
-    ): Map<String, ObjectNode> {
-        val targets = mutableMapOf<String, ObjectNode>()
+    ): Map<String, NxTarget> {
+        val targets = mutableMapOf<String, NxTarget>()
         // Extract discovered phases from lifecycle analysis
         val phasesToAnalyze = getPhases()
 
@@ -73,41 +73,38 @@ class NxTargetFactory(
 
         // Generate targets from phase analysis
         phasesToAnalyze.forEach { phase ->
-            try {
-                val analysis = phaseAnalyzer.analyze(project, phase)
-
-                val target = objectMapper.createObjectNode()
-                target.put("executor", "nx:run-commands")
-
-                val options = objectMapper.createObjectNode()
-                options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
-                target.put("options", options)
-
-                // Copy caching info from analysis
-                if (analysis.isCacheable) {
-                    target.put("cache", true)
-
-                    // Convert inputs to JsonNode array
-                    val inputsArray = objectMapper.createArrayNode()
-                    analysis.inputs.forEach { input -> inputsArray.add(input) }
-                    target.set<ArrayNode>("inputs", inputsArray)
-
-                    // Convert outputs to JsonNode array
-                    val outputsArray = objectMapper.createArrayNode()
-                    analysis.outputs.forEach { output -> outputsArray.add(output) }
-                    target.set<ArrayNode>("outputs", outputsArray)
-                } else {
-                    target.put("cache", false)
-                }
-
-                target.put("parallelism", analysis.isThreadSafe)
-                targets[phase] = target
-
-            } catch (e: Exception) {
-                log.debug("Failed to analyze phase '$phase' for project ${project.artifactId}: ${e.message}")
-            }
+            targets[phase] = createPhaseTarget(project, phase, mavenCommand)
         }
         return targets
+    }
+
+    private fun createPhaseTarget(
+        project: MavenProject,
+        phase: String,
+        mavenCommand: String
+    ): NxTarget {
+        val analysis = phaseAnalyzer.analyze(project, phase)
+
+
+        val options = objectMapper.createObjectNode()
+        options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
+        val target = NxTarget(phase, "nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+
+        // Copy caching info from analysis
+        if (analysis.isCacheable) {
+
+            // Convert inputs to JsonNode array
+            val inputsArray = objectMapper.createArrayNode()
+            analysis.inputs.forEach { input -> inputsArray.add(input) }
+            target.inputs = inputsArray
+
+            // Convert outputs to JsonNode array
+            val outputsArray = objectMapper.createArrayNode()
+            analysis.outputs.forEach { output -> outputsArray.add(output) }
+            target.outputs = outputsArray
+        }
+
+        return target
     }
 
     private fun generateGoalTargets(
@@ -242,5 +239,30 @@ class NxTargetFactory(
             .replace("org.apache.maven.plugins.", "")
             .replace("maven-", "")
             .replace("-plugin", "")
+    }
+}
+
+data class NxTarget(
+    val name: String,
+    val executor: String,
+    val options: ObjectNode,
+    val cache: Boolean,
+    val parallelism: Boolean,
+    var dependsOn: ArrayNode? = null,
+    var outputs: ArrayNode? = null,
+    var inputs: ArrayNode? = null
+) {
+    fun toJSON(objectMapper: ObjectMapper): ObjectNode {
+        val node = objectMapper.createObjectNode()
+        node.put("executor", executor)
+        node.set<ObjectNode>("options", options)
+        node.put("cache", cache)
+        node.put("parallelism", parallelism)
+
+        dependsOn?.let { node.set<ObjectNode>("dependsOn", it) }
+        outputs?.let { node.set<ObjectNode>("outputs", it) }
+        inputs?.let { node.set<ObjectNode>("inputs", it) }
+
+        return node
     }
 }
