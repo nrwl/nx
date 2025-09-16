@@ -187,28 +187,28 @@ class PhaseAnalyzer(
             goal.contains(pattern, ignoreCase = true) ||
             artifactId.contains(pattern, ignoreCase = true)
         }) {
-            log.debug("Mojo $artifactId:$goal marked as non-cacheable due to goal/plugin pattern")
+            log.info("Mojo $artifactId:$goal marked as non-cacheable due to goal/plugin pattern")
             return false
         }
 
         // Check for network-related parameters
-        descriptor.parameters?.forEach { parameter ->
-            val name = parameter.name.lowercase()
-            val description = parameter.description?.lowercase() ?: ""
-
-            if (hasNetworkIndicators(name, description)) {
-                log.debug("Mojo $artifactId:$goal marked as non-cacheable due to network parameter: ${parameter.name}")
-                return false
-            }
-        }
+//        descriptor.parameters?.forEach { parameter ->
+//            val name = parameter.name.lowercase()
+//            val description = parameter.description?.lowercase() ?: ""
+//
+//            if (hasNetworkIndicators(name, description)) {
+//                log.info("Mojo $artifactId:$goal marked as non-cacheable due to network parameter: ${parameter.name}")
+//                return false
+//            }
+//        }
 
         // Check for time-sensitive operations
         if (hasTimeSensitiveIndicators(goal, artifactId)) {
-            log.debug("Mojo $artifactId:$goal marked as non-cacheable due to time-sensitive operation")
+            log.info("Mojo $artifactId:$goal marked as non-cacheable due to time-sensitive operation")
             return false
         }
 
-        log.debug("Mojo $artifactId:$goal appears cacheable")
+        log.info("Mojo $artifactId:$goal appears cacheable")
         return true
     }
 
