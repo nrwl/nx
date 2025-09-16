@@ -93,6 +93,10 @@ class NxTargetFactory(
         options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
         val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
 
+        val dependsOn = objectMapper.createArrayNode()
+        dependsOn.add("^$phase")
+        target.dependsOn = dependsOn
+
         // Copy caching info from analysis
         if (analysis.isCacheable) {
 
