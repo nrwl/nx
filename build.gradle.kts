@@ -1,5 +1,5 @@
 plugins {
-    id("dev.nx.gradle.project-graph") version("0.1.8")
+    id("dev.nx.gradle.project-graph") version("0.1.7")
     id("com.ncorti.ktfmt.gradle") version("+")
 }
 
