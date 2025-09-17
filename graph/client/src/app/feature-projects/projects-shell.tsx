@@ -67,7 +67,11 @@ import { useCurrentPath } from '../hooks/use-current-path';
 export function ProjectsShell() {
   const environmentConfig = useEnvironmentConfig();
 
-  const [errors, setErrors] = useState<GraphError[] | undefined>(undefined);
+  const { errors: routerErrors } = useRouteLoaderData(
+    'selectedWorkspace'
+  ) as ProjectGraphClientResponse;
+
+  const [errors, setErrors] = useState<GraphError[] | undefined>(routerErrors);
 
   const renderPlatform = useMemo(
     () =>
@@ -75,23 +79,16 @@ export function ProjectsShell() {
     [environmentConfig.environment]
   );
 
-  const { errors: routerErrors } = useRouteLoaderData(
-    'selectedWorkspace'
-  ) as ProjectGraphClientResponse;
-
-  useLayoutEffect(() => {
+  useEffect(() => {
     setErrors(routerErrors);
   }, [routerErrors]);
 
   return (
     <>
-      {errors && errors.length > 0 ? (
-        <ErrorToast errors={errors} />
-      ) : (
-        <NxGraphProjectGraphProvider renderPlatform={renderPlatform}>
-          <ProjectsShellInner />
-        </NxGraphProjectGraphProvider>
-      )}
+      <NxGraphProjectGraphProvider renderPlatform={renderPlatform}>
+        <ProjectsShellInner />
+      </NxGraphProjectGraphProvider>
+      <ErrorToast errors={errors} />
     </>
   );
 }
@@ -549,8 +546,8 @@ function ProjectGraphControlsPanel({
         <NxGraphProjectListControl
           projectItemClassName={({ rendered }) =>
             rendered
-              ? 'text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700'
-              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              ? 'text-slate-900 dark:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-700'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
           }
           projectItemSelectIconClassName={() =>
             'hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-500 dark:hover:text-sky-400'
