@@ -11,7 +11,8 @@ const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType
 <StarlightPage frontmatter={{
   title: 'Nx Plugins',
   description: 'Discover all available Nx plugins to enhance your development workflow. Each plugin provides generators, executors, and migrations to help you build modern applications.',
-  tableOfContents: false
+  tableOfContents: false,
+  filter: "type:References"
 }}
 >
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 not-content">

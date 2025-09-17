@@ -1,5 +1,7 @@
 ---
 // Copied from https://github.com/withastro/starlight/blob/f14eb0c/packages/starlight/components/TwoColumnContent.astro with modifications.
+const { data} = Astro.locals.starlightRoute.entry;
+console.log(data.weight, data.filter)
 ---
 
 <div class="lg:sl-flex">
@@ -12,7 +14,8 @@
       </aside>
     )
   }
-  <div class="main-pane" data-testid="main-pane"><slot /></div>
+  <div class="main-pane" data-testid="main-pane" data-pagefind-weight={data.weight} data-pagefind-filter={data.filter}
+  ><slot /></div>
 </div>
 
 <style>

@@ -33,10 +33,11 @@ const docTypeDisplay = docType.charAt(0).toUpperCase() + docType.slice(1);
 
 <StarlightPage
   frontmatter={{
+    ...doc.data,
     title: `@nx/${pluginName} - ${docTypeDisplay}`,
     description: doc.data.description || `@nx/${pluginName} plugin ${docType}`,
   }}
   headings={headings || []}
 >
-  <Content />
+    <Content />
 </StarlightPage>

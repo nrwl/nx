@@ -12,11 +12,22 @@ const baseSchema = z.object({
    * Slug should be from the root route without any prefix requirements i.e. `/docs`
    **/
   slug: z.string(),
+  weight: z
+    .number()
+    .min(0, 'Search weight cannot be lower than 0')
+    .max(10, 'Search weight cannot be higher than 10')
+    .optional(),
+  filter: z.string().optional(),
 });
 // Default docs collection handled by Starlight
 const docs = defineCollection({
   loader: docsLoader(),
-  schema: docsSchema(),
+  schema: docsSchema({
+    extend: z.object({
+      filter: z.string().optional(),
+      weight: z.number().optional(),
+    }),
+  }),
 });
 
 const nxReferencePackages = defineCollection({
@@ -42,7 +53,7 @@ const nxReferencePackages = defineCollection({
       githubStars: z.number().optional(),
       lastPublishedDate: z.date().optional(),
       lastFetched: z.date().optional(),
-    })
+    }),
   ),
 });
 
@@ -61,7 +72,7 @@ const pluginDocs = defineCollection({
       githubStars: z.number().optional(),
       lastPublishedDate: z.date().optional(),
       lastFetched: z.date().optional(),
-    })
+    }),
   ),
 });
 
@@ -77,7 +88,7 @@ const communityPlugins = defineCollection({
       githubStars: z.number().optional(),
       nxVersion: z.string().optional(),
       lastFetched: z.date().optional(),
-    })
+    }),
   ),
 });
 
