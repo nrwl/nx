@@ -73,12 +73,6 @@ export interface NxAppRspackPluginOptions {
   commonChunk?: boolean;
 
   /**
-   * Delete the output path before building.
-   * @deprecated Use the `output.clean` option in Rspack. https://rspack.dev/config/output#outputclean
-   */
-  // TODO(v22): Add migration to remove this option and remove it.
-  deleteOutputPath?: boolean;
-  /**
    * The deploy path for the application. e.g. `/my-app/`
    */
   deployUrl?: string;
@@ -161,12 +155,6 @@ export interface NxAppRspackPluginOptions {
    * Add an additional chunk for the rspack runtime. Defaults to `true` when `target === 'web'`.
    */
   runtimeChunk?: boolean;
-  // TODO(v22): Remove in version 22.
-  /**
-   * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
-   * @deprecated Sass option will be removed in Nx 22. This option will also be removed in Nx 22 as it is no longer needed.
-   */
-  sassImplementation?: 'sass' | 'sass-embedded';
   /**
    * External scripts that will be included before the main application entry.
    */

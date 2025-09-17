@@ -35,13 +35,6 @@ export default async function* runExecutor(
     await executeTypeCheck(normalizedOptions, context);
   }
 
-  if (options.deleteOutputPath !== false) {
-    rmSync(join(context.root, normalizedOptions.outputPath), {
-      force: true,
-      recursive: true,
-    });
-  }
-
   const compiler = await createCompiler(normalizedOptions, context);
 
   const iterable = createAsyncIterable<{
