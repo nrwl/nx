@@ -537,12 +537,8 @@ export async function generateGraph(
       };
     }
 
-    if (args.view === 'project-details') {
-      // if we're in project-details view, rawGraph ain't needed
-      graphState = undefined;
-    }
-
-    if (graphState) {
+    if (graphState && args.view === 'projects') {
+      // only projects graph restore-able state  is relevant at the moment
       url.searchParams.set('rawGraph', JSON.stringify(graphState));
     }
 
