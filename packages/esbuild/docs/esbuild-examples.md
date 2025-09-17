@@ -108,4 +108,4 @@ Additional [esbuild options](https://esbuild.github.io/api/) can be passed using
 ```
 
 {% /tab %}
-{% tabs %}
+{% /tabs %}

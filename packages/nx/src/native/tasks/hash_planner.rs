@@ -359,10 +359,7 @@ impl HashPlanner {
             )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
-            Input::Runtime(runtime) => Some(HashInstruction::Runtime(
-                project_name.to_string(),
-                runtime.to_string(),
-            )),
+            Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
             _ => None,
         });

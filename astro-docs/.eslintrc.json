@@ -7,6 +7,12 @@
       "rules": {}
     },
     {
+      "files": ["**/*.spec.ts", "**/*.test.ts", "**/*.spec.js", "**/*.test.js"],
+      "rules": {
+        "playwright/no-standalone-expect": "off"
+      }
+    },
+    {
       "files": ["*.ts", "*.tsx"],
       "rules": {}
     },

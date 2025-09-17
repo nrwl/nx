@@ -179,18 +179,11 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_workspace_files: {:?}", now.elapsed());
                 hashed_workspace_files?
             }
-            HashInstruction::Runtime(project_name, runtime) => {
-                // Create a modified environment with NX_PROJECT_ROOT
-                let mut env_with_project_root = js_env.clone();
-                if let Some(project) = self.project_graph.nodes.get(project_name) {
-                    env_with_project_root
-                        .insert("NX_PROJECT_ROOT".to_string(), project.root.clone());
-                }
-
+            HashInstruction::Runtime(runtime) => {
                 let hashed_runtime = hash_runtime(
                     &self.workspace_root,
                     runtime,
-                    &env_with_project_root,
+                    js_env,
                     Arc::clone(&self.runtime_cache),
                 )?;
                 trace!(parent: &span, "hash_runtime: {:?}", now.elapsed());
