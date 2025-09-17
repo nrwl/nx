@@ -75,7 +75,7 @@ export async function generateAllPluginDocs(
   logger: LoaderContext['logger'],
   watcher: LoaderContext['watcher'],
   renderMarkdown: (content: string) => Promise<RenderedContent>,
-  store: LoaderContext['store'],
+  store: LoaderContext['store']
 ) {
   logger.info('Generating plugin documentation...');
   let successCount = 0;
@@ -102,7 +102,7 @@ export async function generateAllPluginDocs(
     // Skip special packages that are handled by nx-reference-packages.loader
     if (['nx', 'devkit', 'plugin', 'web', 'workspace'].includes(pluginName)) {
       logger.info(
-        `Skipping ${pluginName} - handled by nx-reference-packages.loader`,
+        `Skipping ${pluginName} - handled by nx-reference-packages.loader`
       );
       skipCount++;
       continue;
@@ -113,7 +113,7 @@ export async function generateAllPluginDocs(
     const pluginDescription = getPluginDescription(pluginPath, pluginName);
 
     const existingOverviewEntry = store.get<DocEntry['data']>(
-      `${pluginName}-overview`,
+      `${pluginName}-overview`
     );
     // special case for the main Nx package
     const packageName = pluginName === 'nx' ? 'nx' : `@nx/${pluginName}`;
@@ -251,7 +251,7 @@ export async function generateAllPluginDocs(
         successCount++;
       } else {
         logger.warn(
-          `⚠️  Skipping ${pluginName} - no visible documentation found`,
+          `⚠️  Skipping ${pluginName} - no visible documentation found`
         );
         skipCount++;
       }
@@ -273,7 +273,7 @@ export function PluginLoader(options: any = {}): Loader {
           watcher,
           // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
           renderMarkdown,
-          store,
+          store
         );
       };
 

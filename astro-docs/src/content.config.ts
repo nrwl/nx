@@ -53,7 +53,7 @@ const nxReferencePackages = defineCollection({
       githubStars: z.number().optional(),
       lastPublishedDate: z.date().optional(),
       lastFetched: z.date().optional(),
-    }),
+    })
   ),
 });
 
@@ -72,7 +72,7 @@ const pluginDocs = defineCollection({
       githubStars: z.number().optional(),
       lastPublishedDate: z.date().optional(),
       lastFetched: z.date().optional(),
-    }),
+    })
   ),
 });
 
@@ -88,7 +88,7 @@ const communityPlugins = defineCollection({
       githubStars: z.number().optional(),
       nxVersion: z.string().optional(),
       lastFetched: z.date().optional(),
-    }),
+    })
   ),
 });
 

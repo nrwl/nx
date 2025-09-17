@@ -65,7 +65,6 @@ const processedPages = sortedPages.map(page => {
   };
 }).filter(page => page.href !== '#'); // Filter out any pages with invalid hrefs
 ---
-<div data-pagefind-weight="0.5">
 {processedPages.length > 0 ? (
   <Cards>
     {processedPages.map(page => (
@@ -80,4 +79,3 @@ const processedPages = sortedPages.map(page => {
 ) : (
   <p>No pages found in this section.</p>
 )}
-</div>
