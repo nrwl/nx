@@ -4,6 +4,7 @@
 // This is the only file we should use the `ratatui::style::Color` type in
 use ratatui::style::Color;
 use std::sync::LazyLock;
+#[cfg(not(test))]
 use terminal_colorsaurus::{ColorScheme, QueryOptions, color_scheme};
 use tracing::debug;
 
@@ -65,10 +66,20 @@ impl Theme {
     /// NOTE: This requires raw mode access and might not work correctly once the TUI is fully running.
     /// It should ideally be called once during initialization.
     fn is_dark_mode() -> bool {
-        match color_scheme(QueryOptions::default()) {
-            Ok(ColorScheme::Dark) => true,
-            Ok(ColorScheme::Light) => false,
-            Err(_) => true, // Default to dark mode if detection fails
+        // Tests don't really need to detect the theme, default to dark mode
+        // to avoid sending OSC queries
+        #[cfg(test)]
+        {
+            return true;
+        }
+
+        #[cfg(not(test))]
+        {
+            match color_scheme(QueryOptions::default()) {
+                Ok(ColorScheme::Dark) => true,
+                Ok(ColorScheme::Light) => false,
+                Err(_) => true, // Default to dark mode if detection fails
+            }
         }
     }
 }
