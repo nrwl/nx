@@ -11,15 +11,15 @@ import {MavenAnalysisData, MavenPluginOptions} from './types';
 function detectMavenExecutable(): string {
     console.log(`[Maven Analyzer] Detecting Maven executable in workspace: ${workspaceRoot}`);
 
-    // First priority: Check for Maven Daemon
-    try {
-        const {execSync} = require('child_process');
-        execSync('mvnd --version', {stdio: 'pipe'});
-        console.log(`[Maven Analyzer] Found Maven Daemon, using: mvnd`);
-        return 'mvnd';
-    } catch (error) {
-        console.log(`[Maven Analyzer] Maven Daemon not available`);
-    }
+    // // First priority: Check for Maven Daemon
+    // try {
+    //     const {execSync} = require('child_process');
+    //     execSync('mvnd --version', {stdio: 'pipe'});
+    //     console.log(`[Maven Analyzer] Found Maven Daemon, using: mvnd`);
+    //     return 'mvnd';
+    // } catch (error) {
+    //     console.log(`[Maven Analyzer] Maven Daemon not available`);
+    // }
 
     // Second priority: Check for Maven wrapper
     if (process.platform === 'win32') {
