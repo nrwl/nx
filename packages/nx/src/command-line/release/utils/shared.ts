@@ -341,12 +341,32 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
 export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
-  projects: string[]
+  projects: string[],
+  projectToDependencies: Map<string, Set<string>>
 ): Promise<GitCommit[]> {
   const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
+  const relevantProjectDependencies = (() => {
+    const relevantProjectDependencies: Set<string> = new Set();
+    for (const project of projects) {
+      const dependencies = projectToDependencies.get(project);
+      if (dependencies) {
+        for (const dependency of dependencies) {
+          relevantProjectDependencies.add(dependency);
+        }
+      }
+    }
+    return relevantProjectDependencies;
+  })();
+  const projectsAndDependencies = new Set([
+    ...projects,
+    ...relevantProjectDependencies,
+  ]);
   const filesInReleaseGroup = new Set<string>(
-    projects.reduce(
-      (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
+    Array.from(projectsAndDependencies).reduce(
+      (files, p) => [
+        ...files,
+        ...(fileMap.projectFileMap[p]?.map((f) => f.file) ?? []),
+      ],
       [] as string[]
     )
   );
