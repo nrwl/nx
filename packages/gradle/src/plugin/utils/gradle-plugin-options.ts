@@ -3,6 +3,7 @@ export interface GradlePluginOptions {
   ciTestTargetName?: string;
   ciIntTestTargetName?: string;
   [taskTargetName: string]: string | undefined | boolean;
+  projectDirectory?: string;
 }
 
 export function normalizeOptions(

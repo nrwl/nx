@@ -16,9 +16,13 @@ export async function getNxProjectGraphLines(
   let nxProjectGraphBuffer: Buffer;
 
   const gradlePluginOptionsArgs =
-    Object.entries(gradlePluginOptions ?? {})?.map(
-      ([key, value]) => `-P${key}=${value}`
-    ) ?? [];
+    Object.entries(gradlePluginOptions ?? {})
+      ?.filter(([key]) => key !== 'projectDirectory')
+      ?.map(([key, value]) => `-P${key}=${value}`) ?? [];
+
+  const projectDirArg = gradlePluginOptions?.projectDirectory
+    ? [`--project-dir`, gradlePluginOptions.projectDirectory]
+    : [];
 
   try {
     nxProjectGraphBuffer = await execGradleAsync(gradlewFile, [
@@ -29,6 +33,7 @@ export async function getNxProjectGraphLines(
       '--build-cache', // enable build cache
       '--warning-mode',
       'none',
+      ...projectDirArg,
       ...gradlePluginOptionsArgs,
       `-PworkspaceRoot=${workspaceRoot}`,
       process.env.NX_VERBOSE_LOGGING ? '--info' : '',
