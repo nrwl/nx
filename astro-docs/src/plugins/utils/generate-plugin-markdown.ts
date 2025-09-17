@@ -11,6 +11,7 @@ import { stripMarkdocTags } from './strip-markdoc-tags';
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
   let markdown = `\n### \`${name}\`\n`;
+
   if (config.version) {
     markdown += `**Version**: ${config.version}\n\n`;
   }
@@ -55,7 +56,7 @@ export function generatePackageUpdateItem(name: string, item: any): string {
     markdown += `|---------|----------|---------|\n`;
 
     for (const [packageName, packageConfig] of Object.entries(
-      config.packages
+      config.packages,
     ) as [string, any][]) {
       const addToPackageJson = packageConfig.alwaysAddToPackageJson
         ? 'Added if not installed'
@@ -71,7 +72,7 @@ export function generatePackageUpdateItem(name: string, item: any): string {
 
 export function getMigrationsMarkdown(
   pluginName: string,
-  items: Map<string, PluginMigrationItem>
+  items: Map<string, PluginMigrationItem>,
 ): string {
   const packageName = `@nx/${pluginName}`;
 
@@ -124,7 +125,7 @@ Below is a complete reference for all available migrations.
     // Combine all items without sub-headers
     const generators = items.filter(({ item }) => item.type === 'generator');
     const packageUpdates = items.filter(
-      ({ item }) => item.type === 'packageJsonUpdate'
+      ({ item }) => item.type === 'packageJsonUpdate',
     );
 
     // Add generators first
@@ -145,18 +146,18 @@ Below is a complete reference for all available migrations.
 
 export function getGeneratorsMarkdown(
   pluginName: string,
-  items: Map<string, PluginItem>
+  items: Map<string, PluginItem>,
 ): string {
   const packageName = `@nx/${pluginName}`;
 
   let markdown = `
-  The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
+The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available generators and their options.
 `;
 
   // Sort items alphabetically
   const sortedItems = Array.from(items.entries()).sort(([a], [b]) =>
-    a.localeCompare(b)
+    a.localeCompare(b),
   );
 
   for (const [name, { config, schema, schemaPath }] of sortedItems) {
@@ -197,7 +198,7 @@ nx generate ${fullItemName} [options]
     const positionalArgs: string[] = [];
     for (const [propName, prop] of Object.entries(properties) as [
       string,
-      any
+      any,
     ][]) {
       if (
         prop.$default &&
@@ -270,12 +271,13 @@ nx generate ${fullItemName} ${positionalArgs
      nx generate ${packageName}:<generator> --help
      \`\`\`
      `;
+
   return markdown;
 }
 
 export function getExecutorsMarkdown(
   pluginName: string,
-  items: Map<string, any>
+  items: Map<string, any>,
 ): string {
   const packageName = `@nx/${pluginName}`;
 
@@ -286,7 +288,7 @@ Below is a complete reference for all available executors and their options.
 
   // Sort items alphabetically
   const sortedItems = Array.from(items.entries()).sort(([a], [b]) =>
-    a.localeCompare(b)
+    a.localeCompare(b),
   );
 
   for (const [name, { config, schema, schemaPath }] of sortedItems) {

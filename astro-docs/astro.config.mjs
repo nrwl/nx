@@ -126,6 +126,21 @@ export default defineConfig({
         PageTitle: './src/components/layout/PageTitle.astro',
         TableOfContents: './src/components/layout/TableOfContents.astro',
       },
+      pagefind: {
+        ranking: {
+          // termFrequency changes the ranking balance between
+          // frequency of the term relative to document length
+          // versus weighted term count.
+          // default is 1.0
+          termFrequency: 0.75,
+          // termSimilarity changes the ranking based on
+          // similarity of terms to the search query.
+          // Currently this only takes the length of the term into account.
+          // default is 1.0
+          // termSimilarity: 1.0
+          pageLength: 0.5,
+        },
+      },
     }),
     react(),
   ],

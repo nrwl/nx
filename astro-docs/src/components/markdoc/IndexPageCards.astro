@@ -48,10 +48,7 @@ const sortedPages = childPages.sort((a, b) => {
 const processedPages = sortedPages.map(page => {
   let href = `/${page.id.replace('.mdoc', '')}`;
   
-  // Check if this is a subdirectory index page
-  const fileName = page.id.split('/').pop()?.replace('.mdoc', '');
-  const isIndexPage = fileName === 'index';
-  
+  // Check if this is a subdirectory index page  
   const title = page.data.sidebar?.label || page.data.title || 'Untitled';
 
   // Ensure href is never undefined
@@ -68,7 +65,7 @@ const processedPages = sortedPages.map(page => {
   };
 }).filter(page => page.href !== '#'); // Filter out any pages with invalid hrefs
 ---
-
+<div data-pagefind-weight="0.5">
 {processedPages.length > 0 ? (
   <Cards>
     {processedPages.map(page => (
@@ -83,3 +80,4 @@ const processedPages = sortedPages.map(page => {
 ) : (
   <p>No pages found in this section.</p>
 )}
+</div>
