@@ -1,12 +1,14 @@
 import { ProjectGraph } from '../config/project-graph';
 
 let runCommandsCache: Map<string, [string, string, string?]>;
+let cachedGraph: ProjectGraph;
 
 function getCommandCache(projectGraph: ProjectGraph) {
-  if (runCommandsCache) {
+  if (runCommandsCache && cachedGraph === projectGraph) {
     return runCommandsCache;
   }
   runCommandsCache = new Map<string, [string, string, string?]>();
+  cachedGraph = projectGraph;
   for (const [projectName, projectNode] of Object.entries(projectGraph.nodes)) {
     for (const [targetName, targetConfig] of Object.entries(
       projectNode.data.targets || {}

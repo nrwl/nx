@@ -478,6 +478,9 @@ describe('utils', () => {
             type: 'app',
             data: {
               root: 'libs/project',
+              targets: {
+                build: {},
+              },
             },
           },
         },
@@ -757,7 +760,7 @@ describe('utils', () => {
     it('throws an error if the output is a glob pattern from the workspace root', () => {
       expect(() => validateOutputs(['{workspaceRoot}/**/dist/*.js']))
         .toThrowErrorMatchingInlineSnapshot(`
-        "The following outputs are defined by a glob pattern from the workspace root: 
+        "The following outputs are defined by a glob pattern from the workspace root:
          - {workspaceRoot}/**/dist/*.js
 
         These can be slow, replace them with a more specific pattern."
@@ -777,7 +780,7 @@ describe('utils', () => {
     it("throws an error if the output doesn't start with a prefix", () => {
       expect(() => validateOutputs(['dist']))
         .toThrowErrorMatchingInlineSnapshot(`
-        "The following outputs are invalid: 
+        "The following outputs are invalid:
          - dist
 
         Run \`nx repair\` to fix this."
