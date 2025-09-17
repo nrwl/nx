@@ -14,20 +14,6 @@
       "description": "Rspack init generator.",
       "hidden": true
     },
-    "preset": {
-      "factory": "./src/generators/preset/preset",
-      "schema": "./src/generators/preset/schema.json",
-      "description": "React preset generator.",
-      "hidden": true
-    },
-    "application": {
-      "factory": "./src/generators/application/application",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
-      "x-type": "application",
-      "description": "React application generator.",
-      "x-deprecated": "This generator will be removed in Nx 22. Please use the equivalent generator for your application type instead."
-    },
     "convert-webpack": {
       "aliases": ["convert-to-rspack"],
       "factory": "./src/generators/convert-webpack/convert-webpack",
