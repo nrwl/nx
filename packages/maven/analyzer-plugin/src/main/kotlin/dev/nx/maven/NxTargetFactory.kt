@@ -45,13 +45,13 @@ class NxTargetFactory(
                 phaseDependsOn[phase] = mutableListOf()
 
                         // find previous phase and add to dependsOn
-                if (index > 1) {
-                    val previousPhase = lifecycle.phases[index - 1]
-
-                    target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
-                    target.dependsOn?.add(previousPhase)
-                    phaseDependsOn[phase]?.add(previousPhase)
-                }
+//                if (index > 1) {
+//                    val previousPhase = lifecycle.phases[index - 1]
+//
+//                    target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
+//                    target.dependsOn?.add(previousPhase)
+//                    phaseDependsOn[phase]?.add(previousPhase)
+//                }
                 target.dependsOn?.add("^$phase")
                 phaseDependsOn[phase]?.add("^$phase")
 
@@ -70,18 +70,18 @@ class NxTargetFactory(
                     val goalTargetName = "$cleanPluginName:$goal@${execution.id}"
                     val goalTarget = createGoalTarget(mavenCommand, project, cleanPluginName, goal, execution)
 
-                    val phase = execution.phase ?: getMojoDescriptor(plugin, project, goal)?.phase
-
-                    val phaseTarget = phaseTargets[phase]
-                    phaseTarget?.dependsOn = phaseTarget?.dependsOn ?: objectMapper.createArrayNode()
-                    phaseTarget?.dependsOn?.add(goalTargetName)
-
-                    val dependsOn = objectMapper.createArrayNode()
-                    phaseDependsOn[phase]?.forEach {
-                        dependency ->
-                        dependsOn.add(dependency)
-                    }
-                    goalTarget.dependsOn = dependsOn
+//                    val phase = execution.phase ?: getMojoDescriptor(plugin, project, goal)?.phase
+//
+//                    val phaseTarget = phaseTargets[phase]
+//                    phaseTarget?.dependsOn = phaseTarget?.dependsOn ?: objectMapper.createArrayNode()
+//                    phaseTarget?.dependsOn?.add(goalTargetName)
+//
+//                    val dependsOn = objectMapper.createArrayNode()
+//                    phaseDependsOn[phase]?.forEach {
+//                        dependency ->
+//                        dependsOn.add(dependency)
+//                    }
+//                    goalTarget.dependsOn = dependsOn
 
                     pluginTargetGroup.add(goalTargetName)
                     nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
@@ -120,10 +120,10 @@ class NxTargetFactory(
         val analysis = phaseAnalyzer.analyze(project, phase)
 
 
-//        val options = objectMapper.createObjectNode()
-//        options.put("command", "$mavenCommand $phase -am -pl ${project.groupId}:${project.artifactId}")
-//        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
-        val target = NxTarget("nx:noop", null, analysis.isCacheable, analysis.isThreadSafe)
+        val options = objectMapper.createObjectNode()
+        options.put("command", "$mavenCommand $phase -pl ${project.groupId}:${project.artifactId} --batch-mode --resume")
+        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+//        val target = NxTarget("nx:noop", null, analysis.isCacheable, analysis.isThreadSafe)
 
         val dependsOn = objectMapper.createArrayNode()
         dependsOn.add("^$phase")
