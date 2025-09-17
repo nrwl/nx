@@ -82,7 +82,21 @@ class NxProjectAnalyzer(
                 "${dependency.groupId}:${dependency.artifactId}",
                 project.file
             )
-        }.map { nxDependency ->
+        }.toMutableList()
+
+        if (project.parent != null) {
+            dependencies.add(
+                NxDependency(
+                    NxDependencyType.Static,
+                    projectName,
+                    "${project.parent.groupId}:${project.parent.artifactId}",
+                    project.file
+                )
+            )
+        }
+
+
+        val dependenciesJson = dependencies.map { nxDependency ->
             val dependency = objectMapper.createObjectNode()
 
             dependency.put("type", nxDependency.type.name.lowercase())
@@ -92,7 +106,7 @@ class NxProjectAnalyzer(
             dependency
         }
 
-        return ProjectAnalysis(project.file, root, nxProject, dependencies)
+        return ProjectAnalysis(project.file, root, nxProject, dependenciesJson)
     }
 
     private fun determineProjectType(packaging: String): String {
