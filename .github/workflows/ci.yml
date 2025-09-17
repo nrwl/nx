@@ -46,7 +46,7 @@ jobs:
           main-branch-name: 'master'
 
       - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+        run: npx nx-cloud@next start-ci-run --auto-apply-fixes="*format:check*,*documentation*" --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
 
       - name: Install dependencies
         run: |
