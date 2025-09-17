@@ -226,6 +226,153 @@ describe('shared', () => {
           ]
         `);
       });
+
+      it('should respect custom commit message for independent versioning with multiple projects', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            projectsRelationship: 'independent',
+            projects: ['project-a', 'project-b'],
+            version: {
+              conventionalCommits: false,
+              generator: '@nx/js:version',
+              generatorOptions: {},
+              groupPreVersionCommand: '',
+            },
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            releaseTagPatternCheckAllBranchesWhen: undefined,
+            releaseTagPatternRequireSemver: true,
+            releaseTagPatternStrictPreid: false,
+            name: '__default__',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+
+        const customCommitMessage = 'ci: release updates [skip ci]';
+        const result = createCommitMessageValues(
+          releaseGroups,
+          new Map().set(releaseGroups[0], new Set(['project-a', 'project-b'])),
+          {
+            'project-a': {
+              currentVersion: '1.0.0',
+              dependentProjects: [],
+              newVersion: '1.0.1',
+            },
+            'project-b': {
+              currentVersion: '2.0.0',
+              dependentProjects: [],
+              newVersion: '2.0.1',
+            },
+          },
+          customCommitMessage
+        );
+
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "ci: release updates [skip ci]",
+            "- project: project-a 1.0.1",
+            "- project: project-b 2.0.1",
+          ]
+        `);
+      });
+
+      it('should respect custom commit message with placeholders for single project in independent group', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            projectsRelationship: 'independent',
+            projects: ['my-lib'],
+            version: {
+              conventionalCommits: false,
+              generator: '@nx/js:version',
+              generatorOptions: {},
+              groupPreVersionCommand: '',
+            },
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            releaseTagPatternCheckAllBranchesWhen: undefined,
+            releaseTagPatternRequireSemver: true,
+            releaseTagPatternStrictPreid: false,
+            name: '__default__',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+
+        // Custom message WITHOUT {projectName} placeholder should still be respected
+        const customCommitMessage = 'build: bump version to {version}';
+        const result = createCommitMessageValues(
+          releaseGroups,
+          new Map().set(releaseGroups[0], new Set(['my-lib'])),
+          {
+            'my-lib': {
+              currentVersion: '3.2.1',
+              dependentProjects: [],
+              newVersion: '3.3.0',
+            },
+          },
+          customCommitMessage
+        );
+
+        // Should interpolate version even without {projectName} in the message
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "build: bump version to 3.3.0",
+          ]
+        `);
+      });
+
+      it('should use default format when using the default commit message with multiple independent projects', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            projectsRelationship: 'independent',
+            projects: ['lib-a', 'lib-b'],
+            version: {
+              conventionalCommits: false,
+              generator: '@nx/js:version',
+              generatorOptions: {},
+              groupPreVersionCommand: '',
+            },
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            releaseTagPatternCheckAllBranchesWhen: undefined,
+            releaseTagPatternRequireSemver: true,
+            releaseTagPatternStrictPreid: false,
+            name: '__default__',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+
+        // Using the default commit message
+        const defaultCommitMessage = 'chore(release): publish {version}';
+        const result = createCommitMessageValues(
+          releaseGroups,
+          new Map().set(releaseGroups[0], new Set(['lib-a', 'lib-b'])),
+          {
+            'lib-a': {
+              currentVersion: '1.0.0',
+              dependentProjects: [],
+              newVersion: '1.0.1',
+            },
+            'lib-b': {
+              currentVersion: '2.0.0',
+              dependentProjects: [],
+              newVersion: '2.0.1',
+            },
+          },
+          defaultCommitMessage
+        );
+
+        // Should use the existing behavior with bullet points
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: lib-a 1.0.1",
+            "- project: lib-b 2.0.1",
+          ]
+        `);
+      });
     });
   });
 

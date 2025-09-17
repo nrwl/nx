@@ -142,14 +142,13 @@ export function createCommitMessageValues(
   }
 
   /**
-   * There is another special case for interpolation: if, after all filtering, we have a single independent release group with a single project,
-   * and the user has provided {projectName} within the custom message.
-   * In this case we will directly interpolate both {version} and {projectName} within the commit message.
+   * Special case for interpolation: if, after all filtering, we have a single independent release group with a single project,
+   * we will directly interpolate both {version} and {projectName} within the commit message, regardless of whether
+   * {projectName} is in the message or not.
    */
   if (
     releaseGroups.length === 1 &&
-    releaseGroups[0].projectsRelationship === 'independent' &&
-    commitMessage.includes('{projectName}')
+    releaseGroups[0].projectsRelationship === 'independent'
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
@@ -162,6 +161,7 @@ export function createCommitMessageValues(
         releaseTagPattern: releaseGroup.releaseTagPattern,
         projectName: releaseGroupProjectNames[0],
       });
+      // Interpolate both version and projectName, even if projectName is not in the template
       commitMessageValues[0] = interpolate(commitMessageValues[0], {
         version: releaseVersion.rawVersion,
         projectName: releaseGroupProjectNames[0],
@@ -171,10 +171,17 @@ export function createCommitMessageValues(
   }
 
   /**
-   * At this point we have multiple release groups for a single commit, we will not interpolate an overall {version} or {projectName} because that won't be
-   * appropriate (for any {version} or {projectName} value within the string, we will replace it with an empty string so that it doesn't end up in the final output).
-   *
-   * Instead for fixed groups we will add one bullet point the release group, and for independent groups we will add one bullet point per project.
+   * Check if this is a custom commit message (different from the default)
+   * If it's custom, we should respect it and not generate the default format
+   */
+  const isCustomCommitMessage = !commitMessage.includes(
+    'chore(release): publish'
+  );
+
+  /**
+   * At this point we have multiple release groups or multiple projects for a single commit.
+   * If the user provided a custom commit message, respect it and strip placeholders.
+   * Otherwise, use the default behavior of generating bullet points.
    */
   commitMessageValues[0] = stripPlaceholders(commitMessageValues[0], [
     // for cleanest possible final result try and replace the common pattern of a v prefix in front of the version first
@@ -183,40 +190,87 @@ export function createCommitMessageValues(
     '{projectName}',
   ]);
 
-  for (const releaseGroup of releaseGroups) {
-    const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup)
-    );
+  // Only add bullet points if using the default commit message pattern
+  // For custom messages, respect the user's intent
+  if (
+    !isCustomCommitMessage ||
+    commitMessageValues[0].trim() === 'chore(release): publish'
+  ) {
+    for (const releaseGroup of releaseGroups) {
+      const releaseGroupProjectNames = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      );
 
-    // One entry per project for independent groups
-    if (releaseGroup.projectsRelationship === 'independent') {
-      for (const project of releaseGroupProjectNames) {
-        const projectVersionData = versionData[project];
+      // One entry per project for independent groups
+      if (releaseGroup.projectsRelationship === 'independent') {
+        for (const project of releaseGroupProjectNames) {
+          const projectVersionData = versionData[project];
+          if (projectVersionData.newVersion !== null) {
+            const releaseVersion = new ReleaseVersion({
+              version: projectVersionData.newVersion,
+              releaseTagPattern: releaseGroup.releaseTagPattern,
+              projectName: project,
+            });
+            commitMessageValues.push(
+              `- project: ${project} ${releaseVersion.rawVersion}`
+            );
+          }
+        }
+        continue;
+      }
+
+      // One entry for the whole group for fixed groups
+      const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
+      if (projectVersionData.newVersion !== null) {
+        const releaseVersion = new ReleaseVersion({
+          version: projectVersionData.newVersion,
+          releaseTagPattern: releaseGroup.releaseTagPattern,
+        });
+        commitMessageValues.push(
+          `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
+        );
+      }
+    }
+  } else {
+    // For custom commit messages with multiple projects, add a simple list of projects and versions
+    // This respects the user's custom message while still providing project information
+    const projectUpdates = [];
+    for (const releaseGroup of releaseGroups) {
+      const releaseGroupProjectNames = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      );
+
+      if (releaseGroup.projectsRelationship === 'independent') {
+        for (const project of releaseGroupProjectNames) {
+          const projectVersionData = versionData[project];
+          if (projectVersionData.newVersion !== null) {
+            const releaseVersion = new ReleaseVersion({
+              version: projectVersionData.newVersion,
+              releaseTagPattern: releaseGroup.releaseTagPattern,
+              projectName: project,
+            });
+            projectUpdates.push(
+              `- project: ${project} ${releaseVersion.rawVersion}`
+            );
+          }
+        }
+      } else {
+        // Fixed group
+        const projectVersionData = versionData[releaseGroupProjectNames[0]];
         if (projectVersionData.newVersion !== null) {
           const releaseVersion = new ReleaseVersion({
             version: projectVersionData.newVersion,
             releaseTagPattern: releaseGroup.releaseTagPattern,
-            projectName: project,
           });
-          commitMessageValues.push(
-            `- project: ${project} ${releaseVersion.rawVersion}`
+          projectUpdates.push(
+            `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
           );
         }
       }
-      continue;
     }
 
-    // One entry for the whole group for fixed groups
-    const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
-    if (projectVersionData.newVersion !== null) {
-      const releaseVersion = new ReleaseVersion({
-        version: projectVersionData.newVersion,
-        releaseTagPattern: releaseGroup.releaseTagPattern,
-      });
-      commitMessageValues.push(
-        `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
-      );
-    }
+    // Add project updates to commit message values
+    commitMessageValues.push(...projectUpdates);
   }
 
   return commitMessageValues;
