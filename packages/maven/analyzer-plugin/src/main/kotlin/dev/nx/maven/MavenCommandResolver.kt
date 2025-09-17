@@ -45,23 +45,23 @@ object MavenCommandResolver {
 
     private fun detectMavenCommand(workspaceRoot: String): String {
         // First priority: Check for Maven Daemon
-        try {
-            val mvndStart = System.currentTimeMillis()
-            val process = ProcessBuilder("mvnd", "--version")
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
-            val exitCode = process.waitFor()
-            val mvndTime = System.currentTimeMillis() - mvndStart
-            log.debug("mvnd detection took ${mvndTime}ms")
-
-            if (exitCode == 0) {
-                log.info("Found mvnd (Maven Daemon)")
-                return "mvnd"
-            }
-        } catch (e: Exception) {
-            log.debug("mvnd not available: ${e.message}")
-        }
+//        try {
+//            val mvndStart = System.currentTimeMillis()
+//            val process = ProcessBuilder("mvnd", "--version")
+//                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+//                .redirectError(ProcessBuilder.Redirect.PIPE)
+//                .start()
+//            val exitCode = process.waitFor()
+//            val mvndTime = System.currentTimeMillis() - mvndStart
+//            log.debug("mvnd detection took ${mvndTime}ms")
+//
+//            if (exitCode == 0) {
+//                log.info("Found mvnd (Maven Daemon)")
+//                return "mvnd"
+//            }
+//        } catch (e: Exception) {
+//            log.debug("mvnd not available: ${e.message}")
+//        }
 
         // Second priority: Check for Maven wrapper
         val mvnwStart = System.currentTimeMillis()
