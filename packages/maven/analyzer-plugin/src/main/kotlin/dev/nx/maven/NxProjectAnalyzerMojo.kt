@@ -19,7 +19,6 @@ import java.io.File
  */
 @Mojo(
     name = "analyze",
-    defaultPhase = LifecyclePhase.VALIDATE,
     aggregator = true,
     requiresDependencyResolution = ResolutionScope.NONE
 )
@@ -109,7 +108,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             lifecycles,
             objectMapper,
             sharedTestClassDiscovery,
-            phaseAnalyzer
+            pluginManager,
+            session,
+            phaseAnalyzer,
         )
 
         // Resolve Maven command once for all projects
