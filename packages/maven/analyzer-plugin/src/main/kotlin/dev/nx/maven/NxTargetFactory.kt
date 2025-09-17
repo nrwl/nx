@@ -3,8 +3,12 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
+import org.apache.maven.model.PluginExecution
+import org.apache.maven.plugin.MavenPluginManager
+import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,6 +20,8 @@ class NxTargetFactory(
     private val lifecycles: DefaultLifecycles,
     private val objectMapper: ObjectMapper,
     private val testClassDiscovery: TestClassDiscovery,
+    private val pluginManager: MavenPluginManager,
+    private val session: MavenSession,
     private val phaseAnalyzer: PhaseAnalyzer
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
@@ -26,6 +32,8 @@ class NxTargetFactory(
         val nxTargets = objectMapper.createObjectNode()
         val targetGroups = mutableMapOf<String, List<String>>()
 
+        val phaseDependsOn = mutableMapOf<String, MutableList<String>>()
+
         val phaseTargets = mutableMapOf<String, NxTarget>()
         // Extract discovered phases from lifecycle analysis
         lifecycles.lifeCycles.forEach { lifecycle ->
@@ -33,12 +41,19 @@ class NxTargetFactory(
             lifecycle.phases.forEachIndexed { index, phase ->
                 val target =  createPhaseTarget(project, phase, mavenCommand)
 
-                // find previous phase and add to dependsOn
+
+                phaseDependsOn[phase] = mutableListOf()
+
+                        // find previous phase and add to dependsOn
                 if (index > 1) {
                     val previousPhase = lifecycle.phases[index - 1]
+
                     target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
                     target.dependsOn?.add(previousPhase)
+                    phaseDependsOn[phase]?.add(previousPhase)
                 }
+                target.dependsOn?.add("^$phase")
+                phaseDependsOn[phase]?.add("^$phase")
 
                 phaseTargets[phase] = target;
 
@@ -52,12 +67,21 @@ class NxTargetFactory(
             val pluginTargetGroup = mutableListOf<String>()
             plugin.executions.forEach { execution ->
                 execution.goals.forEach { goal ->
-                    val goalTargetName = "$cleanPluginName:$goal"
-                    val goalTarget = createGoalTarget(mavenCommand, project, cleanPluginName, goal)
+                    val goalTargetName = "$cleanPluginName:$goal@${execution.id}"
+                    val goalTarget = createGoalTarget(mavenCommand, project, cleanPluginName, goal, execution)
 
-                    val phaseTarget = phaseTargets[execution.phase]
+                    val phase = execution.phase ?: getMojoDescriptor(plugin, project, goal)?.phase
+
+                    val phaseTarget = phaseTargets[phase]
                     phaseTarget?.dependsOn = phaseTarget?.dependsOn ?: objectMapper.createArrayNode()
                     phaseTarget?.dependsOn?.add(goalTargetName)
+
+                    val dependsOn = objectMapper.createArrayNode()
+                    phaseDependsOn[phase]?.forEach {
+                        dependency ->
+                        dependsOn.add(dependency)
+                    }
+                    goalTarget.dependsOn = dependsOn
 
                     pluginTargetGroup.add(goalTargetName)
                     nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
@@ -164,14 +188,18 @@ class NxTargetFactory(
     }
 
     private fun createGoalTarget(
-        mavenCommand: String, project: MavenProject, cleanPluginName: String, goalName: String
+        mavenCommand: String,
+        project: MavenProject,
+        cleanPluginName: String,
+        goalName: String,
+        execution: PluginExecution
     ): NxTarget {
         val options = objectMapper.createObjectNode()
         options.put(
-            "command", "$mavenCommand $cleanPluginName:$goalName -am -pl ${project.groupId}:${project.artifactId}"
+            "command", "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId}"
         )
 
-        return NxTarget("nx:run-commands", options, false, false)
+        return NxTarget("nx:run-commands", options, false, true)
     }
 
 
@@ -181,6 +209,15 @@ class NxTargetFactory(
     private fun cleanPluginName(plugin: Plugin): String {
         val fullPluginName = "${plugin.groupId}.${plugin.artifactId}"
         return fullPluginName.replace("org.apache.maven.plugins.", "").replace("maven-", "").replace("-plugin", "")
+    }
+
+    private fun getMojoDescriptor(plugin: Plugin, project: MavenProject, goal: String): MojoDescriptor? {
+        val pluginDescriptor = pluginManager.getPluginDescriptor(
+            plugin,
+            project.remotePluginRepositories,
+            session.repositorySession
+        )
+        return pluginDescriptor?.getMojo(goal)
     }
 }
 
