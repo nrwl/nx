@@ -44,7 +44,7 @@ export const ErrorToastUI = forwardRef(
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed right-4 top-4 z-50 px-4 py-2 text-center">
+        <div className="fixed inset-x-0 top-4 z-50 px-4 py-2 text-center">
           <div
             onClick={() => inputsModalRef.current?.openModal()}
             className="z-50 flex w-fit max-w-sm
