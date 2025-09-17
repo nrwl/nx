@@ -11,7 +11,7 @@ function getCommandCache(projectGraph: ProjectGraph) {
     for (const [targetName, targetConfig] of Object.entries(
       projectNode.data.targets || {}
     )) {
-      // TODO (miro): consider duplicates, otherwise next one overrides it
+      // TODO (meeroslav): consider what to do with duplicates, otherwise next one overrides it
       runCommandsCache.set(`${projectName}:${targetName}`, [
         projectName,
         targetName,
@@ -48,7 +48,6 @@ export function splitTarget(
       return [...(cache.get(rest) as [string, string]), configuration];
     }
   }
-  // TODO (miro): consider duplicates, otherwise next one overrides it
   // no project-target pair found, return the original string
   return [s];
 }
