@@ -1,41 +1,56 @@
 import { ProjectGraph } from '../config/project-graph';
 
+let runCommandsCache: Map<string, [string, string, string?]>;
+
+function getCommandCache(projectGraph: ProjectGraph) {
+  if (runCommandsCache) {
+    return runCommandsCache;
+  }
+  runCommandsCache = new Map<string, [string, string, string?]>();
+  for (const [projectName, projectNode] of Object.entries(projectGraph.nodes)) {
+    for (const [targetName, targetConfig] of Object.entries(
+      projectNode.data.targets || {}
+    )) {
+      // TODO (miro): consider duplicates, otherwise next one overrides it
+      runCommandsCache.set(`${projectName}:${targetName}`, [
+        projectName,
+        targetName,
+      ]);
+      if (targetConfig.configurations) {
+        for (const configurationName of Object.keys(
+          targetConfig.configurations
+        )) {
+          runCommandsCache.set(
+            `${projectName}:${targetName}:${configurationName}`,
+            [projectName, targetName, configurationName]
+          );
+        }
+      }
+    }
+  }
+
+  return runCommandsCache;
+}
+
 export function splitTarget(
   s: string,
   projectGraph: ProjectGraph
 ): [project: string, target?: string, configuration?: string] {
-  let [project, ...segments] = splitByColons(s);
-  const validTargets = projectGraph.nodes[project]
-    ? projectGraph.nodes[project].data.targets
-    : {};
-  const validTargetNames = new Set(Object.keys(validTargets ?? {}));
-
-  return [project, ...groupJointSegments(segments, validTargetNames)] as [
-    string,
-    string?,
-    string?
-  ];
-}
-
-function groupJointSegments(segments: string[], validTargetNames: Set<string>) {
-  for (
-    let endingSegmentIdx = segments.length;
-    endingSegmentIdx > 0;
-    endingSegmentIdx--
-  ) {
-    const potentialTargetName = segments.slice(0, endingSegmentIdx).join(':');
-    if (validTargetNames.has(potentialTargetName)) {
-      const configurationName =
-        endingSegmentIdx < segments.length
-          ? segments.slice(endingSegmentIdx).join(':')
-          : null;
-      return configurationName
-        ? [potentialTargetName, configurationName]
-        : [potentialTargetName];
+  const cache = getCommandCache(projectGraph);
+  if (cache.has(s)) {
+    return cache.get(s);
+  }
+  // if only configuration cannot be matched, try to match project and target
+  if (s.includes(':')) {
+    const configuration = s.split(':').pop();
+    const rest = s.slice(0, -(configuration.length + 1));
+    if (cache.has(rest) && cache.get(rest).length === 2) {
+      return [...(cache.get(rest) as [string, string]), configuration];
     }
   }
-  // If we can't find a segment match, keep older behaviour
-  return segments;
+  // TODO (miro): consider duplicates, otherwise next one overrides it
+  // no project-target pair found, return the original string
+  return [s];
 }
 
 export function splitByColons(s: string) {

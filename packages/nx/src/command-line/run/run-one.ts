@@ -147,6 +147,8 @@ const targetAliases = {
   t: 'test',
 };
 
+const PROJECT_TARGET_CONFIG = 'project:target:configuration';
+
 export function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
@@ -164,29 +166,28 @@ export function parseRunOneOptions(
   let target;
   let configuration;
 
-  if (parsedArgs['project:target:configuration']?.indexOf(':') > -1) {
+  if (parsedArgs[PROJECT_TARGET_CONFIG]?.lastIndexOf(':') > 0) {
     // run case
     [project, target, configuration] = splitTarget(
-      parsedArgs['project:target:configuration'],
+      parsedArgs[PROJECT_TARGET_CONFIG],
       projectGraph
     );
-    // this is to account for "nx npmsript:dev"
+    // this is to account for "nx npmscript:dev"
     if (project && !target && defaultProjectName) {
       target = project;
       project = defaultProjectName;
     }
   } else if (parsedArgs.target) {
     target = parsedArgs.target;
-  } else if (parsedArgs['project:target:configuration']) {
+  } else if (parsedArgs[PROJECT_TARGET_CONFIG]) {
     // If project:target:configuration exists but has no colon, check if it's a project with run target
     if (
-      projectGraph.nodes[parsedArgs['project:target:configuration']]?.data
-        ?.targets?.run
+      projectGraph.nodes[parsedArgs[PROJECT_TARGET_CONFIG]]?.data?.targets?.run
     ) {
       target = 'run';
-      project = parsedArgs['project:target:configuration'];
+      project = parsedArgs[PROJECT_TARGET_CONFIG];
     } else {
-      target = parsedArgs['project:target:configuration'];
+      target = parsedArgs[PROJECT_TARGET_CONFIG];
     }
   }
   if (parsedArgs.project) {
@@ -210,7 +211,7 @@ export function parseRunOneOptions(
 
   const res = { project, target, configuration, parsedArgs };
   delete parsedArgs['c'];
-  delete parsedArgs['project:target:configuration'];
+  delete parsedArgs[PROJECT_TARGET_CONFIG];
   delete parsedArgs['configuration'];
   delete parsedArgs['prod'];
   delete parsedArgs['project'];
