@@ -4,6 +4,7 @@ import dev.nx.gradle.data.*
 import java.io.File
 import java.util.*
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.testing.Test
 
 /** Loops through a project and populate dependencies and nodes for each target */
@@ -88,14 +89,14 @@ fun processTargetsForProject(
 
   logger.info("${Date()} ${project}: Process targets")
 
-  val ciTestTargetName = targetNameOverrides["ciTestTargetName"]
+  val ciTestTargetBaseName = targetNameOverrides["ciTestTargetName"]
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
 
   val testTasks = project.tasks.withType(Test::class.java)
-  val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
+  val hasCiTestTarget = ciTestTargetBaseName != null && testTasks.isNotEmpty() && atomized
 
   logger.info(
-      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetName, testTasks.size=${testTasks.size}, atomized=$atomized)")
+      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)")
 
   project.tasks.forEach { task ->
     try {
@@ -127,26 +128,51 @@ fun processTargetsForProject(
 
       targets[targetName] = target
 
-      if (hasCiTestTarget && task.name.startsWith("compileTest")) {
-        addTestCiTargets(
-            task.inputs.sourceFiles,
-            projectBuildPath,
-            testTasks.first(),
-            targets,
-            targetGroups,
-            projectRoot,
-            workspaceRoot,
-            ciTestTargetName)
+      val isCompileTestTask = task.name.startsWith("compile") && task.name.contains("test", ignoreCase = true)
+      if (hasCiTestTarget && isCompileTestTask) {
+        val sourceSet = getSourceSetName(task)
+        val ciTestTargetName =
+            if (sourceSet == "test") {
+              ciTestTargetBaseName
+            } else {
+              "$ciTestTargetBaseName-$sourceSet"
+            }
+
+        // Find the matching test task for this compile task
+        // We need to match based on the actual dependencies between tasks
+        val matchingTestTask =
+            testTasks.find { testTask ->
+              if (testTask is Test) {
+                // Check if the test task's classpath includes the compile task's outputs
+                val testClasspath = testTask.classpath.files
+                val compileOutputs = task.outputs.files.files
+                compileOutputs.any { output -> testClasspath.contains(output) }
+              } else {
+                false
+              }
+            }
+
+        matchingTestTask?.let {
+          addTestCiTargets(
+              task.inputs.sourceFiles,
+              projectBuildPath,
+              it,
+              targets,
+              targetGroups,
+              projectRoot,
+              workspaceRoot,
+              ciTestTargetName)
+        }
       }
 
-      if (ciTestTargetName != null) {
+      if (ciTestTargetBaseName != null) {
         val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
         if (task.name == "check") {
           val replacedDependencies =
               (target["dependsOn"] as? List<*>)?.map { dep ->
                 val dependsOn = dep.toString()
                 if (hasCiTestTarget && dependsOn == "${project.name}:$testTargetName") {
-                  "${project.name}:$ciTestTargetName"
+                  "${project.name}:$ciTestTargetBaseName"
                 } else {
                   dep
                 }
@@ -197,4 +223,16 @@ fun processTargetsForProject(
 
   logger.info("Final targets in processTargetsForProject: $targets")
   return GradleTargets(targets, targetGroups, externalNodes)
+}
+
+// We may have different source sets for test suites, so when we atomize we need to differentiate
+// between different ciTest targets
+private fun getSourceSetName(task: Task): String {
+  return task.name
+      .removePrefix("compile")
+      .removeSuffix("Java")
+      .removeSuffix("Kotlin")
+      .removeSuffix("Groovy")
+      .removeSuffix("Scala")
+      .replaceFirstChar { it.lowercase() }
 }
