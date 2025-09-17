@@ -147,6 +147,13 @@ describe('Rollup Plugin', () => {
     runCLI(
       `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup`
     );
+
+    // Update project to use legacy TypeScript plugin for this legacy test
+    updateJson(join('libs', jsLib, 'project.json'), (config) => {
+      config.targets.build.options.useLegacyTypescriptPlugin = true;
+      return config;
+    });
+
     updateFile(
       `libs/${jsLib}/rollup.config.cjs`,
       `module.exports = {
@@ -191,6 +198,13 @@ describe('Rollup Plugin', () => {
     runCLI(
       `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup --verbose`
     );
+
+    // Update project to use legacy TypeScript plugin for this legacy test
+    updateJson(join('libs', jsLib, 'project.json'), (config) => {
+      config.targets.build.options.useLegacyTypescriptPlugin = true;
+      return config;
+    });
+
     updateFile(
       `libs/${jsLib}/rollup.config.cjs`,
       `module.exports = (config) => [{

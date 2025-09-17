@@ -250,14 +250,14 @@ export function withNx(
       image(),
       json(),
       // TypeScript compilation and declaration generation
-      // TODO(v22): Change default value of useLegacyTypescriptPlugin to false for Nx 22
-      options.useLegacyTypescriptPlugin !== false
+      options.useLegacyTypescriptPlugin === true
         ? (() => {
             // TODO(v23): Remove in Nx 23
             // Show deprecation warning
             logger.warn(
-              `rollup-plugin-typescript2 usage is deprecated and will be removed in Nx 23. ` +
-                `Set 'useLegacyTypescriptPlugin: false' to use the official @rollup/plugin-typescript.`
+              `rollup-plugin-typescript2 is deprecated and will be removed in Nx 23. ` +
+                `You are explicitly using it with 'useLegacyTypescriptPlugin: true'. ` +
+                `Consider removing this option to use the official @rollup/plugin-typescript.`
             );
 
             return require('rollup-plugin-typescript2')({
