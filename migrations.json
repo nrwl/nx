@@ -1,0 +1,21 @@
+{
+  "migrations": [
+    {
+      "version": "21.6.1-beta.2",
+      "cli": "nx",
+      "description": "Change dev.nx.gradle.project-graph to version 0.1.8 in build file",
+      "factory": "./src/migrations/21-6-1/change-plugin-version-0-1-8",
+      "package": "@nx/gradle",
+      "name": "change-plugin-version-0-1-8"
+    },
+    {
+      "cli": "nx",
+      "version": "21.6.1-beta.2",
+      "requires": { "@angular/core": ">=20.3.0" },
+      "description": "Update the @angular/cli package version to ~20.3.0.",
+      "factory": "./src/migrations/update-21-6-1/update-angular-cli",
+      "package": "@nx/angular",
+      "name": "update-angular-cli-version-20-3-0"
+    }
+  ]
+}
