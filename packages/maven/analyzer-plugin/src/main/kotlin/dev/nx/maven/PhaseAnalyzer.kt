@@ -47,7 +47,7 @@ class PhaseAnalyzer(
 
             val parameterInfos = descriptor.parameters?.parallelStream()?.map { parameter ->
                 val paramInfo = analyzeParameterInputsOutputs(descriptor, parameter, project)
-                log.info("Parameter analysis: ${descriptor.phase} ${parameter.name} -> ${paramInfo}")
+                log.debug("Parameter analysis: ${descriptor.phase} ${parameter.name} -> ${paramInfo}")
                 paramInfo
             }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
 
