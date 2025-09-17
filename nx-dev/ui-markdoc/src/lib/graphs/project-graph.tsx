@@ -6,7 +6,10 @@ import type {
 } from 'nx/src/config/project-graph';
 import { useEffect, useMemo } from 'react';
 import { ElementData, RenderTheme } from '@nx/graph';
-import { useProjectGraphOrchestrator } from '@nx/graph/projects';
+import {
+  NxGraphProjectGraphProvider,
+  useProjectGraphContext,
+} from '@nx/graph/projects';
 import { resolveTheme } from './resolve-theme';
 import {
   NxGraphCompositeProjectNodePanelContent,
@@ -26,7 +29,15 @@ interface NxDevProjectGraphProps {
   composite?: boolean;
 }
 
-export function NxDevProjectGraph({
+export function NxDevProjectGraph(props: NxDevProjectGraphProps) {
+  return (
+    <NxGraphProjectGraphProvider renderPlatform="nx-dev">
+      <NxDevProjectGraphInner {...props} />
+    </NxGraphProjectGraphProvider>
+  );
+}
+
+function NxDevProjectGraphInner({
   projects,
   dependencies = {},
   affectedProjects = [],
@@ -34,9 +45,7 @@ export function NxDevProjectGraph({
   composite = false,
   enableContextMenu = false,
 }: NxDevProjectGraphProps) {
-  const graphContext = useProjectGraphOrchestrator({
-    renderPlatform: 'nx-dev',
-  });
+  const graphContext = useProjectGraphContext();
 
   const { containerRef, orchestrator, sendRendererConfigEvent, send } =
     graphContext;

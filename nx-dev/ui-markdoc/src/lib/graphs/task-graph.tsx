@@ -1,13 +1,10 @@
 'use client';
 
-import type {
-  ProjectGraphDependency,
-  ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import { TaskGraph } from 'nx/src/config/task-graph';
 import { useEffect, useMemo } from 'react';
 import { RenderTheme } from '@nx/graph';
-import { useTaskGraphOrchestrator } from '@nx/graph/tasks';
+import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';
 import { resolveTheme } from './resolve-theme';
 import {
   NxGraphElementPanel,
@@ -25,7 +22,15 @@ interface NxDevTaskGraphProps {
   enableContextMenu?: boolean;
 }
 
-export function NxDevTaskGraph({
+export function NxDevTaskGraph(props: NxDevTaskGraphProps) {
+  return (
+    <NxGraphTaskGraphProvider renderPlatform="nx-dev">
+      <NxDevTaskGraphInner {...props} />
+    </NxGraphTaskGraphProvider>
+  );
+}
+
+export function NxDevTaskGraphInner({
   projects,
   taskGraph,
   taskId,
@@ -33,10 +38,7 @@ export function NxDevTaskGraph({
   theme = 'system',
   enableContextMenu = false,
 }: NxDevTaskGraphProps) {
-  const graphContext = useTaskGraphOrchestrator({
-    renderPlatform: 'nx-dev',
-    styles: [],
-  });
+  const graphContext = useTaskGraphContext();
   const { containerRef, orchestrator, sendRendererConfigEvent, send } =
     graphContext;
 
