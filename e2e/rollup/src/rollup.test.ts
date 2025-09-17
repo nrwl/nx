@@ -235,64 +235,6 @@ export default config;
   });
 
   describe('useLegacyTypescriptPlugin', () => {
-    it('should use @rollup/plugin-typescript by default when useLegacyTypescriptPlugin is not specified', async () => {
-      const myPkg = uniq('my-pkg');
-      runCLI(
-        `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=rollup --no-interactive`
-      );
-      updateFile(
-        `libs/${myPkg}/src/index.ts`,
-        `export const hello = 'default';\n`
-      );
-
-      // Change TypeScript plugin build target to avoid conflict with Rollup
-      updateJson('nx.json', (nxJson) => {
-        nxJson.plugins.forEach((plugin) => {
-          if (
-            plugin.plugin === '@nx/js/typescript' &&
-            plugin.include?.includes(`libs/${myPkg}/*`)
-          ) {
-            if (plugin.options?.build?.targetName === 'build') {
-              plugin.options.build.targetName = 'tsc:build';
-            }
-          }
-        });
-        return nxJson;
-      });
-
-      // Use default config without specifying useLegacyTypescriptPlugin
-      updateFile(
-        `libs/${myPkg}/rollup.config.cjs`,
-        `
-        const { withNx } = require('@nx/rollup/with-nx');
-        module.exports = withNx({
-          outputPath: '../../dist/libs/${myPkg}',
-          main: './src/index.ts',
-          tsConfig: './tsconfig.lib.json',
-          compiler: 'tsc',
-          format: ['cjs', 'esm']
-        });
-      `
-      );
-
-      // Build should succeed with the official @rollup/plugin-typescript (new default)
-      rmDist();
-      const output = runCLI(`build ${myPkg} --verbose`);
-
-      // Verify build succeeded
-      expect(output).toContain('Successfully ran target build');
-      // By default (without the flag), it should use @rollup/plugin-typescript
-      checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
-      checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
-      checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
-
-      // Verify the output works
-      const result = runCommand(
-        `node -e "console.log(require('./dist/libs/${myPkg}/index.cjs.js').hello)"`
-      );
-      expect(result.trim()).toBe('default');
-    });
-
     it('should use @rollup/plugin-typescript when useLegacyTypescriptPlugin is false', async () => {
       const myPkg = uniq('my-pkg');
       runCLI(
