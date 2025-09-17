@@ -130,18 +130,10 @@ fun processTargetsForProject(
 
       val isCompileTestTask = task.name.startsWith("compile") && task.name.contains("test", ignoreCase = true)
       if (hasCiTestTarget && isCompileTestTask) {
-        val sourceSet = getSourceSetName(task)
-        val ciTestTargetName =
-            if (sourceSet == "test") {
-              ciTestTargetBaseName
-            } else {
-              "$ciTestTargetBaseName-$sourceSet"
-            }
-
         // Find the matching test task for this compile task
         // We need to match based on the actual dependencies between tasks
-        val matchingTestTask =
-            testTasks.find { testTask ->
+        val matchingTestTasks =
+            testTasks.filter { testTask ->
               if (testTask is Test) {
                 // Check if the test task's classpath includes the compile task's outputs
                 val testClasspath = testTask.classpath.files
@@ -152,7 +144,14 @@ fun processTargetsForProject(
               }
             }
 
-        matchingTestTask?.let {
+        matchingTestTasks.forEach {
+          val ciTestTargetName =
+            if (it.name == "test") {
+              ciTestTargetBaseName
+            } else {
+              "$ciTestTargetBaseName-${it.name}"
+            }
+
           addTestCiTargets(
               task.inputs.sourceFiles,
               projectBuildPath,
@@ -169,12 +168,23 @@ fun processTargetsForProject(
         val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
         if (task.name == "check") {
           val replacedDependencies =
-              (target["dependsOn"] as? List<*>)?.map { dep ->
-                val dependsOn = dep.toString()
-                if (hasCiTestTarget && dependsOn == "${project.name}:$testTargetName") {
-                  "${project.name}:$ciTestTargetBaseName"
-                } else {
-                  dep
+              (target["dependsOn"] as? List<*>)?.map { dependency ->
+                val dependsOn = dependency.toString()
+
+                when {
+                  hasCiTestTarget && dependsOn == "${project.name}:$testTargetName" -> {
+                    "${project.name}:$ciTestTargetBaseName"
+                  }
+                  hasCiTestTarget && dependsOn.startsWith("${project.name}:") -> {
+                    val taskName = dependsOn.removePrefix("${project.name}:")
+                    // Check if it's a test task that's not the default test target
+                    if (testTasks.any { it.name == taskName } && taskName != testTargetName) {
+                      "${project.name}:$ciTestTargetBaseName-$taskName"
+                    } else {
+                      dependency
+                    }
+                  }
+                  else -> dependency
                 }
               } ?: emptyList()
 
