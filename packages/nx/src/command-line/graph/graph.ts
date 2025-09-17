@@ -497,15 +497,20 @@ export async function generateGraph(
     }
 
     // setting up `?graph=serialized-graph-state`
-    let graphState: Record<string, unknown> | undefined = undefined;
+    let graphState:
+      | {
+          config: Record<string, unknown>;
+          state?: Record<string, unknown>;
+        }
+      | undefined = undefined;
     url.pathname = args.view;
 
     if (args.focus) {
       if (args.view === 'project-details') {
         url.pathname += '/' + encodeURIComponent(args.focus);
       } else if (args.view === 'projects') {
-        graphState ??= { c: {} };
-        graphState['s'] = {
+        graphState ??= { config: {} };
+        graphState.state = {
           type: 'focused',
           nodeId: encodeURIComponent(`project-${args.focus}`),
         };
@@ -530,11 +535,8 @@ export async function generateGraph(
         args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
-      graphState ??= { c: {} };
-      graphState['c'] = {
-        ...(graphState['c'] as Record<string, unknown>),
-        showMode: 'affected',
-      };
+      graphState ??= { config: {} };
+      graphState.config = { ...graphState.config, showMode: 'affected' };
     }
 
     if (graphState && args.view === 'projects') {

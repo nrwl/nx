@@ -17,7 +17,7 @@ import { ErrorBoundary } from './ui-components/error-boundary';
 import { taskGraphClientCache } from './task-graph-client-cache';
 import { ProjectsShell } from './feature-projects/projects-shell';
 import { TasksShell } from './feature-tasks/tasks-shell';
-import { GraphStateSerializer } from '@nx/graph';
+import { GraphSerializableState, GraphStateSerializer } from '@nx/graph';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -244,9 +244,19 @@ function handleRawGraphQueryParam(searchParams: URLSearchParams) {
   if (!rawGraph) return;
 
   try {
-    const rawGraphJson = JSON.parse(rawGraph);
+    const rawGraphJson: {
+      config: Record<string, unknown>;
+      state?: Record<string, unknown>;
+    } = JSON.parse(rawGraph);
+
     searchParams.delete('rawGraph');
-    searchParams.set('graph', GraphStateSerializer.serialize(rawGraphJson));
+    searchParams.set(
+      'graph',
+      GraphStateSerializer.serialize({
+        c: rawGraphJson.config,
+        s: rawGraphJson.state,
+      } as Omit<GraphSerializableState<any>, 'v'>)
+    );
   } catch (err) {
     console.error('Graph Client: error during rawGraph handling', err);
     return;
