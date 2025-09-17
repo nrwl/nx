@@ -212,6 +212,13 @@
       }
     },
     {
+      "plugin": "@nx/vite/plugin",
+      "include": ["astro-docs/**"],
+      "options": {
+        "testTargetName": "vite:test"
+      }
+    },
+    {
       "plugin": "@nx/js/typescript",
       "exclude": ["examples/angular-rspack/**/*"],
       "options": {
