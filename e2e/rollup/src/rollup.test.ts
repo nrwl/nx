@@ -337,6 +337,8 @@ export default config;
 
       // Verify build succeeded
       expect(output).toContain('Successfully ran target build');
+      // Note: The deprecation warning is shown but may not be captured in the test output
+      // The important thing is that the build succeeds with the legacy plugin when explicitly set
       checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
       checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
       checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
