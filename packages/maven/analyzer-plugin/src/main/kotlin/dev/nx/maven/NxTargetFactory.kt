@@ -8,7 +8,7 @@ import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
 import org.apache.maven.model.PluginExecution
 import org.apache.maven.plugin.MavenPluginManager
-import org.apache.maven.plugin.descriptor.MojoDescriptor
+import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -77,26 +77,41 @@ class NxTargetFactory(
         // Extract discovered plugin goals
         val plugins = getExecutablePlugins(project)
         plugins.forEach { plugin: Plugin ->
-            val cleanPluginName = cleanPluginName(plugin)
+            val pluginDescriptor = getPluginDescriptor(plugin, project)
+            val goalPrefix = pluginDescriptor.goalPrefix
             val pluginTargetGroup = mutableListOf<String>()
             plugin.executions.forEach { execution ->
                 execution.goals.forEach { goal ->
+
                     // Skip build-helper attach-artifact goal as it's not relevant for Nx
-                    if (cleanPluginName == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
+                    if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
                         return@forEach
                     }
 
-                    val goalTargetName = "$cleanPluginName:$goal@${execution.id}"
-                    val goalTarget = createGoalTarget(mavenCommand, project, cleanPluginName, goal, execution)
+                    val goalTargetName = "$goalPrefix:$goal@${execution.id}"
+                    val goalTarget = createGoalTarget(mavenCommand, project, goalPrefix, goal, execution)
 
-                    val phase = execution.phase ?: getMojoDescriptor(plugin, project, goal)?.phase
+                    val phase = execution.phase ?: pluginDescriptor.getMojo(goal)?.phase
 
-                    val phaseTarget = phaseTargets[phase]
-                    phaseTarget?.dependsOn = phaseTarget?.dependsOn ?: objectMapper.createArrayNode()
+                    // Normalize Maven 3 phase names to Maven 4 for backward compatibility
+                    val normalizedPhase = when (phase) {
+                        "generate-sources" -> "sources"
+                        "process-sources" -> "after:sources"
+                        "generate-resources" -> "resources"
+                        "process-resources" -> "after:resources"
+                        "generate-test-sources" -> "test-sources"
+                        "process-test-sources" -> "after:test-sources"
+                        "generate-test-resources" -> "test-resources"
+                        "process-test-resources" -> "after:test-resources"
+                        else -> phase
+                    }
+
+                    val phaseTarget = phaseTargets[normalizedPhase]
+                    phaseTarget?.dependsOn = phaseTarget.dependsOn ?: objectMapper.createArrayNode()
                     phaseTarget?.dependsOn?.add(goalTargetName)
 
                     val dependsOn = objectMapper.createArrayNode()
-                    phaseDependsOn[phase]?.forEach { dependency ->
+                    phaseDependsOn[normalizedPhase]?.forEach { dependency ->
                         dependsOn.add(dependency)
                     }
                     goalTarget.dependsOn = dependsOn
@@ -105,7 +120,7 @@ class NxTargetFactory(
                     nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
                 }
             }
-            targetGroups[cleanPluginName] = pluginTargetGroup
+            targetGroups[goalPrefix] = pluginTargetGroup
         }
 
         val atomizedTestTargets = generateAtomizedTestTargets(project, mavenCommand)
@@ -243,12 +258,12 @@ class NxTargetFactory(
         return fullPluginName.replace("org.apache.maven.plugins.", "").replace("maven-", "").replace("-plugin", "")
     }
 
-    private fun getMojoDescriptor(plugin: Plugin, project: MavenProject, goal: String): MojoDescriptor? {
-        val pluginDescriptor = pluginManager.getPluginDescriptor(
-            plugin, project.remotePluginRepositories, session.repositorySession
-        )
-        return pluginDescriptor?.getMojo(goal)
-    }
+    private fun getPluginDescriptor(
+        plugin: Plugin,
+        project: MavenProject
+    ): PluginDescriptor = pluginManager.getPluginDescriptor(
+        plugin, project.remotePluginRepositories, session.repositorySession
+    )
 }
 
 data class NxTarget(
