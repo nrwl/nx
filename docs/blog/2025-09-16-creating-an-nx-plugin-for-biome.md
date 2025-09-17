@@ -1,18 +1,16 @@
 ---
-title: 'Build Your Own Nx Plugin: Integrating Biome in 20 Minutes'
-slug: build-nx-plugin-biome-integration
+title: 'Integrating Biome in 20 Minutes'
+slug: integrate-biome-in-20-minutes
 authors: ['Philip Fulcher']
 tags: ['nx']
-cover_image: /blog/images/2025-09-16/header.avif
-description: 'Learn how to create your own Nx plugin to integrate Biome, the fast Rust-based linter and formatter. Discover why writing your own plugin is often better than waiting for official support.'
+cover_image: /blog/images/2025-09-17/header.avif
+description: 'Learn how to integrate Biome, the fast Rust-based linter and formatter, in an Nx Workspace. Discover why writing your own plugin is often better than waiting for official support.'
 youtubeUrl: https://www.youtube.com/watch?v=GyDYN1AdfbQ
 ---
 
-One question we get all the time is: "When are you going to support my tool of choice?" Whether it's a new linting tool, build tool, or framework, the truth is **we just can't support everything** with a team our size.
+One question we get all the time is: "When are you going to support my tool of choice?" Whether it's a new linting tool, build tool, or framework, the truth is **we just can't support everything** with a team our size. But we do provide multiple tools to make that integration possible for you.
 
-That's exactly why we have an extensive plugin infrastructure with our devkit: so you can build that functionality yourself. And here's the thing: **you can absolutely do this**. We write our plugins using the exact same tools we provide to the community.
-
-Today, we're going to walk through integrating [Biome](https://biomejs.dev/), a fast linter and formatter written in Rust, into an Nx workspace. We'll show you how to get started with Biome, apply what you already know about the Node ecosystem, and finally write a plugin that makes Biome work seamlessly with Nx.
+Today, we're going to walk through integrating [Biome](https://biomejs.dev/), a fast linter and formatter written in Rust, into an Nx workspace. We'll show you how to get started with Biome, apply what you already know about the Node ecosystem, and finally write a plugin that scales for large workspaces with Nx.
 
 {% toc /%}
 
@@ -22,7 +20,7 @@ Biome promises to be faster than ESLint and Prettier because it's written in Rus
 
 We're working with a workspace that looks like this: a React application that depends on a few libraries. This workspace is small, but the process we're walking through will scale to any size workspace.
 
-![A workspace graph showing an application depending on three libraries.](/blog/images/2025-09-16/graph.avif)
+![A workspace graph showing an application depending on three libraries.](/blog/images/2025-09-17/graph.avif)
 
 ## Start with What You Know: Using Biome Without Nx
 
@@ -52,7 +50,7 @@ npx @biomejs/biome lint
 
 Without thinking about Nx at all, we've successfully installed Biome and run a lint across our entire workspace. That's a good starting point, but in a monorepo, **we don't want to lint all files all the time**. We want to lint individual projects.
 
-## Using npm scripts
+## Using npm Scripts
 
 Normally, to avoid writing long commands every time, we'd reach for npm scripts. Let's add this to our root `package.json`:
 
@@ -80,11 +78,13 @@ Since our workspace uses npm workspaces, every project has its own `package.json
 
 Now if we move into that directory and run `npm run biome-lint`, we're only linting that specific directory. When you run `biome lint` with no other options, it lints that directory and directories below it.
 
-## The Nx Integration you didn't realize was there
+### The Nx Integration You Didn't Realize Was There
 
 Here's something you might not realize: **we've already started an Nx integration**. If you open Nx Console, you'll see that `biome-lint` is available as a target under the "npm scripts" area. Nx automatically incorporates npm scripts into available tasks.
 
-![Screenshot of Nx Console showing npm scripts available as targets](/blog/images/2025-09-16/npm-scripts.avif)
+{% video-player src="/documentation/blog/images/2025-09-17/nx-console-npm-scripts.mp4" alt="Opening Nx Console to see npm scripts targets" autoPlay=true loop=true  /%}
+
+![Screenshot of Nx Console showing npm scripts available as targets](/blog/images/2025-09-17/npm-scripts.avif)
 
 So while `npm run biome-lint` works, we can also run this through Nx:
 
@@ -94,9 +94,13 @@ npx nx biome-lint biome-example
 
 This gives us the exact same result. We can copy this script to other packages, like our navigation library, and suddenly we can run `biome-lint` on multiple projects individually.
 
-## Hold on, I'm not using npm workspaces!
+```shell
+npx nx run-many -t biome-lint
+```
 
-While npm workspaces are the default for new Nx workspaces, there's a long history of workspaces created before that. Those workspaces use `project.json` files for project configuration. While you won't be able to use npm scripts like in npm workspaces, you can still create a target in your `project.json` files:
+### Hold On, I'm Not Using NPM Workspaces!
+
+While npm workspaces are the [default for new Nx workspaces](/blog/new-nx-experience-for-typescript-monorepos), there's a long history of workspaces created before that. Those workspaces use `project.json` files for project configuration. While you won't be able to use npm scripts like in npm workspaces, you can still create a target in your `project.json` files:
 
 ```json {% fileName="apps/biome-example/project.json" %}
 {
@@ -116,9 +120,7 @@ One thing missing with this simple setup is **caching**. Nx doesn't know the `bi
 
 Right now, if we rerun `nx biome-lint biome-example` twice, it actually runs the lint every time. Ideally, we shouldn't rerun this lint if we haven't changed anything between successful runs.
 
-### Configuring Target Defaults
-
-Let's open our `nx.json` and add target defaults for `biome-lint`:
+To configure caching, let's open our `nx.json` and add target defaults for `biome-lint`:
 
 ```json {% fileName="nx.json" %}
 {
@@ -140,7 +142,7 @@ Let's open our `nx.json` and add target defaults for `biome-lint`:
 
 How do we figure out these inputs? **Steal them from another linting configuration that we know works**. We can copy the inputs from ESLint's configuration using Nx Console. Find a project using eslint and scroll down to the "Inputs" area.
 
-![Screenshot of Nx Console showing the ability to copy inputs from a target](/blog/images/2025-09-16/copy-inputs.avif)
+![Screenshot of Nx Console showing the ability to copy inputs from a target](/blog/images/2025-09-17/copy-inputs.avif)
 
 Click the copy button and modify the output for Biome:
 
@@ -219,7 +221,7 @@ async function createNodesInternal(
 
 Let's take this example and make some changes:
 
-```typescript {% fileName="plugin/src/index.ts" %}
+```typescript {% fileName="plugin/src/index.ts" highlightLines=[13,"35-51"] %}
 import {
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -230,7 +232,9 @@ import { dirname } from 'path';
 export interface MyPluginOptions {}
 
 export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
-  '**/package.json', //look for all package.json files in the workspace (keep this as project.json if you're not using npm workspaces)
+  // look for all package.json files in the workspace
+  // (keep this as project.json if you're not using npm workspaces)
+  '**/package.json',
   async (configFiles, options, context) => {
     return await createNodesFromFiles(
       (configFile, options, context) =>
@@ -301,7 +305,7 @@ To activate our plugin, add it to the `plugins` array in `nx.json`:
 
 If you open Nx Console, you'll see the `biome-lint` target is still available, but now it shows "created by @biome-example/plugin."
 
-![Screenshot of Nx Console showing biome-lint proviced by the plugin](/blog/images/2025-09-16/inferred-task.avif)
+![Screenshot of Nx Console showing biome-lint proviced by the plugin](/blog/images/2025-09-17/inferred-task.avif)
 
 ## Selective Application with Configuration Files
 
@@ -330,12 +334,11 @@ This configuration:
 
 Now we can modify our plugin to look for `biome.json` files instead of `package.json`:
 
-```typescript
+```typescript {% fileName="plugin/src/index.ts" highlightLines=[11,"30-35"] %}
 import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
-  readJsonFile,
 } from '@nx/devkit';
 import { dirname } from 'path';
 
@@ -394,15 +397,18 @@ async function createNodesInternal(
 
 Now the plugin only adds `biome-lint` targets to projects that have a `biome.json` file. This enables **progressive adoption**: teams can opt into Biome by adding configuration files where they want them.
 
-### Development Tips
+{% callout title="PROTIP" type="note" %}
 
 During plugin development, Nx caches plugin compilation. Use `NX_DAEMON=false` to bypass this cache:
 
 ```shell
 NX_DAEMON=false nx run-many --target=biome-lint
+
 ```
 
 When you're ready for production, run `nx reset` to clear the cache and the plugin will work normally.
+
+{% /callout %}
 
 ## The Power of Custom Plugins
 
