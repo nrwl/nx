@@ -123,6 +123,9 @@ async function createNodesInternal(
     {
       ...normalizedOptions,
       CI: process.env.CI,
+      // change this to bust the cache when making changes that would yield
+      // different results for the same hash
+      bust: 1,
     },
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
@@ -321,6 +324,7 @@ async function buildPlaywrightTargets(
         target: targetName,
         projects: 'self',
         params: 'forward',
+        options: 'forward',
       });
     }
 

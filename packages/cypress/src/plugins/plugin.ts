@@ -118,7 +118,12 @@ async function createNodesInternal(
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    options,
+    {
+      ...options,
+      // change this to bust the cache when making changes that would yield
+      // different results for the same hash
+      bust: 1,
+    },
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -411,6 +416,7 @@ async function buildCypressTargets(
           target: targetName,
           projects: 'self',
           params: 'forward',
+          options: 'forward',
         });
 
         if (ciWebServerCommandTask) {
@@ -553,6 +559,7 @@ async function buildCypressTargets(
           target: targetName,
           projects: 'self',
           params: 'forward',
+          options: 'forward',
         });
       }
 
