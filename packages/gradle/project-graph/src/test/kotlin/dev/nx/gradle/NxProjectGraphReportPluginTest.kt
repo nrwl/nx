@@ -3,8 +3,11 @@ package dev.nx.gradle
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import org.gradle.api.GradleException
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
+import org.gradle.api.tasks.testing.Test as GradleTest
+import org.junit.jupiter.api.assertThrows
 
 class NxProjectGraphReportPluginTest {
 

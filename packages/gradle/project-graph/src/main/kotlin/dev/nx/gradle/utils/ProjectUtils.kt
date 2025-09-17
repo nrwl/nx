@@ -235,14 +235,3 @@ fun processTargetsForProject(
   return GradleTargets(targets, targetGroups, externalNodes)
 }
 
-// We may have different source sets for test suites, so when we atomize we need to differentiate
-// between different ciTest targets
-private fun getSourceSetName(task: Task): String {
-  return task.name
-      .removePrefix("compile")
-      .removeSuffix("Java")
-      .removeSuffix("Kotlin")
-      .removeSuffix("Groovy")
-      .removeSuffix("Scala")
-      .replaceFirstChar { it.lowercase() }
-}
