@@ -107,7 +107,6 @@ class NxTargetFactory(
                     }
 
                     val phaseTarget = phaseTargets[normalizedPhase]
-                    phaseTarget?.dependsOn = phaseTarget.dependsOn ?: objectMapper.createArrayNode()
                     phaseTarget?.dependsOn?.add(goalTargetName)
 
                     val dependsOn = objectMapper.createArrayNode()
@@ -150,7 +149,7 @@ class NxTargetFactory(
     private fun createPhaseTarget(
         project: MavenProject, phase: String, mavenCommand: String
     ): NxTarget {
-        val analysis = phaseAnalyzer.analyze(project, phase)
+//        val analysis = phaseAnalyzer.analyze(project, phase)
 
 
         val options = objectMapper.createObjectNode()
@@ -158,25 +157,25 @@ class NxTargetFactory(
             "command", "$mavenCommand $phase -pl ${project.groupId}:${project.artifactId} --batch-mode --resume"
         )
 //        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
-        val target = NxTarget("nx:noop", null, analysis.isCacheable, analysis.isThreadSafe)
+        val target = NxTarget("nx:noop", null, false, true)
 
         val dependsOn = objectMapper.createArrayNode()
         dependsOn.add("^$phase")
         target.dependsOn = dependsOn
 
         // Copy caching info from analysis
-        if (analysis.isCacheable) {
-
-            // Convert inputs to JsonNode array
-            val inputsArray = objectMapper.createArrayNode()
-            analysis.inputs.forEach { input -> inputsArray.add(input) }
-            target.inputs = inputsArray
-
-            // Convert outputs to JsonNode array
-            val outputsArray = objectMapper.createArrayNode()
-            analysis.outputs.forEach { output -> outputsArray.add(output) }
-            target.outputs = outputsArray
-        }
+//        if (analysis.isCacheable) {
+//
+//            // Convert inputs to JsonNode array
+//            val inputsArray = objectMapper.createArrayNode()
+//            analysis.inputs.forEach { input -> inputsArray.add(input) }
+//            target.inputs = inputsArray
+//
+//            // Convert outputs to JsonNode array
+//            val outputsArray = objectMapper.createArrayNode()
+//            analysis.outputs.forEach { output -> outputsArray.add(output) }
+//            target.outputs = outputsArray
+//        }
 
         return target
     }
@@ -235,12 +234,12 @@ class NxTargetFactory(
                 val fileExtension = project.artifact.type
                 val artifactFile = "${project.build.directory}/${project.build.finalName}.${fileExtension}"
 
-                "$mavenCommand install:install-file -Dfile=$artifactFile -DgroupId=${project.groupId} -DartifactId=${project.artifactId} -Dversion=${project.version} -Dpackaging=${project.packaging}"
+                "$mavenCommand install:install-file -Dfile=$artifactFile -DgroupId=${project.groupId} -DartifactId=${project.artifactId} -Dversion=${project.version} -Dpackaging=${project.packaging} -X -e"
             } else {
-                "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N"
+                "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N -X -e"
             }
         } else {
-            "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N"
+            "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N -X -e"
         }
         options.put(
             "command", command
