@@ -19,6 +19,8 @@ If we look at these two trivial examples, you can see that the repository with m
 {% cards smCols=2 mdCols=2 lgCols=2 %}
 
 {% graph title="One Project" height="200px" %}
+
+```json
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -41,10 +43,13 @@ If we look at these two trivial examples, you can see that the repository with m
   "groupByFolder": false,
   "exclude": []
 }
+```
 
 {% /graph %}
 
 {% graph title="Four Projects" height="200px" %}
+
+```json
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -89,6 +94,8 @@ If we look at these two trivial examples, you can see that the repository with m
   "groupByFolder": false,
   "exclude": []
 }
+```
+
 {% /graph %}
 
 {% /cards %}
@@ -104,6 +111,8 @@ Consider the following example repo structures.
 {% cards mdCols=3 lgCols=3 %}
 
 {% graph title="Stacked" height="200px" %}
+
+```json
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -140,9 +149,12 @@ Consider the following example repo structures.
   "groupByFolder": false,
   "exclude": []
 }
+```
 {% /graph %}
 
 {% graph title="Grouped" height="200px" %}
+
+```json
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -179,10 +191,13 @@ Consider the following example repo structures.
   "groupByFolder": false,
   "exclude": []
 }
+```
 
 {% /graph %}
 
 {% graph title="Flat" height="200px" %}
+
+```json
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -219,6 +234,8 @@ Consider the following example repo structures.
   "groupByFolder": false,
   "exclude": []
 }
+```
+
 {% /graph %}
 
 {% /cards %}
@@ -290,6 +307,8 @@ Take a look at the example below. The projects are setup in the suboptimal stack
 
 {% cards smCols=2 mdCols=2 lgCols=2 %}
 {% graph title="First CI Run" height="200px" %}
+
+```json
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -326,9 +345,13 @@ Take a look at the example below. The projects are setup in the suboptimal stack
   "groupByFolder": false,
   "exclude": []
 }
+```
+
 {% /graph %}
 
 {% graph title="Second CI Run (project2 Changed)" height="200px" %}
+
+```json
 {
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
@@ -365,6 +388,8 @@ Take a look at the example below. The projects are setup in the suboptimal stack
   "groupByFolder": false,
   "exclude": []
 }
+```
+
 {% /graph %}
 
 {% /cards %}
