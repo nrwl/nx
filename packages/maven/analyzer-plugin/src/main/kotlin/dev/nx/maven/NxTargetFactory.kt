@@ -32,9 +32,40 @@ class NxTargetFactory(
         val requiresAttachment: Boolean = true
     )
 
+    data class BuildStateConfig(
+        val requiresRecord: Boolean = false,
+        val requiresApply: Boolean = false
+    )
+
     private val artifactAttachmentConfigs = mapOf(
         "install:install" to ArtifactAttachmentConfig(requiresMainArtifact = true),
         "spring-boot:repackage" to ArtifactAttachmentConfig(requiresMainArtifact = true)
+    )
+
+    // Goals that need build state recorded after execution (produce artifacts/state)
+    private val buildStateRecordConfigs = mapOf(
+        "compiler:compile" to BuildStateConfig(requiresRecord = true),
+        "modello:velocity" to BuildStateConfig(requiresRecord = true),
+        "modello:java" to BuildStateConfig(requiresRecord = true),
+        "build-helper:add-source" to BuildStateConfig(requiresRecord = true),
+        "build-helper:add-test-source" to BuildStateConfig(requiresRecord = true),
+        "antrun:run" to BuildStateConfig(requiresRecord = true), // May generate sources
+        "exec:java" to BuildStateConfig(requiresRecord = true), // May generate sources
+        "jar:jar" to BuildStateConfig(requiresRecord = true),
+        "maven-jar-plugin:jar" to BuildStateConfig(requiresRecord = true)
+    )
+
+    // Goals that need build state applied before execution (consume artifacts/state)
+    private val buildStateApplyConfigs = mapOf(
+        "compiler:testCompile" to BuildStateConfig(requiresApply = true),
+        "surefire:test" to BuildStateConfig(requiresApply = true),
+        "failsafe:integration-test" to BuildStateConfig(requiresApply = true),
+        "javadoc:javadoc" to BuildStateConfig(requiresApply = true),
+        "javadoc:jar" to BuildStateConfig(requiresApply = true),
+        "source:jar" to BuildStateConfig(requiresApply = true),
+        "jar:test-jar" to BuildStateConfig(requiresApply = true),
+        "install:install" to BuildStateConfig(requiresApply = true),
+        "deploy:deploy" to BuildStateConfig(requiresApply = true)
     )
 
     private fun createMavenCommand(
@@ -47,33 +78,54 @@ class NxTargetFactory(
     ): String {
         val mainGoal = "$goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N"
         val goalKey = "$goalPrefix:$goalName"
-        val attachmentConfig = artifactAttachmentConfigs[goalKey]
 
-        var command = if (attachmentConfig != null && project.packaging != "pom") {
-            val fileExtension = project.artifact.type
-            val artifactFile = "${project.build.directory}/${project.build.finalName}.${fileExtension}"
+        // Check build state configurations
+        val recordConfig = buildStateRecordConfigs[goalKey]
+        val applyConfig = buildStateApplyConfigs[goalKey]
+//        val attachmentConfig = artifactAttachmentConfigs[goalKey]
 
-            var artifactAttachmentGoal = "nx-maven:attach-artifact -Dartifact=$artifactFile"
-            if (attachmentConfig.requiresMainArtifact) {
-                artifactAttachmentGoal += " -DmainArtifact=true"
-            }
+        // Build command with build state management
+        var commandParts = mutableListOf<String>()
+        commandParts.add(mavenCommand)
 
-            "$mavenCommand $artifactAttachmentGoal $mainGoal"
-        } else {
-            "$mavenCommand $mainGoal"
+        // Add build state apply if needed (before main goal)
+        if (applyConfig?.requiresApply == true) {
+            commandParts.add("nx:apply")
         }
+
+        // Add artifact attachment if needed
+//        if (attachmentConfig != null && project.packaging != "pom") {
+//            val fileExtension = project.artifact.type
+//            val artifactFile = "${project.build.directory}/${project.build.finalName}.${fileExtension}"
+//
+//            var artifactAttachmentGoal = "nx:attach-artifact -Dartifact=$artifactFile"
+//            if (attachmentConfig.requiresMainArtifact) {
+//                artifactAttachmentGoal += " -DmainArtifact=true"
+//            }
+//            commandParts.add(artifactAttachmentGoal)
+//        }
+
+        // Add main goal
+        commandParts.add(mainGoal)
+
+        // Add build state record if needed (after main goal)
+        if (recordConfig?.requiresRecord == true) {
+            commandParts.add("nx:record")
+        }
+
+        val command = commandParts.joinToString(" ")
 
         // Merge configurations like Maven does: execution config dominates, plugin config provides defaults
-        val executionConfig = execution.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
-        val pluginConfig = plugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
-
-        val config = executionConfig ?: pluginConfig
-        config?.let { dom ->
-            dom.getChild("params")?.children?.forEach { param ->
-                // Convert params to -D system properties if needed
-                command += " -D${param.value}"
-            }
-        }
+//        val executionConfig = execution.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
+//        val pluginConfig = plugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
+//
+//        val config = executionConfig ?: pluginConfig
+//        config?.let { dom ->
+//            dom.getChild("params")?.children?.forEach { param ->
+//                // Convert params to -D system properties if needed
+//                command += " -D${param.value}"
+//            }
+//        }
 
         return command
     }
