@@ -8,6 +8,7 @@ import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
 import org.apache.maven.model.PluginExecution
 import org.apache.maven.plugin.MavenPluginManager
+import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
@@ -25,6 +26,57 @@ class NxTargetFactory(
     private val phaseAnalyzer: PhaseAnalyzer
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
+
+    data class ArtifactAttachmentConfig(
+        val requiresMainArtifact: Boolean = false,
+        val requiresAttachment: Boolean = true
+    )
+
+    private val artifactAttachmentConfigs = mapOf(
+        "install:install" to ArtifactAttachmentConfig(requiresMainArtifact = true),
+        "spring-boot:repackage" to ArtifactAttachmentConfig(requiresMainArtifact = true)
+    )
+
+    private fun createMavenCommand(
+        mavenCommand: String,
+        project: MavenProject,
+        goalPrefix: String,
+        goalName: String,
+        execution: PluginExecution,
+        plugin: Plugin
+    ): String {
+        val mainGoal = "$goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N"
+        val goalKey = "$goalPrefix:$goalName"
+        val attachmentConfig = artifactAttachmentConfigs[goalKey]
+
+        var command = if (attachmentConfig != null && project.packaging != "pom") {
+            val fileExtension = project.artifact.type
+            val artifactFile = "${project.build.directory}/${project.build.finalName}.${fileExtension}"
+
+            var artifactAttachmentGoal = "nx-maven:attach-artifact -Dartifact=$artifactFile"
+            if (attachmentConfig.requiresMainArtifact) {
+                artifactAttachmentGoal += " -DmainArtifact=true"
+            }
+
+            "$mavenCommand $artifactAttachmentGoal $mainGoal"
+        } else {
+            "$mavenCommand $mainGoal"
+        }
+
+        // Merge configurations like Maven does: execution config dominates, plugin config provides defaults
+        val executionConfig = execution.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
+        val pluginConfig = plugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
+
+        val config = executionConfig ?: pluginConfig
+        config?.let { dom ->
+            dom.getChild("params")?.children?.forEach { param ->
+                // Convert params to -D system properties if needed
+                command += " -D${param.value}"
+            }
+        }
+
+        return command
+    }
 
     fun createNxTargets(
         mavenCommand: String, project: MavenProject
@@ -81,6 +133,7 @@ class NxTargetFactory(
             val goalPrefix = pluginDescriptor.goalPrefix
             val pluginTargetGroup = mutableListOf<String>()
             plugin.executions.forEach { execution ->
+//                val goal = execution.goals.first()
                 execution.goals.forEach { goal ->
 
                     // Skip build-helper attach-artifact goal as it's not relevant for Nx
@@ -89,9 +142,11 @@ class NxTargetFactory(
                     }
 
                     val goalTargetName = "$goalPrefix:$goal@${execution.id}"
-                    val goalTarget = createGoalTarget(mavenCommand, project, goalPrefix, goal, execution, plugin)
+                    val mojoDescriptor = pluginDescriptor.getMojo(goal)
 
-                    val phase = execution.phase ?: pluginDescriptor.getMojo(goal)?.phase
+                    val goalTarget = createGoalTarget(mavenCommand, project, goalPrefix, goal, execution, plugin, mojoDescriptor)
+
+                    val phase = execution.phase ?: mojoDescriptor?.phase
 
                     // Normalize Maven 3 phase names to Maven 4 for backward compatibility
                     val normalizedPhase = when (phase) {
@@ -224,53 +279,20 @@ class NxTargetFactory(
     private fun createGoalTarget(
         mavenCommand: String,
         project: MavenProject,
-        cleanPluginName: String,
+        goalPrefix: String,
         goalName: String,
         execution: PluginExecution,
-        plugin: Plugin
+        plugin: Plugin,
+        mojoDescriptor: MojoDescriptor
     ): NxTarget {
         val options = objectMapper.createObjectNode()
-        var command = if (goalName == "install" && cleanPluginName == "install") {
-            if (project.packaging != "pom") {
-                val fileExtension = project.artifact.type
-                val artifactFile = "${project.build.directory}/${project.build.finalName}.${fileExtension}"
-
-                "$mavenCommand install:install-file -Dfile=$artifactFile -DgroupId=${project.groupId} -DartifactId=${project.artifactId} -Dversion=${project.version} -Dpackaging=${project.packaging} -X -e"
-            } else {
-                "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N -X -e"
-            }
-        } else {
-            "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N -X -e"
-        }
-
-        // Merge configurations like Maven does: execution config dominates, plugin config provides defaults
-//        val executionConfig = execution.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
-//        val pluginConfig = plugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
-//
-//        val config = when {
-//            executionConfig != null && pluginConfig != null -> {
-//                // Deep merge with execution config as dominant (like Maven does)
-//                org.codehaus.plexus.util.xml.Xpp3Dom.mergeXpp3Dom(
-//                    executionConfig,
-//                    org.codehaus.plexus.util.xml.Xpp3Dom(pluginConfig)
-//                )
-//            }
-//            executionConfig != null -> executionConfig
-//            pluginConfig != null -> pluginConfig
-//            else -> null
-//        }
-//        config?.let { dom ->
-//            dom.getChild("params")?.children?.forEach { param ->
-//                // Convert params to -D system properties if needed
-//                command += " -D${param.value}"
-//            }
-//        } ?: ""
+        val command = createMavenCommand(mavenCommand, project, goalPrefix, goalName, execution, plugin)
 
         options.put(
             "command", command
         )
 
-        return NxTarget("nx:run-commands", options, false, true)
+        return NxTarget("nx:run-commands", options, false, mojoDescriptor.isThreadSafe)
     }
 
 
