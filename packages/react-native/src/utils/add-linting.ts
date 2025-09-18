@@ -25,6 +25,7 @@ interface NormalizedSchema {
   skipPackageJson?: boolean;
   addPlugin?: boolean;
   buildable?: boolean;
+  isTsSolutionSetup?: boolean;
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -101,6 +102,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       'public',
       '.cache',
       'node_modules',
+      ...(options.isTsSolutionSetup ? ['**/out-tsc'] : []),
     ]);
   }
 
