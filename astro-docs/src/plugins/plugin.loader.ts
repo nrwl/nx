@@ -176,7 +176,7 @@ export async function generateAllPluginDocs(
               docType: 'generators',
               description: pluginDescription,
               slug,
-              weight: 2.0,
+              weight: 1.0,
               filter: 'type:References',
             },
           });
@@ -206,7 +206,7 @@ export async function generateAllPluginDocs(
               docType: 'executors',
               description: pluginDescription,
               slug,
-              weight: 2.0,
+              weight: 1.1,
               filter: 'type:References',
             },
           });
@@ -235,7 +235,7 @@ export async function generateAllPluginDocs(
               docType: 'migrations',
               description: pluginDescription,
               slug,
-              weight: 0.9,
+              weight: 0.5,
               filter: 'type:References',
             },
           });
