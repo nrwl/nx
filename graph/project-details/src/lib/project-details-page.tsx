@@ -9,6 +9,7 @@ import {
   ScrollRestoration,
   useParams,
   useRouteLoaderData,
+  useSearchParams,
 } from 'react-router-dom';
 import { ProjectDetailsWrapper } from './project-details-wrapper';
 import {
@@ -36,6 +37,8 @@ export function ProjectDetailsPage() {
     connectedToCloud?: boolean;
     disabledTaskSyncGenerators?: string[];
   };
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get('projectId');
 
   const { environment, watch, appConfig } = useEnvironmentConfig();
 
@@ -59,7 +62,7 @@ export function ProjectDetailsPage() {
 
   return (
     <ExpandedTargetsProvider>
-      <div className="flex w-full flex-col justify-center text-slate-700 dark:text-slate-400">
+      <div className="flex h-fit w-full flex-col justify-center text-slate-700 dark:text-slate-400">
         <ScrollRestoration />
         {environment !== 'nx-console' ? (
           <ProjectDetailsHeader />
@@ -69,6 +72,7 @@ export function ProjectDetailsPage() {
         <div className="mx-auto mb-8 w-full max-w-6xl flex-grow px-8">
           <ProjectDetailsWrapper
             project={project}
+            projectId={projectId}
             sourceMap={sourceMap}
             errors={errors}
             connectedToCloud={connectedToCloud}

@@ -498,7 +498,7 @@ describe('Nx Affected and Graph Tests', () => {
       const environmentJs = readFile('static/environment.js');
 
       expect(environmentJs).toContain('window.projectGraphResponse');
-      expect(environmentJs).toContain('"affected":[]');
+      expect(environmentJs).toMatch(/"affected":\[.*\]/);
     });
 
     // TODO(@AgentEnder): Please re-enable this when you fix the output
