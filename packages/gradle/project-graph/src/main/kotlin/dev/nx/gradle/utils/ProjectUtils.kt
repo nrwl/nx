@@ -4,6 +4,7 @@ import dev.nx.gradle.data.*
 import java.io.File
 import java.util.*
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 
 /** Loops through a project and populate dependencies and nodes for each target */
 fun createNodeForProject(
@@ -87,32 +88,32 @@ fun processTargetsForProject(
 
   logger.info("${Date()} ${project}: Process targets")
 
-  val ciTestTargetName = targetNameOverrides["ciTestTargetName"]
-  val ciIntTestTargetName = targetNameOverrides["ciIntTestTargetName"]
+  val ciTestTargetBaseName = targetNameOverrides["ciTestTargetName"]
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
-  val intTestTargetName = targetNameOverrides.getOrDefault("intTestTargetName", "intTest")
 
-  val testTasks = project.getTasksByName("test", false)
-  val intTestTasks = project.getTasksByName("intTest", false)
-  val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
-  val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
+  val testTasks = project.tasks.withType(Test::class.java)
+  val hasCiTestTarget = ciTestTargetBaseName != null && testTasks.isNotEmpty() && atomized
 
   logger.info(
-      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetName, testTasks.size=${testTasks.size}, atomized=$atomized)")
-  logger.info(
-      "${project.name}: hasCiIntTestTarget = $hasCiIntTestTarget (ciIntTestTargetName=$ciIntTestTargetName, intTestTasks.size=${intTestTasks.size}, atomized=$atomized)")
+      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetBaseName, testTasks.size=${testTasks.size}, atomized=$atomized)")
 
   project.tasks.forEach { task ->
     try {
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
-      val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
+      // Apply target name override if applicable
+      val targetName =
+          if (task.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+            targetNameOverrides["testTargetName"]!!
+          } else {
+            task.name
+          }
 
-      // Group task under its group if available
+      // Group task under its group if available, using the overridden name
       task.group
           ?.takeIf { it.isNotBlank() }
-          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(taskName) }
+          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(targetName) }
 
       val target =
           processTask(
@@ -124,47 +125,66 @@ fun processTargetsForProject(
               dependencies,
               targetNameOverrides)
 
-      targets[taskName] = target
+      targets[targetName] = target
 
-      if (hasCiTestTarget && task.name.startsWith("compileTest")) {
-        addTestCiTargets(
-            task.inputs.sourceFiles,
-            projectBuildPath,
-            testTasks.first(),
-            testTargetName,
-            targets,
-            targetGroups,
-            projectRoot,
-            workspaceRoot,
-            ciTestTargetName)
+      val isCompileTestTask =
+          task.name.startsWith("compile") && task.name.contains("test", ignoreCase = true)
+      if (hasCiTestTarget && isCompileTestTask) {
+        // Find the matching test task for this compile task
+        // We need to match based on the actual dependencies between tasks
+        val matchingTestTasks =
+            testTasks.filter { testTask ->
+              if (testTask is Test) {
+                // Check if the test task's classpath includes the compile task's outputs
+                val testClasspath = testTask.classpath.files
+                val compileOutputs = task.outputs.files.files
+                compileOutputs.any { output -> testClasspath.contains(output) }
+              } else {
+                false
+              }
+            }
+
+        matchingTestTasks.forEach {
+          val ciTestTargetName =
+              if (it.name == "test") {
+                ciTestTargetBaseName
+              } else {
+                "$ciTestTargetBaseName-${it.name}"
+              }
+
+          addTestCiTargets(
+              task.inputs.sourceFiles,
+              projectBuildPath,
+              it,
+              targets,
+              targetGroups,
+              projectRoot,
+              workspaceRoot,
+              ciTestTargetName)
+        }
       }
 
-      if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
-        addTestCiTargets(
-            task.inputs.sourceFiles,
-            projectBuildPath,
-            intTestTasks.first(),
-            intTestTargetName,
-            targets,
-            targetGroups,
-            projectRoot,
-            workspaceRoot,
-            ciIntTestTargetName)
-      }
-
-      if (ciTestTargetName != null || ciIntTestTargetName != null) {
+      if (ciTestTargetBaseName != null) {
         val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
         if (task.name == "check") {
           val replacedDependencies =
-              (target["dependsOn"] as? List<*>)?.map { dep ->
-                val dependsOn = dep.toString()
-                if (hasCiTestTarget && dependsOn == "${project.name}:$testTargetName") {
-                  "${project.name}:$ciTestTargetName"
-                } else if (hasCiIntTestTarget &&
-                    dependsOn == "${project.name}:$intTestTargetName") {
-                  "${project.name}:$ciIntTestTargetName"
-                } else {
-                  dep
+              (target["dependsOn"] as? List<*>)?.map { dependency ->
+                val dependsOn = dependency.toString()
+
+                when {
+                  hasCiTestTarget && dependsOn == "${project.name}:$testTargetName" -> {
+                    "${project.name}:$ciTestTargetBaseName"
+                  }
+                  hasCiTestTarget && dependsOn.startsWith("${project.name}:") -> {
+                    val taskName = dependsOn.removePrefix("${project.name}:")
+                    // Check if it's a test task that's not the default test target
+                    if (testTasks.any { it.name == taskName } && taskName != testTargetName) {
+                      "${project.name}:$ciTestTargetBaseName-$taskName"
+                    } else {
+                      dependency
+                    }
+                  }
+                  else -> dependency
                 }
               } ?: emptyList()
 
