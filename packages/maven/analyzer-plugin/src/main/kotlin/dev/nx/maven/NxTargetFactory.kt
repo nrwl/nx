@@ -32,40 +32,37 @@ class NxTargetFactory(
         val requiresAttachment: Boolean = true
     )
 
-    data class BuildStateConfig(
-        val requiresRecord: Boolean = false,
-        val requiresApply: Boolean = false
-    )
-
     private val artifactAttachmentConfigs = mapOf(
         "install:install" to ArtifactAttachmentConfig(requiresMainArtifact = true),
         "spring-boot:repackage" to ArtifactAttachmentConfig(requiresMainArtifact = true)
     )
 
-    // Goals that need build state recorded after execution (produce artifacts/state)
-    private val buildStateRecordConfigs = mapOf(
-        "compiler:compile" to BuildStateConfig(requiresRecord = true),
-        "modello:velocity" to BuildStateConfig(requiresRecord = true),
-        "modello:java" to BuildStateConfig(requiresRecord = true),
-        "build-helper:add-source" to BuildStateConfig(requiresRecord = true),
-        "build-helper:add-test-source" to BuildStateConfig(requiresRecord = true),
-        "antrun:run" to BuildStateConfig(requiresRecord = true), // May generate sources
-        "exec:java" to BuildStateConfig(requiresRecord = true), // May generate sources
-        "jar:jar" to BuildStateConfig(requiresRecord = true),
-        "maven-jar-plugin:jar" to BuildStateConfig(requiresRecord = true)
+    // Goals that need build state applied before execution (consume artifacts/state)
+    private val goalsRequiringApply = setOf(
+        "compiler:compile",
+        "compiler:testCompile",
+        "surefire:test",
+        "failsafe:integration-test",
+        "javadoc:javadoc",
+        "javadoc:jar",
+        "source:jar",
+        "jar:test-jar",
+        "install:install",
+        "deploy:deploy"
     )
 
-    // Goals that need build state applied before execution (consume artifacts/state)
-    private val buildStateApplyConfigs = mapOf(
-        "compiler:testCompile" to BuildStateConfig(requiresApply = true),
-        "surefire:test" to BuildStateConfig(requiresApply = true),
-        "failsafe:integration-test" to BuildStateConfig(requiresApply = true),
-        "javadoc:javadoc" to BuildStateConfig(requiresApply = true),
-        "javadoc:jar" to BuildStateConfig(requiresApply = true),
-        "source:jar" to BuildStateConfig(requiresApply = true),
-        "jar:test-jar" to BuildStateConfig(requiresApply = true),
-        "install:install" to BuildStateConfig(requiresApply = true),
-        "deploy:deploy" to BuildStateConfig(requiresApply = true)
+    // Goals that need build state recorded after execution (produce artifacts/state)
+    private val goalsRequiringRecord = setOf(
+        "compiler:compile",
+        "compiler:testCompile",
+        "modello:velocity",
+        "modello:java",
+        "build-helper:add-source",
+        "build-helper:add-test-source",
+        "antrun:run", // May generate sources
+        "exec:java", // May generate sources
+        "jar:jar",
+        "maven-jar-plugin:jar"
     )
 
     private fun createMavenCommand(
@@ -79,17 +76,14 @@ class NxTargetFactory(
         val mainGoal = "$goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N"
         val goalKey = "$goalPrefix:$goalName"
 
-        // Check build state configurations
-        val recordConfig = buildStateRecordConfigs[goalKey]
-        val applyConfig = buildStateApplyConfigs[goalKey]
 //        val attachmentConfig = artifactAttachmentConfigs[goalKey]
 
         // Build command with build state management
-        var commandParts = mutableListOf<String>()
+        val commandParts = mutableListOf<String>()
         commandParts.add(mavenCommand)
 
         // Add build state apply if needed (before main goal)
-        if (applyConfig?.requiresApply == true) {
+        if (goalKey in goalsRequiringApply) {
             commandParts.add("nx:apply")
         }
 
@@ -109,7 +103,7 @@ class NxTargetFactory(
         commandParts.add(mainGoal)
 
         // Add build state record if needed (after main goal)
-        if (recordConfig?.requiresRecord == true) {
+        if (goalKey in goalsRequiringRecord) {
             commandParts.add("nx:record")
         }
 
