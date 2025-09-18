@@ -16,7 +16,7 @@ import java.io.File
 @Mojo(
     name = "apply",
     requiresProject = true,
-    threadSafe = true
+    threadSafe = false
 )
 class NxBuildStateApplyMojo : AbstractMojo() {
 
@@ -29,22 +29,15 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     @Component
     private lateinit var projectHelper: MavenProjectHelper
 
-    @Parameter(property = "inputFile", defaultValue = "\${project.build.directory}/nx-build-state.json")
+    @Parameter(property = "inputFile", defaultValue = "\${project.build.directory}/nx-build-state.json", readonly = true)
     private lateinit var inputFile: File
-
-    @Parameter(property = "skipIfMissing", defaultValue = "true")
-    private var skipIfMissing: Boolean = true
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
         try {
             if (!inputFile.exists()) {
-                if (skipIfMissing) {
-                    log.info("Build state file not found, skipping: ${inputFile.absolutePath}")
-                    return
-                } else {
-                    throw MojoExecutionException("Build state file not found: ${inputFile.absolutePath}")
-                }
+                log.info("Build state file not found, skipping: ${inputFile.absolutePath}")
+                return
             }
 
             log.info("Reapplying build state for project: ${project.artifactId}")
