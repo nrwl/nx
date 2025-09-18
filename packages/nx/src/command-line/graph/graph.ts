@@ -323,19 +323,33 @@ export async function generateGraph(
     }
   }
 
-  affectedProjects = (
-    await getAffectedGraphNodes(
-      splitArgsIntoNxArgsAndOverrides(
-        args,
-        'affected',
-        {
-          printWarnings: args.affected && !args.print && args.file !== 'stdout',
-        },
-        readNxJson()
-      ).nxArgs,
-      rawGraph
-    )
-  ).map((n) => n.name);
+  try {
+    affectedProjects = (
+      await getAffectedGraphNodes(
+        splitArgsIntoNxArgsAndOverrides(
+          args,
+          'affected',
+          {
+            printWarnings:
+              args.affected && !args.print && args.file !== 'stdout',
+          },
+          readNxJson()
+        ).nxArgs,
+        rawGraph
+      )
+    ).map((n) => n.name);
+  } catch (e) {
+    // if `--affected` is explicitly passed in or
+    // resolved `args.affected` is true, then calculating affected projects
+    // is intended (and expected) so we rethrow the error here.
+    if (args.affected) {
+      throw e;
+    }
+
+    // if `affected` is falsy, and we calculate affected projects for default case
+    // and the operation might fail (i.e: in e2e tests), we fallback to empty array
+    affectedProjects = [];
+  }
 
   if (args.exclude) {
     const invalidExcludes: string[] = [];
