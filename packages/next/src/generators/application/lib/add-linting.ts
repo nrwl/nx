@@ -91,7 +91,10 @@ export async function addLinting(
         },
       })
     );
-    addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
+    addIgnoresToLintConfig(host, options.appProjectRoot, [
+      '.next/**/*',
+      ...(options.isTsSolutionSetup ? ['**/out-tsc'] : []),
+    ]);
   }
 
   if (!options.skipPackageJson) {

@@ -128,6 +128,40 @@ describe('app', () => {
     expect(tsconfig.extends).toEqual('../tsconfig.json');
   });
 
+  it('should not ignore "out-tsc" from eslint', async () => {
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'my-app',
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      install: false,
+      unitTestRunner: 'none',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
+    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+  });
+
+  it('should not ignore "out-tsc" from eslint with flat config', async () => {
+    appTree.write('eslint.config.mjs', 'export default [];');
+
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'my-app',
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      install: false,
+      unitTestRunner: 'none',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    const eslintConfig = appTree.read('my-app/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
+  });
+
   describe('detox', () => {
     it('should create e2e app with directory', async () => {
       await reactNativeApplicationGenerator(appTree, {
@@ -485,6 +519,42 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'my-app-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'webpack',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'my-app/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'webpack',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('my-app/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 });
