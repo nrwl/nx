@@ -43,6 +43,7 @@ class NxTargetFactory(
         "compiler:testCompile",
         "surefire:test",
         "failsafe:integration-test",
+        "japicmp:cmp",
         "javadoc:javadoc",
         "javadoc:jar",
         "source:jar",
