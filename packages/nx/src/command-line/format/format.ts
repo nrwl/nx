@@ -240,12 +240,17 @@ async function check(patterns: string[]): Promise<string[]> {
 
   const prettierPath = getPrettierPath();
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
       { encoding: 'utf-8', windowsHide: false },
       (error, stdout) => {
         if (error) {
+          // The command failed because Prettier threw an error.
+          if (stdout.length === 0) {
+            reject(error);
+          }
+
           // The command failed so there are files with different formatting. Prettier writes them to stdout, newline separated.
           resolve(stdout.trim().split('\n'));
         } else {
