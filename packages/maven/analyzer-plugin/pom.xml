@@ -195,7 +195,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>3.11.0</version>
         <configuration>
-          <goalPrefix>nx-maven</goalPrefix>
+          <goalPrefix>nx</goalPrefix>
           <requiredMavenVersion>3.6.0</requiredMavenVersion>
         </configuration>
       </plugin>
