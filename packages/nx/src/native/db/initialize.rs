@@ -1,4 +1,5 @@
 use crate::native::db::connection::NxDbConnection;
+use rusqlite::vtab::array;
 use rusqlite::{Connection, OpenFlags};
 use std::fs::{File, remove_file};
 use std::path::{Path, PathBuf};
@@ -114,10 +115,14 @@ fn open_database_connection(db_path: &Path) -> anyhow::Result<NxDbConnection> {
             | OpenFlags::SQLITE_OPEN_CREATE
             | OpenFlags::SQLITE_OPEN_URI
             | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-    );
+    )
+    .map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))?;
 
-    conn.map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))
-        .map(NxDbConnection::new)
+    // Load array module for rarray() functionality - needed per connection
+    array::load_module(&conn)
+        .map_err(|e| anyhow::anyhow!("Unable to load array module: {:?}", e))?;
+
+    Ok(NxDbConnection::new(conn))
 }
 
 fn configure_database(connection: &NxDbConnection) -> anyhow::Result<()> {

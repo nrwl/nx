@@ -804,8 +804,9 @@ export class TaskOrchestrator {
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
       }
-      this.runningTasksService.removeRunningTask(task.id);
-      this.runningContinuousTasks.delete(task.id);
+      if (this.runningContinuousTasks.delete(task.id)) {
+        this.runningTasksService.removeRunningTask(task.id);
+      }
     });
     await this.scheduleNextTasksAndReleaseThreads();
     if (this.initializingTaskIds.has(task.id)) {
@@ -1034,7 +1035,9 @@ export class TaskOrchestrator {
         } catch (e) {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         } finally {
-          this.runningTasksService.removeRunningTask(taskId);
+          if (this.runningContinuousTasks.delete(taskId)) {
+            this.runningTasksService.removeRunningTask(taskId);
+          }
         }
       }),
       ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
