@@ -4,7 +4,6 @@ import dev.nx.gradle.data.*
 import java.io.File
 import java.util.*
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.tasks.testing.Test
 
 /** Loops through a project and populate dependencies and nodes for each target */
@@ -128,7 +127,8 @@ fun processTargetsForProject(
 
       targets[targetName] = target
 
-      val isCompileTestTask = task.name.startsWith("compile") && task.name.contains("test", ignoreCase = true)
+      val isCompileTestTask =
+          task.name.startsWith("compile") && task.name.contains("test", ignoreCase = true)
       if (hasCiTestTarget && isCompileTestTask) {
         // Find the matching test task for this compile task
         // We need to match based on the actual dependencies between tasks
@@ -146,11 +146,11 @@ fun processTargetsForProject(
 
         matchingTestTasks.forEach {
           val ciTestTargetName =
-            if (it.name == "test") {
-              ciTestTargetBaseName
-            } else {
-              "$ciTestTargetBaseName-${it.name}"
-            }
+              if (it.name == "test") {
+                ciTestTargetBaseName
+              } else {
+                "$ciTestTargetBaseName-${it.name}"
+              }
 
           addTestCiTargets(
               task.inputs.sourceFiles,
@@ -234,4 +234,3 @@ fun processTargetsForProject(
   logger.info("Final targets in processTargetsForProject: $targets")
   return GradleTargets(targets, targetGroups, externalNodes)
 }
-

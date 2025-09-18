@@ -33,8 +33,7 @@ fun addTestCiTargets(
       projectRoot,
       workspaceRoot,
       ciTestTargetName,
-      ciDependsOn
-  )
+      ciDependsOn)
 
   ensureParentCiTarget(
       targets,
@@ -44,8 +43,7 @@ fun addTestCiTargets(
       testTask,
       projectRoot,
       workspaceRoot,
-      ciDependsOn
-  )
+      ciDependsOn)
 }
 
 private fun processTestFiles(

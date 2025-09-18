@@ -1,10 +1,9 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.*
-import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
 import kotlin.test.*
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
@@ -241,7 +240,9 @@ class ProcessTargetsForProjectTest {
   }
 
   @Test
-  fun `should process multiple test suites with different ci targets when atomized`(@TempDir workspaceDir: File) {
+  fun `should process multiple test suites with different ci targets when atomized`(
+      @TempDir workspaceDir: File
+  ) {
     // Arrange
     val workspaceRoot = workspaceDir.absolutePath
     val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
@@ -293,13 +294,15 @@ class ProcessTargetsForProjectTest {
         }
 
     // Create compile tasks that would trigger CI target creation
-    val compileTestKotlinTask = project.tasks.register("compileTestJava", JavaCompile::class.java).get().apply {
-      source(project.files(unitTestFile1, unitTestFile2))
-    }
+    val compileTestKotlinTask =
+        project.tasks.register("compileTestJava", JavaCompile::class.java).get().apply {
+          source(project.files(unitTestFile1, unitTestFile2))
+        }
 
-    val compileIntegrationTestKotlinTask = project.tasks.register("compileIntegrationTestJava", JavaCompile::class.java).get().apply {
-      source(project.files(integrationTestFile1, integrationTestFile2))
-    }
+    val compileIntegrationTestKotlinTask =
+        project.tasks.register("compileIntegrationTestJava", JavaCompile::class.java).get().apply {
+          source(project.files(integrationTestFile1, integrationTestFile2))
+        }
 
     // Set up classpath dependencies
     testTask.classpath = project.files(compileTestKotlinTask.outputs.files)
@@ -313,9 +316,7 @@ class ProcessTargetsForProjectTest {
         }
 
     val targetNameOverrides =
-        mapOf(
-            "ciTestTargetName" to "ci-test",
-            "ciCheckTargetName" to "ci-check")
+        mapOf("ciTestTargetName" to "ci-test", "ciCheckTargetName" to "ci-check")
 
     val dependencies = mutableSetOf<Dependency>()
 
