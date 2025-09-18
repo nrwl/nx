@@ -55,7 +55,7 @@ nxApi:
 ##### Updates
 
 - Feat: [Polygraph availability](/docs/enterprise/polygraph) (Conformance, Workspace Graph, Custom Workflows)
-- Feat: Nx 21 [continuous tasks](/blog/nx-21-continuous-tasks) support
+- Feat: Nx 21 [continuous tasks](https://nx.dev/blog/nx-21-continuous-tasks) support
 - Feat: Download artifacts button
   - When you view a task that just ran in CI on the NxCloud UI, there is now a button to download any artifacts that task produced directly from your browser
   - This is especially useful if you want to view screenshots/videos of failed e2e tests
@@ -221,7 +221,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
 
 ##### Affected project graph
 
-The affected project graph for pull requests has now made it to the on-prem release! Read the full announcement [here](/blog/ci-affected-graph).
+The affected project graph for pull requests has now made it to the on-prem release! [Read the full announcement here](https://nx.dev/blog/ci-affected-graph).
 
 ##### DTE improvements
 
@@ -256,7 +256,7 @@ We now also make much fewer requests to GitHub (or your other VCS providers) dur
 
 The PR comment containing status updates about your CI execution has had make-over, showing a more clear breakdown of your runs, their duration and the status:
 
-![new PR comment](/nx-cloud/reference/images/new_github_comment.png)
+![new PR comment](../../../../assets/nx-cloud/new_github_comment.png)
 
 ##### Misc Items
 
@@ -292,7 +292,7 @@ When distributing with DTE, up until now, we have been replaying all your tasks 
 
 This is not that useful on big workspaces, with large task affected task graphs as it can be hard to follow all the outputs from all the agents streaming back concurrently.
 
-This release contains the new "CI Table Log View" summary, and you can read all about it [here](/blog/improved-ci-log-with-nx-cloud).
+This release contains the new "CI Table Log View" summary, and you can [read all about it here](https://nx.dev/blog/improved-ci-log-with-nx-cloud).
 
 If you prefer the old logs style, you can always disable the feature via your workspace's settings screen.
 
@@ -305,11 +305,11 @@ This flow was secure enough as is, even if you never rotated your access tokens,
 
 But given you already manage developer access to your NxCloud workspace via the web app, we wanted to tie local cache access to that mechanism as well.
 
-This release contains the new ["Personal Access Tokens"](/blog/personal-access-tokens) feature that now asks developers to login locally before they can use the cache.
+This release contains the new ["Personal Access Tokens"](https://nx.dev/blog/personal-access-tokens) feature that now asks developers to login locally before they can use the cache.
 If they are a member of the workspace, they get a local token stored on their machine that will be used to access the cache.
 The moment they get removed as a member from your workspace, they won't be able to read from the cache anymore.
 
-Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](/blog/personal-access-tokens).
+Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](https://nx.dev/blog/personal-access-tokens).
 
 ##### GitHub App Integration
 
@@ -485,7 +485,7 @@ If you already running DTE, there are a few advantages to upgrading to Agents:
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
 
-![agents_screen](/nx-cloud/reference/images/agents.webp)
+![agents_screen](../../../../assets/nx-cloud/agents.webp)
 
 ##### Task Atomizer and task retries
 
@@ -495,7 +495,7 @@ If you combine this release + upgrade to the latest Nx 18, you will have access 
 
 Along with all the UI changes to support agents (following their logs and track how tasks get distributed,details of which you'll find demoed on [this page](/docs/features/ci-features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
 
-![cipe_top_half_screen](/nx-cloud/reference/images/cipe_top.webp)
+![cipe_top_half_screen](../../../../assets/nx-cloud/cipe_top.webp)
 
 ### 2312.11.7.patch1
 
@@ -518,7 +518,7 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 On the UI, we replaced the runs overview with the new CI Pipeline Executions (CIPE for short) screen:
 
-![cipe_screen](/nx-cloud/reference/images/cipe_screen.webp)
+![cipe_screen](../../../../assets/nx-cloud/cipe_screen.webp)
 
 This screen organises your runs more logically, according to each invocation of your CI pipeline.
 It provides more data around the committer name and commit message and a full analysis of your CIPE once it is completed.
@@ -527,7 +527,7 @@ You can play around with an example on the [Nx Repo](https://staging.nx.app/orgs
 
 There is also a new Analytics screen for your workspaces, to which we'll keep adding new features to better help you optimise your CI pipelines:
 
-![analytics_screen](/nx-cloud/reference/images/analytics_screen.webp)
+![analytics_screen](../../../../assets/nx-cloud/analytics_screen.webp)
 
 Here you can see:
 
@@ -668,7 +668,7 @@ This is one of our biggest Nx Cloud On-Prem releases. It also marks a change in 
 
 A few months ago we announced a complete re-design of the Nx Cloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
 
-You can read more about it in our [announcement blog post](/blog/nx-cloud-3-0-faster-more-efficient-modernized).
+You can read more about it in our [announcement blog post](https://nx.dev/blog/nx-cloud-3-0-faster-more-efficient-modernized).
 
 ##### Pricing updates
 
@@ -692,7 +692,7 @@ We completely re-wrote our Task Distribution engine, which should result in much
 
 We've also added a new internal task queueing system, which should further improve the performance of DTE. While this is an implementation detail which will be automatically enabled in future releases, you can test it out today by setting [`enableMessageQueue: true`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/values.yaml#L18) in your Helm config.
 
-You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog post](/blog/nx-cloud-3-0-faster-more-efficient-modernized).
+You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog post](https://nx.dev/blog/nx-cloud-3-0-faster-more-efficient-modernized).
 
 ##### Misc updates
 
