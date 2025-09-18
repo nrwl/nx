@@ -199,6 +199,8 @@ export type PostTasksExecutionContext = {
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly taskResults: TaskResults;
   readonly argv: string[];
+  readonly startTime: number;
+  readonly endTime: number;
 };
 
 export type PreTasksExecution<TOptions = unknown> = (
