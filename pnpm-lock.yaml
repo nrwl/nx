@@ -1420,6 +1420,19 @@ importers:
         specifier: 1.5.0
         version: 1.5.0(@swc/helpers@0.5.17)
 
+  examples/angular-rspack/csr-css-assets:
+    dependencies:
+      '@nx/angular-rspack':
+        specifier: workspace:*
+        version: link:../../../packages/angular-rspack
+    devDependencies:
+      '@rspack/cli':
+        specifier: 1.5.0
+        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+      '@rspack/core':
+        specifier: 1.5.0
+        version: 1.5.0(@swc/helpers@0.5.17)
+
   examples/angular-rspack/csr-i18n:
     dependencies:
       '@nx/angular-rspack':
