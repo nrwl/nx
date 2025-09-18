@@ -89,7 +89,7 @@ class NxTargetFactory(
                     }
 
                     val goalTargetName = "$goalPrefix:$goal@${execution.id}"
-                    val goalTarget = createGoalTarget(mavenCommand, project, goalPrefix, goal, execution)
+                    val goalTarget = createGoalTarget(mavenCommand, project, goalPrefix, goal, execution, plugin)
 
                     val phase = execution.phase ?: pluginDescriptor.getMojo(goal)?.phase
 
@@ -226,10 +226,11 @@ class NxTargetFactory(
         project: MavenProject,
         cleanPluginName: String,
         goalName: String,
-        execution: PluginExecution
+        execution: PluginExecution,
+        plugin: Plugin
     ): NxTarget {
         val options = objectMapper.createObjectNode()
-        val command = if (goalName == "install" && cleanPluginName == "install") {
+        var command = if (goalName == "install" && cleanPluginName == "install") {
             if (project.packaging != "pom") {
                 val fileExtension = project.artifact.type
                 val artifactFile = "${project.build.directory}/${project.build.finalName}.${fileExtension}"
@@ -241,6 +242,30 @@ class NxTargetFactory(
         } else {
             "$mavenCommand $cleanPluginName:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N -X -e"
         }
+
+        // Merge configurations like Maven does: execution config dominates, plugin config provides defaults
+//        val executionConfig = execution.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
+//        val pluginConfig = plugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
+//
+//        val config = when {
+//            executionConfig != null && pluginConfig != null -> {
+//                // Deep merge with execution config as dominant (like Maven does)
+//                org.codehaus.plexus.util.xml.Xpp3Dom.mergeXpp3Dom(
+//                    executionConfig,
+//                    org.codehaus.plexus.util.xml.Xpp3Dom(pluginConfig)
+//                )
+//            }
+//            executionConfig != null -> executionConfig
+//            pluginConfig != null -> pluginConfig
+//            else -> null
+//        }
+//        config?.let { dom ->
+//            dom.getChild("params")?.children?.forEach { param ->
+//                // Convert params to -D system properties if needed
+//                command += " -D${param.value}"
+//            }
+//        } ?: ""
+
         options.put(
             "command", command
         )
