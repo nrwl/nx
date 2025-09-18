@@ -1,6 +1,8 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.*
+import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
 import kotlin.test.*
 import org.gradle.api.tasks.testing.Test as GradleTest
@@ -278,6 +280,7 @@ class ProcessTargetsForProjectTest {
           group = "verification"
           description = "Runs the unit tests"
           inputs.files(project.files(unitTestFile1, unitTestFile2))
+          testClassesDirs = project.files(File(projectDir, "build/classes/kotlin/test"))
         }
 
     // Create an integration test task
@@ -286,17 +289,16 @@ class ProcessTargetsForProjectTest {
           group = "verification"
           description = "Runs the integration tests"
           inputs.files(project.files(integrationTestFile1, integrationTestFile2))
+          testClassesDirs = project.files(File(projectDir, "build/classes/kotlin/integrationTest"))
         }
 
     // Create compile tasks that would trigger CI target creation
-    val compileTestKotlinTask = project.tasks.register("compileTestKotlin").get().apply {
-      inputs.files(project.files(unitTestFile1, unitTestFile2))
-      outputs.dir(File(projectDir, "build/classes/kotlin/test"))
+    val compileTestKotlinTask = project.tasks.register("compileTestJava", JavaCompile::class.java).get().apply {
+      source(project.files(unitTestFile1, unitTestFile2))
     }
 
-    val compileIntegrationTestKotlinTask = project.tasks.register("compileIntegrationTestKotlin").get().apply {
-      inputs.files(project.files(integrationTestFile1, integrationTestFile2))
-      outputs.dir(File(projectDir, "build/classes/kotlin/integrationTest"))
+    val compileIntegrationTestKotlinTask = project.tasks.register("compileIntegrationTestJava", JavaCompile::class.java).get().apply {
+      source(project.files(integrationTestFile1, integrationTestFile2))
     }
 
     // Set up classpath dependencies
