@@ -105,7 +105,7 @@ class NxTargetFactory(
                 val target = if (hasGoals) {
                     createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
                 } else {
-                    createNoopPhaseTarget(project, phase)
+                    createNoopPhaseTarget(phase)
                 }
 
                 phaseDependsOn[phase] = mutableListOf()
@@ -152,7 +152,8 @@ class NxTargetFactory(
                     val goalTargetName = "$goalPrefix:$goal@${execution.id}"
                     val mojoDescriptor = pluginDescriptor.getMojo(goal)
 
-                    val goalTarget = createSimpleGoalTarget(mavenCommand, project, goalPrefix, goal, execution, mojoDescriptor)
+                    val goalTarget =
+                        createSimpleGoalTarget(mavenCommand, project, goalPrefix, goal, execution, mojoDescriptor)
                     nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
 
                     log.info("Created individual goal target: $goalTargetName")
@@ -219,29 +220,29 @@ class NxTargetFactory(
 
         log.info("Created phase target '$phase' with command: $command")
 
-        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+        val target = NxTarget("nx:run-commands", options, false, analysis.isThreadSafe)
 
-        // Copy caching info from analysis
-        if (analysis.isCacheable) {
-            // Convert inputs to JsonNode array
-            val inputsArray = objectMapper.createArrayNode()
-            analysis.inputs.forEach { input -> inputsArray.add(input) }
-            target.inputs = inputsArray
-
-            // Convert outputs to JsonNode array
-            val outputsArray = objectMapper.createArrayNode()
-            analysis.outputs.forEach { output -> outputsArray.add(output) }
-            target.outputs = outputsArray
-        }
+//        // Copy caching info from analysis
+//        if (analysis.isCacheable) {
+//            // Convert inputs to JsonNode array
+//            val inputsArray = objectMapper.createArrayNode()
+//            analysis.inputs.forEach { input -> inputsArray.add(input) }
+//            target.inputs = inputsArray
+//
+//            // Convert outputs to JsonNode array
+//            val outputsArray = objectMapper.createArrayNode()
+//            analysis.outputs.forEach { output -> outputsArray.add(output) }
+//            target.outputs = outputsArray
+//        }
 
         return target
     }
 
     private fun createNoopPhaseTarget(
-        project: MavenProject, phase: String
+        phase: String
     ): NxTarget {
         log.info("Creating noop target for phase '$phase' (no goals)")
-        return NxTarget("nx:noop", null, false, true)
+        return NxTarget("nx:noop", null, true, true)
     }
 
     private fun createSimpleGoalTarget(
@@ -255,7 +256,8 @@ class NxTargetFactory(
         val options = objectMapper.createObjectNode()
 
         // Simple command without nx:apply/nx:record
-        val command = "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
+        val command =
+            "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
         options.put("command", command)
 
         // No dependencies for goal targets - they can run independently
@@ -302,8 +304,6 @@ class NxTargetFactory(
 
         return targets
     }
-
-
 
 
     private fun getPluginDescriptor(
