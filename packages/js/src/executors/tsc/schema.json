@@ -77,30 +77,6 @@
       },
       "x-priority": "important"
     },
-    "external": {
-      "description": "A list projects to be treated as external. This feature is experimental",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": ["all", "none"]
-        },
-        {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      ],
-      "x-deprecated": "Make sure all dependencies are buildable by running `nx g @nx/js:setup-build`. This option will be removed in Nx 20."
-    },
-    "externalBuildTargets": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "List of target names that annotate a build target for a project",
-      "default": ["build"]
-    },
     "generateLockfile": {
       "type": "boolean",
       "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match. Ignored when `generatePackageJson` is set to `false`.",

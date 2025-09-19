@@ -1,7 +1,7 @@
-import { ExecutorContext, output, readJsonFile } from '@nx/devkit';
-import { globSync } from 'tinyglobby';
+import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import { rmSync } from 'node:fs';
 import { dirname, join, normalize, relative, resolve } from 'path';
+import { globSync } from 'tinyglobby';
 import { copyAssets } from '../../utils/assets';
 import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import type { DependentBuildableProjectNode } from '../../utils/buildable-libs-utils';
@@ -10,12 +10,6 @@ import {
   getHelperDependency,
   HelperDependency,
 } from '../../utils/compiler-helper-dependency';
-import {
-  handleInliningBuild,
-  isInlineGraphEmpty,
-  postProcessInlinedDependencies,
-  type InlineProjectGraph,
-} from '../../utils/inline';
 import {
   copyPackageJson,
   type CopyPackageJsonResult,
@@ -26,7 +20,6 @@ import {
 } from '../../utils/schema';
 import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
 import { getSwcrcPath } from '../../utils/swc/get-swcrc-path';
-import { generateTmpSwcrc } from '../../utils/swc/inline';
 import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 
 function normalizeOptions(
@@ -60,20 +53,6 @@ function normalizeOptions(
 
   if (options.watch == null) {
     options.watch = false;
-  }
-
-  // TODO: put back when inlining story is more stable
-  // if (options.external == null) {
-  //   options.external = 'all';
-  // } else if (Array.isArray(options.external) && options.external.length === 0) {
-  //   options.external = 'none';
-  // }
-
-  if (Array.isArray(options.external) && options.external.length > 0) {
-    const firstItem = options.external[0];
-    if (firstItem === 'all' || firstItem === 'none') {
-      options.external = firstItem;
-    }
   }
 
   const files: FileInputOutput[] = assetGlobsToFiles(
@@ -122,7 +101,6 @@ export async function* swcExecutor(
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
 
   let swcHelperDependency: DependentBuildableProjectNode;
-  let inlineProjectGraph: InlineProjectGraph;
   if (!options.isTsSolutionSetup) {
     const { tmpTsConfig, dependencies } = checkDependencies(
       context,
@@ -142,38 +120,6 @@ export async function* swcExecutor(
 
     if (swcHelperDependency) {
       dependencies.push(swcHelperDependency);
-    }
-
-    inlineProjectGraph = handleInliningBuild(
-      context,
-      options,
-      options.tsConfig
-    );
-
-    if (!isInlineGraphEmpty(inlineProjectGraph)) {
-      if (options.stripLeadingPaths) {
-        throw new Error(`Cannot use --strip-leading-paths with inlining.`);
-      }
-
-      options.projectRoot = '.'; // set to root of workspace to include other libs for type check
-
-      // remap paths for SWC compilation
-      options.inline = true;
-      options.swcCliOptions.swcCwd = '.';
-      options.swcCliOptions.srcPath = options.swcCliOptions.swcCwd;
-      options.swcCliOptions.destPath = join(
-        options.swcCliOptions.destPath.split(normalize('../')).at(-1),
-        options.swcCliOptions.srcPath
-      );
-
-      // tmp swcrc with dependencies to exclude
-      // - buildable libraries
-      // - other libraries that are not dependent on the current project
-      options.swcCliOptions.swcrcPath = generateTmpSwcrc(
-        inlineProjectGraph,
-        options.swcCliOptions.swcrcPath,
-        options.tmpSwcrcPath
-      );
     }
   }
 
@@ -224,11 +170,6 @@ export async function* swcExecutor(
             extraDependencies: swcHelperDependency ? [swcHelperDependency] : [],
           },
           context
-        );
-        postProcessInlinedDependencies(
-          options.outputPath,
-          options.originalProjectRoot,
-          inlineProjectGraph
         );
       }
       removeTmpSwcrc(options.swcCliOptions.swcrcPath);
