@@ -4,6 +4,11 @@
       "version": "21.5.0-beta.2",
       "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
       "factory": "./src/migrations/update-21-5-0/migrate-development-custom-condition"
+    },
+    "remove-external-options-from-js-executors": {
+      "version": "22.0.0-beta.0",
+      "description": "Remove the deprecated `external` and `externalBuildTargets` options from the `@nx/js:swc` and `@nx/js:tsc` executors.",
+      "factory": "./src/migrations/update-22-0-0/remove-external-options-from-js-executors"
     }
   },
   "packageJsonUpdates": {
