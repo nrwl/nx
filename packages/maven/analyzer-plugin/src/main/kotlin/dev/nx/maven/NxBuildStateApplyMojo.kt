@@ -27,6 +27,9 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
 
+    @Parameter(defaultValue = "\${session}", readonly = true, required = true)
+    private lateinit var session: org.apache.maven.execution.MavenSession
+
     @Component
     private lateinit var projectHelper: MavenProjectHelper
 
@@ -36,164 +39,115 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     @Throws(MojoExecutionException::class)
     override fun execute() {
         try {
-            if (!inputFile.exists()) {
-                log.info("Build state file not found, skipping: ${inputFile.absolutePath}")
-                return
-            }
-
-            log.info("Reapplying build state for project: ${project.artifactId}")
-            log.info("Reading build state from: ${inputFile.absolutePath}")
-
-            // Read build state from JSON
-            val buildState = try {
-                objectMapper.readValue(inputFile, BuildState::class.java)
-            } catch (e: Exception) {
-                log.warn("Failed to read build state file: ${e.message}")
-                log.info("Skipping build state application due to corrupted or empty file")
-                return
-            }
-
-            // Reapply compile source roots
-            buildState.compileSourceRoots.forEach { sourceRoot ->
-                val sourceDir = File(sourceRoot)
-                if (sourceDir.exists() && sourceDir.isDirectory) {
-                    project.addCompileSourceRoot(sourceRoot)
-                    log.info("Added compile source root: $sourceRoot")
-                } else {
-                    log.warn("Compile source root does not exist or is not a directory: $sourceRoot")
-                }
-            }
-
-            // Reapply test compile source roots
-            buildState.testCompileSourceRoots.forEach { testSourceRoot ->
-                val testSourceDir = File(testSourceRoot)
-                if (testSourceDir.exists() && testSourceDir.isDirectory) {
-                    project.addTestCompileSourceRoot(testSourceRoot)
-                    log.info("Added test compile source root: $testSourceRoot")
-                } else {
-                    log.warn("Test compile source root does not exist or is not a directory: $testSourceRoot")
-                }
-            }
-
-            // Reapply resources
-            buildState.resources.forEach { resourceDir ->
-                val resourceDirectory = File(resourceDir)
-                if (resourceDirectory.exists() && resourceDirectory.isDirectory) {
-                    val resource = Resource()
-                    resource.directory = resourceDir
-                    project.addResource(resource)
-                    log.info("Added resource directory: $resourceDir")
-                } else {
-                    log.warn("Resource directory does not exist or is not a directory: $resourceDir")
-                }
-            }
-
-            // Reapply test resources
-            buildState.testResources.forEach { testResourceDir ->
-                val testResourceDirectory = File(testResourceDir)
-                if (testResourceDirectory.exists() && testResourceDirectory.isDirectory) {
-                    val testResource = Resource()
-                    testResource.directory = testResourceDir
-                    project.addTestResource(testResource)
-                    log.info("Added test resource directory: $testResourceDir")
-                } else {
-                    log.warn("Test resource directory does not exist or is not a directory: $testResourceDir")
-                }
-            }
-
-//            // Reapply generated source roots
-//            buildState.generatedSourceRoots.forEach { generatedSourceRoot ->
-//                val generatedSourceDir = File(generatedSourceRoot)
-//                if (generatedSourceDir.exists() && generatedSourceDir.isDirectory) {
-//                    project.addCompileSourceRoot(generatedSourceRoot)
-//                    log.info("Added generated source root: $generatedSourceRoot")
-//                } else {
-//                    log.warn("Generated source root does not exist or is not a directory: $generatedSourceRoot")
-//                }
-//            }
-//
-//            // Reapply generated test source roots
-//            buildState.generatedTestSourceRoots.forEach { generatedTestSourceRoot ->
-//                val generatedTestSourceDir = File(generatedTestSourceRoot)
-//                if (generatedTestSourceDir.exists() && generatedTestSourceDir.isDirectory) {
-//                    project.addTestCompileSourceRoot(generatedTestSourceRoot)
-//                    log.info("Added generated test source root: $generatedTestSourceRoot")
-//                } else {
-//                    log.warn("Generated test source root does not exist or is not a directory: $generatedTestSourceRoot")
-//                }
-//            }
-
-            // Reapply output directories
-            buildState.outputDirectory?.let { outputDir ->
-                val outputDirectory = File(outputDir)
-                if (outputDirectory.exists() && outputDirectory.isDirectory) {
-                    project.build.outputDirectory = outputDir
-                    log.info("Set output directory: $outputDir")
-                } else {
-                    log.warn("Output directory does not exist or is not a directory: $outputDir")
-                }
-            }
-
-            buildState.testOutputDirectory?.let { testOutputDir ->
-                val testOutputDirectory = File(testOutputDir)
-                if (testOutputDirectory.exists() && testOutputDirectory.isDirectory) {
-                    project.build.testOutputDirectory = testOutputDir
-                    log.info("Set test output directory: $testOutputDir")
-                } else {
-                    log.warn("Test output directory does not exist or is not a directory: $testOutputDir")
-                }
-            }
-
-            // Note: Classpaths are typically rebuilt from dependencies, so we don't restore them
-            // They are captured for informational purposes and dependency analysis
-            if (buildState.compileClasspath.isNotEmpty()) {
-                log.info("Recorded compile classpath with ${buildState.compileClasspath.size} elements")
-
-                buildState.compileClasspath.forEach { classpathElement ->
-                    log.info("Adding compile classpath element: $classpathElement")
-                    project.compileClasspathElements.add(classpathElement)
-                }
-            }
-            if (buildState.testClasspath.isNotEmpty()) {
-                log.info("Recorded test classpath with ${buildState.testClasspath.size} elements")
-
-                buildState.testClasspath.forEach { classpathElement ->
-                    log.info("Adding test classpath element: $classpathElement")
-                    project.testClasspathElements.add(classpathElement)
-                }
-            }
-
-            // Reapply main artifact
-            buildState.mainArtifact?.let { artifactInfo ->
-                val artifactFile = File(artifactInfo.file)
-                if (artifactFile.exists() && artifactFile.isFile) {
-                    project.artifact.file = artifactFile
-                    log.info("Set main artifact: ${artifactFile.absolutePath}")
-                } else {
-                    log.warn("Main artifact file does not exist: ${artifactInfo.file}")
-                }
-            }
-
-            // Reapply attached artifacts
-            buildState.attachedArtifacts.forEach { artifactInfo ->
-                val artifactFile = File(artifactInfo.file)
-                if (artifactFile.exists() && artifactFile.isFile) {
-                    if (artifactInfo.classifier != null && artifactInfo.classifier.isNotEmpty()) {
-                        projectHelper.attachArtifact(project, artifactInfo.type, artifactInfo.classifier, artifactFile)
-                        log.info("Attached artifact with classifier '${artifactInfo.classifier}': ${artifactFile.absolutePath}")
-                    } else {
-                        projectHelper.attachArtifact(project, artifactInfo.type, artifactFile)
-                        log.info("Attached artifact: ${artifactFile.absolutePath}")
-                    }
-                } else {
-                    log.warn("Attached artifact file does not exist: ${artifactInfo.file}")
-                }
-            }
-
-            log.info("Successfully reapplied build state for project: ${project.artifactId}")
-
+            applyDependencyBuildStates()
+            applyCurrentProjectBuildState()
         } catch (e: Exception) {
             throw MojoExecutionException("Failed to reapply build state", e)
+        }
+    }
+
+    private fun applyCurrentProjectBuildState() {
+        if (!inputFile.exists()) {
+            log.info("Build state file not found, skipping: ${inputFile.absolutePath}")
+            return
+        }
+
+        val buildState = try {
+            objectMapper.readValue(inputFile, BuildState::class.java)
+        } catch (e: Exception) {
+            log.warn("Failed to read build state file: ${e.message}")
+            return
+        }
+
+        log.info("Applying build state for project: ${project.artifactId}")
+
+        // Apply source roots
+        buildState.compileSourceRoots.forEach { addIfExists(it) { project.addCompileSourceRoot(it) } }
+        buildState.testCompileSourceRoots.forEach { addIfExists(it) { project.addTestCompileSourceRoot(it) } }
+
+        // Apply resources
+        buildState.resources.forEach { addResourceIfExists(it, project::addResource) }
+        buildState.testResources.forEach { addResourceIfExists(it, project::addTestResource) }
+
+        // Apply output directories
+        buildState.outputDirectory?.let { if (File(it).isDirectory) project.build.outputDirectory = it }
+        buildState.testOutputDirectory?.let { if (File(it).isDirectory) project.build.testOutputDirectory = it }
+
+        // Apply classpaths (only JAR files to avoid workspace conflicts)
+        buildState.compileClasspath.filter { it.endsWith(".jar") }.forEach { project.compileClasspathElements.add(it) }
+        buildState.testClasspath.filter { it.endsWith(".jar") }.forEach { project.testClasspathElements.add(it) }
+
+        // Apply artifacts
+        applyBuildStateToProject(project, buildState)
+
+        log.info("Applied build state for project: ${project.artifactId}")
+    }
+
+    private fun addIfExists(path: String, action: () -> Unit) {
+        if (File(path).isDirectory) action() else log.warn("Directory not found: $path")
+    }
+
+    private fun addResourceIfExists(path: String, action: (Resource) -> Unit) {
+        if (File(path).isDirectory) {
+            val resource = Resource().apply { directory = path }
+            action(resource)
+        } else {
+            log.warn("Resource directory not found: $path")
+        }
+    }
+
+    private fun applyDependencyBuildStates() {
+        val reactorProjects = session.projects.associateBy { "${it.groupId}:${it.artifactId}" }
+
+        val dependencies = (project.dependencies.orEmpty().map { "${it.groupId}:${it.artifactId}" } +
+                           project.buildPlugins.orEmpty().map { "${it.groupId}:${it.artifactId}" }).toSet()
+
+        val dependenciesToApply = dependencies.parallelStream()
+            .map { dep ->
+                reactorProjects[dep]?.let { depProject ->
+                    val stateFile = File(depProject.build.directory, "nx-build-state.json")
+                    if (stateFile.exists()) depProject to stateFile else null
+                }
+            }
+            .filter { it != null }
+            .toList()
+            .filterNotNull()
+
+        if (dependenciesToApply.isNotEmpty()) {
+            log.info("Applying build state to ${dependenciesToApply.size} dependencies...")
+            dependenciesToApply.parallelStream().forEach { (depProject, stateFile) ->
+                try {
+                    val buildState = objectMapper.readValue(stateFile, BuildState::class.java)
+                    applyBuildStateToProject(depProject, buildState)
+                } catch (e: Exception) {
+                    log.warn("Failed to apply build state to ${depProject.artifactId}: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun applyBuildStateToProject(targetProject: MavenProject, buildState: BuildState) {
+        // Apply main artifact
+        buildState.mainArtifact?.let { artifact ->
+            val file = File(artifact.file)
+            if (file.isFile) targetProject.artifact.file = file
+        }
+
+        // Apply attached artifacts
+        buildState.attachedArtifacts.forEach { artifact ->
+            val file = File(artifact.file)
+            if (file.isFile) {
+                if (artifact.classifier.isNullOrEmpty()) {
+                    projectHelper.attachArtifact(targetProject, artifact.type, file)
+                } else {
+                    projectHelper.attachArtifact(targetProject, artifact.type, artifact.classifier, file)
+                }
+            }
+        }
+
+        // Apply outputTimestamp
+        buildState.outputTimestamp?.let {
+            targetProject.properties.setProperty("project.build.outputTimestamp", it)
         }
     }
 }

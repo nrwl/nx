@@ -132,6 +132,12 @@ class NxBuildStateRecordMojo : AbstractMojo() {
 
             log.info("Captured ${attachedArtifacts.size} attached artifacts")
 
+            // Capture project.build.outputTimestamp for reproducible builds
+            val outputTimestamp = project.properties.getProperty("project.build.outputTimestamp")
+            if (outputTimestamp != null) {
+                log.info("Captured outputTimestamp: $outputTimestamp")
+            }
+
             // Create current build state
             val currentState = BuildState(
                 compileSourceRoots = compileSourceRoots,
@@ -145,7 +151,8 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                 compileClasspath = compileClasspath,
                 testClasspath = testClasspath,
                 mainArtifact = mainArtifact,
-                attachedArtifacts = attachedArtifacts
+                attachedArtifacts = attachedArtifacts,
+                outputTimestamp = outputTimestamp
             )
 
             // Don't merge - just use current state to avoid duplicates
