@@ -33,7 +33,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('<build>');
       expect(updatedPom).toContain('<plugins>');
       expect(updatedPom).toContain('dev.nx.maven');
-      expect(updatedPom).toContain('nx-maven-analyzer-plugin');
+      expect(updatedPom).toContain('nx-maven-plugin');
       expect(updatedPom).toContain('0.0.1-SNAPSHOT');
     });
 
@@ -65,7 +65,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('<finalName>test-project</finalName>');
       expect(updatedPom).toContain('<plugins>');
       expect(updatedPom).toContain('dev.nx.maven');
-      expect(updatedPom).toContain('nx-maven-analyzer-plugin');
+      expect(updatedPom).toContain('nx-maven-plugin');
       expect(updatedPom).toContain('0.0.1-SNAPSHOT');
     });
 
@@ -101,7 +101,7 @@ describe('Maven Init Generator', () => {
       const updatedPom = tree.read('pom.xml', 'utf-8')!;
       expect(updatedPom).toContain('maven-compiler-plugin');
       expect(updatedPom).toContain('dev.nx.maven');
-      expect(updatedPom).toContain('nx-maven-analyzer-plugin');
+      expect(updatedPom).toContain('nx-maven-plugin');
       expect(updatedPom).toContain('0.0.1-SNAPSHOT');
     });
 
@@ -120,7 +120,7 @@ describe('Maven Init Generator', () => {
     <plugins>
       <plugin>
         <groupId>dev.nx.maven</groupId>
-        <artifactId>nx-maven-analyzer-plugin</artifactId>
+        <artifactId>nx-maven-plugin</artifactId>
         <version>0.0.1-SNAPSHOT</version>
       </plugin>
     </plugins>
@@ -135,7 +135,7 @@ describe('Maven Init Generator', () => {
 
       // Assert
       const updatedPom = tree.read('pom.xml', 'utf-8')!;
-      const pluginOccurrences = (updatedPom.match(/nx-maven-analyzer-plugin/g) || []).length;
+      const pluginOccurrences = (updatedPom.match(/nx-maven-plugin/g) || []).length;
       expect(pluginOccurrences).toBe(1);
     });
 
@@ -179,7 +179,7 @@ describe('Maven Init Generator', () => {
       // The XML parser should fix the malformed XML and add the plugin
       const updatedPom = tree.read('pom.xml', 'utf-8')!;
       expect(updatedPom).toContain('dev.nx.maven');
-      expect(updatedPom).toContain('nx-maven-analyzer-plugin');
+      expect(updatedPom).toContain('nx-maven-plugin');
       expect(updatedPom).toContain('&lt;!-- Missing closing tag');
     });
   });
