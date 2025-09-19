@@ -520,8 +520,6 @@
           - [generators](/technologies/build-tools/rspack/api/generators)
             - [configuration](/technologies/build-tools/rspack/api/generators/configuration)
             - [init](/technologies/build-tools/rspack/api/generators/init)
-            - [preset](/technologies/build-tools/rspack/api/generators/preset)
-            - [application](/technologies/build-tools/rspack/api/generators/application)
             - [convert-webpack](/technologies/build-tools/rspack/api/generators/convert-webpack)
             - [convert-config-to-rspack-plugin](/technologies/build-tools/rspack/api/generators/convert-config-to-rspack-plugin)
             - [convert-to-inferred](/technologies/build-tools/rspack/api/generators/convert-to-inferred)

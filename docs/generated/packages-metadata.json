@@ -5428,24 +5428,6 @@
         "type": "generator"
       },
       {
-        "description": "React preset generator.",
-        "file": "generated/packages/rspack/generators/preset.json",
-        "hidden": true,
-        "name": "preset",
-        "originalFilePath": "/packages/rspack/src/generators/preset/schema.json",
-        "path": "rspack/generators/preset",
-        "type": "generator"
-      },
-      {
-        "description": "React application generator.",
-        "file": "generated/packages/rspack/generators/application.json",
-        "hidden": false,
-        "name": "application",
-        "originalFilePath": "/packages/rspack/src/generators/application/schema.json",
-        "path": "rspack/generators/application",
-        "type": "generator"
-      },
-      {
         "description": "Convert a webpack application to use rspack.",
         "file": "generated/packages/rspack/generators/convert-webpack.json",
         "hidden": false,

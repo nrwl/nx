@@ -4313,22 +4313,6 @@
                             "disableCollapsible": false
                           },
                           {
-                            "id": "preset",
-                            "path": "/technologies/build-tools/rspack/api/generators/preset",
-                            "name": "preset",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
-                            "id": "application",
-                            "path": "/technologies/build-tools/rspack/api/generators/application",
-                            "name": "application",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
                             "id": "convert-webpack",
                             "path": "/technologies/build-tools/rspack/api/generators/convert-webpack",
                             "name": "convert-webpack",
