@@ -26,6 +26,9 @@
       "path": "../ui-icons"
     },
     {
+      "path": "../feature-search"
+    },
+    {
       "path": "../data-access-documents"
     },
     {

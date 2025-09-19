@@ -1,4 +1,5 @@
 'use client';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { MoreBlogs } from './more-blogs';
 import { FeaturedBlogs } from './featured-blogs';
@@ -73,25 +74,52 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   return (
     <main id="main" role="main" className="w-full py-8">
       <div className="mx-auto mb-8 w-full max-w-[1088px] px-8">
-        <div className="mb-12 mt-20 flex items-center justify-between">
-          <header>
-            <h1
-              id="blog-title"
-              className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
-            >
-              {selectedFilterHeading}
-            </h1>
-          </header>
-          <div className="flex items-center justify-end md:justify-start">
-            <Filters
-              blogs={blogPosts}
-              filters={filters}
-              initialSelectedFilter={initialSelectedFilter}
-              setFilteredList={setFilteredList}
-              setSelectedFilterHeading={setSelectedFilterHeading}
-            />
+        {process.env.NEXT_PUBLIC_ASTRO_URL ? (
+          <>
+            <header className="mb-8 mt-20">
+              <h1
+                id="blog-title"
+                className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
+              >
+                {selectedFilterHeading}
+              </h1>
+            </header>
+            <div className="mb-12 flex items-center justify-between">
+              <div className="flex items-center">
+                <Filters
+                  blogs={blogPosts}
+                  filters={filters}
+                  initialSelectedFilter={initialSelectedFilter}
+                  setFilteredList={setFilteredList}
+                  setSelectedFilterHeading={setSelectedFilterHeading}
+                />
+              </div>
+              <div className="flex w-48 items-center justify-end md:justify-start">
+                <AlgoliaSearch blogOnly={true} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mb-12 mt-20 flex items-center justify-between">
+            <header>
+              <h1
+                id="blog-title"
+                className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
+              >
+                {selectedFilterHeading}
+              </h1>
+            </header>
+            <div className="flex items-center justify-end md:justify-start">
+              <Filters
+                blogs={blogPosts}
+                filters={filters}
+                initialSelectedFilter={initialSelectedFilter}
+                setFilteredList={setFilteredList}
+                setSelectedFilterHeading={setSelectedFilterHeading}
+              />
+            </div>
           </div>
-        </div>
+        )}
         <FeaturedBlogs blogs={firstFiveBlogs} />
         {!!remainingBlogs.length && (
           <>
