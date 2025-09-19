@@ -3,5 +3,35 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/gradle/batch-runner/src",
   "projectType": "library",
-  "tags": []
+  "tags": [],
+  "targets": {
+    "assemble": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "batch-runner:assemble"
+      },
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/build.gradle.kts",
+        "{projectRoot}/settings.gradle.kts"
+      ],
+      "outputs": ["{projectRoot}/build"],
+      "cache": true
+    },
+    "test": {
+      "command": "./gradlew :batch-runner:test",
+      "options": {
+        "args": []
+      },
+      "cache": true
+    },
+    "lint": {
+      "command": "./gradlew :batch-runner:ktfmtCheck",
+      "cache": true
+    },
+    "format": {
+      "command": "./gradlew :batch-runner:ktfmtFormat",
+      "cache": true
+    }
+  }
 }
