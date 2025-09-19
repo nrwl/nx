@@ -81,7 +81,7 @@ crossterm = { version = "0.29.0", features = ["event-stream", "use-dev-tty"] }
 portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1e89eeb4832fb35ae095564dce34c29" }
 ignore-files = "2.1.0"
 fs4 = "0.12.0"
-ratatui = { version = "0.29", features = ["scrolling-regions"] }
+ratatui = { version = "0.29" }
 reqwest = { version = "0.12.22", default-features = false, features = [
     "rustls-tls-native-roots",
 ] }

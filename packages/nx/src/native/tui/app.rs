@@ -3,11 +3,11 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use ratatui::layout::{Alignment, Rect, Size};
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Gauge, Paragraph, Widget};
 use std::collections::HashMap;
 use std::io;
 use std::sync::{Arc, Mutex};
@@ -15,6 +15,7 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
 use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
+use tui_term::widget::PseudoTerminal;
 
 use crate::native::tui::tui::Tui;
 use crate::native::{
@@ -35,7 +36,7 @@ use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::config::TuiConfig;
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::RunMode;
+use super::lifecycle::{RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -48,6 +49,7 @@ pub struct App {
     pub quit_at: Option<std::time::Instant>,
     focus: Focus,
     run_mode: RunMode,
+    tui_mode: TuiMode,
     previous_focus: Focus,
     done_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
     forced_shutdown_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
@@ -68,6 +70,14 @@ pub struct App {
     resize_debounce_timer: Option<u128>, // Timer for debouncing resize events
     // task id -> pty instance
     pty_instances: HashMap<String, Arc<PtyInstance>>,
+    // Track scrollback line count per task for incremental rendering
+    task_scrollback_lines: HashMap<String, usize>,
+    // Track last rendered scrollback lines per task for buffered rendering
+    task_last_rendered_scrollback: HashMap<String, usize>,
+    // Counter for buffering scrollback renders (render every 20th iteration)
+    scrollback_render_counter: u32,
+    // Track total lines inserted above TUI for cleanup on exit
+    total_inserted_lines: u32,
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     pinned_tasks: Vec<String>,
     task_graph: TaskGraph,
@@ -76,6 +86,7 @@ pub struct App {
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
     estimated_task_timings: HashMap<String, i64>,
+    // Note: Inline rendering is handled within this App, no separate instance needed
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,6 +98,13 @@ pub enum Focus {
 }
 
 impl App {
+    pub fn get_tui_mode(&self) -> TuiMode {
+        self.tui_mode
+    }
+
+    fn should_use_inline_layout(&self) -> bool {
+        matches!(self.tui_mode, TuiMode::Inline)
+    }
     pub fn new(
         tasks: Vec<Task>,
         initiating_tasks: HashSet<String>,
@@ -95,6 +113,7 @@ impl App {
         tui_config: TuiConfig,
         title_text: String,
         task_graph: TaskGraph,
+        tui_mode: TuiMode,
     ) -> Result<Self> {
         let task_count = get_task_count(&task_graph);
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
@@ -126,8 +145,12 @@ impl App {
 
         let main_terminal_pane_data = TerminalPaneData::new();
 
+        // Note: Inline rendering is now handled as a mode within the main app
+        debug!("🚀 App::new - TUI mode: {:?}", tui_mode);
+
         Ok(Self {
             run_mode,
+            tui_mode,
             components,
             pinned_tasks,
             quit_at: None,
@@ -148,6 +171,10 @@ impl App {
             action_tx: None,
             resize_debounce_timer: None,
             pty_instances: HashMap::new(),
+            task_scrollback_lines: HashMap::new(),
+            task_last_rendered_scrollback: HashMap::new(),
+            scrollback_render_counter: 0,
+            total_inserted_lines: 0,
             selection_manager,
             task_graph,
             task_status_map,
@@ -252,7 +279,8 @@ impl App {
         } else {
             // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
             // Tasks not run within a pseudo-terminal need a new pty instance to print output
-            let pty = PtyInstance::non_interactive();
+            let (rows, cols) = self.calculate_pty_dimensions_for_mode();
+            let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
 
             // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
             let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
@@ -347,15 +375,27 @@ impl App {
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        debug!("Registering interactive task: {task_id}");
+        debug!(
+            "🔗 Registering interactive task: {} (mode: {:?})",
+            task_id, self.tui_mode
+        );
+        // Same logic for both full-screen and inline modes - the difference is in rendering, not task management
         let pty =
             PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
-        self.register_running_task(task_id, pty)
+        self.register_running_task(task_id, pty);
     }
 
     pub fn register_running_non_interactive_task(&mut self, task_id: String) {
-        debug!("Registering non-interactive task: {task_id}");
-        let pty = PtyInstance::non_interactive();
+        debug!(
+            "🔗 Registering NON-interactive task: {} (mode: {:?})",
+            task_id, self.tui_mode
+        );
+        debug!(
+            "❌ ISSUE: Task {} is being registered as NON-interactive - won't show in inline TUI!",
+            task_id
+        );
+        let (rows, cols) = self.calculate_pty_dimensions_for_mode();
+        let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
         self.register_pty_instance(&task_id, pty);
         self.update_task_status(task_id.clone(), TaskStatus::InProgress);
         // Ensure the pty instances get resized appropriately
@@ -893,12 +933,24 @@ impl App {
                 debug!("Debug mode: {}", self.debug_mode);
             }
             Action::Render => {
+                // For inline TUI, render scrollback content above the TUI using insert_before
+                if self.should_use_inline_layout() {
+                    self.render_scrollback_above_tui(tui);
+                }
+
                 tui.draw(|f| {
                     let area = f.area();
+
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
                     if self.frame_area.is_none() {
                         self.frame_area = Some(area);
                     }
+
+                    if self.should_use_inline_layout() {
+                        self.render_inline_layout(f, area);
+                        return;
+                    }
+
                     // Determine the required layout areas for the tasks list and terminal panes using the LayoutManager
                     if self.layout_areas.is_none() {
                         self.recalculate_layout_areas();
@@ -1532,44 +1584,54 @@ impl App {
 
     /// Actually processes the resize event by updating PTY dimensions.
     fn handle_pty_resize(&mut self) -> io::Result<()> {
-        if self.layout_areas.is_none() {
-            return Ok(());
-        }
+        match &self.tui_mode {
+            TuiMode::FullScreen => {
+                if self.layout_areas.is_none() {
+                    return Ok(());
+                }
 
-        let mut needs_sort = false;
+                let mut needs_sort = false;
 
-        for (pane_idx, pane_area) in self
-            .layout_areas
-            .as_ref()
-            .unwrap()
-            .terminal_panes
-            .iter()
-            .enumerate()
-        {
-            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            if let Some(pty) = terminal_pane_data.pty.as_ref() {
-                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*pane_area);
+                for (pane_idx, pane_area) in self
+                    .layout_areas
+                    .as_ref()
+                    .unwrap()
+                    .terminal_panes
+                    .iter()
+                    .enumerate()
+                {
+                    let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                    if let Some(pty) = terminal_pane_data.pty.as_ref() {
+                        let (pty_height, pty_width) =
+                            TerminalPane::calculate_pty_dimensions(*pane_area);
 
-                // Get current dimensions before resize
-                let old_rows = if let Some(screen) = pty.get_screen() {
-                    let (rows, _) = screen.size();
-                    rows
-                } else {
-                    0
-                };
-                let mut pty_clone = pty.as_ref().clone();
-                pty_clone.resize(pty_height, pty_width)?;
+                        // Get current dimensions before resize
+                        let old_rows = if let Some(screen) = pty.get_screen() {
+                            let (rows, _) = screen.size();
+                            rows
+                        } else {
+                            0
+                        };
+                        let mut pty_clone = pty.as_ref().clone();
+                        pty_clone.resize(pty_height, pty_width)?;
 
-                // If dimensions changed, mark for sort
-                if old_rows != pty_height {
-                    needs_sort = true;
+                        // If dimensions changed, mark for sort
+                        if old_rows != pty_height {
+                            needs_sort = true;
+                        }
+                    }
+                }
+
+                // Sort tasks if needed after all resizing is complete
+                if needs_sort {
+                    self.dispatch_action(Action::SortTasks);
                 }
             }
-        }
-
-        // Sort tasks if needed after all resizing is complete
-        if needs_sort {
-            self.dispatch_action(Action::SortTasks);
+            TuiMode::Inline => {
+                // Inline viewport doesn't support resize events, so PTY instances
+                // are initialized with correct dimensions from the start
+                debug!("Inline mode doesn't support PTY resize - dimensions set during init");
+            }
         }
 
         Ok(())
@@ -1579,11 +1641,51 @@ impl App {
         self.layout_manager.get_task_list_visibility() == TaskListVisibility::Hidden
     }
 
-    fn register_pty_instance(&mut self, task_id: &str, pty: PtyInstance) {
-        // Access the contents of the External
-        let pty = Arc::new(pty);
+    fn register_pty_instance(&mut self, task_id: &str, mut pty: PtyInstance) {
+        // Resize PTY before wrapping in Arc if in inline mode
+        if matches!(&self.tui_mode, TuiMode::Inline) {
+            if let Some(frame_area) = self.frame_area {
+                // Reserve space for status/progress bars (roughly 3 lines)
+                let inline_content_height = frame_area.height.saturating_sub(6);
+                let inline_content_width = frame_area.width;
+                pty.resize(inline_content_height, inline_content_width)
+                    .unwrap();
+            } else {
+                // Fallback to reasonable defaults if no frame area yet
+                pty.resize(20, 80).unwrap();
+            }
+        }
 
+        // Wrap in Arc after resizing
+        let pty = Arc::new(pty);
         self.pty_instances.insert(task_id.to_string(), pty);
+
+        // Initialize scrollback line tracking for this task
+        self.task_scrollback_lines.insert(task_id.to_string(), 0);
+        self.task_last_rendered_scrollback
+            .insert(task_id.to_string(), 0);
+    }
+
+    /// Calculate appropriate PTY dimensions based on the current TUI mode
+    fn calculate_pty_dimensions_for_mode(&self) -> (u16, u16) {
+        match &self.tui_mode {
+            TuiMode::FullScreen => {
+                // For fullscreen, use reasonable defaults that will be resized later by terminal panes
+                (24, 80)
+            }
+            TuiMode::Inline => {
+                // For inline mode, calculate dimensions based on available space
+                if let Some(frame_area) = self.frame_area {
+                    // Reserve space for status/progress bars (roughly 6 lines)
+                    let inline_content_height = frame_area.height.saturating_sub(3);
+                    let inline_content_width = frame_area.width;
+                    (inline_content_height, inline_content_width)
+                } else {
+                    // Fallback to reasonable defaults if no frame area yet
+                    (20, 80)
+                }
+            }
+        }
     }
 
     // Writes the given output to the given parser, used for the case where a task is a cache hit, or when it is run outside of the rust pseudo-terminal
@@ -1648,13 +1750,24 @@ impl App {
     }
 
     pub fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
+        let is_connected = messenger.is_connected();
+        debug!(
+            "🔗 Setting console messenger: is_connected={}",
+            is_connected
+        );
         self.console_messenger = Some(messenger);
-        if self
-            .console_messenger
-            .as_ref()
-            .is_some_and(|c| c.is_connected())
-        {
-            self.dispatch_action(Action::ConsoleMessengerAvailable(true));
+
+        // ALWAYS dispatch ConsoleMessengerAvailable(true) regardless of connection status
+        // The TUI should work even without Nx Console connection
+        debug!(
+            "✅ Dispatching ConsoleMessengerAvailable(true) - TUI should work with or without console connection"
+        );
+        self.dispatch_action(Action::ConsoleMessengerAvailable(true));
+
+        if !is_connected {
+            debug!(
+                "ℹ️ Console messenger is not connected - Nx Console features will be disabled, but TUI will work normally"
+            );
         }
     }
 
@@ -1882,5 +1995,258 @@ impl App {
         let failed_deps =
             get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
         failed_deps.into_iter().next()
+    }
+
+    // Inline rendering methods
+    fn render_inline_layout(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Put terminal content at the top, status/progress at bottom
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Max(f.area().height.saturating_sub(8)), // Terminal output FIRST (at top)
+                Constraint::Length(4),                              // Status bar (smaller)
+                Constraint::Length(4),                              // Progress bar (minimal)
+            ])
+            .split(area);
+
+        // Render main content section FIRST (terminal at top)
+        self.render_inline_main_content(f, chunks[0]);
+
+        // Render status section below
+        self.render_inline_status(f, chunks[1]);
+
+        // Render progress section at bottom
+        self.render_inline_progress(f, chunks[2]);
+    }
+
+    fn render_inline_status(&self, f: &mut ratatui::Frame, area: Rect) {
+        let current_task = self.get_current_running_task();
+        let status_text = if let Some(task_id) = current_task {
+            format!(" Running: {} ", task_id)
+        } else {
+            " Idle ".to_string()
+        };
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(20),    // Status text
+                Constraint::Length(30), // Help text
+            ])
+            .split(area);
+
+        let status = Paragraph::new(status_text)
+            .style(Style::default().fg(THEME.primary_fg))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Status ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            );
+
+        let help = Paragraph::new(" Press 'q', Ctrl+C, or ESC to exit ")
+            .style(Style::default().fg(THEME.warning))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Help ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            );
+
+        f.render_widget(status, chunks[0]);
+        f.render_widget(help, chunks[1]);
+    }
+
+    fn render_inline_progress(&self, f: &mut ratatui::Frame, area: Rect) {
+        let completed_count = self.get_completed_task_count();
+        let total_count = self.task_status_map.len();
+
+        let progress = if total_count > 0 {
+            (completed_count as f64 / total_count as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let gauge = Gauge::default()
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Progress ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            )
+            .gauge_style(Style::default().fg(THEME.success))
+            .percent(progress as u16)
+            .label(format!("{}/{} tasks", completed_count, total_count));
+
+        f.render_widget(gauge, area);
+    }
+
+    fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Show running task output if available, otherwise show task list
+        if let Some(current_task) = self.get_current_running_task() {
+            // Clone the Arc to avoid borrow issues
+            if let Some(pty) = self.pty_instances.get(&current_task).cloned() {
+                self.render_inline_task_output(f, area, &current_task, &pty);
+                return;
+            }
+        }
+
+        // Fallback: render task list
+        self.render_inline_task_list(f, area);
+    }
+
+    fn render_inline_task_output(
+        &mut self,
+        f: &mut ratatui::Frame,
+        area: Rect,
+        _task_name: &str,
+        pty: &Arc<PtyInstance>,
+    ) {
+        // Scrollback is now handled separately via terminal.insert_before in render_scrollback_above_tui
+        // Just render the current terminal screen here
+        if let Some(screen) = pty.get_screen() {
+            let block = Block::default()
+                .borders(Borders::NONE)
+                // .title(format!(" {} ", task_name))
+                .border_style(Style::default().fg(THEME.primary_fg));
+
+            // Use PseudoTerminal with block, just like terminal_pane does
+            let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+            f.render_widget(pseudo_term, area);
+        }
+    }
+
+    fn render_inline_task_list(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Reuse existing TasksList component but in simplified mode
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            let _ = tasks_list.draw(f, area);
+        }
+    }
+
+    fn render_scrollback_above_tui(&mut self, tui: &mut Tui) {
+        // Increment render counter
+        self.scrollback_render_counter += 1;
+
+        // Only render scrollback every 20th iteration to batch updates for VSCode
+        let should_render_scrollback = self.scrollback_render_counter % 20 == 0;
+
+        if !should_render_scrollback {
+            return;
+        }
+
+        // Get the current running task and its buffered scrollback content
+        if let Some(current_task) = self.get_current_running_task() {
+            if let Some(pty) = self.pty_instances.get(&current_task).cloned() {
+                // Get last rendered scrollback line count for this task
+                let last_rendered_lines = self
+                    .task_last_rendered_scrollback
+                    .get(&current_task)
+                    .copied()
+                    .unwrap_or(0);
+
+                // Get buffered scrollback content since last render (accumulated over ~10 iterations)
+                let buffered_scrollback_lines =
+                    pty.get_buffered_scrollback_content_for_inline(last_rendered_lines);
+
+                // Update tracking for next buffered render
+                let current_scrollback_lines = pty.get_scrollback_line_count();
+                self.task_scrollback_lines
+                    .insert(current_task.clone(), current_scrollback_lines);
+
+                // Render buffered scrollback above TUI using terminal.insert_before
+                if !buffered_scrollback_lines.is_empty() {
+                    let height = (buffered_scrollback_lines.len()) as u16; // +1 for reset line
+                    let _ = tui.insert_before(height, |buf| {
+                        // Convert buffered scrollback lines to ratatui Lines
+                        let mut lines: Vec<Line> = buffered_scrollback_lines
+                            .iter()
+                            .map(|line| Line::from(line.as_str()))
+                            .collect();
+
+                        // Add a reset line at the end to ensure clean state for TUI below
+                        lines.push(Line::from("\x1b[0m"));
+
+                        // Create a paragraph with the buffered scrollback content + reset
+                        let paragraph =
+                            Paragraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
+
+                        // Render using the Widget trait
+                        paragraph.render(buf.area, buf);
+                    });
+
+                    // Track total lines inserted for cleanup on exit
+                    self.total_inserted_lines += height as u32;
+
+                    // Update last rendered count after successful render
+                    self.task_last_rendered_scrollback
+                        .insert(current_task.clone(), current_scrollback_lines);
+
+                    debug!(
+                        "Rendered {} buffered scrollback lines above TUI for {} (total scrollback: {}, total inserted: {}) [every 20th render]",
+                        buffered_scrollback_lines.len(),
+                        current_task,
+                        current_scrollback_lines,
+                        self.total_inserted_lines
+                    );
+                }
+            }
+        }
+    }
+
+    /// Clear scrollback lines that were inserted above the TUI on exit
+    /// Uses cursor positioning to overwrite inserted content with blank lines
+    pub fn cleanup_scrollback_on_exit(&self) {
+        if self.total_inserted_lines > 0 && matches!(self.tui_mode, TuiMode::Inline) {
+            use std::io::{self, Write};
+
+            // Move cursor up to the beginning of inserted content
+            print!("\x1b[{}A", self.total_inserted_lines);
+
+            // Overwrite each line with spaces, then clear to end of line
+            for _ in 0..self.total_inserted_lines {
+                print!("\x1b[2K"); // Clear current line
+                print!("\x1b[1B"); // Move cursor down one line
+            }
+
+            // Move cursor back to the original starting position
+            print!("\x1b[{}A", self.total_inserted_lines);
+
+            // Ensure output is flushed to terminal
+            let _ = io::stdout().flush();
+
+            debug!(
+                "Cleaned up {} inserted scrollback lines on TUI exit using cursor positioning",
+                self.total_inserted_lines
+            );
+        }
+    }
+
+    // Helper methods
+    fn get_current_running_task(&self) -> Option<String> {
+        self.task_status_map
+            .iter()
+            .find(|(_, status)| **status == TaskStatus::InProgress)
+            .map(|(id, _)| id.clone())
+    }
+
+    fn get_completed_task_count(&self) -> usize {
+        self.task_status_map
+            .values()
+            .filter(|status| {
+                matches!(
+                    status,
+                    TaskStatus::Success
+                        | TaskStatus::Failure
+                        | TaskStatus::Skipped
+                        | TaskStatus::LocalCache
+                        | TaskStatus::LocalCacheKeptExisting
+                        | TaskStatus::RemoteCache
+                )
+            })
+            .count()
     }
 }

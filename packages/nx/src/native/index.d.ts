@@ -8,7 +8,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, tuiMode: TuiMode)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -378,6 +378,11 @@ export interface TuiCliArgs {
 
 export interface TuiConfig {
   autoExit?: boolean | number | undefined
+}
+
+export declare const enum TuiMode {
+  FullScreen = 0,
+  Inline = 1
 }
 
 export interface UpdatedWorkspaceFiles {

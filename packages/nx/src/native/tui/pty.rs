@@ -39,6 +39,58 @@ pub struct PtyInstance {
 }
 
 impl PtyInstance {
+    /// Get buffered scrollback content that should be displayed above the current screen
+    /// This gets content from last_rendered_lines to current scrollback for batched rendering
+    pub fn get_buffered_scrollback_content_for_inline(
+        &self,
+        last_rendered_lines: usize,
+    ) -> Vec<String> {
+        if let Ok(parser) = self.parser.read() {
+            let screen = parser.screen();
+            let (screen_rows, _) = screen.size();
+
+            // Get all content with ANSI formatting preserved for colors
+            let all_formatted = screen.all_contents_formatted();
+            let content_str = String::from_utf8_lossy(&all_formatted);
+            let all_lines: Vec<&str> = content_str.lines().collect();
+
+            let total_lines = all_lines.len();
+
+            // Calculate current scrollback: everything above the current visible screen
+            let current_scrollback_lines = total_lines.saturating_sub(screen_rows as usize);
+
+            // Return buffered scrollback content since last render
+            if current_scrollback_lines > last_rendered_lines {
+                let start_index = last_rendered_lines;
+                let end_index = current_scrollback_lines;
+
+                // Return the buffered scrollback content
+                all_lines[start_index..end_index]
+                    .iter()
+                    .map(|line| line.to_string())
+                    .collect()
+            } else {
+                Vec::new()
+            }
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Get the current number of scrollback lines for tracking
+    pub fn get_scrollback_line_count(&self) -> usize {
+        if let Ok(parser) = self.parser.read() {
+            let screen = parser.screen();
+            let (screen_rows, _) = screen.size();
+            let all_formatted = screen.all_contents_formatted();
+            let content_str = String::from_utf8_lossy(&all_formatted);
+            let total_lines = content_str.lines().count();
+            total_lines.saturating_sub(screen_rows as usize)
+        } else {
+            0
+        }
+    }
+
     pub fn interactive(
         parser: Arc<RwLock<Parser>>,
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
@@ -58,6 +110,17 @@ impl PtyInstance {
         // Use sane defaults for rows, cols and scrollback buffer size. The dimensions will be adjusted dynamically later.
         let rows = 24;
         let cols = 80;
+        let parser = Arc::new(RwLock::new(Parser::new(rows, cols, 10000)));
+        Self {
+            parser,
+            writer: None,
+            rows,
+            cols,
+            scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
+        }
+    }
+
+    pub fn non_interactive_with_dimensions(rows: u16, cols: u16) -> Self {
         let parser = Arc::new(RwLock::new(Parser::new(rows, cols, 10000)));
         Self {
             parser,
@@ -372,7 +435,7 @@ mod tests {
 
     #[test]
     fn test_handles_arrow_keys_cursor_movement() {
-        let mut pty = create_test_pty_instance(false);
+        let pty = create_test_pty_instance(false);
 
         // Initially should not be interactive
         assert!(!pty.handles_arrow_keys());
@@ -387,7 +450,7 @@ mod tests {
 
     #[test]
     fn test_handles_arrow_keys_enquirer_style_output() {
-        let mut pty = create_test_pty_instance(false);
+        let pty = create_test_pty_instance(false);
 
         // Simulate enquirer output with cursor positioning
         let enquirer_output =
