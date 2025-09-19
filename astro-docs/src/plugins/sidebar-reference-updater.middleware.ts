@@ -37,23 +37,23 @@ export const onRequest = defineRouteMiddleware(async (context) => {
   const devkitSection = await getDevKitSection(context.locals.starlightRoute);
   const nxSection = await getNxPackageSection(
     'nx',
-    context.locals.starlightRoute,
+    context.locals.starlightRoute
   );
   const webSection = await getNxPackageSection(
     'web',
-    context.locals.starlightRoute,
+    context.locals.starlightRoute
   );
   const workspaceSection = await getNxPackageSection(
     'workspace',
-    context.locals.starlightRoute,
+    context.locals.starlightRoute
   );
   const pluginSection = await getNxPackageSection(
     'plugin',
-    context.locals.starlightRoute,
+    context.locals.starlightRoute
   );
 
   const commandSection = await getCommandsSection(
-    context.locals.starlightRoute,
+    context.locals.starlightRoute
   );
 
   // Add Plugin Registry and Changelog links
@@ -89,7 +89,7 @@ export const onRequest = defineRouteMiddleware(async (context) => {
   refSection.entries = sortReferenceEntries(
     refSection.entries as (SidebarGroup | SidebarLink)[],
     newEntries,
-    desiredSectionOrder,
+    desiredSectionOrder
   );
 });
 
@@ -107,12 +107,12 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
 
   const devkitOnlyItems = devkitItems.filter(
     (item) =>
-      !item.params.slug?.startsWith('ngcli_adapter') && item.params.slug !== '',
+      !item.params.slug?.startsWith('ngcli_adapter') && item.params.slug !== ''
   );
   const ngcliItems = devkitItems.filter(
     (item) =>
       item.params.slug?.startsWith('ngcli_adapter/') &&
-      item.params.slug !== 'ngcli_adapter',
+      item.params.slug !== 'ngcli_adapter'
   );
 
   const devkitRoutes = devkitOnlyItems.map(
@@ -124,7 +124,7 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
       isCurrent:
         entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
       attrs: {},
-    }),
+    })
   );
 
   const ngcliOverview: SidebarLink = {
@@ -145,7 +145,7 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
       isCurrent:
         entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
       attrs: {},
-    }),
+    })
   );
 
   const ngcliSection: SidebarGroup = {
@@ -169,13 +169,13 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
 
 async function getNxPackageSection(
   packageName: 'nx' | 'web' | 'workspace' | 'plugin',
-  { entry }: StarlightRouteData,
+  { entry }: StarlightRouteData
 ) {
   const docTypes = ['overview', 'generators', 'executors', 'migrations'];
   const docIds = docTypes.map((type) => `${packageName}-${type}`);
 
   const docs = await getEntries<'nx-reference-packages'>(
-    docIds.map((id) => ({ collection: 'nx-reference-packages' as const, id })),
+    docIds.map((id) => ({ collection: 'nx-reference-packages' as const, id }))
   );
 
   const overviewDoc = docs.find((d) => d?.id === `${packageName}-overview`);
@@ -220,7 +220,7 @@ async function getNxPackageSection(
         badge: undefined,
         isCurrent: entry.slug === record.data.slug,
         attrs: {},
-      }),
+      })
     );
 
   const label =
@@ -260,7 +260,7 @@ async function getCommandsSection({ entry }: StarlightRouteData) {
 function sortReferenceEntries(
   existingEntries: (SidebarLink | SidebarGroup)[],
   newEntries: (SidebarLink | SidebarGroup)[],
-  desiredOrder: string[],
+  desiredOrder: string[]
 ): (SidebarLink | SidebarGroup)[] {
   const allEntries = [...newEntries, ...existingEntries];
 
@@ -280,7 +280,7 @@ function sortReferenceEntries(
   // Add links in desired order
   for (const desiredLabel of desiredOrder) {
     const linkIndex = linkEntries.findIndex(
-      (entry) => entry.label === desiredLabel,
+      (entry) => entry.label === desiredLabel
     );
     if (linkIndex !== -1) {
       orderedLinkEntries.push(linkEntries[linkIndex]);
