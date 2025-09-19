@@ -97,25 +97,14 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     }
 
     private fun applyDependencyBuildStates() {
-        val reactorProjects = session.projects.associateBy { "${it.groupId}:${it.artifactId}" }
+        val projectsToApply = session.allProjects.mapNotNull { depProject ->
+            val stateFile = File(depProject.build.directory, "nx-build-state.json")
+            if (stateFile.exists()) depProject to stateFile else null
+        }
 
-        val dependencies = (project.dependencies.orEmpty().map { "${it.groupId}:${it.artifactId}" } +
-                           project.buildPlugins.orEmpty().map { "${it.groupId}:${it.artifactId}" }).toSet()
-
-        val dependenciesToApply = dependencies.parallelStream()
-            .map { dep ->
-                reactorProjects[dep]?.let { depProject ->
-                    val stateFile = File(depProject.build.directory, "nx-build-state.json")
-                    if (stateFile.exists()) depProject to stateFile else null
-                }
-            }
-            .filter { it != null }
-            .toList()
-            .filterNotNull()
-
-        if (dependenciesToApply.isNotEmpty()) {
-            log.info("Applying build state to ${dependenciesToApply.size} dependencies...")
-            dependenciesToApply.parallelStream().forEach { (depProject, stateFile) ->
+        if (projectsToApply.isNotEmpty()) {
+            log.info("Applying build state to ${projectsToApply.size} projects...")
+            projectsToApply.parallelStream().forEach { (depProject, stateFile) ->
                 try {
                     val buildState = objectMapper.readValue(stateFile, BuildState::class.java)
                     applyBuildStateToProject(depProject, buildState)
@@ -130,12 +119,14 @@ class NxBuildStateApplyMojo : AbstractMojo() {
         // Apply main artifact
         buildState.mainArtifact?.let { artifact ->
             val file = File(artifact.file)
+            log.info("Applying main artifact: ${file.absolutePath} to ${targetProject.artifactId}")
             if (file.isFile) targetProject.artifact.file = file
         }
 
         // Apply attached artifacts
         buildState.attachedArtifacts.forEach { artifact ->
             val file = File(artifact.file)
+            log.info("Applying attached artifact: ${file.absolutePath} to ${targetProject.artifactId}")
             if (file.isFile) {
                 if (artifact.classifier.isNullOrEmpty()) {
                     projectHelper.attachArtifact(targetProject, artifact.type, file)
