@@ -42,16 +42,48 @@ export function splitTarget(
   if (cache.has(s)) {
     return cache.get(s);
   }
-  // if only configuration cannot be matched, try to match project and target
   if (s.includes(':')) {
-    const configuration = s.split(':').pop();
+    let [project, ...segments] = splitByColons(s);
+    // if only configuration cannot be matched, try to match project and target
+    const configuration = segments[segments.length - 1];
     const rest = s.slice(0, -(configuration.length + 1));
     if (cache.has(rest) && cache.get(rest).length === 2) {
       return [...(cache.get(rest) as [string, string]), configuration];
     }
+    // no project-target pair found, do the naive matching
+    const validTargets = projectGraph.nodes[project]
+      ? projectGraph.nodes[project].data.targets
+      : {};
+    const validTargetNames = new Set(Object.keys(validTargets ?? {}));
+
+    return [project, ...groupJointSegments(segments, validTargetNames)] as [
+      string,
+      string?,
+      string?
+    ];
   }
-  // no project-target pair found, return the original string
   return [s];
+}
+
+function groupJointSegments(segments: string[], validTargetNames: Set<string>) {
+  for (
+    let endingSegmentIdx = segments.length;
+    endingSegmentIdx > 0;
+    endingSegmentIdx--
+  ) {
+    const potentialTargetName = segments.slice(0, endingSegmentIdx).join(':');
+    if (validTargetNames.has(potentialTargetName)) {
+      const configurationName =
+        endingSegmentIdx < segments.length
+          ? segments.slice(endingSegmentIdx).join(':')
+          : null;
+      return configurationName
+        ? [potentialTargetName, configurationName]
+        : [potentialTargetName];
+    }
+  }
+  // If we can't find a segment match, keep older behaviour
+  return segments;
 }
 
 export function splitByColons(s: string) {

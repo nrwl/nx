@@ -75,10 +75,10 @@ describe('splitTarget', () => {
     ).toEqual(['project', 'target:target', 'configuration']);
   });
 
-  it('should return the original string when the target is not present in the graph', () => {
+  it('should targets that contain colons when not present in the graph but surrounded by quotes', () => {
     expect(
-      splitTarget('project:other:other:configuration', projectGraph)
-    ).toEqual(['project:other:other:configuration']);
+      splitTarget('project:"other:other":configuration', projectGraph)
+    ).toEqual(['project', 'other:other', 'configuration']);
   });
 
   it('should support projects with colons in the name', () => {
