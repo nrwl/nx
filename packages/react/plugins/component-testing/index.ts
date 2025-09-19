@@ -116,7 +116,7 @@ export function nxComponentTestingPreset(
     };
   }
 
-  let webpackConfig: any;
+  let webpackConfig: any = null;
   try {
     const graph = readCachedProjectGraph();
     const { targets: ctTargets, name: ctProjectName } = getProjectConfigByPath(
@@ -169,7 +169,10 @@ export function nxComponentTestingPreset(
       Falling back to default webpack config.`
     );
     logger.warn(e);
+  }
 
+  // Fallback config
+  if (!webpackConfig) {
     const { buildBaseWebpackConfig } = require('./webpack-fallback');
     webpackConfig = buildBaseWebpackConfig({
       tsConfigPath: findTsConfig(normalizedProjectRootPath),
@@ -286,37 +289,37 @@ function buildTargetWebpack(
 
   return async () => {
     customWebpack = await customWebpack;
-    // TODO(v22): Component testing need to be agnostic of the underlying executor. With Crystal, we're not using `@nx/webpack:webpack` by default.
-    // We need to decouple CT from the build target of the app, we just care about bundler config (e.g. webpack.config.js).
-    // The generated setup should support both Webpack and Vite as documented here: https://docs.cypress.io/guides/component-testing/react/overview
-    // Related issue: https://github.com/nrwl/nx/issues/21546
-    const configure = composePluginsSync(withNx(), withWeb());
-    const defaultWebpack = configure(
-      {},
-      {
-        options: {
-          ...options,
-          // cypress will generate its own index.html from component-index.html
-          generateIndexHtml: false,
-          // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
-          extractLicenses: false,
-          root: workspaceRoot,
-          projectRoot: ctProjectConfig.root,
-          sourceRoot: getProjectSourceRoot(ctProjectConfig),
-        },
-        context,
-      }
-    );
-
-    if (customWebpack) {
-      return await customWebpack(defaultWebpack, {
-        options,
-        context,
-        configuration: parsed.configuration,
-      });
+    // For legacy `composePlugins(...)` setup, we need change some options to make Cypress CT work properly.
+    if (
+      customWebpack &&
+      require('@nx/webpack').isNxWebpackComposablePlugin(customWebpack) // using inline since @nx/webpack may not be installed when using vite so top-level import would error
+    ) {
+      return await customWebpack(
+        {},
+        {
+          options: {
+            ...options,
+            // cypress will generate its own index.html from component-index.html
+            generateIndexHtml: false,
+            // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
+            extractLicenses: false,
+            root: workspaceRoot,
+            projectRoot: ctProjectConfig.root,
+            sourceRoot: getProjectSourceRoot(ctProjectConfig),
+          },
+          context,
+          configuration: parsed.configuration,
+        }
+      );
+    } else if (
+      typeof customWebpack === 'object' &&
+      typeof customWebpack === 'function'
+    ) {
+      // If this is a standard webpack config object or function, just return. it
+      return customWebpack;
     }
 
-    return defaultWebpack;
+    return null; // return null to use fallback config
   };
 }
 
