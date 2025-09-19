@@ -32,11 +32,6 @@ class NxTargetFactory(
         val requiresAttachment: Boolean = true
     )
 
-    private val artifactAttachmentConfigs = mapOf(
-        "install:install" to ArtifactAttachmentConfig(requiresMainArtifact = true),
-        "spring-boot:repackage" to ArtifactAttachmentConfig(requiresMainArtifact = true)
-    )
-
     // All goals now get build state management for maximum compatibility
     private fun shouldApplyBuildState(goalKey: String): Boolean = true
     private fun shouldRecordBuildState(goalKey: String): Boolean = true
