@@ -2,6 +2,7 @@ import { LinkIcon, TagIcon } from '@heroicons/react/24/outline';
 import {
   Breadcrumbs,
   DocumentationHeader,
+  Header,
   Footer,
   SidebarContainer,
 } from '@nx/nx-dev-ui-common';
@@ -231,9 +232,15 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
           type: 'website',
         }}
       />
-      <div className="w-full flex-shrink-0">
-        <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
-      </div>
+      {process.env.NEXT_PUBLIC_ASTRO_URL ? (
+        <div className="mb-12">
+          <Header />
+        </div>
+      ) : (
+        <div className="w-full flex-shrink-0">
+          <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+        </div>
+      )}
 
       <main id="main" role="main">
         <div className="mx-auto flex max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
