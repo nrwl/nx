@@ -1,15 +1,11 @@
 rootProject.name = "project-graph"
 
 dependencyResolutionManagement {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        gradlePluginPortal()
-    }
+  repositories {
+    mavenLocal()
+    mavenCentral()
+    gradlePluginPortal()
+  }
 
-    versionCatalogs {
-        create("libs") {
-            from(files("../../../gradle/libs.versions.toml"))
-        }
-    }
+  versionCatalogs { create("libs") { from(files("../../../gradle/libs.versions.toml")) } }
 }
