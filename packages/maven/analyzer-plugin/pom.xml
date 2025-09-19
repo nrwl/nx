@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.nx.maven</groupId>
-  <artifactId>nx-maven-analyzer-plugin</artifactId>
+  <artifactId>nx-maven-plugin</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
-  <name>Nx Maven Analyzer Plugin</name>
-  <description>Maven plugin to analyze project structure for Nx integration</description>
+  <name>Nx Maven Plugin</name>
+  <description>Maven plugin for Nx integration and project analysis</description>
 
   <properties>
     <kotlin.version>1.9.22</kotlin.version>
