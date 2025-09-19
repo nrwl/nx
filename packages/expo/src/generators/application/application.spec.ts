@@ -148,6 +148,36 @@ describe('app', () => {
     expect(packageJson.devDependencies['jest-expo']).toBeUndefined();
   });
 
+  it('should not ignore "out-tsc" from eslint', async () => {
+    await expoApplicationGenerator(appTree, {
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      js: false,
+      unitTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
+    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+  });
+
+  it('should not ignore "out-tsc" from eslint with flat config', async () => {
+    appTree.write('eslint.config.mjs', 'export default [];');
+
+    await expoApplicationGenerator(appTree, {
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      js: false,
+      unitTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = appTree.read('my-app/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
+  });
+
   describe('detox', () => {
     it('should create e2e app with directory', async () => {
       await expoApplicationGenerator(appTree, {
@@ -569,6 +599,36 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'my-app-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        js: false,
+        unitTestRunner: 'none',
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'my-app/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        js: false,
+        unitTestRunner: 'none',
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('my-app/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 });

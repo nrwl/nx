@@ -1,6 +1,7 @@
 package dev.nx.gradle
 
 import java.util.*
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
@@ -36,6 +37,22 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
           task.hash.set(hashProperty)
           task.targetNameOverrides.set(targetNameOverrides)
           task.workspaceRoot.set(workspaceRootProperty)
+
+          val conflictingTargetNames =
+              targetNameOverrides.filter { (propertyKey, overrideValue) ->
+                val originalTaskName = propertyKey.removeSuffix("TargetName")
+                // Check if the override value conflicts with a different existing task
+                overrideValue != originalTaskName && project.tasks.any { it.name == overrideValue }
+              }
+
+          if (conflictingTargetNames.isNotEmpty()) {
+            val conflicts =
+                conflictingTargetNames.entries.joinToString { (propertyKey, overrideValue) ->
+                  "'$overrideValue' (from property '$propertyKey')"
+                }
+            throw GradleException(
+                "Target name overrides from your gradle plugin configuration conflict with existing gradle tasks: $conflicts. Please rename your overrides to prevent name collision.")
+          }
 
           task.description = "Create Nx project report for ${project.name}"
           task.group = "Reporting"

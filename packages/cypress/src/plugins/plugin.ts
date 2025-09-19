@@ -411,6 +411,7 @@ async function buildCypressTargets(
           target: targetName,
           projects: 'self',
           params: 'forward',
+          options: 'forward',
         });
 
         if (ciWebServerCommandTask) {
@@ -553,6 +554,7 @@ async function buildCypressTargets(
           target: targetName,
           projects: 'self',
           params: 'forward',
+          options: 'forward',
         });
       }
 

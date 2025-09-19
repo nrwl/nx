@@ -60,3 +60,4 @@ nx g @nx/angular:component apps/my-app/src/lib/card/card --changeDetection=OnPus
 ```
 
 {% /tab %}
+{% /tabs %}

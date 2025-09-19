@@ -340,6 +340,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
+
+    // Add out-tsc ignore pattern when using TS solution setup
+    if (options.isUsingTsSolutionConfig) {
+      const { addIgnoresToLintConfig } = await import(
+        '@nx/eslint/src/generators/utils/eslint-file'
+      );
+      addIgnoresToLintConfig(host, options.appProjectRoot, ['**/out-tsc']);
+    }
   }
 
   if (options.bundler === 'vite') {
