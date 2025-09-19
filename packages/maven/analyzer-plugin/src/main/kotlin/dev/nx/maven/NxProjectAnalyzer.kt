@@ -95,7 +95,6 @@ class NxProjectAnalyzer(
             )
         }
 
-
         val dependenciesJson = dependencies.map { nxDependency ->
             val dependency = objectMapper.createObjectNode()
 
