@@ -59,10 +59,7 @@ dependencies {
     implementation project(':app')
 }`
     );
-    updateFile(
-      `settings.gradle`,
-      (content) => `${content}\r\ninclude("app2")`
-    );
+    updateFile(`settings.gradle`, (content) => `${content}\r\ninclude("app2")`);
 
     let buildOutput = runCLI('build app2', { verbose: true });
     expect(buildOutput).toContain('nx run app:build');
@@ -120,5 +117,3 @@ function addProjectReportToBuildGradle(settingsGradleFile: string) {
     updateFile(gradleFilePath, buildGradleContent);
   }
 }
-
-

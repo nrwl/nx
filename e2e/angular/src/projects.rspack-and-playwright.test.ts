@@ -44,5 +44,3 @@ describe('Angular Projects - rspack and playwright', () => {
     }
   }, 1000000);
 });
-
-

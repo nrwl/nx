@@ -60,5 +60,3 @@ describe('React Module Federation - Webpack - preserve remotes query params', ()
     );
   });
 });
-
-

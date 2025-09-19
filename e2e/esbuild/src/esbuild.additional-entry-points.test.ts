@@ -42,5 +42,3 @@ describe('EsBuild Plugin - additional entry points', () => {
     ).toMatch(/extra/);
   }, 120_000);
 });
-
-

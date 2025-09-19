@@ -1,4 +1,10 @@
-import { cleanupProject, newProject, runCLI, runE2ETests, uniq } from '@nx/e2e-utils';
+import {
+  cleanupProject,
+  newProject,
+  runCLI,
+  runE2ETests,
+  uniq,
+} from '@nx/e2e-utils';
 
 describe('Angular Cypress Component Tests - lib used in app', () => {
   beforeAll(async () => {
@@ -24,5 +30,3 @@ describe('Angular Cypress Component Tests - lib used in app', () => {
     }
   }, 300_000);
 });
-
-

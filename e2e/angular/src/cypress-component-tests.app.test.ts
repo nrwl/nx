@@ -47,5 +47,3 @@ describe('Angular Cypress Component Tests - app', () => {
     }
   }, 300_000);
 });
-
-

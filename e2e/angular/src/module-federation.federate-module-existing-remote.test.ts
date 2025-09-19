@@ -80,5 +80,3 @@ describe('Angular Module Federation - federate module to existing remote', () =>
     }
   }, 500_000);
 });
-
-

@@ -22,8 +22,12 @@ describe('Angular Cypress Component Tests - buildable lib and tailwind', () => {
     const appName = uniq('cy-angular-app');
     const buildableLibName = uniq('cy-angular-buildable-lib');
 
-    runCLI(`generate @nx/angular:app ${appName} --bundler=webpack --no-interactive`);
-    runCLI(`generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`);
+    runCLI(
+      `generate @nx/angular:app ${appName} --bundler=webpack --no-interactive`
+    );
+    runCLI(
+      `generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`
+    );
     runCLI(
       `generate @nx/angular:component ${buildableLibName}/src/lib/input/input.component --inlineTemplate --inlineStyle --export --no-interactive`
     );
@@ -126,5 +130,3 @@ describe(InputStandalone.name, () => {
     }
   }, 300_000);
 });
-
-

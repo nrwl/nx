@@ -75,13 +75,17 @@ describe('Angular Module Federation - generate and serve', () => {
       `${hostApp}/src/app/app-module.ts`,
       `import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
-      import { ${names(wildcardLib).className}Module } from '@${proj}/${wildcardLib}/${
+      import { ${
+        names(wildcardLib).className
+      }Module } from '@${proj}/${wildcardLib}/${
         names(wildcardLib).fileName
       }-module';
-      import { ${names(sharedLib).className}Module } from '@${proj}/${sharedLib}';
-      import { ${names(secondaryEntry).className}Module } from '@${
-        proj
-      }/${sharedLib}/${secondaryEntry}';
+      import { ${
+        names(sharedLib).className
+      }Module } from '@${proj}/${sharedLib}';
+      import { ${
+        names(secondaryEntry).className
+      }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
       import { App } from './app';
       import { NxWelcome } from './nx-welcome';
       import { RouterModule } from '@angular/router';
@@ -117,9 +121,9 @@ describe('Angular Module Federation - generate and serve', () => {
     import { CommonModule } from '@angular/common';
     import { RouterModule } from '@angular/router';
     import { ${names(sharedLib).className}Module } from '@${proj}/${sharedLib}';
-      import { ${names(secondaryEntry).className}Module } from '@${
-        proj
-      }/${sharedLib}/${secondaryEntry}';
+      import { ${
+        names(secondaryEntry).className
+      }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
     import { RemoteEntry } from './entry';
     import { NxWelcome } from './nx-welcome';
 
@@ -160,5 +164,3 @@ describe('Angular Module Federation - generate and serve', () => {
     await killProcessAndPorts(processTsNode.pid, hostPort, remotePort);
   }, 20_000_000);
 });
-
-

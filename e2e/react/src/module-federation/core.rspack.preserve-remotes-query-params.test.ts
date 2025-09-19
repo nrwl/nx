@@ -57,5 +57,3 @@ describe('React Rspack Module Federation - preserve remotes query params', () =>
     );
   });
 });
-
-

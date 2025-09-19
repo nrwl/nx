@@ -1,4 +1,12 @@
-import { cleanupProject, newProject, runCLI, runE2ETests, uniq, updateFile, removeFile } from '@nx/e2e-utils';
+import {
+  cleanupProject,
+  newProject,
+  runCLI,
+  runE2ETests,
+  uniq,
+  updateFile,
+  removeFile,
+} from '@nx/e2e-utils';
 import { names } from '@nx/devkit';
 
 describe('Angular Cypress Component Tests - implicit dep on buildTarget', () => {
@@ -13,9 +21,13 @@ describe('Angular Cypress Component Tests - implicit dep on buildTarget', () => 
     const buildableLibName = uniq('cy-angular-buildable-lib');
     const usedInAppLibName = uniq('cy-angular-lib');
 
-    runCLI(`generate @nx/angular:app ${appName} --bundler=webpack --no-interactive`);
+    runCLI(
+      `generate @nx/angular:app ${appName} --bundler=webpack --no-interactive`
+    );
     runCLI(`generate @nx/angular:lib ${usedInAppLibName} --no-interactive`);
-    runCLI(`generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`);
+    runCLI(
+      `generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`
+    );
     runCLI(
       `generate @nx/angular:component ${buildableLibName}/src/lib/input-standalone/input-standalone --inlineTemplate --inlineStyle --export --standalone --no-interactive`
     );
@@ -59,5 +71,3 @@ export class BtnStandalone {
     }
   });
 });
-
-

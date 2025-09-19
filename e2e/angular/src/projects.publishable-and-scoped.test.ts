@@ -35,7 +35,9 @@ describe('Angular Projects - publishable and scoped', () => {
     const moduleContent = `
     import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
-          import { ${names(childLib).className}Module } from '@${proj}/${childLib}';
+          import { ${
+            names(childLib).className
+          }Module } from '@${proj}/${childLib}';
     import { SubModule } from '@${proj}/${childLib}/sub';
     @NgModule({
       imports: [CommonModule, ${names(childLib).className}Module, SubModule]
@@ -69,5 +71,3 @@ describe('Angular Projects - publishable and scoped', () => {
     expect(() => runCLI(`test ${libName}`)).not.toThrow();
   }, 500_000);
 });
-
-

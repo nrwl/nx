@@ -54,7 +54,9 @@ describe('EsBuild Plugin - bundle options', () => {
 
     runCLI(`build ${parentLib} --third-party=false`);
 
-    expect(readJson(`dist/libs/${parentLib}/package.json`).dependencies).toEqual({
+    expect(
+      readJson(`dist/libs/${parentLib}/package.json`).dependencies
+    ).toEqual({
       rambda: expect.any(String),
       lodash: expect.any(String),
     });
@@ -63,5 +65,3 @@ describe('EsBuild Plugin - bundle options', () => {
     expect(runResult).toMatch(/Hello from child lib/);
   }, 300_000);
 });
-
-

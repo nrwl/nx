@@ -110,5 +110,3 @@ describe('React Rspack Module Federation - Default Configuration', () => {
     500_000
   );
 });
-
-

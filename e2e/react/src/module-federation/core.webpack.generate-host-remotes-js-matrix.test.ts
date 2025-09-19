@@ -37,9 +37,7 @@ describe('React Module Federation - Webpack - Default Configuration', () => {
         `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
       );
 
-      checkFilesExist(
-        `${shell}/module-federation.config.${js ? 'js' : 'ts'}`
-      );
+      checkFilesExist(`${shell}/module-federation.config.${js ? 'js' : 'ts'}`);
       checkFilesExist(
         `${remote1}/module-federation.config.${js ? 'js' : 'ts'}`
       );
@@ -120,5 +118,3 @@ describe('React Module Federation - Webpack - Default Configuration', () => {
     500_000
   );
 });
-
-

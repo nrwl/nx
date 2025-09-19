@@ -72,5 +72,3 @@ describe('React Rspack Module Federation - Playwright', () => {
     }
   }, 500_000);
 });
-
-

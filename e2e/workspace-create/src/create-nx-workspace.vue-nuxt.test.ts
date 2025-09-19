@@ -77,5 +77,3 @@ describe('create-nx-workspace vue & nuxt', () => {
     expectCodeIsFormatted();
   });
 });
-
-

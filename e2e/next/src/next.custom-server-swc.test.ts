@@ -28,5 +28,3 @@ describe('Next.js - custom server swc', () => {
     );
   }, 300_000);
 });
-
-

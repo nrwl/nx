@@ -136,5 +136,3 @@ describe('Angular Projects - generate and build', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 });
-
-

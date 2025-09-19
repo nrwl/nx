@@ -168,5 +168,3 @@ describe('React Module Federation - Webpack - SSR & new root format', () => {
     );
   }, 500_000);
 });
-
-

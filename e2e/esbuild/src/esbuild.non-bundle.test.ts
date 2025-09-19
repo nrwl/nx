@@ -31,5 +31,3 @@ describe('EsBuild Plugin - non-bundle builds', () => {
     );
   }, 300_000);
 });
-
-

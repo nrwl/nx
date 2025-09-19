@@ -1,4 +1,14 @@
-import { checkFilesDoNotExist, checkFilesExist, cleanupProject, createFile, newProject, removeFile, runCLI, runE2ETests, uniq } from '@nx/e2e-utils';
+import {
+  checkFilesDoNotExist,
+  checkFilesExist,
+  cleanupProject,
+  createFile,
+  newProject,
+  removeFile,
+  runCLI,
+  runE2ETests,
+  uniq,
+} from '@nx/e2e-utils';
 
 describe('Angular Cypress Component Tests - root level tailwind config', () => {
   beforeAll(async () => {
@@ -9,7 +19,9 @@ describe('Angular Cypress Component Tests - root level tailwind config', () => {
 
   it('should use root level tailwinds config', () => {
     const buildableLibName = uniq('cy-angular-buildable-lib');
-    runCLI(`generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`);
+    runCLI(
+      `generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`
+    );
 
     createFile(
       'tailwind.config.js',
@@ -41,5 +53,3 @@ module.exports = {
     }
   });
 });
-
-

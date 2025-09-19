@@ -87,5 +87,3 @@ describe('EsBuild Plugin - basic build', () => {
     );
   }, 300_000);
 });
-
-

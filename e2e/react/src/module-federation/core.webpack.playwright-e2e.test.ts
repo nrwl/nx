@@ -82,5 +82,3 @@ describe('React Module Federation - Webpack - Playwright', () => {
     }
   }, 500_000);
 });
-
-

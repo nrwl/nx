@@ -85,5 +85,3 @@ function readPort(appName: string): number {
   }
   return config.targets.serve.options.port;
 }
-
-

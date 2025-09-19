@@ -64,5 +64,3 @@ describe('EsBuild Plugin - external config and env', () => {
     expect(output).toMatch(/foobar/);
   });
 });
-
-

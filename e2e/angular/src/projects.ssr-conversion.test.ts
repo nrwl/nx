@@ -50,8 +50,8 @@ describe('Angular Projects - SSR conversion', () => {
       `dist/${webpackApp}/server/server.mjs`
     );
 
-    expect(() => runCLI(`server ${webpackApp} --output-hashing none`)).toThrow();
+    expect(() =>
+      runCLI(`server ${webpackApp} --output-hashing none`)
+    ).toThrow();
   }, 500_000);
 });
-
-

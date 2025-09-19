@@ -1,4 +1,11 @@
-import { cleanupProject, newProject, runCLI, runE2ETests, uniq, updateFile } from '@nx/e2e-utils';
+import {
+  cleanupProject,
+  newProject,
+  runCLI,
+  runE2ETests,
+  uniq,
+  updateFile,
+} from '@nx/e2e-utils';
 
 describe('React Cypress Component Tests - babel compiler', () => {
   beforeAll(async () => {
@@ -32,5 +39,3 @@ describe('React Cypress Component Tests - babel compiler', () => {
     }
   }, 300_000);
 });
-
-

@@ -289,5 +289,3 @@ describe('create-nx-workspace yarn berry', () => {
     expect(result).toContain(`yarn-${yarnVersion}`);
   });
 });
-
-

@@ -126,5 +126,3 @@ function addProjectReportToBuildGradle(settingsGradleFile: string) {
     updateFile(gradleFilePath, buildGradleContent);
   }
 }
-
-

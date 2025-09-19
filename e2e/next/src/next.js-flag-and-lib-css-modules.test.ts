@@ -65,5 +65,3 @@ describe('Next.js - --js flag and lib CSS modules', () => {
     );
   }, 300_000);
 });
-
-

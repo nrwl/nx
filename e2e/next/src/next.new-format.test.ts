@@ -40,5 +40,3 @@ describe('Next.js - new name and root format', () => {
     );
   }, 600_000);
 });
-
-

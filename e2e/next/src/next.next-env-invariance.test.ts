@@ -41,5 +41,3 @@ describe('Next.js - next-env invariance', () => {
     expect(postBuildPagesContent).toEqual(pagesDirNextEnvContent);
   });
 });
-
-

@@ -35,12 +35,12 @@ describe('create-nx-workspace yarn berry', () => {
       cwd: tmpDir,
     });
 
-    expect(readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })).toContain(
-      'nodeLinker: node-modules'
-    );
-    expect(readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })).toContain(
-      `yarn-${yarnVersion}`
-    );
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toContain('nodeLinker: node-modules');
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toContain(`yarn-${yarnVersion}`);
   });
 
   it('should create a js workspace with yarn berry', () => {
@@ -52,13 +52,11 @@ describe('create-nx-workspace yarn berry', () => {
       cwd: tmpDir,
     });
 
-    expect(readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })).toContain(
-      'nodeLinker: node-modules'
-    );
-    expect(readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })).toContain(
-      `yarn-${yarnVersion}`
-    );
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toContain('nodeLinker: node-modules');
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toContain(`yarn-${yarnVersion}`);
   });
 });
-
-

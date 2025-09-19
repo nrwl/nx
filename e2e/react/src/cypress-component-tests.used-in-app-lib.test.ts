@@ -32,5 +32,3 @@ describe('React Cypress Component Tests - lib used in app', () => {
     }
   }, 300_000);
 });
-
-

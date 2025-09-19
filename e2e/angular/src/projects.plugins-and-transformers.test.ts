@@ -119,5 +119,3 @@ describe('Angular Projects - plugins and transformers', () => {
     );
   });
 });
-
-

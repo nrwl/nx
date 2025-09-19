@@ -109,5 +109,3 @@ describe('create-nx-workspace react', () => {
     expectCodeIsFormatted();
   });
 });
-
-

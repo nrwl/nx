@@ -25,5 +25,3 @@ describe('Next.js - dev mode build', () => {
     }).not.toThrow();
   }, 300_000);
 });
-
-

@@ -20,5 +20,3 @@ describe('Next.js - no swc', () => {
     checkFilesExist(`${appName}/.babelrc`);
   }, 300_000);
 });
-
-

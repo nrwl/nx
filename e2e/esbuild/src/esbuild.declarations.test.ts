@@ -49,5 +49,3 @@ describe('EsBuild Plugin - declarations', () => {
     );
   }, 300_000);
 });
-
-

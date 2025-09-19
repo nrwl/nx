@@ -95,5 +95,3 @@ describe('create-nx-workspace angular', () => {
     ).toThrow();
   });
 });
-
-
