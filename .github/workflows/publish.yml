@@ -74,8 +74,13 @@ jobs:
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest
             setup: |-
+              choco install openjdk --version=21.0.0 -y
               rustup target add aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
+            build: |
+              $env:JAVA_HOME = "C:\Program Files\OpenJDK\jdk-21.0.0"
+              $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+              java --version
+              pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           # Windows 32bit (not needed)
           # - host: windows-latest
@@ -89,16 +94,22 @@ jobs:
               set -e
               apt-get update
 
+              # Install Java 21
+              apt-get install -y openjdk-21-jdk
+              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+              export PATH="$JAVA_HOME/bin:$PATH"
+              java --version
+
               curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
               apt-get install -y nodejs=22.16.0-1nodesource1
-            
+
               export PATH="/usr/local/bin:$PATH"
               node --version
               npm --version
-            
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
-            
+
               pnpm install --frozen-lockfile
               rustup target add x86_64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
@@ -109,21 +120,26 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz
+                apk add --no-cache curl xz openjdk21
+
+                # Set up Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
 
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-            
+
                 export PATH=\"/usr/local/node/bin:\$PATH\"
-            
+
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
-            
+
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
-            
+
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
                 rustup target add x86_64-unknown-linux-musl
@@ -146,17 +162,23 @@ jobs:
             build: |
               set -e
               apt-get update
-            
+
+              # Install Java 21
+              apt-get install -y openjdk-21-jdk
+              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
+              export PATH="$JAVA_HOME/bin:$PATH"
+              java --version
+
               curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
               apt-get install -y nodejs=22.16.0-1nodesource1
-            
+
               export PATH="/usr/local/bin:$PATH"
               node --version
               npm --version
-            
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
-            
+
               pnpm install --frozen-lockfile
               rustup target add aarch64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
@@ -184,31 +206,41 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz
-            
+                apk add --no-cache curl xz openjdk21
+
+                # Set up Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
+
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-            
+
                 export PATH=\"/usr/local/node/bin:\$PATH\"
-            
+
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
-            
+
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
-            
+
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
-                rustup target add aarch64-unknown-linux-musl  
-                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl  
+                rustup target add aarch64-unknown-linux-musl
+                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
               "
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             setup: |-
+              choco install openjdk --version=21.0.0 -y
               rustup target add aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
+            build: |
+              $env:JAVA_HOME = "C:\Program Files\OpenJDK\jdk-21.0.0"
+              $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+              java --version
+              pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@22.16.0
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -322,8 +354,15 @@ jobs:
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 www/npm git
+            sudo pkg install -y -f node libnghttp2 www/npm git openjdk21
             sudo npm install --location=global --ignore-scripts pnpm@10.11.1
+
+            # Set up Java 21
+            export JAVA_HOME=/usr/local/openjdk21
+            export PATH="$JAVA_HOME/bin:$PATH"
+            echo "~~~~ java --version ~~~~"
+            java --version
+
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
