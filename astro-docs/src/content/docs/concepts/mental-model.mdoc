@@ -45,6 +45,8 @@ For instance `nx test lib` creates a task graph with a single node:
 
 {% graph height="100px" type="task" %}
 
+
+```json
 {
   "projects": [
     {
@@ -77,6 +79,7 @@ For instance `nx test lib` creates a task graph with a single node:
       "dependencies": {}
   }
 }
+```
 
 {% /graph %}
 
@@ -96,6 +99,7 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
 {% side_by_side %}
 {% graph height="200px" type="project" %}
 
+```json
 {
   "projects": [
     {
@@ -128,11 +132,13 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
       "dependencies": {}
   }
 }
+```
 
 {% /graph %}
 
 {% graph height="200px" type="task"%}
 
+```json
 {
   "projects": [
     {
@@ -165,6 +171,7 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
       "dependencies": {}
   }
 }
+```
 
 {% /graph %}
 {% /side_by_side %}
@@ -202,6 +209,7 @@ With this, running the same test command creates the following task graph:
 {% side_by_side %}
 {% graph height="200px" type="project" %}
 
+```json
 {
   "projects": [
     {
@@ -234,11 +242,13 @@ With this, running the same test command creates the following task graph:
       "dependencies": {}
   }
 }
+```
 
 {% /graph %}
 
 {% graph height="200px" type="task" %}
 
+```json
 {
   "projects": [
     {
@@ -271,6 +281,7 @@ With this, running the same test command creates the following task graph:
       "dependencies": {}
   }
 }
+```
 
 {% /graph %}
 {% /side_by_side %}
@@ -356,6 +367,7 @@ As your workspace grows, the task graph looks more like this:
 
 {% graph height="400px" type="task"%}
 
+```json
 {
   "projects": [
     {
@@ -388,6 +400,7 @@ As your workspace grows, the task graph looks more like this:
       "dependencies": {}
   }
 }
+```
 
 {% /graph %}
 
