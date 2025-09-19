@@ -1,13 +1,13 @@
 import { ProjectGraph } from '../config/project-graph';
 
-let runCommandsCache: Map<string, [string, string, string?]>;
+let runCommandsCache: Map<string, [string, string?, string?]>;
 let cachedGraph: ProjectGraph;
 
 function getCommandCache(projectGraph: ProjectGraph) {
   if (runCommandsCache && cachedGraph === projectGraph) {
     return runCommandsCache;
   }
-  runCommandsCache = new Map<string, [string, string, string?]>();
+  runCommandsCache = new Map<string, [string, string?, string?]>();
   cachedGraph = projectGraph;
   for (const [projectName, projectNode] of Object.entries(projectGraph.nodes)) {
     for (const [targetName, targetConfig] of Object.entries(
@@ -42,6 +42,10 @@ export function splitTarget(
   if (cache.has(s)) {
     return cache.get(s);
   }
+  // if the string is a project, return it
+  if (projectGraph.nodes[s]) {
+    return [s];
+  }
   if (s.includes(':')) {
     let [project, ...segments] = splitByColons(s);
     // if only configuration cannot be matched, try to match project and target
@@ -62,6 +66,7 @@ export function splitTarget(
       string?
     ];
   }
+  // we don't know what to do with the string, return as is
   return [s];
 }
 
