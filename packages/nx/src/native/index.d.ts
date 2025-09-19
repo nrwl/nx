@@ -162,6 +162,8 @@ export interface CachedResult {
 
 export declare export declare function canInstallNxConsole(): boolean
 
+export declare export declare function canInstallNxConsoleForEditor(editor: string): boolean
+
 export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
 export declare export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>

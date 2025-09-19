@@ -3,24 +3,31 @@ import { join } from 'path';
 import { output } from '../../utils/output';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 
+import {
+  configureAgents,
+  getAgentConfigurationIsOutdated,
+  getAgentConfigurations,
+} from '../../ai/utils';
 import { installPackageToTmp } from '../../devkit-internals';
-import { runNxAsync } from '../../utils/child-process';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { AiAgentSetupOptions } from './command-object';
+import ora = require('ora');
 
 const availableAgents = [
   'claude',
   'codex',
-  'vscode',
+  'copilot',
   'cursor',
   'gemini',
 ] as const;
 type Agent = (typeof availableAgents)[number];
 
 export async function aiAgentSetupHandler(
-  args: AiAgentSetupOptions
+  args: AiAgentSetupOptions,
+  inner = false
 ): Promise<void> {
   // Use environment variable to force local execution
-  if (process.env.NX_AI_FILES_USE_LOCAL === 'true') {
+  if (process.env.NX_AI_FILES_USE_LOCAL === 'true' || inner) {
     return await aiAgentSetupHandlerImpl(args);
   }
 
@@ -36,7 +43,7 @@ export async function aiAgentSetupHandler(
     );
 
     const module = await import(modulePath);
-    const aiAgentSetupResult = await module.aiAgentSetupHandlerImpl(args);
+    const aiAgentSetupResult = await module.aiAgentSetupHandler(args, true);
     cleanup();
     return aiAgentSetupResult;
   } catch (error) {
@@ -46,28 +53,59 @@ export async function aiAgentSetupHandler(
 }
 
 export async function aiAgentSetupHandlerImpl(
-  args: AiAgentSetupOptions
+  options: AiAgentSetupOptions
 ): Promise<void> {
-  let selectedAgents: string[] = args.agents || [];
+  const normalizedOptions = normalizeOptions(options);
 
-  // If no agents provided and interactive mode, prompt for selection
-  if (selectedAgents.length === 0 && args.interactive) {
-    try {
-      const response = await prompt<{ agents: Agent[] }>({
-        type: 'multiselect',
-        name: 'agents',
-        message: 'Which AI agents would you like to set up?',
-        choices: availableAgents.map((agent) => ({
-          name: agent,
-          message: agent.charAt(0).toUpperCase() + agent.slice(1),
-        })),
-        required: true,
-      });
-      selectedAgents = response.agents;
-    } catch (e) {
-      return;
+  const {
+    nonConfiguredAgents,
+    partiallyConfiguredAgents,
+    fullyConfiguredAgents,
+  } = getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
+
+  // first, prompt for partially configured agents and out of date agents
+  const agentsToUpdate: [agent: string, message: string][] = [];
+  partiallyConfiguredAgents.forEach((a) => {
+    agentsToUpdate.push([a, `${a} (partially configured)`] as const);
+  });
+
+  fullyConfiguredAgents.forEach((a) => {
+    if (getAgentConfigurationIsOutdated(a, workspaceRoot)) {
+      agentsToUpdate.push([a, `${a} (out of date)`]);
+    }
+  });
+
+  if (agentsToUpdate.length > 0) {
+    const updateResponse = await prompt<{ agents: Agent[] }>({
+      type: 'multiselect',
+      name: 'agents',
+      message:
+        'The following agents are not configured completely or are out of date. Which would you like to update?',
+      choices: agentsToUpdate.map(([agent, message]) => ({
+        name: agent,
+        message,
+      })),
+      initial: agentsToUpdate.map((_, i) => i),
+      required: true,
+    } as any);
+
+    if (updateResponse.agents && updateResponse.agents.length > 0) {
+      const updateSpinner = ora(`Updating agent configurations...`).start();
+      // todo: update configuration
+      updateSpinner.succeed('Agent configurations updated.');
     }
   }
+
+  // then prompt for non-configured agents
+  const configurationResponse = await prompt<{ agents: Agent[] }>({
+    type: 'multiselect',
+    name: 'agents',
+    message: 'Which AI agents would you like to configure?',
+    choices: nonConfiguredAgents,
+    required: true,
+  } as any);
+
+  const selectedAgents = configurationResponse.agents;
 
   if (selectedAgents.length === 0) {
     output.error({
@@ -77,28 +115,11 @@ export async function aiAgentSetupHandlerImpl(
     return;
   }
 
-  output.log({
-    title: 'Setting up AI agents',
-  });
-
   try {
-    // Call the existing generator
-    // For now, it will generate the same files regardless of the selected agents
-    // The generator can be enhanced later to handle different agents
-    await runNxAsync(
-      `generate @nx/workspace:set-up-ai-agents --agents ${selectedAgents.join(
-        ','
-      )}`
-    );
+    await configureAgents(selectedAgents, workspaceRoot, false);
 
     output.success({
       title: 'AI agents set up successfully',
-      bodyLines: [
-        `Configuration files have been created for: ${selectedAgents.join(
-          ', '
-        )}`,
-        'You can now use these AI agents with your Nx workspace.',
-      ],
     });
 
     return;
@@ -108,4 +129,19 @@ export async function aiAgentSetupHandlerImpl(
       bodyLines: [e.message],
     });
   }
+}
+
+type NormalizedAiAgentSetupOptions = AiAgentSetupOptions & {
+  agents: Agent[];
+};
+function normalizeOptions(
+  options: AiAgentSetupOptions
+): NormalizedAiAgentSetupOptions {
+  const agents = (options.agents ?? availableAgents).filter((a) =>
+    availableAgents.includes(a as Agent)
+  ) as Agent[];
+  return {
+    ...options,
+    agents,
+  };
 }

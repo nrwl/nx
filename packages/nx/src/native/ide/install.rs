@@ -60,6 +60,7 @@ fn is_nx_console_installed(command: &str) -> Result<bool, Error> {
     Ok(false)
 }
 
+
 fn install_extension(command: &str) -> Result<(), Error> {
     debug!(
         "Attempting to install Nx Console extension with: {} --install-extension {}",
@@ -138,6 +139,52 @@ pub fn can_install_nx_console() -> bool {
     }
 }
 
+fn get_command_for_editor(editor: &SupportedEditor) -> Option<&'static str> {
+    match editor {
+        SupportedEditor::VSCode => {
+            #[cfg(target_os = "windows")]
+            {
+                Some("code.cmd")
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                Some("code")
+            }
+        }
+        SupportedEditor::VSCodeInsiders => {
+            #[cfg(target_os = "windows")]
+            {
+                Some("code-insiders.cmd")
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                Some("code-insiders")
+            }
+        }
+        SupportedEditor::Cursor => {
+            if cfg!(target_os = "windows") {
+                Some("cursor.cmd")
+            } else if cfg!(target_os = "macos") {
+                Some("cursor")
+            } else {
+                debug!("Cursor extension installation not supported on this platform");
+                None
+            }
+        }
+        SupportedEditor::Windsurf => {
+            #[cfg(target_os = "windows")]
+            {
+                Some("windsurf.cmd")
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                Some("windsurf")
+            }
+        }
+        _ => None,
+    }
+}
+
 pub fn get_install_command() -> Option<&'static str> {
     // Check if installation should be skipped
     let skip_install = std::env::var("NX_SKIP_VSCODE_EXTENSION_INSTALL")
@@ -168,55 +215,24 @@ pub fn get_install_command() -> Option<&'static str> {
     match current_editor {
         SupportedEditor::VSCode => {
             debug!("Installing Nx Console extension for VS Code");
-            #[cfg(target_os = "windows")]
-            {
-                Some("code.cmd")
-            }
-            #[cfg(not(target_os = "windows"))]
-            {
-                Some("code")
-            }
         }
         SupportedEditor::VSCodeInsiders => {
             debug!("Installing Nx Console extension for VS Code Insiders");
-            #[cfg(target_os = "windows")]
-            {
-                Some("code-insiders.cmd")
-            }
-            #[cfg(not(target_os = "windows"))]
-            {
-                Some("code-insiders")
-            }
         }
         SupportedEditor::Cursor => {
             debug!("Installing Nx Console extension for Cursor");
-            if cfg!(target_os = "windows") {
-                Some("cursor.cmd")
-            } else if cfg!(target_os = "macos") {
-                Some("cursor")
-            } else {
-                debug!("Cursor extension installation not supported on this platform");
-                None
-            }
         }
         SupportedEditor::Windsurf => {
             debug!("Installing Nx Console extension for Windsurf");
-            #[cfg(target_os = "windows")]
-            {
-                Some("windsurf.cmd")
-            }
-            #[cfg(not(target_os = "windows"))]
-            {
-                Some("windsurf")
-            }
         }
         editor => {
             trace!(
                 "Unknown editor ({editor:?}) detected, skipping Nx Console extension installation"
             );
-            None
         }
     }
+
+    get_command_for_editor(current_editor)
 }
 
 #[napi]
@@ -228,5 +244,39 @@ pub fn install_nx_console() {
         if let Err(e) = install_extension(command) {
             debug!("Failed to install Nx Console extension: {}", e);
         }
+    }
+}
+
+#[napi]
+pub fn can_install_nx_console_for_editor(editor: String) -> bool {
+    enable_logger();
+
+    let parsed_editor = parse_editor_string(&editor);
+    debug!("Checking if Nx Console can be installed for editor: {:?}", parsed_editor);
+
+    if let Ok(installed) = is_nx_console_installed_for_editor(&parsed_editor) {
+        !installed  // Can install if NOT installed
+    } else {
+        false
+    }
+}
+
+
+fn is_nx_console_installed_for_editor(editor: &SupportedEditor) -> Result<bool, Error> {
+    if let Some(command) = get_command_for_editor(editor) {
+        is_nx_console_installed(command)
+    } else {
+        Ok(false)
+    }
+}
+
+fn parse_editor_string(editor: &str) -> SupportedEditor {
+    match editor.to_lowercase().as_str() {
+        "vscode" => SupportedEditor::VSCode,
+        "vscode-insiders" => SupportedEditor::VSCodeInsiders,
+        "cursor" => SupportedEditor::Cursor,
+        "windsurf" => SupportedEditor::Windsurf,
+        "jetbrains" => SupportedEditor::JetBrains,
+        _ => SupportedEditor::Unknown,
     }
 }

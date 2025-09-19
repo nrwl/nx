@@ -19,7 +19,7 @@ export const yargsAiAgentSetupCommand: CommandModule<{}, AiAgentSetupOptions> =
           description:
             'List of AI agents to set up (e.g., claude, codex, vscode, cursor, gemini).',
           choices: ['claude', 'codex', 'vscode', 'cursor', 'gemini'],
-        } as const)
+        })
         .option('interactive', {
           type: 'boolean',
           description:
@@ -35,13 +35,6 @@ export const yargsAiAgentSetupCommand: CommandModule<{}, AiAgentSetupOptions> =
           'Set up Claude and Gemini AI agents without prompts'
         ),
     handler: async (args) => {
-      try {
-        await import('./ai-agent-setup').then((m) =>
-          m.aiAgentSetupHandler(args)
-        );
-        process.exit(0);
-      } catch (error) {
-        process.exit(1);
-      }
+      await (await import('./ai-agent-setup')).aiAgentSetupHandler(args);
     },
   };

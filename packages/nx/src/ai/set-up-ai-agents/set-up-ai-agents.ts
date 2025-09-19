@@ -9,6 +9,7 @@ import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
+import { Agent } from '../utils';
 
 export async function setupAiAgentsGenerator(
   tree: Tree,
@@ -58,13 +59,7 @@ function normalizeOptions(
     directory: options.directory,
     writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
-    agents: options.agents ?? [
-      'claude',
-      'codex',
-      'copilot',
-      'cursor',
-      'gemini',
-    ],
+    agents: options.agents ?? ['claude', 'gemini'],
   };
 }
 
@@ -72,36 +67,65 @@ export async function setupAiAgentsGeneratorImpl(
   tree: Tree,
   options: NormalizedSetupAiAgentsGeneratorSchema
 ) {
-  const claudePath = join(options.directory, 'CLAUDE.md');
-  if (!tree.exists(claudePath)) {
-    tree.write(claudePath, getAgentRules(options.writeNxCloudRules));
-  }
-  const agentsPath = join(options.directory, 'AGENTS.md');
-  if (!tree.exists(agentsPath)) {
-    tree.write(agentsPath, getAgentRules(options.writeNxCloudRules));
+  const hasAgent = (agent: Agent) => options.agents.includes(agent);
+
+  // write AGENTS.md for most agents
+  if (
+    hasAgent('gemini') ||
+    hasAgent('cursor') ||
+    hasAgent('copilot') ||
+    hasAgent('codex')
+  ) {
+    const agentsPath = join(options.directory, 'AGENTS.md');
+    writeAgentRules(tree, agentsPath, options.writeNxCloudRules);
   }
 
-  const mcpJsonPath = join(options.directory, '.mcp.json');
-  if (!tree.exists(mcpJsonPath)) {
-    writeJson(tree, mcpJsonPath, {});
-  }
-  updateJson(tree, mcpJsonPath, mcpConfigUpdater);
+  if (hasAgent('claude')) {
+    const claudePath = join(options.directory, 'CLAUDE.md');
+    writeAgentRules(tree, claudePath, options.writeNxCloudRules);
 
-  const geminiPath = join(options.directory, '.gemini', 'settings.json');
-  if (!tree.exists(geminiPath)) {
-    writeJson(tree, geminiPath, {});
+    const mcpJsonPath = join(options.directory, '.mcp.json');
+    if (!tree.exists(mcpJsonPath)) {
+      writeJson(tree, mcpJsonPath, {});
+    }
+    updateJson(tree, mcpJsonPath, mcpConfigUpdater);
   }
-  updateJson(tree, geminiPath, mcpConfigUpdater);
 
-  // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
-  if (!tree.exists(join(options.directory, 'GEMINI.md'))) {
-    updateJson(tree, geminiPath, (json) => ({
-      ...json,
-      contextFileName: 'AGENTS.md',
-    }));
+  if (hasAgent('gemini')) {
+    const geminiPath = join(options.directory, '.gemini', 'settings.json');
+    if (!tree.exists(geminiPath)) {
+      writeJson(tree, geminiPath, {});
+    }
+    updateJson(tree, geminiPath, mcpConfigUpdater);
+
+    // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
+    if (!tree.exists(join(options.directory, 'GEMINI.md'))) {
+      updateJson(tree, geminiPath, (json) => ({
+        ...json,
+        contextFileName: 'AGENTS.md',
+      }));
+    }
   }
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
+}
+
+function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
+  const agentRulesString = getAgentRules(writeNxCloudRules);
+  if (!tree.exists(path)) {
+    tree.write(path, agentRulesString);
+    return;
+  }
+
+  const existing = tree.read(path, 'utf-8');
+
+  if (existing === agentRulesString) {
+    return;
+  }
+
+  // TODO: be smarter about merging changes here
+
+  tree.write(path, existing + '\n' + agentRulesString);
 }
 
 function mcpConfigUpdater(existing: any): any {
