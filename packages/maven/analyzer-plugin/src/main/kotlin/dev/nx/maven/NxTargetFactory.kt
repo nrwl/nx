@@ -68,10 +68,15 @@ class NxTargetFactory(
                         "process-sources" -> "after:sources"
                         "generate-resources" -> "resources"
                         "process-resources" -> "after:resources"
+                        "process-classes" -> "after:compile"
                         "generate-test-sources" -> "test-sources"
                         "process-test-sources" -> "after:test-sources"
                         "generate-test-resources" -> "test-resources"
                         "process-test-resources" -> "after:test-resources"
+                        "process-test-classes" -> "after:test-compile"
+                        "prepare-package" -> "before:package"
+                        "pre-integration-test" -> "before:integration-test"
+                        "post-integration-test" -> "after:integration-test"
                         else -> phase
                     }
 
