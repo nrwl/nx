@@ -40,7 +40,7 @@ function withFormatOptions(yargs: Argv): Argv {
       coerce: parseCSV,
     })
     .option('sort-root-tsconfig-paths', {
-      describe: `Ensure the workspace's tsconfig compilerOptions.paths are sorted. Warning: This will cause comments in the tsconfig to be lost. The default value is "true" unless NX_FORMAT_SORT_TSCONFIG_PATHS is set to "false".`,
+      describe: `Ensure the workspace's tsconfig compilerOptions.paths are sorted. Warning: This will cause comments in the tsconfig to be lost. The default value is "false" unless NX_FORMAT_SORT_TSCONFIG_PATHS is set to "true".`,
       type: 'boolean',
     })
     .option('all', {
@@ -51,12 +51,8 @@ function withFormatOptions(yargs: Argv): Argv {
       all: 'projects',
     })
     .middleware((args) => {
-      /**
-       * TODO(v22): Stop sorting tsconfig paths by default, paths are now less common/important
-       * in Nx workspace setups, and the sorting causes comments to be lost.
-       */
       args.sortRootTsconfigPaths ??=
-        process.env.NX_FORMAT_SORT_TSCONFIG_PATHS !== 'false';
+        process.env.NX_FORMAT_SORT_TSCONFIG_PATHS === 'true';
       // If NX_FORMAT_SORT_TSCONFIG_PATHS=false and --sort-root-tsconfig-paths is passed, we want to set it to true favoring the arg
       process.env.NX_FORMAT_SORT_TSCONFIG_PATHS =
         args.sortRootTsconfigPaths.toString();
