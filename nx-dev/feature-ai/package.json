@@ -11,7 +11,7 @@
     "@nx/nx-dev-ui-primitives": "workspace:*",
     "@nx/nx-dev-ui-common": "workspace:*",
     "@nx/nx-dev-ui-markdoc": "workspace:*",
-    "ai": "^3.4.15",
+    "ai": "3.0.19",
     "react": "18.3.1"
   }
 }

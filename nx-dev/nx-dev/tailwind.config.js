@@ -56,6 +56,7 @@ module.exports = {
     // ...createGlobPatternsForDependencies(__dirname), TODO: look into why this fails
     // Essential nx-dev UI packages
     '../ui-*/src/**/*.{js,ts,jsx,tsx}',
+    '../feature-ai/src/**/*.{js,ts,jsx,tsx}',
     '../feature-doc-viewer/src/**/*.{js,ts,jsx,tsx}',
     '../feature-feedback/src/**/*.{js,ts,jsx,tsx}',
     // Resolve the classes used in @nx/graph components
