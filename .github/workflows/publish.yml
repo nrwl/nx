@@ -360,7 +360,6 @@ jobs:
             # Set up Java 21
             export JAVA_HOME=/usr/local/openjdk21
             export PATH="$JAVA_HOME/bin:$PATH"
-            echo "~~~~ java --version ~~~~"
             java --version
 
             curl https://sh.rustup.rs -sSf --output rustup.sh
