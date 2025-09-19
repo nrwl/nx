@@ -286,12 +286,6 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    {
-      "plugin": "@nx/gradle",
-      "options": {
-        "testTargetName": "test-kt"
-      }
-    },
     "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
