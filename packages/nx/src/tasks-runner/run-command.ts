@@ -145,19 +145,24 @@ async function getTerminalOutputLifeCycle(
       if (mainContinuousDependencies.length > 0) {
         pinnedTasks.push(mainContinuousDependencies[0]);
       }
-      const [project, target] = mainTaskId.split(':');
-      titleText = `${target} ${project}`;
+      const [, target] = mainTaskId.split(':');
+      titleText = `Running 1 ${target} task`;
       if (tasks.length > 1) {
-        titleText += `, and ${tasks.length - 1} requisite ${taskText}`;
+        const dependentTasksCount = tasks.length - 1;
+        const dependentTaskText =
+          dependentTasksCount === 1 ? 'other' : 'others';
+        titleText += `, and ${dependentTasksCount} ${dependentTaskText} they depend on`;
       }
     } else {
-      titleText =
-        nxArgs.targets.join(', ') +
-        ` for ${projectNames.length} ${projectText}`;
+      const mainTasksCount = projectNames.length;
+      const targetText = nxArgs.targets.join(', ');
+      const mainTaskText = mainTasksCount === 1 ? 'task' : 'tasks';
+      titleText = `Running ${mainTasksCount} ${targetText} ${mainTaskText}`;
       if (tasks.length > projectNames.length) {
-        titleText += `, and ${
-          tasks.length - projectNames.length
-        } requisite ${taskText}`;
+        const dependentTasksCount = tasks.length - projectNames.length;
+        const dependentTaskText =
+          dependentTasksCount === 1 ? 'other' : 'others';
+        titleText += `, and ${dependentTasksCount} ${dependentTaskText} they depend on`;
       }
     }
 
