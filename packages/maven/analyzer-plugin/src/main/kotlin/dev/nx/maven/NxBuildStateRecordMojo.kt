@@ -2,6 +2,7 @@ package dev.nx.maven
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.model.Resource
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
@@ -68,6 +69,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
         return BuildState(
             compileSourceRoots = existing.compileSourceRoots + current.compileSourceRoots,
             testCompileSourceRoots = existing.testCompileSourceRoots + current.testCompileSourceRoots,
+            resources = existing.resources + current.resources,
+            testResources = existing.testResources + current.testResources,
+            generatedSourceRoots = existing.generatedSourceRoots + current.generatedSourceRoots,
+            generatedTestSourceRoots = existing.generatedTestSourceRoots + current.generatedTestSourceRoots,
             mainArtifact = current.mainArtifact ?: existing.mainArtifact,
             attachedArtifacts = mergeArtifacts(existing.attachedArtifacts, current.attachedArtifacts)
         )
@@ -88,6 +93,40 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             // Capture test compile source roots
             val testCompileSourceRoots = project.testCompileSourceRoots.toSet()
             log.info("Captured ${testCompileSourceRoots.size} test compile source roots")
+
+            // Capture resources
+            val resources = project.resources.map { (it as Resource).directory }.filter { it != null }.toSet()
+            log.info("Captured ${resources.size} resource directories")
+
+            // Capture test resources
+            val testResources = project.testResources.map { (it as Resource).directory }.filter { it != null }.toSet()
+            log.info("Captured ${testResources.size} test resource directories")
+
+            // Capture generated source roots (from build helper plugin or annotation processors)
+            val generatedSourceRoots = mutableSetOf<String>()
+            val generatedTestSourceRoots = mutableSetOf<String>()
+
+            // Look for common generated source patterns
+            val targetGenerated = File(project.build.directory, "generated-sources")
+            if (targetGenerated.exists()) {
+                targetGenerated.listFiles()?.forEach { dir ->
+                    if (dir.isDirectory) {
+                        generatedSourceRoots.add(dir.absolutePath)
+                    }
+                }
+            }
+
+            val targetGeneratedTest = File(project.build.directory, "generated-test-sources")
+            if (targetGeneratedTest.exists()) {
+                targetGeneratedTest.listFiles()?.forEach { dir ->
+                    if (dir.isDirectory) {
+                        generatedTestSourceRoots.add(dir.absolutePath)
+                    }
+                }
+            }
+
+            log.info("Captured ${generatedSourceRoots.size} generated source roots")
+            log.info("Captured ${generatedTestSourceRoots.size} generated test source roots")
 
             // Capture main artifact
             val mainArtifact = if (project.artifact?.file != null) {
@@ -123,6 +162,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             val currentState = BuildState(
                 compileSourceRoots = compileSourceRoots,
                 testCompileSourceRoots = testCompileSourceRoots,
+                resources = resources,
+                testResources = testResources,
+                generatedSourceRoots = generatedSourceRoots,
+                generatedTestSourceRoots = generatedTestSourceRoots,
                 mainArtifact = mainArtifact,
                 attachedArtifacts = attachedArtifacts
             )
@@ -132,6 +175,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
 
             log.info("Merged build state - Total compile source roots: ${buildState.compileSourceRoots.size}, " +
                     "Total test source roots: ${buildState.testCompileSourceRoots.size}, " +
+                    "Total resources: ${buildState.resources.size}, " +
+                    "Total test resources: ${buildState.testResources.size}, " +
+                    "Total generated source roots: ${buildState.generatedSourceRoots.size}, " +
+                    "Total generated test source roots: ${buildState.generatedTestSourceRoots.size}, " +
                     "Total attached artifacts: ${buildState.attachedArtifacts.size}")
 
             // Ensure output directory exists
