@@ -16,7 +16,8 @@ data class BuildState @JsonCreator constructor(
     @JsonProperty("compileClasspath") val compileClasspath: Set<String> = emptySet(),
     @JsonProperty("testClasspath") val testClasspath: Set<String> = emptySet(),
     @JsonProperty("mainArtifact") val mainArtifact: ArtifactInfo?,
-    @JsonProperty("attachedArtifacts") val attachedArtifacts: List<ArtifactInfo>
+    @JsonProperty("attachedArtifacts") val attachedArtifacts: List<ArtifactInfo>,
+    @JsonProperty("outputTimestamp") val outputTimestamp: String? = null
 )
 
 /**
