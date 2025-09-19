@@ -36,6 +36,36 @@ class NxTargetFactory(
     private fun shouldApplyBuildState(goalKey: String): Boolean = true
     private fun shouldRecordBuildState(goalKey: String): Boolean = true
 
+    /**
+     * Normalizes Maven 3 phase names to Maven 4 equivalents when running Maven 4.
+     * Returns the original phase name when running Maven 3.
+     */
+    private fun normalizePhase(phase: String?): String? {
+        if (phase == null) return null
+
+        val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
+        if (!mavenVersion.startsWith("4")) {
+            return phase // Keep original phase names for Maven 3
+        }
+
+        return when (phase) {
+            "generate-sources" -> "sources"
+            "process-sources" -> "after:sources"
+            "generate-resources" -> "resources"
+            "process-resources" -> "after:resources"
+            "process-classes" -> "after:compile"
+            "generate-test-sources" -> "test-sources"
+            "process-test-sources" -> "after:test-sources"
+            "generate-test-resources" -> "test-resources"
+            "process-test-resources" -> "after:test-resources"
+            "process-test-classes" -> "after:test-compile"
+            "prepare-package" -> "before:package"
+            "pre-integration-test" -> "before:integration-test"
+            "post-integration-test" -> "after:integration-test"
+            else -> phase
+        }
+    }
+
 
     fun createNxTargets(
         mavenCommand: String, project: MavenProject
@@ -62,23 +92,7 @@ class NxTargetFactory(
                     val mojoDescriptor = pluginDescriptor.getMojo(goal)
                     val phase = execution.phase ?: mojoDescriptor?.phase
 
-                    // Normalize Maven 3 phase names to Maven 4 for backward compatibility
-                    val normalizedPhase = when (phase) {
-                        "generate-sources" -> "sources"
-                        "process-sources" -> "after:sources"
-                        "generate-resources" -> "resources"
-                        "process-resources" -> "after:resources"
-                        "process-classes" -> "after:compile"
-                        "generate-test-sources" -> "test-sources"
-                        "process-test-sources" -> "after:test-sources"
-                        "generate-test-resources" -> "test-resources"
-                        "process-test-resources" -> "after:test-resources"
-                        "process-test-classes" -> "after:test-compile"
-                        "prepare-package" -> "before:package"
-                        "pre-integration-test" -> "before:integration-test"
-                        "post-integration-test" -> "after:integration-test"
-                        else -> phase
-                    }
+                    val normalizedPhase = normalizePhase(phase)
 
                     if (normalizedPhase != null) {
                         val goalSpec = "$goalPrefix:$goal@${execution.id}"
