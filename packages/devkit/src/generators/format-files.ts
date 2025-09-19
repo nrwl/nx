@@ -29,12 +29,8 @@ export async function formatFiles(
     }
   } catch {}
 
-  /**
-   * TODO(v22): Stop sorting tsconfig paths by default, paths are now less common/important
-   * in Nx workspace setups, and the sorting causes comments to be lost.
-   */
   options.sortRootTsconfigPaths ??=
-    process.env.NX_FORMAT_SORT_TSCONFIG_PATHS !== 'false';
+    process.env.NX_FORMAT_SORT_TSCONFIG_PATHS === 'true';
 
   if (options.sortRootTsconfigPaths) {
     sortTsConfig(tree);
