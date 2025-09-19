@@ -5069,24 +5069,6 @@
         "path": "/technologies/build-tools/rspack/api/generators/init",
         "type": "generator"
       },
-      "/technologies/build-tools/rspack/api/generators/preset": {
-        "description": "React preset generator.",
-        "file": "generated/packages/rspack/generators/preset.json",
-        "hidden": true,
-        "name": "preset",
-        "originalFilePath": "/packages/rspack/src/generators/preset/schema.json",
-        "path": "/technologies/build-tools/rspack/api/generators/preset",
-        "type": "generator"
-      },
-      "/technologies/build-tools/rspack/api/generators/application": {
-        "description": "React application generator.",
-        "file": "generated/packages/rspack/generators/application.json",
-        "hidden": false,
-        "name": "application",
-        "originalFilePath": "/packages/rspack/src/generators/application/schema.json",
-        "path": "/technologies/build-tools/rspack/api/generators/application",
-        "type": "generator"
-      },
       "/technologies/build-tools/rspack/api/generators/convert-webpack": {
         "description": "Convert a webpack application to use rspack.",
         "file": "generated/packages/rspack/generators/convert-webpack.json",
