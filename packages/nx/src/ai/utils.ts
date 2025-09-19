@@ -1,10 +1,24 @@
-import { appendFileSync, readFileSync, writeFileSync, existsSync } from 'fs';
+import {
+  appendFileSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+} from 'fs';
 import { join } from 'path';
 import { canInstallNxConsoleForEditor } from '../native';
 import { flushChanges, FsTree } from '../generators/tree';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
 import { homedir } from 'os';
 import { output } from '../utils/output';
+import {
+  claudeMcpPath,
+  claudeMdPath,
+  geminiMdPath,
+  agentsMdPath,
+  geminiSettingsPath,
+  codexConfigTomlPath,
+} from './config-paths';
 
 export type Agent = 'claude' | 'gemini' | 'codex' | 'cursor' | 'copilot';
 
@@ -71,6 +85,21 @@ export function getAgentIsConfigured(
         rules: agentsMdExists,
       };
     }
+    case 'codex': {
+      const agentsMdExists = existsSync(agentsMdPath(workspaceRoot));
+      let mcpConfigured: boolean;
+      if (existsSync(codexConfigTomlPath)) {
+        const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
+        mcpConfigured = tomlContents.includes(nxMcpTomlHeader);
+      } else {
+        mcpConfigured = false;
+      }
+
+      return {
+        mcp: mcpConfigured,
+        rules: agentsMdExists,
+      };
+    }
     default: {
       return {
         rules: false,
@@ -84,7 +113,7 @@ export async function getAgentConfigurationIsOutdated(
   agent: Agent,
   workspaceRoot: string
 ): Promise<boolean> {
-  // todo: download latest version and check against it
+  // we check by
   return false;
 }
 
@@ -105,24 +134,29 @@ export async function configureAgents(
 
   flushChanges(workspaceRoot, tree.listChanges());
 
+  // changes that are out of scope for the generator because they do more than modify the tree
   if (agents.includes('codex')) {
-    const configTomlPath = join(homedir(), '.codex', 'config.toml');
-
-    if (existsSync(configTomlPath)) {
-      const tomlContents = readFileSync(configTomlPath, 'utf-8');
+    if (existsSync(codexConfigTomlPath)) {
+      const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
       if (!tomlContents.includes(nxMcpTomlHeader)) {
-        appendFileSync(configTomlPath, `\n${nxMcpTomlConfig}`);
+        appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
         output.log({
-          title: `Updated ${configTomlPath} with nx-mcp server`,
+          title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
         });
       }
     } else {
       mkdirSync(join(homedir(), '.codex'), { recursive: true });
-      writeFileSync(configTomlPath, nxMcpTomlConfig);
+      writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
       output.log({
-        title: `Created ${configTomlPath} with nx-mcp server`,
+        title: `Created ${codexConfigTomlPath} with nx-mcp server`,
       });
     }
+  }
+  if (agents.includes('copilot')) {
+    // install nx console if not installed
+  }
+  if (agents.includes('cursor')) {
+    // install nx console if not installed
   }
 }
 
@@ -156,25 +190,9 @@ export function getAgentConfigurations(
   };
 }
 
-export function agentsMdPath(root: string): string {
-  return join(root, 'AGENTS.md');
-}
-
-export function geminiMdPath(root: string): string {
-  return join(root, 'GEMINI.md');
-}
-
-export function geminiSettingsPath(root: string): string {
-  return join(root, '.gemini', 'settings.json');
-}
-
-export function claudeMdPath(root: string): string {
-  return join(root, 'CLAUDE.md');
-}
-
-export function claudeMcpPath(root: string): string {
-  return join(root, '.mcp.json');
-}
+export const nxRulesMarkerCommentStart = `// nx configuration start`;
+export const nxRulesMarkerCommentDescription = `Leave the start & end comments to automatically receive updates.`;
+export const nxRulesMarkerCommentEnd = `// nx configuration end`;
 
 const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
 const nxMcpTomlConfig = `${nxMcpTomlHeader}

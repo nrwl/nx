@@ -9,7 +9,12 @@ import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
-import { Agent } from '../utils';
+import {
+  Agent,
+  nxRulesMarkerCommentStart,
+  nxRulesMarkerCommentEnd,
+  nxRulesMarkerCommentDescription,
+} from '../utils';
 
 export async function setupAiAgentsGenerator(
   tree: Tree,
@@ -119,13 +124,24 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
 
   const existing = tree.read(path, 'utf-8');
 
-  if (existing === agentRulesString) {
-    return;
+  const escapeRegex = (str: string) =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(
+    `${escapeRegex(nxRulesMarkerCommentStart)}[\\s\\S]*?${escapeRegex(
+      nxRulesMarkerCommentEnd
+    )}`,
+    'm'
+  );
+  const existingNxConfiguration = existing.match(regex);
+
+  const agentRulesWithMarkers = `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n${nxRulesMarkerCommentEnd}`;
+
+  if (existingNxConfiguration) {
+    const updatedContent = existing.replace(regex, agentRulesWithMarkers);
+    tree.write(path, updatedContent);
+  } else {
+    tree.write(path, existing + '\n\n' + agentRulesWithMarkers);
   }
-
-  // TODO: be smarter about merging changes here
-
-  tree.write(path, existing + '\n' + agentRulesString);
 }
 
 function mcpConfigUpdater(existing: any): any {

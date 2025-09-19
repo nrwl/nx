@@ -69,11 +69,11 @@ export async function configureAiAgentsHandlerImpl(
     agentsToUpdate.push([a, `${a} (partially configured)`] as const);
   });
 
-  fullyConfiguredAgents.forEach((a) => {
-    if (getAgentConfigurationIsOutdated(a, workspaceRoot)) {
+  for (const a of fullyConfiguredAgents) {
+    if (await getAgentConfigurationIsOutdated(a, workspaceRoot)) {
       agentsToUpdate.push([a, `${a} (out of date)`]);
     }
-  });
+  }
 
   if (agentsToUpdate.length > 0) {
     const updateResponse = await prompt<{ agents: Agent[] }>({
@@ -89,6 +89,10 @@ export async function configureAiAgentsHandlerImpl(
       required: true,
     } as any);
 
+    if (!updateResponse) {
+      process.exit(1);
+    }
+
     if (updateResponse.agents && updateResponse.agents.length > 0) {
       const updateSpinner = ora(`Updating agent configurations...`).start();
       // todo: update configuration
@@ -97,6 +101,12 @@ export async function configureAiAgentsHandlerImpl(
   }
 
   // then prompt for non-configured agents
+  if (nonConfiguredAgents.length === 0) {
+    output.success({
+      title: 'All selected AI agents are already configured',
+    });
+    process.exit(0);
+  }
   const configurationResponse = await prompt<{ agents: Agent[] }>({
     type: 'multiselect',
     name: 'agents',
@@ -105,6 +115,10 @@ export async function configureAiAgentsHandlerImpl(
     required: true,
   } as any);
 
+  if (!configurationResponse) {
+    process.exit(1);
+  }
+
   const selectedAgents = configurationResponse.agents;
 
   if (selectedAgents.length === 0) {
@@ -112,7 +126,7 @@ export async function configureAiAgentsHandlerImpl(
       title: 'No agents selected',
       bodyLines: ['Please select at least one AI agent to set up.'],
     });
-    return;
+    process.exit(1);
   }
 
   try {
@@ -128,6 +142,7 @@ export async function configureAiAgentsHandlerImpl(
       title: 'Failed to set up AI agents',
       bodyLines: [e.message],
     });
+    process.exit(1);
   }
 }
 
