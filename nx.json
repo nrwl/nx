@@ -1,3 +1,4 @@
+
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
   "namedInputs": {
@@ -284,6 +285,12 @@
         "buildTargetName": "next:build",
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static"
+      }
+    },
+    {
+      "plugin": "@nx/gradle",
+      "options": {
+        "testTargetName": "test-kt"
       }
     },
     "@nx/enterprise-cloud",
