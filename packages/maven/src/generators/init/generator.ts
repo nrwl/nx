@@ -65,8 +65,8 @@ function addNxMavenAnalyzerPlugin(tree: Tree) {
   }
 
   // Check if plugin is already present
-  if (pomContent.includes('dev.nx.maven') && pomContent.includes('nx-maven-analyzer-plugin')) {
-    logger.info('nx-maven-analyzer plugin already present in pom.xml');
+  if (pomContent.includes('dev.nx.maven') && pomContent.includes('nx-maven-plugin')) {
+    logger.info('nx-maven plugin already present in pom.xml');
     return;
   }
 
@@ -149,7 +149,7 @@ function addPluginToPom(pomContent: string): string {
     plugin.appendChild(groupId);
     
     const artifactId = doc.createElement('artifactId');
-    artifactId.appendChild(doc.createTextNode('nx-maven-analyzer-plugin'));
+    artifactId.appendChild(doc.createTextNode('nx-maven-plugin'));
     plugin.appendChild(doc.createTextNode('\n        '));
     plugin.appendChild(artifactId);
     
