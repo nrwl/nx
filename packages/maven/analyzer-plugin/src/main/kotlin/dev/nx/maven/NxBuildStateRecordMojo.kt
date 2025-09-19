@@ -73,6 +73,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             testResources = existing.testResources + current.testResources,
             generatedSourceRoots = existing.generatedSourceRoots + current.generatedSourceRoots,
             generatedTestSourceRoots = existing.generatedTestSourceRoots + current.generatedTestSourceRoots,
+            outputDirectory = current.outputDirectory ?: existing.outputDirectory,
+            testOutputDirectory = current.testOutputDirectory ?: existing.testOutputDirectory,
+            compileClasspath = existing.compileClasspath + current.compileClasspath,
+            testClasspath = existing.testClasspath + current.testClasspath,
             mainArtifact = current.mainArtifact ?: existing.mainArtifact,
             attachedArtifacts = mergeArtifacts(existing.attachedArtifacts, current.attachedArtifacts)
         )
@@ -128,6 +132,30 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             log.info("Captured ${generatedSourceRoots.size} generated source roots")
             log.info("Captured ${generatedTestSourceRoots.size} generated test source roots")
 
+            // Capture output directories
+            val outputDirectory = project.build.outputDirectory
+            val testOutputDirectory = project.build.testOutputDirectory
+            log.info("Captured output directory: $outputDirectory")
+            log.info("Captured test output directory: $testOutputDirectory")
+
+            // Capture compile classpath
+            val compileClasspath = try {
+                project.compileClasspathElements.toSet()
+            } catch (e: Exception) {
+                log.warn("Failed to capture compile classpath: ${e.message}")
+                emptySet<String>()
+            }
+            log.info("Captured ${compileClasspath.size} compile classpath elements")
+
+            // Capture test classpath
+            val testClasspath = try {
+                project.testClasspathElements.toSet()
+            } catch (e: Exception) {
+                log.warn("Failed to capture test classpath: ${e.message}")
+                emptySet<String>()
+            }
+            log.info("Captured ${testClasspath.size} test classpath elements")
+
             // Capture main artifact
             val mainArtifact = if (project.artifact?.file != null) {
                 ArtifactInfo(
@@ -166,6 +194,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                 testResources = testResources,
                 generatedSourceRoots = generatedSourceRoots,
                 generatedTestSourceRoots = generatedTestSourceRoots,
+                outputDirectory = outputDirectory,
+                testOutputDirectory = testOutputDirectory,
+                compileClasspath = compileClasspath,
+                testClasspath = testClasspath,
                 mainArtifact = mainArtifact,
                 attachedArtifacts = attachedArtifacts
             )
@@ -179,6 +211,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                     "Total test resources: ${buildState.testResources.size}, " +
                     "Total generated source roots: ${buildState.generatedSourceRoots.size}, " +
                     "Total generated test source roots: ${buildState.generatedTestSourceRoots.size}, " +
+                    "Output directory: ${buildState.outputDirectory}, " +
+                    "Test output directory: ${buildState.testOutputDirectory}, " +
+                    "Total compile classpath: ${buildState.compileClasspath.size}, " +
+                    "Total test classpath: ${buildState.testClasspath.size}, " +
                     "Total attached artifacts: ${buildState.attachedArtifacts.size}")
 
             // Ensure output directory exists
