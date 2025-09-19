@@ -1972,6 +1972,9 @@ importers:
       '@nx/nx-dev-data-access-documents':
         specifier: workspace:*
         version: link:../data-access-documents
+      '@nx/nx-dev-feature-search':
+        specifier: workspace:*
+        version: link:../feature-search
       '@nx/nx-dev-ui-common':
         specifier: workspace:*
         version: link:../ui-common
@@ -32646,6 +32649,7 @@ snapshots:
   '@nx/nx-dev-ui-blog@file:nx-dev/ui-blog':
     dependencies:
       '@nx/nx-dev-data-access-documents': link:nx-dev/data-access-documents
+      '@nx/nx-dev-feature-search': link:nx-dev/feature-search
       '@nx/nx-dev-ui-common': link:nx-dev/ui-common
       '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
       '@nx/nx-dev-ui-markdoc': link:nx-dev/ui-markdoc
