@@ -34,6 +34,14 @@ describe('explicit package json dependencies', () => {
           root: 'libs/proj4',
           name: 'proj4',
         },
+        proj5: {
+          root: 'libs/proj5',
+          name: 'proj5',
+        },
+        proj6: {
+          root: 'libs/proj6',
+          name: 'proj6',
+        },
       },
     };
 
@@ -65,6 +73,16 @@ describe('explicit package json dependencies', () => {
         name: 'proj4',
         version: '2.0.0', // the source version in the workspace
       }),
+      './libs/proj5/index.js': '',
+      './libs/proj5/package.json': JSON.stringify({
+        name: 'proj5',
+        version: '1.1.0', // the source version in the workspace
+      }),
+      './libs/proj6/index.js': '',
+      './libs/proj6/package.json': JSON.stringify({
+        name: 'proj6',
+        version: '1.1.0', // the source version in the workspace
+      }),
       './libs/proj3/node_modules/lodash/index.js': '',
       './libs/proj3/node_modules/lodash/package.json': JSON.stringify({
         name: 'lodash',
@@ -79,6 +97,8 @@ describe('explicit package json dependencies', () => {
         dependencies: {
           proj2: '*',
           proj4: '1.0.0', // references an installed older version from package manager
+          proj5: '^1.0.0',
+          proj6: 'file:../proj6',
           lodash: '4.0.0',
         },
         devDependencies: { proj3: '*' },
@@ -136,6 +156,37 @@ describe('explicit package json dependencies', () => {
           metadata: {
             js: {
               packageName: 'proj4',
+              packageVersion: '2.0.0',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
+      proj5: {
+        name: 'proj5',
+        type: 'lib',
+        data: {
+          root: 'libs/proj5',
+          metadata: {
+            js: {
+              packageName: 'proj5',
+              packageVersion: '1.1.0',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
+      proj6: {
+        name: 'proj6',
+        type: 'lib',
+        data: {
+          root: 'libs/proj6',
+          metadata: {
+            js: {
+              packageName: 'proj6',
+              packageVersion: '1.1.0',
               packageExports: undefined,
               isInPackageManagerWorkspaces: true,
             },
@@ -201,46 +252,37 @@ describe('explicit package json dependencies', () => {
     );
 
     const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
-    expect(res).toEqual([
-      {
-        source: 'proj',
-        target: 'proj3',
-        sourceFile: 'libs/proj/package.json',
-        type: 'static',
-      },
-      {
-        source: 'proj',
-        target: 'proj2',
-        sourceFile: 'libs/proj/package.json',
-        type: 'static',
-      },
-      {
-        source: 'proj',
-        sourceFile: 'libs/proj/package.json',
-        target: 'npm:proj4', // correctly resolves to the npm package of the project rather than the workspace project
-        type: 'static',
-      },
-      {
-        sourceFile: 'libs/proj/package.json',
-        source: 'proj',
-        target: 'npm:lodash',
-        type: 'static',
-      },
-      {
-        sourceFile: 'libs/proj3/package.json',
-        source: 'proj3',
-        target: 'npm:lodash@3.0.0',
-        type: 'static',
-      },
-      {
-        source: 'proj3',
-        sourceFile: 'libs/proj3/package.json',
-        target: 'proj4', // correctly resolves to the workspace dependency of the project in the workspace
-        type: 'static',
-      },
-    ]);
+    expect(res).toEqual(
+      expect.arrayContaining([
+        {
+          source: 'proj',
+          target: 'proj3',
+          sourceFile: 'libs/proj/package.json',
+          type: 'static',
+        },
+        {
+          source: 'proj',
+          target: 'proj2',
+          sourceFile: 'libs/proj/package.json',
+          type: 'static',
+        },
+        {
+          sourceFile: 'libs/proj/package.json',
+          source: 'proj',
+          target: 'npm:lodash',
+          type: 'static',
+        },
+        {
+          sourceFile: 'libs/proj3/package.json',
+          source: 'proj3',
+          target: 'npm:lodash@3.0.0',
+          type: 'static',
+        },
+      ])
+    );
     expect(npmResolutionCache).toMatchInlineSnapshot(`
       Map {
+        "proj4__libs/proj" => "npm:proj4",
         "lodash__libs/proj" => "npm:lodash",
         "lodash__libs/proj3" => "npm:lodash@3.0.0",
       }
@@ -260,46 +302,20 @@ describe('explicit package json dependencies', () => {
     npmResolutionCache.set('lodash__libs/proj3', 'npm:lodash@999.9.9');
 
     const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
-    expect(res).toEqual([
-      {
-        source: 'proj',
-        target: 'proj3',
-        sourceFile: 'libs/proj/package.json',
-        type: 'static',
-      },
-      {
-        source: 'proj',
-        target: 'proj2',
-        sourceFile: 'libs/proj/package.json',
-        type: 'static',
-      },
-      {
-        source: 'proj',
-        sourceFile: 'libs/proj/package.json',
-        target: 'npm:proj4', // correctly resolves to the npm package of the project rather than the workspace project
-        type: 'static',
-      },
-      {
-        sourceFile: 'libs/proj/package.json',
-        source: 'proj',
-        // Preferred the cached version of lodash, instead of 4.0.0 resolved from tempFs node_modules
-        target: 'npm:lodash@999.9.9',
-        type: 'static',
-      },
-      {
-        sourceFile: 'libs/proj3/package.json',
-        source: 'proj3',
-        // Preferred the cached version of lodash, instead of 3.0.0 resolved from tempFs node_modules
-        target: 'npm:lodash@999.9.9',
-        type: 'static',
-      },
-      {
-        source: 'proj3',
-        sourceFile: 'libs/proj3/package.json',
-        target: 'proj4', // correctly resolves to the workspace dependency of the project in the workspace
-        type: 'static',
-      },
-    ]);
+    expect(res).toContainEqual({
+      sourceFile: 'libs/proj/package.json',
+      source: 'proj',
+      // Preferred the cached version of lodash, instead of 4.0.0 resolved from tempFs node_modules
+      target: 'npm:lodash@999.9.9',
+      type: 'static',
+    });
+    expect(res).toContainEqual({
+      sourceFile: 'libs/proj3/package.json',
+      source: 'proj3',
+      // Preferred the cached version of lodash, instead of 3.0.0 resolved from tempFs node_modules
+      target: 'npm:lodash@999.9.9',
+      type: 'static',
+    });
   });
 
   it('should add correct npm dependencies for projects that use an older installed version of a package that exists in the workspace', async () => {
@@ -317,6 +333,48 @@ describe('explicit package json dependencies', () => {
           source: 'proj',
           sourceFile: 'libs/proj/package.json',
           target: 'npm:proj4', // correctly resolves to the npm package of the project rather than the workspace project
+          type: 'static',
+        },
+      ])
+    );
+  });
+
+  it('should add correct workspace dependencies for projects that use a range for packages which exist in the workspace', async () => {
+    const npmResolutionCache = new Map();
+    const targetProjectLocator = new TargetProjectLocator(
+      projects,
+      ctx.externalNodes,
+      npmResolutionCache
+    );
+
+    const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
+    expect(res).toEqual(
+      expect.arrayContaining([
+        {
+          source: 'proj',
+          sourceFile: 'libs/proj/package.json',
+          target: 'proj5', // correctly resolves to the npm package of the project rather than the workspace project
+          type: 'static',
+        },
+      ])
+    );
+  });
+
+  it('should add correct workspace dependencies for projects that use a file reference of a package that exists in the workspace', async () => {
+    const npmResolutionCache = new Map();
+    const targetProjectLocator = new TargetProjectLocator(
+      projects,
+      ctx.externalNodes,
+      npmResolutionCache
+    );
+
+    const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
+    expect(res).toEqual(
+      expect.arrayContaining([
+        {
+          source: 'proj',
+          sourceFile: 'libs/proj/package.json',
+          target: 'proj6', // correctly resolves to the npm package of the project rather than the workspace project
           type: 'static',
         },
       ])

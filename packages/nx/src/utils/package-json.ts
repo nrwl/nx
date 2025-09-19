@@ -163,7 +163,8 @@ export function getMetadataFromPackageJson(
   packageJson: PackageJson,
   isInPackageManagerWorkspaces: boolean
 ): ProjectMetadata {
-  const { scripts, nx, description, name, exports, main } = packageJson;
+  const { scripts, nx, description, name, exports, main, version } =
+    packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   return {
     targetGroups: {
@@ -172,6 +173,7 @@ export function getMetadataFromPackageJson(
     description,
     js: {
       packageName: name,
+      packageVersion: version,
       packageExports: exports,
       packageMain: main,
       isInPackageManagerWorkspaces,
