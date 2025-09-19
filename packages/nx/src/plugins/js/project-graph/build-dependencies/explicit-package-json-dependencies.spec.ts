@@ -1,4 +1,5 @@
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
+
 const tempFs = new TempFs('explicit-package-json');
 
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
@@ -54,15 +55,32 @@ describe('explicit package json dependencies', () => {
       './libs/proj2/package.json': JSON.stringify({ name: 'proj2' }),
       './libs/proj3/package.json': JSON.stringify({
         name: 'proj3',
-        dependencies: { lodash: '3.0.0' },
+        dependencies: {
+          lodash: '3.0.0',
+          proj4: '2.0.0', // references the local source version in the workspace
+        },
+      }),
+      './libs/proj4/index.js': '',
+      './libs/proj4/package.json': JSON.stringify({
+        name: 'proj4',
+        version: '2.0.0', // the source version in the workspace
       }),
       './libs/proj3/node_modules/lodash/index.js': '',
       './libs/proj3/node_modules/lodash/package.json': JSON.stringify({
         name: 'lodash',
         version: '3.0.0',
       }),
+      './libs/proj/node_modules/proj4/index.js': '',
+      './libs/proj/node_modules/proj4/package.json': JSON.stringify({
+        name: 'proj4',
+        version: '1.0.0',
+      }),
       './libs/proj/package.json': JSON.stringify({
-        dependencies: { proj2: '*', lodash: '4.0.0' },
+        dependencies: {
+          proj2: '*',
+          proj4: '1.0.0', // references an installed older version from package manager
+          lodash: '4.0.0',
+        },
         devDependencies: { proj3: '*' },
       }),
     });
@@ -100,10 +118,24 @@ describe('explicit package json dependencies', () => {
         name: 'proj3',
         type: 'lib',
         data: {
-          root: 'libs/proj4',
+          root: 'libs/proj3',
           metadata: {
             js: {
               packageName: 'proj3',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
+      proj4: {
+        name: 'proj4',
+        type: 'lib',
+        data: {
+          root: 'libs/proj4',
+          metadata: {
+            js: {
+              packageName: 'proj4',
               packageExports: undefined,
               isInPackageManagerWorkspaces: true,
             },
@@ -127,6 +159,14 @@ describe('explicit package json dependencies', () => {
       data: {
         version: '4.0.0',
         packageName: 'lodash',
+      },
+    });
+    builder.addExternalNode({
+      type: 'npm',
+      name: 'npm:proj4',
+      data: {
+        version: '1.0.0',
+        packageName: 'proj4',
       },
     });
     builder.addExternalNode({
@@ -175,6 +215,12 @@ describe('explicit package json dependencies', () => {
         type: 'static',
       },
       {
+        source: 'proj',
+        sourceFile: 'libs/proj/package.json',
+        target: 'npm:proj4', // correctly resolves to the npm package of the project rather than the workspace project
+        type: 'static',
+      },
+      {
         sourceFile: 'libs/proj/package.json',
         source: 'proj',
         target: 'npm:lodash',
@@ -184,6 +230,12 @@ describe('explicit package json dependencies', () => {
         sourceFile: 'libs/proj3/package.json',
         source: 'proj3',
         target: 'npm:lodash@3.0.0',
+        type: 'static',
+      },
+      {
+        source: 'proj3',
+        sourceFile: 'libs/proj3/package.json',
+        target: 'proj4', // correctly resolves to the workspace dependency of the project in the workspace
         type: 'static',
       },
     ]);
@@ -222,6 +274,12 @@ describe('explicit package json dependencies', () => {
         type: 'static',
       },
       {
+        source: 'proj',
+        sourceFile: 'libs/proj/package.json',
+        target: 'npm:proj4', // correctly resolves to the npm package of the project rather than the workspace project
+        type: 'static',
+      },
+      {
         sourceFile: 'libs/proj/package.json',
         source: 'proj',
         // Preferred the cached version of lodash, instead of 4.0.0 resolved from tempFs node_modules
@@ -235,6 +293,33 @@ describe('explicit package json dependencies', () => {
         target: 'npm:lodash@999.9.9',
         type: 'static',
       },
+      {
+        source: 'proj3',
+        sourceFile: 'libs/proj3/package.json',
+        target: 'proj4', // correctly resolves to the workspace dependency of the project in the workspace
+        type: 'static',
+      },
     ]);
+  });
+
+  it('should add correct npm dependencies for projects that use an older installed version of a package that exists in the workspace', async () => {
+    const npmResolutionCache = new Map();
+    const targetProjectLocator = new TargetProjectLocator(
+      projects,
+      ctx.externalNodes,
+      npmResolutionCache
+    );
+
+    const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
+    expect(res).toEqual(
+      expect.arrayContaining([
+        {
+          source: 'proj',
+          sourceFile: 'libs/proj/package.json',
+          target: 'npm:proj4', // correctly resolves to the npm package of the project rather than the workspace project
+          type: 'static',
+        },
+      ])
+    );
   });
 });
