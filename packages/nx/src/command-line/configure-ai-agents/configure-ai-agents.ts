@@ -10,7 +10,7 @@ import {
 } from '../../ai/utils';
 import { installPackageToTmp } from '../../devkit-internals';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { AiAgentSetupOptions } from './command-object';
+import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
 
 const availableAgents = [
@@ -22,13 +22,13 @@ const availableAgents = [
 ] as const;
 type Agent = (typeof availableAgents)[number];
 
-export async function aiAgentSetupHandler(
-  args: AiAgentSetupOptions,
+export async function configureAiAgentsHandler(
+  args: ConfigureAiAgentsOptions,
   inner = false
 ): Promise<void> {
   // Use environment variable to force local execution
   if (process.env.NX_AI_FILES_USE_LOCAL === 'true' || inner) {
-    return await aiAgentSetupHandlerImpl(args);
+    return await configureAiAgentsHandlerImpl(args);
   }
 
   try {
@@ -48,12 +48,12 @@ export async function aiAgentSetupHandler(
     return aiAgentSetupResult;
   } catch (error) {
     // Fall back to local implementation
-    return aiAgentSetupHandlerImpl(args);
+    return configureAiAgentsHandlerImpl(args);
   }
 }
 
-export async function aiAgentSetupHandlerImpl(
-  options: AiAgentSetupOptions
+export async function configureAiAgentsHandlerImpl(
+  options: ConfigureAiAgentsOptions
 ): Promise<void> {
   const normalizedOptions = normalizeOptions(options);
 
@@ -131,11 +131,11 @@ export async function aiAgentSetupHandlerImpl(
   }
 }
 
-type NormalizedAiAgentSetupOptions = AiAgentSetupOptions & {
+type NormalizedAiAgentSetupOptions = ConfigureAiAgentsOptions & {
   agents: Agent[];
 };
 function normalizeOptions(
-  options: AiAgentSetupOptions
+  options: ConfigureAiAgentsOptions
 ): NormalizedAiAgentSetupOptions {
   const agents = (options.agents ?? availableAgents).filter((a) =>
     availableAgents.includes(a as Agent)
