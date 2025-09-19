@@ -30,65 +30,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
     @Parameter(property = "outputFile", defaultValue = "\${project.build.directory}/nx-build-state.json", readonly = true)
     private lateinit var outputFile: File
 
-    private fun readExistingState(): BuildState? {
-        return try {
-            if (outputFile.exists()) {
-                log.info("Reading existing build state from: ${outputFile.absolutePath}")
-                objectMapper.readValue(outputFile, BuildState::class.java)
-            } else {
-                log.info("No existing build state file found")
-                null
-            }
-        } catch (e: Exception) {
-            log.warn("Failed to read existing build state, starting fresh: ${e.message}")
-            null
-        }
-    }
-
-    private fun mergeArtifacts(existing: List<ArtifactInfo>, current: List<ArtifactInfo>): List<ArtifactInfo> {
-        val artifactMap = mutableMapOf<String, ArtifactInfo>()
-
-        // Add existing artifacts
-        existing.forEach { artifact ->
-            val key = "${artifact.type}:${artifact.classifier ?: ""}"
-            artifactMap[key] = artifact
-        }
-
-        // Add/update with current artifacts (current takes precedence)
-        current.forEach { artifact ->
-            val key = "${artifact.type}:${artifact.classifier ?: ""}"
-            artifactMap[key] = artifact
-        }
-
-        return artifactMap.values.toList()
-    }
-
-    private fun mergeStates(existing: BuildState?, current: BuildState): BuildState {
-        if (existing == null) return current
-
-        return BuildState(
-            compileSourceRoots = existing.compileSourceRoots + current.compileSourceRoots,
-            testCompileSourceRoots = existing.testCompileSourceRoots + current.testCompileSourceRoots,
-            resources = existing.resources + current.resources,
-            testResources = existing.testResources + current.testResources,
-            generatedSourceRoots = existing.generatedSourceRoots + current.generatedSourceRoots,
-            generatedTestSourceRoots = existing.generatedTestSourceRoots + current.generatedTestSourceRoots,
-            outputDirectory = current.outputDirectory ?: existing.outputDirectory,
-            testOutputDirectory = current.testOutputDirectory ?: existing.testOutputDirectory,
-            compileClasspath = existing.compileClasspath + current.compileClasspath,
-            testClasspath = existing.testClasspath + current.testClasspath,
-            mainArtifact = current.mainArtifact ?: existing.mainArtifact,
-            attachedArtifacts = mergeArtifacts(existing.attachedArtifacts, current.attachedArtifacts)
-        )
-    }
-
     @Throws(MojoExecutionException::class)
     override fun execute() {
         try {
             log.info("Recording build state for project: ${project.artifactId}")
-
-            // Read existing state first
-            val existingState = readExistingState()
 
             // Capture compile source roots
             val compileSourceRoots = project.compileSourceRoots.toSet()
@@ -202,20 +147,20 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                 attachedArtifacts = attachedArtifacts
             )
 
-            // Merge with existing state
-            val buildState = mergeStates(existingState, currentState)
+            // Don't merge - just use current state to avoid duplicates
+            val buildState = currentState
 
-            log.info("Merged build state - Total compile source roots: ${buildState.compileSourceRoots.size}, " +
-                    "Total test source roots: ${buildState.testCompileSourceRoots.size}, " +
-                    "Total resources: ${buildState.resources.size}, " +
-                    "Total test resources: ${buildState.testResources.size}, " +
-                    "Total generated source roots: ${buildState.generatedSourceRoots.size}, " +
-                    "Total generated test source roots: ${buildState.generatedTestSourceRoots.size}, " +
+            log.info("Recorded build state - Compile source roots: ${buildState.compileSourceRoots.size}, " +
+                    "Test source roots: ${buildState.testCompileSourceRoots.size}, " +
+                    "Resources: ${buildState.resources.size}, " +
+                    "Test resources: ${buildState.testResources.size}, " +
+                    "Generated source roots: ${buildState.generatedSourceRoots.size}, " +
+                    "Generated test source roots: ${buildState.generatedTestSourceRoots.size}, " +
                     "Output directory: ${buildState.outputDirectory}, " +
                     "Test output directory: ${buildState.testOutputDirectory}, " +
-                    "Total compile classpath: ${buildState.compileClasspath.size}, " +
-                    "Total test classpath: ${buildState.testClasspath.size}, " +
-                    "Total attached artifacts: ${buildState.attachedArtifacts.size}")
+                    "Compile classpath: ${buildState.compileClasspath.size}, " +
+                    "Test classpath: ${buildState.testClasspath.size}, " +
+                    "Attached artifacts: ${buildState.attachedArtifacts.size}")
 
             // Ensure output directory exists
             outputFile.parentFile?.mkdirs()
