@@ -101,27 +101,27 @@ class NxBuildStateApplyMojo : AbstractMojo() {
                 }
             }
 
-            // Reapply generated source roots
-            buildState.generatedSourceRoots.forEach { generatedSourceRoot ->
-                val generatedSourceDir = File(generatedSourceRoot)
-                if (generatedSourceDir.exists() && generatedSourceDir.isDirectory) {
-                    project.addCompileSourceRoot(generatedSourceRoot)
-                    log.info("Added generated source root: $generatedSourceRoot")
-                } else {
-                    log.warn("Generated source root does not exist or is not a directory: $generatedSourceRoot")
-                }
-            }
-
-            // Reapply generated test source roots
-            buildState.generatedTestSourceRoots.forEach { generatedTestSourceRoot ->
-                val generatedTestSourceDir = File(generatedTestSourceRoot)
-                if (generatedTestSourceDir.exists() && generatedTestSourceDir.isDirectory) {
-                    project.addTestCompileSourceRoot(generatedTestSourceRoot)
-                    log.info("Added generated test source root: $generatedTestSourceRoot")
-                } else {
-                    log.warn("Generated test source root does not exist or is not a directory: $generatedTestSourceRoot")
-                }
-            }
+//            // Reapply generated source roots
+//            buildState.generatedSourceRoots.forEach { generatedSourceRoot ->
+//                val generatedSourceDir = File(generatedSourceRoot)
+//                if (generatedSourceDir.exists() && generatedSourceDir.isDirectory) {
+//                    project.addCompileSourceRoot(generatedSourceRoot)
+//                    log.info("Added generated source root: $generatedSourceRoot")
+//                } else {
+//                    log.warn("Generated source root does not exist or is not a directory: $generatedSourceRoot")
+//                }
+//            }
+//
+//            // Reapply generated test source roots
+//            buildState.generatedTestSourceRoots.forEach { generatedTestSourceRoot ->
+//                val generatedTestSourceDir = File(generatedTestSourceRoot)
+//                if (generatedTestSourceDir.exists() && generatedTestSourceDir.isDirectory) {
+//                    project.addTestCompileSourceRoot(generatedTestSourceRoot)
+//                    log.info("Added generated test source root: $generatedTestSourceRoot")
+//                } else {
+//                    log.warn("Generated test source root does not exist or is not a directory: $generatedTestSourceRoot")
+//                }
+//            }
 
             // Reapply output directories
             buildState.outputDirectory?.let { outputDir ->
@@ -148,9 +148,19 @@ class NxBuildStateApplyMojo : AbstractMojo() {
             // They are captured for informational purposes and dependency analysis
             if (buildState.compileClasspath.isNotEmpty()) {
                 log.info("Recorded compile classpath with ${buildState.compileClasspath.size} elements")
+
+                buildState.compileClasspath.forEach { classpathElement ->
+                    log.info("Adding compile classpath element: $classpathElement")
+                    project.compileClasspathElements.add(classpathElement)
+                }
             }
             if (buildState.testClasspath.isNotEmpty()) {
                 log.info("Recorded test classpath with ${buildState.testClasspath.size} elements")
+
+                buildState.testClasspath.forEach { classpathElement ->
+                    log.info("Adding test classpath element: $classpathElement")
+                    project.testClasspathElements.add(classpathElement)
+                }
             }
 
             // Reapply main artifact

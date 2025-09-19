@@ -51,31 +51,32 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             val testResources = project.testResources.map { (it as Resource).directory }.filter { it != null }.toSet()
             log.info("Captured ${testResources.size} test resource directories")
 
-            // Capture generated source roots (from build helper plugin or annotation processors)
-            val generatedSourceRoots = mutableSetOf<String>()
-            val generatedTestSourceRoots = mutableSetOf<String>()
 
-            // Look for common generated source patterns
-            val targetGenerated = File(project.build.directory, "generated-sources")
-            if (targetGenerated.exists()) {
-                targetGenerated.listFiles()?.forEach { dir ->
-                    if (dir.isDirectory) {
-                        generatedSourceRoots.add(dir.absolutePath)
-                    }
-                }
-            }
+//            // Capture generated source roots (from build helper plugin or annotation processors)
+//            val generatedSourceRoots = mutableSetOf<String>()
+//            val generatedTestSourceRoots = mutableSetOf<String>()
 
-            val targetGeneratedTest = File(project.build.directory, "generated-test-sources")
-            if (targetGeneratedTest.exists()) {
-                targetGeneratedTest.listFiles()?.forEach { dir ->
-                    if (dir.isDirectory) {
-                        generatedTestSourceRoots.add(dir.absolutePath)
-                    }
-                }
-            }
+//            // Look for common generated source patterns
+//            val targetGenerated = File(project.build.directory, "generated-sources")
+//            if (targetGenerated.exists()) {
+//                targetGenerated.listFiles()?.forEach { dir ->
+//                    if (dir.isDirectory) {
+//                        generatedSourceRoots.add(dir.absolutePath)
+//                    }
+//                }
+//            }
+//
+//            val targetGeneratedTest = File(project.build.directory, "generated-test-sources")
+//            if (targetGeneratedTest.exists()) {
+//                targetGeneratedTest.listFiles()?.forEach { dir ->
+//                    if (dir.isDirectory) {
+//                        generatedTestSourceRoots.add(dir.absolutePath)
+//                    }
+//                }
+//            }
 
-            log.info("Captured ${generatedSourceRoots.size} generated source roots")
-            log.info("Captured ${generatedTestSourceRoots.size} generated test source roots")
+//            log.info("Captured ${generatedSourceRoots.size} generated source roots")
+//            log.info("Captured ${generatedTestSourceRoots.size} generated test source roots")
 
             // Capture output directories
             val outputDirectory = project.build.outputDirectory
@@ -137,8 +138,8 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                 testCompileSourceRoots = testCompileSourceRoots,
                 resources = resources,
                 testResources = testResources,
-                generatedSourceRoots = generatedSourceRoots,
-                generatedTestSourceRoots = generatedTestSourceRoots,
+//                generatedSourceRoots = generatedSourceRoots,
+//                generatedTestSourceRoots = generatedTestSourceRoots,
                 outputDirectory = outputDirectory,
                 testOutputDirectory = testOutputDirectory,
                 compileClasspath = compileClasspath,
@@ -154,8 +155,8 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                     "Test source roots: ${buildState.testCompileSourceRoots.size}, " +
                     "Resources: ${buildState.resources.size}, " +
                     "Test resources: ${buildState.testResources.size}, " +
-                    "Generated source roots: ${buildState.generatedSourceRoots.size}, " +
-                    "Generated test source roots: ${buildState.generatedTestSourceRoots.size}, " +
+//                    "Generated source roots: ${buildState.generatedSourceRoots.size}, " +
+//                    "Generated test source roots: ${buildState.generatedTestSourceRoots.size}, " +
                     "Output directory: ${buildState.outputDirectory}, " +
                     "Test output directory: ${buildState.testOutputDirectory}, " +
                     "Compile classpath: ${buildState.compileClasspath.size}, " +
