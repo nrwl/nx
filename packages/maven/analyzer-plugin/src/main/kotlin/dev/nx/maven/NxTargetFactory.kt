@@ -37,34 +37,9 @@ class NxTargetFactory(
         "spring-boot:repackage" to ArtifactAttachmentConfig(requiresMainArtifact = true)
     )
 
-    // Goals that need build state applied before execution (consume artifacts/state)
-    private val goalsRequiringApply = setOf(
-        "compiler:compile",
-        "compiler:testCompile",
-        "surefire:test",
-        "failsafe:integration-test",
-        "japicmp:cmp",
-        "javadoc:javadoc",
-        "javadoc:jar",
-        "source:jar",
-        "jar:test-jar",
-        "install:install",
-        "deploy:deploy"
-    )
-
-    // Goals that need build state recorded after execution (produce artifacts/state)
-    private val goalsRequiringRecord = setOf(
-        "compiler:compile",
-        "compiler:testCompile",
-        "modello:velocity",
-        "modello:java",
-        "build-helper:add-source",
-        "build-helper:add-test-source",
-        "antrun:run", // May generate sources
-        "exec:java", // May generate sources
-        "jar:jar",
-        "maven-jar-plugin:jar"
-    )
+    // All goals now get build state management for maximum compatibility
+    private fun shouldApplyBuildState(goalKey: String): Boolean = true
+    private fun shouldRecordBuildState(goalKey: String): Boolean = true
 
     private fun createMavenCommand(
         mavenCommand: String,
@@ -84,7 +59,7 @@ class NxTargetFactory(
         commandParts.add(mavenCommand)
 
         // Add build state apply if needed (before main goal)
-        if (goalKey in goalsRequiringApply) {
+        if (shouldApplyBuildState(goalKey)) {
             commandParts.add("nx:apply")
         }
 
@@ -104,7 +79,7 @@ class NxTargetFactory(
         commandParts.add(mainGoal)
 
         // Add build state record if needed (after main goal)
-        if (goalKey in goalsRequiringRecord) {
+        if (shouldRecordBuildState(goalKey)) {
             commandParts.add("nx:record")
         }
 

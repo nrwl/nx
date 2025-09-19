@@ -9,10 +9,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class BuildState @JsonCreator constructor(
     @JsonProperty("compileSourceRoots") val compileSourceRoots: Set<String>,
     @JsonProperty("testCompileSourceRoots") val testCompileSourceRoots: Set<String>,
-    @JsonProperty("resources") val resources: Set<String>,
-    @JsonProperty("testResources") val testResources: Set<String>,
-    @JsonProperty("generatedSourceRoots") val generatedSourceRoots: Set<String>,
-    @JsonProperty("generatedTestSourceRoots") val generatedTestSourceRoots: Set<String>,
+    @JsonProperty("resources") val resources: Set<String> = emptySet(),
+    @JsonProperty("testResources") val testResources: Set<String> = emptySet(),
+    @JsonProperty("generatedSourceRoots") val generatedSourceRoots: Set<String> = emptySet(),
+    @JsonProperty("generatedTestSourceRoots") val generatedTestSourceRoots: Set<String> = emptySet(),
+    @JsonProperty("outputDirectory") val outputDirectory: String? = null,
+    @JsonProperty("testOutputDirectory") val testOutputDirectory: String? = null,
+    @JsonProperty("compileClasspath") val compileClasspath: Set<String> = emptySet(),
+    @JsonProperty("testClasspath") val testClasspath: Set<String> = emptySet(),
     @JsonProperty("mainArtifact") val mainArtifact: ArtifactInfo?,
     @JsonProperty("attachedArtifacts") val attachedArtifacts: List<ArtifactInfo>
 )

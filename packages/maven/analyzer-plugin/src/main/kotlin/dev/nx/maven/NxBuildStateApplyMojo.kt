@@ -45,7 +45,13 @@ class NxBuildStateApplyMojo : AbstractMojo() {
             log.info("Reading build state from: ${inputFile.absolutePath}")
 
             // Read build state from JSON
-            val buildState = objectMapper.readValue(inputFile, BuildState::class.java)
+            val buildState = try {
+                objectMapper.readValue(inputFile, BuildState::class.java)
+            } catch (e: Exception) {
+                log.warn("Failed to read build state file: ${e.message}")
+                log.info("Skipping build state application due to corrupted or empty file")
+                return
+            }
 
             // Reapply compile source roots
             buildState.compileSourceRoots.forEach { sourceRoot ->
@@ -115,6 +121,36 @@ class NxBuildStateApplyMojo : AbstractMojo() {
                 } else {
                     log.warn("Generated test source root does not exist or is not a directory: $generatedTestSourceRoot")
                 }
+            }
+
+            // Reapply output directories
+            buildState.outputDirectory?.let { outputDir ->
+                val outputDirectory = File(outputDir)
+                if (outputDirectory.exists() && outputDirectory.isDirectory) {
+                    project.build.outputDirectory = outputDir
+                    log.info("Set output directory: $outputDir")
+                } else {
+                    log.warn("Output directory does not exist or is not a directory: $outputDir")
+                }
+            }
+
+            buildState.testOutputDirectory?.let { testOutputDir ->
+                val testOutputDirectory = File(testOutputDir)
+                if (testOutputDirectory.exists() && testOutputDirectory.isDirectory) {
+                    project.build.testOutputDirectory = testOutputDir
+                    log.info("Set test output directory: $testOutputDir")
+                } else {
+                    log.warn("Test output directory does not exist or is not a directory: $testOutputDir")
+                }
+            }
+
+            // Note: Classpaths are typically rebuilt from dependencies, so we don't restore them
+            // They are captured for informational purposes and dependency analysis
+            if (buildState.compileClasspath.isNotEmpty()) {
+                log.info("Recorded compile classpath with ${buildState.compileClasspath.size} elements")
+            }
+            if (buildState.testClasspath.isNotEmpty()) {
+                log.info("Recorded test classpath with ${buildState.testClasspath.size} elements")
             }
 
             // Reapply main artifact
