@@ -1,6 +1,7 @@
 package dev.nx.maven
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.maven.model.Resource
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
@@ -65,6 +66,54 @@ class NxBuildStateApplyMojo : AbstractMojo() {
                     log.info("Added test compile source root: $testSourceRoot")
                 } else {
                     log.warn("Test compile source root does not exist or is not a directory: $testSourceRoot")
+                }
+            }
+
+            // Reapply resources
+            buildState.resources.forEach { resourceDir ->
+                val resourceDirectory = File(resourceDir)
+                if (resourceDirectory.exists() && resourceDirectory.isDirectory) {
+                    val resource = Resource()
+                    resource.directory = resourceDir
+                    project.addResource(resource)
+                    log.info("Added resource directory: $resourceDir")
+                } else {
+                    log.warn("Resource directory does not exist or is not a directory: $resourceDir")
+                }
+            }
+
+            // Reapply test resources
+            buildState.testResources.forEach { testResourceDir ->
+                val testResourceDirectory = File(testResourceDir)
+                if (testResourceDirectory.exists() && testResourceDirectory.isDirectory) {
+                    val testResource = Resource()
+                    testResource.directory = testResourceDir
+                    project.addTestResource(testResource)
+                    log.info("Added test resource directory: $testResourceDir")
+                } else {
+                    log.warn("Test resource directory does not exist or is not a directory: $testResourceDir")
+                }
+            }
+
+            // Reapply generated source roots
+            buildState.generatedSourceRoots.forEach { generatedSourceRoot ->
+                val generatedSourceDir = File(generatedSourceRoot)
+                if (generatedSourceDir.exists() && generatedSourceDir.isDirectory) {
+                    project.addCompileSourceRoot(generatedSourceRoot)
+                    log.info("Added generated source root: $generatedSourceRoot")
+                } else {
+                    log.warn("Generated source root does not exist or is not a directory: $generatedSourceRoot")
+                }
+            }
+
+            // Reapply generated test source roots
+            buildState.generatedTestSourceRoots.forEach { generatedTestSourceRoot ->
+                val generatedTestSourceDir = File(generatedTestSourceRoot)
+                if (generatedTestSourceDir.exists() && generatedTestSourceDir.isDirectory) {
+                    project.addTestCompileSourceRoot(generatedTestSourceRoot)
+                    log.info("Added generated test source root: $generatedTestSourceRoot")
+                } else {
+                    log.warn("Generated test source root does not exist or is not a directory: $generatedTestSourceRoot")
                 }
             }
 
