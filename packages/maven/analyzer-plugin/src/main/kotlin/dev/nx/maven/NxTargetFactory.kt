@@ -142,6 +142,29 @@ class NxTargetFactory(
             }
         }
 
+        // Also create individual goal targets for granular execution
+        plugins.forEach { plugin: Plugin ->
+            val pluginDescriptor = getPluginDescriptor(plugin, project)
+            val goalPrefix = pluginDescriptor.goalPrefix
+
+            plugin.executions.forEach { execution ->
+                execution.goals.forEach { goal ->
+                    // Skip build-helper attach-artifact goal as it's not relevant for Nx
+                    if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
+                        return@forEach
+                    }
+
+                    val goalTargetName = "$goalPrefix:$goal@${execution.id}"
+                    val mojoDescriptor = pluginDescriptor.getMojo(goal)
+
+                    val goalTarget = createSimpleGoalTarget(mavenCommand, project, goalPrefix, goal, execution, mojoDescriptor)
+                    nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+
+                    log.info("Created individual goal target: $goalTargetName")
+                }
+            }
+        }
+
         val atomizedTestTargets = generateAtomizedTestTargets(project, mavenCommand)
 
         atomizedTestTargets.forEach { (goal, target) ->
@@ -224,6 +247,24 @@ class NxTargetFactory(
     ): NxTarget {
         log.info("Creating noop target for phase '$phase' (no goals)")
         return NxTarget("nx:noop", null, false, true)
+    }
+
+    private fun createSimpleGoalTarget(
+        mavenCommand: String,
+        project: MavenProject,
+        goalPrefix: String,
+        goalName: String,
+        execution: PluginExecution,
+        mojoDescriptor: MojoDescriptor?
+    ): NxTarget {
+        val options = objectMapper.createObjectNode()
+
+        // Simple command without nx:apply/nx:record
+        val command = "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
+        options.put("command", command)
+
+        // No dependencies for goal targets - they can run independently
+        return NxTarget("nx:run-commands", options, false, mojoDescriptor?.isThreadSafe ?: true)
     }
 
     private fun getExecutablePlugins(project: MavenProject): List<Plugin> {
