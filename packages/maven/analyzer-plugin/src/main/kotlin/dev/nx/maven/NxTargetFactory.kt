@@ -124,8 +124,8 @@ class NxTargetFactory(
                     phaseDependsOn[phase]?.add("^install")
                 }
 
-                target.dependsOn?.add("^$phase")
-                phaseDependsOn[phase]?.add("^$phase")
+//                target.dependsOn?.add("^$phase")
+//                phaseDependsOn[phase]?.add("^$phase")
 
                 phaseTargets[phase] = target
 
@@ -242,7 +242,7 @@ class NxTargetFactory(
         phase: String
     ): NxTarget {
         log.info("Creating noop target for phase '$phase' (no goals)")
-        return NxTarget("nx:noop", null, true, true)
+        return NxTarget("nx:noop", null, false, true)
     }
 
     private fun createSimpleGoalTarget(

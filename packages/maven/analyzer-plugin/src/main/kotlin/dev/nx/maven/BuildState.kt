@@ -11,8 +11,6 @@ data class BuildState @JsonCreator constructor(
     @JsonProperty("testCompileSourceRoots") val testCompileSourceRoots: Set<String>,
     @JsonProperty("resources") val resources: Set<String> = emptySet(),
     @JsonProperty("testResources") val testResources: Set<String> = emptySet(),
-    @JsonProperty("generatedSourceRoots") val generatedSourceRoots: Set<String> = emptySet(),
-    @JsonProperty("generatedTestSourceRoots") val generatedTestSourceRoots: Set<String> = emptySet(),
     @JsonProperty("outputDirectory") val outputDirectory: String? = null,
     @JsonProperty("testOutputDirectory") val testOutputDirectory: String? = null,
     @JsonProperty("compileClasspath") val compileClasspath: Set<String> = emptySet(),
