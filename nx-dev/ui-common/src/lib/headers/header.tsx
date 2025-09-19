@@ -291,10 +291,14 @@ export function Header({
             >
               Nx Enterprise
             </Link>
-            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <div className="px-3 opacity-50 hover:opacity-100">
-              <AlgoliaSearch tiny={true} />
-            </div>
+            {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+              <>
+                <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+                <div className="px-3 opacity-50 hover:opacity-100">
+                  <AlgoliaSearch tiny={true} />
+                </div>
+              </>
+            )}
           </nav>
         </div>
         {/*SECONDARY NAVIGATION*/}

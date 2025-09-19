@@ -245,9 +245,11 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-auto flex-grow">
-            <AlgoliaSearch />
-          </div>
+          {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+            <div className="mx-4 w-auto flex-grow">
+              <AlgoliaSearch />
+            </div>
+          )}
         </div>
         {/*LOGO*/}
         <div className="flex items-center gap-4">
@@ -281,9 +283,11 @@ export function DocumentationHeader({
           <VersionPicker />
         </div>
         {/*SEARCH*/}
-        <div className="hidden w-full max-w-[14rem] lg:inline">
-          <AlgoliaSearch />
-        </div>
+        {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+          <div className="hidden w-full max-w-[14rem] lg:inline">
+            <AlgoliaSearch />
+          </div>
+        )}
         {/*NAVIGATION*/}
         <div className="hidden flex-shrink-0 lg:flex">
           <nav

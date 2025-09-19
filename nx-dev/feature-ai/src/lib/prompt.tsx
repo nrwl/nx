@@ -62,7 +62,7 @@ export function Prompt({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="relative mx-auto flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 py-0 shadow-lg dark:border-slate-900 dark:bg-slate-700"
+      className="relative mx-auto flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 py-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
     >
       <div
         className={cx(
@@ -123,12 +123,12 @@ export function Prompt({
           name="query"
           maxLength={500}
           disabled={isGenerating}
-          className="block w-full resize-none border-none bg-transparent p-0 py-[1.3rem] pl-2 text-sm placeholder-slate-500 focus-within:outline-none focus:placeholder-slate-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-slate-300"
+          className="block w-full resize-none border-none bg-transparent p-0 py-3 pl-2 text-sm placeholder-slate-500 focus-within:outline-none focus:placeholder-slate-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-slate-300"
           placeholder="How does caching work?"
           rows={1}
         />
       </div>
-      <div className="flex pb-2">
+      <div className="flex">
         <Button
           variant="primary"
           size="small"
