@@ -1,0 +1,14 @@
+{
+  "name": "remove-deprecated-rspack-options",
+  "cli": "nx",
+  "version": "22.0.0-beta.1",
+  "description": "Remove deprecated deleteOutputPath and sassImplementation options from rspack configurations.",
+  "factory": "./src/migrations/update-22-0-0/remove-deprecated-options",
+  "implementation": "/packages/rspack/src/migrations/update-22-0-0/remove-deprecated-options.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/rspack",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

@@ -50,7 +50,6 @@ export function applyBaseConfig(
   } = {}
 ): void {
   // Defaults that was applied from executor schema previously.
-  options.deleteOutputPath ??= true;
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
   options.memoryLimit ??= 2048;
@@ -149,7 +148,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
-    clean: config.output?.clean ?? options.deleteOutputPath,
+    clean: config.output?.clean ?? true,
   };
 
   config.watch = options.watch;
