@@ -40,13 +40,25 @@ class MavenExpressionResolver(
             }
         }
         
-        // Try known parameter mappings
+        // Try known parameter mappings based on what Maven actually provides
         val result = when (name) {
-            "sourceDirectory" -> project.compileSourceRoots.firstOrNull()
-            "testSourceDirectory" -> project.testCompileSourceRoots.firstOrNull()
+            // These map directly to Maven project model
+            "compileSourceRoots" -> project.compileSourceRoots.firstOrNull()
+            "testCompileSourceRoots" -> project.testCompileSourceRoots.firstOrNull()
+            "sourceDirectory" -> project.build.sourceDirectory
+            "testSourceDirectory" -> project.build.testSourceDirectory
             "outputDirectory" -> project.build.outputDirectory
             "testOutputDirectory" -> project.build.testOutputDirectory
             "buildDirectory" -> project.build.directory
+            "classesDirectory" -> project.build.outputDirectory
+            "testClassesDirectory" -> project.build.testOutputDirectory
+            "basedir" -> project.basedir?.absolutePath
+
+            // Resources from project model
+            "resources" -> project.build.resources?.firstOrNull()?.directory
+            "testResources" -> project.build.testResources?.firstOrNull()?.directory
+
+            // Classpath elements
             "classpathElements", "compileClasspathElements" -> {
                 // Return classpath as colon-separated string of JAR paths
                 project.compileClasspathElements?.joinToString(System.getProperty("path.separator"))
@@ -54,6 +66,11 @@ class MavenExpressionResolver(
             "testClasspathElements" -> {
                 project.testClasspathElements?.joinToString(System.getProperty("path.separator"))
             }
+
+            // Common plugin-specific paths (these are typically configured in pom.xml)
+            "reportsDirectory" -> "${project.build.directory}/surefire-reports"
+            "warSourceDirectory" -> "${project.basedir}/src/main/webapp"
+
             else -> null
         }
         
