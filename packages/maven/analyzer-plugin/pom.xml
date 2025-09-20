@@ -148,6 +148,13 @@
       <artifactId>org.eclipse.jgit</artifactId>
       <version>6.8.0.202311291450-r</version>
     </dependency>
+
+    <!-- Maven Build Cache Extension -->
+    <dependency>
+      <groupId>org.apache.maven.extensions</groupId>
+      <artifactId>maven-build-cache-extension</artifactId>
+      <version>1.2.0</version>
+    </dependency>
   </dependencies>
 
   <build>
