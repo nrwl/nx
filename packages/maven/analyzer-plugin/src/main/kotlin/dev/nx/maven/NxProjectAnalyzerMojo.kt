@@ -101,8 +101,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val pathResolver = PathResolver(workspaceRoot)
         val pluginKnowledge = PluginKnowledge()
 
-        val phaseAnalyzer =
-            PhaseAnalyzer(pluginManager, session, sharedExpressionResolver, pathResolver, pluginKnowledge)
         val sharedTestClassDiscovery = TestClassDiscovery()
 
         val sharedLifecycleAnalyzer = NxTargetFactory(
@@ -111,7 +109,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             sharedTestClassDiscovery,
             pluginManager,
             session,
-            phaseAnalyzer,
+            sharedExpressionResolver,
+            pathResolver,
+            pluginKnowledge
         )
 
         // Resolve Maven command once for all projects
