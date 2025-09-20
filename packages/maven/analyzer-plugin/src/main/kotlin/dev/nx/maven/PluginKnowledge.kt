@@ -6,6 +6,9 @@ import org.apache.maven.buildcache.xml.config.DirScanConfig
 import org.apache.maven.buildcache.xml.config.TagScanConfig
 import org.apache.maven.buildcache.xml.config.TagExclude
 import org.apache.maven.buildcache.xml.config.io.xpp3.BuildCacheConfigXpp3Reader
+import org.apache.maven.plugin.descriptor.MojoDescriptor
+import org.apache.maven.plugin.descriptor.Parameter
+import org.apache.maven.project.MavenProject
 import org.slf4j.LoggerFactory
 
 /**
@@ -16,7 +19,7 @@ enum class ParameterRole {
     INPUT,      // Parameter represents input files/data
     OUTPUT,     // Parameter represents output files/data
     BOTH,       // Parameter can be both input and output
-    UNKNOWN     // Unable to determine parameter role
+    NONE     // Unable to determine parameter role
 }
 
 data class ParameterInformation(
@@ -24,7 +27,7 @@ data class ParameterInformation(
     val outputs: Set<String>
 )
 
-class PluginKnowledge {
+class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
     private val log = LoggerFactory.getLogger(PluginKnowledge::class.java)
 
     private val CACHE_CONFIG_RESOURCE = "/nx-cache-config.xml"
@@ -38,31 +41,21 @@ class PluginKnowledge {
      * Uses Maven build cache directory scanning rules to determine input/output classification.
      *
      * @param pluginArtifactId The plugin artifact ID (e.g., "maven-compiler-plugin")
-     * @param executionId The execution ID (not used in this approach, kept for API compatibility)
      * @param parameterName The parameter name (e.g., "outputDirectory")
      * @return The ParameterRole if known, null otherwise
      */
-    fun getParameterRole(pluginArtifactId: String?, executionId: String?, parameterName: String?): ParameterRole? {
-        if (pluginArtifactId == null || parameterName == null) {
-            return null
+    fun getParameterRole(pluginArtifactId: String, parameterName: String): ParameterRole {
+        val plugin = getPluginConfig(pluginArtifactId) ?: return ParameterRole.NONE
+        val dirScan = plugin.dirScan ?: return ParameterRole.NONE
+
+        val role = when {
+            isParameterInIncludes(dirScan, parameterName) -> ParameterRole.INPUT
+            isParameterInExcludes(dirScan, parameterName) -> ParameterRole.OUTPUT
+            else -> return ParameterRole.NONE
         }
 
-        return try {
-            val plugin = getPluginConfig(pluginArtifactId) ?: return null
-            val dirScan = plugin.dirScan ?: return null
-
-            val role = when {
-                isParameterInIncludes(dirScan, parameterName) -> ParameterRole.INPUT
-                isParameterInExcludes(dirScan, parameterName) -> ParameterRole.OUTPUT
-                else -> return null
-            }
-
-            log.debug("Found parameter role from cache config: $pluginArtifactId.$parameterName -> $role")
-            role
-        } catch (e: Exception) {
-            log.warn("Error looking up parameter role for $pluginArtifactId.$parameterName: ${e.message}")
-            null
-        }
+        log.debug("Found parameter role from cache config: {}.{} -> {}", pluginArtifactId, parameterName, role)
+        return   role
     }
 
     /**
@@ -214,14 +207,17 @@ class PluginKnowledge {
      * Analyzes all parameters for a mojo execution to determine inputs and outputs
      */
     fun getParameterInformation(
-        descriptor: org.apache.maven.plugin.descriptor.MojoDescriptor,
-        executionId: String,
-        project: org.apache.maven.project.MavenProject,
-        expressionResolver: dev.nx.maven.MavenExpressionResolver,
-        pathResolver: dev.nx.maven.PathResolver
+        descriptor: MojoDescriptor,
+        project: MavenProject,
+        pathResolver: PathResolver
     ): List<ParameterInformation> {
         return descriptor.parameters?.parallelStream()?.map { parameter ->
-            val paramInfo = analyzeParameterInputsOutputs(descriptor, parameter, project, executionId, expressionResolver, pathResolver)
+            val paramInfo = analyzeParameterInputsOutputs(
+                descriptor,
+                parameter,
+                project,
+                pathResolver
+            )
             log.debug("Parameter analysis: {} {} -> {}", descriptor.phase, parameter.name, paramInfo)
             paramInfo
         }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
@@ -231,19 +227,17 @@ class PluginKnowledge {
      * Analyzes a single parameter to determine inputs and outputs
      */
     private fun analyzeParameterInputsOutputs(
-        descriptor: org.apache.maven.plugin.descriptor.MojoDescriptor,
-        parameter: org.apache.maven.plugin.descriptor.Parameter,
-        project: org.apache.maven.project.MavenProject,
-        executionId: String,
-        expressionResolver: dev.nx.maven.MavenExpressionResolver,
-        pathResolver: dev.nx.maven.PathResolver
+        descriptor: MojoDescriptor,
+        parameter: Parameter,
+        project: MavenProject,
+        pathResolver: PathResolver
     ): ParameterInformation {
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
-        val role = getParameterRole(descriptor.pluginDescriptor?.artifactId, executionId, parameter.name)
+        val role = getParameterRole(descriptor.pluginDescriptor.artifactId, parameter.name)
 
-        if (role == ParameterRole.UNKNOWN) {
+        if (role == ParameterRole.NONE) {
             log.debug("Skipping unknown parameter: ${parameter.name}")
             return ParameterInformation(inputs, outputs)
         }
@@ -274,7 +268,7 @@ class PluginKnowledge {
                 pathResolver.addOutputPath(path, outputs)
                 log.debug("Added input/output path: $path (from parameter ${parameter.name})")
             }
-            ParameterRole.UNKNOWN -> {
+            ParameterRole.NONE -> {
                 // Won't reach here due to early return above
             }
         }
