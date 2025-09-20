@@ -168,7 +168,7 @@ class NxTargetFactory(
                     val mojoDescriptor = pluginDescriptor.getMojo(goal)
 
                     val goalTarget =
-                        createSimpleGoalTarget(mavenCommand, project, plugin, goalPrefix, goal, execution, mojoDescriptor)
+                        createSimpleGoalTarget(mavenCommand, project, plugin, goalPrefix, goal, execution, mojoDescriptor!!)
                     nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
 
                     log.info("Created individual goal target: $goalTargetName")
@@ -218,7 +218,7 @@ class NxTargetFactory(
                         log.info("Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}")
 
                         execution.goals.mapNotNull { goal ->
-                            getMojoDescriptor(plugin, goal, project)?.let { descriptor ->
+                            pluginKnowledge.getMojoDescriptor(plugin, goal, project, pluginManager, session)?.let { descriptor ->
                                 ExecutionContext(plugin, execution.id, goal, descriptor)
                             }
                         }
@@ -228,7 +228,7 @@ class NxTargetFactory(
         // Transform all execution contexts to analysis results in parallel, then aggregate on main thread
         executionContexts.parallelStream().forEach { context ->
             val descriptorThreadSafe = context.descriptor.isThreadSafe
-            val descriptorCacheable = isMojoCacheable(context.descriptor)
+            val descriptorCacheable = pluginKnowledge.isMojoCacheable(context.descriptor)
 
             val parameterInfos = pluginKnowledge.getParameterInformation(context.descriptor, project, pathResolver)
             if (!descriptorThreadSafe) {
@@ -327,7 +327,7 @@ class NxTargetFactory(
 
         val context = ExecutionContext(plugin, execution.id, goalName, mojoDescriptor)
         val isThreadSafe = context.descriptor.isThreadSafe
-        val isCacheable = isMojoCacheable(context.descriptor)
+        val isCacheable = pluginKnowledge.isMojoCacheable(context.descriptor)
 
 
         // Analyze inputs and outputs for the goal
@@ -409,39 +409,6 @@ class NxTargetFactory(
         targets["verify-ci"] = verifyCiTarget
 
         return targets
-    }
-
-
-    /**
-     * Determines if a mojo can be safely cached based on Maven build cache configuration
-     */
-    private fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
-        val artifactId = descriptor.pluginDescriptor?.artifactId
-
-        // Check if plugin should always run (never cached)
-        if (pluginKnowledge.shouldAlwaysRun(artifactId)) {
-            log.debug("Plugin $artifactId should always run - not cacheable")
-            return false
-        }
-
-        // Default: cacheable (Maven build cache extension default behavior)
-        log.debug("Plugin $artifactId:${descriptor.goal} is cacheable by default")
-        return true
-    }
-
-
-    private fun getMojoDescriptor(plugin: Plugin, goal: String, project: MavenProject): MojoDescriptor? {
-        return try {
-            val pluginDescriptor = pluginManager.getPluginDescriptor(
-                plugin,
-                project.remotePluginRepositories,
-                session.repositorySession
-            )
-            pluginDescriptor?.getMojo(goal)
-        } catch (e: Exception) {
-            log.warn("Failed to get MojoDescriptor for plugin ${plugin.artifactId} and goal $goal: ${e.message}")
-            null
-        }
     }
 
 

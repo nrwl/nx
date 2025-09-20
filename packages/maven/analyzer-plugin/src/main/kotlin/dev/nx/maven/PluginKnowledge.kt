@@ -294,6 +294,46 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
         }
     }
 
+    /**
+     * Determines if a mojo can be safely cached based on Maven build cache configuration
+     */
+    fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
+        val artifactId = descriptor.pluginDescriptor?.artifactId
+
+        // Check if plugin should always run (never cached)
+        if (shouldAlwaysRun(artifactId)) {
+            log.debug("Plugin $artifactId should always run - not cacheable")
+            return false
+        }
+
+        // Default: cacheable (Maven build cache extension default behavior)
+        log.debug("Plugin $artifactId:${descriptor.goal} is cacheable by default")
+        return true
+    }
+
+    /**
+     * Gets a MojoDescriptor for a specific plugin and goal
+     */
+    fun getMojoDescriptor(
+        plugin: org.apache.maven.model.Plugin,
+        goal: String,
+        project: MavenProject,
+        pluginManager: org.apache.maven.plugin.MavenPluginManager,
+        session: org.apache.maven.execution.MavenSession
+    ): MojoDescriptor? {
+        return try {
+            val pluginDescriptor = pluginManager.getPluginDescriptor(
+                plugin,
+                project.remotePluginRepositories,
+                session.repositorySession
+            )
+            pluginDescriptor?.getMojo(goal)
+        } catch (e: Exception) {
+            log.warn("Failed to get MojoDescriptor for plugin ${plugin.artifactId} and goal $goal: ${e.message}")
+            null
+        }
+    }
+
     private fun loadCacheConfig(): CacheConfig {
         return try {
             val resourceStream = javaClass.getResourceAsStream(CACHE_CONFIG_RESOURCE)
