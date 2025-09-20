@@ -1116,8 +1116,11 @@ describe('TargetProjectLocator', () => {
           {},
           new Map()
         );
-        const result =
-          targetProjectLocator.findDependencyInWorkspaceProjects('@org/pkg1');
+        const result = targetProjectLocator.findDependencyInWorkspaceProjects(
+          '',
+          '@org/pkg1',
+          '*'
+        );
 
         expect(result).toEqual('pkg1');
       }
@@ -1145,8 +1148,11 @@ describe('TargetProjectLocator', () => {
         {},
         new Map()
       );
-      const result =
-        targetProjectLocator.findDependencyInWorkspaceProjects('@org/pkg2');
+      const result = targetProjectLocator.findDependencyInWorkspaceProjects(
+        '',
+        '@org/pkg2',
+        '*'
+      );
 
       expect(result).toBeFalsy();
     });

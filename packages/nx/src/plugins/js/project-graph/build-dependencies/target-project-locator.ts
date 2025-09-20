@@ -1,6 +1,6 @@
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative } from 'node:path';
-import { clean } from 'semver';
+import { dirname, join, posix, relative, resolve } from 'node:path';
+import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -323,10 +323,47 @@ export class TargetProjectLocator {
     return project?.name;
   }
 
-  findDependencyInWorkspaceProjects(dep: string): string | null {
+  findDependencyInWorkspaceProjects(
+    packageJsonPath: string,
+    dep: string,
+    packageVersion: string
+  ): string | null {
     this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
 
-    return this.packagesMetadata.packageToProjectMap[dep]?.name;
+    const maybeDep = this.packagesMetadata.packageToProjectMap[dep];
+
+    const maybeDepMetadata = maybeDep?.data.metadata.js;
+
+    if (!maybeDepMetadata?.isInPackageManagerWorkspaces) {
+      return null;
+    }
+
+    const normalizedRange = packageVersion.replace('workspace:', '');
+
+    if (normalizedRange === '*') {
+      return maybeDep?.name;
+    }
+
+    if (normalizedRange.startsWith('file:')) {
+      const targetPath = maybeDep?.data.root;
+
+      const normalizedPath = normalizedRange.replace('file:', '');
+      const resolvedPath = join(dirname(packageJsonPath), normalizedPath);
+
+      if (targetPath === resolvedPath) {
+        return maybeDep?.name;
+      }
+    }
+
+    if (
+      satisfies(maybeDepMetadata.packageVersion, normalizedRange, {
+        includePrerelease: true,
+      })
+    ) {
+      return maybeDep?.name;
+    }
+
+    return null;
   }
 
   private isPatternMatch(
