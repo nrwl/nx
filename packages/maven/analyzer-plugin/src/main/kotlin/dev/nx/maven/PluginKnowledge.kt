@@ -12,6 +12,18 @@ import org.slf4j.LoggerFactory
  * Provides knowledge about Maven plugin directory scanning and input/output classification.
  * Uses Maven build cache extension's official configuration format for compatibility.
  */
+enum class ParameterRole {
+    INPUT,      // Parameter represents input files/data
+    OUTPUT,     // Parameter represents output files/data
+    BOTH,       // Parameter can be both input and output
+    UNKNOWN     // Unable to determine parameter role
+}
+
+data class ParameterInformation(
+    val inputs: Set<String>,
+    val outputs: Set<String>
+)
+
 class PluginKnowledge {
     private val log = LoggerFactory.getLogger(PluginKnowledge::class.java)
 
