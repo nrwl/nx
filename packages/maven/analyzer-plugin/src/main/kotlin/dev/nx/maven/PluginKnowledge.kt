@@ -1,129 +1,175 @@
 package dev.nx.maven
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import org.apache.maven.buildcache.xml.config.CacheConfig
+import org.apache.maven.buildcache.xml.config.PluginConfigurationScan
+import org.apache.maven.buildcache.xml.config.DirScanConfig
+import org.apache.maven.buildcache.xml.config.TagScanConfig
+import org.apache.maven.buildcache.xml.config.TagExclude
+import org.apache.maven.buildcache.xml.config.io.xpp3.BuildCacheConfigXpp3Reader
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Provides knowledge about known Maven plugin parameters and their input/output roles.
- * Loads plugin parameter mappings from a JSON resource file.
+ * Provides knowledge about Maven plugin directory scanning and input/output classification.
+ * Uses Maven build cache extension's official configuration format for compatibility.
  */
 class PluginKnowledge {
     private val log = LoggerFactory.getLogger(PluginKnowledge::class.java)
-    private val mapper = jacksonObjectMapper()
 
-    // Cache for parsed plugin knowledge
-    private val knowledgeCache = ConcurrentHashMap<String, PluginKnowledgeData>()
+    private val CACHE_CONFIG_RESOURCE = "/nx-cache-config.xml"
 
-    companion object {
-        private const val KNOWLEDGE_RESOURCE = "/known-plugin-parameters.json"
-
-        @Volatile
-        private var instance: PluginKnowledge? = null
-
-        fun getInstance(): PluginKnowledge {
-            return instance ?: synchronized(this) {
-                instance ?: PluginKnowledge().also { instance = it }
-            }
-        }
-    }
-
-    private val pluginData: PluginKnowledgeData by lazy {
-        loadKnowledgeData()
+    private val cacheConfig: CacheConfig by lazy {
+        loadCacheConfig()
     }
 
     /**
-     * Gets the parameter role for a specific plugin, goal, and parameter combination.
+     * Gets the parameter role for a specific plugin and parameter combination.
+     * Uses Maven build cache directory scanning rules to determine input/output classification.
      *
      * @param pluginArtifactId The plugin artifact ID (e.g., "maven-compiler-plugin")
-     * @param goal The goal name (e.g., "compile")
+     * @param executionId The execution ID (not used in this approach, kept for API compatibility)
      * @param parameterName The parameter name (e.g., "outputDirectory")
      * @return The ParameterRole if known, null otherwise
      */
-    fun getParameterRole(pluginArtifactId: String?, goal: String?, parameterName: String?): ParameterRole? {
-        if (pluginArtifactId == null || goal == null || parameterName == null) {
+    fun getParameterRole(pluginArtifactId: String?, executionId: String?, parameterName: String?): ParameterRole? {
+        if (pluginArtifactId == null || parameterName == null) {
             return null
         }
 
         return try {
-            val plugin = pluginData.plugins[pluginArtifactId] ?: return null
-            val goalData = plugin.goals[goal] ?: return null
+            val plugin = getPluginConfig(pluginArtifactId) ?: return null
+            val dirScan = plugin.dirScan ?: return null
 
             val role = when {
-                goalData.inputParameters.contains(parameterName) -> ParameterRole.INPUT
-                goalData.outputParameters.contains(parameterName) -> ParameterRole.OUTPUT
+                isParameterInIncludes(dirScan, parameterName) -> ParameterRole.INPUT
+                isParameterInExcludes(dirScan, parameterName) -> ParameterRole.OUTPUT
                 else -> return null
             }
 
-            log.debug("Found parameter role from knowledge: $pluginArtifactId:$goal.$parameterName -> $role")
+            log.debug("Found parameter role from cache config: $pluginArtifactId.$parameterName -> $role")
             role
         } catch (e: Exception) {
-            log.warn("Error looking up parameter role for $pluginArtifactId:$goal.$parameterName: ${e.message}")
+            log.warn("Error looking up parameter role for $pluginArtifactId.$parameterName: ${e.message}")
             null
         }
     }
 
     /**
-     * Checks if a plugin is known in the knowledge base.
+     * Checks if a plugin is known in the cache configuration.
      */
     fun isKnownPlugin(pluginArtifactId: String?): Boolean {
-        return pluginArtifactId?.let { pluginData.plugins.containsKey(it) } ?: false
+        return pluginArtifactId?.let {
+            getPluginConfig(it) != null
+        } ?: false
     }
 
     /**
-     * Checks if a specific goal is known for a plugin.
+     * Checks if a specific execution is known for a plugin.
+     * Note: Maven build cache extension doesn't use execution-level configuration,
+     * so this always returns true if the plugin is known.
      */
-    fun isKnownGoal(pluginArtifactId: String?, goal: String?): Boolean {
-        if (pluginArtifactId == null || goal == null) return false
-        return pluginData.plugins[pluginArtifactId]?.goals?.containsKey(goal) ?: false
+    fun isKnownExecution(pluginArtifactId: String?, executionId: String?): Boolean {
+        return isKnownPlugin(pluginArtifactId)
     }
 
     /**
-     * Gets all known input parameters for a specific plugin and goal.
+     * Gets all known input tag scan configurations for a specific plugin.
      */
-    fun getKnownInputParameters(pluginArtifactId: String?, goal: String?): Set<String> {
-        if (pluginArtifactId == null || goal == null) return emptySet()
-        return pluginData.plugins[pluginArtifactId]?.goals?.get(goal)?.inputParameters?.toSet() ?: emptySet()
+    fun getKnownInputTagScans(pluginArtifactId: String?): List<TagScanConfig> {
+        if (pluginArtifactId == null) return emptyList()
+        val plugin = getPluginConfig(pluginArtifactId) ?: return emptyList()
+        return plugin.dirScan?.includes ?: emptyList()
     }
 
     /**
-     * Gets all known output parameters for a specific plugin and goal.
+     * Gets all known output tag excludes for a specific plugin.
      */
-    fun getKnownOutputParameters(pluginArtifactId: String?, goal: String?): Set<String> {
-        if (pluginArtifactId == null || goal == null) return emptySet()
-        return pluginData.plugins[pluginArtifactId]?.goals?.get(goal)?.outputParameters?.toSet() ?: emptySet()
+    fun getKnownOutputTagExcludes(pluginArtifactId: String?): List<TagExclude> {
+        if (pluginArtifactId == null) return emptyList()
+        val plugin = getPluginConfig(pluginArtifactId) ?: return emptyList()
+        return plugin.dirScan?.excludes ?: emptyList()
     }
 
-    private fun loadKnowledgeData(): PluginKnowledgeData {
+    /**
+     * Gets directory scan configuration for a specific plugin.
+     */
+    fun getDirScanConfig(pluginArtifactId: String?): DirScanConfig? {
+        if (pluginArtifactId == null) return null
+        return getPluginConfig(pluginArtifactId)?.dirScan
+    }
+
+    /**
+     * Gets global input include patterns.
+     */
+    fun getGlobalIncludes(): List<org.apache.maven.buildcache.xml.config.Include> {
+        return cacheConfig.input?.global?.includes ?: emptyList()
+    }
+
+    /**
+     * Gets global input exclude patterns.
+     */
+    fun getGlobalExcludes(): List<org.apache.maven.buildcache.xml.config.Exclude> {
+        return cacheConfig.input?.global?.excludes ?: emptyList()
+    }
+
+    /**
+     * Checks if a plugin should always run (never be cached).
+     */
+    fun shouldAlwaysRun(pluginArtifactId: String?): Boolean {
+        if (pluginArtifactId == null) return false
+        return cacheConfig.executionControl?.runAlways?.plugins?.any {
+            it.artifactId == pluginArtifactId
+        } ?: false
+    }
+
+
+    /**
+     * Gets output exclusion patterns.
+     */
+    fun getOutputExclusionPatterns(): List<String> {
+        return cacheConfig.output?.exclude?.patterns ?: emptyList()
+    }
+
+    /**
+     * Gets a specific plugin configuration.
+     */
+    private fun getPluginConfig(pluginArtifactId: String): PluginConfigurationScan? {
+        return cacheConfig.input?.plugins?.find {
+            it.artifactId == pluginArtifactId
+        }
+    }
+
+    /**
+     * Checks if a parameter is included in the directory scan includes.
+     */
+    private fun isParameterInIncludes(dirScan: DirScanConfig, parameterName: String): Boolean {
+        return dirScan.includes?.any { include ->
+            include.tagName == parameterName
+        } ?: false
+    }
+
+    /**
+     * Checks if a parameter is excluded in the directory scan excludes.
+     */
+    private fun isParameterInExcludes(dirScan: DirScanConfig, parameterName: String): Boolean {
+        return dirScan.excludes?.any { exclude ->
+            exclude.tagName == parameterName
+        } ?: false
+    }
+
+    private fun loadCacheConfig(): CacheConfig {
         return try {
-            val resourceStream = javaClass.getResourceAsStream(KNOWLEDGE_RESOURCE)
-                ?: throw IllegalStateException("Could not find resource: $KNOWLEDGE_RESOURCE")
+            val resourceStream = javaClass.getResourceAsStream(CACHE_CONFIG_RESOURCE)
+                ?: throw IllegalStateException("Could not find resource: $CACHE_CONFIG_RESOURCE")
 
             resourceStream.use { stream ->
-                val knowledgeData = mapper.readValue<PluginKnowledgeData>(stream)
-                log.info("Loaded plugin knowledge for ${knowledgeData.plugins.size} plugins")
-                knowledgeData
+                val reader = BuildCacheConfigXpp3Reader()
+                val cacheConfig = reader.read(stream)
+                log.info("Loaded cache configuration for ${cacheConfig.input?.plugins?.size ?: 0} plugins")
+                cacheConfig
             }
         } catch (e: Exception) {
-            log.warn("Failed to load plugin knowledge from $KNOWLEDGE_RESOURCE: ${e.message}. Using empty knowledge base.")
-            PluginKnowledgeData(emptyMap())
+            log.warn("Failed to load cache configuration from $CACHE_CONFIG_RESOURCE: ${e.message}. Using empty configuration.")
+            CacheConfig()
         }
     }
 }
-
-/**
- * Data structure for plugin knowledge loaded from JSON.
- */
-data class PluginKnowledgeData(
-    val plugins: Map<String, PluginData>
-)
-
-data class PluginData(
-    val goals: Map<String, GoalData>
-)
-
-data class GoalData(
-    val inputParameters: List<String>,
-    val outputParameters: List<String>
-)
