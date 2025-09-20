@@ -9,6 +9,7 @@ import org.apache.maven.model.Plugin
 import org.apache.maven.model.PluginExecution
 import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.plugin.descriptor.MojoDescriptor
+import org.apache.maven.plugin.descriptor.Parameter
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
@@ -23,7 +24,9 @@ class NxTargetFactory(
     private val testClassDiscovery: TestClassDiscovery,
     private val pluginManager: MavenPluginManager,
     private val session: MavenSession,
-    private val phaseAnalyzer: PhaseAnalyzer
+    private val expressionResolver: MavenExpressionResolver,
+    private val pathResolver: PathResolver,
+    private val pluginKnowledge: PluginKnowledge
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
@@ -202,7 +205,64 @@ class NxTargetFactory(
     private fun createPhaseTarget(
         project: MavenProject, phase: String, mavenCommand: String, goals: List<String>
     ): NxTarget {
-        val analysis = phaseAnalyzer.analyze(project, phase)
+        // Inline analysis logic from PhaseAnalyzer
+        val plugins = project.build.plugins
+        var isThreadSafe = true
+        var isCacheable = true
+        val inputs = mutableSetOf<String>()
+        val outputs = mutableSetOf<String>()
+
+        data class ExecutionContext(
+            val plugin: Plugin,
+            val executionId: String,
+            val goal: String,
+            val descriptor: MojoDescriptor
+        )
+
+        val executionContexts = plugins
+            .flatMap { plugin ->
+                plugin.executions
+                    .filter { execution -> execution.phase == phase }
+                    .flatMap { execution ->
+                        log.info("Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}")
+
+                        execution.goals.mapNotNull { goal ->
+                            getMojoDescriptor(plugin, goal, project)?.let { descriptor ->
+                                ExecutionContext(plugin, execution.id, goal, descriptor)
+                            }
+                        }
+                    }
+            }
+
+        // Transform all execution contexts to analysis results in parallel, then aggregate on main thread
+        val analysisResults = executionContexts.parallelStream().map { context ->
+            val descriptorThreadSafe = context.descriptor.isThreadSafe
+            val descriptorCacheable = isMojoCacheable(context.descriptor)
+
+            val parameterInfos = context.descriptor.parameters?.parallelStream()?.map { parameter ->
+                val paramInfo = analyzeParameterInputsOutputs(context.descriptor, parameter, project, context.executionId)
+                log.debug("Parameter analysis: ${context.descriptor.phase} ${parameter.name} -> ${paramInfo}")
+                paramInfo
+            }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
+
+            Triple(descriptorThreadSafe, descriptorCacheable, parameterInfos)
+        }.collect(java.util.stream.Collectors.toList())
+
+        // Aggregate results on main thread (no synchronization needed)
+        analysisResults.forEach { (descriptorThreadSafe, descriptorCacheable, parameterInfos) ->
+            if (!descriptorThreadSafe) {
+                isThreadSafe = false
+            }
+            if (!descriptorCacheable) {
+                isCacheable = false
+            }
+            parameterInfos.forEach { paramInfo ->
+                inputs.addAll(paramInfo.inputs)
+                outputs.addAll(paramInfo.outputs)
+            }
+        }
+
+        log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
 
         val options = objectMapper.createObjectNode()
 
@@ -234,20 +294,20 @@ class NxTargetFactory(
 
         log.info("Created phase target '$phase' with command: $command")
 
-        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+        val target = NxTarget("nx:run-commands", options, isCacheable, isThreadSafe)
 
-//        // Copy caching info from analysis
-//        if (analysis.isCacheable) {
-//            // Convert inputs to JsonNode array
-//            val inputsArray = objectMapper.createArrayNode()
-//            analysis.inputs.forEach { input -> inputsArray.add(input) }
-//            target.inputs = inputsArray
-//
-//            // Convert outputs to JsonNode array
-//            val outputsArray = objectMapper.createArrayNode()
-//            analysis.outputs.forEach { output -> outputsArray.add(output) }
-//            target.outputs = outputsArray
-//        }
+        // Copy caching info from analysis
+        if (isCacheable) {
+            // Convert inputs to JsonNode array
+            val inputsArray = objectMapper.createArrayNode()
+            inputs.forEach { input -> inputsArray.add(input) }
+            target.inputs = inputsArray
+
+            // Convert outputs to JsonNode array
+            val outputsArray = objectMapper.createArrayNode()
+            outputs.forEach { output -> outputsArray.add(output) }
+            target.outputs = outputsArray
+        }
 
         return target
     }
@@ -319,6 +379,102 @@ class NxTargetFactory(
         return targets
     }
 
+
+    /**
+     * Analyzes parameter to determine inputs and outputs
+     */
+    private fun analyzeParameterInputsOutputs(descriptor: MojoDescriptor, parameter: Parameter, project: MavenProject, executionId: String? = null): ParameterInformation {
+        val inputs = mutableSetOf<String>()
+        val outputs = mutableSetOf<String>()
+
+        val role = analyzeParameterRole(descriptor, parameter, executionId)
+
+        if (role == ParameterRole.UNKNOWN) {
+            log.debug("Skipping unknown parameter: ${parameter.name}")
+            return ParameterInformation(inputs, outputs)
+        }
+
+        val path = expressionResolver.resolveParameterValue(
+            parameter.name,
+            parameter.defaultValue,
+            parameter.expression,
+            project
+        )
+
+        if (path == null) {
+            log.debug("Parameter ${parameter.name} resolved to null path")
+            return ParameterInformation(inputs, outputs)
+        }
+
+        when (role) {
+            ParameterRole.INPUT -> {
+                pathResolver.addInputPath(path, inputs)
+                log.info("Added input path: $path (from parameter ${parameter.name})")
+            }
+            ParameterRole.OUTPUT -> {
+                pathResolver.addOutputPath(path, outputs)
+                log.info("Added output path: $path (from parameter ${parameter.name})")
+            }
+            ParameterRole.BOTH -> {
+                pathResolver.addInputPath(path, inputs)
+                pathResolver.addOutputPath(path, outputs)
+                log.debug("Added input/output path: $path (from parameter ${parameter.name})")
+            }
+            ParameterRole.UNKNOWN -> {
+                // Won't reach here due to early return above
+            }
+        }
+
+        return ParameterInformation(inputs, outputs)
+    }
+
+    /**
+     * Determines if a mojo can be safely cached based on Maven build cache configuration
+     */
+    private fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
+        val artifactId = descriptor.pluginDescriptor?.artifactId
+
+        // Check if plugin should always run (never cached)
+        if (pluginKnowledge.shouldAlwaysRun(artifactId)) {
+            log.debug("Plugin $artifactId should always run - not cacheable")
+            return false
+        }
+
+        // Default: cacheable (Maven build cache extension default behavior)
+        log.debug("Plugin $artifactId:${descriptor.goal} is cacheable by default")
+        return true
+    }
+
+    private fun analyzeParameterRole(descriptor: MojoDescriptor, parameter: Parameter, executionId: String? = null): ParameterRole {
+        val name = parameter.name
+
+        // Only use plugin knowledge - no heuristics
+        val pluginArtifactId = descriptor.pluginDescriptor?.artifactId
+        val goal = descriptor.goal
+        val knownRole = pluginKnowledge.getParameterRole(pluginArtifactId, executionId ?: "default-${goal}", name)
+
+        if (knownRole != null) {
+            log.debug("Parameter $name: Found in plugin knowledge for $pluginArtifactId:$goal -> $knownRole")
+            return knownRole
+        }
+
+        log.debug("Parameter $name: Not found in plugin knowledge")
+        return ParameterRole.UNKNOWN
+    }
+
+    private fun getMojoDescriptor(plugin: Plugin, goal: String, project: MavenProject): MojoDescriptor? {
+        return try {
+            val pluginDescriptor = pluginManager.getPluginDescriptor(
+                plugin,
+                project.remotePluginRepositories,
+                session.repositorySession
+            )
+            pluginDescriptor?.getMojo(goal)
+        } catch (e: Exception) {
+            log.warn("Failed to get MojoDescriptor for plugin ${plugin.artifactId} and goal $goal: ${e.message}")
+            null
+        }
+    }
 
     private fun getPluginDescriptor(
         plugin: Plugin,
