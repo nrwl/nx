@@ -168,6 +168,138 @@ class PluginKnowledge {
         } ?: false
     }
 
+    /**
+     * Gets Maven's standard directory conventions as fallback inputs/outputs
+     * Includes both Maven standard layout and global patterns from cache config
+     */
+    fun getMavenConventionFallbacks(): Pair<Set<String>, Set<String>> {
+        val inputs = mutableSetOf<String>()
+        val outputs = mutableSetOf<String>()
+
+        // Maven standard directory layout
+        inputs.addAll(setOf(
+            "src/main/java",
+            "src/test/java",
+            "src/main/resources",
+            "src/test/resources",
+            "pom.xml"
+        ))
+
+        outputs.addAll(setOf(
+            "target/classes",
+            "target/test-classes",
+            "target"
+        ))
+
+        // Add global includes from cache config
+        cacheConfig.input?.global?.includes?.forEach { include ->
+            include.value?.let { directory ->
+                // Include directories from global config as inputs
+                when (directory) {
+                    "." -> {
+                        // Root directory includes (like pom.xml) are already covered above
+                    }
+                    else -> {
+                        // Add any other directories specified in global includes
+                        inputs.add(directory)
+                    }
+                }
+            }
+        }
+
+        return Pair(inputs, outputs)
+    }
+
+    /**
+     * Analyzes all parameters for a mojo execution to determine inputs and outputs
+     */
+    fun getParameterInformation(
+        descriptor: org.apache.maven.plugin.descriptor.MojoDescriptor,
+        executionId: String,
+        project: org.apache.maven.project.MavenProject,
+        expressionResolver: dev.nx.maven.MavenExpressionResolver,
+        pathResolver: dev.nx.maven.PathResolver
+    ): List<ParameterInformation> {
+        return descriptor.parameters?.parallelStream()?.map { parameter ->
+            val paramInfo = analyzeParameterInputsOutputs(descriptor, parameter, project, executionId, expressionResolver, pathResolver)
+            log.debug("Parameter analysis: {} {} -> {}", descriptor.phase, parameter.name, paramInfo)
+            paramInfo
+        }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
+    }
+
+    /**
+     * Analyzes a single parameter to determine inputs and outputs
+     */
+    private fun analyzeParameterInputsOutputs(
+        descriptor: org.apache.maven.plugin.descriptor.MojoDescriptor,
+        parameter: org.apache.maven.plugin.descriptor.Parameter,
+        project: org.apache.maven.project.MavenProject,
+        executionId: String,
+        expressionResolver: dev.nx.maven.MavenExpressionResolver,
+        pathResolver: dev.nx.maven.PathResolver
+    ): ParameterInformation {
+        val inputs = mutableSetOf<String>()
+        val outputs = mutableSetOf<String>()
+
+        val role = getParameterRole(descriptor.pluginDescriptor?.artifactId, executionId, parameter.name)
+
+        if (role == ParameterRole.UNKNOWN) {
+            log.debug("Skipping unknown parameter: ${parameter.name}")
+            return ParameterInformation(inputs, outputs)
+        }
+
+        val path = expressionResolver.resolveParameterValue(
+            parameter.name,
+            parameter.defaultValue,
+            parameter.expression,
+            project
+        )
+
+        if (path == null) {
+            log.debug("Parameter ${parameter.name} resolved to null path")
+            return ParameterInformation(inputs, outputs)
+        }
+
+        when (role) {
+            ParameterRole.INPUT -> {
+                pathResolver.addInputPath(path, inputs)
+                log.info("Added input path: $path (from parameter ${parameter.name})")
+            }
+            ParameterRole.OUTPUT -> {
+                pathResolver.addOutputPath(path, outputs)
+                log.info("Added output path: $path (from parameter ${parameter.name})")
+            }
+            ParameterRole.BOTH -> {
+                pathResolver.addInputPath(path, inputs)
+                pathResolver.addOutputPath(path, outputs)
+                log.debug("Added input/output path: $path (from parameter ${parameter.name})")
+            }
+            ParameterRole.UNKNOWN -> {
+                // Won't reach here due to early return above
+            }
+        }
+
+        // Format all paths for Nx compatibility
+        val formattedInputs = inputs.map { formatPathForNx(it) }.toSet()
+        val formattedOutputs = outputs.map { formatPathForNx(it) }.toSet()
+
+        return ParameterInformation(formattedInputs, formattedOutputs)
+    }
+
+    /**
+     * Formats a path for Nx compatibility by adding {projectRoot} prefix for relative paths
+     */
+    private fun formatPathForNx(path: String): String {
+        return when {
+            // Already has Nx interpolation
+            path.startsWith("{") -> path
+            // Absolute paths stay as-is (though not recommended for Nx)
+            path.startsWith("/") -> path
+            // Relative paths get {projectRoot} prefix
+            else -> "{projectRoot}/$path"
+        }
+    }
+
     private fun loadCacheConfig(): CacheConfig {
         return try {
             val resourceStream = javaClass.getResourceAsStream(CACHE_CONFIG_RESOURCE)
