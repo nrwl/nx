@@ -109,7 +109,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             sharedTestClassDiscovery,
             pluginManager,
             session,
-            sharedExpressionResolver,
             pathResolver,
             pluginKnowledge
         )
