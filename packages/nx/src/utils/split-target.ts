@@ -1,20 +1,73 @@
 import { ProjectGraph } from '../config/project-graph';
 
+let runCommandsCache: Map<string, [string, string?, string?]>;
+let cachedGraph: ProjectGraph;
+
+function getCommandCache(projectGraph: ProjectGraph) {
+  if (runCommandsCache && cachedGraph === projectGraph) {
+    return runCommandsCache;
+  }
+  runCommandsCache = new Map<string, [string, string?, string?]>();
+  cachedGraph = projectGraph;
+  for (const [projectName, projectNode] of Object.entries(projectGraph.nodes)) {
+    for (const [targetName, targetConfig] of Object.entries(
+      projectNode.data.targets || {}
+    )) {
+      // TODO (meeroslav): consider what to do with duplicates, otherwise next one overrides it
+      runCommandsCache.set(`${projectName}:${targetName}`, [
+        projectName,
+        targetName,
+      ]);
+      if (targetConfig.configurations) {
+        for (const configurationName of Object.keys(
+          targetConfig.configurations
+        )) {
+          runCommandsCache.set(
+            `${projectName}:${targetName}:${configurationName}`,
+            [projectName, targetName, configurationName]
+          );
+        }
+      }
+    }
+  }
+
+  return runCommandsCache;
+}
+
 export function splitTarget(
   s: string,
   projectGraph: ProjectGraph
 ): [project: string, target?: string, configuration?: string] {
-  let [project, ...segments] = splitByColons(s);
-  const validTargets = projectGraph.nodes[project]
-    ? projectGraph.nodes[project].data.targets
-    : {};
-  const validTargetNames = new Set(Object.keys(validTargets ?? {}));
+  const cache = getCommandCache(projectGraph);
+  if (cache.has(s)) {
+    return cache.get(s);
+  }
+  // if the string is a project, return it
+  if (projectGraph.nodes[s]) {
+    return [s];
+  }
+  if (s.includes(':')) {
+    let [project, ...segments] = splitByColons(s);
+    // if only configuration cannot be matched, try to match project and target
+    const configuration = segments[segments.length - 1];
+    const rest = s.slice(0, -(configuration.length + 1));
+    if (cache.has(rest) && cache.get(rest).length === 2) {
+      return [...(cache.get(rest) as [string, string]), configuration];
+    }
+    // no project-target pair found, do the naive matching
+    const validTargets = projectGraph.nodes[project]
+      ? projectGraph.nodes[project].data.targets
+      : {};
+    const validTargetNames = new Set(Object.keys(validTargets ?? {}));
 
-  return [project, ...groupJointSegments(segments, validTargetNames)] as [
-    string,
-    string?,
-    string?
-  ];
+    return [project, ...groupJointSegments(segments, validTargetNames)] as [
+      string,
+      string?,
+      string?
+    ];
+  }
+  // we don't know what to do with the string, return as is
+  return [s];
 }
 
 function groupJointSegments(segments: string[], validTargetNames: Set<string>) {
