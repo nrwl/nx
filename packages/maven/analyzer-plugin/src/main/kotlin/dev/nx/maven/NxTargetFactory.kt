@@ -23,7 +23,6 @@ class NxTargetFactory(
     private val testClassDiscovery: TestClassDiscovery,
     private val pluginManager: MavenPluginManager,
     private val session: MavenSession,
-    private val expressionResolver: MavenExpressionResolver,
     private val pathResolver: PathResolver,
     private val pluginKnowledge: PluginKnowledge
 ) {
