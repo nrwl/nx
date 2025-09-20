@@ -217,7 +217,7 @@ class NxTargetFactory(
 
         // Add build state apply if needed (before goals)
         if (shouldApplyBuildState("$phase-goals")) {
-            commandParts.add("nx:apply")
+            commandParts.add("dev.nx.maven:nx-maven-plugin:apply")
         }
 
         // Add all goals for this phase
@@ -225,7 +225,7 @@ class NxTargetFactory(
 
         // Add build state record if needed (after goals)
         if (shouldRecordBuildState("$phase-goals")) {
-            commandParts.add("nx:record")
+            commandParts.add("dev.nx.maven:nx-maven-plugin:record")
         }
 
         // Add project selection and non-recursive flag
