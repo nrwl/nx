@@ -170,7 +170,7 @@ Plugins which define compile or bundling tasks such as `@nx/webpack/plugin` and 
 ```jsonc
 "inputs": [
   "production", // All files in a project excluding test files
-  "^production" // Inputs of a dependencies which may affect behavior of projects which depend on them
+  "^production" // Inputs of dependencies which may affect behavior of projects which depend on them
 ]
 ```
 
@@ -179,7 +179,7 @@ Plugins which define testing tasks such as `@nx/cypress/plugin`, `@nx/playwright
 ```jsonc
 "inputs": [
   "default", // All files in a project including test files
-  "^production" // Inputs of a dependencies which may affect behavior of projects which depend on them
+  "^production" // Inputs of dependencies which may affect behavior of projects which depend on them
 ]
 ```
 
