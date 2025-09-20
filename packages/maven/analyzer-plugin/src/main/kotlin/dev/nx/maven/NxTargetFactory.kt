@@ -231,7 +231,7 @@ class NxTargetFactory(
             val descriptorThreadSafe = context.descriptor.isThreadSafe
             val descriptorCacheable = isMojoCacheable(context.descriptor)
 
-            val parameterInfos = pluginKnowledge.getParameterInformation(context.descriptor, context.executionId, project, expressionResolver, pathResolver)
+            val parameterInfos = pluginKnowledge.getParameterInformation(context.descriptor, project, pathResolver)
             if (!descriptorThreadSafe) {
                 isThreadSafe = false
             }
@@ -335,7 +335,11 @@ class NxTargetFactory(
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
-        pluginKnowledge.getParameterInformation(context.descriptor, context.executionId, project, expressionResolver, pathResolver).forEach { parameterInformation ->
+        pluginKnowledge.getParameterInformation(
+            context.descriptor,
+            project,
+            pathResolver
+        ).forEach { parameterInformation ->
             inputs.addAll(parameterInformation.inputs)
             outputs.addAll(parameterInformation.outputs)
         }

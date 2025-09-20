@@ -99,7 +99,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         // Create shared component instances ONCE for all projects (major optimization)
 
         val pathResolver = PathResolver(workspaceRoot)
-        val pluginKnowledge = PluginKnowledge()
+        val pluginKnowledge = PluginKnowledge(sharedExpressionResolver)
 
         val sharedTestClassDiscovery = TestClassDiscovery()
 
