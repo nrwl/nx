@@ -27,11 +27,6 @@ class NxTargetFactory(
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
-    data class ArtifactAttachmentConfig(
-        val requiresMainArtifact: Boolean = false,
-        val requiresAttachment: Boolean = true
-    )
-
     // All goals now get build state management for maximum compatibility
     private fun shouldApplyBuildState(goalKey: String): Boolean = true
     private fun shouldRecordBuildState(goalKey: String): Boolean = true
@@ -239,7 +234,7 @@ class NxTargetFactory(
 
         log.info("Created phase target '$phase' with command: $command")
 
-        val target = NxTarget("nx:run-commands", options, false, analysis.isThreadSafe)
+        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
 
 //        // Copy caching info from analysis
 //        if (analysis.isCacheable) {
@@ -261,7 +256,7 @@ class NxTargetFactory(
         phase: String
     ): NxTarget {
         log.info("Creating noop target for phase '$phase' (no goals)")
-        return NxTarget("nx:noop", null, false, true)
+        return NxTarget("nx:noop", null, cache = true, parallelism = true)
     }
 
     private fun createSimpleGoalTarget(

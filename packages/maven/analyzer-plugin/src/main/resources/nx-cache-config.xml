@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cache xmlns="http://maven.apache.org/BUILD-CACHE-CONFIG/1.0.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://maven.apache.org/BUILD-CACHE-CONFIG/1.0.0
+                           https://maven.apache.org/xsd/build-cache-config-1.0.0.xsd">
+
+    <configuration>
+        <enabled>true</enabled>
+        <hashAlgorithm>XX</hashAlgorithm>
+        <validateXml>false</validateXml>
+        <mandatoryClean>false</mandatoryClean>
+        <projectVersioning adjustMetaInf="false" calculateProjectVersionChecksum="false"/>
+        <local>
+            <maxBuildsCached>3</maxBuildsCached>
+        </local>
+    </configuration>
+
+    <input>
+        <global>
+            <glob>*</glob>
+            <includes>
+                <!-- Include common configuration files -->
+                <include recursive="false" glob="pom.xml">.</include>
+                <include recursive="true" glob="**/*.properties">src/main/resources</include>
+                <include recursive="true" glob="**/*.xml">src/main/resources</include>
+                <include recursive="true" glob="**/*.properties">src/test/resources</include>
+                <include recursive="true" glob="**/*.xml">src/test/resources</include>
+            </includes>
+            <excludes>
+                <!-- Exclude common temporary and generated files -->
+                <exclude glob="**/*.tmp">target</exclude>
+                <exclude glob="**/*.log">target</exclude>
+                <exclude glob="**/surefire-reports/**">target</exclude>
+                <exclude glob="**/failsafe-reports/**">target</exclude>
+            </excludes>
+        </global>
+
+        <plugins>
+            <!-- Maven Compiler Plugin -->
+            <plugin artifactId="maven-compiler-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="compileSourceRoots" recursive="true" glob="**/*.java"/>
+                        <include tagName="sourceDirectory" recursive="true" glob="**/*.java"/>
+                        <include tagName="testCompileSourceRoots" recursive="true" glob="**/*.java"/>
+                        <include tagName="testSourceDirectory" recursive="true" glob="**/*.java"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                        <exclude tagName="testOutputDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Maven Resources Plugin -->
+            <plugin artifactId="maven-resources-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="resources" recursive="true" glob="**/*"/>
+                        <include tagName="testResources" recursive="true" glob="**/*"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                        <exclude tagName="testOutputDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Maven Surefire Plugin -->
+            <plugin artifactId="maven-surefire-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="testClassesDirectory" recursive="true" glob="**/*.class"/>
+                        <include tagName="classesDirectory" recursive="true" glob="**/*.class"/>
+                        <include tagName="suiteXmlFiles" recursive="false" glob="**/*.xml"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="reportsDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Maven Failsafe Plugin -->
+            <plugin artifactId="maven-failsafe-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="testClassesDirectory" recursive="true" glob="**/*.class"/>
+                        <include tagName="classesDirectory" recursive="true" glob="**/*.class"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="reportsDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Maven JAR Plugin -->
+            <plugin artifactId="maven-jar-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="classesDirectory" recursive="true" glob="**/*"/>
+                        <include tagName="testClassesDirectory" recursive="true" glob="**/*"/>
+                        <include tagName="manifestFile" recursive="false" glob="*"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Maven WAR Plugin -->
+            <plugin artifactId="maven-war-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="warSourceDirectory" recursive="true" glob="**/*"/>
+                        <include tagName="classesDirectory" recursive="true" glob="**/*"/>
+                        <include tagName="webXml" recursive="false" glob="*.xml"/>
+                        <include tagName="webResources" recursive="true" glob="**/*"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Maven Dependency Plugin -->
+            <plugin artifactId="maven-dependency-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="artifactItems" recursive="false" glob="*"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Maven Assembly Plugin -->
+            <plugin artifactId="maven-assembly-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="descriptors" recursive="false" glob="**/*.xml"/>
+                        <include tagName="descriptorRefs" recursive="false" glob="*"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                        <exclude tagName="workDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- Spring Boot Maven Plugin -->
+            <plugin artifactId="spring-boot-maven-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="classesDirectory" recursive="true" glob="**/*.class"/>
+                        <include tagName="testClassesDirectory" recursive="true" glob="**/*.class"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+
+            <!-- JaCoCo Maven Plugin -->
+            <plugin artifactId="jacoco-maven-plugin">
+                <dirScan mode="auto">
+                    <includes>
+                        <include tagName="dataFile" recursive="false" glob="*.exec"/>
+                    </includes>
+                    <excludes>
+                        <exclude tagName="outputDirectory"/>
+                        <exclude tagName="destFile"/>
+                    </excludes>
+                </dirScan>
+            </plugin>
+        </plugins>
+    </input>
+
+    <output>
+        <exclude>
+            <patterns>
+                <!-- Exclude common output patterns that shouldn't be cached -->
+                <pattern>**/*.tmp</pattern>
+                <pattern>**/*.log</pattern>
+                <pattern>**/maven-archiver/**</pattern>
+                <pattern>**/maven-status/**</pattern>
+            </patterns>
+        </exclude>
+    </output>
+
+    <executionControl>
+        <runAlways>
+            <plugins>
+                <!-- These plugins should always run regardless of cache status -->
+                <plugin artifactId="maven-deploy-plugin"/>
+                <plugin artifactId="maven-install-plugin"/>
+                <plugin artifactId="maven-site-plugin"/>
+            </plugins>
+        </runAlways>
+        <ignoreMissing>
+            <plugins>
+                <!-- These plugins don't affect build correctness if missing from cache -->
+                <plugin artifactId="jacoco-maven-plugin"/>
+            </plugins>
+        </ignoreMissing>
+    </executionControl>
+
+</cache>
