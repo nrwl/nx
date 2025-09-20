@@ -112,6 +112,18 @@ Type: `'all' | 'none' | string[]`
 Define external packages that will not be bundled. Use `all` to exclude all 3rd party packages, and `none` to bundle all
 packages. Use an array to exclude specific packages from the bundle. Default is `none`.
 
+##### mergeExternals
+
+Type: `boolean`  
+Default: `false`
+
+When `true`, the `NxAppWebpackPlugin` will **merge** its computed `externals`
+(from `externalDependencies`) with any existing `externals` defined in your
+Webpack config, instead of replacing them. This is useful when you already
+specify custom externals (e.g., Electron, Node built-ins, or framework-specific
+runtime externals) and want to keep them while also leveraging Nx’s handling of
+external dependencies.
+
 ##### extractCss
 
 Type: `boolean`
