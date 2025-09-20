@@ -141,6 +141,8 @@ export async function loadDevkitPackage(
         docType: 'devkit',
         slug,
         category: mappedCategory,
+        weight: 1.0,
+        filter: 'type:References',
       },
     };
 

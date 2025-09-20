@@ -78,7 +78,6 @@ export async function generateAllPluginDocs(
   store: LoaderContext['store']
 ) {
   logger.info('Generating plugin documentation...');
-  const entries: DocEntry[] = [];
   let successCount = 0;
   let skipCount = 0;
 
@@ -150,6 +149,8 @@ export async function generateAllPluginDocs(
           lastFetched: new Date(),
           title: pluginName,
           slug,
+          filter: 'type:References',
+          weight: 2.1,
         },
       };
     } else {
@@ -175,6 +176,8 @@ export async function generateAllPluginDocs(
               docType: 'generators',
               description: pluginDescription,
               slug,
+              weight: 1.0,
+              filter: 'type:References',
             },
           });
         }
@@ -203,6 +206,8 @@ export async function generateAllPluginDocs(
               docType: 'executors',
               description: pluginDescription,
               slug,
+              weight: 1.1,
+              filter: 'type:References',
             },
           });
         }
@@ -230,6 +235,8 @@ export async function generateAllPluginDocs(
               docType: 'migrations',
               description: pluginDescription,
               slug,
+              weight: 0.5,
+              filter: 'type:References',
             },
           });
         }
