@@ -226,29 +226,33 @@ class NxTargetFactory(
             }
 
         // Transform all execution contexts to analysis results in parallel, then aggregate on main thread
+        var usedFallback = false
         executionContexts.parallelStream().forEach { context ->
-            val descriptorThreadSafe = context.descriptor.isThreadSafe
-            val descriptorCacheable = pluginKnowledge.isMojoCacheable(context.descriptor)
+            val analysis = pluginKnowledge.analyzeMojo(context.descriptor, project, pathResolver)
 
-            val parameterInfos = pluginKnowledge.getParameterInformation(context.descriptor, project, pathResolver)
-            if (!descriptorThreadSafe) {
+            if (!analysis.isThreadSafe) {
                 isThreadSafe = false
             }
-            if (!descriptorCacheable) {
+            if (!analysis.isCacheable) {
                 isCacheable = false
             }
-            parameterInfos.forEach { paramInfo ->
-                inputs.addAll(paramInfo.inputs)
-                outputs.addAll(paramInfo.outputs)
+
+            if (analysis.usedFallback) {
+                usedFallback = true
             }
+
+            inputs.addAll(analysis.inputs)
+            outputs.addAll(analysis.outputs)
         }
 
         // Add Maven convention fallbacks if no inputs/outputs were found
         if (inputs.isEmpty() && outputs.isEmpty()) {
             val (conventionInputs, conventionOutputs) = pluginKnowledge.getMavenConventionFallbacks()
-            inputs.addAll(conventionInputs.map { "{projectRoot}/$it" })
-            outputs.addAll(conventionOutputs.map { "{projectRoot}/$it" })
+            inputs.addAll(conventionInputs)
+            outputs.addAll(conventionOutputs)
             log.info("Phase $phase: No parameter-based inputs/outputs found, using Maven convention fallbacks")
+        } else if (usedFallback) {
+            log.info("Phase $phase: Some mojos used Maven convention fallbacks for inputs/outputs")
         }
 
         log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
@@ -323,47 +327,25 @@ class NxTargetFactory(
         val command =
             "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
         options.put("command", command)
-
-
         val context = ExecutionContext(plugin, execution.id, goalName, mojoDescriptor)
-        val isThreadSafe = context.descriptor.isThreadSafe
-        val isCacheable = pluginKnowledge.isMojoCacheable(context.descriptor)
+        val analysis = pluginKnowledge.analyzeMojo(context.descriptor, project, pathResolver)
 
-
-        // Analyze inputs and outputs for the goal
-        val inputs = mutableSetOf<String>()
-        val outputs = mutableSetOf<String>()
-
-        pluginKnowledge.getParameterInformation(
-            context.descriptor,
-            project,
-            pathResolver
-        ).forEach { parameterInformation ->
-            inputs.addAll(parameterInformation.inputs)
-            outputs.addAll(parameterInformation.outputs)
-        }
-
-
-        // Add Maven convention fallbacks if no inputs/outputs were found
-        if (inputs.isEmpty() && outputs.isEmpty()) {
-            val (conventionInputs, conventionOutputs) = pluginKnowledge.getMavenConventionFallbacks()
-            inputs.addAll(conventionInputs.map { "{projectRoot}/$it" })
-            outputs.addAll(conventionOutputs.map { "{projectRoot}/$it" })
+        if (analysis.usedFallback) {
             log.info("Goal $goalPrefix:$goalName: No parameter-based inputs/outputs found, using Maven convention fallbacks")
         }
 
-        val target = NxTarget("nx:run-commands", options, isCacheable, isThreadSafe)
+        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
 
         // Add inputs and outputs if cacheable
-        if (isCacheable) {
+        if (analysis.isCacheable) {
             // Convert inputs to JsonNode array
             val inputsArray = objectMapper.createArrayNode()
-            inputs.forEach { input -> inputsArray.add(input) }
+            analysis.inputs.forEach { input -> inputsArray.add(input) }
             target.inputs = inputsArray
 
             // Convert outputs to JsonNode array
             val outputsArray = objectMapper.createArrayNode()
-            outputs.forEach { output -> outputsArray.add(output) }
+            analysis.outputs.forEach { output -> outputsArray.add(output) }
             target.outputs = outputsArray
         }
 
