@@ -210,25 +210,40 @@ class NxTargetFactory(
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
 
-        val executionContexts = plugins
+        val analyses = plugins
             .flatMap { plugin ->
                 plugin.executions
                     .filter { execution -> execution.phase == phase }
                     .flatMap { execution ->
-                        log.info("Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}")
+                        log.info(
+                            "Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}"
+                        )
 
-                        execution.goals.mapNotNull { goal ->
-                            pluginKnowledge.getMojoDescriptor(plugin, goal, project, pluginManager, session)?.let { descriptor ->
-                                ExecutionContext(plugin, execution.id, goal, descriptor)
+                        execution.goals.filterNotNull().mapNotNull { goal ->
+                            val descriptor = pluginKnowledge.getMojoDescriptor(
+                                plugin,
+                                goal,
+                                project,
+                                pluginManager,
+                                session
+                            )
+
+                            if (descriptor == null) {
+                                log.warn(
+                                    "Skipping analysis for ${plugin.artifactId}:$goal because MojoDescriptor could not be resolved"
+                                )
+                                null
+                            } else {
+                                val context = ExecutionContext(plugin, execution.id, goal, descriptor)
+                                pluginKnowledge.analyzeMojo(context.descriptor, project, pathResolver)
                             }
                         }
                     }
             }
 
-        // Transform all execution contexts to analysis results in parallel, then aggregate on main thread
+        // Aggregate analysis results
         var usedFallback = false
-        executionContexts.parallelStream().forEach { context ->
-            val analysis = pluginKnowledge.analyzeMojo(context.descriptor, project, pathResolver)
+        analyses.forEach { analysis ->
 
             if (!analysis.isThreadSafe) {
                 isThreadSafe = false
