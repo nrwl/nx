@@ -8,7 +8,6 @@ import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
 import org.apache.maven.model.PluginExecution
 import org.apache.maven.plugin.MavenPluginManager
-import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
@@ -171,24 +170,14 @@ class NxTargetFactory(
                     }
 
                     val goalTargetName = "$goalPrefix:$goal@${execution.id}"
-                    val mojoDescriptor = pluginDescriptor.getMojo(goal)
-                    if (mojoDescriptor == null) {
-                        log.warn(
-                            "Skipping target creation for ${plugin.artifactId}:$goal – mojo descriptor not found"
-                        )
-                        return@forEach
-                    }
-
-                    val goalTarget =
-                        createSimpleGoalTarget(
-                            mavenCommand,
-                            project,
-                            plugin,
-                            goalPrefix,
-                            goal,
-                            execution,
-                            mojoDescriptor
-                        )
+                    val goalTarget = createSimpleGoalTarget(
+                        mavenCommand,
+                        project,
+                        pluginDescriptor,
+                        goalPrefix,
+                        goal,
+                        execution
+                    ) ?: return@forEach
                     nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
 
                     log.info("Created individual goal target: $goalTargetName")
@@ -248,16 +237,7 @@ class NxTargetFactory(
                         )
 
                         execution.goals.filterNotNull().mapNotNull { goal ->
-                            val descriptor = pluginDescriptor.getMojo(goal)
-
-                            if (descriptor == null) {
-                                log.warn(
-                                    "Skipping analysis for ${plugin.artifactId}:$goal – mojo descriptor not found"
-                                )
-                                null
-                            } else {
-                                pluginKnowledge.analyzeMojo(descriptor, project, pathResolver)
-                            }
+                            pluginKnowledge.analyzeMojo(pluginDescriptor, goal, project, pathResolver)
                         }
                     }
             }
@@ -351,19 +331,19 @@ class NxTargetFactory(
     private fun createSimpleGoalTarget(
         mavenCommand: String,
         project: MavenProject,
-        plugin: Plugin,
+        pluginDescriptor: PluginDescriptor,
         goalPrefix: String,
         goalName: String,
-        execution: PluginExecution,
-        mojoDescriptor: MojoDescriptor
-    ): NxTarget {
+        execution: PluginExecution
+    ): NxTarget? {
         val options = objectMapper.createObjectNode()
 
         // Simple command without nx:apply/nx:record
         val command =
             "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
         options.put("command", command)
-        val analysis = pluginKnowledge.analyzeMojo(mojoDescriptor, project, pathResolver)
+        val analysis = pluginKnowledge.analyzeMojo(pluginDescriptor, goalName, project, pathResolver)
+            ?: return null
 
         if (analysis.usedFallback) {
             log.info("Goal $goalPrefix:$goalName: No parameter-based inputs/outputs found, using Maven convention fallbacks")
