@@ -3,8 +3,6 @@ package dev.nx.maven
 import org.apache.maven.buildcache.xml.config.CacheConfig
 import org.apache.maven.buildcache.xml.config.PluginConfigurationScan
 import org.apache.maven.buildcache.xml.config.DirScanConfig
-import org.apache.maven.buildcache.xml.config.TagScanConfig
-import org.apache.maven.buildcache.xml.config.TagExclude
 import org.apache.maven.buildcache.xml.config.io.xpp3.BuildCacheConfigXpp3Reader
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
@@ -22,7 +20,15 @@ enum class ParameterRole {
     NONE     // Unable to determine parameter role
 }
 
-data class ParameterInformation(
+data class MojoAnalysis(
+    val inputs: Set<String>,
+    val outputs: Set<String>,
+    val isCacheable: Boolean,
+    val isThreadSafe: Boolean,
+    val usedFallback: Boolean
+)
+
+private data class ParameterInformation(
     val inputs: Set<String>,
     val outputs: Set<String>
 )
@@ -30,197 +36,69 @@ data class ParameterInformation(
 class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
     private val log = LoggerFactory.getLogger(PluginKnowledge::class.java)
 
-    private val CACHE_CONFIG_RESOURCE = "/nx-cache-config.xml"
-
     private val cacheConfig: CacheConfig by lazy {
         loadCacheConfig()
     }
 
     /**
-     * Gets the parameter role for a specific plugin and parameter combination.
-     * Uses Maven build cache directory scanning rules to determine input/output classification.
-     *
-     * @param pluginArtifactId The plugin artifact ID (e.g., "maven-compiler-plugin")
-     * @param parameterName The parameter name (e.g., "outputDirectory")
-     * @return The ParameterRole if known, null otherwise
+     * Aggregates cacheability, thread-safety, and input/output metadata for a mojo.
      */
-    fun getParameterRole(pluginArtifactId: String, parameterName: String): ParameterRole {
-        val plugin = getPluginConfig(pluginArtifactId) ?: return ParameterRole.NONE
-        val dirScan = plugin.dirScan ?: return ParameterRole.NONE
-
-        val role = when {
-            isParameterInIncludes(dirScan, parameterName) -> ParameterRole.INPUT
-            isParameterInExcludes(dirScan, parameterName) -> ParameterRole.OUTPUT
-            else -> return ParameterRole.NONE
-        }
-
-        log.debug("Found parameter role from cache config: {}.{} -> {}", pluginArtifactId, parameterName, role)
-        return   role
-    }
-
-    /**
-     * Checks if a plugin is known in the cache configuration.
-     */
-    fun isKnownPlugin(pluginArtifactId: String?): Boolean {
-        return pluginArtifactId?.let {
-            getPluginConfig(it) != null
-        } ?: false
-    }
-
-    /**
-     * Checks if a specific execution is known for a plugin.
-     * Note: Maven build cache extension doesn't use execution-level configuration,
-     * so this always returns true if the plugin is known.
-     */
-    fun isKnownExecution(pluginArtifactId: String?, executionId: String?): Boolean {
-        return isKnownPlugin(pluginArtifactId)
-    }
-
-    /**
-     * Gets all known input tag scan configurations for a specific plugin.
-     */
-    fun getKnownInputTagScans(pluginArtifactId: String?): List<TagScanConfig> {
-        if (pluginArtifactId == null) return emptyList()
-        val plugin = getPluginConfig(pluginArtifactId) ?: return emptyList()
-        return plugin.dirScan?.includes ?: emptyList()
-    }
-
-    /**
-     * Gets all known output tag excludes for a specific plugin.
-     */
-    fun getKnownOutputTagExcludes(pluginArtifactId: String?): List<TagExclude> {
-        if (pluginArtifactId == null) return emptyList()
-        val plugin = getPluginConfig(pluginArtifactId) ?: return emptyList()
-        return plugin.dirScan?.excludes ?: emptyList()
-    }
-
-    /**
-     * Gets directory scan configuration for a specific plugin.
-     */
-    fun getDirScanConfig(pluginArtifactId: String?): DirScanConfig? {
-        if (pluginArtifactId == null) return null
-        return getPluginConfig(pluginArtifactId)?.dirScan
-    }
-
-    /**
-     * Gets global input include patterns.
-     */
-    fun getGlobalIncludes(): List<org.apache.maven.buildcache.xml.config.Include> {
-        return cacheConfig.input?.global?.includes ?: emptyList()
-    }
-
-    /**
-     * Gets global input exclude patterns.
-     */
-    fun getGlobalExcludes(): List<org.apache.maven.buildcache.xml.config.Exclude> {
-        return cacheConfig.input?.global?.excludes ?: emptyList()
-    }
-
-    /**
-     * Checks if a plugin should always run (never be cached).
-     */
-    fun shouldAlwaysRun(pluginArtifactId: String?): Boolean {
-        if (pluginArtifactId == null) return false
-        return cacheConfig.executionControl?.runAlways?.plugins?.any {
-            it.artifactId == pluginArtifactId
-        } ?: false
-    }
-
-
-    /**
-     * Gets output exclusion patterns.
-     */
-    fun getOutputExclusionPatterns(): List<String> {
-        return cacheConfig.output?.exclude?.patterns ?: emptyList()
-    }
-
-    /**
-     * Gets a specific plugin configuration.
-     */
-    private fun getPluginConfig(pluginArtifactId: String): PluginConfigurationScan? {
-        return cacheConfig.input?.plugins?.find {
-            it.artifactId == pluginArtifactId
-        }
-    }
-
-    /**
-     * Checks if a parameter is included in the directory scan includes.
-     */
-    private fun isParameterInIncludes(dirScan: DirScanConfig, parameterName: String): Boolean {
-        return dirScan.includes?.any { include ->
-            include.tagName == parameterName
-        } ?: false
-    }
-
-    /**
-     * Checks if a parameter is excluded in the directory scan excludes.
-     */
-    private fun isParameterInExcludes(dirScan: DirScanConfig, parameterName: String): Boolean {
-        return dirScan.excludes?.any { exclude ->
-            exclude.tagName == parameterName
-        } ?: false
-    }
-
-    /**
-     * Gets Maven's standard directory conventions as fallback inputs/outputs
-     * Includes both Maven standard layout and global patterns from cache config
-     */
-    fun getMavenConventionFallbacks(): Pair<Set<String>, Set<String>> {
-        val inputs = mutableSetOf<String>()
-        val outputs = mutableSetOf<String>()
-
-        // Maven standard directory layout
-        inputs.addAll(setOf(
-            "src/main/java",
-            "src/test/java",
-            "src/main/resources",
-            "src/test/resources",
-            "pom.xml"
-        ))
-
-        outputs.addAll(setOf(
-            "target/classes",
-            "target/test-classes",
-            "target"
-        ))
-
-        // Add global includes from cache config
-        cacheConfig.input?.global?.includes?.forEach { include ->
-            include.value?.let { directory ->
-                // Include directories from global config as inputs
-                when (directory) {
-                    "." -> {
-                        // Root directory includes (like pom.xml) are already covered above
-                    }
-                    else -> {
-                        // Add any other directories specified in global includes
-                        inputs.add(directory)
-                    }
-                }
-            }
-        }
-
-        return Pair(inputs, outputs)
-    }
-
-    /**
-     * Analyzes all parameters for a mojo execution to determine inputs and outputs
-     */
-    fun getParameterInformation(
+    fun analyzeMojo(
         descriptor: MojoDescriptor,
         project: MavenProject,
         pathResolver: PathResolver
-    ): List<ParameterInformation> {
-        return descriptor.parameters?.parallelStream()?.map { parameter ->
-            val paramInfo = analyzeParameterInputsOutputs(
-                descriptor,
-                parameter,
-                project,
-                pathResolver
+    ): MojoAnalysis {
+        val parameterInfos = collectParameterInformation(descriptor, project, pathResolver)
+
+        val aggregatedInputs = mutableSetOf<String>()
+        val aggregatedOutputs = mutableSetOf<String>()
+
+        parameterInfos.forEach { info ->
+            aggregatedInputs.addAll(info.inputs)
+            aggregatedOutputs.addAll(info.outputs)
+        }
+
+        var usedFallback = false
+
+        if (aggregatedInputs.isEmpty() && aggregatedOutputs.isEmpty()) {
+            val (fallbackInputs, fallbackOutputs) = getMavenConventionFallbacks()
+            aggregatedInputs.addAll(fallbackInputs)
+            aggregatedOutputs.addAll(fallbackOutputs)
+            usedFallback = true
+        }
+
+        val cacheable = isMojoCacheable(descriptor)
+
+        return MojoAnalysis(
+            inputs = aggregatedInputs.toSet(),
+            outputs = aggregatedOutputs.toSet(),
+            isCacheable = cacheable,
+            isThreadSafe = descriptor.isThreadSafe,
+            usedFallback = usedFallback
+        )
+    }
+
+    /**
+     * Gets a MojoDescriptor for a specific plugin and goal
+     */
+    fun getMojoDescriptor(
+        plugin: org.apache.maven.model.Plugin,
+        goal: String,
+        project: MavenProject,
+        pluginManager: org.apache.maven.plugin.MavenPluginManager,
+        session: org.apache.maven.execution.MavenSession
+    ): MojoDescriptor? {
+        return try {
+            val pluginDescriptor = pluginManager.getPluginDescriptor(
+                plugin,
+                project.remotePluginRepositories,
+                session.repositorySession
             )
-            log.debug("Parameter analysis: {} {} -> {}", descriptor.phase, parameter.name, paramInfo)
-            paramInfo
-        }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
+            pluginDescriptor?.getMojo(goal)
+        } catch (e: Exception) {
+            log.warn("Failed to get MojoDescriptor for plugin ${plugin.artifactId} and goal $goal: ${e.message}")
+            null
+        }
     }
 
     /**
@@ -280,6 +158,23 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
         return ParameterInformation(formattedInputs, formattedOutputs)
     }
 
+    private fun collectParameterInformation(
+        descriptor: MojoDescriptor,
+        project: MavenProject,
+        pathResolver: PathResolver
+    ): List<ParameterInformation> {
+        return descriptor.parameters?.parallelStream()?.map { parameter ->
+            val paramInfo = analyzeParameterInputsOutputs(
+                descriptor,
+                parameter,
+                project,
+                pathResolver
+            )
+            log.debug("Parameter analysis: {} {} -> {}", descriptor.phase, parameter.name, paramInfo)
+            paramInfo
+        }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
+    }
+
     /**
      * Formats a path for Nx compatibility by adding {projectRoot} prefix for relative paths
      */
@@ -295,43 +190,106 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
     }
 
     /**
-     * Determines if a mojo can be safely cached based on Maven build cache configuration
+     * Gets the parameter role for a specific plugin and parameter combination.
+     * Uses Maven build cache directory scanning rules to determine input/output classification.
+     *
+     * @param pluginArtifactId The plugin artifact ID (e.g., "maven-compiler-plugin")
+     * @param parameterName The parameter name (e.g., "outputDirectory")
+     * @return The ParameterRole if known, null otherwise
      */
-    fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
+    private fun getParameterRole(pluginArtifactId: String, parameterName: String): ParameterRole {
+        val plugin = getPluginConfig(pluginArtifactId) ?: return ParameterRole.NONE
+        val dirScan = plugin.dirScan ?: return ParameterRole.NONE
+
+        val role = when {
+            isParameterInIncludes(dirScan, parameterName) -> ParameterRole.INPUT
+            isParameterInExcludes(dirScan, parameterName) -> ParameterRole.OUTPUT
+            else -> return ParameterRole.NONE
+        }
+
+        log.debug("Found parameter role from cache config: {}.{} -> {}", pluginArtifactId, parameterName, role)
+        return role
+    }
+
+    /**
+     * Checks if a plugin should always run (never be cached).
+     */
+    private fun shouldAlwaysRun(pluginArtifactId: String?): Boolean {
+        if (pluginArtifactId == null) return false
+        return cacheConfig.executionControl?.runAlways?.plugins?.any {
+            it.artifactId == pluginArtifactId
+        } ?: false
+    }
+
+    /**
+     * Gets a specific plugin configuration.
+     */
+    private fun getPluginConfig(pluginArtifactId: String): PluginConfigurationScan? {
+        return cacheConfig.input?.plugins?.find {
+            it.artifactId == pluginArtifactId
+        }
+    }
+
+    /**
+     * Checks if a parameter is included in the directory scan includes.
+     */
+    private fun isParameterInIncludes(dirScan: DirScanConfig, parameterName: String): Boolean {
+        return dirScan.includes?.any { include ->
+            include.tagName == parameterName
+        } ?: false
+    }
+
+    /**
+     * Checks if a parameter is excluded in the directory scan excludes.
+     */
+    private fun isParameterInExcludes(dirScan: DirScanConfig, parameterName: String): Boolean {
+        return dirScan.excludes?.any { exclude ->
+            exclude.tagName == parameterName
+        } ?: false
+    }
+
+    private fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
         val artifactId = descriptor.pluginDescriptor?.artifactId
 
-        // Check if plugin should always run (never cached)
         if (shouldAlwaysRun(artifactId)) {
             log.debug("Plugin $artifactId should always run - not cacheable")
             return false
         }
 
-        // Default: cacheable (Maven build cache extension default behavior)
         log.debug("Plugin $artifactId:${descriptor.goal} is cacheable by default")
         return true
     }
 
-    /**
-     * Gets a MojoDescriptor for a specific plugin and goal
-     */
-    fun getMojoDescriptor(
-        plugin: org.apache.maven.model.Plugin,
-        goal: String,
-        project: MavenProject,
-        pluginManager: org.apache.maven.plugin.MavenPluginManager,
-        session: org.apache.maven.execution.MavenSession
-    ): MojoDescriptor? {
-        return try {
-            val pluginDescriptor = pluginManager.getPluginDescriptor(
-                plugin,
-                project.remotePluginRepositories,
-                session.repositorySession
-            )
-            pluginDescriptor?.getMojo(goal)
-        } catch (e: Exception) {
-            log.warn("Failed to get MojoDescriptor for plugin ${plugin.artifactId} and goal $goal: ${e.message}")
-            null
+    internal fun getMavenConventionFallbacks(): Pair<Set<String>, Set<String>> {
+        val inputs = mutableSetOf(
+            "src/main/java",
+            "src/test/java",
+            "src/main/resources",
+            "src/test/resources",
+            "pom.xml"
+        )
+
+        val outputs = mutableSetOf(
+            "target/classes",
+            "target/test-classes",
+            "target"
+        )
+
+        cacheConfig.input?.global?.includes?.forEach { include ->
+            include.value?.let { directory ->
+                when (directory) {
+                    "." -> {
+                        // Root directory includes (like pom.xml) are already covered above
+                    }
+                    else -> inputs.add(directory)
+                }
+            }
         }
+
+        val formattedInputs = inputs.map { formatPathForNx(it) }.toSet()
+        val formattedOutputs = outputs.map { formatPathForNx(it) }.toSet()
+
+        return Pair(formattedInputs, formattedOutputs)
     }
 
     private fun loadCacheConfig(): CacheConfig {
@@ -349,5 +307,9 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
             log.warn("Failed to load cache configuration from $CACHE_CONFIG_RESOURCE: ${e.message}. Using empty configuration.")
             CacheConfig()
         }
+    }
+
+    private companion object {
+        const val CACHE_CONFIG_RESOURCE = "/nx-cache-config.xml"
     }
 }
