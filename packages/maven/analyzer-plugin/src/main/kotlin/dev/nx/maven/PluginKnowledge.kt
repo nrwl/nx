@@ -6,6 +6,7 @@ import org.apache.maven.buildcache.xml.config.DirScanConfig
 import org.apache.maven.buildcache.xml.config.io.xpp3.BuildCacheConfigXpp3Reader
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
+import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
 import org.slf4j.LoggerFactory
 
@@ -44,10 +45,19 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
      * Aggregates cacheability, thread-safety, and input/output metadata for a mojo.
      */
     fun analyzeMojo(
-        descriptor: MojoDescriptor,
+        pluginDescriptor: PluginDescriptor,
+        goal: String,
         project: MavenProject,
         pathResolver: PathResolver
-    ): MojoAnalysis {
+    ): MojoAnalysis? {
+        val descriptor = pluginDescriptor.getMojo(goal)
+            ?: run {
+                log.warn(
+                    "Skipping analysis for ${pluginDescriptor.artifactId}:$goal – mojo descriptor not found"
+                )
+                return null
+            }
+
         val parameterInfos = collectParameterInformation(descriptor, project, pathResolver)
 
         val aggregatedInputs = mutableSetOf<String>()
