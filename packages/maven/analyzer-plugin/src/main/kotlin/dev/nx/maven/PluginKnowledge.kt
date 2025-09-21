@@ -79,29 +79,6 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
     }
 
     /**
-     * Gets a MojoDescriptor for a specific plugin and goal
-     */
-    fun getMojoDescriptor(
-        plugin: org.apache.maven.model.Plugin,
-        goal: String,
-        project: MavenProject,
-        pluginManager: org.apache.maven.plugin.MavenPluginManager,
-        session: org.apache.maven.execution.MavenSession
-    ): MojoDescriptor? {
-        return try {
-            val pluginDescriptor = pluginManager.getPluginDescriptor(
-                plugin,
-                project.remotePluginRepositories,
-                session.repositorySession
-            )
-            pluginDescriptor?.getMojo(goal)
-        } catch (e: Exception) {
-            log.warn("Failed to get MojoDescriptor for plugin ${plugin.artifactId} and goal $goal: ${e.message}")
-            null
-        }
-    }
-
-    /**
      * Analyzes a single parameter to determine inputs and outputs
      */
     private fun analyzeParameterInputsOutputs(

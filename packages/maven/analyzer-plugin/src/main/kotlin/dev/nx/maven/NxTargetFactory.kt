@@ -154,7 +154,13 @@ class NxTargetFactory(
 
         // Also create individual goal targets for granular execution
         plugins.forEach { plugin: Plugin ->
-            val pluginDescriptor = getPluginDescriptor(plugin, project)
+            val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
+                .getOrElse { throwable ->
+                    log.warn(
+                        "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
+                    )
+                    return@forEach
+                }
             val goalPrefix = pluginDescriptor.goalPrefix
 
             plugin.executions.forEach { execution ->
@@ -166,9 +172,23 @@ class NxTargetFactory(
 
                     val goalTargetName = "$goalPrefix:$goal@${execution.id}"
                     val mojoDescriptor = pluginDescriptor.getMojo(goal)
+                    if (mojoDescriptor == null) {
+                        log.warn(
+                            "Skipping target creation for ${plugin.artifactId}:$goal – mojo descriptor not found"
+                        )
+                        return@forEach
+                    }
 
                     val goalTarget =
-                        createSimpleGoalTarget(mavenCommand, project, plugin, goalPrefix, goal, execution, mojoDescriptor!!)
+                        createSimpleGoalTarget(
+                            mavenCommand,
+                            project,
+                            plugin,
+                            goalPrefix,
+                            goal,
+                            execution,
+                            mojoDescriptor
+                        )
                     nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
 
                     log.info("Created individual goal target: $goalTargetName")
@@ -212,6 +232,14 @@ class NxTargetFactory(
 
         val analyses = plugins
             .flatMap { plugin ->
+                val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
+                    .getOrElse { throwable ->
+                        log.warn(
+                            "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
+                        )
+                        return@flatMap emptyList()
+                    }
+
                 plugin.executions
                     .filter { execution -> execution.phase == phase }
                     .flatMap { execution ->
@@ -220,22 +248,15 @@ class NxTargetFactory(
                         )
 
                         execution.goals.filterNotNull().mapNotNull { goal ->
-                            val descriptor = pluginKnowledge.getMojoDescriptor(
-                                plugin,
-                                goal,
-                                project,
-                                pluginManager,
-                                session
-                            )
+                            val descriptor = pluginDescriptor.getMojo(goal)
 
                             if (descriptor == null) {
                                 log.warn(
-                                    "Skipping analysis for ${plugin.artifactId}:$goal because MojoDescriptor could not be resolved"
+                                    "Skipping analysis for ${plugin.artifactId}:$goal – mojo descriptor not found"
                                 )
                                 null
                             } else {
-                                val context = ExecutionContext(plugin, execution.id, goal, descriptor)
-                                pluginKnowledge.analyzeMojo(context.descriptor, project, pathResolver)
+                                pluginKnowledge.analyzeMojo(descriptor, project, pathResolver)
                             }
                         }
                     }
@@ -342,8 +363,7 @@ class NxTargetFactory(
         val command =
             "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
         options.put("command", command)
-        val context = ExecutionContext(plugin, execution.id, goalName, mojoDescriptor)
-        val analysis = pluginKnowledge.analyzeMojo(context.descriptor, project, pathResolver)
+        val analysis = pluginKnowledge.analyzeMojo(mojoDescriptor, project, pathResolver)
 
         if (analysis.usedFallback) {
             log.info("Goal $goalPrefix:$goalName: No parameter-based inputs/outputs found, using Maven convention fallbacks")
@@ -442,10 +462,3 @@ data class NxTarget(
         return node
     }
 }
-
-data class ExecutionContext(
-    val plugin: Plugin,
-    val executionId: String,
-    val goal: String,
-    val descriptor: MojoDescriptor
-)
