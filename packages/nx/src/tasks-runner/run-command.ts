@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logDebug, RunMode } from '../native';
+import { logDebug, RunMode, TuiMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -94,7 +94,11 @@ async function getTerminalOutputLifeCycle(
 
   const isRunOne = initiatingProject != null;
 
-  if (isTuiEnabled()) {
+  // Use TUI if TUI is enabled and we have tasks to run
+  const shouldUseTui = isTuiEnabled() && tasks.length > 0;
+  const tuiMode = isRunOne ? TuiMode.Inline : TuiMode.FullScreen;
+
+  if (shouldUseTui) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
 
     const createPatchedConsoleMethod = (
@@ -172,8 +176,12 @@ async function getTerminalOutputLifeCycle(
       (resolve) => (resolveRenderIsDonePromise = resolve)
     );
 
-    const { lifeCycle: tsLifeCycle, printSummary } =
-      getTuiTerminalSummaryLifeCycle({
+    let tsLifeCycle: LifeCycle;
+    let printSummary: (() => void) | undefined;
+
+    // Only create TUI lifecycle if we're using the TUI
+    if (shouldUseTui) {
+      const tuiResult = getTuiTerminalSummaryLifeCycle({
         projectNames,
         tasks,
         taskGraph,
@@ -183,6 +191,13 @@ async function getTerminalOutputLifeCycle(
         initiatingTasks,
         resolveRenderIsDonePromise,
       });
+      tsLifeCycle = tuiResult.lifeCycle;
+      printSummary = tuiResult.printSummary;
+    } else {
+      // Create a minimal lifecycle for non-TUI mode
+      tsLifeCycle = {} as LifeCycle;
+      resolveRenderIsDonePromise();
+    }
 
     if (tasks.length === 0) {
       renderIsDone = renderIsDone.then(() => {
@@ -206,7 +221,8 @@ async function getTerminalOutputLifeCycle(
         nxJson.tui ?? {},
         titleText,
         workspaceRoot,
-        taskGraph
+        taskGraph,
+        tuiMode
       );
       lifeCycles.unshift(appLifeCycle);
 
@@ -301,6 +317,7 @@ async function getTerminalOutputLifeCycle(
       };
 
       renderIsDone = new Promise<void>((resolve) => {
+        // The unified __init method now handles both TUI modes internally
         appLifeCycle.__init(() => {
           resolve();
         });
@@ -321,7 +338,10 @@ async function getTerminalOutputLifeCycle(
         process.stderr.write = originalStderrWrite;
         console.log = originalConsoleLog;
         console.error = originalConsoleError;
-        restoreTerminal();
+        // Only call restoreTerminal if TUI was actually used
+        if (shouldUseTui) {
+          restoreTerminal();
+        }
       },
       printSummary,
       renderIsDone,
