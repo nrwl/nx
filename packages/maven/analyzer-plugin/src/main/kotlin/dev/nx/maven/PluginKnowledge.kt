@@ -70,10 +70,13 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
 
         var usedFallback = false
 
-        if (aggregatedInputs.isEmpty() && aggregatedOutputs.isEmpty()) {
-            val (fallbackInputs, fallbackOutputs) = getMavenConventionFallbacks()
-            aggregatedInputs.addAll(fallbackInputs)
-            aggregatedOutputs.addAll(fallbackOutputs)
+        if (aggregatedInputs.isEmpty()) {
+            aggregatedInputs.addAll(mavenFallbackInputs)
+            usedFallback = true
+        }
+
+        if (aggregatedOutputs.isEmpty()) {
+            aggregatedOutputs.addAll(mavenFallbackOutputs)
             usedFallback = true
         }
 
@@ -247,19 +250,13 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
         return true
     }
 
-    internal fun getMavenConventionFallbacks(): Pair<Set<String>, Set<String>> {
+    internal val mavenFallbackInputs: Set<String> by lazy {
         val inputs = mutableSetOf(
             "src/main/java",
             "src/test/java",
             "src/main/resources",
             "src/test/resources",
             "pom.xml"
-        )
-
-        val outputs = mutableSetOf(
-            "target/classes",
-            "target/test-classes",
-            "target"
         )
 
         cacheConfig.input?.global?.includes?.forEach { include ->
@@ -273,10 +270,17 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
             }
         }
 
-        val formattedInputs = inputs.map { formatPathForNx(it) }.toSet()
-        val formattedOutputs = outputs.map { formatPathForNx(it) }.toSet()
+        inputs.map { formatPathForNx(it) }.toSet()
+    }
 
-        return Pair(formattedInputs, formattedOutputs)
+    internal val mavenFallbackOutputs: Set<String> by lazy {
+        val outputs = mutableSetOf(
+            "target/classes",
+            "target/test-classes",
+            "target"
+        )
+
+        outputs.map { formatPathForNx(it) }.toSet()
     }
 
     private fun loadCacheConfig(): CacheConfig {

@@ -262,10 +262,17 @@ class NxTargetFactory(
         }
 
         // Add Maven convention fallbacks if no inputs/outputs were found
-        if (inputs.isEmpty() && outputs.isEmpty()) {
-            val (conventionInputs, conventionOutputs) = pluginKnowledge.getMavenConventionFallbacks()
-            inputs.addAll(conventionInputs)
-            outputs.addAll(conventionOutputs)
+        var appliedFallback = false
+        if (inputs.isEmpty()) {
+            inputs.addAll(pluginKnowledge.mavenFallbackInputs)
+            appliedFallback = true
+        }
+        if (outputs.isEmpty()) {
+            outputs.addAll(pluginKnowledge.mavenFallbackOutputs)
+            appliedFallback = true
+        }
+
+        if (appliedFallback) {
             log.info("Phase $phase: No parameter-based inputs/outputs found, using Maven convention fallbacks")
         } else if (usedFallback) {
             log.info("Phase $phase: Some mojos used Maven convention fallbacks for inputs/outputs")
