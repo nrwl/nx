@@ -5,6 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import dev.nx.maven.targets.NxTargetFactory
 import dev.nx.maven.targets.TestClassDiscovery
+import dev.nx.maven.utils.MavenCommandResolver
+import dev.nx.maven.utils.MavenExpressionResolver
+import dev.nx.maven.utils.MojoAnalyzer
+import dev.nx.maven.utils.PathResolver
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.plugin.AbstractMojo

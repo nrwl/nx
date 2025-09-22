@@ -1,4 +1,4 @@
-package dev.nx.maven
+package dev.nx.maven.utils
 
 import dev.nx.maven.cache.CacheConfig
 import dev.nx.maven.cache.CacheConfigLoader
