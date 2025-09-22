@@ -363,9 +363,6 @@ async function getConfigFileHash(
     lockFileHash,
     optionsHash,
     ...(packageJson ? [hashObject(packageJson)] : []),
-    // change this to bust the cache when making changes that would yield
-    // different results for the same hash
-    hashObject({ bust: 3 }),
   ]);
 }
 
