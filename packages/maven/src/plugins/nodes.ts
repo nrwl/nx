@@ -26,8 +26,6 @@ export const createNodesV2: CreateNodesV2 = [
             return [];
         }
 
-        console.log(configFiles);
-
         // Try to get cached data first (skip cache if in verbose mode)
         let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
 
@@ -35,8 +33,6 @@ export const createNodesV2: CreateNodesV2 = [
         if (!mavenData) {
             mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
         }
-
-        console.log(mavenData.createNodesResults);
 
         console.log('GOT RESULTS', mavenData.createNodesResults.length)
 
