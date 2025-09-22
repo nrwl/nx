@@ -440,7 +440,10 @@ export async function runCommand(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
       await runPreTasksExecution({
+        nxArgs,
+        overrides,
         workspaceRoot,
+        initiatingProject,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
       });
@@ -472,8 +475,11 @@ export async function runCommand(
         : 0;
 
       await runPostTasksExecution({
+        nxArgs,
+        overrides,
         taskResults,
         workspaceRoot,
+        initiatingProject,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
       });
