@@ -164,9 +164,8 @@ class PluginKnowledge(
                 pathResolver.addOutputPath(path, outputs)
                 log.debug("Added input/output path: $path (from parameter ${parameter.name})")
             }
-            ParameterRole.NONE -> {
-                // Won't reach here due to early return above
-            }
+
+            else -> {}
         }
 
         // Format all paths for Nx compatibility

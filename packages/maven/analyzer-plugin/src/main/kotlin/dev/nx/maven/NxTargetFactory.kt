@@ -27,8 +27,8 @@ class NxTargetFactory(
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
     // All goals now get build state management for maximum compatibility
-    private fun shouldApplyBuildState(goalKey: String): Boolean = true
-    private fun shouldRecordBuildState(goalKey: String): Boolean = true
+    private fun shouldApplyBuildState(): Boolean = true
+    private fun shouldRecordBuildState(): Boolean = true
 
     /**
      * Normalizes Maven 3 phase names to Maven 4 equivalents when running Maven 4.
@@ -286,7 +286,7 @@ class NxTargetFactory(
         commandParts.add(mavenCommand)
 
         // Add build state apply if needed (before goals)
-        if (shouldApplyBuildState("$phase-goals")) {
+        if (shouldApplyBuildState()) {
             commandParts.add("dev.nx.maven:nx-maven-plugin:apply")
         }
 
@@ -294,7 +294,7 @@ class NxTargetFactory(
         commandParts.addAll(goals)
 
         // Add build state record if needed (after goals)
-        if (shouldRecordBuildState("$phase-goals")) {
+        if (shouldRecordBuildState()) {
             commandParts.add("dev.nx.maven:nx-maven-plugin:record")
         }
 
