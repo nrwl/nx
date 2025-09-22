@@ -22,7 +22,7 @@ class NxTargetFactory(
     private val testClassDiscovery: TestClassDiscovery,
     private val pluginManager: MavenPluginManager,
     private val session: MavenSession,
-    private val pluginKnowledge: PluginKnowledge
+    private val mojoAnalyzer: MojoAnalyzer
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
@@ -236,7 +236,7 @@ class NxTargetFactory(
                         )
 
                         execution.goals.filterNotNull().mapNotNull { goal ->
-                            pluginKnowledge.analyzeMojo(pluginDescriptor, goal, project)
+                            mojoAnalyzer.analyzeMojo(pluginDescriptor, goal, project)
                         }
                     }
             }
@@ -263,11 +263,11 @@ class NxTargetFactory(
         // Add Maven convention fallbacks if no inputs/outputs were found
         var appliedFallback = false
         if (inputs.isEmpty()) {
-            inputs.addAll(pluginKnowledge.mavenFallbackInputs)
+            inputs.addAll(mojoAnalyzer.mavenFallbackInputs)
             appliedFallback = true
         }
         if (outputs.isEmpty()) {
-            outputs.addAll(pluginKnowledge.mavenFallbackOutputs)
+            outputs.addAll(mojoAnalyzer.mavenFallbackOutputs)
             appliedFallback = true
         }
 
@@ -348,7 +348,7 @@ class NxTargetFactory(
         val command =
             "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
         options.put("command", command)
-        val analysis = pluginKnowledge.analyzeMojo(pluginDescriptor, goalName, project)
+        val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
             ?: return null
 
         val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
