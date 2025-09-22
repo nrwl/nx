@@ -80,6 +80,32 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
             usedFallback = true
         }
 
+        cacheConfig.input?.global?.includes?.forEach { include ->
+            include.value?.let { directory ->
+                var path = directory
+                include.glob?.let { glob -> path += "/$glob" }
+
+                val formatted = formatPathForNx(path)
+                aggregatedInputs.add(formatted)
+                log.debug("Added global include input path: $formatted")
+
+                if (include.isRecursive == true) {
+                    aggregatedInputs.add("^$formatted")
+                }
+            }
+        }
+
+        cacheConfig.input?.global?.excludes?.forEach { exclude ->
+            exclude.value?.let { directory ->
+                var path = directory
+                exclude.glob?.let { glob -> path += "/$glob" }
+
+                val formatted = formatPathForNx(path)
+                aggregatedInputs.add("!$formatted")
+                log.debug("Added global exclude input path: !$formatted")
+            }
+        }
+
         val cacheable = isMojoCacheable(descriptor)
 
         return MojoAnalysis(

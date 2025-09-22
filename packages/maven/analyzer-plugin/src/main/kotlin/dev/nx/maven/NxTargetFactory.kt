@@ -352,10 +352,6 @@ class NxTargetFactory(
         val analysis = pluginKnowledge.analyzeMojo(pluginDescriptor, goalName, project, pathResolver)
             ?: return null
 
-        if (analysis.usedFallback) {
-            log.info("Goal $goalPrefix:$goalName: No parameter-based inputs/outputs found, using Maven convention fallbacks")
-        }
-
         val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
 
         // Add inputs and outputs if cacheable
