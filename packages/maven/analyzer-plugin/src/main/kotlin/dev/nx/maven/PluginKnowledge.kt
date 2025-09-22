@@ -89,9 +89,10 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
                 aggregatedInputs.add(formatted)
                 log.debug("Added global include input path: $formatted")
 
-                if (include.isRecursive == true) {
-                    aggregatedInputs.add("^$formatted")
-                }
+                // TODO: This is not supported by nx yet
+//                if (include.isRecursive == true) {
+//                    aggregatedInputs.add("^$formatted")
+//                }
             }
         }
 
