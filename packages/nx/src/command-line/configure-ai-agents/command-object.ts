@@ -5,6 +5,7 @@ export interface ConfigureAiAgentsOptions {
   agents?: string[];
   interactive?: boolean;
   verbose?: boolean;
+  check?: boolean;
 }
 
 export const yargsConfigureAiAgentsCommand: CommandModule<
@@ -28,6 +29,12 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
           'When false disables interactive input prompts for options.',
         default: true,
       })
+      .option('--check', {
+        type: 'boolean',
+        description:
+          'Check if any configured agents are out of date and need to be updated. Does not make any changes.',
+        default: false,
+      })
       .example(
         '$0 configure-ai-agents',
         'Interactively select AI agents to update and configure'
@@ -35,6 +42,10 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
       .example(
         '$0 configure-ai-agents --agents claude gemini',
         'Configures and updates Claude and Gemini AI agents '
+      )
+      .example(
+        '$0 configure-ai-agents --check',
+        'Checks if any configured agents are out of date and need to be updated'
       ),
   handler: async (args) => {
     await (

@@ -20,7 +20,14 @@ import {
   codexConfigTomlPath,
 } from './config-paths';
 
-export type Agent = 'claude' | 'gemini' | 'codex' | 'cursor' | 'copilot';
+export const availableAgents = [
+  'claude',
+  'codex',
+  'copilot',
+  'cursor',
+  'gemini',
+] as const;
+export type Agent = (typeof availableAgents)[number];
 
 export function getAgentIsConfigured(
   agent: Agent,
