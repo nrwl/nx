@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
-import org.apache.maven.lifecycle.LifecycleExecutor
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
@@ -35,9 +34,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     @Component
     private lateinit var lifecycles: DefaultLifecycles
 
-    @Component
-    private lateinit var lifecycleExecutor: LifecycleExecutor
-
     @Parameter(property = "outputFile", defaultValue = "nx-maven-projects.json")
     private lateinit var outputFile: String
 
@@ -53,7 +49,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         // Create GitIgnoreClassifier once for the entire session
         val gitIgnoreClassifier: GitIgnoreClassifier? = try {
-            val sessionRoot = session.executionRootDirectory?.let { java.io.File(it) }
+            val sessionRoot = session.executionRootDirectory?.let { File(it) }
             if (sessionRoot != null) {
                 GitIgnoreClassifier(sessionRoot)
             } else {
@@ -70,7 +66,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
             // Step 1: Execute per-project analysis for all projects (in-memory)
             log.info("Step 1: Running optimized per-project analysis...")
-            val inMemoryAnalyses = executePerProjectAnalysisInMemory(allProjects, gitIgnoreClassifier)
+            val inMemoryAnalyses = executePerProjectAnalysisInMemory(allProjects)
 
             // Step 2: Write project analyses to output file
             log.info("Step 2: Writing project analyses to output file...")
@@ -87,8 +83,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     }
 
     private fun executePerProjectAnalysisInMemory(
-        allProjects: List<MavenProject>,
-        gitIgnoreClassifier: GitIgnoreClassifier?
+        allProjects: List<MavenProject>
     ): List<ProjectAnalysis> {
         val startTime = System.currentTimeMillis()
         log.info("Creating shared component instances for optimized analysis...")
@@ -197,7 +192,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         return result
     }
 
-    private fun generateCreateNodesResults(inMemoryAnalyses: List<ProjectAnalysis>): com.fasterxml.jackson.databind.node.ArrayNode {
+    private fun generateCreateNodesResults(inMemoryAnalyses: List<ProjectAnalysis>): ArrayNode {
         val createNodesResults = objectMapper.createArrayNode()
 
         inMemoryAnalyses.forEach { analysis ->
