@@ -11,6 +11,7 @@ import { stripMarkdocTags } from './strip-markdoc-tags';
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
   let markdown = `\n### \`${name}\`\n`;
+
   if (config.version) {
     markdown += `**Version**: ${config.version}\n\n`;
   }
@@ -150,7 +151,7 @@ export function getGeneratorsMarkdown(
   const packageName = `@nx/${pluginName}`;
 
   let markdown = `
-  The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
+The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available generators and their options.
 `;
 
@@ -270,6 +271,7 @@ nx generate ${fullItemName} ${positionalArgs
      nx generate ${packageName}:<generator> --help
      \`\`\`
      `;
+
   return markdown;
 }
 

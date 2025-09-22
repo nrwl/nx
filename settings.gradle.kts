@@ -5,7 +5,6 @@
  * For more detailed information on multi-project builds, please refer to https://docs.gradle.org/8.5/userguide/building_swift_projects.html in the Gradle documentation.
  */
 
-
 pluginManagement {
     repositories {
         mavenLocal()
@@ -14,6 +13,22 @@ pluginManagement {
     }
 }
 
+plugins {
+    kotlin("jvm") version "2.1.20" apply false
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = "nx"
-includeBuild("./packages/gradle/project-graph")
-includeBuild("./packages/gradle/batch-runner")
+
+include("batch-runner")
+project(":batch-runner").projectDir = file("packages/gradle/batch-runner")
+
+include("project-graph")
+project(":project-graph").projectDir = file("packages/gradle/project-graph")

@@ -446,7 +446,6 @@ function ProjectsShellInner() {
                 sectionTextClassName="text-slate-700 dark:text-slate-300"
                 tagBadgeClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600"
                 actionButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
-                viewProjectDetailsButtonClassName="bg-slate-100/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600"
                 cancelActionButtonClassName="bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 border-red-500 dark:border-red-600"
                 dependencyItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                 dependentItemClassName="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"

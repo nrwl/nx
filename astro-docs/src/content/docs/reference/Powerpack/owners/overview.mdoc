@@ -3,6 +3,8 @@ title: Overview of the Nx powerpack-owners Plugin
 description: The Nx Powerpack Owners plugin provides the ability to define code ownership based on projects in addition to files
 sidebar:
   label: Overview
+weight: 2.1
+filter: 'type:References'
 ---
 
 The `@nx/owners` plugin extends the CODEOWNERS functionality to allow you to define code ownership based on projects in addition to the standard file-based definitions. It leverages the [`nx sync`](/docs/concepts/sync-generators) command to compile `owners` configuration settings from `nx.json` and project configuration files into valid CODEOWNERS files for [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners), [Bitbucket](https://support.atlassian.com/bitbucket-cloud/docs/set-up-and-use-code-owners/) or [GitLab](https://docs.gitlab.com/ee/user/project/codeowners/).

@@ -3,6 +3,7 @@ title: 'Gradle Tutorial'
 description: In this tutorial you'll add Nx to an existing Gradle repo
 sidebar:
   label: 'Gradle Monorepo'
+filter: "type:Guides"
 ---
 
 This tutorial walks you through adding Nx to an existing Gradle project. You'll see how Nx enhances your Gradle workflow with caching, task orchestration, and better developer experience.
@@ -157,6 +158,7 @@ nx graph
 
 {% graph title="Gradle Projects" height="200px" %}
 
+```json
 {
   "hash": "ad0ea8f7ae85c873d6478c31b51a95c54115a49844d62a5b3972232ac82137d0",
   "projects": [
@@ -1117,6 +1119,8 @@ nx graph
   "exclude": [],
   "isPartial": false
 }
+```
+
 {% /graph %}
 
 ## Running Tasks
@@ -1134,6 +1138,7 @@ nx show project application
 
 {% project_details title="Project Details View" expandedTargets=["build"] height="520px" %}
 
+```json
 {
   "project": {
     "name": "application",
@@ -2363,6 +2368,8 @@ nx show project application
     ]
   }
 }
+```
+
 {% /project_details %}
 
 The Nx command to run the `build` task for the `application` project is:
