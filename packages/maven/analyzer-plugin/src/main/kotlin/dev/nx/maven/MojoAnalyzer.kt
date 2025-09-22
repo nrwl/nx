@@ -1,9 +1,7 @@
 package dev.nx.maven
 
-import org.apache.maven.buildcache.xml.config.CacheConfig
-import org.apache.maven.buildcache.xml.config.DirScanConfig
-import org.apache.maven.buildcache.xml.config.PluginConfigurationScan
-import org.apache.maven.buildcache.xml.config.io.xpp3.BuildCacheConfigXpp3Reader
+import dev.nx.maven.cache.CacheConfig
+import dev.nx.maven.cache.CacheConfigLoader
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
 import org.apache.maven.plugin.descriptor.PluginDescriptor
@@ -34,14 +32,14 @@ private data class ParameterInformation(
     val outputs: Set<String>
 )
 
-class PluginKnowledge(
+class MojoAnalyzer(
     private val expressionResolver: MavenExpressionResolver,
     private val pathResolver: PathResolver
 ) {
-    private val log = LoggerFactory.getLogger(PluginKnowledge::class.java)
+    private val log = LoggerFactory.getLogger(MojoAnalyzer::class.java)
 
     private val cacheConfig: CacheConfig by lazy {
-        loadCacheConfig()
+        CacheConfigLoader().loadConfig("/nx-cache-config.xml")
     }
 
     /**
@@ -82,31 +80,27 @@ class PluginKnowledge(
             usedFallback = true
         }
 
-        cacheConfig.input?.global?.includes?.forEach { include ->
-            include.value?.let { directory ->
-                var path = directory
-                include.glob?.let { glob -> path += "/$glob" }
+        cacheConfig.globalIncludes.forEach { include ->
+            var path = include.path
+            include.glob?.let { glob -> path += "/$glob" }
 
-                val formatted = formatPathForNx(path)
-                aggregatedInputs.add(formatted)
-                log.debug("Added global include input path: $formatted")
+            val formatted = formatPathForNx(path)
+            aggregatedInputs.add(formatted)
+            log.debug("Added global include input path: $formatted")
 
-                // TODO: This is not supported by nx yet
-//                if (include.isRecursive == true) {
-//                    aggregatedInputs.add("^$formatted")
-//                }
-            }
+            // TODO: This is not supported by nx yet
+//            if (include.recursive) {
+//                aggregatedInputs.add("^$formatted")
+//            }
         }
 
-        cacheConfig.input?.global?.excludes?.forEach { exclude ->
-            exclude.value?.let { directory ->
-                var path = directory
-                exclude.glob?.let { glob -> path += "/$glob" }
+        cacheConfig.globalExcludes.forEach { exclude ->
+            var path = exclude.path
+            exclude.glob?.let { glob -> path += "/$glob" }
 
-                val formatted = formatPathForNx(path)
-                aggregatedInputs.add("!$formatted")
-                log.debug("Added global exclude input path: !$formatted")
-            }
+            val formatted = formatPathForNx(path)
+            aggregatedInputs.add("!$formatted")
+            log.debug("Added global exclude input path: !$formatted")
         }
 
         val cacheable = isMojoCacheable(descriptor)
@@ -213,12 +207,11 @@ class PluginKnowledge(
      * @return The ParameterRole if known, null otherwise
      */
     private fun getParameterRole(pluginArtifactId: String, parameterName: String): ParameterRole {
-        val plugin = getPluginConfig(pluginArtifactId) ?: return ParameterRole.NONE
-        val dirScan = plugin.dirScan ?: return ParameterRole.NONE
+        val plugin = cacheConfig.plugins[pluginArtifactId] ?: return ParameterRole.NONE
 
         val role = when {
-            isParameterInIncludes(dirScan, parameterName) -> ParameterRole.INPUT
-            isParameterInExcludes(dirScan, parameterName) -> ParameterRole.OUTPUT
+            plugin.inputParameters.contains(parameterName) -> ParameterRole.INPUT
+            plugin.outputParameters.contains(parameterName) -> ParameterRole.OUTPUT
             else -> return ParameterRole.NONE
         }
 
@@ -231,37 +224,9 @@ class PluginKnowledge(
      */
     private fun shouldAlwaysRun(pluginArtifactId: String?): Boolean {
         if (pluginArtifactId == null) return false
-        return cacheConfig.executionControl?.runAlways?.plugins?.any {
-            it.artifactId == pluginArtifactId
-        } ?: false
+        return cacheConfig.alwaysRunPlugins.contains(pluginArtifactId)
     }
 
-    /**
-     * Gets a specific plugin configuration.
-     */
-    private fun getPluginConfig(pluginArtifactId: String): PluginConfigurationScan? {
-        return cacheConfig.input?.plugins?.find {
-            it.artifactId == pluginArtifactId
-        }
-    }
-
-    /**
-     * Checks if a parameter is included in the directory scan includes.
-     */
-    private fun isParameterInIncludes(dirScan: DirScanConfig, parameterName: String): Boolean {
-        return dirScan.includes?.any { include ->
-            include.tagName == parameterName
-        } ?: false
-    }
-
-    /**
-     * Checks if a parameter is excluded in the directory scan excludes.
-     */
-    private fun isParameterInExcludes(dirScan: DirScanConfig, parameterName: String): Boolean {
-        return dirScan.excludes?.any { exclude ->
-            exclude.tagName == parameterName
-        } ?: false
-    }
 
     private fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
         val artifactId = descriptor.pluginDescriptor?.artifactId
@@ -284,14 +249,12 @@ class PluginKnowledge(
             "pom.xml"
         )
 
-        cacheConfig.input?.global?.includes?.forEach { include ->
-            include.value?.let { directory ->
-                when (directory) {
-                    "." -> {
-                        // Root directory includes (like pom.xml) are already covered above
-                    }
-                    else -> inputs.add(directory)
+        cacheConfig.globalIncludes.forEach { include ->
+            when (include.path) {
+                "." -> {
+                    // Root directory includes (like pom.xml) are already covered above
                 }
+                else -> inputs.add(include.path)
             }
         }
 
@@ -308,24 +271,4 @@ class PluginKnowledge(
         outputs.map { formatPathForNx(it) }.toSet()
     }
 
-    private fun loadCacheConfig(): CacheConfig {
-        return try {
-            val resourceStream = javaClass.getResourceAsStream(CACHE_CONFIG_RESOURCE)
-                ?: throw IllegalStateException("Could not find resource: $CACHE_CONFIG_RESOURCE")
-
-            resourceStream.use { stream ->
-                val reader = BuildCacheConfigXpp3Reader()
-                val cacheConfig = reader.read(stream)
-                log.info("Loaded cache configuration for ${cacheConfig.input?.plugins?.size ?: 0} plugins")
-                cacheConfig
-            }
-        } catch (e: Exception) {
-            log.warn("Failed to load cache configuration from $CACHE_CONFIG_RESOURCE: ${e.message}. Using empty configuration.")
-            CacheConfig()
-        }
-    }
-
-    private companion object {
-        const val CACHE_CONFIG_RESOURCE = "/nx-cache-config.xml"
-    }
 }
