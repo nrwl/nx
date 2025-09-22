@@ -126,6 +126,28 @@ export default defineConfig({
         PageTitle: './src/components/layout/PageTitle.astro',
         TableOfContents: './src/components/layout/TableOfContents.astro',
       },
+      pagefind: {
+        ranking: {
+          // termFrequency changes the ranking balance between
+          // frequency of the term relative to document length
+          // versus weighted term count.
+          // default is 1.0
+          termFrequency: 0.75,
+          // pageLength changes the way ranking compares page lengths with the average page lengths on your site.
+          // default 0.75
+          pageLength: 0.5,
+          // termSaturation controls how quickly a term “saturates” on a page.
+          // Once a term has appeared on a page many times,
+          // further appearances have a reduced impact on the page rank.
+          // default: 1.4
+          // termSaturation: 1.4,
+          // termSimilarity changes the ranking based on
+          // similarity of terms to the search query.
+          // Currently this only takes the length of the term into account.
+          // default is 1.0
+          // termSimilarity: 1.0,
+        },
+      },
     }),
     react(),
   ],

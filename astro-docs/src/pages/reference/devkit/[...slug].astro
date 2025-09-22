@@ -18,7 +18,8 @@ const { Content, headings } = await render(doc);
 
 <StarlightPage
   frontmatter={{
-    title: doc.data.title
+    ...doc.data,
+    title: doc.data.title  
   }}
   headings={headings || []}
 >
