@@ -1,8 +1,9 @@
-package dev.nx.maven
+package dev.nx.maven.targets
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import dev.nx.maven.MojoAnalyzer
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
@@ -417,30 +418,4 @@ class NxTargetFactory(
     ): PluginDescriptor = pluginManager.getPluginDescriptor(
         plugin, project.remotePluginRepositories, session.repositorySession
     )
-}
-
-data class NxTarget(
-    val executor: String,
-    val options: ObjectNode?,
-    val cache: Boolean,
-    val parallelism: Boolean,
-    var dependsOn: ArrayNode? = null,
-    var outputs: ArrayNode? = null,
-    var inputs: ArrayNode? = null
-) {
-    fun toJSON(objectMapper: ObjectMapper): ObjectNode {
-        val node = objectMapper.createObjectNode()
-        node.put("executor", executor)
-        if (options != null) {
-            node.set<ObjectNode>("options", options)
-        }
-        node.put("cache", cache)
-        node.put("parallelism", parallelism)
-
-        dependsOn?.let { node.set<ObjectNode>("dependsOn", it) }
-        outputs?.let { node.set<ObjectNode>("outputs", it) }
-        inputs?.let { node.set<ObjectNode>("inputs", it) }
-
-        return node
-    }
 }
