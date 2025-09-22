@@ -1,4 +1,4 @@
-package dev.nx.maven
+package dev.nx.maven.buildstate
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.maven.execution.MavenSession
