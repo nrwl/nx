@@ -1,6 +1,7 @@
 package dev.nx.maven
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.maven.execution.MavenSession
 import org.apache.maven.model.Resource
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
@@ -28,7 +29,7 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     private lateinit var project: MavenProject
 
     @Parameter(defaultValue = "\${session}", readonly = true, required = true)
-    private lateinit var session: org.apache.maven.execution.MavenSession
+    private lateinit var session: MavenSession
 
     @Component
     private lateinit var projectHelper: MavenProjectHelper
