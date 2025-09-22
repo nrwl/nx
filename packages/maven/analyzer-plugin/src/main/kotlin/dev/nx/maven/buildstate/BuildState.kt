@@ -1,4 +1,4 @@
-package dev.nx.maven
+package dev.nx.maven.buildstate
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
