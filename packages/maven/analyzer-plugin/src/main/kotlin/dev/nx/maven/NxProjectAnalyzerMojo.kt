@@ -3,6 +3,8 @@ package dev.nx.maven
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import dev.nx.maven.targets.NxTargetFactory
+import dev.nx.maven.targets.TestClassDiscovery
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.plugin.AbstractMojo
