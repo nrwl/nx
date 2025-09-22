@@ -116,7 +116,10 @@ function getNodes(
 
       const packageName = path.split('node_modules/').pop();
       const version = findV3Version(snapshot, packageName);
-      createNode(packageName, version, path, nodes, keyMap, snapshot);
+      // symlinked packages in workspaces do not have versions
+      if (version) {
+        createNode(packageName, version, path, nodes, keyMap, snapshot);
+      }
     });
   } else {
     Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
