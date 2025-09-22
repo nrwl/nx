@@ -142,12 +142,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- JGit for gitignore parsing -->
-    <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
-      <version>6.8.0.202311291450-r</version>
-    </dependency>
 
     <!-- Plexus Utils for XML parsing -->
     <dependency>
