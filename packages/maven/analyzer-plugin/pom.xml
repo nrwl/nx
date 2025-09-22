@@ -149,12 +149,13 @@
       <version>6.8.0.202311291450-r</version>
     </dependency>
 
-    <!-- Maven Build Cache Extension -->
+    <!-- Plexus Utils for XML parsing -->
     <dependency>
-      <groupId>org.apache.maven.extensions</groupId>
-      <artifactId>maven-build-cache-extension</artifactId>
-      <version>1.2.0</version>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.5.1</version>
     </dependency>
+
 
   </dependencies>
 
