@@ -33,55 +33,15 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     @Component
     private lateinit var projectHelper: MavenProjectHelper
 
-    @Parameter(property = "inputFile", defaultValue = "\${project.build.directory}/nx-build-state.json", readonly = true)
-    private lateinit var inputFile: File
-
     @Throws(MojoExecutionException::class)
     override fun execute() {
         try {
-            applyDependencyBuildStates()
-            applyCurrentProjectBuildState()
+            applyAllBuildStates()
         } catch (e: Exception) {
             throw MojoExecutionException("Failed to reapply build state", e)
         }
     }
 
-    private fun applyCurrentProjectBuildState() {
-        if (!inputFile.exists()) {
-            log.info("Build state file not found, skipping: ${inputFile.absolutePath}")
-            return
-        }
-
-        val buildState = try {
-            objectMapper.readValue(inputFile, BuildState::class.java)
-        } catch (e: Exception) {
-            log.warn("Failed to read build state file: ${e.message}")
-            return
-        }
-
-        log.info("Applying build state for project: ${project.artifactId}")
-
-        // Apply source roots
-        buildState.compileSourceRoots.forEach { addIfExists(it) { project.addCompileSourceRoot(it) } }
-        buildState.testCompileSourceRoots.forEach { addIfExists(it) { project.addTestCompileSourceRoot(it) } }
-
-        // Apply resources
-        buildState.resources.forEach { addResourceIfExists(it, project::addResource) }
-        buildState.testResources.forEach { addResourceIfExists(it, project::addTestResource) }
-
-        // Apply output directories
-        buildState.outputDirectory?.let { if (File(it).isDirectory) project.build.outputDirectory = it }
-        buildState.testOutputDirectory?.let { if (File(it).isDirectory) project.build.testOutputDirectory = it }
-
-        // Apply classpaths (only JAR files to avoid workspace conflicts)
-        buildState.compileClasspath.filter { it.endsWith(".jar") }.forEach { project.compileClasspathElements.add(it) }
-        buildState.testClasspath.filter { it.endsWith(".jar") }.forEach { project.testClasspathElements.add(it) }
-
-        // Apply artifacts
-        applyBuildStateToProject(project, buildState)
-
-        log.info("Applied build state for project: ${project.artifactId}")
-    }
 
     private fun addIfExists(path: String, action: () -> Unit) {
         if (File(path).isDirectory) action() else log.warn("Directory not found: $path")
@@ -96,7 +56,7 @@ class NxBuildStateApplyMojo : AbstractMojo() {
         }
     }
 
-    private fun applyDependencyBuildStates() {
+    private fun applyAllBuildStates() {
         val projectsToApply = session.allProjects.mapNotNull { depProject ->
             val stateFile = File(depProject.build.directory, "nx-build-state.json")
             if (stateFile.exists()) depProject to stateFile else null
@@ -116,6 +76,27 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     }
 
     private fun applyBuildStateToProject(targetProject: MavenProject, buildState: BuildState) {
+        log.info("Applying build state for project: ${targetProject.artifactId}")
+
+        // If this is the current project, apply source roots, resources, and output directories
+        if (targetProject.artifactId == project.artifactId) {
+            // Apply source roots
+            buildState.compileSourceRoots.forEach { addIfExists(it) { targetProject.addCompileSourceRoot(it) } }
+            buildState.testCompileSourceRoots.forEach { addIfExists(it) { targetProject.addTestCompileSourceRoot(it) } }
+
+            // Apply resources
+            buildState.resources.forEach { addResourceIfExists(it, targetProject::addResource) }
+            buildState.testResources.forEach { addResourceIfExists(it, targetProject::addTestResource) }
+
+            // Apply output directories
+            buildState.outputDirectory?.let { if (File(it).isDirectory) targetProject.build.outputDirectory = it }
+            buildState.testOutputDirectory?.let { if (File(it).isDirectory) targetProject.build.testOutputDirectory = it }
+
+            // Apply classpaths (only JAR files to avoid workspace conflicts)
+            buildState.compileClasspath.filter { it.endsWith(".jar") }.forEach { targetProject.compileClasspathElements.add(it) }
+            buildState.testClasspath.filter { it.endsWith(".jar") }.forEach { targetProject.testClasspathElements.add(it) }
+        }
+
         // Apply main artifact
         buildState.mainArtifact?.let { artifact ->
             val file = File(artifact.file)
