@@ -1,8 +1,8 @@
 package dev.nx.maven
 
 import org.apache.maven.buildcache.xml.config.CacheConfig
-import org.apache.maven.buildcache.xml.config.PluginConfigurationScan
 import org.apache.maven.buildcache.xml.config.DirScanConfig
+import org.apache.maven.buildcache.xml.config.PluginConfigurationScan
 import org.apache.maven.buildcache.xml.config.io.xpp3.BuildCacheConfigXpp3Reader
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.Parameter
@@ -34,7 +34,10 @@ private data class ParameterInformation(
     val outputs: Set<String>
 )
 
-class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
+class PluginKnowledge(
+    private val expressionResolver: MavenExpressionResolver,
+    private val pathResolver: PathResolver
+) {
     private val log = LoggerFactory.getLogger(PluginKnowledge::class.java)
 
     private val cacheConfig: CacheConfig by lazy {
@@ -47,8 +50,7 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
     fun analyzeMojo(
         pluginDescriptor: PluginDescriptor,
         goal: String,
-        project: MavenProject,
-        pathResolver: PathResolver
+        project: MavenProject
     ): MojoAnalysis? {
         val descriptor = pluginDescriptor.getMojo(goal)
             ?: run {
@@ -58,7 +60,7 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
                 return null
             }
 
-        val parameterInfos = collectParameterInformation(descriptor, project, pathResolver)
+        val parameterInfos = collectParameterInformation(descriptor, project)
 
         val aggregatedInputs = mutableSetOf<String>()
         val aggregatedOutputs = mutableSetOf<String>()
@@ -124,8 +126,7 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
     private fun analyzeParameterInputsOutputs(
         descriptor: MojoDescriptor,
         parameter: Parameter,
-        project: MavenProject,
-        pathResolver: PathResolver
+        project: MavenProject
     ): ParameterInformation {
         val inputs = mutableSetOf<String>()
         val outputs = mutableSetOf<String>()
@@ -177,15 +178,13 @@ class PluginKnowledge(private val expressionResolver: MavenExpressionResolver) {
 
     private fun collectParameterInformation(
         descriptor: MojoDescriptor,
-        project: MavenProject,
-        pathResolver: PathResolver
+        project: MavenProject
     ): List<ParameterInformation> {
         return descriptor.parameters?.parallelStream()?.map { parameter ->
             val paramInfo = analyzeParameterInputsOutputs(
                 descriptor,
                 parameter,
-                project,
-                pathResolver
+                project
             )
             log.debug("Parameter analysis: {} {} -> {}", descriptor.phase, parameter.name, paramInfo)
             paramInfo
