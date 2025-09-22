@@ -22,7 +22,6 @@ class NxTargetFactory(
     private val testClassDiscovery: TestClassDiscovery,
     private val pluginManager: MavenPluginManager,
     private val session: MavenSession,
-    private val pathResolver: PathResolver,
     private val pluginKnowledge: PluginKnowledge
 ) {
     private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
@@ -237,7 +236,7 @@ class NxTargetFactory(
                         )
 
                         execution.goals.filterNotNull().mapNotNull { goal ->
-                            pluginKnowledge.analyzeMojo(pluginDescriptor, goal, project, pathResolver)
+                            pluginKnowledge.analyzeMojo(pluginDescriptor, goal, project)
                         }
                     }
             }
@@ -349,7 +348,7 @@ class NxTargetFactory(
         val command =
             "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
         options.put("command", command)
-        val analysis = pluginKnowledge.analyzeMojo(pluginDescriptor, goalName, project, pathResolver)
+        val analysis = pluginKnowledge.analyzeMojo(pluginDescriptor, goalName, project)
             ?: return null
 
         val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
