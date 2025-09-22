@@ -47,19 +47,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Analyzing Maven projects using optimized two-tier approach...")
         log.info("Parameters: outputFile='$outputFile', workspaceRoot='$workspaceRoot'")
 
-        // Create GitIgnoreClassifier once for the entire session
-        val gitIgnoreClassifier: GitIgnoreClassifier? = try {
-            val sessionRoot = session.executionRootDirectory?.let { File(it) }
-            if (sessionRoot != null) {
-                GitIgnoreClassifier(sessionRoot)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            log.debug("Failed to initialize GitIgnoreClassifier: ${e.message}")
-            null
-        }
-
         try {
             val allProjects = session.allProjects
             log.info("Found ${allProjects.size} Maven projects")
@@ -76,9 +63,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         } catch (e: Exception) {
             throw MojoExecutionException("Failed to execute optimized two-tier Maven analysis", e)
-        } finally {
-            // Clean up GitIgnoreClassifier resources
-            gitIgnoreClassifier?.close()
         }
     }
 
