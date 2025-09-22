@@ -3,7 +3,7 @@ package dev.nx.maven.targets
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import dev.nx.maven.MojoAnalyzer
+import dev.nx.maven.utils.MojoAnalyzer
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
