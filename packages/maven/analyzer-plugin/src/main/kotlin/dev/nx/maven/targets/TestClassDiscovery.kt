@@ -1,4 +1,4 @@
-package dev.nx.maven
+package dev.nx.maven.targets
 
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
