@@ -1,6 +1,7 @@
 package dev.nx.maven.utils
 
 import org.apache.maven.execution.MavenSession
+import org.apache.maven.plugin.descriptor.Parameter
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,12 +14,50 @@ class MavenExpressionResolver(
 ) {
     private val log: Logger = LoggerFactory.getLogger(MavenExpressionResolver::class.java)
 
+    fun resolveParameter(parameter: Parameter, project: MavenProject): List<String> {
+        return when (parameter.type) {
+            "java.io.File" -> listOfNotNull(
+                resolveStringParameterValue(
+                    parameter,
+                    project
+                )
+            )
+            "java.lang.String" -> listOfNotNull(
+                resolveStringParameterValue(
+                    parameter,
+                    project
+                )
+            )
+            "java.util.List" -> resolveCollectionParameter(parameter, project)
+            "java.util.Set" -> resolveCollectionParameter(parameter, project)
+            else -> emptyList()
+        }
+    }
+
     /**
      * Resolves a mojo parameter value by trying expression, default value, and known mappings
      */
-    fun resolveParameterValue(name: String, defaultValue: String?, expression: String?, project: MavenProject): String? {
+    fun resolveCollectionParameter(
+        parameter: Parameter,
+        project: MavenProject
+    ): List<String> {
+        return buildList {
+            parameter.expression?.let { expr ->
+                addAll(resolveCollectionExpression(expr, project))
+            }
+            parameter.defaultValue?.let { default ->
+                addAll(resolveCollectionExpression(default, project))
+            }
+        }
+    }
+
+
+    /**
+     * Resolves a mojo parameter value by trying expression, default value, and known mappings
+     */
+    fun resolveStringParameterValue(parameter: Parameter, project: MavenProject): String? {
         // Try expression first
-        expression?.let { expr ->
+        parameter.expression?.let { expr ->
             val resolved = resolveExpression(expr, project)
             if (resolved != expr) {
                 // Filter out values that look like version numbers, not paths
@@ -31,7 +70,7 @@ class MavenExpressionResolver(
         }
 
         // Try default value
-        defaultValue?.let { default ->
+        parameter.defaultValue?.let { default ->
             val resolved = resolveExpression(default, project)
             if (isValidPath(resolved)) {
                 return resolved
@@ -41,7 +80,7 @@ class MavenExpressionResolver(
         }
 
         // Try known parameter mappings based on what Maven actually provides
-        val result = when (name) {
+        val result = when (parameter.name) {
             // These map directly to Maven project model
             "compileSourceRoots" -> project.compileSourceRoots.firstOrNull()
             "testCompileSourceRoots" -> project.testCompileSourceRoots.firstOrNull()
@@ -63,6 +102,7 @@ class MavenExpressionResolver(
                 // Return classpath as colon-separated string of JAR paths
                 project.compileClasspathElements?.joinToString(System.getProperty("path.separator"))
             }
+
             "testClasspathElements" -> {
                 project.testClasspathElements?.joinToString(System.getProperty("path.separator"))
             }
@@ -98,6 +138,18 @@ class MavenExpressionResolver(
         return value.contains("/") || value.contains("\\") || value.startsWith(".") || java.io.File(value).isAbsolute
     }
 
+    fun resolveCollectionExpression(expression: String, project: MavenProject): List<String> {
+        return when(expression) {
+            "\${project.compileSourceRoots}" -> project.compileSourceRoots ?: emptyList()
+            "\${project.testCompileSourceRoots}" -> project.testCompileSourceRoots ?: emptyList()
+            "\${project.resources}" -> project.build.resources?.mapNotNull { it.directory } ?: emptyList()
+            "\${project.testResources}" -> project.build.testResources?.mapNotNull { it.directory } ?: emptyList()
+            "\${project.compileClasspathElements}" -> project.compileClasspathElements ?: emptyList()
+            "\${project.testClasspathElements}" -> project.testClasspathElements ?: emptyList()
+            else -> emptyList()
+        }
+    }
+
     /**
      * Resolves Maven expressions in a string
      */
@@ -112,9 +164,16 @@ class MavenExpressionResolver(
         resolved = resolved.replace("\${project.basedir}", project.basedir?.absolutePath ?: "")
         resolved = resolved.replace("\${basedir}", project.basedir?.absolutePath ?: "")
         resolved = resolved.replace("\${project.build.directory}", project.build?.directory ?: "target")
-        resolved = resolved.replace("\${project.build.outputDirectory}", project.build?.outputDirectory ?: "target/classes")
-        resolved = resolved.replace("\${project.build.testOutputDirectory}", project.build?.testOutputDirectory ?: "target/test-classes")
-        resolved = resolved.replace("\${project.build.finalName}", project.build?.finalName ?: "${project.artifactId}-${project.version}")
+        resolved =
+            resolved.replace("\${project.build.outputDirectory}", project.build?.outputDirectory ?: "target/classes")
+        resolved = resolved.replace(
+            "\${project.build.testOutputDirectory}",
+            project.build?.testOutputDirectory ?: "target/test-classes"
+        )
+        resolved = resolved.replace(
+            "\${project.build.finalName}",
+            project.build?.finalName ?: "${project.artifactId}-${project.version}"
+        )
         resolved = resolved.replace("\${project.artifactId}", project.artifactId ?: "")
         resolved = resolved.replace("\${project.groupId}", project.groupId ?: "")
         resolved = resolved.replace("\${project.version}", project.version ?: "")
@@ -162,5 +221,12 @@ class MavenExpressionResolver(
         }
 
         return true
+    }
+
+    fun resolveProperty(propertyPath: String, project: MavenProject): List<String> {
+        return when(propertyPath) {
+            "project.build.resources" -> project.build.resources.mapNotNull { resource -> resource.directory }
+            else -> emptyList()
+        }
     }
 }
