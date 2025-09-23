@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/release",
   "projectType": "application",
-  "implicitDependencies": ["nx", "js"],
+  "implicitDependencies": ["nx", "js", "rollup"],
   "// targets": "to see all targets run: nx show project e2e-release --web",
   "targets": {}
 }
