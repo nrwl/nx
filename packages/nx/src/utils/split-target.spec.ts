@@ -29,6 +29,7 @@ describe('splitTarget', () => {
               dev: {},
             },
           },
+          'target:with:colon': {},
         },
       },
       type: 'app',
@@ -87,6 +88,13 @@ describe('splitTarget', () => {
       'target',
     ]);
   });
+
+  it('should support projects and targets with colons in the name', () => {
+    expect(
+      splitTarget(':utils:common:target:with:colon', projectGraph)
+    ).toEqual([':utils:common', 'target:with:colon']);
+  });
+
   it('should support projects with colons in the name and configuration', () => {
     expect(splitTarget(':utils:common:target:dev', projectGraph)).toEqual([
       ':utils:common',
@@ -94,6 +102,7 @@ describe('splitTarget', () => {
       'dev',
     ]);
   });
+
   it('should use the last matching configuration when there are multiple matches', () => {
     expect(splitTarget(':utils:common:target:prod', projectGraph)).toEqual([
       ':utils:common:target',
