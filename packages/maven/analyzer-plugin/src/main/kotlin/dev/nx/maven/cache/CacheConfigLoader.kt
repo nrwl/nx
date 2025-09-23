@@ -48,22 +48,26 @@ class CacheConfigLoader {
                 globalElement.getChild("includes")?.let { includesElement ->
                     for (includeElement in includesElement.getChildren("include")) {
                         val path = includeElement.getAttribute("value") ?: continue
-                        globalIncludes.add(PathPattern(
-                            path = path,
-                            glob = includeElement.getAttribute("glob"),
-                            recursive = includeElement.getAttribute("recursive")?.toBoolean() ?: false
-                        ))
+                        globalIncludes.add(
+                            PathPattern(
+                                path = path,
+                                glob = includeElement.getAttribute("glob"),
+                                recursive = includeElement.getAttribute("recursive")?.toBoolean() ?: false
+                            )
+                        )
                     }
                 }
 
                 globalElement.getChild("excludes")?.let { excludesElement ->
                     for (excludeElement in excludesElement.getChildren("exclude")) {
                         val path = excludeElement.getAttribute("value") ?: continue
-                        globalExcludes.add(PathPattern(
-                            path = path,
-                            glob = excludeElement.getAttribute("glob"),
-                            recursive = false
-                        ))
+                        globalExcludes.add(
+                            PathPattern(
+                                path = path,
+                                glob = excludeElement.getAttribute("glob"),
+                                recursive = false
+                            )
+                        )
                     }
                 }
             }
@@ -100,15 +104,19 @@ class CacheConfigLoader {
     }
 
     private fun parsePluginConfig(artifactId: String, pluginElement: Xpp3Dom): PluginConfig {
-        val inputParameters = mutableSetOf<String>()
-        val outputParameters = mutableSetOf<String>()
+        val inputParameters = mutableSetOf<PathPattern>()
+        val outputParameters = mutableSetOf<PathPattern>()
 
         pluginElement.getChild("dirScan")?.let { dirScanElement ->
             // Parse includes (input parameters)
             dirScanElement.getChild("includes")?.let { includesElement ->
                 for (includeElement in includesElement.getChildren("include")) {
                     includeElement.getAttribute("tagName")?.let { tagName ->
-                        inputParameters.add(tagName)
+                        inputParameters.add(PathPattern(
+                            tagName,
+                            includeElement.getAttribute("glob"),
+                            includeElement.getAttribute("recursive")?.toBoolean() ?: false
+                        ))
                     }
                 }
             }
@@ -117,7 +125,11 @@ class CacheConfigLoader {
             dirScanElement.getChild("excludes")?.let { excludesElement ->
                 for (excludeElement in excludesElement.getChildren("exclude")) {
                     excludeElement.getAttribute("tagName")?.let { tagName ->
-                        outputParameters.add(tagName)
+                        outputParameters.add(PathPattern(
+                            tagName,
+                            excludeElement.getAttribute("glob"),
+                            excludeElement.getAttribute("recursive")?.toBoolean() ?: false
+                        ))
                     }
                 }
             }
