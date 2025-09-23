@@ -20,6 +20,6 @@ data class PathPattern(
 
 data class PluginConfig(
     val artifactId: String,
-    val inputParameters: Set<String> = emptySet(),
-    val outputParameters: Set<String> = emptySet()
+    val inputParameters: Set<PathPattern> = emptySet(),
+    val outputParameters: Set<PathPattern> = emptySet()
 )
