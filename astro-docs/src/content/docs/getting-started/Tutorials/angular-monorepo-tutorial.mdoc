@@ -222,11 +222,19 @@ npx nx show project demo
 
 When you develop your Angular application, usually all your logic sits in the app's `src` folder. Ideally separated by various folder names which represent your domains or features. As your app grows, however, the app becomes more and more monolithic, which makes building and testing it harder and slower.
 
-{%filetree %}
+{% filetree %}
 
 - acme/
-  - apps/ - demo/ - src/ - app/ - cart/ - products/ - orders/ - ui/
-    {%/filetree %}
+  - apps/
+    - demo/
+      - src/
+        - app/
+        - cart/
+        - products/
+        - orders/
+        - ui/
+
+{%/filetree %}
 
 Nx allows you to separate this logic into "local libraries." The main benefits include
 
@@ -248,7 +256,7 @@ Note how we type out the full path in the command to place the library into a su
 
 Running the above command should lead to the following directory structure:
 
-{%filetree %}
+{% filetree %}
 
 - acme/
   - apps/
@@ -261,7 +269,8 @@ Running the above command should lead to the following directory structure:
   - package.json
   - tsconfig.base.json
   - vitest.workspace.ts
-    {%/filetree %}
+
+{%/filetree %}
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 

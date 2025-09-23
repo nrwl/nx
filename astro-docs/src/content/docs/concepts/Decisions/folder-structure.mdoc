@@ -42,8 +42,13 @@ The purpose of these folders is to help with organizing by scope. We recommend g
     - feature-shell/ <---- project
   - check-in/
     - feature-shell/
-  - shared/ <---- grouping folder - data-access/ <---- project - seatmap/ <---- grouping folder - data-access/ <---- project - feature-seatmap/ <---- project
-    {% /filetree %}
+  - shared/ <---- grouping folder
+    - data-access/ <---- project
+    - seatmap/ <---- grouping folder
+      - data-access/ <---- project
+      - feature-seatmap/ <---- project
+
+{% /filetree %}
 
 ## Sharing Projects
 
@@ -56,5 +61,10 @@ Let's consider our reference monorepo. The `shared-data-access` project contains
 - libs/
   - booking/
     - data-access/ <---- app-specific project
-  - shared/ - data-access/ <---- shared project - seatmap/ - data-access/ <---- shared project - feature-seatmap/ <---- shared project
-    {% /filetree %}
+  - shared/
+    - data-access/ <---- shared project
+    - seatmap/
+      - data-access/ <---- shared project
+      - feature-seatmap/ <---- shared project
+
+{% /filetree %}
