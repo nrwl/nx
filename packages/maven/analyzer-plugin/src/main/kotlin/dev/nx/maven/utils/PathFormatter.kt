@@ -21,7 +21,6 @@ class PathFormatter(
 
     fun toDependentTaskOutputs(path: File, projectRoot: File): DependentTaskOutputs {
         val relativePath = path.relativeTo(projectRoot)
-        // TODO: This is supposed to be an dependent task outputs
         return DependentTaskOutputs(relativePath.path)
     }
 
