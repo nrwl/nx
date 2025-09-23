@@ -1,14 +1,11 @@
 package dev.nx.maven
 
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.ignore.FastIgnoreRule
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
- * Uses JGit to determine if files match gitignore patterns
+ * Determines if files match gitignore patterns
  * Provides heuristic for parameter classification: ignored files are likely outputs, tracked files are likely inputs
  */
 class GitIgnoreClassifier(
@@ -16,53 +13,13 @@ class GitIgnoreClassifier(
 ) {
     private val log = LoggerFactory.getLogger(GitIgnoreClassifier::class.java)
 
-    private var git: Git? = null
-    private var repository: Repository? = null
-    private var isGitRepo: Boolean = false
     private val ignoreRules: MutableList<FastIgnoreRule> = mutableListOf()
 
     init {
-        initializeGitRepository()
         loadIgnoreRules()
     }
 
-    private fun initializeGitRepository() {
-        try {
-            val gitDir = findGitDirectory(workspaceRoot)
-            if (gitDir != null) {
-                repository = FileRepositoryBuilder()
-                    .setGitDir(gitDir)
-                    .readEnvironment()
-                    .build()
-                git = Git(repository)
-                isGitRepo = true
-                log.debug("Initialized Git repository from: ${gitDir.path}")
-            } else {
-                log.debug("No Git repository found in project: ${workspaceRoot.path}")
-                isGitRepo = false
-            }
-        } catch (e: Exception) {
-            log.debug("Failed to initialize Git repository: ${e.message}")
-            isGitRepo = false
-        }
-    }
-
-    private fun findGitDirectory(startDir: File): File? {
-        var current = startDir
-        while (current.exists()) {
-            val gitDir = File(current, ".git")
-            if (gitDir.exists()) {
-                return if (gitDir.isDirectory) gitDir else null
-            }
-            current = current.parentFile ?: break
-        }
-        return null
-    }
-
     private fun loadIgnoreRules() {
-        if (!isGitRepo) {
-            return
-        }
 
         try {
             val gitIgnoreFile = File(workspaceRoot, ".gitignore")
@@ -93,7 +50,7 @@ class GitIgnoreClassifier(
      * Works for both existing and non-existent paths by using pattern matching
      */
     fun isIgnored(path: File): Boolean {
-        if (!isGitRepo || ignoreRules.isEmpty()) {
+        if (ignoreRules.isEmpty()) {
             return false
         }
 
@@ -126,12 +83,4 @@ class GitIgnoreClassifier(
         }
     }
 
-    fun close() {
-        try {
-            git?.close()
-            repository?.close()
-        } catch (e: Exception) {
-            log.debug("Error closing Git repository: ${e.message}")
-        }
-    }
 }
