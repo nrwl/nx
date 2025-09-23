@@ -15,7 +15,6 @@ class PathFormatter(
     private val log: Logger = LoggerFactory.getLogger(PathFormatter::class.java)
 
     fun formatInputPath(path: File, projectRoot: File): String {
-
         return toProjectPath(path, projectRoot)
     }
 
@@ -29,7 +28,7 @@ class PathFormatter(
     }
 
     fun toProjectPath(path: File, projectRoot: File): String {
-        val relativePath = path.relativeTo(projectRoot)
+        val relativePath = path.relativeToOrSelf(projectRoot)
 
         return "{projectRoot}/$relativePath"
     }

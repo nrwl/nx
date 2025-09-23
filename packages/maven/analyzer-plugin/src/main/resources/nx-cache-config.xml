@@ -36,22 +36,6 @@
         </global>
 
         <plugins>
-            <!-- Maven Compiler Plugin -->
-            <plugin artifactId="maven-compiler-plugin">
-                <dirScan mode="auto">
-                    <includes>
-                        <include tagName="compileSourceRoots" recursive="true" glob="**/*.java"/>
-                        <include tagName="sourceDirectory" recursive="true" glob="**/*.java"/>
-                        <include tagName="testCompileSourceRoots" recursive="true" glob="**/*.java"/>
-                        <include tagName="testSourceDirectory" recursive="true" glob="**/*.java"/>
-                    </includes>
-                    <excludes>
-                        <exclude tagName="outputDirectory"/>
-                        <exclude tagName="testOutputDirectory"/>
-                    </excludes>
-                </dirScan>
-            </plugin>
-
             <!-- Maven Resources Plugin -->
             <plugin artifactId="maven-resources-plugin">
                 <dirScan mode="auto">
@@ -62,20 +46,6 @@
                     <excludes>
                         <exclude tagName="outputDirectory"/>
                         <exclude tagName="testOutputDirectory"/>
-                    </excludes>
-                </dirScan>
-            </plugin>
-
-            <!-- Maven Surefire Plugin -->
-            <plugin artifactId="maven-surefire-plugin">
-                <dirScan mode="auto">
-                    <includes>
-                        <include tagName="testClassesDirectory" recursive="true" glob="**/*.class"/>
-                        <include tagName="classesDirectory" recursive="true" glob="**/*.class"/>
-                        <include tagName="suiteXmlFiles" recursive="false" glob="**/*.xml"/>
-                    </includes>
-                    <excludes>
-                        <exclude tagName="reportsDirectory"/>
                     </excludes>
                 </dirScan>
             </plugin>
@@ -204,5 +174,4 @@
             </plugins>
         </ignoreMissing>
     </executionControl>
-
 </cache>
