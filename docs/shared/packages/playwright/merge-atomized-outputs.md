@@ -1,6 +1,11 @@
+---
+title: Merge Atomized Playwright Outputs
+description: Learn how to enable output merging for atomized Playwright tests
+---
+
 # Merge Atomized Playwright Outputs
 
-When running Playwright tests in CI environments, Nx can [split tests across multiple parallel tasks](/docs/features/ci-features/split-e2e-tasks) for faster execution.
+When running Playwright tests in CI environments, Nx can [split tests across multiple parallel tasks](/ci/features/split-e2e-tasks) for faster execution.
 However, this creates separate test reports for each task.
 With the Nx Plugin, the Playwright report merging feature allows you to combine these individual reports into a single, unified report.
 
@@ -14,13 +19,13 @@ With the Nx Plugin, the Playwright report merging feature allows you to combine 
 
 - Nx workspace with `@nx/playwright` plugin
 - Playwright tests configured in your project
-- CI environment with [task atomization enabled](/docs/features/ci-features/split-e2e-tasks)
+- CI environment with [task atomization enabled](/ci/features/split-e2e-tasks)
 - Nx v21.6.1
 
-{% aside type="note" title="Nx Version"%}
+{% callout type="note" title="Nx Version"%}
 Nx v21.6.1 introduced automatic configuration of report merging which is the focus of this guide.
 Similar steps can be followed for manual configuration of Playwright for any versions prior to Nx v21.6.1
-{%/aside%}
+{%/callout%}
 
 ## How report merging works
 
@@ -59,9 +64,9 @@ export default defineConfig({
 });
 ```
 
-### Step 2: Configure the playwright plugin
+### Step 2: Configure the Playwright plugin
 
-Add a `ciTargetName` to the Playwright plugin to your `nx.json`. This will enable the report merging feature for CI environments:
+Add a `ciTargetName` to the Playwright plugin to your `nx.json`. This will enable task splitting and report merging features for CI environments:
 
 ```json {% fileName="nx.json" %}
 {
@@ -77,11 +82,11 @@ Add a `ciTargetName` to the Playwright plugin to your `nx.json`. This will enabl
 }
 ```
 
-With the above configurations, Nx automatically creates these targets for your playwright projects:
+With the above configurations, Nx automatically creates these targets for your Playwright projects:
 
 - `e2e`: Regular target for local development (runs all tests together)
 - `e2e-ci`: CI target that runs tests in parallel across multiple tasks
-- `e2e-ci-merge-reports`: Target that merges blob reports into unified reports
+- `e2e-ci--merge-reports`: Target that merges blob reports into unified reports
 
 ## Running the feature
 
@@ -99,7 +104,7 @@ nx run my-app:e2e
 nx run my-app:e2e-ci
 
 # Merge the reports
-nx run my-app:e2e-ci-merge-reports
+nx run my-app:e2e-ci--merge-reports
 ```
 
 ## Complete example
@@ -140,7 +145,7 @@ export default defineConfig({
 ## CI Integration
 
 > The following example CI configuration is for GitHub Actions, but the same steps can be followed in all CI providers.
-> The most important part is to always call the merge report target, `e2e-ci-merge-reports`, even if the E2E tests fail to always have a final merged report.
+> The most important part is to always call the merge report target, `e2e-ci--merge-reports`, even if the E2E tests fail to always have a final merged report.
 
 ```yaml {% fileName=".github/workflows/ci.yaml" %}
 name: CI
@@ -155,7 +160,7 @@ jobs:
         run: nx run my-app:e2e-ci
 
       - name: Merge Test Reports
-        run: nx run my-app:e2e-ci-merge-reports
+        run: nx run my-app:e2e-ci--merge-reports
         # Run even if tests fail to get partial results
         if: always()
 ```
@@ -168,7 +173,7 @@ jobs:
 
 **Solution:** Ensure the blob reporter is added to your Playwright configuration:
 
-- If overriding the `reporter` in the playwright configuration, make sure to add the blob reporter:
+- If overriding the `reporter` in the Playwright configuration, make sure to add the blob reporter:
 
 ```ts {% fileName="playwright.config.ts" %}
 export default defineConfig({
@@ -197,7 +202,7 @@ export default defineConfig({
 **Solution:**
 
 - Ensure the merge target is running after all test tasks complete
-  - The default merge target name is `e2e-ci-merge-reports`
+  - The default merge target name is `e2e-ci--merge-reports`
   - You can run `nx show project <e2e-project-name>` to view targets available on your project to verify the target exists
 - Check that the blob report directory path is correct
 - Verify Playwright CLI is available in the CI environment
@@ -208,7 +213,7 @@ export default defineConfig({
 
 **Solution:** Add at least one additional reporter (HTML, JSON, JUnit, etc.) alongside the blob reporter.
 
-List of available Playwright reports can be found in the [playwright documentation](https://playwright.dev/docs/test-reporters).
+List of available Playwright reports can be found in the [Playwright documentation](https://playwright.dev/docs/test-reporters).
 
 ## Best Practices
 
