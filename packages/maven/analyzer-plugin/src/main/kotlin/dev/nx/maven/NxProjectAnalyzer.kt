@@ -8,7 +8,6 @@ import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.nio.file.Paths
 
 /**
  * Analyzer for a single Maven project structure to generate JSON for Nx integration
@@ -16,7 +15,7 @@ import java.nio.file.Paths
  */
 class NxProjectAnalyzer(
     private val project: MavenProject,
-    private val workspaceRoot: String,
+    private val workspaceRoot: File,
     private val sharedLifecycleAnalyzer: NxTargetFactory,
     private val mavenCommand: String
 ) {
@@ -33,13 +32,11 @@ class NxProjectAnalyzer(
 
         // Calculate relative path from workspace root
         val pathCalculationStart = System.currentTimeMillis()
-        val workspaceRootPath = Paths.get(workspaceRoot)
-        val projectPath = project.basedir.toPath()
-        val root = workspaceRootPath.relativize(projectPath).toString().replace('\\', '/')
+        val root = project.basedir.relativeTo(workspaceRoot).path
         val projectName = "${project.groupId}:${project.artifactId}"
         val projectType = determineProjectType(project.packaging)
         val pathCalculationTime = System.currentTimeMillis() - pathCalculationStart
-        log.info("Path calculation took ${pathCalculationTime}ms for project: ${project.artifactId}")
+        log.info("Path calculation took ${pathCalculationTime}ms for project: ${project.artifactId} ($root)")
 
         // Create Nx project configuration
         val configCreationStart = System.currentTimeMillis()
@@ -102,7 +99,7 @@ class NxProjectAnalyzer(
             dependency.put("type", nxDependency.type.name.lowercase())
             dependency.put("source", nxDependency.source)
             dependency.put("target", nxDependency.target)
-            dependency.put("sourceFile", nxDependency.sourceFile.relativeTo(File(workspaceRoot)).path)
+            dependency.put("sourceFile", nxDependency.sourceFile.relativeTo(workspaceRoot).path)
             dependency
         }
 
