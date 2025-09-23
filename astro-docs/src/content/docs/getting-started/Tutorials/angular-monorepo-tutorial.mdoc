@@ -3,7 +3,7 @@ title: 'Building and Testing Angular Apps in Nx'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 sidebar:
   label: 'Angular Monorepo'
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through creating an Angular monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
@@ -48,17 +48,18 @@ This is important for using remote caching and self-healing in CI later in the t
 
 Let's take a look at the structure of our new Nx workspace:
 {%filetree%}
-  - acme
-    - apps
-      - demo
-    - packages
-      - ui
-    - eslint.config.mjs
-    - nx.json
-    - package-lock.json
-    - package.json
-    - tsconfig.base.json
-    - vitest.workspace.ts
+
+- acme
+  - apps
+    - demo
+  - packages
+    - ui
+  - eslint.config.mjs
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+  - vitest.workspace.ts
 
 {%/filetree%}
 
@@ -224,15 +225,8 @@ When you develop your Angular application, usually all your logic sits in the ap
 {%filetree %}
 
 - acme/
-  - apps/
-    - demo/
-      - src/
-        - app/
-        - cart/
-        - products/
-        - orders/
-        - ui/
-{%/filetree %}
+  - apps/ - demo/ - src/ - app/ - cart/ - products/ - orders/ - ui/
+    {%/filetree %}
 
 Nx allows you to separate this logic into "local libraries." The main benefits include
 
@@ -255,6 +249,7 @@ Note how we type out the full path in the command to place the library into a su
 Running the above command should lead to the following directory structure:
 
 {%filetree %}
+
 - acme/
   - apps/
     - demo/
@@ -266,7 +261,7 @@ Running the above command should lead to the following directory structure:
   - package.json
   - tsconfig.base.json
   - vitest.workspace.ts
-{%/filetree %}
+    {%/filetree %}
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 

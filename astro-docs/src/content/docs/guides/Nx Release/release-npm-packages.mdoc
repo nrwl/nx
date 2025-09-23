@@ -1,9 +1,8 @@
 ---
 title: Release TypeScript/JavaScript Packages to NPM
 description: Learn how to use Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM in your monorepo.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
-
 
 This guide walks you through setting up Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM from your monorepo.
 
@@ -35,7 +34,7 @@ Configure which projects to release by adding the `release.projects` property to
 
 For example, to release just the projects in the `packages` directory:
 
-```json 
+```json
 // nx.json
 {
   "release": {
@@ -260,7 +259,7 @@ The structure of the git tag defaults to `v{version}`. For example, if the versi
 
 For this same example, if you want the commit message to be 'chore(release): 1.2.3' and the tag to be `release/1.2.3`, you would configure nx.json like this:
 
-```json 
+```json
 // nx.json
 {
   "release": {

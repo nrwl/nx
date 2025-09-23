@@ -3,7 +3,7 @@ title: 'Building and Testing TypeScript Packages in Nx'
 description: In this tutorial you'll create a TypeScript monorepo with Nx.gradient
 sidebar:
   label: 'TypeScript Monorepo'
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through creating a TypeScript monorepo with Nx. You'll build a small example project to understand the core concepts and workflows.
@@ -49,6 +49,7 @@ This is important for using remote caching and self-healing in CI later in the t
 Let's take a look at the structure of our new Nx workspace:
 
 {%filetree %}
+
 - acme/
   - .github/
     - workflows/
@@ -67,7 +68,6 @@ Let's take a look at the structure of our new Nx workspace:
   - tsconfig.json
 
 {% /filetree %}
-
 
 Here are some files that might jump to your eyes:
 
@@ -96,6 +96,7 @@ npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=
 Running these commands should lead to new directories and files in your workspace:
 
 {%filetree %}
+
 - acme/
   - packages/
     - animal/
@@ -362,6 +363,7 @@ npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --li
 Now we have:
 
 {%filetree %}
+
 - acme/
   - packages/
     - animal/

@@ -1,7 +1,7 @@
 ---
 title: 'Launch Templates'
 description: 'Define setup steps for Nx Agents with custom launch templates'
-filter: "type:References"
+filter: 'type:References'
 ---
 
 A launch template defines the setup steps Nx Agents will run before running tasks. A custom launch template isn't required to use Nx Agents.
@@ -368,7 +368,7 @@ launch-templates:
     env:
       MY_ENV_VAR: shared
     # note we are using yaml anchors to reduce duplication with the above launch-template (they have the same init-steps)
-    init-steps: 
+    init-steps:
       # use YAML anchor to include common init setup
       <<: *common-init-steps
       - name: Print Env Var from reusable step
@@ -447,8 +447,8 @@ launch-templates:
       - name: Check PATH
         script: |
           # now contains $HOME/.cargo/bin
-          echo $PATH 
-          # can invoke cargo directly because it's in the PATH now. 
+          echo $PATH
+          # can invoke cargo directly because it's in the PATH now.
           cargo --version
 ```
 
@@ -643,7 +643,7 @@ launch-templates:
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
           # run installer, default location is already in the PATH
-          # if installing in a custom location, 
+          # if installing in a custom location,
           # then update the $PATH like `PATH=$PATH:[extra-path-items] >> $NX_CLOUD_ENV`
           sudo ./aws/install
           # print AWS CLI version to verify command is avaiable
@@ -732,7 +732,7 @@ launch-templates:
         script: |
           # !!! DO NOT RUN THIS IF YOU HAVE PASSWORD/ACCESS TOKENS IN YOUR ENV VARS !!!
           # this will print your env as plain text values to the terminal
-          env  
+          env
           # This is a safer approach to prevent leaking tokens/passwords
           echo "SOME_VALUE: $SOME_VALUE"
 ```

@@ -3,7 +3,7 @@ title: 'Gradle Tutorial'
 description: In this tutorial you'll add Nx to an existing Gradle repo
 sidebar:
   label: 'Gradle Monorepo'
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through adding Nx to an existing Gradle project. You'll see how Nx enhances your Gradle workflow with caching, task orchestration, and better developer experience.
@@ -1132,7 +1132,7 @@ computation caching to reuse the results of tasks. We will explore how Nx adds t
 Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
 that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can view the available tasks either through [Nx Console](/docs/getting-started/editor-setup) or from the terminal:
 
-```shell {% frame="none" %} 
+```shell {% frame="none" %}
 nx show project application
 ```
 
@@ -2534,7 +2534,7 @@ Now for demo purposes, we'll make a mistake in our `DemoApplication` class that 
 
 Commit the changes and open a new PR on GitHub.
 
-```shell {% frame="none" %} 
+```shell {% frame="none" %}
 git add .
 git commit -m 'demo self-healing ci'
 git push origin self-healing-ci

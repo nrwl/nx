@@ -3,7 +3,7 @@ title: Mental Model
 description: Understand how Nx works with project graphs, task graphs, affected commands, and caching to efficiently manage your monorepo development workflow.
 sidebar:
   order: 1
-filter: "type:Concepts"
+filter: 'type:Concepts'
 ---
 
 Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through [plugins](/docs/concepts/nx-plugins). Nx works with a
@@ -46,7 +46,6 @@ For instance `nx test lib` creates a task graph with a single node:
 
 {% graph height="100px" type="task" %}
 
-
 ```json
 {
   "projects": [
@@ -63,21 +62,19 @@ For instance `nx test lib` creates a task graph with a single node:
   ],
   "taskIds": ["lib:test"],
   "taskGraph": {
-      "roots": [
-        "lib:test"
-      ],
-      "tasks": {
-        "lib:test": {
-          "id": "lib:test",
-          "target": {
-            "project": "lib",
-            "target": "test"
-          },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {}
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }
 ```
@@ -116,21 +113,19 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
   ],
   "taskIds": ["lib:test"],
   "taskGraph": {
-      "roots": [
-        "lib:test"
-      ],
-      "tasks": {
-        "lib:test": {
-          "id": "lib:test",
-          "target": {
-            "project": "lib",
-            "target": "test"
-          },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {}
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }
 ```
@@ -155,21 +150,19 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
   ],
   "taskIds": ["lib:test"],
   "taskGraph": {
-      "roots": [
-        "lib:test"
-      ],
-      "tasks": {
-        "lib:test": {
-          "id": "lib:test",
-          "target": {
-            "project": "lib",
-            "target": "test"
-          },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {}
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }
 ```
@@ -226,21 +219,19 @@ With this, running the same test command creates the following task graph:
   ],
   "taskIds": ["lib:test"],
   "taskGraph": {
-      "roots": [
-        "lib:test"
-      ],
-      "tasks": {
-        "lib:test": {
-          "id": "lib:test",
-          "target": {
-            "project": "lib",
-            "target": "test"
-          },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {}
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }
 ```
@@ -265,21 +256,19 @@ With this, running the same test command creates the following task graph:
   ],
   "taskIds": ["lib:test"],
   "taskGraph": {
-      "roots": [
-        "lib:test"
-      ],
-      "tasks": {
-        "lib:test": {
-          "id": "lib:test",
-          "target": {
-            "project": "lib",
-            "target": "test"
-          },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {}
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }
 ```
@@ -384,21 +373,19 @@ As your workspace grows, the task graph looks more like this:
   ],
   "taskIds": ["lib:test"],
   "taskGraph": {
-      "roots": [
-        "lib:test"
-      ],
-      "tasks": {
-        "lib:test": {
-          "id": "lib:test",
-          "target": {
-            "project": "lib",
-            "target": "test"
-          },
-          "projectRoot": "libs/lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {}
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {}
   }
 }
 ```

@@ -3,15 +3,15 @@ title: 'createServer - @nx/angular-rspack/ssr'
 description: 'API Reference for createServer from @nx/angular-rspack/ssr'
 sidebar:
   label: 'Create Server'
-filter: "type:References"
+filter: 'type:References'
 ---
 
 ```shell {% frame="none" %}
 import { createServer } from '@nx/angular-rspack/ssr';
 ```
 
-The `createServer` function is used to setup Angular's `CommonEngine` using an `express` server. 
-It takes the bootstrap function as an argument, which is the function that bootstraps the Angular server application. 
+The `createServer` function is used to setup Angular's `CommonEngine` using an `express` server.
+It takes the bootstrap function as an argument, which is the function that bootstraps the Angular server application.
 This is usually `main.server.ts`. It returns `RsbuildAngularServer` which contains the server instance to allow further modifications as well as the listen method to start the server.
 
 ```ts

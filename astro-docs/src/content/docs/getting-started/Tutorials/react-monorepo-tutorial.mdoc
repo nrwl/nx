@@ -3,7 +3,7 @@ title: 'Building and Testing React Apps in Nx'
 sidebar:
   label: 'React Monorepo'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through creating a React monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
@@ -49,6 +49,7 @@ This is important for using remote caching and self-healing in CI later in the t
 Let's take a look at the structure of our new Nx workspace:
 
 {%filetree%}
+
 - acme/
   - .github/
     - workflows/
@@ -208,6 +209,7 @@ You can override the options for inferred tasks by modifying the [`targetDefault
 When you develop your React application, usually all your logic sits in the app's `src` folder. Ideally separated by various folder names which represent your domains or features. As your app grows, however, the app becomes more and more monolithic, which makes building and testing it harder and slower.
 
 {%filetree%}
+
 - acme/
   - apps/
     - demo/
@@ -241,6 +243,7 @@ Note how we type out the full path in the `directory` flag to place the library 
 Running the above commands should lead to the following directory structure:
 
 {% filetree %}
+
 - acme/
   - apps/
     - demo/
@@ -253,7 +256,7 @@ Running the above commands should lead to the following directory structure:
   - tsconfig.base.json
   - tsconfig.json
   - vitest.workspace.ts
-{% /filetree %}
+    {% /filetree %}
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 

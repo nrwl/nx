@@ -3,7 +3,7 @@ title: Migrating an Angular CLI Project to Nx
 description: Learn how to transform your Angular CLI workspace into an Nx workspace, either as a standalone app or a full monorepo, with automated migration tools.
 sidebar:
   label: Migrating from Angular CLI
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Within an Nx workspace, you gain many capabilities that help you build applications and libraries. If you are currently using an Angular CLI workspace, you can transform it into an Nx workspace.
@@ -46,16 +46,17 @@ The command applies the following changes to your workspace:
 After the changes are applied, your workspace file structure should look similar to the one below:
 
 {% filetree %}
+
 - <workspace_name>/
   - apps/
     - <app_name>/
       - src/
         - app/
-         - assets/
-         - favicon.ico
-         - index.html
-         - main.ts
-         - styles.css
+        - assets/
+        - favicon.ico
+        - index.html
+        - main.ts
+        - styles.css
         - project.json
         - tsconfig.app.json
         - tsconfig.spec.json
@@ -79,7 +80,7 @@ After the changes are applied, your workspace file structure should look similar
   - package.json
   - README.md
   - tsconfig.base.json
-{% /filetree %}
+    {% /filetree %}
 
 ### Modified Folder Structure
 
@@ -237,7 +238,7 @@ If you're not ready to make the change yet, you can come back to this later:
 
 Once the script has run, commit the changes. Reverting this commit will effectively undo the changes made.
 
-{% cardgrid %} 
+{% cardgrid %}
 
 {% linkcard title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" href="/docs/technologies/angular/guides/nx-and-angular" /%}
 

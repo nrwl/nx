@@ -3,7 +3,7 @@ title: Explore your Workspace
 description: 'Learn how Nx helps you understand your workspace by viewing project details, the project graph, and the task graph.'
 sidebar:
   order: 4
-filter: "type:Features"
+filter: 'type:Features'
 ---
 
 Nx understands your workspace as a collection of projects.
@@ -32,130 +32,130 @@ You can see more details about a specific project in Nx Console or by running `n
 {% project_details%}
 
 {
-  "project": {
-    "name": "myreactapp",
-    "type": "app",
-    "data": {
-      "root": "apps/myreactapp",
-      "targets": {
-        "build": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vite build"
-          },
-          "cache": true,
-          "dependsOn": [
-            "^build"
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "vite"
-              ]
-            }
-          ],
-          "outputs": [
-            "{workspaceRoot}/dist/apps/myreactapp"
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "serve": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vite serve",
-            "continuous": true
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "preview": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vite preview"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "serve-static": {
-          "executor": "@nx/web:file-server",
-          "options": {
-            "buildTarget": "build",
-            "continuous": true
-          },
-          "configurations": {}
-        },
-        "test": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vitest run"
-          },
-          "cache": true,
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": [
-                "vitest"
-              ]
-            }
-          ],
-          "outputs": [
-            "{workspaceRoot}/coverage/apps/myreactapp"
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "lint": {
-          "cache": true,
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "eslint ."
-          },
-          "inputs": [
-            "default",
-            "{workspaceRoot}/.eslintrc.json",
-            "{workspaceRoot}/apps/myreactapp/.eslintrc.json",
-            "{workspaceRoot}/tools/eslint-rules/**/*",
-            {
-              "externalDependencies": [
-                "eslint"
-              ]
-            }
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "eslint"
-            ]
-          }
-        }
-      },
-      "name": "myreactapp",
-      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+"project": {
+"name": "myreactapp",
+"type": "app",
+"data": {
+"root": "apps/myreactapp",
+"targets": {
+"build": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vite build"
+},
+"cache": true,
+"dependsOn": [
+"^build"
+],
+"inputs": [
+"production",
+"^production",
+{
+"externalDependencies": [
+"vite"
+]
+}
+],
+"outputs": [
+"{workspaceRoot}/dist/apps/myreactapp"
+],
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"serve": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vite serve",
+"continuous": true
+},
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"preview": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vite preview"
+},
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"serve-static": {
+"executor": "@nx/web:file-server",
+"options": {
+"buildTarget": "build",
+"continuous": true
+},
+"configurations": {}
+},
+"test": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vitest run"
+},
+"cache": true,
+"inputs": [
+"default",
+"^production",
+{
+"externalDependencies": [
+"vitest"
+]
+}
+],
+"outputs": [
+"{workspaceRoot}/coverage/apps/myreactapp"
+],
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"lint": {
+"cache": true,
+"options": {
+"cwd": "apps/myreactapp",
+"command": "eslint ."
+},
+"inputs": [
+"default",
+"{workspaceRoot}/.eslintrc.json",
+"{workspaceRoot}/apps/myreactapp/.eslintrc.json",
+"{workspaceRoot}/tools/eslint-rules/\*_/_",
+{
+"externalDependencies": [
+"eslint"
+]
+}
+],
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"eslint"
+]
+}
+}
+},
+"name": "myreactapp",
+"$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "sourceRoot": "apps/myreactapp/src",
       "projectType": "application",
       "tags": [],
@@ -313,22 +313,22 @@ You can see more details about a specific project in Nx Console or by running `n
       "nx/core/project-json"
     ],
     "$schema": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "sourceRoot": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "projectType": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "tags": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ]
-  }
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+],
+"sourceRoot": [
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+],
+"projectType": [
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+],
+"tags": [
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+]
+}
 }
 
 {% /project_details %}

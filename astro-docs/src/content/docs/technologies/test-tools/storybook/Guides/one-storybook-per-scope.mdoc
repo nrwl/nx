@@ -3,7 +3,7 @@ title: Publishing Storybook - One Storybook instance per scope
 description: Learn how to set up individual Storybook instances for each scope within an Nx workspace. This guide provides a structured approach, emphasizing folder organization and thematic scope separation.
 sidebar:
   label: One Storybook instance per scope
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 This guide extends the
@@ -21,7 +21,6 @@ Say, for example, that you have a client app, an admin app, and a number of UI l
 
 {%filetree %}
 
-
 - happynrwl/
   - apps/
     - client/
@@ -29,39 +28,39 @@ Say, for example, that you have a client app, an admin app, and a number of UI l
   - libs/
     - client/
       - feature/
-    - ui/ 
-      - header/ 
+    - ui/
+      - header/
         - .storybook/
-      - src/ 
+      - src/
         - lib/
           - my-header/
-            - my-header.ts 
-            - my-header.stories.ts 
+            - my-header.ts
+            - my-header.stories.ts
             - etc...
         - etc...
       - README.md
       - tsconfig.json
       - etc...
     - utils/
-    - admin/ 
+    - admin/
       - feature/
-      - ui/ 
-        - dashboard/ 
+      - ui/
+        - dashboard/
           - .storybook/
-        - src/ 
+        - src/
           - etc..
         - README.md
         - tsconfig.json
         - etc...
       - utils/
-    - shared/ 
-      - ui/ 
-        - cta/ 
-        - .storybook/ 
-        - src/ 
-          - etc.. 
-        - README.md 
-        - tsconfig.json 
+    - shared/
+      - ui/
+        - cta/
+        - .storybook/
+        - src/
+          - etc..
+        - README.md
+        - tsconfig.json
         - etc...
       - utils/
   - tools/
@@ -70,7 +69,6 @@ Say, for example, that you have a client app, an admin app, and a number of UI l
   - tsconfig.base.json
 
 {% /filetree %}
-
 
 In this case you can see that we have two deployable applications, `client` and `admin`, and we have a number of UI libraries, each associated with a specific app. For example, `client-ui-header` is a UI library associated with the `client` app, and `admin-ui-dashboard` is a UI library associated with the `admin` app. We also have one more library, the `shared-ui-cta` library, which is shared between the two apps. The way we have structured our folders is such that any new library that is related to the `client` app will go in the `libs/client` folder, and in that folder we have a sub-folder to determine if the new library is related to `ui` or anything else. The same applies to the `admin` app. Any library shared between the two apps will live under a subfolder of the `libs/shared` folder.
 
@@ -144,7 +142,7 @@ export default config;
 
 And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
 
-```json 
+```json
 // libs/storybook-host-admin/.storybook/tsconfig.json
 {
   "extends": "../tsconfig.json",

@@ -7,7 +7,6 @@ sidebar:
 filter: 'type:References'
 ---
 
-
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
 
 The following is an expanded example showing all options. Your `nx.json` will likely be much shorter.
@@ -263,7 +262,9 @@ When defining any options or configurations inside of a target default, you may 
   }
 }
 ```
+
 #### Target Default Priority
+
 Note that the inputs and outputs are specified on both the `@nx/js:tsc` and `build` default configurations. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for `build` uses the `@nx/js:tsc executor`. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 
 {% cardgrid %}

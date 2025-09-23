@@ -1,6 +1,6 @@
 ---
 title: Reduce Wasted Time in CI
-filter: "type:Concepts"
+filter: 'type:Concepts'
 ---
 
 This article explores two ways that Nx improves the average speed of your CI pipeline - `nx affected` and remote caching. Using the `nx affected` command speeds up the first CI run for a PR and remote caching speeds up every CI run after that. Both `nx affected` and remote caching provide more benefits to repositories with more projects and a flatter project structure.
@@ -151,6 +151,7 @@ Consider the following example repo structures.
   "exclude": []
 }
 ```
+
 {% /graph %}
 
 {% graph title="Grouped" height="200px" %}

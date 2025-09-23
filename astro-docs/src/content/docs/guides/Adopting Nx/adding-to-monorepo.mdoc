@@ -1,12 +1,11 @@
 ---
 title: Adding Nx to NPM/Yarn/PNPM Workspace
 description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
-filter: "type:Guides"
+filter: 'type:Guides'
 weight: 6.4
 sidebar:
   label: NPM/Yarn/PNPM workspaces
 ---
-
 
 {% aside type="note" title="Migrating from Lerna?" %}
 Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Lerna v6 is
@@ -324,7 +323,8 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/docs/features/ci-features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/features/ci-features/flaky-tasks).
 
-### Connect to Nx Cloud 
+### Connect to Nx Cloud
+
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
 Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
@@ -355,7 +355,7 @@ git pull
 
 You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow 
+### Create a CI Workflow
 
 Use the following command to generate a CI workflow file.
 
@@ -368,7 +368,7 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 The key lines in the CI pipeline are:
 
 ```yml {% meta="{11-15,22-23}" %}
-// .github/workflows/ci.yml" 
+// .github/workflows/ci.yml"
 name: CI
 # ...
 jobs:
@@ -414,7 +414,6 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 ![Run details](../../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [detailed tutorial for you CI provider](/docs/guides/nx-cloud/setup-ci).
-
 
 ## Learn More
 

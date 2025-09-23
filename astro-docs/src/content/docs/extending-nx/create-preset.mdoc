@@ -3,9 +3,8 @@ title: Create a Custom Plugin Preset
 description: Learn how to create a custom preset generator for your Nx plugin that can be used with create-nx-workspace to generate customized workspaces.
 sidebar:
   label: Custom Plugin Preset
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
-
 
 When you create a new nx workspace, you run the command: [`npx create-nx-workspace`](/docs/reference/create-nx-workspace).
 This command accepts a `--preset` option, for example: `npx create-nx-workspace --preset=react-standalone`.
@@ -48,20 +47,21 @@ The word `preset` is required for the name of this generator
 You should have a similar structure to this:
 
 {% filetree %}
+
 - happynrwl/
   - e2e/
-	- jest.config.js
-	- jest.preset.js
-	- nx.json
-	- package-lock.json
-	- package.json
-	- packages/
-	  - happynrwl/
-	    - src/
-	      - executors/
-	      - generators/
+  - jest.config.js
+  - jest.preset.js
+  - nx.json
+  - package-lock.json
+  - package.json
+  - packages/
+    - happynrwl/
+      - src/
+        - executors/
+        - generators/
           - happynrwl/
-          - preset/  <-- Here
+          - preset/ <-- Here
         - index.ts
   - tools/
   - tsconfig.base.json/

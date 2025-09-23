@@ -1,7 +1,7 @@
 ---
 title: Adding Nx to your Existing Project
 description: Learn how to integrate Nx into an existing non-monorepo project to leverage caching capabilities, speed up CI, and improve your development workflow.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Nx can be added to any type of project, not just monorepos. A large benefit of Nx is its caching feature for package
@@ -86,7 +86,7 @@ You may have noticed that `@nx/next` provides `dev` and `start` tasks in additio
 were created by the `@nx/next/plugin` plugin from your existing Next.js configuration. You can see the configuration for
 the Nx Plugins in `nx.json`:
 
-```json 
+```json
 // nx.json
 {
   "plugins": [
@@ -296,7 +296,7 @@ Now if you run `npm run test` or `nx test` twice, the results will be retrieved 
 this example are as cautious as possible, so you can significantly improve the value of the cache
 by [customizing Nx Inputs](/docs/guides/tasks--caching/configure-inputs) for each task.
 
-## Fast CI ⚡ 
+## Fast CI ⚡
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -337,7 +337,7 @@ git pull
 
 You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow 
+### Create a CI Workflow
 
 Use the following command to generate a CI workflow file.
 
@@ -396,7 +396,6 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 ![Run details](../../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [CI setup guides](/docs/guides/nx-cloud/setup-ci).
-
 
 ## Learn More
 

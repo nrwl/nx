@@ -1,7 +1,7 @@
 ---
 title: Reduce Repetitive Configuration
 description: Learn how to use Nx's targetDefaults, namedInputs, and other features to minimize duplicate configuration across projects in your workspace.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Nx can help you dramatically reduce the lines of configuration code that you need to maintain.
@@ -9,20 +9,22 @@ Nx can help you dramatically reduce the lines of configuration code that you nee
 Lets say you have three libraries in your repository - `lib1`, `lib2` and `lib3`. The folder structure looks like this:
 
 {% filetree %}
+
 - repo/
-    - libs/
-      - lib1/
-        - tsconfig.lib.json
-        - project.json
-      - lib2/
-        - tsconfig.lib.json
-        - project.json
-      - lib3/
-        - tsconfig.lib.json
-        - project.json
+  - libs/
+    - lib1/
+      - tsconfig.lib.json
+      - project.json
+    - lib2/
+      - tsconfig.lib.json
+      - project.json
+    - lib3/
+      - tsconfig.lib.json
+      - project.json
   - nx.json
 
 {% /filetree %}
+
 ## Initial Configuration Settings
 
 All three libraries have a similar project configuration. Here is what their `project.json` files look like:
