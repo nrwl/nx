@@ -4,6 +4,13 @@ on:
   # Automated schedule - canary releases from master
   schedule:
     - cron: "0 20 * * 1-5" # Monday - Friday, at 20:00 UTC (8pm UTC)
+  # Manual trigger - PR releases or dry-runs (based on workflow inputs)
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR Number - If set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
+        required: false
+        type: number
   release:
     types: [ published ]
 
@@ -28,6 +35,11 @@ jobs:
   # - release:
   #   - We are running a full release which is based on the tag that triggered the release event, we can use default
   #     ref resolution in actions/checkout. The exact version will be generated within scripts/nx-release.ts.
+  #
+  # - workflow_dispatch:
+  #   - We are either running a dry-run on the current branch, in which case the version will be static and we can use
+  #     default ref resolution in actions/checkout, or we are creating a PR release for the given PR number, in which case
+  #     we should generate an applicable version number within publish-resolve-data.js and use a custom ref of the PR branch name.
   resolve-required-data:
     name: Resolve Required Data
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -35,7 +47,12 @@ jobs:
     outputs:
       version: ${{ steps.script.outputs.version }}
       dry_run_flag: ${{ steps.script.outputs.dry_run_flag }}
+      success_comment: ${{ steps.script.outputs.success_comment }}
       publish_branch: ${{ steps.script.outputs.publish_branch }}
+      ref: ${{ steps.script.outputs.ref }}
+      repo: ${{ steps.script.outputs.repo }}
+      pr_number: ${{ steps.script.outputs.pr_number }}
+      pr_author: ${{ steps.script.outputs.pr_author }}
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -58,6 +75,43 @@ jobs:
           script: |
             const script = require('${{ github.workspace }}/scripts/publish-resolve-data.js');
             await script({ github, context, core });
+
+      - name: (PR Release Only) Check out latest master
+        if: ${{ steps.script.outputs.ref != '' }}
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          # Check out the latest master branch to get its copy of nx-release.ts
+          repository: nrwl/nx
+          ref: master
+          path: latest-master-checkout
+
+      - name: (PR Release Only) Check out PR branch
+        if: ${{ steps.script.outputs.ref != '' }}
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          # Check out the PR branch to get its copy of nx-release.ts
+          repository: ${{ steps.script.outputs.repo }}
+          ref: ${{ steps.script.outputs.ref }}
+          path: pr-branch-checkout
+
+      - name: (PR Release Only) Ensure that release scripts have not changed in the PR being released
+        if: ${{ steps.script.outputs.ref != '' }}
+        run: |
+          # List of files that must not change in PR releases
+          FILES_TO_CHECK=(
+            "scripts/nx-release.ts"
+            "scripts/publish-resolve-data.js"
+          )
+
+          for FILE in "${FILES_TO_CHECK[@]}"; do
+            if ! cmp -s "latest-master-checkout/$FILE" "pr-branch-checkout/$FILE"; then
+              echo "🛑 Error: The file $FILE is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow."
+              echo "If you did not modify the file, then you likely just need to rebase/merge latest master."
+              exit 1
+            else
+              echo "✅ The file $FILE is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
+            fi
+          done
 
   build:
     needs: [ resolve-required-data ]
@@ -213,6 +267,9 @@ jobs:
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
+          ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
       - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
@@ -303,6 +360,9 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
+          ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
       - name: Build
         id: build
@@ -375,6 +435,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
+          ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
       - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         with:
@@ -429,6 +492,24 @@ jobs:
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
         run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
 
+      - name: (PR Release Only) Create comment for successful PR release
+        if: success() && github.event.inputs.pr
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        permissions:
+          pull-requests: write
+        env:
+          SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
+        with:
+          # github-token defaults to ${{ github.token }} so we don't need to specify it
+          script: |
+            const successComment = JSON.parse(process.env.SUCCESS_COMMENT);
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.inputs.pr }},
+              body: successComment
+            });
+
   report-pending-publish:
     name: Report Pending Publish to Slack
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -444,8 +525,8 @@ jobs:
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
           status: ${{ job.status }}
-          notification_title: '📦 Publish Pending Review'
-          message_format: ${{ format('Version `{0}` is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version) }}
+          notification_title: ${{ needs.resolve-required-data.outputs.pr_number && format('📦 PR #{0} Publish Pending Review', needs.resolve-required-data.outputs.pr_number) || '📦 Publish Pending Review' }}
+          message_format: ${{ needs.resolve-required-data.outputs.pr_number && format('Version `{0}` from PR #{1} by @{2} is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version, needs.resolve-required-data.outputs.pr_number, needs.resolve-required-data.outputs.pr_author) || format('Version `{0}` is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version) }}
           footer: '<{run_url}|View Workflow Run>'
           mention_users: 'U9NPA6C90' # Jason
         env:
@@ -457,16 +538,17 @@ jobs:
     needs: [ resolve-required-data, build, build-freebsd, publish ]
     name: (PR Release Failure Only) Create comment for failed PR release
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Create comment for failed PR release
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           # This script is intentionally kept inline (and e.g. not generated in publish-resolve-data.js)
           # to ensure that an error within the data generation itself is not missed.
           script: |
             const message = `
-              Failed to publish a PR release of this pull request, triggered by @${{ github.triggering_actor }}. 
+              Failed to publish a PR release of this pull request, triggered by @${{ github.triggering_actor }}.
               See the failed workflow run at: https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}
             `;
             await github.rest.issues.createComment({
@@ -475,3 +557,4 @@ jobs:
               issue_number: ${{ github.event.inputs.pr }},
               body: message
             });
+
