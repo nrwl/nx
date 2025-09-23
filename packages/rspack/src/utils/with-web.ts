@@ -10,7 +10,6 @@ export interface WithWebOptions {
   generateIndexHtml?: boolean;
   index?: string;
   postcssConfig?: string;
-  sassImplementation?: 'sass' | 'sass-embedded';
   scripts?: Array<ExtraEntryPointClass | string>;
   styles?: Array<ExtraEntryPointClass | string>;
   stylePreprocessorOptions?: {
