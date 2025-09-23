@@ -323,6 +323,18 @@ export class ReleaseGroupProcessor {
       });
     }
 
+    for (const [groupName, group] of Object.entries(
+      this.nxReleaseConfig.groups
+    )) {
+      if (!this.groupGraph.has(groupName)) {
+        this.groupGraph.set(groupName, {
+          group: { ...group, name: groupName, resolvedVersionPlans: false },
+          dependencies: new Set(),
+          dependents: new Set(),
+        });
+      }
+    }
+
     // Process each project within each release group
     for (const [, releaseGroupNode] of this.groupGraph) {
       for (const projectName of releaseGroupNode.group.projects) {
@@ -421,6 +433,26 @@ export class ReleaseGroupProcessor {
           ((group.version as NxReleaseVersionConfiguration)
             ?.updateDependents as 'auto' | 'never') || 'auto';
         this.projectToUpdateDependentsSetting.set(project, updateDependents);
+      }
+    }
+
+    for (const [groupName, group] of Object.entries(
+      this.nxReleaseConfig.groups
+    )) {
+      for (const project of group.projects) {
+        if (!this.projectToReleaseGroup.has(project)) {
+          this.projectToReleaseGroup.set(project, {
+            ...group,
+            name: groupName,
+            resolvedVersionPlans: false,
+          });
+
+          // Cache updateDependents setting relevant for each project
+          const updateDependents =
+            ((group.version as NxReleaseVersionConfiguration)
+              ?.updateDependents as 'auto' | 'never') || 'auto';
+          this.projectToUpdateDependentsSetting.set(project, updateDependents);
+        }
       }
     }
   }
@@ -1064,7 +1096,8 @@ export class ReleaseGroupProcessor {
     for (const project of sortedProjects) {
       if (
         projectsToUpdate.has(project) &&
-        releaseGroupFilteredProjects.has(project)
+        (releaseGroupFilteredProjects?.has(project) ||
+          this.isDependentUpdate(project))
       ) {
         await this.updateDependenciesForProject(project);
       }
@@ -1721,5 +1754,13 @@ Valid values are: ${validReleaseVersionPrefixes
 
   private getProjectDependencies(project: string): Set<string> {
     return this.projectToDependencies.get(project) || new Set();
+  }
+
+  private isDependentUpdate(project: string) {
+    return (
+      Array.from(this.projectToDependents.values()).some((dependents) =>
+        dependents.has(project)
+      ) && this.hasAutoUpdateDependents(project)
+    );
   }
 }
