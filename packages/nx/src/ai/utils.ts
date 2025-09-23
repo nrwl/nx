@@ -6,7 +6,10 @@ import {
   mkdirSync,
 } from 'fs';
 import { join } from 'path';
-import { canInstallNxConsoleForEditor } from '../native';
+import {
+  canInstallNxConsoleForEditor,
+  installNxConsoleForEditor,
+} from '../native';
 import { flushChanges, FsTree } from '../generators/tree';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
 import { homedir } from 'os';
@@ -18,7 +21,12 @@ import {
   agentsMdPath,
   geminiSettingsPath,
   codexConfigTomlPath,
+  parseGeminiSettings,
 } from './config-paths';
+import { getAgentRules } from './set-up-ai-agents/get-agent-rules';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { readNxJsonFromDisk } from '../devkit-internals';
+import { readNxJson } from '../config/configuration';
 
 export const availableAgents = [
   'claude',
@@ -29,12 +37,21 @@ export const availableAgents = [
 ] as const;
 export type Agent = (typeof availableAgents)[number];
 
-export function getAgentIsConfigured(
+export type AgentConfiguration = {
+  rules: boolean;
+  mcp: boolean;
+  rulesPath: string;
+  mcpPath: string | null;
+};
+
+export function getAgentConfiguration(
   agent: Agent,
   workspaceRoot: string
 ): {
   rules: boolean;
+  rulesPath: string;
   mcp: boolean;
+  mcpPath: string | null;
 } {
   switch (agent) {
     case 'claude': {
@@ -46,54 +63,64 @@ export function getAgentIsConfigured(
       } catch {
         mcpConfigured = false;
       }
+      const rulesPath = claudeMdPath(workspaceRoot);
+      const rulesExists = existsSync(rulesPath);
       return {
-        rules: existsSync(claudeMdPath(workspaceRoot)),
+        rules: rulesExists,
         mcp: mcpConfigured,
+        rulesPath: rulesPath,
+        mcpPath: mcpPath,
       };
     }
     case 'gemini': {
-      const geminiMdExists = existsSync(geminiMdPath(workspaceRoot));
-      const agentsMdExists = existsSync(agentsMdPath(workspaceRoot));
+      const geminiRulePath = geminiMdPath(workspaceRoot);
+      const agentsRulePath = agentsMdPath(workspaceRoot);
+      const geminiMdExists = existsSync(geminiRulePath);
+      const agentsMdExists = existsSync(agentsRulePath);
+      const settingsPath = geminiSettingsPath(workspaceRoot);
+
       let mcpConfigured: boolean;
       let pointsToAgentsMd: boolean;
-      try {
-        const geminiSettings = JSON.parse(
-          readFileSync(geminiSettingsPath(workspaceRoot), 'utf-8')
-        );
-        pointsToAgentsMd = geminiSettings.contextFileName === 'AGENTS.md';
-        mcpConfigured = geminiSettings?.['mcpServers']?.['nx-mcp'];
-      } catch {
-        mcpConfigured = false;
-        pointsToAgentsMd = false;
-      }
+      const geminiSettings = parseGeminiSettings(workspaceRoot);
+      pointsToAgentsMd = geminiSettings?.contextFileName === 'AGENTS.md';
+      mcpConfigured = geminiSettings?.['mcpServers']?.['nx-mcp'];
 
       return {
-        mcp: mcpConfigured,
         rules: geminiMdExists || (pointsToAgentsMd && agentsMdExists),
+        mcp: mcpConfigured,
+        rulesPath: pointsToAgentsMd ? agentsRulePath : geminiRulePath,
+        mcpPath: settingsPath,
       };
     }
     case 'copilot': {
+      const rulesPath = agentsMdPath(workspaceRoot);
       const hasInstalledNxConsole =
         !canInstallNxConsoleForEditor('vscode') &&
         !canInstallNxConsoleForEditor('vscode-insiders');
-      const agentsMdExists = existsSync(agentsMdPath(workspaceRoot));
+      const agentsMdExists = existsSync(rulesPath);
 
       return {
         mcp: hasInstalledNxConsole,
         rules: agentsMdExists,
+        rulesPath,
+        mcpPath: null,
       };
     }
     case 'cursor': {
+      const rulesPath = agentsMdPath(workspaceRoot);
       const hasInstalledNxConsole = !canInstallNxConsoleForEditor('cursor');
-      const agentsMdExists = existsSync(agentsMdPath(workspaceRoot));
+      const agentsMdExists = existsSync(rulesPath);
 
       return {
         mcp: hasInstalledNxConsole,
         rules: agentsMdExists,
+        rulesPath,
+        mcpPath: null,
       };
     }
     case 'codex': {
-      const agentsMdExists = existsSync(agentsMdPath(workspaceRoot));
+      const rulesPath = agentsMdPath(workspaceRoot);
+      const agentsMdExists = existsSync(rulesPath);
       let mcpConfigured: boolean;
       if (existsSync(codexConfigTomlPath)) {
         const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
@@ -105,12 +132,8 @@ export function getAgentIsConfigured(
       return {
         mcp: mcpConfigured,
         rules: agentsMdExists,
-      };
-    }
-    default: {
-      return {
-        rules: false,
-        mcp: false,
+        rulesPath,
+        mcpPath: codexConfigTomlPath,
       };
     }
   }
@@ -118,10 +141,103 @@ export function getAgentIsConfigured(
 
 export async function getAgentConfigurationIsOutdated(
   agent: Agent,
+  agentConfiguration: AgentConfiguration,
+  workspaceRoot: string
+): Promise<{
+  mcpOutdated: boolean;
+  rulesOutdated: boolean;
+}> {
+  const rulesOutdated = getAgentRulesAreOutdated(
+    agent,
+    agentConfiguration,
+    workspaceRoot
+  );
+
+  const mcpOutdated = await getAgentMcpIsOutdated(
+    agent,
+    agentConfiguration,
+    workspaceRoot
+  );
+
+  return {
+    mcpOutdated,
+    rulesOutdated,
+  };
+}
+
+function getAgentRulesAreOutdated(
+  agent: Agent,
+  agentConfiguration: AgentConfiguration,
+  workspaceRoot: string
+): boolean {
+  // we check by seeing if the content in the rule files are what we would put in there right now
+  const rulesPath = agentConfiguration.rulesPath;
+  if (!existsSync(rulesPath)) {
+    return true;
+  }
+  const existing = readFileSync(rulesPath, 'utf-8');
+  const existingNxRules = existing.match(rulesRegex);
+
+  if (!existingNxRules) {
+    return true;
+  }
+
+  const expectedNxRules = getAgentRulesWrapped(
+    isNxCloudUsed(readNxJsonFromDisk())
+  );
+
+  const contentOnly = (str: string) =>
+    str
+      .replace(nxRulesMarkerCommentStart, '')
+      .replace(nxRulesMarkerCommentEnd, '')
+      .replace(nxRulesMarkerCommentDescription, '')
+      // we don't want to make updates on whitespace-only changes
+      .replace(/\s/g, '');
+
+  if (contentOnly(existingNxRules[0]) !== contentOnly(expectedNxRules)) {
+    return true;
+  }
+
+  return false;
+}
+
+async function getAgentMcpIsOutdated(
+  agent: Agent,
+  agentConfiguration: AgentConfiguration,
   workspaceRoot: string
 ): Promise<boolean> {
-  // we check by
-  return false;
+  // no mcp path -> installation through editor, treat as not outdated
+  if (!agentConfiguration.mcpPath) {
+    return false;
+  }
+
+  // claude and gemini are configured fully locally so we can just run the generator
+  if (agent === 'claude' || agent === 'gemini') {
+    const tree = new FsTree(workspaceRoot, false);
+    await setupAiAgentsGenerator(
+      tree,
+      {
+        directory: '.',
+        agents: [agent],
+        writeNxCloudRules: isNxCloudUsed(readNxJson()),
+      },
+      true
+    );
+    return tree.listChanges().length > 0;
+  }
+
+  // codex is the one special case for now where we have to check the toml file
+  if (agent === 'codex') {
+    const mcpFile = agentConfiguration.mcpPath;
+
+    if (!existsSync(mcpFile)) {
+      return true;
+    }
+
+    const tomlContents = readFileSync(mcpFile, 'utf-8');
+
+    return tomlContents.includes(nxMcpTomlHeader) === false;
+  }
 }
 
 export async function configureAgents(
@@ -129,12 +245,14 @@ export async function configureAgents(
   workspaceRoot: string,
   useLatest?: boolean
 ): Promise<void> {
+  const writeNxCloudRules = isNxCloudUsed(readNxJson());
   const tree = new FsTree(workspaceRoot, false);
   await setupAiAgentsGenerator(
     tree,
     {
       directory: '.',
       agents: agents,
+      writeNxCloudRules,
     },
     !useLatest
   );
@@ -160,10 +278,47 @@ export async function configureAgents(
     }
   }
   if (agents.includes('copilot')) {
-    // install nx console if not installed
+    try {
+      if (canInstallNxConsoleForEditor('vscode')) {
+        installNxConsoleForEditor('vscode');
+        output.log({
+          title: `Installed Nx Console for VSCode`,
+        });
+      }
+    } catch (e) {
+      output.error({
+        title: `Failed to install Nx Console for VSCode. Please install it manually.`,
+        bodyLines: [(e as Error).message],
+      });
+    }
+    try {
+      if (canInstallNxConsoleForEditor('vscode-insiders')) {
+        installNxConsoleForEditor('vscode-insiders');
+      }
+      output.log({
+        title: `Installed Nx Console for VSCode Insiders`,
+      });
+    } catch (e) {
+      output.error({
+        title: `Failed to install Nx Console for VSCode Insiders. Please install it manually.`,
+        bodyLines: [(e as Error).message],
+      });
+    }
   }
   if (agents.includes('cursor')) {
-    // install nx console if not installed
+    try {
+      if (canInstallNxConsoleForEditor('cursor')) {
+        installNxConsoleForEditor('cursor');
+      }
+      output.log({
+        title: `Installed Nx Console for Cursor`,
+      });
+    } catch (e) {
+      output.error({
+        title: `Failed to install Nx Console for Cursor. Please install it manually.`,
+        bodyLines: [(e as Error).message],
+      });
+    }
   }
 }
 
@@ -174,13 +329,16 @@ export function getAgentConfigurations(
   nonConfiguredAgents: Agent[];
   partiallyConfiguredAgents: Agent[];
   fullyConfiguredAgents: Agent[];
+  agentConfigurations: Map<Agent, AgentConfiguration>;
 } {
   const nonConfiguredAgents: Agent[] = [];
   const partiallyConfiguredAgents: Agent[] = [];
   const fullyConfiguredAgents: Agent[] = [];
+  const agentConfigurations = new Map<Agent, AgentConfiguration>();
 
   agentsToConsider.forEach((agent) => {
-    const configured = getAgentIsConfigured(agent, workspaceRoot);
+    const configured = getAgentConfiguration(agent, workspaceRoot);
+    agentConfigurations.set(agent, configured);
     if (configured.mcp && configured.rules) {
       fullyConfiguredAgents.push(agent);
     } else if (!configured.mcp && !configured.rules) {
@@ -194,12 +352,22 @@ export function getAgentConfigurations(
     nonConfiguredAgents,
     partiallyConfiguredAgents,
     fullyConfiguredAgents,
+    agentConfigurations,
   };
 }
 
-export const nxRulesMarkerCommentStart = `// nx configuration start`;
-export const nxRulesMarkerCommentDescription = `Leave the start & end comments to automatically receive updates.`;
-export const nxRulesMarkerCommentEnd = `// nx configuration end`;
+export const nxRulesMarkerCommentStart = `<!-- nx configuration start-->`;
+export const nxRulesMarkerCommentDescription = `<!-- Leave the start & end comments to automatically receive updates. -->`;
+export const nxRulesMarkerCommentEnd = `<!-- nx configuration end-->`;
+export const rulesRegex = new RegExp(
+  `${nxRulesMarkerCommentStart}[\\s\\S]*?${nxRulesMarkerCommentEnd}`,
+  'm'
+);
+
+export const getAgentRulesWrapped = (writeNxCloudRules: boolean) => {
+  const agentRulesString = getAgentRules(writeNxCloudRules);
+  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n${agentRulesString}\n${nxRulesMarkerCommentEnd}`;
+};
 
 const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
 const nxMcpTomlConfig = `${nxMcpTomlHeader}

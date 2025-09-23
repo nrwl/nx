@@ -4,17 +4,11 @@ import { Tree } from '../../generators/tree';
 import { updateJson, writeJson } from '../../generators/utils/json';
 import { installPackageToTmp } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { getAgentRules } from './get-agent-rules';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
-import {
-  Agent,
-  nxRulesMarkerCommentStart,
-  nxRulesMarkerCommentEnd,
-  nxRulesMarkerCommentDescription,
-} from '../utils';
+import { Agent, getAgentRulesWrapped, rulesRegex } from '../utils';
 
 export async function setupAiAgentsGenerator(
   tree: Tree,
@@ -116,25 +110,17 @@ export async function setupAiAgentsGeneratorImpl(
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  const agentRulesString = getAgentRules(writeNxCloudRules);
+  const agentRulesWithMarkers = getAgentRulesWrapped(writeNxCloudRules);
+
   if (!tree.exists(path)) {
-    tree.write(path, agentRulesString);
+    tree.write(path, agentRulesWithMarkers);
     return;
   }
 
   const existing = tree.read(path, 'utf-8');
 
-  const escapeRegex = (str: string) =>
-    str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(
-    `${escapeRegex(nxRulesMarkerCommentStart)}[\\s\\S]*?${escapeRegex(
-      nxRulesMarkerCommentEnd
-    )}`,
-    'm'
-  );
+  const regex = rulesRegex;
   const existingNxConfiguration = existing.match(regex);
-
-  const agentRulesWithMarkers = `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n${nxRulesMarkerCommentEnd}`;
 
   if (existingNxConfiguration) {
     const updatedContent = existing.replace(regex, agentRulesWithMarkers);

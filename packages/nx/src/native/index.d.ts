@@ -253,6 +253,8 @@ export interface InputsInput {
 
 export declare export declare function installNxConsole(): void
 
+export declare export declare function installNxConsoleForEditor(editor: string): void
+
 export const IS_WASM: boolean
 
 /** Detects if the current process is being run by an AI agent */

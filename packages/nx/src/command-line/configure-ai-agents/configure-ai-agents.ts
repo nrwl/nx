@@ -54,6 +54,7 @@ export async function configureAiAgentsHandlerImpl(
     nonConfiguredAgents,
     partiallyConfiguredAgents,
     fullyConfiguredAgents,
+    agentConfigurations,
   } = getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
 
   if (options.check) {
@@ -69,7 +70,12 @@ export async function configureAiAgentsHandlerImpl(
 
     const outOfDateAgents: Agent[] = [];
     for (const a of fullyConfiguredAgents) {
-      if (await getAgentConfigurationIsOutdated(a, workspaceRoot)) {
+      const isOutdated = await getAgentConfigurationIsOutdated(
+        a,
+        agentConfigurations.get(a),
+        workspaceRoot
+      );
+      if (isOutdated.mcpOutdated || isOutdated.rulesOutdated) {
         outOfDateAgents.push(a);
       }
     }
@@ -95,33 +101,43 @@ export async function configureAiAgentsHandlerImpl(
   });
 
   for (const a of fullyConfiguredAgents) {
-    if (await getAgentConfigurationIsOutdated(a, workspaceRoot)) {
+    const isOutdated = await getAgentConfigurationIsOutdated(
+      a,
+      agentConfigurations.get(a),
+      workspaceRoot
+    );
+    if (isOutdated.mcpOutdated || isOutdated.rulesOutdated) {
       agentsToUpdate.push([a, `${a} (out of date)`]);
     }
   }
 
   if (agentsToUpdate.length > 0) {
-    const updateResponse = await prompt<{ agents: Agent[] }>({
-      type: 'multiselect',
-      name: 'agents',
-      message:
-        'The following agents are not configured completely or are out of date. Which would you like to update?',
-      choices: agentsToUpdate.map(([agent, message]) => ({
-        name: agent,
-        message,
-      })),
-      initial: agentsToUpdate.map((_, i) => i),
-      required: true,
-    } as any);
-
-    if (!updateResponse) {
+    let updateResponse: { agents: Agent[] };
+    try {
+      updateResponse = await prompt<{ agents: Agent[] }>({
+        type: 'multiselect',
+        name: 'agents',
+        message:
+          'The following agents are not configured completely or are out of date. Which would you like to update?',
+        choices: agentsToUpdate.map(([agent, message]) => ({
+          name: agent,
+          message,
+        })),
+        initial: agentsToUpdate.map((_, i) => i),
+        required: true,
+      } as any);
+    } catch {
       process.exit(1);
     }
 
     if (updateResponse.agents && updateResponse.agents.length > 0) {
       const updateSpinner = ora(`Updating agent configurations...`).start();
-      // todo: update configuration
-      updateSpinner.succeed('Agent configurations updated.');
+      try {
+        await configureAgents(updateResponse.agents, workspaceRoot, false);
+        updateSpinner.succeed('Agent configurations updated.');
+      } catch {
+        updateSpinner.fail('Failed to update agent configurations.');
+      }
     }
   }
 
@@ -132,15 +148,16 @@ export async function configureAiAgentsHandlerImpl(
     });
     process.exit(0);
   }
-  const configurationResponse = await prompt<{ agents: Agent[] }>({
-    type: 'multiselect',
-    name: 'agents',
-    message: 'Which AI agents would you like to configure?',
-    choices: nonConfiguredAgents,
-    required: true,
-  } as any);
-
-  if (!configurationResponse) {
+  let configurationResponse: { agents: Agent[] };
+  try {
+    configurationResponse = await prompt<{ agents: Agent[] }>({
+      type: 'multiselect',
+      name: 'agents',
+      message: 'Which AI agents would you like to configure?',
+      choices: nonConfiguredAgents,
+      required: true,
+    } as any);
+  } catch {
     process.exit(1);
   }
 
