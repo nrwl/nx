@@ -553,9 +553,19 @@ function ProjectGraphControlsPanel({
           }
           searchInputClassName="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600 focus:border-transparent focus:ring-2 focus:ring-sky-500/20 dark:focus:ring-sky-400/20 focus:outline-none data-[focus]:border-sky-500 dark:data-[focus]:border-sky-400 data-[focus]:ring-2 data-[focus]:ring-sky-500/20 dark:data-[focus]:ring-sky-400/20"
           searchInputClearButtonClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white border-slate-300 dark:border-slate-600"
-          searchInputIncludeButtonClassName="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-white border-slate-300 dark:border-slate-600"
           projectListEmptyClassName="text-slate-600 dark:text-slate-400"
           projectSectionHeaderClassName="text-slate-900 dark:text-slate-100"
+          projectItemCheckboxClassName={({ rendered }) =>
+            classNames(
+              'border-slate-300 dark:border-slate-600',
+              rendered ? 'bg-sky-500' : ''
+            )
+          }
+          projectItemTextClassName={({ rendered }) =>
+            rendered
+              ? 'text-slate-900 dark:text-slate-100'
+              : 'text-slate-400 dark:text-slate-400'
+          }
         />
       </NxGraphPanelItemGroup>
     </NxGraphPanel>
