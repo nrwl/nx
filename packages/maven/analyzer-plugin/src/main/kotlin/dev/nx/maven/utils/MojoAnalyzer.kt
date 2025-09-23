@@ -115,7 +115,7 @@ class MojoAnalyzer(
             }
         }
 
-        if (inputs.isEmpty() && dependentTaskOutputInputs.isEmpty()) {
+        if (mojoConfig?.inputParameters == null && mojoConfig?.inputProperties == null) {
             cacheConfig.defaultInputs.forEach { input ->
                 val pathFile = File(input.path);
                 val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
@@ -139,14 +139,10 @@ class MojoAnalyzer(
         mojoDescriptor: MojoDescriptor,
         project: MavenProject
     ): Set<String> {
-        val pluginConfig = cacheConfig.configurations["${pluginDescriptor.artifactId}:${mojoDescriptor.goal}"] ?: return mavenFallbackOutputs
+        val mojoConfig = cacheConfig.configurations["${pluginDescriptor.artifactId}:${mojoDescriptor.goal}"]
 
         val outputs = mutableSetOf<String>()
-        if (pluginConfig.outputParameters.isEmpty()) {
-            return outputs
-        }
-
-        pluginConfig.outputParameters.forEach { paramConfig ->
+        mojoConfig?.outputParameters?.forEach { paramConfig ->
             val parameter = mojoDescriptor.parameterMap[paramConfig.name]
                 ?: return@forEach
 
@@ -165,7 +161,7 @@ class MojoAnalyzer(
             }
         }
 
-        if (outputs.isEmpty()) {
+        if (mojoConfig?.outputParameters == null) {
             return cacheConfig.defaultOutputs.map { output ->
                 val pathFile = File(output.path);
                 pathResolver.formatOutputPath(
