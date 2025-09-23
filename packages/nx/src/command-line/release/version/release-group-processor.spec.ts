@@ -1258,6 +1258,75 @@ describe('ReleaseGroupProcessor', () => {
    * will have already been caught and handled by filterReleaseGroups(), so that is not repeated here.
    */
   describe('filters', () => {
+    it('should bump projects across release groups when one release group is selected but all projects are in nx release config', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+            projectJ ({ "projectsRelationship": "independent" }):
+              - projectJ@1.0.0 [js]
+                -> depends on projectK
+            projectK ({ "projectsRelationship": "independent" }):    
+              - projectK@2.0.0 [js]
+          `,
+        {
+          version: {
+            conventionalCommits: true,
+            updateDependents: 'auto',
+          },
+        },
+        mockResolveCurrentVersion,
+        {
+          // Apply the groups filter to only include projectK in versioning.
+          groups: ['projectK'],
+        }
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+        }
+      );
+      await processor.init();
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        () => 'minor'
+      );
+      await processor.processGroups();
+
+      // projectJ should be bumped because updateDependents is set to "auto"
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.1.0",
+          },
+          "name": "projectJ",
+          "version": "1.0.1",
+        }
+      `);
+
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectK",
+          "version": "2.1.0",
+        }
+      `);
+    });
+
     it('should filter out projects with no dependency relationships within a single independent release group based on the provided user filter', async () => {
       const {
         nxReleaseConfig,
