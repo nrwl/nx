@@ -129,8 +129,6 @@ export function normalizeOptions(
       combinedPluginAndMaybeExecutorOptions.buildLibsFromSource ?? true,
     commonChunk: combinedPluginAndMaybeExecutorOptions.commonChunk ?? true,
     configurationName,
-    deleteOutputPath:
-      combinedPluginAndMaybeExecutorOptions.deleteOutputPath ?? true,
     extractCss: combinedPluginAndMaybeExecutorOptions.extractCss ?? true,
     fileReplacements: normalizeFileReplacements(
       workspaceRoot,
@@ -154,9 +152,6 @@ export function normalizeOptions(
     projectRoot: projectNode.data.root,
     root: workspaceRoot,
     runtimeChunk: combinedPluginAndMaybeExecutorOptions.runtimeChunk ?? true,
-    sassImplementation:
-      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
-      'sass-embedded',
     scripts: combinedPluginAndMaybeExecutorOptions.scripts ?? [],
     skipTypeChecking: normalizedSkipTypeChecking,
     sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,
