@@ -1768,10 +1768,18 @@ Valid values are: ${validReleaseVersionPrefixes
       return false;
     }
 
-    for (const dependents of this.projectToDependents.values()) {
-      if (dependents.has(project)) {
-        this.cachedIsDependentUpdate.set(project, true);
-        return true;
+    // Check if the project depends on any project in the filtered release groups
+    const dependencies = this.projectToDependencies.get(project);
+    if (dependencies) {
+      for (const dependency of dependencies) {
+        if (
+          this.releaseGroups.some((group) =>
+            group.projects.includes(dependency)
+          )
+        ) {
+          this.cachedIsDependentUpdate.set(project, true);
+          return true;
+        }
       }
     }
     this.cachedIsDependentUpdate.set(project, false);
