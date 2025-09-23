@@ -8,9 +8,9 @@ data class PathPattern(
 data class Parameter(val name: String, val glob: String?)
 
 data class MojoConfig(
-    val inputProperties: Set<String> = emptySet(),
-    val inputParameters: Set<Parameter> = emptySet(),
-    val outputParameters: Set<Parameter> = emptySet()
+    val inputProperties: Set<String>? = null,
+    val inputParameters: Set<Parameter>? = null,
+    val outputParameters: Set<Parameter>? = null
 )
 
 /**
@@ -21,7 +21,8 @@ data class CacheConfig(
     val defaultInputs: List<PathPattern> = emptyList(),
     val defaultOutputs: List<PathPattern> = emptyList(),
     val configurations: Map<String, MojoConfig> = emptyMap(),
-    val nonCacheable: Set<String> = emptySet()
+    val nonCacheable: Set<String> = emptySet(),
+    val continuous: Set<String> = emptySet()
 ) {
     companion object {
         val DEFAULT = CacheConfig(
@@ -35,6 +36,40 @@ data class CacheConfig(
                 PathPattern("target")
             ),
             configurations = mapOf(
+                "maven-checkstyle-plugin:check" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("configLocation", null),
+                        Parameter("headerLocation", null),
+                        Parameter("propertiesLocation", null),
+                        Parameter("rulesFiles", null),
+                        Parameter("siteDirectory", null),
+                        Parameter("sourceDirectories", null),
+                        Parameter("suppressionsLocation", null),
+                        Parameter("testSourceDirectories", null),
+                    ),
+                    outputParameters = setOf(
+                        Parameter("cacheFile", null),
+                        Parameter("outputDirectory", null),
+                        Parameter("outputFile", null),
+                    )
+                ),
+                "maven-checkstyle-plugin:checkstyle" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("configLocation", null),
+                        Parameter("headerLocation", null),
+                        Parameter("propertiesLocation", null),
+                        Parameter("rulesFiles", null),
+                        Parameter("siteDirectory", null),
+                        Parameter("sourceDirectories", null),
+                        Parameter("suppressionsLocation", null),
+                        Parameter("testSourceDirectories", null),
+                    ),
+                    outputParameters = setOf(
+                        Parameter("cacheFile", null),
+                        Parameter("outputDirectory", null),
+                        Parameter("outputFile", null),
+                    )
+                ),
                 "maven-compiler-plugin:compile" to MojoConfig(
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
@@ -75,21 +110,82 @@ data class CacheConfig(
                         Parameter("reportsDirectory", null),
                     )
                 ),
-                "maven-surefire-plugin:test" to MojoConfig(
+                "maven-failsafe-plugin:integration-test" to MojoConfig(
                     inputParameters = setOf(
                         Parameter("classesDirectory", null),
                         Parameter("testClassesDirectory", null),
+                        Parameter("testSourceDirectory", null),
                         Parameter("suiteXmlFiles", null),
                     ),
                     outputParameters = setOf(
-                        Parameter("reportsDirectory", null),
+                        Parameter("summaryFile", null),
+                    )
+                ),
+                "maven-failsafe-plugin:verify" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("summaryFile", null),
+                        Parameter("summaryFiles", null),
+                        Parameter("testClassesDirectory", null),
+                    ),
+                    outputParameters = emptySet()
+                ),
+                "maven-jar-plugin:jar" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("classesDirectory", null),
+                    ),
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", "*.jar"),
+                    )
+                ),
+                "maven-jar-plugin:test-jar" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("testClassesDirectory", null),
+                    ),
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", "*.jar"),
+                    )
+                ),
+                "maven-war-plugin:war" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("warSourceDirectory", null),
+                        Parameter("webResources", null),
+                        Parameter("webXml", null),
+                    ),
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", "*.war"),
+                        Parameter("webappDirectory", null),
+                        Parameter("workDirectory", null),
+                    )
+                ),
+                "spring-boot-maven-plugin:run" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("testClassesDirectory", null),
+                    ),
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", "*.jar"),
+                    )
+                ),
+                "spring-boot-maven-plugin:repackage" to MojoConfig(
+                    inputParameters = setOf(
+                        Parameter("classesDirectory", null),
+                        Parameter("testClassesDirectory", null),
+                        Parameter("embeddedLaunchScript", null),
+                    ),
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", "*.jar"),
                     )
                 )
             ),
             nonCacheable = setOf(
                 "maven-clean-plugin:clean",
                 "maven-deploy-plugin:deploy",
-                "maven-install-plugin:install"
+                "maven-site-plugin:site",
+                "maven-install-plugin:install",
+                "bb-sdk-codegen:deploy-local",
+                "spring-boot-maven-plugin:run"
+            ),
+            continuous = setOf(
+                "spring-boot-maven-plugin:run",
             )
         )
     }
