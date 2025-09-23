@@ -8,7 +8,7 @@ import dev.nx.maven.targets.TestClassDiscovery
 import dev.nx.maven.utils.MavenCommandResolver
 import dev.nx.maven.utils.MavenExpressionResolver
 import dev.nx.maven.utils.MojoAnalyzer
-import dev.nx.maven.utils.PathResolver
+import dev.nx.maven.utils.PathFormatter
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.plugin.AbstractMojo
@@ -44,7 +44,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     private lateinit var outputFile: String
 
     @Parameter(property = "workspaceRoot", defaultValue = "\${session.executionRootDirectory}")
-    private lateinit var workspaceRoot: String
+    private lateinit var workspaceRoot: File
 
     private val objectMapper = ObjectMapper()
 
@@ -75,68 +75,74 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     private fun executePerProjectAnalysisInMemory(
         allProjects: List<MavenProject>
     ): List<ProjectAnalysis> {
-        val startTime = System.currentTimeMillis()
-        log.info("Creating shared component instances for optimized analysis...")
 
-        // Create deeply shared components for maximum caching efficiency
-        val sharedExpressionResolver = MavenExpressionResolver(session)
+        val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+        try {
+            val startTime = System.currentTimeMillis()
+            log.info("Creating shared component instances for optimized analysis...")
 
-        // Create shared component instances ONCE for all projects (major optimization)
+            // Create deeply shared components for maximum caching efficiency
+            val sharedExpressionResolver = MavenExpressionResolver(session)
 
-        val pathResolver = PathResolver(workspaceRoot)
-        val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathResolver)
+            // Create shared component instances ONCE for all projects (major optimization)
 
-        val sharedTestClassDiscovery = TestClassDiscovery()
+            val pathResolver = PathFormatter(gitIgnoreClassifier)
+            val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathResolver, gitIgnoreClassifier)
 
-        val sharedLifecycleAnalyzer = NxTargetFactory(
-            lifecycles,
-            objectMapper,
-            sharedTestClassDiscovery,
-            pluginManager,
-            session,
-            mojoAnalyzer
-        )
+            val sharedTestClassDiscovery = TestClassDiscovery()
 
-        // Resolve Maven command once for all projects
-        val mavenCommandStart = System.currentTimeMillis()
-        val mavenCommand = MavenCommandResolver.getMavenCommand(workspaceRoot)
-        val mavenCommandTime = System.currentTimeMillis() - mavenCommandStart
-        log.info("Maven command resolved to '$mavenCommand' in ${mavenCommandTime}ms")
+            val sharedLifecycleAnalyzer = NxTargetFactory(
+                lifecycles,
+                objectMapper,
+                sharedTestClassDiscovery,
+                pluginManager,
+                session,
+                mojoAnalyzer
+            )
 
-        val setupTime = System.currentTimeMillis() - startTime
-        log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
+            // Resolve Maven command once for all projects
+            val mavenCommandStart = System.currentTimeMillis()
+            val mavenCommand = MavenCommandResolver.getMavenCommand(workspaceRoot)
+            val mavenCommandTime = System.currentTimeMillis() - mavenCommandStart
+            log.info("Maven command resolved to '$mavenCommand' in ${mavenCommandTime}ms")
 
-        val projectStartTime = System.currentTimeMillis()
+            val setupTime = System.currentTimeMillis() - startTime
+            log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
 
-        // Process projects in parallel with separate analyzer instances
-        val inMemoryAnalyses = allProjects.parallelStream().map { mavenProject ->
-            try {
-                log.info("Analyzing project: ${mavenProject.artifactId}")
+            val projectStartTime = System.currentTimeMillis()
 
-                // Create separate analyzer instance for each project (thread-safe)
-                val singleAnalyzer = NxProjectAnalyzer(
-                    mavenProject,
-                    workspaceRoot,
-                    sharedLifecycleAnalyzer,
-                    mavenCommand
-                )
+            // Process projects in parallel with separate analyzer instances
+            val inMemoryAnalyses = allProjects.parallelStream().map { mavenProject ->
+                try {
+                    log.info("Analyzing project: ${mavenProject.artifactId}")
 
-                // Get Nx config for project
-                val nxConfig = singleAnalyzer.analyze()
+                    // Create separate analyzer instance for each project (thread-safe)
+                    val singleAnalyzer = NxProjectAnalyzer(
+                        mavenProject,
+                        workspaceRoot,
+                        sharedLifecycleAnalyzer,
+                        mavenCommand
+                    )
 
-                nxConfig
+                    // Get Nx config for project
+                    val nxConfig = singleAnalyzer.analyze()
 
-            } catch (e: Exception) {
-                log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
-                null
-            }
-        }.collect(java.util.stream.Collectors.toList()).filterNotNull()
+                    nxConfig
 
-        val totalTime = System.currentTimeMillis() - startTime
-        val analysisTime = System.currentTimeMillis() - projectStartTime
-        log.info("Completed in-memory analysis of ${allProjects.size} projects in ${totalTime}ms (setup: ${setupTime}ms, analysis: ${analysisTime}ms)")
+                } catch (e: Exception) {
+                    log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
+                    null
+                }
+            }.collect(java.util.stream.Collectors.toList()).filterNotNull()
 
-        return inMemoryAnalyses
+            val totalTime = System.currentTimeMillis() - startTime
+            val analysisTime = System.currentTimeMillis() - projectStartTime
+            log.info("Completed in-memory analysis of ${allProjects.size} projects in ${totalTime}ms (setup: ${setupTime}ms, analysis: ${analysisTime}ms)")
+
+            return inMemoryAnalyses
+        } finally {
+            gitIgnoreClassifier.close()
+        }
     }
 
     private fun writeProjectAnalysesToFile(inMemoryAnalyses: List<ProjectAnalysis>) {
@@ -166,7 +172,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         // Add metadata
         rootNode.put("totalProjects", inMemoryAnalyses.size)
-        rootNode.put("workspaceRoot", workspaceRoot)
+        rootNode.put("workspaceRoot", workspaceRoot.absolutePath)
         rootNode.put("analysisMethod", "optimized-parallel")
         rootNode.put("analyzedProjects", inMemoryAnalyses.size)
 
@@ -187,7 +193,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         inMemoryAnalyses.forEach { analysis ->
             val resultTuple = objectMapper.createArrayNode()
-            resultTuple.add(analysis.pomFile.relativeTo(File(workspaceRoot)).path) // Root path (workspace root)
+            resultTuple.add(analysis.pomFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
 
             // Group projects by root directory (for now, assume all projects are at workspace root)
             val projects = objectMapper.createObjectNode()
