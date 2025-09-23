@@ -61,7 +61,7 @@ expect.addSnapshotSerializer({
   },
 });
 
-describe('debug nx release - independent projects', () => {
+describe('nx release - independent projects', () => {
   let pkg1: string;
   let pkg2: string;
   let pkg3: string;
@@ -201,9 +201,11 @@ describe('debug nx release - independent projects', () => {
 
           NX   Running release version for project: {project-name}
 
-          {project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
-          {project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
-          {project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+        {project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
+        {project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
 
           NX   Running release version for project: {project-name}
 
