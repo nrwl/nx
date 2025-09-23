@@ -2,7 +2,6 @@ package dev.nx.maven.utils
 
 import dev.nx.maven.GitIgnoreClassifier
 import dev.nx.maven.cache.CacheConfig
-import dev.nx.maven.cache.CacheConfigLoader
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
@@ -25,7 +24,7 @@ class MojoAnalyzer(
     private val log = LoggerFactory.getLogger(MojoAnalyzer::class.java)
 
     private val cacheConfig: CacheConfig by lazy {
-        CacheConfigLoader().loadConfig("/nx-cache-config.xml")
+        CacheConfig.DEFAULT
     }
 
     /**
@@ -46,7 +45,7 @@ class MojoAnalyzer(
 
         val isThreadSafe = mojoDescriptor.isThreadSafe
 
-        val isCacheable = isPluginCacheable(pluginDescriptor)
+        val isCacheable = isPluginCacheable(pluginDescriptor, mojoDescriptor)
 
         if (!isCacheable) {
             log.info("${pluginDescriptor.artifactId}:$goal is not cacheable")
@@ -70,77 +69,66 @@ class MojoAnalyzer(
         mojoDescriptor: MojoDescriptor,
         project: MavenProject
     ): Pair<Set<String>, Set<DependentTaskOutputs>> {
-        val pluginConfig = cacheConfig.plugins[pluginDescriptor.artifactId] ?: return Pair(mavenFallbackInputs, emptySet())
+        val mojoConfig =
+            cacheConfig.configurations["${pluginDescriptor.artifactId}:${mojoDescriptor.goal}"]
 
         val inputs = mutableSetOf<String>()
         val dependentTaskOutputInputs = mutableSetOf<DependentTaskOutputs>()
-        if (pluginConfig.inputParameters.isEmpty()) {
-            return Pair(mavenFallbackInputs, emptySet())
-        }
 
-        pluginConfig.inputParameters.forEach { input ->
-            val parameter = mojoDescriptor.parameterMap[input.path]
+        mojoConfig?.inputParameters?.forEach { paramConfig ->
+            val parameter = mojoDescriptor.parameterMap[paramConfig.name]
                 ?: return@forEach
 
-            var path = expressionResolver.resolveParameterValue(
-                parameter.name,
-                parameter.defaultValue,
-                parameter.expression,
-                project
-            )
+            val paths = expressionResolver.resolveParameter(parameter, project)
 
-            if (path == null) {
-                log.debug("Parameter ${parameter.name} resolved to null path")
-                return@forEach
-            }
+            paths.forEach { path ->
+                val pathWithGlob = paramConfig.glob?.let { "$path/$it" } ?: path
+                val pathFile = File(pathWithGlob);
+                val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
+                if (isIgnored) {
+                    log.warn("Input path is gitignored: ${pathFile.path}")
+                    val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
+                    dependentTaskOutputInputs.add(input)
+                } else {
+                    val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
 
-            if (input.glob != null) {
-                path = "$path/${input.glob}"
-            }
-
-            val pathFile = File(path);
-            val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
-            if (isIgnored) {
-                log.warn("Input path is gitignored: ${pathFile.path}")
-                val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-                dependentTaskOutputInputs.add(input)
-            } else {
-                val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
-
-                inputs.add(input)
+                    inputs.add(input)
+                }
             }
         }
 
+        mojoConfig?.inputProperties?.forEach { propertyPath ->
+            val paths = expressionResolver.resolveProperty(propertyPath, project)
 
-        cacheConfig.globalIncludes.forEach { include ->
-            var path = include.path
-            include.glob?.let { glob -> path += "/$glob" }
+            paths.forEach { path ->
+                val pathFile = File(path)
+                val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
+                if (isIgnored) {
+                    log.warn("Input path is gitignored: ${pathFile.path}")
+                    val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
+                    dependentTaskOutputInputs.add(input)
+                } else {
+                    val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
 
-            val pathFile = File(path);
-
-            if (gitIgnoreClassifier.isIgnored(pathFile)) {
-                log.warn("Input path is gitignored: ${pathFile.path}")
-                val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-                dependentTaskOutputInputs.add(input)
-            } else {
-                val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
-
-                inputs.add(input)
+                    inputs.add(input)
+                }
             }
-
-            // TODO: This is not supported by nx yet
-//            if (include.recursive) {
-//                aggregatedInputs.add("^$formatted")
-//            }
         }
 
-        cacheConfig.globalExcludes.forEach { exclude ->
-            var path = exclude.path
-            exclude.glob?.let { glob -> path += "/$glob" }
+        if (inputs.isEmpty() && dependentTaskOutputInputs.isEmpty()) {
+            cacheConfig.defaultInputs.forEach { input ->
+                val pathFile = File(input.path);
+                val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
+                if (isIgnored) {
+                    log.warn("Input path is gitignored: ${pathFile.path}")
+                    val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
+                    dependentTaskOutputInputs.add(input)
+                } else {
+                    val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
 
-            val formatted = pathResolver.formatInputPath(File(path), project.basedir)
-            inputs.add("!$formatted")
-            log.debug("Added global exclude input path: !$formatted")
+                    inputs.add(input)
+                }
+            }
         }
 
         return Pair(inputs, dependentTaskOutputInputs)
@@ -151,36 +139,40 @@ class MojoAnalyzer(
         mojoDescriptor: MojoDescriptor,
         project: MavenProject
     ): Set<String> {
-        val pluginConfig = cacheConfig.plugins[pluginDescriptor.artifactId] ?: return mavenFallbackOutputs
+        val pluginConfig = cacheConfig.configurations["${pluginDescriptor.artifactId}:${mojoDescriptor.goal}"] ?: return mavenFallbackOutputs
 
         val outputs = mutableSetOf<String>()
         if (pluginConfig.outputParameters.isEmpty()) {
             return outputs
         }
 
-        pluginConfig.outputParameters.forEach { ouptut ->
-            val parameter = mojoDescriptor.parameterMap[ouptut.path]
+        pluginConfig.outputParameters.forEach { paramConfig ->
+            val parameter = mojoDescriptor.parameterMap[paramConfig.name]
                 ?: return@forEach
 
-            var path = expressionResolver.resolveParameterValue(
-                parameter.name,
-                parameter.defaultValue,
-                parameter.expression,
+            val paths = expressionResolver.resolveParameter(
+                parameter,
                 project
             )
 
-            if (path == null) {
-                log.debug("Parameter ${parameter.name} resolved to null path")
-                return@forEach
+            paths.forEach { path ->
+                val pathWithGlob = paramConfig.glob?.let { "${path}/$it" } ?: path
+                val pathFile = File(pathWithGlob);
+
+                val formattedPath = pathResolver.formatOutputPath(pathFile, project.basedir)
+
+                outputs.add(formattedPath)
             }
+        }
 
-            if (ouptut.glob != null) {
-                path = "$path/${ouptut.glob}"
-            }
-
-            val formattedPath = pathResolver.formatOutputPath(File(path), project.basedir)
-
-            outputs.add(formattedPath)
+        if (outputs.isEmpty()) {
+            return cacheConfig.defaultOutputs.map { output ->
+                val pathFile = File(output.path);
+                pathResolver.formatOutputPath(
+                    pathFile,
+                    project.basedir
+                )
+            }.toSet()
         }
 
         return outputs
@@ -202,8 +194,8 @@ class MojoAnalyzer(
     }
 
 
-    private fun isPluginCacheable(descriptor: PluginDescriptor): Boolean {
-        return !cacheConfig.alwaysRunPlugins.contains(descriptor.artifactId)
+    private fun isPluginCacheable(pluginDescriptor: PluginDescriptor, mojoDescriptor: MojoDescriptor): Boolean {
+        return !cacheConfig.nonCacheable.contains("${pluginDescriptor.artifactId}:${mojoDescriptor.goal}")
     }
 
     internal val mavenFallbackInputs: Set<String> by lazy {
@@ -215,7 +207,7 @@ class MojoAnalyzer(
             "pom.xml"
         )
 
-        cacheConfig.globalIncludes.forEach { include ->
+        cacheConfig.defaultInputs.forEach { include ->
             when (include.path) {
                 "." -> {
                     // Root directory includes (like pom.xml) are already covered above
