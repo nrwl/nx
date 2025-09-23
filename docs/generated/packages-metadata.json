@@ -6178,6 +6178,16 @@
     ],
     "migrations": [
       {
+        "description": "Remove deprecated deleteOutputPath and sassImplementation options from @nx/webpack:webpack",
+        "file": "generated/packages/webpack/migrations/update-22-0-0-remove-deprecated-options.json",
+        "hidden": false,
+        "name": "update-22-0-0-remove-deprecated-options",
+        "version": "22.0.0-beta.0",
+        "originalFilePath": "/packages/webpack",
+        "path": "webpack/migrations/update-22-0-0-remove-deprecated-options",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/webpack/migrations/21.5.0-package-updates.json",
         "hidden": false,

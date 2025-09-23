@@ -99,8 +99,6 @@ export function normalizeOptions(
     commonChunk: combinedPluginAndMaybeExecutorOptions.commonChunk ?? true,
     compiler: combinedPluginAndMaybeExecutorOptions.compiler ?? 'babel',
     configurationName,
-    deleteOutputPath:
-      combinedPluginAndMaybeExecutorOptions.deleteOutputPath ?? true,
     extractCss: combinedPluginAndMaybeExecutorOptions.extractCss ?? true,
     fileReplacements: normalizeFileReplacements(
       workspaceRoot,
@@ -129,9 +127,6 @@ export function normalizeOptions(
     target: combinedPluginAndMaybeExecutorOptions.target,
     targetName,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
-    sassImplementation:
-      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
-      'sass-embedded',
   };
 }
 

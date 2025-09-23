@@ -26,7 +26,6 @@ export function normalizeOptions(
     outputFileName: options.outputFileName ?? 'main.js',
     webpackConfig: normalizePluginPath(options.webpackConfig, root),
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
-    sassImplementation: options.sassImplementation ?? 'sass',
     optimization:
       typeof options.optimization !== 'object'
         ? {
