@@ -35,7 +35,9 @@ fn is_nx_console_installed(command: &str) -> Result<bool, Error> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
-    if output.status.success() {
+    // Check if we got extension list in stdout even if command failed
+    // This handles the VS Code Insiders crash that happens after listing extensions
+    if !stdout.is_empty() {
         let is_installed = stdout
             .lines()
             .any(|line| line.trim() == NX_CONSOLE_EXTENSION_ID);
@@ -47,16 +49,15 @@ fn is_nx_console_installed(command: &str) -> Result<bool, Error> {
         return Ok(is_installed);
     }
 
-    // Log the error output for debugging
-    debug!("Command failed with status: {:?}", output.status);
-    if !stdout.is_empty() {
-        trace!("Command stdout: {}", stdout.trim());
-    }
-    if !stderr.is_empty() {
-        trace!("Command stderr: {}", stderr.trim());
+    // Log the error output for debugging if no stdout
+    if !output.status.success() {
+        debug!("Command failed with status: {:?}", output.status);
+        if !stderr.is_empty() {
+            trace!("Command stderr: {}", stderr.trim());
+        }
     }
 
-    // Command failed, assume not installed
+    // No output or command failed without output, assume not installed
     Ok(false)
 }
 
