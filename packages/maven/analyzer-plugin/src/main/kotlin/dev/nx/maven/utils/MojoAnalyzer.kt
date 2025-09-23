@@ -151,7 +151,7 @@ class MojoAnalyzer(
         mojoDescriptor: MojoDescriptor,
         project: MavenProject
     ): Set<String> {
-        val pluginConfig = cacheConfig.plugins[pluginDescriptor.artifactId] ?: return mavenFallbackInputs
+        val pluginConfig = cacheConfig.plugins[pluginDescriptor.artifactId] ?: return mavenFallbackOutputs
 
         val outputs = mutableSetOf<String>()
         if (pluginConfig.outputParameters.isEmpty()) {
