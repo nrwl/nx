@@ -16,6 +16,7 @@ import {
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
+import { nxVersion } from '../../utils/versions';
 import {
   createNodesFromFiles,
   CreateNodesV2,
@@ -144,9 +145,7 @@ export function createNodeFromPackageJson(
     ...json,
     root: projectRoot,
     isInPackageManagerWorkspaces,
-    // change this to bust the cache when making changes that result in different
-    // results for the same hash
-    bust: 1,
+    nxVersion,
   });
 
   const cached = cache[hash];

@@ -82,6 +82,8 @@ export function DocViewer({
           vm.description ??
           'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.'
         }
+        noindex={!!process.env.NEXT_PUBLIC_ASTRO_URL}
+        nofollow={!!process.env.NEXT_PUBLIC_ASTRO_URL}
         openGraph={{
           url: 'https://nx.dev' + currentPath,
           title: vm.title,

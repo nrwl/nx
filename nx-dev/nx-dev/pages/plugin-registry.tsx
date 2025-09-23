@@ -84,6 +84,8 @@ export default function Browse(props: BrowseProps): JSX.Element {
       <NextSeo
         title="Nx Plugin Registry"
         description="Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins."
+        noindex={!!process.env.NEXT_PUBLIC_ASTRO_URL}
+        nofollow={!!process.env.NEXT_PUBLIC_ASTRO_URL}
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Plugin Registry',
