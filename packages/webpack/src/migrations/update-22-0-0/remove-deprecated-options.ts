@@ -18,7 +18,10 @@ export default async function (tree: Tree) {
       for (const [targetName, targetConfig] of Object.entries(
         projectConfig.targets
       )) {
-        if (targetConfig.executor === '@nx/webpack:webpack') {
+        if (
+          targetConfig.executor === '@nx/webpack:webpack' ||
+          targetConfig.executor === '@nrwl/webpack:webpack'
+        ) {
           if (targetConfig.options) {
             if ('deleteOutputPath' in targetConfig.options) {
               delete targetConfig.options.deleteOutputPath;
