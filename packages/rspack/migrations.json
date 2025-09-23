@@ -11,6 +11,12 @@
       "version": "20.3.0-beta.2",
       "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
       "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    },
+    "remove-deprecated-rspack-options": {
+      "cli": "nx",
+      "version": "22.0.0-beta.1",
+      "description": "Remove deprecated deleteOutputPath and sassImplementation options from rspack configurations.",
+      "factory": "./src/migrations/update-22-0-0/remove-deprecated-options"
     }
   },
   "packageJsonUpdates": {
