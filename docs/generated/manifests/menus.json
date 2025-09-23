@@ -4682,7 +4682,16 @@
                     "path": "/technologies/test-tools/playwright/recipes",
                     "id": "recipes",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "Merge Atomized Outputs",
+                        "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
+                        "id": "merge-atomized-outputs",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   },
                   {
