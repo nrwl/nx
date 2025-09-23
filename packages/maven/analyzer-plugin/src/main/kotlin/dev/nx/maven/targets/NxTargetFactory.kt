@@ -243,7 +243,6 @@ class NxTargetFactory(
             }
 
         // Aggregate analysis results
-        var usedFallback = false
         analyses.forEach { analysis ->
 
             if (!analysis.isThreadSafe) {
@@ -253,29 +252,16 @@ class NxTargetFactory(
                 isCacheable = false
             }
 
-            if (analysis.usedFallback) {
-                usedFallback = true
-            }
-
             inputs.addAll(analysis.inputs)
             outputs.addAll(analysis.outputs)
         }
 
         // Add Maven convention fallbacks if no inputs/outputs were found
-        var appliedFallback = false
         if (inputs.isEmpty()) {
             inputs.addAll(mojoAnalyzer.mavenFallbackInputs)
-            appliedFallback = true
         }
         if (outputs.isEmpty()) {
             outputs.addAll(mojoAnalyzer.mavenFallbackOutputs)
-            appliedFallback = true
-        }
-
-        if (appliedFallback) {
-            log.info("Phase $phase: No parameter-based inputs/outputs found, using Maven convention fallbacks")
-        } else if (usedFallback) {
-            log.info("Phase $phase: Some mojos used Maven convention fallbacks for inputs/outputs")
         }
 
         log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
@@ -359,6 +345,12 @@ class NxTargetFactory(
             // Convert inputs to JsonNode array
             val inputsArray = objectMapper.createArrayNode()
             analysis.inputs.forEach { input -> inputsArray.add(input) }
+            analysis.dependentTaskOutputInputs.forEach { input ->
+                val obj = objectMapper.createObjectNode()
+                obj.put("dependentTasksOutputFiles", input.path)
+                if (input.transitive) obj.put("transitive", true)
+                inputsArray.add(obj)
+            }
             target.inputs = inputsArray
 
             // Convert outputs to JsonNode array

@@ -1,40 +1,26 @@
 package dev.nx.maven.utils
 
+import dev.nx.maven.GitIgnoreClassifier
 import dev.nx.maven.cache.CacheConfig
 import dev.nx.maven.cache.CacheConfigLoader
 import org.apache.maven.plugin.descriptor.MojoDescriptor
-import org.apache.maven.plugin.descriptor.Parameter
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
 import org.slf4j.LoggerFactory
-
-/**
- * Provides knowledge about Maven plugin directory scanning and input/output classification.
- * Uses Maven build cache extension's official configuration format for compatibility.
- */
-enum class ParameterRole {
-    INPUT,      // Parameter represents input files/data
-    OUTPUT,     // Parameter represents output files/data
-    BOTH,       // Parameter can be both input and output
-    NONE     // Unable to determine parameter role
-}
+import java.io.File
 
 data class MojoAnalysis(
     val inputs: Set<String>,
+    val dependentTaskOutputInputs: Set<DependentTaskOutputs>,
     val outputs: Set<String>,
     val isCacheable: Boolean,
     val isThreadSafe: Boolean,
-    val usedFallback: Boolean
-)
-
-private data class ParameterInformation(
-    val inputs: Set<String>,
-    val outputs: Set<String>
 )
 
 class MojoAnalyzer(
     private val expressionResolver: MavenExpressionResolver,
-    private val pathResolver: PathResolver
+    private val pathResolver: PathFormatter,
+    private val gitIgnoreClassifier: GitIgnoreClassifier,
 ) {
     private val log = LoggerFactory.getLogger(MojoAnalyzer::class.java)
 
@@ -50,7 +36,7 @@ class MojoAnalyzer(
         goal: String,
         project: MavenProject
     ): MojoAnalysis? {
-        val descriptor = pluginDescriptor.getMojo(goal)
+        val mojoDescriptor = pluginDescriptor.getMojo(goal)
             ?: run {
                 log.warn(
                     "Skipping analysis for ${pluginDescriptor.artifactId}:$goal – mojo descriptor not found"
@@ -58,35 +44,89 @@ class MojoAnalyzer(
                 return null
             }
 
-        val parameterInfos = collectParameterInformation(descriptor, project)
+        val isThreadSafe = mojoDescriptor.isThreadSafe
 
-        val aggregatedInputs = mutableSetOf<String>()
-        val aggregatedOutputs = mutableSetOf<String>()
+        val isCacheable = isPluginCacheable(pluginDescriptor)
 
-        parameterInfos.forEach { info ->
-            aggregatedInputs.addAll(info.inputs)
-            aggregatedOutputs.addAll(info.outputs)
+        if (!isCacheable) {
+            log.info("${pluginDescriptor.artifactId}:$goal is not cacheable")
+            return MojoAnalysis(emptySet(), emptySet(), emptySet(), false, isThreadSafe)
         }
 
-        var usedFallback = false
+        val (inputs, dependentTaskOutputInputs) = getInputs(pluginDescriptor, mojoDescriptor, project)
+        val outputs = getOutputs(pluginDescriptor, mojoDescriptor, project)
 
-        if (aggregatedInputs.isEmpty()) {
-            aggregatedInputs.addAll(mavenFallbackInputs)
-            usedFallback = true
+        return MojoAnalysis(
+            inputs,
+            dependentTaskOutputInputs,
+            outputs,
+            true,
+            isThreadSafe
+        )
+    }
+
+    private fun getInputs(
+        pluginDescriptor: PluginDescriptor,
+        mojoDescriptor: MojoDescriptor,
+        project: MavenProject
+    ): Pair<Set<String>, Set<DependentTaskOutputs>> {
+        val pluginConfig = cacheConfig.plugins[pluginDescriptor.artifactId] ?: return Pair(mavenFallbackInputs, emptySet())
+
+        val inputs = mutableSetOf<String>()
+        val dependentTaskOutputInputs = mutableSetOf<DependentTaskOutputs>()
+        if (pluginConfig.inputParameters.isEmpty()) {
+            return Pair(mavenFallbackInputs, emptySet())
         }
 
-        if (aggregatedOutputs.isEmpty()) {
-            aggregatedOutputs.addAll(mavenFallbackOutputs)
-            usedFallback = true
+        pluginConfig.inputParameters.forEach { input ->
+            val parameter = mojoDescriptor.parameterMap[input.path]
+                ?: return@forEach
+
+            var path = expressionResolver.resolveParameterValue(
+                parameter.name,
+                parameter.defaultValue,
+                parameter.expression,
+                project
+            )
+
+            if (path == null) {
+                log.debug("Parameter ${parameter.name} resolved to null path")
+                return@forEach
+            }
+
+            if (input.glob != null) {
+                path = "$path/${input.glob}"
+            }
+
+            val pathFile = File(path);
+            val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
+            if (isIgnored) {
+                log.warn("Input path is gitignored: ${pathFile.path}")
+                val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
+                dependentTaskOutputInputs.add(input)
+            } else {
+                val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
+
+                inputs.add(input)
+            }
         }
+
 
         cacheConfig.globalIncludes.forEach { include ->
             var path = include.path
             include.glob?.let { glob -> path += "/$glob" }
 
-            val formatted = formatPathForNx(path)
-            aggregatedInputs.add(formatted)
-            log.debug("Added global include input path: $formatted")
+            val pathFile = File(path);
+
+            if (gitIgnoreClassifier.isIgnored(pathFile)) {
+                log.warn("Input path is gitignored: ${pathFile.path}")
+                val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
+                dependentTaskOutputInputs.add(input)
+            } else {
+                val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
+
+                inputs.add(input)
+            }
 
             // TODO: This is not supported by nx yet
 //            if (include.recursive) {
@@ -98,91 +138,54 @@ class MojoAnalyzer(
             var path = exclude.path
             exclude.glob?.let { glob -> path += "/$glob" }
 
-            val formatted = formatPathForNx(path)
-            aggregatedInputs.add("!$formatted")
+            val formatted = pathResolver.formatInputPath(File(path), project.basedir)
+            inputs.add("!$formatted")
             log.debug("Added global exclude input path: !$formatted")
         }
 
-        val cacheable = isMojoCacheable(descriptor)
-
-        return MojoAnalysis(
-            inputs = aggregatedInputs.toSet(),
-            outputs = aggregatedOutputs.toSet(),
-            isCacheable = cacheable,
-            isThreadSafe = descriptor.isThreadSafe,
-            usedFallback = usedFallback
-        )
+        return Pair(inputs, dependentTaskOutputInputs)
     }
 
-    /**
-     * Analyzes a single parameter to determine inputs and outputs
-     */
-    private fun analyzeParameterInputsOutputs(
-        descriptor: MojoDescriptor,
-        parameter: Parameter,
+    private fun getOutputs(
+        pluginDescriptor: PluginDescriptor,
+        mojoDescriptor: MojoDescriptor,
         project: MavenProject
-    ): ParameterInformation {
-        val inputs = mutableSetOf<String>()
+    ): Set<String> {
+        val pluginConfig = cacheConfig.plugins[pluginDescriptor.artifactId] ?: return mavenFallbackInputs
+
         val outputs = mutableSetOf<String>()
-
-        val role = getParameterRole(descriptor.pluginDescriptor.artifactId, parameter.name)
-
-        if (role == ParameterRole.NONE) {
-            log.debug("Skipping unknown parameter: ${parameter.name}")
-            return ParameterInformation(inputs, outputs)
+        if (pluginConfig.outputParameters.isEmpty()) {
+            return outputs
         }
 
-        val path = expressionResolver.resolveParameterValue(
-            parameter.name,
-            parameter.defaultValue,
-            parameter.expression,
-            project
-        )
+        pluginConfig.outputParameters.forEach { ouptut ->
+            val parameter = mojoDescriptor.parameterMap[ouptut.path]
+                ?: return@forEach
 
-        if (path == null) {
-            log.debug("Parameter ${parameter.name} resolved to null path")
-            return ParameterInformation(inputs, outputs)
-        }
-
-        when (role) {
-            ParameterRole.INPUT -> {
-                pathResolver.addInputPath(path, inputs)
-                log.info("Added input path: $path (from parameter ${parameter.name})")
-            }
-            ParameterRole.OUTPUT -> {
-                pathResolver.addOutputPath(path, outputs)
-                log.info("Added output path: $path (from parameter ${parameter.name})")
-            }
-            ParameterRole.BOTH -> {
-                pathResolver.addInputPath(path, inputs)
-                pathResolver.addOutputPath(path, outputs)
-                log.debug("Added input/output path: $path (from parameter ${parameter.name})")
-            }
-
-            else -> {}
-        }
-
-        // Format all paths for Nx compatibility
-        val formattedInputs = inputs.map { formatPathForNx(it) }.toSet()
-        val formattedOutputs = outputs.map { formatPathForNx(it) }.toSet()
-
-        return ParameterInformation(formattedInputs, formattedOutputs)
-    }
-
-    private fun collectParameterInformation(
-        descriptor: MojoDescriptor,
-        project: MavenProject
-    ): List<ParameterInformation> {
-        return descriptor.parameters?.parallelStream()?.map { parameter ->
-            val paramInfo = analyzeParameterInputsOutputs(
-                descriptor,
-                parameter,
+            var path = expressionResolver.resolveParameterValue(
+                parameter.name,
+                parameter.defaultValue,
+                parameter.expression,
                 project
             )
-            log.debug("Parameter analysis: {} {} -> {}", descriptor.phase, parameter.name, paramInfo)
-            paramInfo
-        }?.collect(java.util.stream.Collectors.toList()) ?: emptyList()
+
+            if (path == null) {
+                log.debug("Parameter ${parameter.name} resolved to null path")
+                return@forEach
+            }
+
+            if (ouptut.glob != null) {
+                path = "$path/${ouptut.glob}"
+            }
+
+            val formattedPath = pathResolver.formatOutputPath(File(path), project.basedir)
+
+            outputs.add(formattedPath)
+        }
+
+        return outputs
     }
+
 
     /**
      * Formats a path for Nx compatibility by adding {projectRoot} prefix for relative paths
@@ -198,46 +201,9 @@ class MojoAnalyzer(
         }
     }
 
-    /**
-     * Gets the parameter role for a specific plugin and parameter combination.
-     * Uses Maven build cache directory scanning rules to determine input/output classification.
-     *
-     * @param pluginArtifactId The plugin artifact ID (e.g., "maven-compiler-plugin")
-     * @param parameterName The parameter name (e.g., "outputDirectory")
-     * @return The ParameterRole if known, null otherwise
-     */
-    private fun getParameterRole(pluginArtifactId: String, parameterName: String): ParameterRole {
-        val plugin = cacheConfig.plugins[pluginArtifactId] ?: return ParameterRole.NONE
 
-        val role = when {
-            plugin.inputParameters.contains(parameterName) -> ParameterRole.INPUT
-            plugin.outputParameters.contains(parameterName) -> ParameterRole.OUTPUT
-            else -> return ParameterRole.NONE
-        }
-
-        log.debug("Found parameter role from cache config: {}.{} -> {}", pluginArtifactId, parameterName, role)
-        return role
-    }
-
-    /**
-     * Checks if a plugin should always run (never be cached).
-     */
-    private fun shouldAlwaysRun(pluginArtifactId: String?): Boolean {
-        if (pluginArtifactId == null) return false
-        return cacheConfig.alwaysRunPlugins.contains(pluginArtifactId)
-    }
-
-
-    private fun isMojoCacheable(descriptor: MojoDescriptor): Boolean {
-        val artifactId = descriptor.pluginDescriptor?.artifactId
-
-        if (shouldAlwaysRun(artifactId)) {
-            log.debug("Plugin $artifactId should always run - not cacheable")
-            return false
-        }
-
-        log.debug("Plugin $artifactId:${descriptor.goal} is cacheable by default")
-        return true
+    private fun isPluginCacheable(descriptor: PluginDescriptor): Boolean {
+        return !cacheConfig.alwaysRunPlugins.contains(descriptor.artifactId)
     }
 
     internal val mavenFallbackInputs: Set<String> by lazy {
@@ -254,6 +220,7 @@ class MojoAnalyzer(
                 "." -> {
                     // Root directory includes (like pom.xml) are already covered above
                 }
+
                 else -> inputs.add(include.path)
             }
         }
