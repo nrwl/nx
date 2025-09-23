@@ -2,8 +2,7 @@
 
 When running Playwright tests in CI environments, Nx can [split tests across multiple parallel tasks](/docs/features/ci-features/split-e2e-tasks) for faster execution.
 However, this creates separate test reports for each task.
-With the Nx Plugin
-The Playwright report merging feature allows you to combine these individual reports into a single, unified report.
+With the Nx Plugin, the Playwright report merging feature allows you to combine these individual reports into a single, unified report.
 
 **Benefits:**
 
@@ -209,7 +208,7 @@ export default defineConfig({
 
 **Solution:** Add at least one additional reporter (HTML, JSON, JUnit, etc.) alongside the blob reporter.
 
-List of available Playwright reports an be found in the [playwright documentation](https://playwright.dev/docs/test-reporters).
+List of available Playwright reports can be found in the [playwright documentation](https://playwright.dev/docs/test-reporters).
 
 ## Best Practices
 
