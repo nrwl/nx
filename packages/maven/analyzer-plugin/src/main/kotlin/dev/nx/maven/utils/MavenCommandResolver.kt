@@ -13,15 +13,12 @@ object MavenCommandResolver {
     @Volatile
     private var cachedCommand: String? = null
 
-    @Volatile
-    private var cachedWorkspaceRoot: String? = null
-
     /**
      * Gets the best Maven executable with caching: mvnd > mvnw > mvn
      */
-    fun getMavenCommand(workspaceRoot: String): String {
+    fun getMavenCommand(workspaceRoot: File): String {
         // Return cached result if workspace root hasn't changed
-        if (cachedCommand != null && cachedWorkspaceRoot == workspaceRoot) {
+        if (cachedCommand != null) {
             log.debug("Using cached Maven command: $cachedCommand")
             return cachedCommand!!
         }
@@ -29,21 +26,15 @@ object MavenCommandResolver {
         log.info("Detecting Maven command for workspace: $workspaceRoot")
         val startTime = System.currentTimeMillis()
 
-        val command = detectMavenCommand(workspaceRoot)
-
-        // Cache the result
-        synchronized(this) {
-            cachedCommand = command
-            cachedWorkspaceRoot = workspaceRoot
-        }
+        cachedCommand = detectMavenCommand(workspaceRoot)
 
         val detectionTime = System.currentTimeMillis() - startTime
-        log.info("Maven command detection completed: '$command' in ${detectionTime}ms")
+        log.info("Maven command detection completed: '$cachedCommand' in ${detectionTime}ms")
 
-        return command
+        return cachedCommand as String
     }
 
-    private fun detectMavenCommand(workspaceRoot: String): String {
+    private fun detectMavenCommand(workspaceRoot: File): String {
         // First priority: Check for Maven Daemon
 //        try {
 //            val mvndStart = System.currentTimeMillis()
@@ -76,16 +67,5 @@ object MavenCommandResolver {
 
         log.info("Falling back to system Maven: mvn")
         return "mvn"
-    }
-
-    /**
-     * Clears the cache - useful for testing or when workspace changes
-     */
-    fun clearCache() {
-        synchronized(this) {
-            cachedCommand = null
-            cachedWorkspaceRoot = null
-            log.debug("Maven command cache cleared")
-        }
     }
 }

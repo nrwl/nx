@@ -12,7 +12,7 @@ class MavenExpressionResolver(
     private val session: MavenSession
 ) {
     private val log: Logger = LoggerFactory.getLogger(MavenExpressionResolver::class.java)
-    
+
     /**
      * Resolves a mojo parameter value by trying expression, default value, and known mappings
      */
@@ -29,7 +29,7 @@ class MavenExpressionResolver(
                 }
             }
         }
-        
+
         // Try default value
         defaultValue?.let { default ->
             val resolved = resolveExpression(default, project)
@@ -39,7 +39,7 @@ class MavenExpressionResolver(
                 return null
             }
         }
-        
+
         // Try known parameter mappings based on what Maven actually provides
         val result = when (name) {
             // These map directly to Maven project model
@@ -73,31 +73,31 @@ class MavenExpressionResolver(
 
             else -> null
         }
-        
+
         return result
     }
-    
+
     /**
      * Checks if a resolved value looks like a valid file path rather than a version number or other non-path value
      */
     private fun isValidPath(value: String?): Boolean {
         if (value.isNullOrBlank()) return false
-        
+
         // Filter out values that look like version numbers (e.g., "1.8", "11", "17")
         // Use simple string matching instead of regex to avoid StackOverflowError
         if (isVersionNumber(value)) {
             return false
         }
-        
+
         // Filter out other common non-path values
         if (value in setOf("true", "false", "UTF-8", "jar", "war", "ear", "pom", "test-jar")) {
             return false
         }
-        
+
         // Must contain at least one path separator or be an absolute path
         return value.contains("/") || value.contains("\\") || value.startsWith(".") || java.io.File(value).isAbsolute
     }
-    
+
     /**
      * Resolves Maven expressions in a string
      */
@@ -105,9 +105,9 @@ class MavenExpressionResolver(
         if (!expression.contains("\${")) {
             return expression
         }
-        
+
         var resolved = expression
-        
+
         // Replace common project expressions
         resolved = resolved.replace("\${project.basedir}", project.basedir?.absolutePath ?: "")
         resolved = resolved.replace("\${basedir}", project.basedir?.absolutePath ?: "")
@@ -119,48 +119,48 @@ class MavenExpressionResolver(
         resolved = resolved.replace("\${project.groupId}", project.groupId ?: "")
         resolved = resolved.replace("\${project.version}", project.version ?: "")
         resolved = resolved.replace("\${project.name}", project.name ?: "")
-        
+
         // Replace session expressions
         resolved = resolved.replace("\${session.executionRootDirectory}", session.executionRootDirectory ?: "")
-        
+
         // Replace system properties
         System.getProperties().forEach { key, value ->
             resolved = resolved.replace("\${$key}", value.toString())
         }
-        
+
         // Replace user properties from session
         session.userProperties?.forEach { key, value ->
             resolved = resolved.replace("\${$key}", value.toString())
         }
-        
+
         // Replace system properties from session
         session.systemProperties?.forEach { key, value ->
             resolved = resolved.replace("\${$key}", value.toString())
         }
-        
+
         return resolved
     }
-    
+
     /**
      * Check if a string looks like a version number without using regex
      */
     private fun isVersionNumber(value: String): Boolean {
         if (value.isEmpty()) return false
-        
+
         // Simple check: starts with digit and contains only digits and dots
         if (!value[0].isDigit()) return false
-        
+
         for (char in value) {
             if (!char.isDigit() && char != '.') {
                 return false
             }
         }
-        
+
         // Avoid multiple consecutive dots or ending with dot
         if (value.contains("..") || value.endsWith(".")) {
             return false
         }
-        
+
         return true
     }
 }
