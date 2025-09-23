@@ -267,6 +267,8 @@ export class ReleaseGroupProcessor {
   private projectToUpdateDependentsSetting: Map<string, 'auto' | 'never'> =
     new Map();
 
+  private cachedIsDependentUpdate: Map<string, boolean> = new Map();
+
   constructor(
     private tree: Tree,
     private projectGraph: ProjectGraph,
@@ -1757,10 +1759,22 @@ Valid values are: ${validReleaseVersionPrefixes
   }
 
   private isDependentUpdate(project: string) {
-    return (
-      Array.from(this.projectToDependents.values()).some((dependents) =>
-        dependents.has(project)
-      ) && this.hasAutoUpdateDependents(project)
-    );
+    if (this.cachedIsDependentUpdate.has(project)) {
+      return this.cachedIsDependentUpdate.get(project)!;
+    }
+
+    if (!this.hasAutoUpdateDependents(project)) {
+      this.cachedIsDependentUpdate.set(project, false);
+      return false;
+    }
+
+    for (const dependents of this.projectToDependents.values()) {
+      if (dependents.has(project)) {
+        this.cachedIsDependentUpdate.set(project, true);
+        return true;
+      }
+    }
+    this.cachedIsDependentUpdate.set(project, false);
+    return false;
   }
 }
