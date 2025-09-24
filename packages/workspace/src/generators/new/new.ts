@@ -13,7 +13,7 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
-import { Agent } from 'packages/nx/src/ai/utils';
+import { Agent } from 'nx/src/ai/utils';
 
 interface Schema {
   directory: string;
@@ -94,7 +94,9 @@ export async function newGenerator(tree: Tree, opts: Schema) {
       await generatePreset(tree, options);
     }
     // if we move this into create-nx-workspace, we can also easily log things out like nx console install success
-    await aiAgentsCallback();
+    if (aiAgentsCallback) {
+      await aiAgentsCallback();
+    }
   };
 }
 

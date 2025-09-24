@@ -185,7 +185,7 @@ export async function generateWorkspaceFiles(
 
   await createReadme(tree, options, token);
 
-  let aiAgentsCallback: () => unknown | undefined;
+  let aiAgentsCallback: () => unknown | undefined = undefined;
   if (options.aiAgents && options.aiAgents.length > 0) {
     aiAgentsCallback = await setupAiAgentsGenerator(tree, {
       directory: options.directory,
