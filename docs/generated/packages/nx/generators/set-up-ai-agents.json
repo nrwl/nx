@@ -22,6 +22,15 @@
         "type": "string",
         "description": "The version of the package to use",
         "default": "latest"
+      },
+      "agents": {
+        "type": "array",
+        "description": "The agents to setup Nx configuration for.",
+        "items": {
+          "type": "string",
+          "enum": ["claude", "gemini", "codex", "cursor", "copilot"]
+        },
+        "default": ["claude", "gemini", "codex", "cursor", "copilot"]
       }
     },
     "required": ["directory"],

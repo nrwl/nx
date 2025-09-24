@@ -61,7 +61,7 @@ export function getAgentConfiguration(
       let mcpConfigured: boolean;
       try {
         const mcpContents = JSON.parse(readFileSync(mcpPath, 'utf-8'));
-        mcpConfigured = !!mcpContents['mcpServers']['nx-mcp'];
+        mcpConfigured = !!mcpContents?.['mcpServers']?.['nx-mcp'];
       } catch {
         mcpConfigured = false;
       }

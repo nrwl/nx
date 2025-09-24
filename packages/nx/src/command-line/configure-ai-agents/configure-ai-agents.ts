@@ -14,6 +14,7 @@ import { installPackageToTmp } from '../../devkit-internals';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
+import { clean } from 'semver';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
@@ -24,12 +25,14 @@ export async function configureAiAgentsHandler(
     return await configureAiAgentsHandlerImpl(args);
   }
 
+  let cleanup: () => void | undefined;
   try {
     await ensurePackageHasProvenance('nx', 'latest');
-    const { tempDir, cleanup } = installPackageToTmp('nx', 'latest');
+    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    cleanup = packageInstallResults.cleanup;
 
     let modulePath = join(
-      tempDir,
+      packageInstallResults.tempDir,
       'node_modules',
       'nx',
       'src/command-line/ai-agent-setup/ai-agent-setup.js'
@@ -40,6 +43,9 @@ export async function configureAiAgentsHandler(
     cleanup();
     return aiAgentSetupResult;
   } catch (error) {
+    if (cleanup) {
+      cleanup();
+    }
     // Fall back to local implementation
     return configureAiAgentsHandlerImpl(args);
   }
