@@ -352,7 +352,12 @@ async function buildDotNetTargets(
                 ],
                 cache: true,
                 inputs: baseInputs,
-                outputs: ['{projectRoot}/bin', '{projectRoot}/obj'],
+                outputs: [
+                    '{projectRoot}/bin',
+                    '{projectRoot}/obj',
+                    '{workspaceRoot}/artifacts/bin/{projectName}',
+                    '{workspaceRoot}/artifacts/obj/{projectName}',
+                ],
                 metadata: {
                     technologies: technologiesArray,
                     description: `Build the ${fileName} project`,
