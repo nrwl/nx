@@ -54,10 +54,17 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
         const targetsCache = readTargetsCache(cachePath);
         const normalizedOptions = normalizeOptions(options);
 
-        // Collect all project roots
-        const projectRoots = configFilePaths.map((configFile) =>
-            dirname(configFile)
-        );
+        // Group project files by their project root
+        const projectRootToFiles = new Map<string, string[]>();
+        for (const configFile of configFilePaths) {
+            const projectRoot = dirname(configFile);
+            if (!projectRootToFiles.has(projectRoot)) {
+                projectRootToFiles.set(projectRoot, []);
+            }
+            projectRootToFiles.get(projectRoot)!.push(configFile);
+        }
+
+        const projectRoots = Array.from(projectRootToFiles.keys());
 
         // Calculate all hashes at once
         const hashes = await calculateHashesForCreateNodes(
@@ -68,16 +75,16 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
 
         try {
             return await createNodesFromFiles(
-                (configFile, options, context, idx) =>
+                (projectRoot, options, context, idx) =>
                     createNodesInternal(
-                        configFile,
+                        projectRoot,
                         options,
                         context,
                         targetsCache,
-                        projectRoots[idx],
+                        projectRootToFiles.get(projectRoot)!,
                         hashes[idx]
                     ),
-                configFilePaths,
+                projectRoots,
                 options,
                 context
             );
@@ -105,11 +112,11 @@ function writeTargetsToCache(
 }
 
 async function createNodesInternal(
-    configFilePath: string,
+    projectRoot: string,
     options: DotNetPluginOptions,
     context: CreateNodesContext,
     targetsCache: Record<string, DotNetTargets>,
-    projectRoot: string,
+    projectFiles: string[],
     hash: string
 ) {
     // For .NET projects, we don't require package.json or project.json
@@ -118,14 +125,21 @@ async function createNodesInternal(
     const normalizedOptions = normalizeOptions(options);
 
     targetsCache[hash] ??= await buildDotNetTargets(
-        configFilePath,
         projectRoot,
+        projectFiles,
         normalizedOptions,
         context
     );
     const { targets, metadata } = targetsCache[hash];
 
-    const projectName = inferProjectName(configFilePath);
+    // For project naming, use the directory name when multiple projects,
+    // or the single project file name when only one
+    const projectName =
+        projectFiles.length === 1
+            ? inferProjectName(projectFiles[0])
+            : basename(projectRoot)
+                  .replace(/[^a-z0-9\-]/gi, '-')
+                  .toLowerCase();
 
     return {
         projects: {
@@ -159,6 +173,21 @@ function inferProjectName(configFilePath: string): string {
 
     // Convert PascalCase to kebab-case for regular project names
     return filename
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .toLowerCase()
+        .replace(/[^a-z0-9\-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
+function extractProjectNameFromFile(projectFileName: string): string {
+    const nameWithoutExtension =
+        basename(projectFileName, '.csproj') ||
+        basename(projectFileName, '.fsproj') ||
+        basename(projectFileName, '.vbproj');
+
+    // Convert PascalCase to kebab-case for target names
+    return nameWithoutExtension
         .replace(/([a-z])([A-Z])/g, '$1-$2')
         .toLowerCase()
         .replace(/[^a-z0-9\-]/g, '-')
@@ -246,36 +275,60 @@ function parseProjectFile(projectFilePath: string): ProjectInfo {
 }
 
 async function buildDotNetTargets(
-    configFilePath: string,
     projectRoot: string,
+    projectFiles: string[],
     options: NormalizedOptions,
     context: CreateNodesContext
 ): Promise<DotNetTargets> {
-    const projectInfo = parseProjectFile(
-        join(context.workspaceRoot, configFilePath)
-    );
     const namedInputs = getNamedInputs(projectRoot, context);
-
     const targets: ProjectConfiguration['targets'] = {};
     let metadata: ProjectConfiguration['metadata'];
 
-    // Technology detection based on project type
-    const technologies = ['dotnet'];
-    switch (projectInfo.projectType) {
-        case 'csharp':
-            technologies.push('csharp');
-            break;
-        case 'fsharp':
-            technologies.push('fsharp');
-            break;
-        case 'vb':
-            technologies.push('vb');
-            break;
+    const hasMultipleProjects = projectFiles.length > 1;
+
+    // Collect information about all projects in this directory
+    const projectInfos = projectFiles.map((projectFile) => ({
+        file: projectFile,
+        fileName: basename(projectFile),
+        projectName: extractProjectNameFromFile(basename(projectFile)),
+        info: parseProjectFile(join(context.workspaceRoot, projectFile)),
+    }));
+
+    // Aggregate technology detection from all projects
+    const technologies = new Set(['dotnet']);
+    let hasTestProjects = false;
+    let hasExecutableProjects = false;
+    let hasLibraryProjects = false;
+
+    for (const { info } of projectInfos) {
+        switch (info.projectType) {
+            case 'csharp':
+                technologies.add('csharp');
+                break;
+            case 'fsharp':
+                technologies.add('fsharp');
+                break;
+            case 'vb':
+                technologies.add('vb');
+                break;
+        }
+
+        if (info.isTestProject) {
+            technologies.add('test');
+            hasTestProjects = true;
+        }
+
+        if (info.isExecutable) {
+            hasExecutableProjects = true;
+        }
+
+        if (!info.isExecutable && !info.isTestProject) {
+            hasLibraryProjects = true;
+        }
     }
 
-    if (projectInfo.isTestProject) {
-        technologies.push('test');
-    }
+    const technologiesArray = Array.from(technologies);
+    metadata = { technologies: technologiesArray };
 
     const baseInputs =
         'production' in namedInputs
@@ -283,159 +336,473 @@ async function buildDotNetTargets(
             : ['default', '^default'];
 
     // Build target - always available
-    targets[options.buildTargetName] = {
-        command: 'dotnet build',
-        options: {
-            cwd: '{projectRoot}',
-            args: ['--no-restore', '--no-dependencies'],
-        },
-        dependsOn: ['restore', '^build'],
-        cache: true,
-        inputs: baseInputs,
-        outputs: ['{projectRoot}/bin', '{projectRoot}/obj'],
-        metadata: {
-            technologies,
-            description: 'Build the .NET project',
-            help: {
-                command: 'dotnet build --help',
-                example: {
-                    options: {
-                        configuration: 'Release',
+    if (hasMultipleProjects) {
+        // Create project-specific build targets for each project
+        for (const { fileName, projectName } of projectInfos) {
+            const projectSpecificBuildTarget = `${options.buildTargetName}:${projectName}`;
+            targets[projectSpecificBuildTarget] = {
+                command: 'dotnet build',
+                options: {
+                    cwd: '{projectRoot}',
+                    args: [fileName, '--no-restore', '--no-dependencies'],
+                },
+                dependsOn: [
+                    `${options.restoreTargetName}:${projectName}`,
+                    '^build',
+                ],
+                cache: true,
+                inputs: baseInputs,
+                outputs: ['{projectRoot}/bin', '{projectRoot}/obj'],
+                metadata: {
+                    technologies: technologiesArray,
+                    description: `Build the ${fileName} project`,
+                    help: {
+                        command: 'dotnet build --help',
+                        example: {
+                            options: {
+                                configuration: 'Release',
+                            },
+                        },
                     },
                 },
-            },
-        },
-    };
+            };
+        }
 
-    // Test target - only for test projects
-    if (projectInfo.isTestProject) {
-        targets[options.testTargetName] = {
-            command: 'dotnet test',
-            options: {
-                cwd: '{projectRoot}',
-                args: ['--no-dependencies', '--no-build'],
-            },
-            dependsOn: ['build'],
-            cache: true,
-            inputs: [
-                ...baseInputs,
-                { externalDependencies: projectInfo.packageReferences },
-            ],
-            outputs: ['{projectRoot}/TestResults'],
+        // Create umbrella build target that depends on all project-specific build targets
+        targets[options.buildTargetName] = {
+            dependsOn: [`${options.buildTargetName}:*`],
+            cache: false,
             metadata: {
-                technologies,
-                description: 'Run .NET tests',
+                technologies: technologiesArray,
+                description: 'Build all .NET projects in this directory',
                 help: {
-                    command: 'dotnet test --help',
+                    command: 'dotnet build --help',
                     example: {
                         options: {
-                            logger: 'trx',
+                            configuration: 'Release',
                         },
                     },
                 },
             },
         };
+    } else {
+        // Single project - use original logic
+        targets[options.buildTargetName] = {
+            command: 'dotnet build',
+            options: {
+                cwd: '{projectRoot}',
+                args: ['--no-restore', '--no-dependencies'],
+            },
+            dependsOn: [options.restoreTargetName, '^build'],
+            cache: true,
+            inputs: baseInputs,
+            outputs: ['{projectRoot}/bin', '{projectRoot}/obj'],
+            metadata: {
+                technologies: technologiesArray,
+                description: 'Build the .NET project',
+                help: {
+                    command: 'dotnet build --help',
+                    example: {
+                        options: {
+                            configuration: 'Release',
+                        },
+                    },
+                },
+            },
+        };
+    }
+
+    // Test target - only for test projects
+    if (hasTestProjects) {
+        if (hasMultipleProjects) {
+            // Create project-specific test targets for each test project
+            for (const { fileName, projectName, info } of projectInfos) {
+                if (info.isTestProject) {
+                    const projectSpecificTestTarget = `${options.testTargetName}:${projectName}`;
+                    targets[projectSpecificTestTarget] = {
+                        command: 'dotnet test',
+                        options: {
+                            cwd: '{projectRoot}',
+                            args: [fileName, '--no-dependencies', '--no-build'],
+                        },
+                        dependsOn: [
+                            `${options.buildTargetName}:${projectName}`,
+                        ],
+                        cache: true,
+                        inputs: [
+                            ...baseInputs,
+                            { externalDependencies: info.packageReferences },
+                        ],
+                        outputs: ['{projectRoot}/TestResults'],
+                        metadata: {
+                            technologies: technologiesArray,
+                            description: `Run tests for ${fileName}`,
+                            help: {
+                                command: 'dotnet test --help',
+                                example: {
+                                    options: {
+                                        logger: 'trx',
+                                    },
+                                },
+                            },
+                        },
+                    };
+                }
+            }
+
+            // Create umbrella test target
+            targets[options.testTargetName] = {
+                dependsOn: [`${options.testTargetName}:*`],
+                cache: false,
+                metadata: {
+                    technologies: technologiesArray,
+                    description: 'Run all .NET tests in this directory',
+                    help: {
+                        command: 'dotnet test --help',
+                        example: {
+                            options: {
+                                logger: 'trx',
+                            },
+                        },
+                    },
+                },
+            };
+        } else {
+            // Single project - use original logic
+            const { info } = projectInfos[0];
+            targets[options.testTargetName] = {
+                command: 'dotnet test',
+                options: {
+                    cwd: '{projectRoot}',
+                    args: ['--no-dependencies', '--no-build'],
+                },
+                dependsOn: [options.buildTargetName],
+                cache: true,
+                inputs: [
+                    ...baseInputs,
+                    { externalDependencies: info.packageReferences },
+                ],
+                outputs: ['{projectRoot}/TestResults'],
+                metadata: {
+                    technologies: technologiesArray,
+                    description: 'Run .NET tests',
+                    help: {
+                        command: 'dotnet test --help',
+                        example: {
+                            options: {
+                                logger: 'trx',
+                            },
+                        },
+                    },
+                },
+            };
+        }
     }
 
     // Restore target - always available
-    targets[options.restoreTargetName] = {
-        command: 'dotnet restore',
-        options: {
-            cwd: '{projectRoot}',
-            args: ['--no-dependencies'],
-        },
-        dependsOn: ['^restore'],
-        cache: true,
-        inputs: [
-            '{projectRoot}/*.csproj',
-            '{projectRoot}/*.fsproj',
-            '{projectRoot}/*.vbproj',
-        ],
-        outputs: ['{projectRoot}/obj'],
-        metadata: {
-            technologies,
-            description: 'Restore .NET project dependencies',
-            help: {
-                command: 'dotnet restore --help',
-                example: {
-                    options: {},
+    if (hasMultipleProjects) {
+        // Create project-specific restore targets for each project
+        for (const { fileName, projectName } of projectInfos) {
+            const projectSpecificRestoreTarget = `${options.restoreTargetName}:${projectName}`;
+            targets[projectSpecificRestoreTarget] = {
+                command: 'dotnet restore',
+                options: {
+                    cwd: '{projectRoot}',
+                    args: [fileName, '--no-dependencies'],
+                },
+                dependsOn: [`^${options.restoreTargetName}`],
+                cache: true,
+                inputs: ['{projectRoot}/' + fileName],
+                outputs: ['{projectRoot}/obj'],
+                metadata: {
+                    technologies: technologiesArray,
+                    description: `Restore dependencies for ${fileName}`,
+                    help: {
+                        command: 'dotnet restore --help',
+                        example: {
+                            options: {},
+                        },
+                    },
+                },
+            };
+        }
+
+        // Create umbrella restore target
+        targets[options.restoreTargetName] = {
+            dependsOn: [`${options.restoreTargetName}:*`],
+            cache: false,
+            metadata: {
+                technologies: technologiesArray,
+                description:
+                    'Restore dependencies for all .NET projects in this directory',
+                help: {
+                    command: 'dotnet restore --help',
+                    example: {
+                        options: {},
+                    },
                 },
             },
-        },
-    };
-
-    // Clean target - always available
-    targets[options.cleanTargetName] = {
-        command: 'dotnet clean',
-        options: {
-            cwd: '{projectRoot}',
-        },
-        cache: false,
-        metadata: {
-            technologies,
-            description: 'Clean build artifacts',
-            help: {
-                command: 'dotnet clean --help',
-                example: {
-                    options: {},
-                },
-            },
-        },
-    };
-
-    // Publish target - for executable projects
-    if (projectInfo.isExecutable) {
-        targets[options.publishTargetName] = {
-            command: 'dotnet publish',
+        };
+    } else {
+        // Single project - use original logic
+        targets[options.restoreTargetName] = {
+            command: 'dotnet restore',
             options: {
                 cwd: '{projectRoot}',
-                args: ['--no-build', '--no-dependencies'],
+                args: ['--no-dependencies'],
             },
-            dependsOn: ['build'],
+            dependsOn: [`^${options.restoreTargetName}`],
             cache: true,
-            inputs: baseInputs,
-            outputs: ['{projectRoot}/bin/Release/publish'],
+            inputs: [
+                '{projectRoot}/*.csproj',
+                '{projectRoot}/*.fsproj',
+                '{projectRoot}/*.vbproj',
+            ],
+            outputs: ['{projectRoot}/obj'],
             metadata: {
-                technologies,
-                description: 'Publish the .NET application',
+                technologies: technologiesArray,
+                description: 'Restore .NET project dependencies',
                 help: {
-                    command: 'dotnet publish --help',
+                    command: 'dotnet restore --help',
                     example: {
-                        options: {
-                            configuration: 'Release',
-                            output: './publish',
-                        },
+                        options: {},
                     },
                 },
             },
         };
     }
 
-    // Pack target - for library projects (non-executable, non-test)
-    if (!projectInfo.isExecutable && !projectInfo.isTestProject) {
-        targets[options.packTargetName] = {
-            command: 'dotnet pack',
-            options: {
-                cwd: '{projectRoot}',
-                args: ['--no-dependencies', '--no-build'],
-            },
-            dependsOn: ['build'],
-            cache: true,
-            inputs: baseInputs,
-            outputs: ['{projectRoot}/bin/Release/*.nupkg'],
-            metadata: {
-                technologies,
-                description: 'Create NuGet package',
-                help: {
-                    command: 'dotnet pack --help',
-                    example: {
-                        options: {
-                            configuration: 'Release',
+    // Clean target - always available
+    if (hasMultipleProjects) {
+        // Create project-specific clean targets for each project
+        for (const { fileName, projectName } of projectInfos) {
+            const projectSpecificCleanTarget = `${options.cleanTargetName}:${projectName}`;
+            targets[projectSpecificCleanTarget] = {
+                command: 'dotnet clean',
+                options: {
+                    cwd: '{projectRoot}',
+                    args: [fileName],
+                },
+                cache: false,
+                metadata: {
+                    technologies: technologiesArray,
+                    description: `Clean build artifacts for ${fileName}`,
+                    help: {
+                        command: 'dotnet clean --help',
+                        example: {
+                            options: {},
                         },
+                    },
+                },
+            };
+        }
+
+        // Create umbrella clean target
+        targets[options.cleanTargetName] = {
+            dependsOn: [`${options.cleanTargetName}:*`],
+            cache: false,
+            metadata: {
+                technologies: technologiesArray,
+                description:
+                    'Clean build artifacts for all .NET projects in this directory',
+                help: {
+                    command: 'dotnet clean --help',
+                    example: {
+                        options: {},
                     },
                 },
             },
         };
+    } else {
+        // Single project - use original logic
+        targets[options.cleanTargetName] = {
+            command: 'dotnet clean',
+            options: {
+                cwd: '{projectRoot}',
+            },
+            cache: false,
+            metadata: {
+                technologies: technologiesArray,
+                description: 'Clean build artifacts',
+                help: {
+                    command: 'dotnet clean --help',
+                    example: {
+                        options: {},
+                    },
+                },
+            },
+        };
+    }
+
+    // Publish target - for executable projects
+    if (hasExecutableProjects) {
+        if (hasMultipleProjects) {
+            // Create project-specific publish targets for each executable project
+            for (const { fileName, projectName, info } of projectInfos) {
+                if (info.isExecutable) {
+                    const projectSpecificPublishTarget = `${options.publishTargetName}:${projectName}`;
+                    targets[projectSpecificPublishTarget] = {
+                        command: 'dotnet publish',
+                        options: {
+                            cwd: '{projectRoot}',
+                            args: [fileName, '--no-build', '--no-dependencies'],
+                        },
+                        dependsOn: [
+                            `${options.buildTargetName}:${projectName}`,
+                        ],
+                        cache: true,
+                        inputs: baseInputs,
+                        outputs: ['{projectRoot}/bin/Release/publish'],
+                        metadata: {
+                            technologies: technologiesArray,
+                            description: `Publish the ${fileName} application`,
+                            help: {
+                                command: 'dotnet publish --help',
+                                example: {
+                                    options: {
+                                        configuration: 'Release',
+                                        output: './publish',
+                                    },
+                                },
+                            },
+                        },
+                    };
+                }
+            }
+
+            // Create umbrella publish target
+            targets[options.publishTargetName] = {
+                dependsOn: [`${options.publishTargetName}:*`],
+                cache: false,
+                metadata: {
+                    technologies: technologiesArray,
+                    description:
+                        'Publish all executable .NET applications in this directory',
+                    help: {
+                        command: 'dotnet publish --help',
+                        example: {
+                            options: {
+                                configuration: 'Release',
+                                output: './publish',
+                            },
+                        },
+                    },
+                },
+            };
+        } else {
+            // Single project - use original logic
+            const { info } = projectInfos[0];
+            if (info.isExecutable) {
+                targets[options.publishTargetName] = {
+                    command: 'dotnet publish',
+                    options: {
+                        cwd: '{projectRoot}',
+                        args: ['--no-build', '--no-dependencies'],
+                    },
+                    dependsOn: [options.buildTargetName],
+                    cache: true,
+                    inputs: baseInputs,
+                    outputs: ['{projectRoot}/bin/Release/publish'],
+                    metadata: {
+                        technologies: technologiesArray,
+                        description: 'Publish the .NET application',
+                        help: {
+                            command: 'dotnet publish --help',
+                            example: {
+                                options: {
+                                    configuration: 'Release',
+                                    output: './publish',
+                                },
+                            },
+                        },
+                    },
+                };
+            }
+        }
+    }
+
+    // Pack target - for library projects (non-executable, non-test)
+    if (hasLibraryProjects) {
+        if (hasMultipleProjects) {
+            // Create project-specific pack targets for each library project
+            for (const { fileName, projectName, info } of projectInfos) {
+                if (!info.isExecutable && !info.isTestProject) {
+                    const projectSpecificPackTarget = `${options.packTargetName}:${projectName}`;
+                    targets[projectSpecificPackTarget] = {
+                        command: 'dotnet pack',
+                        options: {
+                            cwd: '{projectRoot}',
+                            args: [fileName, '--no-dependencies', '--no-build'],
+                        },
+                        dependsOn: [
+                            `${options.buildTargetName}:${projectName}`,
+                        ],
+                        cache: true,
+                        inputs: baseInputs,
+                        outputs: ['{projectRoot}/bin/Release/*.nupkg'],
+                        metadata: {
+                            technologies: technologiesArray,
+                            description: `Create NuGet package for ${fileName}`,
+                            help: {
+                                command: 'dotnet pack --help',
+                                example: {
+                                    options: {
+                                        configuration: 'Release',
+                                    },
+                                },
+                            },
+                        },
+                    };
+                }
+            }
+
+            // Create umbrella pack target
+            targets[options.packTargetName] = {
+                dependsOn: [`${options.packTargetName}:*`],
+                cache: false,
+                metadata: {
+                    technologies: technologiesArray,
+                    description:
+                        'Create NuGet packages for all library projects in this directory',
+                    help: {
+                        command: 'dotnet pack --help',
+                        example: {
+                            options: {
+                                configuration: 'Release',
+                            },
+                        },
+                    },
+                },
+            };
+        } else {
+            // Single project - use original logic
+            const { info } = projectInfos[0];
+            if (!info.isExecutable && !info.isTestProject) {
+                targets[options.packTargetName] = {
+                    command: 'dotnet pack',
+                    options: {
+                        cwd: '{projectRoot}',
+                        args: ['--no-dependencies', '--no-build'],
+                    },
+                    dependsOn: [options.buildTargetName],
+                    cache: true,
+                    inputs: baseInputs,
+                    outputs: ['{projectRoot}/bin/Release/*.nupkg'],
+                    metadata: {
+                        technologies: technologiesArray,
+                        description: 'Create NuGet package',
+                        help: {
+                            command: 'dotnet pack --help',
+                            example: {
+                                options: {
+                                    configuration: 'Release',
+                                },
+                            },
+                        },
+                    },
+                };
+            }
+        }
     }
 
     return { targets, metadata };
@@ -524,8 +891,6 @@ export const createDependencies: CreateDependencies<
         for (const file of files) {
             const { ext } = parse(file.file);
             if (['.csproj', '.fsproj', '.vbproj'].includes(ext)) {
-                process.stdout.write('\u001b[;0K');
-                console.log('Processing', file.file, 'for project', source);
                 const references = await dotnetClient.getProjectReferencesAsync(
                     join(ctx.workspaceRoot, file.file)
                 );
