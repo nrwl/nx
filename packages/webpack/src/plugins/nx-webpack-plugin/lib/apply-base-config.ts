@@ -50,7 +50,6 @@ export function applyBaseConfig(
 ): void {
   // Defaults that was applied from executor schema previously.
   options.compiler ??= 'babel';
-  options.deleteOutputPath ??= true;
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
   options.memoryLimit ??= 2048;

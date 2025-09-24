@@ -742,6 +742,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, '../../dist/apps/my-app'),
+            clean: true,
           },
           devServer: {
             port: 4200
@@ -952,6 +953,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, 'dist'),
+            clean: true,
           },
           devServer: {
             port: 4200

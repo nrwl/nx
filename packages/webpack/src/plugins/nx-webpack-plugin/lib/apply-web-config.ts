@@ -144,10 +144,7 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             api: 'modern-compiler',
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             sassOptions: {
               fiber: false,
               precision: 8,
@@ -191,10 +188,7 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             api: 'modern-compiler',
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
@@ -242,10 +236,7 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             api: 'modern-compiler',
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,

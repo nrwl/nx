@@ -139,6 +139,7 @@ describe('web app generator (legacy)', () => {
       module.exports = composePlugins(withNx(), withWeb(), (config) => {
         // Update the webpack config as needed here.
         // e.g. \`config.plugins.push(new MyPlugin())\`
+        config.output.clean = true;
         return config;
       });
       "
