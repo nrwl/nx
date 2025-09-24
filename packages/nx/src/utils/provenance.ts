@@ -1,4 +1,4 @@
-import { execFile } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
@@ -21,11 +21,10 @@ export async function ensurePackageHasProvenance(
     return;
   }
 
-  const execFileAsync = promisify(execFile);
+  const execAsync = promisify(exec);
   try {
-    const result = await execFileAsync(
-      platform() === 'win32' ? 'npm.cmd' : 'npm',
-      ['view', `${packageName}@${packageVersion}`, '--json', '--silent'],
+    const result = await execAsync(
+      `npm view ${packageName}@${packageVersion} --json --silent`,
       {
         timeout: 20000,
       }
