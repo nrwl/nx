@@ -1,6 +1,5 @@
 package dev.nx.maven.utils
 
-import dev.nx.maven.GitIgnoreClassifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -9,7 +8,6 @@ import java.io.File
  * Handles path resolution, Maven command detection, and input/output path formatting for Nx
  */
 class PathFormatter(
-    private val gitIgnoreClassifier: GitIgnoreClassifier,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(PathFormatter::class.java)
