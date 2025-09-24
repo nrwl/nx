@@ -137,41 +137,46 @@ class NxTargetFactory(
                 }
 
                 // Add dependency on immediate previous phase (if exists)
-                if (index > 0) {
-                    val previousPhase = lifecycle.phases[index - 1]
+                val previousPhase = lifecycle.phases.getOrNull(index - 1)
+                if (previousPhase != null) {
                     target.dependsOn?.add(previousPhase)
                     phaseDependsOn[phase]?.add(previousPhase)
-                    log.info("Phase '$phase' depends on previous phase: '$previousPhase'")
+                }
 
-                    if (testIndex > -1 && index >= testIndex) {
-                        val ciPhaseName = "$phase-ci"
-                        // Test and later phases get a CI counterpart
+                phaseTargets[phase] = target
 
-                        val ciTarget = if (hasGoals && phase !== "test") {
-                            createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
-                        } else {
-                            createNoopPhaseTarget(phase)
-                        }
-                        ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
+//                    if (testIndex > -1 && index >= testIndex) {
+                if (testIndex > -1) {
+                    val ciPhaseName = "$phase-ci"
+                    // Test and later phases get a CI counterpart
 
-                        if (phase === "test") {
-                            ciTarget.dependsOn?.add("$previousPhase")
-                        } else {
-                            ciTarget.dependsOn?.add("$previousPhase-ci")
-                        }
-
-                        if (hasInstall) {
-                            ciTarget.dependsOn?.add("^install")
-                        }
-
-                        ciPhaseTargets[ciPhaseName] = ciTarget
+                    val ciTarget = if (hasGoals && phase !== "test") {
+                        createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+                    } else {
+                        createNoopPhaseTarget(phase)
                     }
+                    val ciPhaseDependsOn = mutableListOf<String>()
+
+                    if (previousPhase != null) {
+                        ciPhaseDependsOn.add("$previousPhase-ci")
+                        log.info("Phase '$phase' depends on previous phase: '$previousPhase'")
+                    }
+
+                    if (hasInstall) {
+                        ciPhaseDependsOn.add("^install-ci")
+                    }
+
+                    ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
+                    ciPhaseDependsOn.forEach {
+                        ciTarget.dependsOn?.add(it)
+                    }
+
+                    phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
+                    ciPhaseTargets[ciPhaseName] = ciTarget
                 }
 
 //                target.dependsOn?.add("^$phase")
 //                phaseDependsOn[phase]?.add("^$phase")
-
-                phaseTargets[phase] = target
 
                 if (hasGoals) {
                     log.info("Created phase target '$phase' with ${goalsForPhase?.size ?: 0} goals")
@@ -230,7 +235,7 @@ class NxTargetFactory(
         targetGroups["CI Phases"] = ciPhasesGroup
 
         if (phaseGoals.contains("test")) {
-            val atomizedTestTargets = generateAtomizedTestTargets(project, mavenCommand, ciPhaseTargets["test-ci"]!!, phaseGoals["test"]!!, phaseDependsOn["test"]!!)
+            val atomizedTestTargets = generateAtomizedTestTargets(project, mavenCommand, ciPhaseTargets["test-ci"]!!, phaseGoals["test"]!!, phaseDependsOn["test-ci"]!!)
 
             atomizedTestTargets.forEach { (goal, target) ->
                 nxTargets.set<ObjectNode>(goal, target.toJSON(objectMapper))
