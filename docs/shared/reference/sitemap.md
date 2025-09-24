@@ -564,6 +564,7 @@
       - [Playwright](/technologies/test-tools/playwright)
         - [Introduction](/technologies/test-tools/playwright/introduction)
         - [Guides](/technologies/test-tools/playwright/recipes)
+          - [Merge Atomized Outputs](/technologies/test-tools/playwright/recipes/merge-atomized-outputs)
         - [API](/technologies/test-tools/playwright/api)
           - [executors](/technologies/test-tools/playwright/api/executors)
             - [playwright](/technologies/test-tools/playwright/api/executors/playwright)

@@ -1636,7 +1636,13 @@
                     {
                       "name": "Guides",
                       "id": "recipes",
-                      "itemList": []
+                      "itemList": [
+                        {
+                          "name": "Merge Atomized Outputs",
+                          "id": "merge-atomized-outputs",
+                          "file": "shared/packages/playwright/merge-atomized-outputs"
+                        }
+                      ]
                     },
                     {
                       "name": "API",
