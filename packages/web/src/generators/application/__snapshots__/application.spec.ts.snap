@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app not nested should generate files if bundler is vite 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
@@ -247,6 +247,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -275,6 +276,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,

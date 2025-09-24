@@ -112,6 +112,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, '../dist/my-node-app'),
+            clean: true,
             ...(process.env.NODE_ENV !== 'production' && {
               devtoolModuleFilenameTemplate: '[absolute-resource-path]',
             }),
@@ -948,6 +949,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, 'dist'),
+            clean: true,
             ...(process.env.NODE_ENV !== 'production' && {
               devtoolModuleFilenameTemplate: '[absolute-resource-path]',
             }),

@@ -11,6 +11,12 @@
       "version": "21.0.0-beta.11",
       "description": "Remove isolatedConfig option for @nx/webpack:webpack",
       "implementation": "./src/migrations/update-21-0-0/remove-isolated-config"
+    },
+    "update-22-0-0-remove-deprecated-options": {
+      "cli": "nx",
+      "version": "22.0.0-beta.0",
+      "description": "Remove deprecated deleteOutputPath and sassImplementation options from @nx/webpack:webpack",
+      "implementation": "./src/migrations/update-22-0-0/remove-deprecated-options"
     }
   },
   "packageJsonUpdates": {

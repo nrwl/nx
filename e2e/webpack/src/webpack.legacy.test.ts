@@ -85,6 +85,7 @@ describe('Webpack Plugin (legacy)', () => {
       `
         const { composePlugins, withNx, withWeb } = require('@nx/webpack');
         module.exports = composePlugins(withNx(), withWeb(), (config) => {
+        config.output.clean = true;
           return {
             ...config,
             entry: {
