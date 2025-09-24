@@ -239,6 +239,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -313,6 +314,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -534,6 +536,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -687,6 +690,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,

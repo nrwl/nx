@@ -5,6 +5,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
+    clean: true,
     ...(process.env.NODE_ENV !== 'production' && {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
@@ -35,6 +36,7 @@ module.exports = composePlugins(
     config.output = {
       ...config.output,
       ...(process.env.NODE_ENV !== 'production' && {
+      clean: true,
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
       }),
     };

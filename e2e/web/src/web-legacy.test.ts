@@ -51,21 +51,11 @@ describe('Web Components Applications (legacy)', () => {
       `dist/apps/${appName}/_should_remove.txt`,
       `dist/libs/${libName}/_should_remove.txt`
     );
-    checkFilesExist(`dist/apps/_should_not_remove.txt`);
 
     // Asset that React runtime is imported
     expect(readFile(`dist/libs/${libName}/index.esm.js`)).toMatch(
       /react\/jsx-runtime/
     );
-
-    // `delete-output-path`
-    createFile(`dist/apps/${appName}/_should_keep.txt`);
-    runCLI(`build ${appName} --delete-output-path=false --outputHashing none`);
-    checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
-
-    createFile(`dist/libs/${libName}/_should_keep.txt`);
-    runCLI(`build ${libName} --delete-output-path=false --outputHashing none`);
-    checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
   }, 120000);
 
   it('should support custom webpackConfig option', async () => {

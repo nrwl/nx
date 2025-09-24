@@ -1,0 +1,13 @@
+{
+  "name": "update-22-0-0-remove-deprecated-options",
+  "cli": "nx",
+  "version": "22.0.0-beta.0",
+  "description": "Remove deprecated deleteOutputPath and sassImplementation options from @nx/webpack:webpack",
+  "implementation": "/packages/webpack/src/migrations/update-22-0-0/remove-deprecated-options.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/webpack",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}
