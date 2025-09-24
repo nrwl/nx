@@ -447,11 +447,14 @@ impl TasksList {
             Some(self.max_parallel)
         } else {
             // When filtering, calculate filtered InProgress count once and use for both checks
-            let filtered_in_progress_count = self.tasks
+            let filtered_in_progress_count = self
+                .tasks
                 .iter()
                 .filter(|t| {
                     matches!(t.status, TaskStatus::InProgress)
-                    && t.name.to_lowercase().contains(&self.filter_text.to_lowercase())
+                        && t.name
+                            .to_lowercase()
+                            .contains(&self.filter_text.to_lowercase())
                 })
                 .count();
 
@@ -3715,7 +3718,10 @@ mod tests {
 
         // Start first two tasks
         tasks_list
-            .update(Action::StartTasks(vec![test_tasks[0].clone(), test_tasks[1].clone()]))
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
             .unwrap();
 
         // Test 1: Filter that matches both InProgress tasks - use "task" to match task1 and task2
@@ -3726,7 +3732,10 @@ mod tests {
         tasks_list.update(Action::AddFilterChar('k')).unwrap();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!("filtered_active_tasks_with_parallel_section", terminal.backend());
+        insta::assert_snapshot!(
+            "filtered_active_tasks_with_parallel_section",
+            terminal.backend()
+        );
 
         // Test 2: Complete both tasks and filter them - no parallel section
         tasks_list
@@ -3757,7 +3766,10 @@ mod tests {
         }
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!("filtered_completed_tasks_no_parallel_section", terminal.backend());
+        insta::assert_snapshot!(
+            "filtered_completed_tasks_no_parallel_section",
+            terminal.backend()
+        );
 
         // Test 3: Clear filter and add one that matches nothing
         tasks_list.update(Action::ClearFilter).unwrap();
