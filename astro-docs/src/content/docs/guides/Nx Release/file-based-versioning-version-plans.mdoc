@@ -1,7 +1,7 @@
 ---
 title: File Based Versioning (Version Plans)
 description: Learn how to use Nx Release's version plans feature to track version bumps in separate files, similar to Changesets or Beachball, allowing for more flexible versioning workflows.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Tools such as Changesets and Beachball helped popularize the concept of tracking the desired semver version bump in a separate file on disk (which is committed to your repository alongside your code changes). This has the advantage of separating the desired bump from your git commits themselves, which can be very useful if you are not able to enforce that all contributors follow a strict commit message format ([e.g. Conventional Commits](/docs/guides/nx-release/automatically-version-with-conventional-commits)), or if you want multiple commits to be included in the same version bump and therefore not map commits 1:1 with changelog entries.
@@ -38,11 +38,14 @@ Version plan files live in the `.nx/version-plans/` directory within your worksp
 The files themselves are written in markdown (`.md` files) and contain Front Matter YAML metadata at the top of the file. The Front Matter YAML section is denoted via triple dashes `---` at the start and end of the section. For example:
 
 ```md
-// .nx/version-plans/version-plan-1723732065047.md
----
+## // .nx/version-plans/version-plan-1723732065047.md
+
 #
+
 # FRONT MATTER YAML HERE
+
 #
+
 ---
 
 #
@@ -57,10 +60,9 @@ We leverage the Front Matter YAML section to store a mapping of project or relea
 For example, the following Front Matter YAML section specifies that the `my-app` project should have a `minor` version bump and describes the changes (again, note that there are no constraints on the format of the description, it can contain multiple lines, paragraphs etc):
 
 ```md
-// .nx/version-plans/version-plan-1723732065047.md
----
-my-app: minor
----
+## // .nx/version-plans/version-plan-1723732065047.md
+
+## my-app: minor
 
 This is an awesome change!
 
@@ -70,11 +72,12 @@ A new paragraph describing the change in greater detail. All of this will be inc
 Any number of different projects and different desired semver bumps can be combined within a single version plan file (which represents one change and therefore changelog entry, if applicable). For example:
 
 ```md
-// .nx/version-plans/version-plan-1723732065047.md
----
+## // .nx/version-plans/version-plan-1723732065047.md
+
 my-app: minor
 my-lib: patch
 release-group-a: major
+
 ---
 
 One change that affects multiple projects and release groups.
@@ -87,10 +90,9 @@ The project or release group names specified in the Front Matter YAML section mu
 If you use a single version for all your packages (see [Release projects independetly](/docs/guides/nx-release/release-projects-independently)) your version plan file might look like this:
 
 ```md
-// .nx/version-plans/version-plan-1723732065047.md
----
-__default__: minor
----
+## // .nx/version-plans/version-plan-1723732065047.md
+
+## **default**: minor
 
 This is an awesome change!
 ```
@@ -129,8 +131,8 @@ nx release plan:check
 
 Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updateDependents` option).
 
-
 ### Running release plan:check in CI
+
 As mentioned, `nx release plan:check` supports the same options as `nx affected` for determining the range of commits to consider. Therefore, in CI, you must also ensure that the base and head are set appropriately just like you would for `nx affected`.
 
 For GitHub Actions, we provide a utility action to do this for you:

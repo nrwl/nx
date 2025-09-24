@@ -3,7 +3,7 @@ title: Angular - Set up Compodoc for Storybook on Nx
 description: This guide explains how to set up Compodoc for Storybook in Angular projects within your Nx workspace.
 sidebar:
   label: Angular - Set up Compodoc for Storybook on Nx
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 [Compodoc](https://compodoc.app/) is a documentation tool for Angular applications. When used with Storybook, Compodoc can automatically generate documentation for your Angular components by analyzing their TypeScript code, decorators, and JSDoc comments.
@@ -11,6 +11,7 @@ filter: "type:Guides"
 ## What is Compodoc?
 
 Compodoc automatically generates documentation by:
+
 - Analyzing TypeScript interfaces and classes
 - Reading Angular decorators (`@Input`, `@Output`, etc.)
 - Parsing JSDoc comments
@@ -34,16 +35,13 @@ npm install --save-dev @compodoc/compodoc
 
 Add Compodoc configuration to your Storybook's `main.ts` file:
 
-```typescript 
+```typescript
 // .storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: [
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-  ],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/angular',
     options: {},
@@ -54,7 +52,8 @@ const config: StorybookConfig = {
     reactDocgen: 'react-docgen-typescript',
     reactDocgenTypescriptOptions: {
       shouldExtractLiteralValuesFromEnum: true,
-      propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+      propFilter: (prop) =>
+        prop.parent ? !/node_modules/.test(prop.parent.fileName) : true,
       compilerOptions: {
         allowSyntheticDefaultImports: false,
         esModuleInterop: false,
@@ -87,7 +86,7 @@ Add a script to your `package.json` to generate Compodoc documentation:
 
 Add JSDoc comments and use TypeScript interfaces for better documentation generation:
 
-```typescript 
+```typescript
 // button.component.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 
@@ -108,14 +107,15 @@ export interface ButtonProps {
 @Component({
   selector: 'app-button',
   template: `
-    <button 
-      [class]="classes" 
+    <button
+      [class]="classes"
       [disabled]="disabled"
-      (click)="onClick.emit($event)">
+      (click)="onClick.emit($event)"
+    >
       {{ label }}
     </button>
   `,
-  styleUrls: ['./button.component.css']
+  styleUrls: ['./button.component.css'],
 })
 export class ButtonComponent implements ButtonProps {
   /** The button label */
@@ -147,7 +147,7 @@ export class ButtonComponent implements ButtonProps {
 
 Create a story that leverages the Compodoc-generated documentation:
 
-```typescript 
+```typescript
 // button.stories.ts
 import type { Meta, StoryObj } from '@storybook/angular';
 import { ButtonComponent } from './button.component';
@@ -158,7 +158,8 @@ const meta: Meta<ButtonComponent> = {
   parameters: {
     docs: {
       description: {
-        component: 'A customizable button component with multiple variants and sizes.',
+        component:
+          'A customizable button component with multiple variants and sizes.',
       },
     },
   },

@@ -1,16 +1,14 @@
 ---
 title: Import an Existing Project into an Nx Workspace
 description: Learn how to use the nx import command to move projects between repositories while preserving git history, managing dependencies, and handling external code references.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 {% youtube src="https://youtu.be/hnbwoV2-620" title="Importing an existing project into your monorepo" /%}
 
 Nx can help with the process of moving an existing project from another repository into an Nx workspace. In order to communicate clearly about this process, we'll call the repository we're moving the project out of the "source repository" and the repository we're moving the project into the "destination repository". Here's an example of what those repositories might look like.
 
-
 **Source Repository**
-
 
 {% filetree %}
 
@@ -57,7 +55,6 @@ Nx can help with the process of moving an existing project from another reposito
 
 {% /filetree %}
 
-
 In this example, the source repository contains a single application while the destination repository is already a monorepo. You can also import a project from a sub-directory of the source repository (if the source repository is a monorepo, for instance). The `nx import` command can be run with no arguments and you will be prompted to for the required arguments:
 
 ```shell {% frame="none" %}
@@ -68,7 +65,7 @@ Make sure to run `nx import` from within the **destination repository**.
 
 You can also directly specify arguments from the terminal, like one of these commands:
 
-```shell {% frame="none" %} 
+```shell {% frame="none" %}
 nx import [sourceRepository] [destinationDirectory]
 nx import ../inventory-app apps/inventory
 nx import https://github.com/myorg/inventory-app.git apps/inventory

@@ -1,9 +1,8 @@
 ---
 title: NxModuleFederationDevServerPlugin
 description: Details about the NxModuleFederationDevServerPlugin and NxModuleFederationSSRDevServerPlugin
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
-
 
 The `NxModuleFederationDevServerPlugin` and `NxModuleFederationSSRDevServerPlugin` are [Rspack](https://rspack.dev) plugins that handle the development server for module federation in Nx Workspaces. They aim to provide the same Developer Experience(DX) that you would normally receive from using Nx's `module-federation-dev-server` executors in a non-executor ([Inferred Tasks](/docs/concepts/inferred-tasks)) project.
 
@@ -12,7 +11,6 @@ The `NxModuleFederationDevServerPlugin` and `NxModuleFederationSSRDevServerPlugi
 To use the plugin, you need to add it to your `rspack.config.ts` file. You can do this by adding the following to your config.
 
 ### Client Side Rendering
-
 
 ```ts
 // rspack.config.ts
@@ -31,7 +29,6 @@ export default {
 
 ### Server Side Rendering
 
-
 ```ts
 // rspack.config.ts
 import { NxModuleFederationSSRDevServerPlugin } from '@nx/module-federation/rspack';
@@ -46,7 +43,6 @@ export default {
   ],
 };
 ```
-
 
 ## How it works
 
@@ -81,8 +77,8 @@ You'll commonly see the following configuration in your `module-federation.confi
 ```javascript
 // module-federation.config.ts
 export default {
-    remotes: ['shop', 'cart']
-}
+  remotes: ['shop', 'cart'],
+};
 ```
 
 These names match the names of the projects in the workspace. Therefore, Nx can find them in the project graph and determine the information it needs.
@@ -94,6 +90,7 @@ cart@localhost:4202
 ```
 
 When it comes deployment to a real server, you'll need to configure the URLs to point to their real location. For example, if you deploy the host and the remotes to three servers, each with their own domain, you'd need to configure that:
+
 ```shell {% frame="none" %}
 shop@https://shop.example.com
 cart@https://cart.example.com
@@ -104,11 +101,11 @@ The `remotes` option in the `module-federation.config.ts` file allows you to do 
 ```javascript
 // module-federation.config.ts
 export default {
-    remotes: [
-        ['shop', 'https://shop.example.com'],
-        ['cart', 'https://cart.example.com'],
-    ]
-}
+  remotes: [
+    ['shop', 'https://shop.example.com'],
+    ['cart', 'https://cart.example.com'],
+  ],
+};
 ```
 
 However, once you make this change, it will no longer work locally.
@@ -118,20 +115,19 @@ A simple way to achieve this could be to use an environment variable:
 
 ```javascript
 // module-federation.config.ts
-const remotes = process.env.PRODUCTION_DEPLOY ?
-    [
-        ['shop', 'https://shop.example.com'],
-        ['cart', 'https://cart.example.com'],
-    ] :
-    ['shop', 'cart']
+const remotes = process.env.PRODUCTION_DEPLOY
+  ? [
+      ['shop', 'https://shop.example.com'],
+      ['cart', 'https://cart.example.com'],
+    ]
+  : ['shop', 'cart'];
 
 export default {
-    remotes
-}
+  remotes,
+};
 ```
 
 In your CI/CD pipeline, you can set the `PRODUCTION_DEPLOY` environment variable to `true` and then build for production, and the remotes will be configured to point to their real location.
-
 
 ## API Reference
 

@@ -3,7 +3,7 @@ title: Nx and the Angular CLI
 description: Compare Nx and Angular CLI features, understand similarities and differences, and learn how Nx enhances Angular development with improved caching, monorepo support, and advanced tooling.
 sidebar:
   label: Nx and the Angular CLI
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 {% youtube
@@ -29,30 +29,30 @@ Note, the Nx team's focus is on building the best possible developer productivit
 
 Here's a quick side-by-side overview comparing the features between the Angular CLI and Nx. _(Kudos to [Daniel Glejzner](https://twitter.com/DanielGlejzner) for helping with this)_
 
-| Feature/Tool                                                                                          | Angular CLI     | Nx            |
-| ----------------------------------------------------------------------------------------------------- | --------------- | ------------- |
-| Create Angular Apps                                                                                   | ✅              | ✅            |
-| Generate Angular Components, Services, etc.                                                           | ✅              | ✅            |
-| Building & Bundling                                                                                   | ✅              | ✅            |
-| Local Development Server                                                                              | ✅              | ✅            |
-| Code Schematics                                                                                       | ✅              | ✅            |
-| Automated Update with Migrations                                                                      | ✅              | ✅ (Enhanced) |
-| Generators                                                                                            | ✅ (Schematics) | ✅            |
-| Executors                                                                                             | ✅ (Builders)   | ✅            |
-| Advanced Generators (e.g. Module Federation, Tailwind,...)                                            | ❌              | ✅            |
-| Integrated Tooling (Jest, Cypress, Playwright etc.)                                                   | ❌              | ✅            |
-| Support for single-project Workspaces                                                                 | ✅              | ✅            |
+| Feature/Tool                                                                                               | Angular CLI     | Nx            |
+| ---------------------------------------------------------------------------------------------------------- | --------------- | ------------- |
+| Create Angular Apps                                                                                        | ✅              | ✅            |
+| Generate Angular Components, Services, etc.                                                                | ✅              | ✅            |
+| Building & Bundling                                                                                        | ✅              | ✅            |
+| Local Development Server                                                                                   | ✅              | ✅            |
+| Code Schematics                                                                                            | ✅              | ✅            |
+| Automated Update with Migrations                                                                           | ✅              | ✅ (Enhanced) |
+| Generators                                                                                                 | ✅ (Schematics) | ✅            |
+| Executors                                                                                                  | ✅ (Builders)   | ✅            |
+| Advanced Generators (e.g. Module Federation, Tailwind,...)                                                 | ❌              | ✅            |
+| Integrated Tooling (Jest, Cypress, Playwright etc.)                                                        | ❌              | ✅            |
+| Support for single-project Workspaces                                                                      | ✅              | ✅            |
 | First-Class [Monorepo Support](/docs/getting-started/tutorials/angular-monorepo-tutorial)                  | ❌\*            | ✅            |
 | [Enforced Module Boundaries](/docs/features/enforce-module-boundaries)                                     | ❌              | ✅            |
 | Interactive [Project Graph](/docs/features/explore-graph)                                                  | ❌              | ✅            |
-| Task Graph                                                                                            | ❌              | ✅            |
+| Task Graph                                                                                                 | ❌              | ✅            |
 | [Running Tasks in Parallel](/docs/guides/tasks--caching/run-tasks-in-parallel)                             | ❌              | ✅            |
 | Building, Testing [Only What is Affected](/docs/features/run-tasks#run-tasks-on-projects-affected-by-a-pr) | ❌              | ✅            |
 | [Local Caching](/docs/features/cache-task-results)                                                         | ❌\*\*          | ✅            |
-| [Remote Caching](/docs/features/ci-features/remote-cache)                                                           | ❌              | ✅            |
-| [Distributed Task Execution on CI](/docs/features/ci-features/distribute-task-execution)                            | ❌              | ✅            |
-| Custom Hashers                                                                                        | ❌              | ✅            |
-| [Extensible Plugin System](/docs/extending-nx/intro)                                                  | ❌              | ✅            |
+| [Remote Caching](/docs/features/ci-features/remote-cache)                                                  | ❌              | ✅            |
+| [Distributed Task Execution on CI](/docs/features/ci-features/distribute-task-execution)                   | ❌              | ✅            |
+| Custom Hashers                                                                                             | ❌              | ✅            |
+| [Extensible Plugin System](/docs/extending-nx/intro)                                                       | ❌              | ✅            |
 
 {% aside type="note" title="Notes" %}
 
@@ -205,7 +205,7 @@ To reiterate: `nx migrate` runs the migrations written by the Angular team the s
 
 ### 'nx add'
 
-The [`nx add` command](/docs/reference/nx-commands#add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
+The [`nx add` command](/docs/reference/nx-commands#nx-add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
 
 ```shell {% frame="none" %}
 nx add [package]

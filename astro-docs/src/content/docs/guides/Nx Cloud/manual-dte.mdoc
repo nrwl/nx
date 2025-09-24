@@ -1,7 +1,7 @@
 ---
 title: 'Manual Distributed Task Execution'
 description: 'Learn how to set up manual distributed task execution on various CI providers'
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Using [Nx Agents](/docs/features/ci-features/distribute-task-execution) is the easiest way to distribute task execution, but your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipes below.
@@ -9,7 +9,6 @@ Using [Nx Agents](/docs/features/ci-features/distribute-task-execution) is the e
 {% tabs syncKey="ci-provider" %}
 
 {% tabitem label="GitHub" %}
-
 
 Our [reusable GitHub workflow](https://github.com/nrwl/ci) represents a good set of defaults that works for a large number of our users. However, reusable GitHub workflows come with their [limitations](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
 
@@ -121,7 +120,6 @@ There are comments throughout the workflow to help you understand what is happen
 
 {% tabitem label="Circle CI" %}
 
-
 Run agents directly on Circle CI with the workflow below:
 
 ```yaml
@@ -176,7 +174,6 @@ The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
 {% /tabitem %}
 
 {% tabitem label="Azure" %}
-
 
 Run agents directly on Azure Pipelines with the workflow below:
 
@@ -251,7 +248,6 @@ The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
 
 {% tabitem label="Bitbucket" %}
 
-
 Run agents directly on Bitbucket Pipelines with the workflow below:
 
 ```yaml
@@ -298,7 +294,6 @@ The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
 {% /tabitem %}
 
 {% tabitem label="GitLab" %}
-
 
 Run agents directly on GitLab with the workflow below:
 
@@ -371,7 +366,6 @@ The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
 {% /tabitem %}
 
 {% tabitem label="Jenkins" %}
-
 
 Run agents directly on Jenkins with the workflow below:
 
@@ -449,6 +443,6 @@ The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
 {% /tabs %}
 
 {% aside type="caution" title="Two types of parallelization" %}
-The agent configuration and the `--parallel` flag both parallelize tasks, but in different ways. 
+The agent configuration and the `--parallel` flag both parallelize tasks, but in different ways.
 In the examples above, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
 {% /aside %}

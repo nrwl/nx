@@ -1,9 +1,8 @@
 ---
 title: Defining a Task Pipeline
 description: This recipe shows how to define task dependencies in your Nx workspace
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
-
 
 Running a specific task like `build` in a monorepo usually involves running multiple commands.
 
@@ -31,7 +30,7 @@ You can define dependencies among tasks by using the `dependsOn` property:
 
 Task dependencies can be [defined globally](/docs/reference/nx-json#target-defaults) for all projects in `nx.json` file:
 
-```json 
+```json
 // nx.json
 {
   ...

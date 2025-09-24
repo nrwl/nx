@@ -1,7 +1,7 @@
 ---
 title: Pass Args to Commands
 description: 'Recipe describing how to pass args to tasks running commands'
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 When you have an [inferred task](/docs/concepts/inferred-tasks) (or an explicitly defined task using the [`nx:run-commands` executor](/docs/guides/tasks--caching/run-commands-executor#2-update)) running a command, there'll come a time when you'll need to pass args to the underlying command being run. This recipe explains how you can achieve that.
@@ -224,7 +224,7 @@ To provide the same args for all projects in the workspace, you need to update t
 {% tabs %}
 {% tabitem label="Setting args directly as options" %}
 
-```json 
+```json
 // nx.json
 {
   "targetDefaults": {

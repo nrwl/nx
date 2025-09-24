@@ -3,8 +3,9 @@ title: 'Cache Task Results'
 description: 'Learn how to use Nx computation caching to speed up task execution and reduce CI/CD costs by never rebuilding the same code twice.'
 sidebar:
   order: 2
-filter: "type:Features"
+filter: 'type:Features'
 ---
+
 {% youtube src="https://youtu.be/o-6jb78uuP0" title="Remote Caching with Nx Replay" /%}
 
 Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**. This:
@@ -21,7 +22,7 @@ Nx **restores both the terminal output and the files** created from running the 
 
 To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include the `build` and `test` tasks:
 
-```json 
+```json
 // nx.json
 {
   "targetDefaults": {
@@ -106,7 +107,7 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 {% /tabitem %}
 {% tabitem label="Project Level (project.json)" %}
 
-```json 
+```json
 // packages/some-project/project.json
 {
   "name": "some-project",
@@ -125,7 +126,7 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 {% /tabitem %}
 {% tabitem label="Project Level (package.json)" %}
 
-```json 
+```json
 // packages/some-project/package.json
 {
   "name": "some-project",

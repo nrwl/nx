@@ -3,7 +3,7 @@ title: Set up Storybook for React Projects
 description: This guide explains how to set up Storybook for React projects in your Nx workspace.
 sidebar:
   label: Set up Storybook for React Projects
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for React projects in your Nx workspace.
@@ -25,11 +25,12 @@ nx g @nx/react:storybook-configuration project-name
 The [`@nx/react:storybook-configuration` generator](/docs/technologies/react/generators#storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 {% filetree %}
+
 - <some-folder>/
   - my-component.tsx
-  -  my-component.stories.tsx
-{% /filetree %}
+  - my-component.stories.tsx
 
+{% /filetree %}
 
 If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/react:stories` generator](/docs/technologies/react/generators#stories):
 
@@ -38,6 +39,7 @@ nx g @nx/react:stories --project=<project-name>
 ```
 
 ### Example Library
+
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.
 
 The command to generate stories for that library would be:
@@ -49,17 +51,18 @@ nx g @nx/react:stories --project=feature-ui
 and the result would be the following:
 
 {% filetree %}
+
 - workspace-name/
   - apps/
   - libs/
     - feature/
       - ui/
         - .storybook/
-      - src/ 
+      - src/
         - lib/
           - my-button/
-            - my-button.tsx 
-            - my-button.stories.tsx 
+            - my-button.tsx
+            - my-button.stories.tsx
         - etc...
       - README.md
       - tsconfig.json
@@ -69,14 +72,13 @@ and the result would be the following:
 
 {% /filetree %}
 
-
 ## Example Files
 
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui` with a component, called `my-button`.
 
 Let's say that your component code looks like this:
 
-```typescript 
+```typescript
 // libs/feature/ui/src/lib/my-button/my-button.tsx
 export interface MyButtonProps {
   text: string;

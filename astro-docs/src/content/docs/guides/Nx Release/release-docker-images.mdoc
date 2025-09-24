@@ -1,10 +1,8 @@
 ---
 title: Release Docker Images
 description: Learn how to use Nx Release to version and publish Docker images from your monorepo with calendar-based versioning.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
-
-
 
 This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo using calendar-based versioning.
 
@@ -16,6 +14,7 @@ Before starting, ensure you have:
 
 1. Docker installed and running locally
 2. Run `docker login` to authenticate with your Docker registry (e.g., `docker login docker.io` for Docker Hub)
+
 ## Install Nx Docker Plugin
 
 ```shell {% frame="none" %}
@@ -191,6 +190,7 @@ By default, Nx Release uses the following patterns for calendar versioning
 - **Hotfix**: `YYMM.DD.SHA-hotfix`
 
 Where the following tokens are replaced:
+
 - `YYMM`: Year and month
 - `DD`: Day of the month
 - `SHA`: Short commit hash
@@ -224,7 +224,6 @@ This will bypass the version scheme logic entirely and tag your Docker images wi
 - Override the calendar-based versioning for specific releases
 - Set custom version tags that don't follow the standard patterns
 
-
 ### Customizing Version Schemes
 
 You can customize Docker version schemes in your `nx.json` to match your deployment workflow. The version patterns support several interpolation tokens:
@@ -234,11 +233,11 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
 {
   "release": {
     "docker": {
-        "versionSchemes": {
-            "production": "{currentDate|YYMM.DD}.{env.BUILD_NUMBER}",
-            "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
-            "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
-        }
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{env.BUILD_NUMBER}",
+        "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
+        "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
+      }
     }
   }
 }
