@@ -111,7 +111,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         val projectStartTime = System.currentTimeMillis()
 
         // Process projects in parallel with separate analyzer instances
-        val inMemoryAnalyses = allProjects.parallelStream().map { mavenProject ->
+        val results = allProjects.parallelStream().map { mavenProject ->
             try {
                 log.info("Analyzing project: ${mavenProject.artifactId}")
 
@@ -126,13 +126,24 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
                 // Get Nx config for project
                 val nxConfig = singleAnalyzer.analyze()
 
-                nxConfig
+                Result.success(nxConfig)
 
             } catch (e: Exception) {
-                log.warn("Failed to analyze project ${mavenProject.artifactId}: ${e.message}")
-                null
+                Result.failure(e)
             }
-        }.collect(java.util.stream.Collectors.toList()).filterNotNull()
+        }.collect(java.util.stream.Collectors.toList())
+
+        val errors = results.filter { it.isFailure }
+
+        if (errors.isNotEmpty()) {
+            errors.forEach { error ->
+                log.error("Failed to analyze project", error.exceptionOrNull())
+            }
+
+            throw MojoExecutionException("Failed to analyze ${errors.size} of ${allProjects.size} projects. See errors above.")
+        }
+
+        val inMemoryAnalyses = results.map { it.getOrThrow() }
 
         val totalTime = System.currentTimeMillis() - startTime
         val analysisTime = System.currentTimeMillis() - projectStartTime
