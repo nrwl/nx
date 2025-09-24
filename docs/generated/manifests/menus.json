@@ -4682,7 +4682,16 @@
                     "path": "/technologies/test-tools/playwright/recipes",
                     "id": "recipes",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "Merge Atomized Outputs",
+                        "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
+                        "id": "merge-atomized-outputs",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   },
                   {
@@ -5716,6 +5725,14 @@
                         "id": "connect-to-nx-cloud",
                         "path": "/reference/core-api/nx/generators/connect-to-nx-cloud",
                         "name": "connect-to-nx-cloud",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "set-up-ai-agents",
+                        "path": "/reference/core-api/nx/generators/set-up-ai-agents",
+                        "name": "set-up-ai-agents",
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false

@@ -12,6 +12,7 @@ import {
   ExpandedTargetsProvider,
 } from '@nx/graph-internal-ui-project-details';
 import { twMerge } from 'tailwind-merge';
+import { parseAstroHtmlWrappedJson } from '../utils/parse-astro-html-wrapped-json';
 
 export function Loading() {
   return (
@@ -34,15 +35,6 @@ function getInitialPropsForAstro(children: ReactElement) {
   } catch {
     return null;
   }
-}
-
-function parseAstroHtmlWrappedJson(htmlString: string) {
-  const cleanedString = htmlString
-    .trim()
-    .replace(/^<\w>|<\/\w>$/g, '')
-    .trim()
-    .replace(/&quot;/g, '"');
-  return JSON.parse(cleanedString);
 }
 
 export type ProjectDetailsProps = {

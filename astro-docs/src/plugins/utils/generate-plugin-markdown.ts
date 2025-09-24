@@ -6,10 +6,12 @@ import {
   type PluginItem,
   type PluginMigrationItem,
 } from './plugin-schema-parser';
+import { stripMarkdocTags } from './strip-markdoc-tags';
 
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
   let markdown = `\n### \`${name}\`\n`;
+
   if (config.version) {
     markdown += `**Version**: ${config.version}\n\n`;
   }
@@ -30,7 +32,8 @@ export function generateMigrationItem(name: string, item: any): string {
   if (config.fullPath) {
     const maybeExampleMdFile = config.fullPath + '.md';
     if (existsSync(maybeExampleMdFile)) {
-      markdown += `${readFileSync(maybeExampleMdFile, 'utf-8')}\n\n`;
+      const rawContent = readFileSync(maybeExampleMdFile, 'utf-8');
+      markdown += `${stripMarkdocTags(rawContent)}\n\n`;
     }
   }
 
@@ -148,7 +151,7 @@ export function getGeneratorsMarkdown(
   const packageName = `@nx/${pluginName}`;
 
   let markdown = `
-  The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
+The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available generators and their options.
 `;
 
@@ -268,6 +271,7 @@ nx generate ${fullItemName} ${positionalArgs
      nx generate ${packageName}:<generator> --help
      \`\`\`
      `;
+
   return markdown;
 }
 

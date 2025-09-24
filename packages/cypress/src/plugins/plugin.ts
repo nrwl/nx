@@ -1,38 +1,36 @@
 import {
-  CreateNodes,
-  CreateNodesContext,
+  type CreateNodes,
+  type CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
-  NxJsonConfiguration,
-  ProjectConfiguration,
+  type NxJsonConfiguration,
+  type ProjectConfiguration,
   readJsonFile,
-  TargetConfiguration,
+  type TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, join, relative } from 'path';
-
-import { getLockFileName } from '@nx/js';
-
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { getLockFileName } from '@nx/js';
+import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { dirname, join, relative } from 'path';
+import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
   targetName?: string;
   openTargetName?: string;
   componentTestingTargetName?: string;
+  ciComponentTestingTargetName?: string;
 }
 
 function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
@@ -50,6 +48,16 @@ function writeTargetsToCache(cachePath: string, results: CypressTargets) {
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
+const defaultPatterns = {
+  e2e: {
+    specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    excludeSpecPattern: '*.hot-update.js',
+  },
+  component: {
+    specPattern: '**/*.cy.{js,jsx,ts,tsx}',
+    excludeSpecPattern: ['/snapshots/*', '/image_snapshots/*'],
+  },
+};
 
 const pmc = getPackageManagerCommand();
 
@@ -327,21 +335,13 @@ async function buildCypressTargets(
 
     const ciWebServerCommand: string = pluginPresetOptions?.ciWebServerCommand;
     if (ciWebServerCommand) {
-      const specPatterns = Array.isArray(cypressConfig.e2e.specPattern)
-        ? cypressConfig.e2e.specPattern.map((p) => join(projectRoot, p))
-        : [join(projectRoot, cypressConfig.e2e.specPattern)];
-
-      const excludeSpecPatterns: string[] = !cypressConfig.e2e
-        .excludeSpecPattern
-        ? cypressConfig.e2e.excludeSpecPattern
-        : Array.isArray(cypressConfig.e2e.excludeSpecPattern)
-        ? cypressConfig.e2e.excludeSpecPattern.map((p) => join(projectRoot, p))
-        : [join(projectRoot, cypressConfig.e2e.excludeSpecPattern)];
-      const specFiles = await globWithWorkspaceContext(
-        context.workspaceRoot,
-        specPatterns,
-        excludeSpecPatterns
-      );
+      const { specFiles, specPatterns, excludeSpecPatterns } =
+        await getSpecFilesAndPatternsForTestType(
+          cypressConfig,
+          'e2e',
+          context.workspaceRoot,
+          projectRoot
+        );
 
       const ciBaseUrl = pluginPresetOptions?.ciBaseUrl;
 
@@ -411,6 +411,7 @@ async function buildCypressTargets(
           target: targetName,
           projects: 'self',
           params: 'forward',
+          options: 'forward',
         });
 
         if (ciWebServerCommandTask) {
@@ -453,6 +454,9 @@ async function buildCypressTargets(
   }
 
   if ('component' in cypressConfig) {
+    const inputs = getInputs(namedInputs);
+    const outputs = getOutputs(projectRoot, cypressConfig, 'component');
+
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
       command: `cypress run --component`,
@@ -461,8 +465,8 @@ async function buildCypressTargets(
         env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
       },
       cache: true,
-      inputs: getInputs(namedInputs),
-      outputs: getOutputs(projectRoot, cypressConfig, 'component'),
+      inputs,
+      outputs,
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Component Tests',
@@ -474,6 +478,107 @@ async function buildCypressTargets(
         },
       },
     };
+
+    if (options.ciComponentTestingTargetName) {
+      const { specFiles, specPatterns, excludeSpecPatterns } =
+        await getSpecFilesAndPatternsForTestType(
+          cypressConfig,
+          'component',
+          context.workspaceRoot,
+          projectRoot
+        );
+
+      const dependsOn: TargetConfiguration['dependsOn'] = [];
+      const groupName = 'Component Testing (CI)';
+      metadata ??= {};
+      metadata.targetGroups ??= {};
+      metadata.targetGroups[groupName] ??= [];
+      const ctCiTargetGroup = metadata.targetGroups[groupName];
+
+      for (const file of specFiles) {
+        const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
+
+        if (relativeSpecFilePath.includes('../')) {
+          throw new Error(
+            '@nx/cypress/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+              `\n\n${JSON.stringify(
+                {
+                  projectRoot,
+                  relativeSpecFilePath,
+                  specFiles,
+                  context,
+                  excludeSpecPatterns,
+                  specPatterns,
+                },
+                null,
+                2
+              )}`
+          );
+        }
+
+        const targetName =
+          options.ciComponentTestingTargetName + '--' + relativeSpecFilePath;
+        const outputSubfolder = relativeSpecFilePath
+          .replace(/[\/\\]/g, '-')
+          .replace(/\./g, '-');
+
+        ctCiTargetGroup.push(targetName);
+        targets[targetName] = {
+          outputs: getTargetOutputs(outputs, outputSubfolder),
+          inputs,
+          cache: true,
+          command: `cypress run --component --spec ${relativeSpecFilePath} --config=${getTargetConfig(
+            cypressConfig,
+            outputSubfolder
+          )}`,
+          options: {
+            cwd: projectRoot,
+            env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
+          },
+          // Cypress handles starting the server, there's no separate server
+          // target we can use as continuous, so we need to disable parallelism
+          // to avoid port conflicts
+          parallelism: false,
+          metadata: {
+            technologies: ['cypress'],
+            description: `Runs Cypress Component Tests for ${relativeSpecFilePath} in CI`,
+            help: {
+              command: `${pmc.exec} cypress run --help`,
+              example: {
+                args: ['--dev', '--headed'],
+              },
+            },
+          },
+        };
+        dependsOn.push({
+          target: targetName,
+          projects: 'self',
+          params: 'forward',
+          options: 'forward',
+        });
+      }
+
+      targets[options.ciComponentTestingTargetName] = {
+        executor: 'nx:noop',
+        cache: true,
+        inputs,
+        outputs,
+        dependsOn,
+        metadata: {
+          technologies: ['cypress'],
+          description: 'Runs Cypress Component Tests in CI',
+          nonAtomizedTarget: options.componentTestingTargetName,
+          help: {
+            command: `${pmc.exec} cypress run --help`,
+            example: {
+              args: ['--dev', '--headed'],
+            },
+          },
+        },
+      };
+
+      ctCiTargetGroup.push(options.ciComponentTestingTargetName);
+    }
   }
 
   targets[options.openTargetName] = {
@@ -503,6 +608,8 @@ function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
   options.openTargetName ??= 'open-cypress';
   options.componentTestingTargetName ??= 'component-test';
   options.ciTargetName ??= 'e2e-ci';
+  // must be explicitly provided to opt-in to atomized component testing
+  options.ciComponentTestingTargetName;
   return options;
 }
 
@@ -541,4 +648,36 @@ function parseTaskFromCommand(command: string): {
   }
 
   return null;
+}
+
+async function getSpecFilesAndPatternsForTestType(
+  cypressConfig: any,
+  testType: 'e2e' | 'component',
+  workspaceRoot: string,
+  projectRoot: string
+): Promise<{
+  specFiles: string[];
+  specPatterns: string[];
+  excludeSpecPatterns: string[];
+}> {
+  const specPattern =
+    cypressConfig[testType].specPattern ??
+    defaultPatterns[testType].specPattern;
+  const specPatterns = Array.isArray(specPattern)
+    ? specPattern.map((p) => join(projectRoot, p))
+    : [join(projectRoot, specPattern)];
+
+  const excludeSpecPattern =
+    cypressConfig[testType].excludeSpecPattern ??
+    defaultPatterns[testType].excludeSpecPattern;
+  const excludeSpecPatterns: string[] = Array.isArray(excludeSpecPattern)
+    ? excludeSpecPattern.map((p) => join(projectRoot, p))
+    : [join(projectRoot, excludeSpecPattern)];
+  const specFiles = await globWithWorkspaceContext(
+    workspaceRoot,
+    specPatterns,
+    excludeSpecPatterns
+  );
+
+  return { specFiles, specPatterns, excludeSpecPatterns };
 }

@@ -69,7 +69,6 @@ class CompileTestCiTargetsTest {
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,

@@ -48,8 +48,8 @@
       }
     },
     "test": {
-      "dependsOn": ["validate-links"],
-      "command": "echo done"
+      "executor": "nx:noop",
+      "dependsOn": ["vite:test", "validate-links"]
     },
     "pw-e2e": {
       "dependsOn": ["serve"],
@@ -73,7 +73,7 @@
         "{projectRoot}/tsconfig.json",
         "{projectRoot}/package.json"
       ],
-      "command": "npx tsx validate-links.ts",
+      "command": "tsx validate-links.ts",
       "options": {
         "cwd": "astro-docs"
       }

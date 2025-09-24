@@ -810,6 +810,36 @@ describe('lib', () => {
           }
         `);
       });
+
+      it('should not ignore "out-tsc" from eslint', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          linter: 'eslint',
+          bundler: 'none',
+          unitTestRunner: 'none',
+          skipFormat: true,
+        });
+
+        const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
+        expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+      });
+
+      it('should not ignore "out-tsc" from eslint with flat config', async () => {
+        tree.write('eslint.config.mjs', 'export default [];');
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          linter: 'eslint',
+          bundler: 'none',
+          unitTestRunner: 'none',
+          skipFormat: true,
+        });
+
+        const eslintConfig = tree.read('my-lib/eslint.config.mjs', 'utf-8');
+        expect(eslintConfig).not.toContain('**/out-tsc');
+      });
     });
   });
 
@@ -2475,6 +2505,40 @@ describe('lib', () => {
       expect(
         readJson(tree, 'my-lib/package.json').exports['.']
       ).not.toHaveProperty('@proj/source');
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        linter: 'eslint',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        linter: 'eslint',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('my-lib/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 });

@@ -288,7 +288,12 @@ fun getDependsOnForTask(
       }
 
       if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
-        val taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
+        val taskName =
+            if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+              targetNameOverrides["testTargetName"]!!
+            } else {
+              depTask.name
+            }
         "${depProject.name}:${taskName}"
       } else {
         null

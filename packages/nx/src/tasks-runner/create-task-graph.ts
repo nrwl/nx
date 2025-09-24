@@ -142,10 +142,12 @@ export class ProcessTasks {
       this.allTargetNames
     );
     for (const dependencyConfig of dependencyConfigs) {
-      const taskOverrides =
-        dependencyConfig.params === 'forward'
-          ? overrides
-          : { __overrides_unparsed__: [] };
+      const taskOverrides = createTaskOverrides(
+        dependencyConfig,
+        overrides,
+        task,
+        this.projectGraph
+      );
       if (dependencyConfig.projects) {
         this.processTasksForMultipleProjects(
           dependencyConfig,
@@ -520,6 +522,39 @@ export function getNonDummyDeps(
   } else {
     return [currentTask];
   }
+}
+
+function createTaskOverrides(
+  dependencyConfig: TargetDependencyConfig,
+  cliOverrides: any,
+  sourceTask: Task,
+  projectGraph: ProjectGraph
+): any {
+  const optionsToForward: any = {};
+
+  if (dependencyConfig.options === 'forward') {
+    const sourceTargetConfig =
+      projectGraph.nodes[sourceTask.target.project].data.targets?.[
+        sourceTask.target.target
+      ];
+    if (sourceTargetConfig?.options) {
+      Object.assign(optionsToForward, sourceTargetConfig.options);
+    }
+
+    if (
+      sourceTask.target.configuration &&
+      sourceTargetConfig?.configurations?.[sourceTask.target.configuration]
+    ) {
+      Object.assign(
+        optionsToForward,
+        sourceTargetConfig.configurations[sourceTask.target.configuration]
+      );
+    }
+  }
+
+  return dependencyConfig.params === 'forward'
+    ? { ...optionsToForward, ...cliOverrides }
+    : { ...optionsToForward, __overrides_unparsed__: [] };
 }
 
 function createTaskId(

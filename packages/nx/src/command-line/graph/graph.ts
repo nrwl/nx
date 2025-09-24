@@ -278,9 +278,7 @@ export async function generateGraph(
   let isPartial = false;
   try {
     const projectGraphAndSourceMaps =
-      await createProjectGraphAndSourceMapsAsync({
-        exitOnError: false,
-      });
+      await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     rawGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
   } catch (e) {
@@ -296,10 +294,7 @@ export async function generateGraph(
       const errors = e.getErrors();
       if (errors?.length > 0) {
         errors.forEach((e) => {
-          output.error({
-            title: e.message,
-            bodyLines: [e.stack],
-          });
+          output.error({ title: e.message, bodyLines: [e.stack] });
         });
       }
       output.warn({
@@ -328,18 +323,32 @@ export async function generateGraph(
     }
   }
 
-  if (args.affected) {
+  try {
     affectedProjects = (
       await getAffectedGraphNodes(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: !args.print && args.file !== 'stdout' },
+          {
+            printWarnings:
+              args.affected && !args.print && args.file !== 'stdout',
+          },
           readNxJson()
         ).nxArgs,
         rawGraph
       )
     ).map((n) => n.name);
+  } catch (e) {
+    // if `--affected` is explicitly passed in or
+    // resolved `args.affected` is true, then calculating affected projects
+    // is intended (and expected) so we rethrow the error here.
+    if (args.affected) {
+      throw e;
+    }
+
+    // if `affected` is falsy, and we calculate affected projects for default case
+    // and the operation might fail (i.e: in e2e tests), we fallback to empty array
+    affectedProjects = [];
   }
 
   if (args.exclude) {
@@ -501,10 +510,25 @@ export async function generateGraph(
       process.exit(1);
     }
 
+    // setting up `?graph=serialized-graph-state`
+    let graphState:
+      | {
+          config: Record<string, unknown>;
+          state?: Record<string, unknown>;
+        }
+      | undefined = undefined;
     url.pathname = args.view;
 
     if (args.focus) {
-      url.pathname += '/' + encodeURIComponent(args.focus);
+      if (args.view === 'project-details') {
+        url.pathname += '/' + encodeURIComponent(args.focus);
+      } else if (args.view === 'projects') {
+        graphState ??= { config: {} };
+        graphState.state = {
+          type: 'focused',
+          nodeId: encodeURIComponent(`project-${args.focus}`),
+        };
+      }
     }
 
     // Add targets as query parameters for tasks view
@@ -516,17 +540,22 @@ export async function generateGraph(
     }
 
     if (args.all) {
-      url.pathname += '/all';
+      if (args.view === 'tasks') {
+        url.pathname += '/all';
+      }
     } else if (args.projects) {
       url.searchParams.append(
         'projects',
         args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
-      url.pathname += '/affected';
+      graphState ??= { config: {} };
+      graphState.config = { ...graphState.config, showMode: 'affected' };
     }
-    if (args.groupByFolder) {
-      url.searchParams.append('groupByFolder', 'true');
+
+    if (graphState && args.view === 'projects') {
+      // only projects graph restore-able state  is relevant at the moment
+      url.searchParams.set('rawGraph', JSON.stringify(graphState));
     }
 
     output.success({

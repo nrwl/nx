@@ -67,6 +67,7 @@ export async function loadNxSpecialPackage(
       features: [],
       totalDocs: 0,
       githubStars: ghStarMap.get('nrwl/nx')?.stargazers?.totalCount || 0,
+      filter: 'type:References',
     },
   };
 
@@ -86,6 +87,8 @@ export async function loadNxSpecialPackage(
         packageType: packageName,
         docType: 'generators',
         description: packageDescription,
+        filter: 'type:References',
+        weight: 2.0,
       },
     });
     overviewEntry.data.features!.push('generators');
@@ -108,6 +111,8 @@ export async function loadNxSpecialPackage(
         packageType: packageName,
         docType: 'executors',
         description: packageDescription,
+        filter: 'type:References',
+        weight: 2.0,
       },
     });
     overviewEntry.data.features!.push('executors');
@@ -130,6 +135,8 @@ export async function loadNxSpecialPackage(
         packageType: packageName,
         docType: 'migrations',
         description: packageDescription,
+        filter: 'type:References',
+        weight: 2.0,
       },
     });
     overviewEntry.data.features!.push('migrations');

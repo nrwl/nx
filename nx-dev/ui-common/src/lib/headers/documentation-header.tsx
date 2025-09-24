@@ -245,9 +245,11 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-auto flex-grow">
-            <AlgoliaSearch />
-          </div>
+          {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+            <div className="mx-4 w-auto flex-grow">
+              <AlgoliaSearch />
+            </div>
+          )}
         </div>
         {/*LOGO*/}
         <div className="flex items-center gap-4">
@@ -281,9 +283,11 @@ export function DocumentationHeader({
           <VersionPicker />
         </div>
         {/*SEARCH*/}
-        <div className="hidden w-full max-w-[14rem] lg:inline">
-          <AlgoliaSearch />
-        </div>
+        {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+          <div className="hidden w-full max-w-[14rem] lg:inline">
+            <AlgoliaSearch />
+          </div>
+        )}
         {/*NAVIGATION*/}
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
@@ -389,8 +393,8 @@ export function DocumentationHeader({
               Contact
             </ButtonLink>
             <ButtonLink
-              href="https://cloud.nx.app/?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
-              title="Login"
+              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
+              title="Try Nx Cloud for free"
               variant="primary"
               size="small"
               onClick={() =>
@@ -401,7 +405,7 @@ export function DocumentationHeader({
                 )
               }
             >
-              Login
+              Try Nx Cloud for free
             </ButtonLink>
           </nav>
         </div>

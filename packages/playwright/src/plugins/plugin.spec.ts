@@ -357,11 +357,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -533,11 +535,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -769,11 +773,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -989,11 +995,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",

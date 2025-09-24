@@ -136,13 +136,14 @@ export function Faq(): ReactElement {
           Yes, we are happy to collaborate with open source projects. Please
           complete this form, and we will review your request and get back to
           you:{' '}
-          <Link
+          {/* Note: Keep as regular <a> tag to trigger server-side redirect */}
+          <a
             href="/pricing/special-offer"
             title="Special offer"
             className="underline"
           >
             https://nx.dev/pricing/special-offer
-          </Link>
+          </a>
         </p>
       ),
     },

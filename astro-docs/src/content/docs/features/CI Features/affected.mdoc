@@ -3,6 +3,8 @@ title: Run Only Tasks Affected by a PR
 description: Learn how to use Nx's affected command to determine and run tasks only on projects affected by your changes, improving CI speed and efficiency.
 sidebar:
   order: 13
+
+filter: "type:Features"
 ---
 
 {% youtube src="https://youtu.be/q-cu5Lw3DoE" title="Only Run Tasks for Projects That Changed" /%}
@@ -16,6 +18,7 @@ This drastically improves the speed of your CI and reduces the amount of compute
 
 {% graph title="Making a change in lib10 only affects a sub-part of the project graph (shown in purple)" height="400px" %}
 
+```json
 {
   "projects": [
     {
@@ -200,6 +203,7 @@ This drastically improves the speed of your CI and reduces the amount of compute
   },
   "affectedProjectIds": ["lib10", "lib4", "lib5", "app2"]
 }
+```
 
 {% /graph %}
 

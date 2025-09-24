@@ -1,0 +1,13 @@
+.nx-angular-rspack {
+  color: green;
+}
+
+.pattern-background {
+  width: 200px;
+  height: 200px;
+  background-image: url('../assets/test-pattern.svg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  margin: 20px auto;
+  border: 2px solid #ccc;
+}

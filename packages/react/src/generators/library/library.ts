@@ -92,6 +92,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   const initTask = await initGenerator(host, {
     ...options,
     skipFormat: true,
+    useReactRouterPlugin: false,
   });
   tasks.push(initTask);
 

@@ -9,6 +9,8 @@ import {
   ProjectDetailsEvents,
   ProjectDetailsState,
 } from './project-details.machine';
+import { GraphStateSerializer } from '@nx/graph';
+import { ProjectElement } from '@nx/graph/projects';
 
 export function ProjectDetailsApp({
   service,
@@ -31,10 +33,18 @@ export function ProjectDetailsApp({
 
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
+      const serializedState = GraphStateSerializer.serialize({
+        c: {},
+        s: {
+          type: 'focused',
+          nodeId: ProjectElement.makeId('project', data.projectName),
+        },
+      });
       externalApiService.postEvent({
         type: 'open-project-graph',
         payload: {
           projectName: data.projectName,
+          serializedProjectGraphState: serializedState,
         },
       });
     },

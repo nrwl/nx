@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve as resolvePath } from 'node:path';
 import { type PluginSchemaWithExamples } from './plugin-schema-parser';
+import { stripMarkdocTags } from './strip-markdoc-tags';
 const EXAMPLE_SCHEMA_KEY = 'examplesFile';
 
 /**
@@ -60,11 +61,14 @@ export function getExampleForSchema(
     return null;
   }
 
+  // Strip Markdoc tags and transform to Starlight syntax
+  const cleanedContent = stripMarkdocTags(content);
+
   // If content already has headers, increase their level by 1 to nest under generator
-  if (hasHeaders(content)) {
-    return content.replace(/^(#{1,5})\s/gm, '#$1 ');
+  if (hasHeaders(cleanedContent)) {
+    return cleanedContent.replace(/^(#{1,5})\s/gm, '#$1 ');
   }
 
   // Only add Examples header if there are no existing headers
-  return `### Examples\n\n${content}`;
+  return `### Examples\n\n${cleanedContent}`;
 }

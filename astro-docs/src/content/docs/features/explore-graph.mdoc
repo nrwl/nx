@@ -3,6 +3,7 @@ title: Explore your Workspace
 description: 'Learn how Nx helps you understand your workspace by viewing project details, the project graph, and the task graph.'
 sidebar:
   order: 4
+filter: "type:Features"
 ---
 
 Nx understands your workspace as a collection of projects.
@@ -374,6 +375,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
 
 {% graph height="450px" title="Project View" %}
 
+```json
 {
   "composite": false,
   "projects": [
@@ -482,11 +484,13 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
   "exclude": [],
   "enableTooltips": false
 }
+```
 
 {% /graph %}
 
 {% graph height="450px" title="Composite View (Nx 20+)" %}
 
+```json
 {
   "composite": true,
   "projects": [
@@ -595,6 +599,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
   "exclude": [],
   "enableTooltips": false
 }
+```
 
 {% /graph %}
 

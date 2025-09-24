@@ -4,4 +4,5 @@ export interface InitSchema {
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
   addPlugin?: boolean;
+  useReactRouterPlugin?: boolean;
 }

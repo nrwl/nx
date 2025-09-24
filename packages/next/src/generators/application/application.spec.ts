@@ -803,6 +803,30 @@ describe('app', () => {
         ]);
       });
     });
+
+    it('should not ignore "out-tsc" from eslint', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        style: 'css',
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'myapp/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+    });
+
+    it('should not ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        style: 'css',
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('myapp/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).not.toContain('**/out-tsc');
+    });
   });
 
   describe('--js', () => {
@@ -1079,6 +1103,30 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        style: 'css',
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'myapp/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        style: 'css',
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('myapp/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 

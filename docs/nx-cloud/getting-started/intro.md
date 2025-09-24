@@ -27,15 +27,6 @@ For example:
 - More work needs to run in CI - Add more agent machines, Nx Cloud automatically assigns available work to extra agent machines.
 - Known flaky tasks waste CI time on needed reruns - Nx Cloud automatically detects flaky tasks and reruns automatically in the current CI execution.
 
-See Nx Cloud in action with stories from our customers:
-
-{% testimonial
-    name="Nicolas Beaussart"
-    title="Staff Engineer, Payfit"
-    image="https://avatars.githubusercontent.com/u/7281023?v=4" %}
-The number of hours we spent optimizing CI before, trying to load balance in CircleCI, the different number of agents that we run ourselves by hand... it was painful and we spent hours and days trying to do that. The main thing with Nx Cloud is that we don't have to think about that.
-{% /testimonial %}
-
 [Read more customer stories](/blog?filterBy=customer+story)
 
 ## Learn more

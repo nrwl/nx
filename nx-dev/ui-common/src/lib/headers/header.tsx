@@ -105,25 +105,25 @@ export function Header({
         sendCustomEvent('contact-click', 'header-cta', 'page-header'),
     },
     {
-      href: 'https://cloud.nx.app?utm_source=nx-dev&utm_medium=header',
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header',
       variant: 'primary',
       size: 'small',
       target: '_blank',
-      title: 'Login to Nx Cloud',
-      children: 'Login',
+      title: 'Try Nx Cloud for free',
+      children: 'Try Nx Cloud for free',
       onClick: () =>
         sendCustomEvent('login-click', 'header-cta', 'page-header'),
     },
   ];
 
-  const getButtonsToRender = () => {
-    if (ctaButtons && ctaButtons.length > 0) return ctaButtons;
-    if (scrollCtaButtons && scrollCtaButtons.length > 0 && isScrolled)
-      return scrollCtaButtons;
-    return defaultCtaButtons;
-  };
+  // const getButtonsToRender = () => {
+  //   if (ctaButtons && ctaButtons.length > 0) return ctaButtons;
+  //   if (scrollCtaButtons && scrollCtaButtons.length > 0 && isScrolled)
+  //     return scrollCtaButtons;
+  //   return defaultCtaButtons;
+  // };
 
-  const buttonsToRender = getButtonsToRender();
+  // const buttonsToRender = getButtonsToRender();
 
   return (
     <div className="fixed inset-x-0 top-0 isolate z-[5] flex px-4 print:hidden">
@@ -291,10 +291,14 @@ export function Header({
             >
               Nx Enterprise
             </Link>
-            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <div className="px-3 opacity-50 hover:opacity-100">
-              <AlgoliaSearch tiny={true} />
-            </div>
+            {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+              <>
+                <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+                <div className="px-3 opacity-50 hover:opacity-100">
+                  <AlgoliaSearch tiny={true} />
+                </div>
+              </>
+            )}
           </nav>
         </div>
         {/*SECONDARY NAVIGATION*/}

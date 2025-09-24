@@ -6,17 +6,30 @@ import { PluginLoader } from './plugins/plugin.loader';
 import { NxReferencePackagesLoader } from './plugins/nx-reference-packages.loader';
 import { CommunityPluginsLoader } from './plugins/community-plugins.loader';
 
-const baseSchema = z.object({
-  title: z.string(),
-  /**
-   * Slug should be from the root route without any prefix requirements i.e. `/docs`
-   **/
-  slug: z.string(),
+const searchSchema = z.object({
+  weight: z
+    .number()
+    .min(0, 'Search weight cannot be lower than 0')
+    .max(10, 'Search weight cannot be higher than 10')
+    .optional(),
+  filter: z.string().optional(),
 });
+
+const baseSchema = z
+  .object({
+    title: z.string(),
+    /**
+     * Slug should be from the root route without any prefix requirements i.e. `/docs`
+     **/
+    slug: z.string(),
+  })
+  .and(searchSchema);
 // Default docs collection handled by Starlight
 const docs = defineCollection({
   loader: docsLoader(),
-  schema: docsSchema(),
+  schema: docsSchema({
+    extend: searchSchema,
+  }),
 });
 
 const nxReferencePackages = defineCollection({

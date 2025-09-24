@@ -82,6 +82,7 @@ export async function loadNxCliPackage(
       packageType: 'nx-cli',
       docType: 'cli',
       description: 'Complete reference for Nx CLI commands',
+      filter: 'type:References',
     },
     // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
     rendered: await renderMarkdown(markdown),

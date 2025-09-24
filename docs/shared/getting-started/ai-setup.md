@@ -5,7 +5,7 @@ description: Set up Nx MCP server to give AI assistants deep workspace context, 
 
 # Integrate Nx with your Coding Assistant
 
-Nx provides deep integration with AI coding assistants through the **Nx Model Context Protocol (MCP) server**, giving your AI assistant comprehensive understanding of your monorepo structure, running processes, and development workflows.
+Nx provides deep integration with AI coding assistants through the **Nx Model Context Protocol (MCP) server**, giving your AI assistant comprehensive understanding of your monorepo structure, running processes, and development workflows. When you create a new Nx workspace, it includes AI agent configuration files (`CLAUDE.md` and `AGENTS.md`) that provide guidelines for working with Nx and the Nx MCP server.
 
 ## Setup and Configuration
 
