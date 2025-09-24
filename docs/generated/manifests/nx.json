@@ -5259,7 +5259,19 @@
                 "description": "",
                 "mediaImage": "",
                 "file": "",
-                "itemList": [],
+                "itemList": [
+                  {
+                    "id": "merge-atomized-outputs",
+                    "name": "Merge Atomized Outputs",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/packages/playwright/merge-atomized-outputs",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
+                    "tags": []
+                  }
+                ],
                 "isExternal": false,
                 "path": "/technologies/test-tools/playwright/recipes",
                 "tags": []
@@ -10184,7 +10196,19 @@
             "description": "",
             "mediaImage": "",
             "file": "",
-            "itemList": [],
+            "itemList": [
+              {
+                "id": "merge-atomized-outputs",
+                "name": "Merge Atomized Outputs",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/playwright/merge-atomized-outputs",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
+                "tags": []
+              }
+            ],
             "isExternal": false,
             "path": "/technologies/test-tools/playwright/recipes",
             "tags": []
@@ -10747,7 +10771,19 @@
         "description": "",
         "mediaImage": "",
         "file": "",
-        "itemList": [],
+        "itemList": [
+          {
+            "id": "merge-atomized-outputs",
+            "name": "Merge Atomized Outputs",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/playwright/merge-atomized-outputs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
+            "tags": []
+          }
+        ],
         "isExternal": false,
         "path": "/technologies/test-tools/playwright/recipes",
         "tags": []
@@ -10785,9 +10821,32 @@
     "description": "",
     "mediaImage": "",
     "file": "",
-    "itemList": [],
+    "itemList": [
+      {
+        "id": "merge-atomized-outputs",
+        "name": "Merge Atomized Outputs",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/playwright/merge-atomized-outputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
+        "tags": []
+      }
+    ],
     "isExternal": false,
     "path": "/technologies/test-tools/playwright/recipes",
+    "tags": []
+  },
+  "/technologies/test-tools/playwright/recipes/merge-atomized-outputs": {
+    "id": "merge-atomized-outputs",
+    "name": "Merge Atomized Outputs",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/playwright/merge-atomized-outputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
     "tags": []
   },
   "/technologies/test-tools/playwright/api": {
