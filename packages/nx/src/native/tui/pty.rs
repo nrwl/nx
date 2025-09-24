@@ -103,14 +103,12 @@ impl PtyInstance {
             return Ok(());
         }
 
-        // Update dimensions in a separate scope
-        {
-            let mut dimensions_guard = self
-                .dimensions
-                .write()
-                .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to write dimensions"))?;
-            *dimensions_guard = (rows, cols);
-        }
+        // Update dimensions
+        let mut dimensions_guard = self
+            .dimensions
+            .write()
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to write dimensions"))?;
+        *dimensions_guard = (rows, cols);
 
         // Create a new parser with the new dimensions while preserving state
         if let Ok(mut parser_guard) = self.parser.write() {
