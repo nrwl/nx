@@ -131,41 +131,13 @@ pub fn can_install_nx_console() -> bool {
     let current_editor = get_current_editor();
     debug!("Detected editor: {:?}", current_editor);
 
-    can_install_nx_console_for_supported_editor(&current_editor)
+    can_install_nx_console_for_editor(*current_editor)
 }
 
 #[napi]
-pub fn can_install_nx_console_for_editor(editor: String) -> bool {
+pub fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool {
     enable_logger();
 
-    let parsed_editor = parse_editor_string(&editor);
-    debug!(
-        "Checking if Nx Console can be installed for editor: {:?}",
-        parsed_editor
-    );
-
-    can_install_nx_console_for_supported_editor(&parsed_editor)
-}
-
-#[napi]
-pub fn install_nx_console() {
-    enable_logger();
-
-    let current_editor = get_current_editor();
-    debug!("Detected editor: {:?}", current_editor);
-
-    install_nx_console_for_supported_editor(&current_editor);
-}
-
-#[napi]
-pub fn install_nx_console_for_editor(editor: String) {
-    enable_logger();
-
-    let parsed_editor = parse_editor_string(&editor);
-    install_nx_console_for_supported_editor(&parsed_editor);
-}
-
-fn can_install_nx_console_for_supported_editor(editor: &SupportedEditor) -> bool {
     if let Some(command) = get_command_for_editor(&editor) {
         if let Ok(installed) = is_nx_console_installed(&command) {
             !installed // Can install if NOT installed
@@ -177,7 +149,20 @@ fn can_install_nx_console_for_supported_editor(editor: &SupportedEditor) -> bool
     }
 }
 
-fn install_nx_console_for_supported_editor(editor: &SupportedEditor) {
+#[napi]
+pub fn install_nx_console() {
+    enable_logger();
+
+    let current_editor = get_current_editor();
+    debug!("Detected editor: {:?}", current_editor);
+
+    install_nx_console_for_editor(*current_editor);
+}
+
+#[napi]
+pub fn install_nx_console_for_editor(editor: SupportedEditor) {
+    enable_logger();
+
     if let Some(command) = get_command_for_editor(&editor) {
         // Try to install the extension
         if let Err(e) = install_extension(command) {
@@ -251,16 +236,5 @@ fn get_command_for_editor(editor: &SupportedEditor) -> Option<&'static str> {
             }
         }
         _ => None,
-    }
-}
-
-fn parse_editor_string(editor: &str) -> SupportedEditor {
-    match editor.to_lowercase().as_str() {
-        "vscode" => SupportedEditor::VSCode,
-        "vscode-insiders" => SupportedEditor::VSCodeInsiders,
-        "cursor" => SupportedEditor::Cursor,
-        "windsurf" => SupportedEditor::Windsurf,
-        "jetbrains" => SupportedEditor::JetBrains,
-        _ => SupportedEditor::Unknown,
     }
 }

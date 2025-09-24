@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { readJsonFile } from '../utils/fileutils';
 
 export function agentsMdPath(root: string): string {
   return join(root, 'AGENTS.md');
@@ -13,7 +14,7 @@ export function geminiMdPath(root: string): string {
 export function parseGeminiSettings(root: string): any | undefined {
   const settingsPath = geminiSettingsPath(root);
   try {
-    return JSON.parse(readFileSync(settingsPath, 'utf-8'));
+    return readJsonFile(settingsPath);
   } catch {
     return undefined;
   }

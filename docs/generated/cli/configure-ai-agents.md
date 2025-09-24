@@ -19,8 +19,8 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 | Option          | Type                                            | Description                                                                                                          |
 | --------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `----check`     | boolean                                         | Check if any configured agents are out of date and need to be updated. Does not make any changes. (Default: `false`) |
 | `--agents`      | `claude`, `codex`, `vscode`, `cursor`, `gemini` | List of AI agents to set up (e.g., claude, codex, vscode, cursor, gemini).                                           |
+| `--check`       | boolean                                         | Check if any configured agents are out of date and need to be updated. Does not make any changes. (Default: `false`) |
 | `--help`        | boolean                                         | Show help.                                                                                                           |
 | `--interactive` | boolean                                         | When false disables interactive input prompts for options. (Default: `true`)                                         |
 | `--verbose`     | boolean                                         | Prints additional information about the commands (e.g., stack traces).                                               |

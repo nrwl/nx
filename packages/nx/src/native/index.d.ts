@@ -162,7 +162,7 @@ export interface CachedResult {
 
 export declare export declare function canInstallNxConsole(): boolean
 
-export declare export declare function canInstallNxConsoleForEditor(editor: string): boolean
+export declare export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): boolean
 
 export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
@@ -253,7 +253,7 @@ export interface InputsInput {
 
 export declare export declare function installNxConsole(): void
 
-export declare export declare function installNxConsoleForEditor(editor: string): void
+export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): void
 
 export const IS_WASM: boolean
 
@@ -305,6 +305,15 @@ export declare const enum RunMode {
 
 export interface RuntimeInput {
   runtime: string
+}
+
+export declare const enum SupportedEditor {
+  VSCode = 0,
+  VSCodeInsiders = 1,
+  Cursor = 2,
+  Windsurf = 3,
+  JetBrains = 4,
+  Unknown = 5
 }
 
 export interface Target {

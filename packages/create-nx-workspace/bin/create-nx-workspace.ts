@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 
 import {
-  availableAgents,
+  supportedAgents,
   CreateWorkspaceOptions,
 } from '../src/create-workspace-options';
 import { createWorkspace } from '../src/create-workspace';
@@ -224,7 +224,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('aiAgents', {
             describe: chalk.dim`List of AI agents to configure.`,
             type: 'array',
-            choices: [...availableAgents],
+            choices: [...supportedAgents],
           }),
         withNxCloud,
         withUseGitHub,

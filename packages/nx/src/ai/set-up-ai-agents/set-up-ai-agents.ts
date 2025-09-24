@@ -6,13 +6,14 @@ import {
   mkdirSync,
 } from 'fs';
 import { homedir } from 'os';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
-import { updateJson, writeJson } from '../../generators/utils/json';
+import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import {
   canInstallNxConsoleForEditor,
   installNxConsoleForEditor,
+  SupportedEditor,
 } from '../../native';
 import {
   CLIErrorMessageConfig,
@@ -20,13 +21,18 @@ import {
 } from '../../utils/output';
 import { installPackageToTmp } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { codexConfigTomlPath } from '../config-paths';
+import {
+  agentsMdPath,
+  codexConfigTomlPath,
+  geminiMdPath,
+} from '../config-paths';
 import {
   Agent,
   getAgentRulesWrapped,
   nxMcpTomlConfig,
   nxMcpTomlHeader,
   rulesRegex,
+  supportedAgents,
 } from '../utils';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -42,7 +48,7 @@ export async function setupAiAgentsGenerator(
   tree: Tree,
   options: SetupAiAgentsGeneratorSchema,
   inner = false
-): Promise<() => Promise<ModificationResults>> {
+): Promise<(check?: boolean) => Promise<ModificationResults>> {
   const normalizedOptions: NormalizedSetupAiAgentsGeneratorSchema =
     normalizeOptions(options);
 
@@ -86,7 +92,7 @@ function normalizeOptions(
     directory: options.directory,
     writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
-    agents: options.agents ?? ['claude', 'gemini'],
+    agents: options.agents ?? [...supportedAgents],
   };
 }
 
@@ -96,15 +102,11 @@ export async function setupAiAgentsGeneratorImpl(
 ): Promise<() => Promise<ModificationResults>> {
   const hasAgent = (agent: Agent) => options.agents.includes(agent);
 
+  const agentsMd = agentsMdPath(options.directory);
+
   // write AGENTS.md for most agents
-  if (
-    hasAgent('gemini') ||
-    hasAgent('cursor') ||
-    hasAgent('copilot') ||
-    hasAgent('codex')
-  ) {
-    const agentsPath = join(options.directory, 'AGENTS.md');
-    writeAgentRules(tree, agentsPath, options.writeNxCloudRules);
+  if (hasAgent('cursor') || hasAgent('copilot') || hasAgent('codex')) {
+    writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
   }
 
   if (hasAgent('claude')) {
@@ -119,38 +121,61 @@ export async function setupAiAgentsGeneratorImpl(
   }
 
   if (hasAgent('gemini')) {
-    const geminiPath = join(options.directory, '.gemini', 'settings.json');
-    if (!tree.exists(geminiPath)) {
-      writeJson(tree, geminiPath, {});
+    const geminiSettingsPath = join(
+      options.directory,
+      '.gemini',
+      'settings.json'
+    );
+    if (!tree.exists(geminiSettingsPath)) {
+      writeJson(tree, geminiSettingsPath, {});
     }
-    updateJson(tree, geminiPath, mcpConfigUpdater);
+    updateJson(tree, geminiSettingsPath, mcpConfigUpdater);
+
+    const contextFileName: string | undefined = readJson(
+      tree,
+      geminiSettingsPath
+    ).contextFileName;
+
+    const geminiMd = geminiMdPath(options.directory);
 
     // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
-    if (!tree.exists(join(options.directory, 'GEMINI.md'))) {
-      updateJson(tree, geminiPath, (json) => ({
+    if (!contextFileName && !tree.exists(geminiMd)) {
+      writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
+      updateJson(tree, geminiSettingsPath, (json) => ({
         ...json,
         contextFileName: 'AGENTS.md',
       }));
+    } else {
+      writeAgentRules(
+        tree,
+        contextFileName ?? geminiMd,
+        options.writeNxCloudRules
+      );
     }
   }
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
 
-  return async () => {
+  // we use the check variable to determine if we should actually make changes or just report what would be changed
+  return async (check: boolean = false) => {
     const messages: CLINoteMessageConfig[] = [];
     const errors: CLIErrorMessageConfig[] = [];
     if (hasAgent('codex')) {
       if (existsSync(codexConfigTomlPath)) {
         const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
         if (!tomlContents.includes(nxMcpTomlHeader)) {
-          appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
+          if (check === false) {
+            appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
+          }
           messages.push({
             title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
           });
         }
       } else {
-        mkdirSync(join(homedir(), '.codex'), { recursive: true });
-        writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
+        if (check === false) {
+          mkdirSync(join(homedir(), '.codex'), { recursive: true });
+          writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
+        }
         messages.push({
           title: `Created ${codexConfigTomlPath} with nx-mcp server`,
         });
@@ -158,8 +183,10 @@ export async function setupAiAgentsGeneratorImpl(
     }
     if (hasAgent('copilot')) {
       try {
-        if (canInstallNxConsoleForEditor('vscode')) {
-          installNxConsoleForEditor('vscode');
+        if (canInstallNxConsoleForEditor(SupportedEditor.VSCode)) {
+          if (check === false) {
+            installNxConsoleForEditor(SupportedEditor.VSCode);
+          }
           messages.push({
             title: `Installed Nx Console for VSCode`,
           });
@@ -171,8 +198,10 @@ export async function setupAiAgentsGeneratorImpl(
         });
       }
       try {
-        if (canInstallNxConsoleForEditor('vscode-insiders')) {
-          installNxConsoleForEditor('vscode-insiders');
+        if (canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders)) {
+          if (check === false) {
+            installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
+          }
           messages.push({
             title: `Installed Nx Console for VSCode Insiders`,
           });
@@ -186,8 +215,10 @@ export async function setupAiAgentsGeneratorImpl(
     }
     if (hasAgent('cursor')) {
       try {
-        if (canInstallNxConsoleForEditor('cursor')) {
-          installNxConsoleForEditor('cursor');
+        if (canInstallNxConsoleForEditor(SupportedEditor.Cursor)) {
+          if (check === false) {
+            installNxConsoleForEditor(SupportedEditor.Cursor);
+          }
           messages.push({
             title: `Installed Nx Console for Cursor`,
           });

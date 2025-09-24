@@ -40,11 +40,18 @@ export interface CreateWorkspaceOptions {
   aiAgents?: Agent[]; // List of AI agents to configure
 }
 
-export const availableAgents = [
+export const supportedAgents = [
   'claude',
   'codex',
   'copilot',
   'cursor',
   'gemini',
 ] as const;
-export type Agent = (typeof availableAgents)[number];
+export type Agent = (typeof supportedAgents)[number];
+export const agentDisplayMap: Record<Agent, string> = {
+  claude: 'Claude Code',
+  gemini: 'Gemini',
+  codex: 'OpenAI Codex',
+  copilot: 'GitHub Copilot for VSCode',
+  cursor: 'Cursor',
+};

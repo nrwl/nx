@@ -1,20 +1,18 @@
 import { prompt } from 'enquirer';
-import { join } from 'path';
 import { output } from '../../utils/output';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 
 import {
   Agent,
-  availableAgents,
+  agentDisplayMap,
+  supportedAgents,
   configureAgents,
-  getAgentConfigurationIsOutdated,
   getAgentConfigurations,
 } from '../../ai/utils';
 import { installPackageToTmp } from '../../devkit-internals';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
-import { clean } from 'semver';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
@@ -31,17 +29,18 @@ export async function configureAiAgentsHandler(
     const packageInstallResults = installPackageToTmp('nx', 'latest');
     cleanup = packageInstallResults.cleanup;
 
-    let modulePath = join(
-      packageInstallResults.tempDir,
-      'node_modules',
-      'nx',
-      'src/command-line/ai-agent-setup/ai-agent-setup.js'
+    let modulePath = require.resolve(
+      'nx/src/command-line/configure-ai-agents/configure-ai-agents.js',
+      { paths: [packageInstallResults.tempDir] }
     );
 
     const module = await import(modulePath);
-    const aiAgentSetupResult = await module.aiAgentSetupHandler(args, true);
+    const configureAiAgentsResult = await module.configureAiAgentsHandler(
+      args,
+      true
+    );
     cleanup();
-    return aiAgentSetupResult;
+    return configureAiAgentsResult;
   } catch (error) {
     if (cleanup) {
       cleanup();
@@ -61,7 +60,7 @@ export async function configureAiAgentsHandlerImpl(
     partiallyConfiguredAgents,
     fullyConfiguredAgents,
     agentConfigurations,
-  } = getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
+  } = await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
 
   if (options.check) {
     if (fullyConfiguredAgents.length === 0) {
@@ -74,17 +73,11 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(0);
     }
 
-    const outOfDateAgents: Agent[] = [];
-    for (const a of fullyConfiguredAgents) {
-      const isOutdated = await getAgentConfigurationIsOutdated(
-        a,
-        agentConfigurations.get(a),
-        workspaceRoot
-      );
-      if (isOutdated.mcpOutdated || isOutdated.rulesOutdated) {
-        outOfDateAgents.push(a);
-      }
-    }
+    const outOfDateAgents = fullyConfiguredAgents.filter(
+      (a) =>
+        agentConfigurations.get(a)?.mcpOutdated ||
+        agentConfigurations.get(a)?.rulesOutdated
+    );
 
     if (outOfDateAgents.length === 0) {
       output.success({
@@ -107,12 +100,10 @@ export async function configureAiAgentsHandlerImpl(
   });
 
   for (const a of fullyConfiguredAgents) {
-    const isOutdated = await getAgentConfigurationIsOutdated(
-      a,
-      agentConfigurations.get(a),
-      workspaceRoot
-    );
-    if (isOutdated.mcpOutdated || isOutdated.rulesOutdated) {
+    if (
+      agentConfigurations.get(a).mcpOutdated ||
+      agentConfigurations.get(a).rulesOutdated
+    ) {
       agentsToUpdate.push(getAgentChoiceForPrompt(a, false, true));
     }
   }
@@ -174,7 +165,7 @@ export async function configureAiAgentsHandlerImpl(
       title: 'No agents selected',
       bodyLines: ['Please select at least one AI agent to set up.'],
     });
-    process.exit(1);
+    process.exit(0);
   }
 
   try {
@@ -200,24 +191,7 @@ function getAgentChoiceForPrompt(
   partiallyConfigured: boolean,
   outdated: boolean
 ): { name: string; message: string } {
-  let message: string;
-  switch (agent) {
-    case 'claude':
-      message = 'Claude Code';
-      break;
-    case 'gemini':
-      message = 'Gemini';
-      break;
-    case 'codex':
-      message = 'OpenAI Codex';
-      break;
-    case 'copilot':
-      message = 'GitHub Copilot';
-      break;
-    case 'cursor':
-      message = 'Cursor';
-      break;
-  }
+  let message: string = agentDisplayMap[agent];
   if (partiallyConfigured) {
     message += ' (partially configured)';
   } else if (outdated) {
@@ -235,8 +209,8 @@ type NormalizedAiAgentSetupOptions = ConfigureAiAgentsOptions & {
 function normalizeOptions(
   options: ConfigureAiAgentsOptions
 ): NormalizedAiAgentSetupOptions {
-  const agents = (options.agents ?? availableAgents).filter((a) =>
-    availableAgents.includes(a as Agent)
+  const agents = (options.agents ?? supportedAgents).filter((a) =>
+    supportedAgents.includes(a as Agent)
   ) as Agent[];
   return {
     ...options,

@@ -29,7 +29,7 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
           'When false disables interactive input prompts for options.',
         default: true,
       })
-      .option('--check', {
+      .option('check', {
         type: 'boolean',
         description:
           'Check if any configured agents are out of date and need to be updated. Does not make any changes.',

@@ -400,6 +400,7 @@ module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove
 module.exports.restoreTerminal = nativeBinding.restoreTerminal
 module.exports.RunMode = nativeBinding.RunMode
+module.exports.SupportedEditor = nativeBinding.SupportedEditor
 module.exports.TaskStatus = nativeBinding.TaskStatus
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
