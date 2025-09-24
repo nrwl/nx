@@ -292,7 +292,7 @@
         "packages/react-native/src/generators/application/files/**/*"
       ],
       "options": {
-        "testTargetName": "test-kt",
+        "testTargetName": "test-kt"
       }
     },
     "@nx/enterprise-cloud",
