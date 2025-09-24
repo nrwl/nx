@@ -2,7 +2,7 @@
 # https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
 
 [versions]
-kotlin = "2.1.20"
+kotlin = "2.2.10"
 gson = "2.10.1"
 javaparser = "3.25.8"
 junit = "5.10.1"

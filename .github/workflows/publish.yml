@@ -74,8 +74,13 @@ jobs:
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest
             setup: |-
+              choco install openjdk --version=21.0.0 -y
               rustup target add aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
+            build: |
+              export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
+              export PATH="$JAVA_HOME\bin:$PATH"
+              java -version
+              pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           # Windows 32bit (not needed)
           # - host: windows-latest
@@ -89,16 +94,22 @@ jobs:
               set -e
               apt-get update
 
+              # Install Java 21
+              apt-get install -y openjdk-21-jdk
+              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+              export PATH="$JAVA_HOME/bin:$PATH"
+              java --version
+
               curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
               apt-get install -y nodejs=22.16.0-1nodesource1
-            
+
               export PATH="/usr/local/bin:$PATH"
               node --version
               npm --version
-            
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
-            
+
               pnpm install --frozen-lockfile
               rustup target add x86_64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
@@ -109,21 +120,26 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz
+                apk add --no-cache curl xz openjdk21
+
+                # Set up Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
 
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-            
+
                 export PATH=\"/usr/local/node/bin:\$PATH\"
-            
+
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
-            
+
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
-            
+
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
                 rustup target add x86_64-unknown-linux-musl
@@ -146,17 +162,23 @@ jobs:
             build: |
               set -e
               apt-get update
-            
+
+              # Install Java 21
+              apt-get install -y openjdk-21-jdk
+              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+              export PATH="$JAVA_HOME/bin:$PATH"
+              java --version
+
               curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
               apt-get install -y nodejs=22.16.0-1nodesource1
-            
+
               export PATH="/usr/local/bin:$PATH"
               node --version
               npm --version
-            
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
-            
+
               pnpm install --frozen-lockfile
               rustup target add aarch64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
@@ -184,31 +206,41 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz
-            
+                apk add --no-cache curl xz openjdk21
+
+                # Set up Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
+
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-            
+
                 export PATH=\"/usr/local/node/bin:\$PATH\"
-            
+
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
-            
+
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
-            
+
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
-                rustup target add aarch64-unknown-linux-musl  
-                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl  
+                rustup target add aarch64-unknown-linux-musl
+                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
               "
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             setup: |-
+              choco install openjdk --version=21.0.0 -y
               rustup target add aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
+            build: |
+              export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
+              export PATH="$JAVA_HOME\bin:$PATH"
+              java -version
+              pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@22.16.0
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -322,8 +354,12 @@ jobs:
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 www/npm git
+            sudo pkg install -y -f node libnghttp2 www/npm git openjdk17
             sudo npm install --location=global --ignore-scripts pnpm@10.11.1
+            # Set up Java 17
+            export JAVA_HOME=/usr/local/openjdk17
+            export PATH="$JAVA_HOME/bin:$PATH"
+            java --version
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -340,6 +376,54 @@ jobs:
             freebsd-version
             echo "Installing dependencies"
             pnpm install --frozen-lockfile --ignore-scripts
+            
+            echo "Checking disk space before cleanup"
+            df -h
+            echo "Removing unnecessary preinstalled packages"
+            # List all packages first to see what's installed
+            sudo pkg info -a
+            echo "Cleaning up to free disk space"
+            # Clean package caches
+            sudo pkg clean -a -y
+            sudo pkg autoremove -y
+            # Remove unnecessary system files
+            sudo rm -rf /usr/local/lib/*.a
+            sudo rm -rf /usr/local/share/doc/*
+            sudo rm -rf /usr/local/share/man/*
+            sudo rm -rf /usr/local/share/examples/*
+            sudo rm -rf /usr/local/share/locale/*
+            sudo rm -rf /usr/local/share/gtk-doc/*
+            sudo rm -rf /usr/local/share/info/*
+            sudo rm -rf /usr/src/*
+            sudo rm -rf /usr/obj/*
+            sudo rm -rf /usr/tests/*
+            sudo rm -rf /usr/lib/debug/*
+            # Clean var directories
+            sudo rm -rf /var/cache/pkg/*
+            sudo rm -rf /var/db/pkg/*.tbz
+            sudo rm -rf /var/log/*.log
+            sudo rm -rf /var/log/*.old
+            # Clean temporary files
+            sudo rm -rf /tmp/*
+            sudo rm -rf /var/tmp/*
+            # Remove Python cache if present
+            sudo find /usr/local -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+            sudo find /usr/local -name "*.pyc" -delete 2>/dev/null || true
+            sudo find /usr/local -name "*.pyo" -delete 2>/dev/null || true
+            # Clean npm/pnpm caches
+            npm cache clean --force || true
+            pnpm store prune || true
+            rm -rf ~/.npm || true
+            rm -rf ~/.pnpm-store || true
+            # Remove Rust build artifacts if any
+            rm -rf ~/.cargo/registry || true
+            rm -rf ~/.cargo/git || true
+            rm -rf ~/.rustup/toolchains/*/share || true
+            # Remove other development tool caches
+            rm -rf ~/.cache/* || true
+            echo "Checking disk space after cleanup"
+            df -h
+            
             echo "Building FreeBSD bindings"
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
             echo "Cleaning up"

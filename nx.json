@@ -286,6 +286,15 @@
         "serveStaticTargetName": "serve-static"
       }
     },
+    {
+      "plugin": "@nx/gradle",
+      "exclude": [
+        "packages/react-native/src/generators/application/files/**/*"
+      ],
+      "options": {
+        "testTargetName": "test-kt"
+      }
+    },
     "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
