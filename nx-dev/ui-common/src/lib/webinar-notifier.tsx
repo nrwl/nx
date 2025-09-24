@@ -9,6 +9,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 export function WebinarNotifier(): ReactElement | null {
+  return undefined;
+
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
   const localStorageKey = 'workshop-september-24-2025--notifier-closed';
