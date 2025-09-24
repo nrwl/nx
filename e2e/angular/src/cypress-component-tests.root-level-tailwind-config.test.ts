@@ -9,6 +9,7 @@ import {
   runE2ETests,
   uniq,
 } from '@nx/e2e-utils';
+import { join } from 'path';
 
 describe('Angular Cypress Component Tests - root level tailwind config', () => {
   beforeAll(async () => {
