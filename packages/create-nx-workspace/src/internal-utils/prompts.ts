@@ -13,6 +13,7 @@ import {
 import { stringifyCollection } from '../utils/string-utils';
 import { NxCloud } from '../utils/nx/nx-cloud';
 import { isCI } from '../utils/ci/is-ci';
+import { Agent, availableAgents } from '../create-workspace-options';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -69,6 +70,51 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
     }
     return a.NxCloud;
   });
+}
+
+export async function determineAiAgents(
+  parsedArgs: yargs.Arguments<{ aiAgents?: Agent[] }>
+): Promise<Agent[]> {
+  if (parsedArgs.aiAgents) {
+    return parsedArgs.aiAgents;
+  } else {
+    return await aiAgentsPrompt();
+  }
+}
+
+async function aiAgentsPrompt(): Promise<Agent[]> {
+  return (
+    await enquirer.prompt<{ agents: Agent[] }>([
+      {
+        name: 'agents',
+        message:
+          'Which AI agents would you like to set up? (space to select, enter to confirm)',
+        type: 'multiselect',
+        choices: availableAgents.map((a) => {
+          // duplicate from packages/nx/src/command-line/configure-ai-agents/configure-ai-agents.ts
+          let message: string;
+          switch (a) {
+            case 'claude':
+              message = 'Claude Code';
+              break;
+            case 'gemini':
+              message = 'Gemini';
+              break;
+            case 'codex':
+              message = 'OpenAI Codex';
+              break;
+            case 'copilot':
+              message = 'GitHub Copilot';
+              break;
+            case 'cursor':
+              message = 'Cursor';
+              break;
+          }
+          return { name: a, message };
+        }),
+      },
+    ])
+  ).agents;
 }
 
 export async function determineDefaultBase(

@@ -185,12 +185,15 @@ export async function generateWorkspaceFiles(
 
   await createReadme(tree, options, token);
 
-  await setupAiAgentsGenerator(tree, {
-    directory: options.directory,
-    writeNxCloudRules: options.nxCloud !== 'skip',
-    packageVersion: 'latest',
-    agents: ['claude', 'gemini'],
-  });
+  let aiAgentsCallback: () => unknown | undefined;
+  if (options.aiAgents && options.aiAgents.length > 0) {
+    aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+      directory: options.directory,
+      writeNxCloudRules: options.nxCloud !== 'skip',
+      packageVersion: 'latest',
+      agents: [...options.aiAgents],
+    });
+  }
 
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
@@ -210,7 +213,7 @@ export async function generateWorkspaceFiles(
   addNpmScripts(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
-  return token;
+  return { token, aiAgentsCallback };
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {

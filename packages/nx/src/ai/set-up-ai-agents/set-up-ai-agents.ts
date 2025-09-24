@@ -1,20 +1,48 @@
+import {
+  appendFileSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+} from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { updateJson, writeJson } from '../../generators/utils/json';
+import {
+  canInstallNxConsoleForEditor,
+  installNxConsoleForEditor,
+} from '../../native';
+import {
+  CLIErrorMessageConfig,
+  CLINoteMessageConfig,
+} from '../../utils/output';
 import { installPackageToTmp } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { codexConfigTomlPath } from '../config-paths';
+import {
+  Agent,
+  getAgentRulesWrapped,
+  nxMcpTomlConfig,
+  nxMcpTomlHeader,
+  rulesRegex,
+} from '../utils';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
-import { Agent, getAgentRulesWrapped, rulesRegex } from '../utils';
+
+export type ModificationResults = {
+  messages: CLINoteMessageConfig[];
+  errors: CLIErrorMessageConfig[];
+};
 
 export async function setupAiAgentsGenerator(
   tree: Tree,
   options: SetupAiAgentsGeneratorSchema,
   inner = false
-) {
+): Promise<() => Promise<ModificationResults>> {
   const normalizedOptions: NormalizedSetupAiAgentsGeneratorSchema =
     normalizeOptions(options);
 
@@ -65,7 +93,7 @@ function normalizeOptions(
 export async function setupAiAgentsGeneratorImpl(
   tree: Tree,
   options: NormalizedSetupAiAgentsGeneratorSchema
-) {
+): Promise<() => Promise<ModificationResults>> {
   const hasAgent = (agent: Agent) => options.agents.includes(agent);
 
   // write AGENTS.md for most agents
@@ -107,6 +135,75 @@ export async function setupAiAgentsGeneratorImpl(
   }
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
+
+  return async () => {
+    const messages: CLINoteMessageConfig[] = [];
+    const errors: CLIErrorMessageConfig[] = [];
+    if (hasAgent('codex')) {
+      if (existsSync(codexConfigTomlPath)) {
+        const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
+        if (!tomlContents.includes(nxMcpTomlHeader)) {
+          appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
+          messages.push({
+            title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
+          });
+        }
+      } else {
+        mkdirSync(join(homedir(), '.codex'), { recursive: true });
+        writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
+        messages.push({
+          title: `Created ${codexConfigTomlPath} with nx-mcp server`,
+        });
+      }
+    }
+    if (hasAgent('copilot')) {
+      try {
+        if (canInstallNxConsoleForEditor('vscode')) {
+          installNxConsoleForEditor('vscode');
+          messages.push({
+            title: `Installed Nx Console for VSCode`,
+          });
+        }
+      } catch (e) {
+        errors.push({
+          title: `Failed to install Nx Console for VSCode. Please install it manually.`,
+          bodyLines: [(e as Error).message],
+        });
+      }
+      try {
+        if (canInstallNxConsoleForEditor('vscode-insiders')) {
+          installNxConsoleForEditor('vscode-insiders');
+          messages.push({
+            title: `Installed Nx Console for VSCode Insiders`,
+          });
+        }
+      } catch (e) {
+        errors.push({
+          title: `Failed to install Nx Console for VSCode Insiders. Please install it manually.`,
+          bodyLines: [(e as Error).message],
+        });
+      }
+    }
+    if (hasAgent('cursor')) {
+      try {
+        if (canInstallNxConsoleForEditor('cursor')) {
+          installNxConsoleForEditor('cursor');
+          messages.push({
+            title: `Installed Nx Console for Cursor`,
+          });
+        }
+      } catch (e) {
+        errors.push({
+          title: `Failed to install Nx Console for Cursor. Please install it manually.`,
+          bodyLines: [(e as Error).message],
+        });
+      }
+    }
+    return {
+      messages,
+      errors,
+    };
+  };
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {

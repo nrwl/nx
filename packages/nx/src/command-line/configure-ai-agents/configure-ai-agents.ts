@@ -95,9 +95,9 @@ export async function configureAiAgentsHandlerImpl(
     }
   }
   // first, prompt for partially configured agents and out of date agents
-  const agentsToUpdate: [agent: string, message: string][] = [];
+  const agentsToUpdate: { name: string; message: string }[] = [];
   partiallyConfiguredAgents.forEach((a) => {
-    agentsToUpdate.push([a, `${a} (partially configured)`] as const);
+    agentsToUpdate.push(getAgentChoiceForPrompt(a, true, false));
   });
 
   for (const a of fullyConfiguredAgents) {
@@ -107,7 +107,7 @@ export async function configureAiAgentsHandlerImpl(
       workspaceRoot
     );
     if (isOutdated.mcpOutdated || isOutdated.rulesOutdated) {
-      agentsToUpdate.push([a, `${a} (out of date)`]);
+      agentsToUpdate.push(getAgentChoiceForPrompt(a, false, true));
     }
   }
 
@@ -119,10 +119,7 @@ export async function configureAiAgentsHandlerImpl(
         name: 'agents',
         message:
           'The following agents are not configured completely or are out of date. Which would you like to update?',
-        choices: agentsToUpdate.map(([agent, message]) => ({
-          name: agent,
-          message,
-        })),
+        choices: agentsToUpdate,
         initial: agentsToUpdate.map((_, i) => i),
         required: true,
       } as any);
@@ -153,8 +150,11 @@ export async function configureAiAgentsHandlerImpl(
     configurationResponse = await prompt<{ agents: Agent[] }>({
       type: 'multiselect',
       name: 'agents',
-      message: 'Which AI agents would you like to configure?',
-      choices: nonConfiguredAgents,
+      message:
+        'Which AI agents would you like to configure? (space to select, enter to confirm)',
+      choices: nonConfiguredAgents.map((a) =>
+        getAgentChoiceForPrompt(a, false, false)
+      ),
       required: true,
     } as any);
   } catch {
@@ -186,6 +186,41 @@ export async function configureAiAgentsHandlerImpl(
     });
     process.exit(1);
   }
+}
+
+// also keep duplicate in packages/create-nx-workspace/src/internal-utils/prompts.ts updated
+function getAgentChoiceForPrompt(
+  agent: Agent,
+  partiallyConfigured: boolean,
+  outdated: boolean
+): { name: string; message: string } {
+  let message: string;
+  switch (agent) {
+    case 'claude':
+      message = 'Claude Code';
+      break;
+    case 'gemini':
+      message = 'Gemini';
+      break;
+    case 'codex':
+      message = 'OpenAI Codex';
+      break;
+    case 'copilot':
+      message = 'GitHub Copilot';
+      break;
+    case 'cursor':
+      message = 'Cursor';
+      break;
+  }
+  if (partiallyConfigured) {
+    message += ' (partially configured)';
+  } else if (outdated) {
+    message += ' (out of date)';
+  }
+  return {
+    name: agent,
+    message,
+  };
 }
 
 type NormalizedAiAgentSetupOptions = ConfigureAiAgentsOptions & {

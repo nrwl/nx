@@ -13,6 +13,7 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
+import { Agent } from 'packages/nx/src/ai/utils';
 
 interface Schema {
   directory: string;
@@ -43,6 +44,7 @@ interface Schema {
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
+  aiAgents?: Agent[];
 }
 
 export interface NormalizedSchema extends Schema {
@@ -56,7 +58,12 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  options.nxCloudToken = await generateWorkspaceFiles(tree, options);
+  const { token, aiAgentsCallback } = await generateWorkspaceFiles(
+    tree,
+    options
+  );
+
+  options.nxCloudToken = token;
 
   addPresetDependencies(tree, options);
 
@@ -86,6 +93,8 @@ export async function newGenerator(tree: Tree, opts: Schema) {
     if (options.preset !== Preset.NPM && !options.isCustomPreset) {
       await generatePreset(tree, options);
     }
+    // if we move this into create-nx-workspace, we can also easily log things out like nx console install success
+    await aiAgentsCallback();
   };
 }
 

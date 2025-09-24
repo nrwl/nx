@@ -28,6 +28,8 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { readNxJsonFromDisk } from '../devkit-internals';
 import { readNxJson } from '../config/configuration';
 
+// when adding new agents, be sure to also update the list in
+// packages/create-nx-workspace/src/internal-utils/prompts.ts
 export const availableAgents = [
   'claude',
   'codex',
@@ -247,7 +249,7 @@ export async function configureAgents(
 ): Promise<void> {
   const writeNxCloudRules = isNxCloudUsed(readNxJson());
   const tree = new FsTree(workspaceRoot, false);
-  await setupAiAgentsGenerator(
+  const callback = await setupAiAgentsGenerator(
     tree,
     {
       directory: '.',
@@ -257,69 +259,13 @@ export async function configureAgents(
     !useLatest
   );
 
+  // changes that are out of scope for the generator itself because they do more than modify the tree
   flushChanges(workspaceRoot, tree.listChanges());
 
-  // changes that are out of scope for the generator because they do more than modify the tree
-  if (agents.includes('codex')) {
-    if (existsSync(codexConfigTomlPath)) {
-      const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
-      if (!tomlContents.includes(nxMcpTomlHeader)) {
-        appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
-        output.log({
-          title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
-        });
-      }
-    } else {
-      mkdirSync(join(homedir(), '.codex'), { recursive: true });
-      writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
-      output.log({
-        title: `Created ${codexConfigTomlPath} with nx-mcp server`,
-      });
-    }
-  }
-  if (agents.includes('copilot')) {
-    try {
-      if (canInstallNxConsoleForEditor('vscode')) {
-        installNxConsoleForEditor('vscode');
-        output.log({
-          title: `Installed Nx Console for VSCode`,
-        });
-      }
-    } catch (e) {
-      output.error({
-        title: `Failed to install Nx Console for VSCode. Please install it manually.`,
-        bodyLines: [(e as Error).message],
-      });
-    }
-    try {
-      if (canInstallNxConsoleForEditor('vscode-insiders')) {
-        installNxConsoleForEditor('vscode-insiders');
-      }
-      output.log({
-        title: `Installed Nx Console for VSCode Insiders`,
-      });
-    } catch (e) {
-      output.error({
-        title: `Failed to install Nx Console for VSCode Insiders. Please install it manually.`,
-        bodyLines: [(e as Error).message],
-      });
-    }
-  }
-  if (agents.includes('cursor')) {
-    try {
-      if (canInstallNxConsoleForEditor('cursor')) {
-        installNxConsoleForEditor('cursor');
-      }
-      output.log({
-        title: `Installed Nx Console for Cursor`,
-      });
-    } catch (e) {
-      output.error({
-        title: `Failed to install Nx Console for Cursor. Please install it manually.`,
-        bodyLines: [(e as Error).message],
-      });
-    }
-  }
+  const modificationResults = await callback();
+
+  modificationResults.messages.forEach((message) => output.log(message));
+  modificationResults.errors.forEach((error) => output.error(error));
 }
 
 export function getAgentConfigurations(
@@ -369,8 +315,8 @@ export const getAgentRulesWrapped = (writeNxCloudRules: boolean) => {
   return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n${agentRulesString}\n${nxRulesMarkerCommentEnd}`;
 };
 
-const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
-const nxMcpTomlConfig = `${nxMcpTomlHeader}
+export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
+export const nxMcpTomlConfig = `${nxMcpTomlHeader}
 type = "stdio"
 command = "npx"
 args = ["nx", "mcp"]

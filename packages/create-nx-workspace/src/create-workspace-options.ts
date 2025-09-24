@@ -37,4 +37,14 @@ export interface CreateWorkspaceOptions {
     message: string; // Message to use for the initial commit
   };
   cliName?: string; // Name of the CLI, used when displaying outputs. e.g. nx, Nx
+  aiAgents?: Agent[]; // List of AI agents to configure
 }
+
+export const availableAgents = [
+  'claude',
+  'codex',
+  'copilot',
+  'cursor',
+  'gemini',
+] as const;
+export type Agent = (typeof availableAgents)[number];
