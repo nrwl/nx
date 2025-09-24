@@ -85,8 +85,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         // Create shared component instances ONCE for all projects (major optimization)
 
-        val pathResolver = PathFormatter(gitIgnoreClassifier)
-        val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathResolver, gitIgnoreClassifier)
+        val pathFormatter = PathFormatter()
+        val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathFormatter, gitIgnoreClassifier)
 
         val sharedTestClassDiscovery = TestClassDiscovery()
 
@@ -96,7 +96,9 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
             sharedTestClassDiscovery,
             pluginManager,
             session,
-            mojoAnalyzer
+            mojoAnalyzer,
+            pathFormatter,
+            gitIgnoreClassifier
         )
 
         // Resolve Maven command once for all projects
