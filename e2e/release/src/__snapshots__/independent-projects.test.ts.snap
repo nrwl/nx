@@ -1,0 +1,414 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`nx release - independent projects - npm version should allow versioning projects independently 1`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-package.1", from the given specifier, to get new version 999.9.9-package.1
+{project-name} ✍️  New version 999.9.9-package.1 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "0.0.0",
++   "version": "999.9.9-package.1",
+"exports": {
+
+
+NX   Updating {package-manager} lock file
+
+
+NX   Staging changed files with git
+
+
+`;
+
+exports[`nx release - independent projects - npm version should allow versioning projects independently 2`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-package.2", from the given specifier, to get new version 999.9.9-package.2
+{project-name} ✍️  New version 999.9.9-package.2 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "0.0.0",
++   "version": "999.9.9-package.2",
+"exports": {
+
+}
++
+
+
+NX   Updating {package-manager} lock file
+
+
+NX   Staging changed files with git
+
+
+`;
+
+exports[`nx release - independent projects - npm version should allow versioning projects independently 3`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
+{project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+{project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
+{project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-package.3", from the given specifier, to get new version 999.9.9-package.3
+{project-name} ✍️  New version 999.9.9-package.3 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "0.0.0",
++   "version": "999.9.9-package.3",
+"exports": {
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-package.2",
++   "version": "999.9.9",
+"exports": {
+
+"dependencies": {
+-     "@proj/{project-name}": "0.0.0"
++     "@proj/{project-name}": "999.9.9-package.3"
+}
+
+
+NX   Updating {package-manager} lock file
+
+
+NX   Staging changed files with git
+
+
+`;
+
+exports[`nx release - independent projects - npm version should support automated git operations after versioning when configured 1`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.1 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.2", from the given specifier, to get new version 999.9.9-version-git-operations-test.2
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.2 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-version-git-operations-test.1",
++   "version": "999.9.9-version-git-operations-test.2",
+"exports": {
+
+
+NX   Updating {package-manager} lock file
+
+Updating {lock-file} with the following command:
+{lock-file-command}
+
+NX   Committing changes with git
+
+Staging files in git with the following command:
+git add {project-name}/package.json {lock-file}
+
+Committing files in git with the following command:
+git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.2
+
+NX   Tagging commit with git
+
+Tagging the current commit in git with the following command:
+git tag --annotate {project-name}@999.9.9-version-git-operations-test.2 --message {project-name}@999.9.9-version-git-operations-test.2
+
+`;
+
+exports[`nx release - independent projects - npm version should support automated git operations after versioning when configured 4`] = `
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-package.3 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.2 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+{project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-package.3",
++   "version": "999.9.9-version-git-operations-test.3",
+"exports": {
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-version-git-operations-test.2",
++   "version": "999.9.9-version-git-operations-test.3",
+"exports": {
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9",
++   "version": "999.9.9-version-git-operations-test.3",
+"exports": {
+
+"dependencies": {
+-     "@proj/{project-name}": "999.9.9-package.3"
++     "@proj/{project-name}": "999.9.9-version-git-operations-test.3"
+}
+
+
+NX   Updating {package-manager} lock file
+
+Updating {lock-file} with the following command:
+{lock-file-command}
+
+NX   Committing changes with git
+
+Staging files in git with the following command:
+git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {lock-file}
+
+Committing files in git with the following command:
+git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3
+
+NX   Tagging commit with git
+
+Tagging the current commit in git with the following command:
+git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
+Tagging the current commit in git with the following command:
+git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
+Tagging the current commit in git with the following command:
+git tag --annotate v999.9.9-version-git-operations-test.3 --message v999.9.9-version-git-operations-test.3
+
+`;
+
+exports[`nx release - independent projects - pnpm version should allow versioning projects independently 1`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-package.1", from the given specifier, to get new version 999.9.9-package.1
+{project-name} ✍️  New version 999.9.9-package.1 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "0.0.0",
++   "version": "999.9.9-package.1",
+"exports": {
+
+
+NX   Staging changed files with git
+
+
+`;
+
+exports[`nx release - independent projects - pnpm version should allow versioning projects independently 2`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-package.2", from the given specifier, to get new version 999.9.9-package.2
+{project-name} ✍️  New version 999.9.9-package.2 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "0.0.0",
++   "version": "999.9.9-package.2",
+"exports": {
+
+}
++
+
+
+NX   Staging changed files with git
+
+
+`;
+
+exports[`nx release - independent projects - pnpm version should allow versioning projects independently 3`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
+{project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+{project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
+{project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-package.3", from the given specifier, to get new version 999.9.9-package.3
+{project-name} ✍️  New version 999.9.9-package.3 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "0.0.0",
++   "version": "999.9.9-package.3",
+"exports": {
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-package.2",
++   "version": "999.9.9",
+"exports": {
+
+"dependencies": {
+-     "@proj/{project-name}": "0.0.0"
++     "@proj/{project-name}": "999.9.9-package.3"
+}
+
+
+NX   Staging changed files with git
+
+
+`;
+
+exports[`nx release - independent projects - pnpm version should support automated git operations after versioning when configured 1`] = `
+
+NX   Your filter "{project-name}" matched the following projects:
+
+- {project-name}
+
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.1 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.2", from the given specifier, to get new version 999.9.9-version-git-operations-test.2
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.2 written to manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-version-git-operations-test.1",
++   "version": "999.9.9-version-git-operations-test.2",
+"exports": {
+
+
+Skipped lock file update because p{package-manager} workspaces are not enabled.
+
+NX   Committing changes with git
+
+Staging files in git with the following command:
+git add {project-name}/package.json
+
+Committing files in git with the following command:
+git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.2
+
+NX   Tagging commit with git
+
+Tagging the current commit in git with the following command:
+git tag --annotate {project-name}@999.9.9-version-git-operations-test.2 --message {project-name}@999.9.9-version-git-operations-test.2
+
+`;
+
+exports[`nx release - independent projects - pnpm version should support automated git operations after versioning when configured 4`] = `
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-package.3 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.2 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+{project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+{project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-package.3",
++   "version": "999.9.9-version-git-operations-test.3",
+"exports": {
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-version-git-operations-test.2",
++   "version": "999.9.9-version-git-operations-test.3",
+"exports": {
+
+
+"name": "@proj/{project-name}",
+-   "version": "999.9.9",
++   "version": "999.9.9-version-git-operations-test.3",
+"exports": {
+
+"dependencies": {
+-     "@proj/{project-name}": "999.9.9-package.3"
++     "@proj/{project-name}": "999.9.9-version-git-operations-test.3"
+}
+
+
+Skipped lock file update because p{package-manager} workspaces are not enabled.
+
+NX   Committing changes with git
+
+Staging files in git with the following command:
+git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
+
+Committing files in git with the following command:
+git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3
+
+NX   Tagging commit with git
+
+Tagging the current commit in git with the following command:
+git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
+Tagging the current commit in git with the following command:
+git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
+Tagging the current commit in git with the following command:
+git tag --annotate v999.9.9-version-git-operations-test.3 --message v999.9.9-version-git-operations-test.3
+
+`;
