@@ -194,6 +194,14 @@ pre {
     border-radius: var(--radius-lg);
   }
 
+  aside a {
+    color: var(--sl-color-accent);
+  }
+
+  aside a:hover {
+    color: var(--sl-color-accent-high);
+  }
+
   /* Align TOC with sidebar styling */
   starlight-toc ul {
     line-height: var(--leading-relaxed);
@@ -356,9 +364,15 @@ pre {
 /* Additional custom styles can be added here */
 
 /* For deepdive callouts that are still used, need to space out content */
-.callout div:not(:last-child),
+.callout div:not(:last-child):not(.ec-line),
 .callout p:not(:last-child) {
   @apply mb-4;
+}
+.callout a {
+  color: var(--sl-color-accent);
+}
+.callout a:hover {
+  color: var(--sl-color-accent-high);
 }
 
 /* Align top with breadcrumbs */
@@ -386,7 +400,7 @@ h6:hover .anchor-link {
 }
 
 .anchor-link:hover {
-  color: var(--sl-color-accent);
+  color: var(--sl-color-accent-high);
 }
 
 .right-sidebar {
@@ -405,7 +419,7 @@ table code {
   word-wrap: break-word;
 }
 
-/* Fix tab alignment */
 [role='tablist'] {
-  align-items: end;
+  font-size: var(--text-sm);
+  align-items: end; /* Fix tab alignment */
 }
