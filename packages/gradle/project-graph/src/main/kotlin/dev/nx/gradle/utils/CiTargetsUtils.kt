@@ -14,7 +14,6 @@ fun addTestCiTargets(
     testFiles: FileCollection,
     projectBuildPath: String,
     testTask: Task,
-    testTargetName: String,
     targets: NxTargets,
     targetGroups: TargetGroups,
     projectRoot: String,
@@ -74,28 +73,6 @@ private fun processTestFiles(
               mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
         }
       }
-}
-
-internal fun processTestClasses(
-    testClassNames: Map<String, String>,
-    ciTestTargetName: String,
-    projectBuildPath: String,
-    testTask: Task,
-    projectRoot: String,
-    workspaceRoot: String,
-    targets: NxTargets,
-    targetGroups: TargetGroups,
-    ciDependsOn: MutableList<Map<String, String>>
-) {
-  testClassNames.forEach { (className, testClassPackagePath) ->
-    val targetName = "$ciTestTargetName--$className"
-    targets[targetName] =
-        buildTestCiTarget(
-            projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
-    targetGroups[testCiTargetGroup]?.add(targetName)
-
-    ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
-  }
 }
 
 private fun isTestFile(file: File, workspaceRoot: String): Boolean {

@@ -3,6 +3,7 @@ title: 'Building and Testing Angular Apps in Nx'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 sidebar:
   label: 'Angular Monorepo'
+filter: "type:Guides"
 ---
 
 This tutorial walks you through creating an Angular monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
@@ -23,9 +24,9 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 ### Step 1: Creating a new Nx Angular workspace
 
-Let's create your workspace. The setup process takes about 2 minutes and will configure Angular, testing, and CI/CD automatically.
+Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/angular/github) with our Angular preset to get started quickly.
 
-{% call_to_action variant="default" title="Create Angular Workspace in 2 Minutes ⚡" url="https://cloud.nx.app/create-nx-workspace/angular/github" description="Skip the setup hassle - Get coding instantly with pre-configured CI/CD" /%}
+{% call_to_action variant="default" title="Create Angular Workspace" url="https://cloud.nx.app/create-nx-workspace/angular/github" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -146,6 +147,7 @@ npx nx show project demo
 
 {% project_details title="Project Details View (Simplified)" %}
 
+```json
 {
   "project": {
     "name": "demo",
@@ -211,6 +213,7 @@ npx nx show project demo
     "tags": ["apps/demo/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 
@@ -417,6 +420,7 @@ You should be able to see something similar to the following in your browser.
 
 {% graph height="450px" %}
 
+```json
 {
   "projects": [
     {
@@ -442,6 +446,7 @@ You should be able to see something similar to the following in your browser.
   "focus": null,
   "groupByFolder": false
 }
+```
 
 {% /graph %}
 

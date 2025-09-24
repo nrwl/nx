@@ -1,0 +1,68 @@
+---
+import type { TocItem } from '@astrojs/starlight/utils/generateToC';
+
+interface Props {
+  toc: TocItem[];
+  depth?: number;
+  isMobile?: boolean;
+}
+
+const { toc, isMobile = false, depth = 0 } = Astro.props;
+---
+
+<ul class:list={{ isMobile }}>
+  {
+    toc.map((heading) => (
+      <li>
+        <a href={'#' + heading.slug}>
+          <span>{heading.text}</span>
+        </a>
+        {heading.children.length > 0 && (
+          <Astro.self toc={heading.children} depth={depth + 1} isMobile={isMobile} />
+        )}
+      </li>
+    ))
+  }
+</ul>
+
+<style define:vars={{ depth }}>
+  @layer starlight.core {
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+    
+    a {
+      --pad-inline: 0.5rem;
+      display: block;
+      border-radius: 0.25rem;
+      padding-block: 0.25rem;
+      padding-inline: calc(1rem * var(--depth) + var(--pad-inline)) var(--pad-inline);
+      line-height: 1.25;
+      color: var(--sl-color-gray-3);
+      text-decoration: none;
+      outline: none;
+      font-size: var(--sl-text-sm);
+    }
+    
+    a:hover {
+      color: var(--sl-color-gray-2);
+    }
+    
+    a[aria-current='true'] {
+      color: var(--sl-color-text-accent);
+      font-weight: 600;
+    }
+    
+    a:focus-visible {
+      outline: 2px solid var(--sl-color-accent);
+      outline-offset: 2px;
+    }
+    
+    @media (min-width: 50rem) {
+      a {
+        padding-inline-start: calc(1rem * var(--depth) + var(--pad-inline));
+      }
+    }
+  }
+</style>

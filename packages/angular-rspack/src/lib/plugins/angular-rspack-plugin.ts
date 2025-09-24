@@ -43,6 +43,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #javascriptTransformer: ResolvedJavascriptTransformer;
   // This will be defined in the apply method correctly
   #angularCompilation: AngularCompilation;
+  #collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
 
   constructor(
     options: NormalizedAngularRspackPluginOptions,
@@ -148,6 +149,43 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
         },
         (assets) => {
+          // Emit collected stylesheet assets
+          if (this.#collectedStylesheetAssets.length > 0) {
+            const { RawSource } = compiler.rspack.sources;
+
+            for (const asset of this.#collectedStylesheetAssets) {
+              // Normalize the asset path to ensure correct output location
+              let assetPath = asset.path;
+
+              // Extract just the media/filename part from the path
+              const mediaMatch = assetPath.match(/media\/[^/]+$/);
+              if (mediaMatch) {
+                assetPath = mediaMatch[0];
+              } else {
+                // If not a media path, try to make it relative to the project root
+                assetPath = assetPath.replace(/^\/+/, '');
+                // Remove absolute path prefix if present
+                const projectRootIndex = assetPath.lastIndexOf(
+                  this.#_options.root
+                );
+                if (projectRootIndex >= 0) {
+                  assetPath = assetPath.substring(
+                    projectRootIndex + this.#_options.root.length + 1
+                  );
+                }
+              }
+
+              // Create the asset source
+              const source = new RawSource(asset.text);
+
+              // Emit the asset
+              compilation.emitAsset(assetPath, source);
+            }
+
+            // Clear the collected assets after emission
+            this.#collectedStylesheetAssets.length = 0;
+          }
+
           for (const assetName in assets) {
             const asset = compilation.getAsset(assetName);
             if (!asset) {
@@ -335,7 +373,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         ? tsConfig
         : tsConfig.configFile
       : this.#_options.tsConfig;
-    this.#angularCompilation = await setupCompilationWithAngularCompilation(
+    const result = await setupCompilationWithAngularCompilation(
       {
         source: {
           tsconfigPath: tsconfigPath,
@@ -356,5 +394,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       this.#angularCompilation,
       modifiedFiles
     );
+    this.#angularCompilation = result.angularCompilation;
+    this.#collectedStylesheetAssets = result.collectedStylesheetAssets;
   }
 }

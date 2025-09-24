@@ -27,7 +27,13 @@ export default defineMarkdocConfig({
           type: 'String',
           required: false,
           default: 'default',
-          matches: ['default', 'gradient', 'inverted', 'gradient-alt'],
+          matches: [
+            'default',
+            'gradient',
+            'inverted',
+            'gradient-alt',
+            'simple',
+          ],
         },
         size: {
           type: 'String',

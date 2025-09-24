@@ -3,6 +3,7 @@ title: Advanced Angular Micro Frontends with Dynamic Module Federation
 description: Learn how to implement Dynamic Module Federation in Angular applications to achieve "Build once, deploy everywhere" with Nx, enabling runtime determination of remote application locations.
 sidebar:
   label: Advanced Micro Frontends with Angular using Dynamic Federation
+filter: "type:Guides"
 ---
 
 Dynamic Module Federation is a technique that allows an application to determine the location of its remote applications at runtime. It helps to achieve the use case of **"Build once, deploy everywhere"**.
@@ -154,7 +155,7 @@ We can see the following in the **Login** micro frontend configuration:
 
 ```ts
 // apps/login/module-federation.config.ts
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'login',
@@ -175,7 +176,7 @@ This config is then used in the `webpack.config.ts` file:
 
 ```ts
 // apps/login/webpack.config.ts
-import { withModuleFederation } from '@nx/angular/module-federation';
+import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 export default withModuleFederation(config, { dts: false });
@@ -185,7 +186,7 @@ We can see the following in the **Dashboard** micro frontend configuration:
 
 ```ts
 // apps/dashboard/module-federation.config.ts
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'dashboard',
@@ -479,7 +480,7 @@ Open the `module-federation.config.ts` file at the root of our `apps/dashboard/`
 
 ```ts {% meta="{6}" %}
 // apps/dashboard/module-federation.config.ts
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'dashboard',

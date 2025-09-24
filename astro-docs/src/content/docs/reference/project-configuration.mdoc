@@ -4,6 +4,7 @@ keywords: [project.json]
 description: Learn how Nx constructs project configuration from inferred tasks, workspace defaults, and project-level files, with detailed explanations of task definitions and configuration options.
 sidebar:
   order: 3
+filter: 'type:References'
 ---
 
 
@@ -21,6 +22,8 @@ nx show project myproject --web
 
 {% project_details title="Project Details View" %}
 
+
+```json
 {
   "project": {
     "name": "demo",
@@ -58,6 +61,7 @@ nx show project myproject --web
     "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
   }
 }
+```
 
 {% /project_details %}
 

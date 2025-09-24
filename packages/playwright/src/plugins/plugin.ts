@@ -321,6 +321,7 @@ async function buildPlaywrightTargets(
         target: targetName,
         projects: 'self',
         params: 'forward',
+        options: 'forward',
       });
     }
 

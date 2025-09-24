@@ -3,6 +3,7 @@ title: Sync Generators
 description: Learn how to use Nx sync generators to maintain repository state and update configuration files based on the project graph before tasks are run.
 sidebar:
   order: 1
+filter: "type:Concepts"
 ---
 
 In Nx 19.8, you can use sync generators to ensure that your repository is maintained in a correct state. One specific application is to use the project graph to update files. These can be global configuration files or scripts, or at the task level to ensure that files are in sync before a task is run.
@@ -56,6 +57,8 @@ nx show project <name>
 The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/docs/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` generator on `build` and `typecheck` targets.
 
 {% project_details title="Project Details View" expandedTargets=["build"] %}
+
+```json
 {
   "project": {
     "name": "foo",
@@ -86,6 +89,8 @@ The above command opens up the project details view, and the registered sync gen
     "targets.build": ["packages/foo/tsconfig.ts", "@nx/js/typescript"]
   }
 }
+```
+
 {% /project_details %}
 
 Task sync generators can be thought of like the `dependsOn` property, but for generators instead of task dependencies.
@@ -115,6 +120,7 @@ Nx processes the file system in order to [create the project graph](/docs/featur
 
 {% graph title="Project Graph" height="200px" type="project" %}
 
+```json
 {
   "projects": [
     {
@@ -174,6 +180,7 @@ Nx processes the file system in order to [create the project graph](/docs/featur
   "groupByFolder": false,
   "exclude": []
 }
+```
 
 {% /graph %}
 {% /side_by_side %}

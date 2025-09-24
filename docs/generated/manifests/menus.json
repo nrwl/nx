@@ -1819,22 +1819,6 @@
                 "isExternal": false,
                 "children": [
                   {
-                    "name": "React Native with Nx",
-                    "path": "/technologies/react/recipes/react-native",
-                    "id": "react-native",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Remix with Nx",
-                    "path": "/technologies/react/recipes/remix",
-                    "id": "remix",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
                     "name": "React Router with Nx",
                     "path": "/technologies/react/recipes/react-router",
                     "id": "react-router",
@@ -4698,7 +4682,16 @@
                     "path": "/technologies/test-tools/playwright/recipes",
                     "id": "recipes",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "Merge Atomized Outputs",
+                        "path": "/technologies/test-tools/playwright/recipes/merge-atomized-outputs",
+                        "id": "merge-atomized-outputs",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   },
                   {
@@ -5732,6 +5725,14 @@
                         "id": "connect-to-nx-cloud",
                         "path": "/reference/core-api/nx/generators/connect-to-nx-cloud",
                         "name": "connect-to-nx-cloud",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "set-up-ai-agents",
+                        "path": "/reference/core-api/nx/generators/set-up-ai-agents",
+                        "name": "set-up-ai-agents",
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false

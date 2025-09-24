@@ -116,7 +116,11 @@ export function Pricing(): ReactElement {
                     <span>
                       Remote caching with{' '}
                       <Link
-                        href="/ci/features/remote-cache"
+                        href={
+                          process.env.NEXT_PUBLIC_ASTRO_URL
+                            ? '/docs/features/ci-features/remote-cache'
+                            : '/ci/features/remote-cache'
+                        }
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
                         onClick={() =>
@@ -140,7 +144,11 @@ export function Pricing(): ReactElement {
                     <span>
                       Distributed task execution with{' '}
                       <Link
-                        href="/ci/features/distribute-task-execution"
+                        href={
+                          process.env.NEXT_PUBLIC_ASTRO_URL
+                            ? '/docs/features/ci-features/distribute-task-execution'
+                            : '/ci/features/distribute-task-execution'
+                        }
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
                         onClick={() =>
@@ -281,7 +289,7 @@ export function Pricing(): ReactElement {
               </ul>
               <p className="mt-4 text-xs text-slate-500">
                 ¹Any person or actor that has triggered a CI Pipeline Execution
-                within the current billing cycle. Up to 30 active contributors.
+                within the current billing cycle. Up to 50 active contributors.
               </p>
             </div>
 
@@ -409,7 +417,11 @@ export function Pricing(): ReactElement {
             <p className="text-sm font-medium opacity-80">
               See{' '}
               <Link
-                href="/ci/reference/credits-pricing"
+                href={
+                  process.env.NEXT_PUBLIC_ASTRO_URL
+                    ? '/docs/reference'
+                    : '/ci/reference/credits-pricing'
+                }
                 className="font-semibold underline"
               >
                 Credit Pricing

@@ -124,6 +124,7 @@ async function createDockerTargets(
   };
 
   targets[options.buildTarget] = {
+    dependsOn: ['build', '^build'],
     command: `docker build .`,
     options: {
       cwd: projectRoot,

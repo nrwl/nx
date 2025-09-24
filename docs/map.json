@@ -973,16 +973,6 @@
                   "id": "recipes",
                   "itemList": [
                     {
-                      "name": "React Native with Nx",
-                      "id": "react-native",
-                      "file": "shared/guides/react-native"
-                    },
-                    {
-                      "name": "Remix with Nx",
-                      "id": "remix",
-                      "file": "shared/guides/remix"
-                    },
-                    {
                       "name": "React Router with Nx",
                       "id": "react-router",
                       "file": "shared/guides/react-router"
@@ -1646,7 +1636,13 @@
                     {
                       "name": "Guides",
                       "id": "recipes",
-                      "itemList": []
+                      "itemList": [
+                        {
+                          "name": "Merge Atomized Outputs",
+                          "id": "merge-atomized-outputs",
+                          "file": "shared/packages/playwright/merge-atomized-outputs"
+                        }
+                      ]
                     },
                     {
                       "name": "API",

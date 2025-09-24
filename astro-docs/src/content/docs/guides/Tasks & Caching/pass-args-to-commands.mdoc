@@ -1,6 +1,7 @@
 ---
 title: Pass Args to Commands
 description: 'Recipe describing how to pass args to tasks running commands'
+filter: "type:Guides"
 ---
 
 When you have an [inferred task](/docs/concepts/inferred-tasks) (or an explicitly defined task using the [`nx:run-commands` executor](/docs/guides/tasks--caching/run-commands-executor#2-update)) running a command, there'll come a time when you'll need to pass args to the underlying command being run. This recipe explains how you can achieve that.
@@ -22,6 +23,7 @@ And the following [final configuration](/docs/reference/project-configuration):
 
 {% project_details title="Project Details View" %}
 
+```json
 {
   "project": {
     "name": "my-app",
@@ -154,6 +156,7 @@ And the following [final configuration](/docs/reference/project-configuration):
     "tags": ["apps/my-app/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 

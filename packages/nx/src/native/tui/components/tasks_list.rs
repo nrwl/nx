@@ -341,21 +341,32 @@ impl TasksList {
         // Check if there are any tasks that need to be run
         let has_tasks_to_run = !in_progress.is_empty() || !pending.is_empty();
 
-        // Only show the parallel section if there are tasks in progress or pending
-        if has_tasks_to_run {
+        // When filtering is active, only show parallel section if there are InProgress tasks
+        // When not filtering, show parallel section if there are any InProgress or pending tasks
+        let should_show_parallel_section = if self.filter_text.is_empty() {
+            has_tasks_to_run
+        } else {
+            !in_progress.is_empty() // Only show if there are filtered InProgress tasks
+        };
+
+        // Only show the parallel section if appropriate
+        if should_show_parallel_section {
             // Create a fixed section for in-progress tasks (self.max_parallel slots)
             // Add actual in-progress tasks
             entries.extend(in_progress.iter().map(|name| Some(name.clone())));
 
             // Fill remaining slots with None up to self.max_parallel
-            let in_progress_count = in_progress.len();
-            if in_progress_count < self.max_parallel {
-                // When we have fewer InProgress tasks than self.max_parallel, fill the remaining slots
-                // with empty placeholder rows to maintain the fixed height
-                entries.extend(std::iter::repeat_n(
-                    None,
-                    self.max_parallel - in_progress_count,
-                ));
+            // Only add placeholder entries when NOT filtering
+            if self.filter_text.is_empty() {
+                let in_progress_count = in_progress.len();
+                if in_progress_count < self.max_parallel {
+                    // When we have fewer InProgress tasks than self.max_parallel, fill the remaining slots
+                    // with empty placeholder rows to maintain the fixed height
+                    entries.extend(std::iter::repeat_n(
+                        None,
+                        self.max_parallel - in_progress_count,
+                    ));
+                }
             }
 
             // Always add a separator after the parallel tasks section with a bottom cap
@@ -389,7 +400,13 @@ impl TasksList {
             return false;
         }
 
-        // Get scroll position and viewport from selection manager
+        // Check if parallel section should be shown and get its end position
+        let parallel_section_end = match self.get_parallel_section_end() {
+            Some(end) => end,
+            None => return false,
+        };
+
+        // Only get viewport entries if we know we need them
         let viewport_entries = {
             let manager = self.selection_manager.lock().unwrap();
             manager.get_viewport_entries()
@@ -400,15 +417,54 @@ impl TasksList {
             return false;
         }
 
-        // Waiting entries are at positions 0..max_parallel
         // Viewport shows entries from scroll_offset to scroll_offset+viewport_size
-        // Ranges overlap if: max_parallel > scroll_offset AND 0 < scroll_offset + viewport_size
-        scroll_offset < self.max_parallel
+        // Ranges overlap if: parallel_section_end > scroll_offset AND 0 < scroll_offset + viewport_size
+        scroll_offset < parallel_section_end
     }
 
     /// Determine if an entry at absolute position is part of the parallel section
     fn is_in_parallel_section(&self, absolute_idx: usize) -> bool {
-        absolute_idx < self.max_parallel && self.max_parallel > 0 && self.has_active_tasks()
+        if self.max_parallel == 0 || !self.has_active_tasks() {
+            return false;
+        }
+
+        // Check if parallel section should be shown based on filtering logic
+        let parallel_section_end = match self.get_parallel_section_end() {
+            Some(end) => end,
+            None => return false,
+        };
+
+        absolute_idx < parallel_section_end
+    }
+
+    /// Calculate the end position of the parallel section, returning None if no parallel section should be shown
+    fn get_parallel_section_end(&self) -> Option<usize> {
+        if self.filter_text.is_empty() {
+            // When not filtering, show if there are any InProgress or pending tasks
+            if !self.has_active_tasks() {
+                return None;
+            }
+            Some(self.max_parallel)
+        } else {
+            // When filtering, calculate filtered InProgress count once and use for both checks
+            let filtered_in_progress_count = self
+                .tasks
+                .iter()
+                .filter(|t| {
+                    matches!(t.status, TaskStatus::InProgress)
+                        && t.name
+                            .to_lowercase()
+                            .contains(&self.filter_text.to_lowercase())
+                })
+                .count();
+
+            // If no filtered InProgress tasks, don't show parallel section
+            if filtered_in_progress_count == 0 {
+                None
+            } else {
+                Some(filtered_in_progress_count)
+            }
+        }
     }
 
     /// Check if there are active tasks that warrant showing the parallel section
@@ -1222,8 +1278,9 @@ impl TasksList {
 
                 // Check if this is the bottom cap (the separator after the last parallel task)
                 // Only show bottom corner when parallel section is shown
+                let parallel_section_end = self.get_parallel_section_end().unwrap_or(0);
                 let is_bottom_cap =
-                    absolute_idx == self.max_parallel && has_visible_parallel_entries;
+                    absolute_idx == parallel_section_end && has_visible_parallel_entries;
 
                 if is_in_parallel_section && !is_bottom_cap {
                     // This is a "Waiting for task..." entry within the parallel section
@@ -3577,6 +3634,175 @@ mod tests {
     fn test_scrollbar_positioning_narrow_terminal() {
         let mut tasks_list = create_large_tasks_list(25); // 25 tasks to force scrollbar
         let mut terminal = create_test_terminal(60, 18); // Narrow terminal
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_filter_hides_placeholders_but_shows_matching_in_progress() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set max_parallel to 3 to create placeholder slots
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Start only the first task (task1 - should match "app1" filter)
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .unwrap();
+
+        // Apply filter that matches the running task - filter for "task1"
+        tasks_list.update(Action::EnterFilterMode).unwrap();
+        tasks_list.update(Action::AddFilterChar('t')).unwrap();
+        tasks_list.update(Action::AddFilterChar('a')).unwrap();
+        tasks_list.update(Action::AddFilterChar('s')).unwrap();
+        tasks_list.update(Action::AddFilterChar('k')).unwrap();
+        tasks_list.update(Action::AddFilterChar('1')).unwrap();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_filter_hides_parallel_section_when_no_in_progress_match() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set max_parallel to 3
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Start the first task (task1 contains "app1")
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .unwrap();
+
+        // Complete the first task to move it to completed
+        tasks_list
+            .update(Action::EndTasks(vec![TaskResult {
+                task: test_tasks[0].clone(),
+                status: "success".to_string(),
+                code: 0,
+                terminal_output: None,
+            }]))
+            .unwrap();
+
+        // Explicitly update task status to Success to ensure it's properly marked as completed
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+
+        // Apply filter that matches ONLY completed tasks, not InProgress
+        // Filter for "task1" which should match the completed task1 but no InProgress tasks
+        tasks_list.update(Action::EnterFilterMode).unwrap();
+        tasks_list.update(Action::AddFilterChar('t')).unwrap();
+        tasks_list.update(Action::AddFilterChar('a')).unwrap();
+        tasks_list.update(Action::AddFilterChar('s')).unwrap();
+        tasks_list.update(Action::AddFilterChar('k')).unwrap();
+        tasks_list.update(Action::AddFilterChar('1')).unwrap();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_filter_never_shows_placeholders() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set max_parallel to 3 to create placeholder slots
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Start first two tasks
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+
+        // Test 1: Filter that matches both InProgress tasks - use "task" to match task1 and task2
+        tasks_list.update(Action::EnterFilterMode).unwrap();
+        tasks_list.update(Action::AddFilterChar('t')).unwrap();
+        tasks_list.update(Action::AddFilterChar('a')).unwrap();
+        tasks_list.update(Action::AddFilterChar('s')).unwrap();
+        tasks_list.update(Action::AddFilterChar('k')).unwrap();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "filtered_active_tasks_with_parallel_section",
+            terminal.backend()
+        );
+
+        // Test 2: Complete both tasks and filter them - no parallel section
+        tasks_list
+            .update(Action::EndTasks(vec![
+                TaskResult {
+                    task: test_tasks[0].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+                TaskResult {
+                    task: test_tasks[1].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+            ]))
+            .unwrap();
+
+        // Explicitly update task statuses to Success to ensure they're properly marked as completed
+        for task in &test_tasks[0..2] {
+            tasks_list
+                .update(Action::UpdateTaskStatus(
+                    task.id.clone(),
+                    TaskStatus::Success,
+                ))
+                .unwrap();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "filtered_completed_tasks_no_parallel_section",
+            terminal.backend()
+        );
+
+        // Test 3: Clear filter and add one that matches nothing
+        tasks_list.update(Action::ClearFilter).unwrap();
+        tasks_list.update(Action::EnterFilterMode).unwrap();
+        tasks_list.update(Action::AddFilterChar('x')).unwrap();
+        tasks_list.update(Action::AddFilterChar('y')).unwrap();
+        tasks_list.update(Action::AddFilterChar('z')).unwrap();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!("empty_filter_no_matches", terminal.backend());
+    }
+
+    #[test]
+    fn test_parallel_section_visibility_with_filtered_tasks() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set max_parallel to 2
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        // Start the first task only
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .unwrap();
+
+        // Filter that excludes the InProgress task - should hide parallel section entirely
+        // Filter for "task3" which will match only task3 (pending) but NOT task1 (InProgress)
+        tasks_list.update(Action::EnterFilterMode).unwrap();
+        tasks_list.update(Action::AddFilterChar('t')).unwrap();
+        tasks_list.update(Action::AddFilterChar('a')).unwrap();
+        tasks_list.update(Action::AddFilterChar('s')).unwrap();
+        tasks_list.update(Action::AddFilterChar('k')).unwrap();
+        tasks_list.update(Action::AddFilterChar('3')).unwrap();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());

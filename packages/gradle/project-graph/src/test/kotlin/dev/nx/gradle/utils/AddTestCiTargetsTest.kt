@@ -51,7 +51,6 @@ class AddTestCiTargetsTest {
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
@@ -111,7 +110,6 @@ class AddTestCiTargetsTest {
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
@@ -130,14 +128,14 @@ class AddTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-            package com.example;
-            import org.junit.jupiter.api.Test;
-            
-            abstract class AbstractTest {
-                @Test
-                void testMethod() {}
-            }
-          """
+                package com.example;
+                import org.junit.jupiter.api.Test;
+                
+                abstract class AbstractTest {
+                    @Test
+                    void testMethod() {}
+                }
+              """
                   .trimIndent())
         }
 
@@ -146,14 +144,14 @@ class AddTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-            package com.example;
-            import org.junit.jupiter.api.Test;
-            
-            class ConcreteTest {
-                @Test
-                void testMethod() {}
-            }
-          """
+                package com.example;
+                import org.junit.jupiter.api.Test;
+                
+                class ConcreteTest {
+                    @Test
+                    void testMethod() {}
+                }
+              """
                   .trimIndent())
         }
 
@@ -166,7 +164,6 @@ class AddTestCiTargetsTest {
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,

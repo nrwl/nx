@@ -71,7 +71,7 @@ const docsToAstroRedirects = {
   '/ci/recipes/other/cipe-affected-project-graph':
     '/docs/guides/nx-cloud/cipe-affected-project-graph',
   '/ci/reference': '/docs/reference',
-  '/ci/reference/config': '/docs/reference', // TODO: missing
+  '/ci/reference/config': '/docs/reference/nx-cloud/config',
   '/ci/reference/nx-cloud-cli': '/docs/reference/nx-cloud-cli',
   '/ci/reference/launch-templates': '/docs/reference/nx-cloud/launch-templates',
   '/ci/troubleshooting': '/docs/troubleshooting', // combined index listing
@@ -79,12 +79,12 @@ const docsToAstroRedirects = {
     '/docs/troubleshooting/ci-execution-failed',
   '/ci/recipes/enterprise/single-tenant':
     '/docs/enterprise/single-tenant/overview',
-  '/ci/reference/assignment-rules': '/docs/reference', // TODO: missing
-  '/ci/reference/custom-steps': '/docs/reference', // TODO: missing
-  '/ci/reference/custom-images': '/docs/reference', // TODO: missing
+  '/ci/reference/assignment-rules': '/docs/reference/nx-cloud/assignment-rules',
+  '/ci/reference/custom-steps': '/docs/reference/nx-cloud/custom-steps',
+  '/ci/reference/custom-images': '/docs/reference/nx-cloud/custom-images',
   '/ci/reference/env-vars': '/docs/reference/environment-variables',
-  '/ci/reference/credits-pricing': '/docs/reference', // TODO: missing
-  '/ci/reference/release-notes': '/docs/reference', // TODO: missing
+  '/ci/reference/credits-pricing': '/docs/reference/nx-cloud/credits-pricing',
+  '/ci/reference/release-notes': '/docs/reference/nx-cloud/release-notes',
 
   // ========== CONCEPTS ==========
   '/concepts': '/docs/concepts',
@@ -115,7 +115,7 @@ const docsToAstroRedirects = {
     '/docs/concepts/decisions/project-dependency-rules',
   '/concepts/decisions/folder-structure':
     '/docs/concepts/decisions/folder-structure',
-  '/concepts/nx-daemon': '/docs/concepts', // TODO: missing
+  '/concepts/nx-daemon': '/docs/concepts/nx-daemon',
 
   // ========== EXTENDING-NX ==========
   '/extending-nx': '/docs/extending-nx',
@@ -385,10 +385,10 @@ const docsToAstroRedirects = {
   '/reference/core-api/shared-fs-cache/generators':
     '/docs/reference/remote-cache-plugins/shared-fs-cache/generators',
   '/reference/core-api': '/docs/reference',
-  '/reference/core-api/nx': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin': '/docs/reference', // TODO: missing
-  '/reference/core-api/web': '/docs/reference', // TODO: missing
+  '/reference/core-api/nx': '/reference/nx',
+  '/reference/core-api/workspace': '/reference/workspace',
+  '/reference/core-api/plugin': '/reference/plugin',
+  '/reference/core-api/web': '/reference/web',
   '/reference/core-api/create-nx-workspace':
     '/docs/reference/create-nx-workspace',
   '/reference/core-api/devkit/documents': '/docs/reference/devkit',
@@ -686,9 +686,9 @@ const docsToAstroRedirects = {
     '/docs/reference/devkit/writeJson',
   '/reference/core-api/devkit/documents/writeJsonFile':
     '/docs/reference/devkit/writeJsonFile',
-  '/reference/core-api/devkit/executors': '/docs/reference/devkit', // TODO: missing (but this was an empty page anyway
-  '/reference/core-api/devkit/generators': '/docs/reference/devkit', // TODO: missing (but this was an empty page anyway
-  '/reference/core-api/devkit/migrations': '/docs/reference/devkit', // TODO: missing (but this was an empty page anyway
+  '/reference/core-api/devkit/executors': '/docs/reference/devkit', // missing (but this was an empty page anyway
+  '/reference/core-api/devkit/generators': '/docs/reference/devkit', // missing (but this was an empty page anyway
+  '/reference/core-api/devkit/migrations': '/docs/reference/devkit', // missing (but this was an empty page anyway
   '/reference/core-api/nx/documents': '/docs/reference/nx-commands', // these were just list of CLI commands
   '/reference/core-api/nx/documents/create-nx-workspace':
     'https://canary.nx.dev/docs/reference/create-nx-workspace',
@@ -724,50 +724,69 @@ const docsToAstroRedirects = {
   '/reference/core-api/nx/documents/record': '/docs/reference/nx-commands',
   '/reference/core-api/nx/documents/start-ci-run':
     '/docs/reference/nx-commands',
-  '/reference/core-api/nx/executors': '/docs/reference', // TODO: missing
-  '/reference/core-api/nx/executors/noop': '/docs/reference', // TODO: missing
-  '/reference/core-api/nx/executors/run-commands': '/docs/reference', // TODO: missing
-  '/reference/core-api/nx/executors/run-script': '/docs/reference', // TODO: missing
-  '/reference/core-api/nx/generators': '/docs/reference/benchmarks/caching', // TODO: missing
-  '/reference/core-api/nx/generators/connect-to-nx-cloud': '/docs/reference', // TODO: missing
-  '/reference/core-api/nx/migrations': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/executors': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/plugin': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/create-package': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/e2e-project': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/migration': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/generator': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/executor': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/plugin-lint-checks': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/generators/preset': '/docs/reference', // TODO: missing
-  '/reference/core-api/plugin/migrations': '/docs/reference', // TODO: missing
-  '/reference/core-api/web/executors': '/docs/reference', // TODO: missing
-  '/reference/core-api/web/executors/file-server': '/docs/reference', // TODO: missing
-  '/reference/core-api/web/generators': '/docs/reference', // TODO: missing
-  '/reference/core-api/web/generators/init': '/docs/reference', // TODO: missing
-  '/reference/core-api/web/generators/application': '/docs/reference', // TODO: missing
-  '/reference/core-api/web/generators/static-config': '/docs/reference', // TODO: missing
-  '/reference/core-api/web/migrations': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/documents': '/docs/reference', // TODO: missing
+  '/reference/core-api/nx/executors': '/reference/nx/executors',
+  '/reference/core-api/nx/executors/noop': '/reference/nx/executors',
+  '/reference/core-api/nx/executors/run-commands': '/reference/nx/executors',
+  '/reference/core-api/nx/executors/run-script': '/reference/nx/executors',
+  '/reference/core-api/nx/generators': '/reference/nx/generators',
+  '/reference/core-api/nx/generators/connect-to-nx-cloud':
+    '/reference/nx/generators',
+  '/reference/core-api/nx/migrations': '/reference/nx/migrations',
+  '/reference/core-api/plugin/executors': '/reference/plugin/executors',
+  '/reference/core-api/plugin/generators': '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/plugin':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/create-package':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/e2e-project':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/migration':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/generator':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/executor':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/plugin-lint-checks':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/generators/preset':
+    '/reference/plugin/generators',
+  '/reference/core-api/plugin/migrations': '/reference/plugin/migrations',
+  '/reference/core-api/web/executors': '/reference/web/executors',
+  '/reference/core-api/web/executors/file-server': '/reference/web/executors',
+  '/reference/core-api/web/generators': '/reference/web/generators',
+  '/reference/core-api/web/generators/init': '/reference/web/generators',
+  '/reference/core-api/web/generators/application': '/reference/web/generators',
+  '/reference/core-api/web/generators/static-config':
+    '/reference/web/generators',
+  '/reference/core-api/web/migrations': '/reference/web/migrations',
+  '/reference/core-api/workspace/documents': '/reference/workspace',
   '/reference/core-api/workspace/documents/nx-nodejs-typescript-version-matrix':
-    '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/executors': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/executors/counter': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/preset': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/move': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/remove': '/docs/reference', // TODO: missing
+    '/docs/reference/nodejs-typescript-compatibility',
+  '/reference/core-api/workspace/executors': '/reference/workspace/executors',
+  '/reference/core-api/workspace/executors/counter':
+    '/reference/workspace/executors',
+  '/reference/core-api/workspace/generators': '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/preset':
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/move':
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/remove':
+    '/reference/workspace/generators',
   '/reference/core-api/workspace/generators/convert-to-monorepo':
-    '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/new': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/run-commands': '/docs/reference', // TODO: missing
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/new':
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/run-commands':
+    '/reference/workspace/generators',
   '/reference/core-api/workspace/generators/fix-configuration':
-    '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/npm-package': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/ci-workflow': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/generators/infer-targets': '/docs/reference', // TODO: missing
-  '/reference/core-api/workspace/migrations': '/docs/reference', // TODO: missing
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/npm-package':
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/ci-workflow':
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/generators/infer-targets':
+    '/reference/workspace/generators',
+  '/reference/core-api/workspace/migrations': '/reference/workspace/migrations',
   '/reference/core-api/azure-cache/executors':
     '/docs/reference/remote-cache-plugins/azure-cache/overview', // this was empty
   '/reference/core-api/azure-cache/generators':
@@ -1805,7 +1824,7 @@ const docsToAstroRedirects = {
   // ================= CI ================
   '/ci': '/docs/getting-started/nx-cloud',
   '/ci/recipes': '/docs/guides/nx-cloud',
-  '/ci/recipes/improving-ttg': '/docs/guides/nx-cloud/setup-ci', // TODO: missing
+  '/ci/recipes/improving-ttg': '/docs/guides/nx-cloud/optimize-your-ttg',
   '/ci/recipes/set-up': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-azure': '/docs/guides/nx-cloud/setup-ci',
   '/ci/recipes/set-up/monorepo-ci-circle-ci': '/docs/guides/nx-cloud/setup-ci',
@@ -1824,8 +1843,8 @@ const docsToAstroRedirects = {
   '/ci/recipes/other': '/docs/guides/nx-cloud/setup-ci',
 
   // ============= SEE-ALSO =============
-  '/see-also': '/docs/getting-started/intro', // TODO: missing
-  '/see-also/sitemap': '/docs/getting-started/intro', // TODO: missing
+  '/see-also': '/docs/getting-started/intro', //  missing (but it wasn't really used i.e. ~0.01% of all traffic)
+  '/see-also/sitemap': '/docs/getting-started/intro', // missing (but it wasn't really used i.e. ~0.01% of all traffic)
 
   // ============= SHOWCASE =============
   // We removed these outdated showcase pages, but some have moved to reference (e.g. benchmarks)
@@ -1850,7 +1869,6 @@ const docsToAstroRedirects = {
   '/showcase/example-repos/mfe': '/docs/getting-started/intro',
 
   // ============ DEPRECATED ============
-  // TODO: 17 broken links
   // "/deprecated": "/docs/deprecated",
   // "/deprecated/affected-graph": "/docs/deprecated/affected-graph",
   // "/deprecated/print-affected": "/docs/deprecated/print-affected",

@@ -24,6 +24,12 @@
         "x-priority": "internal",
         "description": "Keep existing dependencies versions",
         "default": false
+      },
+      "useReactRouterPlugin": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Add the @nx/react/router-plugin to the nx.json plugins array. Only use this if using React Router for SSR/RSC.",
+        "default": false
       }
     },
     "required": [],

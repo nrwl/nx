@@ -54,6 +54,7 @@ async function loadCommunityPluginsData(
         id: plugin.name,
         collection: 'community-plugins',
         data: {
+          title: plugin.name,
           slug: plugin.name,
           description: plugin.description,
           url: plugin.url,

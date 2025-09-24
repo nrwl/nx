@@ -4,6 +4,7 @@ use std::sync::OnceLock;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SupportedEditor {
     VSCode,
+    VSCodeInsiders,
     Cursor,
     Windsurf,
     JetBrains,
@@ -19,7 +20,7 @@ pub fn get_current_editor() -> &'static SupportedEditor {
     })
 }
 
-pub fn detect_editor(env_map: HashMap<String, String>) -> SupportedEditor {
+fn detect_editor(env_map: HashMap<String, String>) -> SupportedEditor {
     // Check for Cursor-specific environment variable first
     if get_env_var("CURSOR_TRACE_ID", &env_map).is_some() {
         return SupportedEditor::Cursor;
@@ -28,7 +29,18 @@ pub fn detect_editor(env_map: HashMap<String, String>) -> SupportedEditor {
     let term_editor = if let Some(term) = get_env_var("TERM_PROGRAM", &env_map) {
         let term_lower = term.to_lowercase();
         match term_lower.as_str() {
-            "vscode" => SupportedEditor::VSCode,
+            "vscode" => {
+                // Check if it's VS Code Insiders by looking at TERM_PROGRAM_VERSION
+                if let Some(version) = get_env_var("TERM_PROGRAM_VERSION", &env_map) {
+                    if version.contains("-insider") {
+                        SupportedEditor::VSCodeInsiders
+                    } else {
+                        SupportedEditor::VSCode
+                    }
+                } else {
+                    SupportedEditor::VSCode
+                }
+            }
             "cursor" => SupportedEditor::Cursor,
             "windsurf" => SupportedEditor::Windsurf,
             "jetbrains" => SupportedEditor::JetBrains,
@@ -43,7 +55,10 @@ pub fn detect_editor(env_map: HashMap<String, String>) -> SupportedEditor {
         return term_editor;
     }
 
-    if matches!(term_editor, SupportedEditor::VSCode) {
+    if matches!(
+        term_editor,
+        SupportedEditor::VSCode | SupportedEditor::VSCodeInsiders
+    ) {
         if let Some(vscode_git_var) = get_env_var("VSCODE_GIT_ASKPASS_NODE", &env_map) {
             let vscode_git_var_lowercase = vscode_git_var.to_lowercase();
             if vscode_git_var_lowercase.contains("cursor") {
@@ -51,7 +66,7 @@ pub fn detect_editor(env_map: HashMap<String, String>) -> SupportedEditor {
             } else if vscode_git_var_lowercase.contains("windsurf") {
                 return SupportedEditor::Windsurf;
             } else {
-                return SupportedEditor::VSCode;
+                return term_editor;
             }
         } else {
             return term_editor;
@@ -79,6 +94,33 @@ mod tests {
             "some/path/with/vscode/in/it".to_string(),
         );
         assert_eq!(detect_editor(test_env), SupportedEditor::VSCode);
+    }
+
+    #[test]
+    fn test_detect_vscode_with_regular_version() {
+        let mut test_env = HashMap::new();
+        test_env.insert("TERM_PROGRAM".to_string(), "vscode".to_string());
+        test_env.insert("TERM_PROGRAM_VERSION".to_string(), "1.104.0".to_string());
+        test_env.insert(
+            "VSCODE_GIT_ASKPASS_NODE".to_string(),
+            "some/path/with/vscode-insiders/in/it".to_string(),
+        );
+        assert_eq!(detect_editor(test_env), SupportedEditor::VSCode);
+    }
+
+    #[test]
+    fn test_detect_vscode_insiders() {
+        let mut test_env = HashMap::new();
+        test_env.insert("TERM_PROGRAM".to_string(), "vscode".to_string());
+        test_env.insert(
+            "TERM_PROGRAM_VERSION".to_string(),
+            "1.104.0-insider".to_string(),
+        );
+        test_env.insert(
+            "VSCODE_GIT_ASKPASS_NODE".to_string(),
+            "some/path/with/vscode/in/it".to_string(),
+        );
+        assert_eq!(detect_editor(test_env), SupportedEditor::VSCodeInsiders);
     }
 
     #[test]
@@ -152,6 +194,17 @@ mod tests {
             "some/path/with/VSCODE/in/it".to_string(),
         );
         assert_eq!(detect_editor(test_env), SupportedEditor::VSCode);
+    }
+
+    #[test]
+    fn test_vscode_insiders_without_askpass() {
+        let mut test_env = HashMap::new();
+        test_env.insert("TERM_PROGRAM".to_string(), "vscode".to_string());
+        test_env.insert(
+            "TERM_PROGRAM_VERSION".to_string(),
+            "1.104.0-insider".to_string(),
+        );
+        assert_eq!(detect_editor(test_env), SupportedEditor::VSCodeInsiders);
     }
 
     #[test]
