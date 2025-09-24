@@ -21,282 +21,282 @@ describe('setup-ai-agents generator', () => {
 
   describe('default agents', () => {
     describe('file generation', () => {
-    it('should generate CLAUDE.md when it does not exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should generate CLAUDE.md when it does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      expect(tree.exists('CLAUDE.md')).toBe(true);
-      const content = tree.read('CLAUDE.md')?.toString();
-      expect(content).toContain('# General Guidelines for working with Nx');
-    });
+        expect(tree.exists('CLAUDE.md')).toBe(true);
+        const content = tree.read('CLAUDE.md')?.toString();
+        expect(content).toContain('# General Guidelines for working with Nx');
+      });
 
-    it('should NOT overwrite CLAUDE.md if it already exists', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should NOT overwrite CLAUDE.md if it already exists', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      // Create existing file
-      tree.write('CLAUDE.md', 'Existing content');
+        // Create existing file
+        tree.write('CLAUDE.md', 'Existing content');
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const content = tree.read('CLAUDE.md')?.toString();
-      // The new implementation appends to existing content
-      expect(content).toContain('Existing content');
-    });
+        const content = tree.read('CLAUDE.md')?.toString();
+        // The new implementation appends to existing content
+        expect(content).toContain('Existing content');
+      });
 
-    it('should generate AGENTS.md when it does not exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should generate AGENTS.md when it does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      expect(tree.exists('AGENTS.md')).toBe(true);
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toContain('# General Guidelines for working with Nx');
-    });
+        expect(tree.exists('AGENTS.md')).toBe(true);
+        const content = tree.read('AGENTS.md')?.toString();
+        expect(content).toContain('# General Guidelines for working with Nx');
+      });
 
-    it('should NOT overwrite AGENTS.md if it already exists', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should NOT overwrite AGENTS.md if it already exists', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      // Create existing file
-      tree.write('AGENTS.md', 'Existing agents content');
+        // Create existing file
+        tree.write('AGENTS.md', 'Existing agents content');
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const content = tree.read('AGENTS.md')?.toString();
-      // The new implementation appends to existing content
-      expect(content).toContain('Existing agents content');
-    });
+        const content = tree.read('AGENTS.md')?.toString();
+        // The new implementation appends to existing content
+        expect(content).toContain('Existing agents content');
+      });
     });
 
     describe('MCP configuration', () => {
-    it('should create .mcp.json with nx-mcp server when file does not exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should create .mcp.json with nx-mcp server when file does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      expect(tree.exists('.mcp.json')).toBe(true);
-      const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
-      expect(config.mcpServers['nx-mcp']).toEqual({
-        type: 'stdio',
-        command: 'npx',
-        args: ['nx', 'mcp'],
+        expect(tree.exists('.mcp.json')).toBe(true);
+        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
-    });
 
-    it('should add nx-mcp server to existing .mcp.json without mcpServers', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should add nx-mcp server to existing .mcp.json without mcpServers', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      // Create existing config without mcpServers
-      tree.write(
-        '.mcp.json',
-        JSON.stringify({ someOtherConfig: 'value' }, null, 2)
-      );
+        // Create existing config without mcpServers
+        tree.write(
+          '.mcp.json',
+          JSON.stringify({ someOtherConfig: 'value' }, null, 2)
+        );
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
-      expect(config.someOtherConfig).toBe('value');
-      expect(config.mcpServers['nx-mcp']).toEqual({
-        type: 'stdio',
-        command: 'npx',
-        args: ['nx', 'mcp'],
+        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        expect(config.someOtherConfig).toBe('value');
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
-    });
 
-    it('should add nx-mcp server to existing .mcp.json with mcpServers', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should add nx-mcp server to existing .mcp.json with mcpServers', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      // Create existing config with mcpServers
-      tree.write(
-        '.mcp.json',
-        JSON.stringify(
-          {
-            mcpServers: {
-              'other-server': {
-                type: 'stdio',
-                command: 'other',
-                args: ['cmd'],
+        // Create existing config with mcpServers
+        tree.write(
+          '.mcp.json',
+          JSON.stringify(
+            {
+              mcpServers: {
+                'other-server': {
+                  type: 'stdio',
+                  command: 'other',
+                  args: ['cmd'],
+                },
               },
             },
-          },
-          null,
-          2
-        )
-      );
+            null,
+            2
+          )
+        );
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
-      expect(config.mcpServers['other-server']).toEqual({
-        type: 'stdio',
-        command: 'other',
-        args: ['cmd'],
+        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        expect(config.mcpServers['other-server']).toEqual({
+          type: 'stdio',
+          command: 'other',
+          args: ['cmd'],
+        });
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
-      expect(config.mcpServers['nx-mcp']).toEqual({
-        type: 'stdio',
-        command: 'npx',
-        args: ['nx', 'mcp'],
+
+      it('should create .gemini/settings.json with nx-mcp server when file does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        expect(tree.exists('.gemini/settings.json')).toBe(true);
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
-    });
 
-    it('should create .gemini/settings.json with nx-mcp server when file does not exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should add nx-mcp server to existing .gemini/settings.json', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      await setupAiAgentsGenerator(tree, options);
-
-      expect(tree.exists('.gemini/settings.json')).toBe(true);
-      const config = JSON.parse(
-        tree.read('.gemini/settings.json')?.toString() ?? '{}'
-      );
-      expect(config.mcpServers['nx-mcp']).toEqual({
-        type: 'stdio',
-        command: 'npx',
-        args: ['nx', 'mcp'],
-      });
-    });
-
-    it('should add nx-mcp server to existing .gemini/settings.json', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
-
-      // Create existing config
-      tree.write(
-        '.gemini/settings.json',
-        JSON.stringify(
-          {
-            someConfig: 'value',
-            mcpServers: {
-              'existing-server': {
-                type: 'stdio',
-                command: 'existing',
-                args: ['args'],
+        // Create existing config
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify(
+            {
+              someConfig: 'value',
+              mcpServers: {
+                'existing-server': {
+                  type: 'stdio',
+                  command: 'existing',
+                  args: ['args'],
+                },
               },
             },
-          },
-          null,
-          2
-        )
-      );
+            null,
+            2
+          )
+        );
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const config = JSON.parse(
-        tree.read('.gemini/settings.json')?.toString() ?? '{}'
-      );
-      expect(config.someConfig).toBe('value');
-      expect(config.mcpServers['existing-server']).toBeDefined();
-      expect(config.mcpServers['nx-mcp']).toEqual({
-        type: 'stdio',
-        command: 'npx',
-        args: ['nx', 'mcp'],
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.someConfig).toBe('value');
+        expect(config.mcpServers['existing-server']).toBeDefined();
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
-    });
 
-    it('should NOT set contextFileName to AGENTS.md when GEMINI.md already exists', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should NOT set contextFileName to AGENTS.md when GEMINI.md already exists', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      // Create existing GEMINI.md file
-      tree.write('GEMINI.md', '# Existing Gemini configuration');
+        // Create existing GEMINI.md file
+        tree.write('GEMINI.md', '# Existing Gemini configuration');
 
-      // Create existing .gemini/settings.json with custom contextFileName
-      tree.write(
-        '.gemini/settings.json',
-        JSON.stringify(
-          {
-            contextFileName: 'GEMINI.md',
-            mcpServers: {
-              'existing-server': {
-                type: 'stdio',
-                command: 'existing',
-                args: ['args'],
+        // Create existing .gemini/settings.json with custom contextFileName
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify(
+            {
+              contextFileName: 'GEMINI.md',
+              mcpServers: {
+                'existing-server': {
+                  type: 'stdio',
+                  command: 'existing',
+                  args: ['args'],
+                },
               },
             },
-          },
-          null,
-          2
-        )
-      );
+            null,
+            2
+          )
+        );
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const config = JSON.parse(
-        tree.read('.gemini/settings.json')?.toString() ?? '{}'
-      );
-      // Should preserve the existing contextFileName
-      expect(config.contextFileName).toBe('GEMINI.md');
-      // Should still add nx-mcp server
-      expect(config.mcpServers['nx-mcp']).toEqual({
-        type: 'stdio',
-        command: 'npx',
-        args: ['nx', 'mcp'],
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        // Should preserve the existing contextFileName
+        expect(config.contextFileName).toBe('GEMINI.md');
+        // Should still add nx-mcp server
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
-    });
 
-    it('should set contextFileName to AGENTS.md when GEMINI.md does NOT exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-      };
+      it('should set contextFileName to AGENTS.md when GEMINI.md does NOT exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const config = JSON.parse(
-        tree.read('.gemini/settings.json')?.toString() ?? '{}'
-      );
-      // Should set contextFileName to AGENTS.md when GEMINI.md doesn't exist
-      expect(config.contextFileName).toBe('AGENTS.md');
-      expect(config.mcpServers['nx-mcp']).toEqual({
-        type: 'stdio',
-        command: 'npx',
-        args: ['nx', 'mcp'],
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        // Should set contextFileName to AGENTS.md when GEMINI.md doesn't exist
+        expect(config.contextFileName).toBe('AGENTS.md');
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
-    });
     });
 
     describe('options', () => {
-    it('should respect writeNxCloudRules option', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-      };
+      it('should respect writeNxCloudRules option', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          writeNxCloudRules: true,
+        };
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      const claudeContent = tree.read('CLAUDE.md')?.toString();
-      // The template should include NX Cloud rules when writeNxCloudRules is true
-      expect(claudeContent).toContain('# CI Error Guidelines');
-    });
+        const claudeContent = tree.read('CLAUDE.md')?.toString();
+        // The template should include NX Cloud rules when writeNxCloudRules is true
+        expect(claudeContent).toContain('# CI Error Guidelines');
+      });
 
-    it('should use specified directory', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: 'custom-dir',
-      };
+      it('should use specified directory', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: 'custom-dir',
+        };
 
-      await setupAiAgentsGenerator(tree, options);
+        await setupAiAgentsGenerator(tree, options);
 
-      expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
-      expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
-      expect(tree.exists('custom-dir/.mcp.json')).toBe(true);
-      expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
-    });
+        expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
+        expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
+        expect(tree.exists('custom-dir/.mcp.json')).toBe(true);
+        expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
+      });
     });
   });
 

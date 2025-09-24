@@ -3124,6 +3124,12 @@
               "file": "generated/cli/mcp"
             },
             {
+              "name": "configure-ai-agents",
+              "id": "configure-ai-agents",
+              "tags": ["configure-ai-agents"],
+              "file": "generated/cli/configure-ai-agents"
+            },
+            {
               "name": "login",
               "id": "login",
               "tags": ["login"],
