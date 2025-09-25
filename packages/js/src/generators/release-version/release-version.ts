@@ -430,6 +430,7 @@ To fix this you will either need to add a package.json file at that location, or
               previousVersionRef,
               options.projectGraph,
               affectedProjects,
+              new Map(),
               options.conventionalCommitsConfig
             );
 

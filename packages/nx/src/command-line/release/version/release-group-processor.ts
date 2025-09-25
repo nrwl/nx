@@ -1106,6 +1106,7 @@ export class ReleaseGroupProcessor {
         projectLogger,
         releaseGroup,
         projectGraphNode,
+        this.projectToDependencies,
         !!semver.prerelease(currentVersion ?? ''),
         this.cachedLatestMatchingGitTag.get(projectName),
         cachedFinalConfigForProject.fallbackCurrentVersionResolver,
@@ -1702,11 +1703,6 @@ Valid values are: ${validReleaseVersionPrefixes
       );
 
       for (const dep of deps) {
-        // Skip dependencies not covered by nx release
-        if (!this.allProjectsConfiguredForNxRelease.has(dep.target)) {
-          continue;
-        }
-
         // Add this dependency to the project's dependencies
         this.projectToDependencies.get(projectName)!.add(dep.target);
 
