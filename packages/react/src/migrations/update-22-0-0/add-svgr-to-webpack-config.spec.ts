@@ -262,18 +262,9 @@ module.exports = composePlugins(
       const { composePlugins, withNx } = require('@nx/webpack');
       const { withReact } = require('@nx/react');
 
-      module.exports = composePlugins(
-        withNx(),
-        withReact(),
-        withSvgr({
-          svgo: true,
-          titleProp: false,
-          ref: false,
-        }),
-        (config) => {
-          return config;
-        }
-      );
+      module.exports = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
+        return config;
+      });
       "
     `);
   });

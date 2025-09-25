@@ -307,7 +307,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
       // Remove svgr option from first NxReactWebpackPlugin call (only one expected)
       const pluginCalls = tsquery(
         ast,
-        'NewExpression:has(Identifier[name=NxReactWebpackPlugin])'
+        'NewExpression[expression.name=NxReactWebpackPlugin]'
       );
       if (pluginCalls.length > 0) {
         const newExpr = pluginCalls[0] as ts.NewExpression;
@@ -369,32 +369,58 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           }
         }
       }
+
+      // For NxReactWebpackPlugin style, wrap the entire module.exports with withSvgr
+      if (config.svgrOptions) {
+        // Find module.exports statement - look for all BinaryExpressions in the original AST
+        const allAssignments = tsquery(ast, 'BinaryExpression');
+
+        // Find the one that has module.exports on the left side
+        const moduleExportsAssignment = allAssignments.find((node) => {
+          const binaryExpr = node as ts.BinaryExpression;
+          const left = binaryExpr.left;
+          return (
+            ts.isPropertyAccessExpression(left) &&
+            ts.isIdentifier(left.expression) &&
+            left.expression.text === 'module' &&
+            ts.isIdentifier(left.name) &&
+            left.name.text === 'exports'
+          );
+        }) as ts.BinaryExpression | undefined;
+
+        if (moduleExportsAssignment) {
+          const exportValue = moduleExportsAssignment.right;
+
+          // Build the withSvgr call string
+          let svgrCallStr = '';
+          if (config.svgrOptions === true || config.svgrOptions === undefined) {
+            svgrCallStr = 'withSvgr()';
+          } else if (typeof config.svgrOptions === 'object') {
+            const options = Object.entries(config.svgrOptions)
+              .map(([key, value]) => `  ${key}: ${value}`)
+              .join(',\n');
+            svgrCallStr = `withSvgr({\n${options}\n})`;
+          }
+
+          // Insert withSvgr( at the start of the export value
+          changes.push({
+            type: ChangeType.Insert,
+            index: exportValue.getStart(),
+            text: `${svgrCallStr}(`,
+          });
+
+          // Insert ) at the end of the export value
+          changes.push({
+            type: ChangeType.Insert,
+            index: exportValue.getEnd(),
+            text: ')',
+          });
+        }
+      }
     }
 
     // Apply all AST-based changes
     content = applyChangesToString(content, changes);
-
-    // For NxReactWebpackPlugin style, wrap the entire module.exports with withSvgr
-    if (!config.isWithReact) {
-      // For NxReactWebpackPlugin style, wrap the entire module.exports with withSvgr
-      // Build the withSvgr call string
-      let svgrCallStr = '';
-      if (config.svgrOptions === true || config.svgrOptions === undefined) {
-        svgrCallStr = 'withSvgr()';
-      } else if (typeof config.svgrOptions === 'object') {
-        svgrCallStr = `withSvgr(${svgrOptionsStr})`;
-      }
-
-      // Find module.exports and wrap it
-      // Simply replace module.exports = with module.exports = withSvgr()(
-      // and add closing parenthesis before the semicolon
-      content = content.replace(
-        /module\.exports\s*=\s*{/,
-        `module.exports = ${svgrCallStr}({`
-      );
-      // Find the closing }; and add )
-      content = content.replace(/^};$/m, '});');
-    }
 
     tree.write(webpackConfigPath, content);
   }
