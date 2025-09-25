@@ -11,6 +11,7 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
 const withSvgrFunction = `
+
 // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
 function withSvgr(svgrOptions = {}) {
   const defaultOptions = {
