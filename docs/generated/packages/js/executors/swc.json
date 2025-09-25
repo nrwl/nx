@@ -116,20 +116,6 @@
         ],
         "hidden": true
       },
-      "external": {
-        "description": "A list projects to be treated as external. This feature is experimental",
-        "oneOf": [
-          { "type": "string", "enum": ["all", "none"] },
-          { "type": "array", "items": { "type": "string" } }
-        ],
-        "x-deprecated": "Make sure all dependencies are buildable by running `nx g @nx/js:setup-build`. This option will be removed in Nx 20."
-      },
-      "externalBuildTargets": {
-        "type": "array",
-        "items": { "type": "string" },
-        "description": "List of target names that annotate a build target for a project",
-        "default": ["build"]
-      },
       "generateLockfile": {
         "type": "boolean",
         "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
@@ -184,7 +170,7 @@
         ]
       }
     },
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Inline libraries\" %}\n\n`@nx/js:swc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:swc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"all\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=all\n```\n\n`@nx/js:swc` can also inline buildable libraries by setting `external: 'none'`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:swc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"none\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=none\n```\n\n{% /tab %}\n{% tab label=\"Custom swcrc\" %}\n\n`@nx/js:swc` can compile your code with a custom `.swcrc`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:swc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"swcrc\": \"libs/ts-lib/.dev.swcrc\"\n    },\n    \"configurations\": {\n      \"production\": {\n        \"swcrc\": \"libs/ts-lib/.prod.swcrc\"\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Custom swcrc\" %}\n\n`@nx/js:swc` can compile your code with a custom `.swcrc`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:swc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"swcrc\": \"libs/ts-lib/.dev.swcrc\"\n    },\n    \"configurations\": {\n      \"production\": {\n        \"swcrc\": \"libs/ts-lib/.prod.swcrc\"\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "description": "Build a project using SWC.",
