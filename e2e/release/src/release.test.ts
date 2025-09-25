@@ -20,6 +20,7 @@ import {
 } from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
+import { setupWorkspaces } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -58,7 +59,7 @@ describe('nx release', () => {
   let pkg3: string;
   let previousPackageManager: string;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     previousPackageManager = process.env.SELECTED_PM;
     // Ensure consistent package manager usage in all environments for this file
     process.env.SELECTED_PM = 'npm';
@@ -82,6 +83,10 @@ describe('nx release', () => {
       json.dependencies[`@proj/${pkg1}`] = '0.0.0';
       return json;
     });
+
+    setupWorkspaces(pkg1, pkg2, pkg3);
+    const pmc = getPackageManagerCommand();
+    await runCommandAsync(pmc.install);
   });
   afterAll(() => {
     cleanupProject();

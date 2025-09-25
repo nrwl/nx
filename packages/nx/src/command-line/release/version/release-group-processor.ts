@@ -703,7 +703,10 @@ export class ReleaseGroupProcessor {
     const processOrder: string[] = [];
 
     // Use the topologically sorted groups instead of getNextGroup
-    for (const nextGroup of this.sortedReleaseGroups) {
+    const filteredSortedReleaseGroups = this.sortedReleaseGroups.filter(
+      (name) => this.releaseGroups.find((group) => group.name === name)
+    );
+    for (const nextGroup of filteredSortedReleaseGroups) {
       // Skip groups that have already been processed (could happen with circular dependencies)
       if (this.processedGroups.has(nextGroup)) {
         continue;
