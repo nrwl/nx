@@ -1,12 +1,12 @@
 import {
   appendFileSync,
-  readFileSync,
-  writeFileSync,
   existsSync,
   mkdirSync,
+  readFileSync,
+  writeFileSync,
 } from 'fs';
 import { homedir } from 'os';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
@@ -21,19 +21,17 @@ import {
 } from '../../utils/output';
 import { installPackageToTmp } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants';
+import { Agent, supportedAgents } from '../utils';
 import {
-  agentsMdPath,
-  codexConfigTomlPath,
-  geminiMdPath,
-} from '../config-paths';
-import {
-  Agent,
   getAgentRulesWrapped,
   nxMcpTomlConfig,
   nxMcpTomlHeader,
+  nxRulesMarkerCommentDescription,
+  nxRulesMarkerCommentEnd,
+  nxRulesMarkerCommentStart,
   rulesRegex,
-  supportedAgents,
-} from '../utils';
+} from '../constants';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
@@ -238,10 +236,10 @@ export async function setupAiAgentsGeneratorImpl(
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  const agentRulesWithMarkers = getAgentRulesWrapped(writeNxCloudRules);
+  const expectedRules = getAgentRulesWrapped(writeNxCloudRules);
 
   if (!tree.exists(path)) {
-    tree.write(path, agentRulesWithMarkers);
+    tree.write(path, expectedRules);
     return;
   }
 
@@ -251,10 +249,24 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   const existingNxConfiguration = existing.match(regex);
 
   if (existingNxConfiguration) {
-    const updatedContent = existing.replace(regex, agentRulesWithMarkers);
+    const contentOnly = (str: string) =>
+      str
+        .replace(nxRulesMarkerCommentStart, '')
+        .replace(nxRulesMarkerCommentEnd, '')
+        .replace(nxRulesMarkerCommentDescription, '')
+        .replace(/\s/g, '');
+
+    // we don't want to make updates on whitespace-only changes
+    if (
+      contentOnly(existingNxConfiguration[0]) === contentOnly(expectedRules)
+    ) {
+      return;
+    }
+    // otherwise replace the existing configuration
+    const updatedContent = existing.replace(regex, expectedRules);
     tree.write(path, updatedContent);
   } else {
-    tree.write(path, existing + '\n\n' + agentRulesWithMarkers);
+    tree.write(path, existing + '\n\n' + expectedRules);
   }
 }
 

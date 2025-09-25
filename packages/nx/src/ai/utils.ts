@@ -1,34 +1,22 @@
-import {
-  appendFileSync,
-  readFileSync,
-  writeFileSync,
-  existsSync,
-  mkdirSync,
-} from 'fs';
-import { join, resolve } from 'path';
-import {
-  canInstallNxConsoleForEditor,
-  installNxConsoleForEditor,
-  SupportedEditor,
-} from '../native';
+import { existsSync, readFileSync } from 'fs';
+import { resolve } from 'path';
+import { readNxJson } from '../config/configuration';
 import { flushChanges, FsTree } from '../generators/tree';
-import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
-import { homedir } from 'os';
+import { canInstallNxConsoleForEditor, SupportedEditor } from '../native';
+import { readJsonFile } from '../utils/fileutils';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import {
+  agentsMdPath,
   claudeMcpPath,
   claudeMdPath,
-  geminiMdPath,
-  agentsMdPath,
-  geminiSettingsPath,
   codexConfigTomlPath,
+  geminiMdPath,
+  geminiSettingsPath,
+  nxMcpTomlHeader,
   parseGeminiSettings,
-} from './config-paths';
-import { getAgentRules } from './set-up-ai-agents/get-agent-rules';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { readNxJsonFromDisk } from '../devkit-internals';
-import { readNxJson } from '../config/configuration';
-import { readJsonFile } from '../utils/fileutils';
+} from './constants';
+import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
 
 // when adding new agents, be sure to also update the list in
 // packages/create-nx-workspace/src/internal-utils/prompts.ts
@@ -54,15 +42,48 @@ export type AgentConfiguration = {
   mcp: boolean;
   rulesPath: string;
   mcpPath: string | null;
-  mcpOutdated?: boolean;
-  rulesOutdated?: boolean;
+  outdated: boolean;
 };
 
-export async function getAgentConfiguration(
+export async function getAgentConfigurations(
+  agentsToConsider: Agent[],
+  workspaceRoot: string
+): Promise<{
+  nonConfiguredAgents: Agent[];
+  partiallyConfiguredAgents: Agent[];
+  fullyConfiguredAgents: Agent[];
+  agentConfigurations: Map<Agent, AgentConfiguration>;
+}> {
+  const nonConfiguredAgents: Agent[] = [];
+  const partiallyConfiguredAgents: Agent[] = [];
+  const fullyConfiguredAgents: Agent[] = [];
+  const agentConfigurations = new Map<Agent, AgentConfiguration>();
+
+  for (const agent of agentsToConsider) {
+    const configured = await getAgentConfiguration(agent, workspaceRoot);
+    agentConfigurations.set(agent, configured);
+    if (configured.mcp && configured.rules) {
+      fullyConfiguredAgents.push(agent);
+    } else if (!configured.mcp && !configured.rules) {
+      nonConfiguredAgents.push(agent);
+    } else {
+      partiallyConfiguredAgents.push(agent);
+    }
+  }
+
+  return {
+    nonConfiguredAgents,
+    partiallyConfiguredAgents,
+    fullyConfiguredAgents,
+    agentConfigurations,
+  };
+}
+
+async function getAgentConfiguration(
   agent: Agent,
   workspaceRoot: string
 ): Promise<AgentConfiguration> {
-  let agentConfiguration: AgentConfiguration;
+  let agentConfiguration: Omit<AgentConfiguration, 'outdated'>;
   switch (agent) {
     case 'claude': {
       const mcpPath = claudeMcpPath(workspaceRoot);
@@ -161,78 +182,28 @@ export async function getAgentConfiguration(
 
   return {
     ...agentConfiguration,
-    mcpOutdated: await getAgentMcpIsOutdated(
-      agent,
-      agentConfiguration,
-      workspaceRoot
-    ),
-    rulesOutdated: getAgentRulesAreOutdated(
-      agent,
-      agentConfiguration,
-      workspaceRoot
-    ),
+    outdated: await isAgentOutdated(agent, workspaceRoot),
   };
 }
 
-function getAgentRulesAreOutdated(
+async function isAgentOutdated(
   agent: Agent,
-  agentConfiguration: AgentConfiguration,
-  workspaceRoot: string
-): boolean {
-  // we check by seeing if the content in the rule files are what we would put in there right now
-  const rulesPath = agentConfiguration.rulesPath;
-  if (!existsSync(rulesPath)) {
-    return true;
-  }
-  const existing = readFileSync(rulesPath, 'utf-8');
-  const existingNxRules = existing.match(rulesRegex);
-
-  if (!existingNxRules) {
-    return true;
-  }
-
-  const expectedNxRules = getAgentRulesWrapped(
-    isNxCloudUsed(readNxJsonFromDisk())
-  );
-
-  const contentOnly = (str: string) =>
-    str
-      .replace(nxRulesMarkerCommentStart, '')
-      .replace(nxRulesMarkerCommentEnd, '')
-      .replace(nxRulesMarkerCommentDescription, '')
-      // we don't want to make updates on whitespace-only changes
-      .replace(/\s/g, '');
-
-  return contentOnly(existingNxRules[0]) !== contentOnly(expectedNxRules);
-}
-
-async function getAgentMcpIsOutdated(
-  agent: Agent,
-  agentConfiguration: AgentConfiguration,
   workspaceRoot: string
 ): Promise<boolean> {
-  // no mcp path -> installation through editor, treat as not outdated
-  if (!agentConfiguration.mcpPath) {
-    return false;
-  }
-
-  // claude and gemini are configured fully locally so we can just run the generator
-  if (agent === 'claude' || agent === 'gemini') {
-    const tree = new FsTree(workspaceRoot, false);
-    const callback = await setupAiAgentsGenerator(
-      tree,
-      {
-        directory: '.',
-        agents: [agent],
-        writeNxCloudRules: isNxCloudUsed(readNxJson()),
-      },
-      true
-    );
-    const modificationResults = await callback(true);
-    return (
-      tree.listChanges().length > 0 || modificationResults.messages.length > 0
-    );
-  }
+  const tree = new FsTree(workspaceRoot, false);
+  const callback = await setupAiAgentsGenerator(
+    tree,
+    {
+      directory: '.',
+      agents: [agent],
+      writeNxCloudRules: isNxCloudUsed(readNxJson()),
+    },
+    true
+  );
+  const modificationResults = await callback(true);
+  return (
+    tree.listChanges().length > 0 || modificationResults.messages.length > 0
+  );
 }
 
 export async function configureAgents(
@@ -260,57 +231,3 @@ export async function configureAgents(
   modificationResults.messages.forEach((message) => output.log(message));
   modificationResults.errors.forEach((error) => output.error(error));
 }
-
-export async function getAgentConfigurations(
-  agentsToConsider: Agent[],
-  workspaceRoot: string
-): Promise<{
-  nonConfiguredAgents: Agent[];
-  partiallyConfiguredAgents: Agent[];
-  fullyConfiguredAgents: Agent[];
-  agentConfigurations: Map<Agent, AgentConfiguration>;
-}> {
-  const nonConfiguredAgents: Agent[] = [];
-  const partiallyConfiguredAgents: Agent[] = [];
-  const fullyConfiguredAgents: Agent[] = [];
-  const agentConfigurations = new Map<Agent, AgentConfiguration>();
-
-  for (const agent of agentsToConsider) {
-    const configured = await getAgentConfiguration(agent, workspaceRoot);
-    agentConfigurations.set(agent, configured);
-    if (configured.mcp && configured.rules) {
-      fullyConfiguredAgents.push(agent);
-    } else if (!configured.mcp && !configured.rules) {
-      nonConfiguredAgents.push(agent);
-    } else {
-      partiallyConfiguredAgents.push(agent);
-    }
-  }
-
-  return {
-    nonConfiguredAgents,
-    partiallyConfiguredAgents,
-    fullyConfiguredAgents,
-    agentConfigurations,
-  };
-}
-
-export const nxRulesMarkerCommentStart = `<!-- nx configuration start-->`;
-export const nxRulesMarkerCommentDescription = `<!-- Leave the start & end comments to automatically receive updates. -->`;
-export const nxRulesMarkerCommentEnd = `<!-- nx configuration end-->`;
-export const rulesRegex = new RegExp(
-  `${nxRulesMarkerCommentStart}[\\s\\S]*?${nxRulesMarkerCommentEnd}`,
-  'm'
-);
-
-export const getAgentRulesWrapped = (writeNxCloudRules: boolean) => {
-  const agentRulesString = getAgentRules(writeNxCloudRules);
-  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n${agentRulesString}\n${nxRulesMarkerCommentEnd}`;
-};
-
-export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
-export const nxMcpTomlConfig = `${nxMcpTomlHeader}
-type = "stdio"
-command = "npx"
-args = ["nx", "mcp"]
-`;

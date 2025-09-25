@@ -74,9 +74,7 @@ export async function configureAiAgentsHandlerImpl(
     }
 
     const outOfDateAgents = fullyConfiguredAgents.filter(
-      (a) =>
-        agentConfigurations.get(a)?.mcpOutdated ||
-        agentConfigurations.get(a)?.rulesOutdated
+      (a) => agentConfigurations.get(a)?.outdated
     );
 
     if (outOfDateAgents.length === 0) {
@@ -100,10 +98,7 @@ export async function configureAiAgentsHandlerImpl(
   });
 
   for (const a of fullyConfiguredAgents) {
-    if (
-      agentConfigurations.get(a).mcpOutdated ||
-      agentConfigurations.get(a).rulesOutdated
-    ) {
+    if (agentConfigurations.get(a).outdated) {
       agentsToUpdate.push(getAgentChoiceForPrompt(a, false, true));
     }
   }
