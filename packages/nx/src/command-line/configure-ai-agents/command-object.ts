@@ -19,9 +19,8 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
       .option('agents', {
         type: 'array',
         string: true,
-        description:
-          'List of AI agents to set up (e.g., claude, codex, vscode, cursor, gemini).',
-        choices: ['claude', 'codex', 'vscode', 'cursor', 'gemini'],
+        description: 'List of AI agents to set up.',
+        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini'],
       })
       .option('interactive', {
         type: 'boolean',

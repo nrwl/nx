@@ -77,13 +77,16 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
 }
 
 export async function determineAiAgents(
-  parsedArgs: yargs.Arguments<{ aiAgents?: Agent[] }>
+  parsedArgs: yargs.Arguments<{ aiAgents?: Agent[]; interactive?: boolean }>
 ): Promise<Agent[]> {
+  if (parsedArgs.interactive === false) {
+    return parsedArgs.aiAgents ?? [];
+  }
+
   if (parsedArgs.aiAgents) {
     return parsedArgs.aiAgents;
-  } else {
-    return await aiAgentsPrompt();
   }
+  return await aiAgentsPrompt();
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
