@@ -338,9 +338,18 @@ export class TargetProjectLocator {
       return null;
     }
 
-    const normalizedRange = packageVersion.replace('workspace:', '');
+    const workspaceRegex = /^workspace:/;
+    const hasWorkspaceProtocol = workspaceRegex.test(packageVersion);
+    const normalizedRange = packageVersion.replace(workspaceRegex, '');
 
-    if (normalizedRange === '*') {
+    /**
+     * Regex is needed to test for workspace: protocol because following options are all valid:
+     *  - workspace:*
+     *  - workspace:^
+     *  - workspace:~
+     *  - workspace:foo@*
+     */
+    if (hasWorkspaceProtocol || normalizedRange === '*') {
       return maybeDep?.name;
     }
 

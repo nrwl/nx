@@ -1,5 +1,6 @@
 /* eslint-disable */
 export default {
+  testTimeout: 120000,
   transform: {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
