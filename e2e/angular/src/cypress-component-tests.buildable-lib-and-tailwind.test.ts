@@ -1,4 +1,11 @@
-import { checkFilesDoNotExist, createFile, runCLI, runE2ETests, uniq, updateFile } from '@nx/e2e-utils';
+import {
+  checkFilesDoNotExist,
+  createFile,
+  runCLI,
+  runE2ETests,
+  uniq,
+  updateFile,
+} from '@nx/e2e-utils';
 import { registerAngularCypressCTSetup } from './cypress-component-tests.setup';
 
 describe('Angular Cypress Component Tests - buildable lib and tailwind', () => {

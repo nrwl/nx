@@ -37,7 +37,9 @@ export function registerAngularCypressCTSetup() {
       `generate @nx/angular:component ${usedInAppLibName}/src/lib/btn-standalone/btn-standalone --inlineTemplate --inlineStyle --export --standalone --no-interactive`
     );
 
-    runCLI(`generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`);
+    runCLI(
+      `generate @nx/angular:lib ${buildableLibName} --buildable --no-interactive`
+    );
     runCLI(
       `generate @nx/angular:component ${buildableLibName}/src/lib/input/input.component --inlineTemplate --inlineStyle --export --no-interactive`
     );
@@ -81,5 +83,3 @@ export class BtnStandalone {
 
   afterAll(() => cleanupProject());
 }
-
-

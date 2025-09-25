@@ -67,5 +67,3 @@ export function registerReactCypressCTSetup() {
     delete process.env.NX_ADD_PLUGINS;
   });
 }
-
-

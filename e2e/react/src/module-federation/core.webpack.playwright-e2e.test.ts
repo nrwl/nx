@@ -1,13 +1,14 @@
 import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
-  cleanupProject, killProcessAndPorts,
+  cleanupProject,
+  killProcessAndPorts,
   newProject,
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
   uniq,
-  updateFile
+  updateFile,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 

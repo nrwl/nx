@@ -1,4 +1,10 @@
-import { runCLI, runE2ETests, uniq, updateFile, removeFile } from '@nx/e2e-utils';
+import {
+  runCLI,
+  runE2ETests,
+  uniq,
+  updateFile,
+  removeFile,
+} from '@nx/e2e-utils';
 import { names } from '@nx/devkit';
 import { registerAngularCypressCTSetup } from './cypress-component-tests.setup';
 

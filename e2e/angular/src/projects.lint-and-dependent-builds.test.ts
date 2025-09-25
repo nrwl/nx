@@ -8,7 +8,12 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { join } from 'path';
-import { registerAngularProjectsSetup, app1, esbuildApp, proj } from './projects.setup';
+import {
+  registerAngularProjectsSetup,
+  app1,
+  esbuildApp,
+  proj,
+} from './projects.setup';
 
 describe('Angular Projects - lint and dependent builds', () => {
   registerAngularProjectsSetup();

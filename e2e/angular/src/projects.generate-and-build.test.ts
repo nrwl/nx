@@ -12,7 +12,13 @@ import {
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
-import { registerAngularProjectsSetup, app1, esbuildApp, lib1, proj } from './projects.setup';
+import {
+  registerAngularProjectsSetup,
+  app1,
+  esbuildApp,
+  lib1,
+  proj,
+} from './projects.setup';
 
 describe('Angular Projects - generate and build', () => {
   registerAngularProjectsSetup();
