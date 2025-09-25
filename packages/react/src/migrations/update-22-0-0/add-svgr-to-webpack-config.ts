@@ -5,6 +5,7 @@ import {
   applyChangesToString,
   ChangeType,
   type StringChange,
+  addDependenciesToPackageJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
@@ -449,4 +450,13 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
   }
 
   await formatFiles(tree);
+
+  // Add file-loader as a dev dependency since it's now required for SVGR
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      'file-loader': '^6.2.0',
+    }
+  );
 }

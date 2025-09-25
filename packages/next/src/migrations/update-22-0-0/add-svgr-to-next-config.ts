@@ -3,6 +3,7 @@ import {
   formatFiles,
   readProjectConfiguration,
   logger,
+  addDependenciesToPackageJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
@@ -73,23 +74,18 @@ export default async function addSvgrToNextConfig(tree: Tree) {
                   svgrValue[key] = false;
                 }
               }
-            } else if (
-              svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword
-            ) {
-              svgrValue = true;
+            } else {
+              svgrValue =
+                svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword;
             }
           }
         }
       }
 
-      // Only add to projects if svgr is explicitly set to true or has options
-      if (!svgrValue) return;
-      if (
-        svgrValue !== true &&
-        (typeof svgrValue !== 'object' || svgrValue === null)
-      )
-        return;
+      // Add to projects if svgr needs migration (true or options) or removal (false)
+      if (svgrValue === undefined) return;
 
+      // For svgr: false, we still need to track it to remove the property
       projects.set(nextConfigPath, {
         svgrOptions: svgrValue,
       });
@@ -105,74 +101,41 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   for (const [nextConfigPath, config] of projects.entries()) {
     let content = tree.read(nextConfigPath, 'utf-8');
 
-    // Remove nx.svgr option from nextConfig
-    const ast = tsquery.ast(content);
-    const nextConfigDeclarations = tsquery(
-      ast,
-      'VariableDeclaration:has(Identifier[name=nextConfig]) > ObjectLiteralExpression'
+    // Remove nx.svgr option using regex
+    // First pattern: svgr is the first property (svgr: X,)
+    content = content.replace(
+      /(nx:\s*\{)(\s*svgr:\s*(?:true|false|\{[^}]*\}),)(\s*)/g,
+      '$1$3'
     );
 
-    if (nextConfigDeclarations.length > 0) {
-      const objLiteral =
-        nextConfigDeclarations[0] as ts.ObjectLiteralExpression;
+    // Second pattern: svgr is not the first property (, svgr: X)
+    content = content.replace(/(,)(\s*svgr:\s*(?:true|false|\{[^}]*\}))/g, '');
 
-      // Look for nx property
-      const nxProp = objLiteral.properties.find(
-        (prop) =>
-          ts.isPropertyAssignment(prop) &&
-          ts.isIdentifier(prop.name) &&
-          prop.name.text === 'nx'
-      ) as ts.PropertyAssignment | undefined;
+    // Third pattern: svgr is the only property
+    content = content.replace(
+      /(nx:\s*\{)(\s*svgr:\s*(?:true|false|\{[^}]*\}))(\s*\})/g,
+      '$1$3'
+    );
 
-      if (nxProp && ts.isObjectLiteralExpression(nxProp.initializer)) {
-        // Find svgr property in nx object
-        const svgrProp = nxProp.initializer.properties.find(
-          (prop) =>
-            ts.isPropertyAssignment(prop) &&
-            ts.isIdentifier(prop.name) &&
-            prop.name.text === 'svgr'
-        ) as ts.PropertyAssignment | undefined;
-
-        if (svgrProp) {
-          // Remove the svgr property
-          const propStart = svgrProp.getStart();
-          const propEnd = svgrProp.getEnd();
-
-          // Check if there's a comma after this property
-          let removeEnd = propEnd;
-          const nextChar = content[propEnd];
-          if (nextChar === ',') {
-            removeEnd = propEnd + 1;
-          }
-
-          // Also remove leading whitespace/newline
-          let removeStart = propStart;
-          while (removeStart > 0 && /\s/.test(content[removeStart - 1])) {
-            removeStart--;
-          }
-
-          content = content.slice(0, removeStart) + content.slice(removeEnd);
-        }
-      }
-    }
-
-    // Build the svgr options
-    let svgrOptions = '';
-    if (config.svgrOptions === true || config.svgrOptions === undefined) {
-      svgrOptions = `{
+    // Only add SVGR webpack config if svgrOptions is true or an object (not false)
+    if (config.svgrOptions === true || typeof config.svgrOptions === 'object') {
+      // Build the svgr options
+      let svgrOptions = '';
+      if (config.svgrOptions === true) {
+        svgrOptions = `{
       svgo: false,
       titleProp: true,
       ref: true,
     }`;
-    } else if (typeof config.svgrOptions === 'object') {
-      const options = Object.entries(config.svgrOptions)
-        .map(([key, value]) => `      ${key}: ${value}`)
-        .join(',\n');
-      svgrOptions = `{\n${options}\n    }`;
-    }
+      } else if (typeof config.svgrOptions === 'object') {
+        const options = Object.entries(config.svgrOptions)
+          .map(([key, value]) => `      ${key}: ${value}`)
+          .join(',\n');
+        svgrOptions = `{\n${options}\n    }`;
+      }
 
-    // Add SVGR webpack config function and update composePlugins
-    const svgrWebpackFunction = `(config) => {
+      // Add SVGR webpack config function and update composePlugins
+      const svgrWebpackFunction = `(config) => {
     // Add SVGR support
     config.module.rules.push({
       test: /\\.svg$/,
@@ -200,31 +163,45 @@ export default async function addSvgrToNextConfig(tree: Tree) {
     return config;
   }`;
 
-    // Since we're using the nextConfig pattern, we know there's a plugins array
-    // Add the withSvgr function definition after the plugins array
-    content = content.replace(
-      /const plugins = \[([\s\S]*?)\];/,
-      (match, pluginList) => {
-        return `const plugins = [${pluginList}];
+      // Since we're using the nextConfig pattern, we know there's a plugins array
+      // Add the withSvgr function definition after the plugins array
+      content = content.replace(
+        /const plugins = \[([\s\S]*?)\];/,
+        (match, pluginList) => {
+          return `const plugins = [${pluginList}];
 
 // Add SVGR webpack config function
 const withSvgr = ${svgrWebpackFunction};
 `;
-      }
-    );
+        }
+      );
 
-    // Update the composePlugins call to include withSvgr as the last argument
-    content = content.replace(
-      /composePlugins\s*\(\s*\.\.\.plugins\s*\)\s*\(\s*nextConfig\s*\)/,
-      'composePlugins(...plugins, withSvgr)(nextConfig)'
-    );
+      // Update the composePlugins call to include withSvgr as the last argument
+      content = content.replace(
+        /composePlugins\s*\(\s*\.\.\.plugins\s*\)\s*\(\s*nextConfig\s*\)/,
+        'composePlugins(...plugins, withSvgr)(nextConfig)'
+      );
+    }
 
     tree.write(nextConfigPath, content);
 
-    logger.info(
-      `Updated ${nextConfigPath}: Added SVGR webpack configuration directly to config`
-    );
+    if (config.svgrOptions === false) {
+      logger.info(`Updated ${nextConfigPath}: Removed nx.svgr configuration`);
+    } else {
+      logger.info(
+        `Updated ${nextConfigPath}: Added SVGR webpack configuration directly to config`
+      );
+    }
   }
 
   await formatFiles(tree);
+
+  // Add file-loader as a dev dependency since it's now required for SVGR
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      'file-loader': '^6.2.0',
+    }
+  );
 }

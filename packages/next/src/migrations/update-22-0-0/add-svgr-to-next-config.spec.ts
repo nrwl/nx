@@ -77,6 +77,61 @@ module.exports = composePlugins(...plugins)(nextConfig);
     expect(newContent).toEqual(configContent);
   });
 
+  it('should remove nx.svgr option when it is false', async () => {
+    // Add a Next.js project with next.config.js without svgr
+    tree.write(
+      'apps/my-app/project.json',
+      JSON.stringify({
+        root: 'apps/my-app',
+        targets: {
+          build: {
+            executor: '@nx/next:build',
+            options: {},
+          },
+        },
+      })
+    );
+
+    const configContent = `
+const { composePlugins, withNx } = require('@nx/next');
+
+const nextConfig = {
+  nx: {
+    svgr: false,
+    babelUpwardRootMode: true,
+  },
+  reactStrictMode: true,
+};
+
+const plugins = [
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
+`;
+
+    tree.write('apps/my-app/next.config.js', configContent);
+
+    await addSvgrToNextConfig(tree);
+
+    const newContent = tree.read('apps/my-app/next.config.js', 'utf-8');
+    expect(newContent).toMatchInlineSnapshot(`
+      "const { composePlugins, withNx } = require('@nx/next');
+
+      const nextConfig = {
+        nx: {
+          babelUpwardRootMode: true,
+        },
+        reactStrictMode: true,
+      };
+
+      const plugins = [withNx];
+
+      module.exports = composePlugins(...plugins)(nextConfig);
+      "
+    `);
+  });
+
   it('should add SVGR as last function in composePlugins when nx.svgr is true', async () => {
     tree.write(
       'apps/my-app/project.json',
@@ -249,44 +304,6 @@ module.exports = composePlugins(...plugins)(nextConfig);
       module.exports = composePlugins(...plugins, withSvgr)(nextConfig);
       "
     `);
-  });
-
-  it('should not modify config with nx.svgr set to false', async () => {
-    tree.write(
-      'apps/my-app/project.json',
-      JSON.stringify({
-        root: 'apps/my-app',
-        targets: {
-          build: {
-            executor: '@nx/next:build',
-            options: {},
-          },
-        },
-      })
-    );
-
-    const configContent = `
-const { composePlugins, withNx } = require('@nx/next');
-
-const nextConfig = {
-  nx: {
-    svgr: false,
-  },
-  reactStrictMode: true,
-};
-
-const plugins = [
-  withNx,
-];
-
-module.exports = composePlugins(...plugins)(nextConfig);
-`;
-    tree.write('apps/my-app/next.config.js', configContent);
-
-    await addSvgrToNextConfig(tree);
-    const newContent = tree.read('apps/my-app/next.config.js', 'utf-8');
-
-    expect(newContent).toEqual(configContent);
   });
 
   it('should handle spread operator pattern in composePlugins', async () => {
