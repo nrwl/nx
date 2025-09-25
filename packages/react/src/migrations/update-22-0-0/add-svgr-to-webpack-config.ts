@@ -207,12 +207,22 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
     let svgrOptionsStr = '';
 
     if (config.svgrOptions) {
-      // Add the withSvgr function definition at the top of the file after imports
-      // TODO: handle requires
+      // Add the withSvgr function definition at the top of the file after imports/requires
       const importStatements = tsquery(ast, 'ImportDeclaration');
-      const lastImport = importStatements[importStatements.length - 1];
+      const requireStatements = tsquery(
+        ast,
+        'VariableStatement:has(CallExpression[expression.name=require])'
+      );
 
-      if (config.svgrOptions) {
+      // Combine and sort by position to find the last import/require
+      const allImportRequires = [
+        ...importStatements,
+        ...requireStatements,
+      ].sort((a, b) => a.getEnd() - b.getEnd());
+      const lastImportOrRequire =
+        allImportRequires[allImportRequires.length - 1];
+
+      if (config.svgrOptions === true || config.svgrOptions === undefined) {
         // Use default options
         svgrOptionsStr = '';
       } else if (typeof config.svgrOptions === 'object') {
@@ -223,14 +233,14 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         svgrOptionsStr = `{\n${options}\n}`;
       }
 
-      if (lastImport) {
+      if (lastImportOrRequire) {
         changes.push({
           type: ChangeType.Insert,
-          index: lastImport.getEnd(),
+          index: lastImportOrRequire.getEnd(),
           text: withSvgrFunction,
         });
       } else {
-        // No imports, add at the beginning
+        // No imports or requires, add at the beginning
         changes.push({
           type: ChangeType.Insert,
           index: 0,
@@ -370,7 +380,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         }
       }
 
-      // For NxReactWebpackPlugin style, wrap the entire module.exports with withSvgr
+      // For NxReactWebpackPlugin style, wrap the entire module.exports or export default with withSvgr
       if (config.svgrOptions) {
         // Find module.exports statement - look for all BinaryExpressions in the original AST
         const allAssignments = tsquery(ast, 'BinaryExpression');
@@ -388,9 +398,21 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           );
         }) as ts.BinaryExpression | undefined;
 
-        if (moduleExportsAssignment) {
-          const exportValue = moduleExportsAssignment.right;
+        // Also check for export default
+        const exportDefaultStatements = tsquery(ast, 'ExportAssignment');
+        const exportDefaultStatement = exportDefaultStatements[0] as
+          | ts.ExportAssignment
+          | undefined;
 
+        // Use whichever export style is found
+        let exportValue: ts.Expression | undefined;
+        if (moduleExportsAssignment) {
+          exportValue = moduleExportsAssignment.right;
+        } else if (exportDefaultStatement) {
+          exportValue = exportDefaultStatement.expression;
+        }
+
+        if (exportValue) {
           // Build the withSvgr call string
           let svgrCallStr = '';
           if (config.svgrOptions === true || config.svgrOptions === undefined) {

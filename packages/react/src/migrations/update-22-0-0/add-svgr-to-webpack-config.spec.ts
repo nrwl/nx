@@ -117,7 +117,9 @@ module.exports = composePlugins(
     await addSvgrToWebpackConfig(tree);
     const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      "const { composePlugins, withNx } = require('@nx/webpack');
+      const { withReact } = require('@nx/react');
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
       function withSvgr(svgrOptions = {}) {
         const defaultOptions = {
           svgo: false,
@@ -161,9 +163,6 @@ module.exports = composePlugins(
           return config;
         };
       }
-
-      const { composePlugins, withNx } = require('@nx/webpack');
-      const { withReact } = require('@nx/react');
 
       module.exports = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
         return config;
@@ -214,7 +213,9 @@ module.exports = composePlugins(
 
     const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      "const { composePlugins, withNx } = require('@nx/webpack');
+      const { withReact } = require('@nx/react');
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
       function withSvgr(svgrOptions = {}) {
         const defaultOptions = {
           svgo: false,
@@ -259,12 +260,18 @@ module.exports = composePlugins(
         };
       }
 
-      const { composePlugins, withNx } = require('@nx/webpack');
-      const { withReact } = require('@nx/react');
-
-      module.exports = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
-        return config;
-      });
+      module.exports = composePlugins(
+        withNx(),
+        withReact(),
+        withSvgr({
+          svgo: true,
+          titleProp: false,
+          ref: false,
+        }),
+        (config) => {
+          return config;
+        }
+      );
       "
     `);
   });
@@ -315,7 +322,9 @@ module.exports = {
 
     // Should add withSvgr function
     expect(content).toMatchInlineSnapshot(`
-      "// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      "const { NxWebpackPlugin } = require('@nx/webpack');
+      const { NxReactWebpackPlugin } = require('@nx/react');
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
       function withSvgr(svgrOptions = {}) {
         const defaultOptions = {
           svgo: false,
@@ -359,9 +368,6 @@ module.exports = {
           return config;
         };
       }
-
-      const { NxWebpackPlugin } = require('@nx/webpack');
-      const { NxReactWebpackPlugin } = require('@nx/react');
 
       module.exports = withSvgr()({
         output: {
@@ -489,7 +495,9 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
     const content1 = tree.read('apps/app1/webpack.config.js', 'utf-8');
     const content2 = tree.read('apps/app2/webpack.config.js', 'utf-8');
     expect(content1).toMatchInlineSnapshot(`
-      "// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      "const { composePlugins, withNx } = require('@nx/webpack');
+      const { withReact } = require('@nx/react');
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
       function withSvgr(svgrOptions = {}) {
         const defaultOptions = {
           svgo: false,
@@ -534,9 +542,6 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
         };
       }
 
-      const { composePlugins, withNx } = require('@nx/webpack');
-      const { withReact } = require('@nx/react');
-
       module.exports = composePlugins(withNx(), withReact(), withSvgr(), (config) => {
         return config;
       });
@@ -544,6 +549,116 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
     `);
     // This one is unchanged since it doesn't use svgr
     expect(content2).toEqual(configContent2);
+  });
+
+  it('should handle export default with NxReactWebpackPlugin', async () => {
+    tree.write(
+      'apps/my-app/project.json',
+      JSON.stringify({
+        root: 'apps/my-app',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              webpackConfig: 'apps/my-app/webpack.config.js',
+            },
+          },
+        },
+      })
+    );
+
+    tree.write(
+      'apps/my-app/webpack.config.js',
+      `
+import { NxWebpackPlugin } from '@nx/webpack';
+import { NxReactWebpackPlugin } from '@nx/react';
+
+export default {
+  output: {
+    path: join(__dirname, '../dist/apps/my-app'),
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+    }),
+    new NxReactWebpackPlugin({
+      svgr: true
+    }),
+  ],
+};
+`
+    );
+
+    await addSvgrToWebpackConfig(tree);
+    const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+
+    expect(content).toMatchInlineSnapshot(`
+      "import { NxWebpackPlugin } from '@nx/webpack';
+      import { NxReactWebpackPlugin } from '@nx/react';
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      function withSvgr(svgrOptions = {}) {
+        const defaultOptions = {
+          svgo: false,
+          titleProp: true,
+          ref: true,
+        };
+
+        const options = { ...defaultOptions, ...svgrOptions };
+
+        return function configure(config) {
+          // Remove existing SVG loader if present
+          const svgLoaderIdx = config.module.rules.findIndex(
+            (rule) =>
+              typeof rule === 'object' &&
+              typeof rule.test !== 'undefined' &&
+              rule.test.toString().includes('svg')
+          );
+
+          if (svgLoaderIdx !== -1) {
+            config.module.rules.splice(svgLoaderIdx, 1);
+          }
+
+          // Add SVGR loader
+          config.module.rules.push({
+            test: /\\.svg$/,
+            issuer: /\\.(js|ts|md)x?$/,
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options,
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: '[name].[hash].[ext]',
+                },
+              },
+            ],
+          });
+
+          return config;
+        };
+      }
+
+      export default withSvgr()({
+        output: {
+          path: join(__dirname, '../dist/apps/my-app'),
+        },
+        plugins: [
+          new NxWebpackPlugin({
+            tsConfig: './tsconfig.app.json',
+            compiler: 'babel',
+            main: './src/main.tsx',
+            index: './src/index.html',
+          }),
+          new NxReactWebpackPlugin(),
+        ],
+      });
+      "
+    `);
   });
 
   it('should preserve existing imports', async () => {
@@ -584,7 +699,10 @@ module.exports = composePlugins(
 
     const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
-      "// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      "const { composePlugins, withNx } = require('@nx/webpack');
+      const { withReact } = require('@nx/react');
+      const someOtherLib = require('some-lib');
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
       function withSvgr(svgrOptions = {}) {
         const defaultOptions = {
           svgo: false,
@@ -628,10 +746,6 @@ module.exports = composePlugins(
           return config;
         };
       }
-
-      const { composePlugins, withNx } = require('@nx/webpack');
-      const { withReact } = require('@nx/react');
-      const someOtherLib = require('some-lib');
 
       // Some comment here
 
