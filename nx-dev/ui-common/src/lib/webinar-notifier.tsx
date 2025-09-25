@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export function WebinarNotifier(): ReactElement | null {
-  return undefined;
+  return null;
 
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);

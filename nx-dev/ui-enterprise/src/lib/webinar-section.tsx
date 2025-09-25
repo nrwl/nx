@@ -2,7 +2,7 @@ import React from 'react';
 // import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export const WebinarSection: React.FC = () => {
-  return undefined;
+  return null;
 
   // return (
   //   <p>
