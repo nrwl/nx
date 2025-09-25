@@ -755,4 +755,259 @@ module.exports = composePlugins(
       "
     `);
   });
+
+  it('should handle imports and export default (ESM) instead of require/module.exports', async () => {
+    tree.write(
+      'apps/my-app/project.json',
+      JSON.stringify({
+        root: 'apps/my-app',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              webpackConfig: 'apps/my-app/webpack.config.js',
+            },
+          },
+        },
+      })
+    );
+
+    tree.write(
+      'apps/my-app/webpack.config.js',
+      `import { composePlugins, withNx } from '@nx/webpack';
+import { withReact } from '@nx/react';
+import someOtherLib from 'some-lib';
+
+export default composePlugins(
+  withNx(),
+  withReact({ svgr: true }),
+  (config) => {
+    return config;
+  }
+);
+`
+    );
+
+    await addSvgrToWebpackConfig(tree);
+
+    const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+    expect(content).toMatchInlineSnapshot(`
+      "import { composePlugins, withNx } from '@nx/webpack';
+      import { withReact } from '@nx/react';
+      import someOtherLib from 'some-lib';
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      function withSvgr(svgrOptions = {}) {
+        const defaultOptions = {
+          svgo: false,
+          titleProp: true,
+          ref: true,
+        };
+
+        const options = { ...defaultOptions, ...svgrOptions };
+
+        return function configure(config) {
+          // Remove existing SVG loader if present
+          const svgLoaderIdx = config.module.rules.findIndex(
+            (rule) =>
+              typeof rule === 'object' &&
+              typeof rule.test !== 'undefined' &&
+              rule.test.toString().includes('svg')
+          );
+
+          if (svgLoaderIdx !== -1) {
+            config.module.rules.splice(svgLoaderIdx, 1);
+          }
+
+          // Add SVGR loader
+          config.module.rules.push({
+            test: /\\.svg$/,
+            issuer: /\\.(js|ts|md)x?$/,
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options,
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: '[name].[hash].[ext]',
+                },
+              },
+            ],
+          });
+
+          return config;
+        };
+      }
+
+      export default composePlugins(withNx(), withReact(), withSvgr(), (config) => {
+        return config;
+      });
+      "
+    `);
+  });
+
+  it('should not modify NxReactWebpackPlugin with svgr: false', async () => {
+    tree.write(
+      'apps/my-app/project.json',
+      JSON.stringify({
+        root: 'apps/my-app',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              webpackConfig: 'apps/my-app/webpack.config.js',
+            },
+          },
+        },
+      })
+    );
+
+    const configContent = `
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/apps/my-app'),
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+    }),
+    new NxReactWebpackPlugin({
+      svgr: false
+    }),
+  ],
+};
+`;
+
+    tree.write('apps/my-app/webpack.config.js', configContent);
+
+    await addSvgrToWebpackConfig(tree);
+    const newContent = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+
+    expect(newContent).toEqual(configContent);
+  });
+
+  it('should handle NxReactWebpackPlugin with svgr options object', async () => {
+    tree.write(
+      'apps/my-app/project.json',
+      JSON.stringify({
+        root: 'apps/my-app',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              webpackConfig: 'apps/my-app/webpack.config.js',
+            },
+          },
+        },
+      })
+    );
+
+    tree.write(
+      'apps/my-app/webpack.config.js',
+      `
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/apps/my-app'),
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+    }),
+    new NxReactWebpackPlugin({
+      svgr: {
+        svgo: true,
+        titleProp: false,
+        ref: false,
+      }
+    }),
+  ],
+};
+`
+    );
+
+    await addSvgrToWebpackConfig(tree);
+    const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+
+    expect(content).toMatchInlineSnapshot(`
+      "const { NxWebpackPlugin } = require('@nx/webpack');
+      const { NxReactWebpackPlugin } = require('@nx/react');
+      // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+      function withSvgr(svgrOptions = {}) {
+        const defaultOptions = {
+          svgo: false,
+          titleProp: true,
+          ref: true,
+        };
+
+        const options = { ...defaultOptions, ...svgrOptions };
+
+        return function configure(config) {
+          // Remove existing SVG loader if present
+          const svgLoaderIdx = config.module.rules.findIndex(
+            (rule) =>
+              typeof rule === 'object' &&
+              typeof rule.test !== 'undefined' &&
+              rule.test.toString().includes('svg')
+          );
+
+          if (svgLoaderIdx !== -1) {
+            config.module.rules.splice(svgLoaderIdx, 1);
+          }
+
+          // Add SVGR loader
+          config.module.rules.push({
+            test: /\\.svg$/,
+            issuer: /\\.(js|ts|md)x?$/,
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options,
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: '[name].[hash].[ext]',
+                },
+              },
+            ],
+          });
+
+          return config;
+        };
+      }
+
+      module.exports = withSvgr({
+        svgo: true,
+        titleProp: false,
+        ref: false,
+      })({
+        output: {
+          path: join(__dirname, '../dist/apps/my-app'),
+        },
+        plugins: [
+          new NxWebpackPlugin({
+            tsConfig: './tsconfig.app.json',
+            compiler: 'babel',
+            main: './src/main.tsx',
+            index: './src/index.html',
+          }),
+          new NxReactWebpackPlugin(),
+        ],
+      });
+      "
+    `);
+  });
 });
