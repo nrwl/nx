@@ -2700,6 +2700,16 @@
       }
     },
     "migrations": {
+      "/technologies/typescript/api/migrations/remove-external-options-from-js-executors": {
+        "description": "Remove the deprecated `external` and `externalBuildTargets` options from the `@nx/js:swc` and `@nx/js:tsc` executors.",
+        "file": "generated/packages/js/migrations/remove-external-options-from-js-executors.json",
+        "hidden": false,
+        "name": "remove-external-options-from-js-executors",
+        "version": "22.0.0-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "/technologies/typescript/api/migrations/remove-external-options-from-js-executors",
+        "type": "migration"
+      },
       "/technologies/typescript/api/migrations/migrate-development-custom-condition": {
         "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
         "file": "generated/packages/js/migrations/migrate-development-custom-condition.json",
