@@ -926,6 +926,12 @@ function createFetcher() {
     packageVersion,
     setCache: (packageName: string, packageVersion: string) => void
   ): Promise<ResolvedMigrationConfiguration> {
+    if (process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH === 'true') {
+      // Skip registry fetch and use installation method directly
+      logger.info(`Fetching ${packageName}@${packageVersion}`);
+      return getPackageMigrationsUsingInstall(packageName, packageVersion);
+    }
+
     const cacheKey = packageName + '-' + packageVersion;
     return Promise.resolve(resolvedVersionCache[cacheKey])
       .then((cachedResolvedVersion) => {
