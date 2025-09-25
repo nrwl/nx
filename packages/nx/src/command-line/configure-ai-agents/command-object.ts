@@ -40,11 +40,15 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
       )
       .example(
         '$0 configure-ai-agents --agents claude gemini',
-        'Configures and updates Claude and Gemini AI agents '
+        'Prompts for updates and and configuration of Claude and Gemini AI agents'
       )
       .example(
         '$0 configure-ai-agents --check',
         'Checks if any configured agents are out of date and need to be updated'
+      )
+      .example(
+        '$0 configure-ai-agents --agents claude gemini --no-interactive',
+        'Configures and updates Claude and Gemini AI agents without prompts'
       ),
   handler: async (args) => {
     await (

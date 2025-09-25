@@ -238,3 +238,31 @@ fn get_command_for_editor(editor: &SupportedEditor) -> Option<&'static str> {
         _ => None,
     }
 }
+
+#[napi]
+pub fn is_editor_installed(editor: SupportedEditor) -> bool {
+    enable_logger();
+
+    if let Some(command) = get_command_for_editor(&editor) {
+        // Just check if the command exists and is executable
+        match Command::new(command).arg("--version").output() {
+            Ok(_) => {
+                debug!("Editor command '{}' is installed", command);
+                true
+            }
+            Err(e) => match e.kind() {
+                std::io::ErrorKind::NotFound => {
+                    debug!("Editor command '{}' not found", command);
+                    false
+                }
+                _ => {
+                    debug!("Could not determine if '{}' is installed: {}", command, e);
+                    false
+                }
+            },
+        }
+    } else {
+        debug!("No command available for editor: {:?}", editor);
+        false
+    }
+}

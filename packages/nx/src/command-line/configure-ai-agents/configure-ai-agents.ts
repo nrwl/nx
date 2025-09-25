@@ -62,6 +62,20 @@ export async function configureAiAgentsHandlerImpl(
     agentConfigurations,
   } = await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
 
+  const disabledAgents = normalizedOptions.agents.filter(
+    (a) => agentConfigurations.get(a)?.disabled
+  );
+
+  if (disabledAgents.length > 0) {
+    output.log({
+      title: `Ignoring agent${
+        disabledAgents.length > 1 ? 's' : ''
+      } ${disabledAgents
+        .map((a) => agentDisplayMap[a])
+        .join(', ')} because editor is not installed.`,
+    });
+  }
+
   if (options.check) {
     if (fullyConfiguredAgents.length === 0) {
       output.log({
@@ -94,6 +108,9 @@ export async function configureAiAgentsHandlerImpl(
   // first, prompt for partially configured agents and out of date agents
   const agentsToUpdate: { name: string; message: string }[] = [];
   partiallyConfiguredAgents.forEach((a) => {
+    if (agentConfigurations.get(a).disabled) {
+      return;
+    }
     agentsToUpdate.push(getAgentChoiceForPrompt(a, true, false));
   });
 
@@ -104,25 +121,32 @@ export async function configureAiAgentsHandlerImpl(
   }
 
   if (agentsToUpdate.length > 0) {
-    let updateResponse: { agents: Agent[] };
-    try {
-      updateResponse = await prompt<{ agents: Agent[] }>({
-        type: 'multiselect',
-        name: 'agents',
-        message:
-          'The following agents are not configured completely or are out of date. Which would you like to update?',
-        choices: agentsToUpdate,
-        initial: agentsToUpdate.map((_, i) => i),
-        required: true,
-      } as any);
-    } catch {
-      process.exit(1);
+    let updateResult: Agent[];
+    if (options.interactive !== false) {
+      try {
+        updateResult = (
+          await prompt<{ agents: Agent[] }>({
+            type: 'multiselect',
+            name: 'agents',
+            message:
+              'The following agents are not configured completely or are out of date. Which would you like to update?',
+            choices: agentsToUpdate,
+            initial: agentsToUpdate.map((_, i) => i),
+            required: true,
+          } as any)
+        ).agents;
+      } catch {
+        process.exit(1);
+      }
+    } else {
+      // in non-interactive mode, update all
+      updateResult = agentsToUpdate.map((a) => a.name as Agent);
     }
 
-    if (updateResponse.agents && updateResponse.agents.length > 0) {
+    if (updateResult?.length > 0) {
       const updateSpinner = ora(`Updating agent configurations...`).start();
       try {
-        await configureAgents(updateResponse.agents, workspaceRoot, false);
+        await configureAgents(updateResult, workspaceRoot, false);
         updateSpinner.succeed('Agent configurations updated.');
       } catch {
         updateSpinner.fail('Failed to update agent configurations.');
@@ -137,25 +161,31 @@ export async function configureAiAgentsHandlerImpl(
     });
     process.exit(0);
   }
-  let configurationResponse: { agents: Agent[] };
-  try {
-    configurationResponse = await prompt<{ agents: Agent[] }>({
-      type: 'multiselect',
-      name: 'agents',
-      message:
-        'Which AI agents would you like to configure? (space to select, enter to confirm)',
-      choices: nonConfiguredAgents.map((a) =>
-        getAgentChoiceForPrompt(a, false, false)
-      ),
-      required: true,
-    } as any);
-  } catch {
-    process.exit(1);
+
+  let configurationResult: Agent[];
+  if (options.interactive !== false) {
+    try {
+      configurationResult = (
+        await prompt<{ agents: Agent[] }>({
+          type: 'multiselect',
+          name: 'agents',
+          message:
+            'Which AI agents would you like to configure? (space to select, enter to confirm)',
+          choices: nonConfiguredAgents
+            .filter((a) => !agentConfigurations.get(a)?.disabled)
+            .map((a) => getAgentChoiceForPrompt(a, false, false)),
+          required: true,
+        } as any)
+      ).agents;
+    } catch {
+      process.exit(1);
+    }
+  } else {
+    // in non-interactive mode, configure all
+    configurationResult = nonConfiguredAgents;
   }
 
-  const selectedAgents = configurationResponse.agents;
-
-  if (selectedAgents.length === 0) {
+  if (configurationResult?.length === 0) {
     output.error({
       title: 'No agents selected',
       bodyLines: ['Please select at least one AI agent to set up.'],
@@ -164,7 +194,7 @@ export async function configureAiAgentsHandlerImpl(
   }
 
   try {
-    await configureAgents(selectedAgents, workspaceRoot, false);
+    await configureAgents(configurationResult, workspaceRoot, false);
 
     output.success({
       title: 'AI agents set up successfully',
@@ -180,7 +210,6 @@ export async function configureAiAgentsHandlerImpl(
   }
 }
 
-// also keep duplicate in packages/create-nx-workspace/src/internal-utils/prompts.ts updated
 function getAgentChoiceForPrompt(
   agent: Agent,
   partiallyConfigured: boolean,
@@ -198,7 +227,10 @@ function getAgentChoiceForPrompt(
   };
 }
 
-type NormalizedAiAgentSetupOptions = ConfigureAiAgentsOptions & {
+type NormalizedAiAgentSetupOptions = Omit<
+  ConfigureAiAgentsOptions,
+  'agents'
+> & {
   agents: Agent[];
 };
 function normalizeOptions(

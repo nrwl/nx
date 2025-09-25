@@ -2,7 +2,11 @@ import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { readNxJson } from '../config/configuration';
 import { flushChanges, FsTree } from '../generators/tree';
-import { canInstallNxConsoleForEditor, SupportedEditor } from '../native';
+import {
+  canInstallNxConsoleForEditor,
+  isEditorInstalled,
+  SupportedEditor,
+} from '../native';
 import { readJsonFile } from '../utils/fileutils';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
@@ -19,7 +23,7 @@ import {
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
 
 // when adding new agents, be sure to also update the list in
-// packages/create-nx-workspace/src/internal-utils/prompts.ts
+// packages/create-nx-workspace/src/create-workspace-options.ts
 export const supportedAgents = [
   'claude',
   'codex',
@@ -28,7 +32,6 @@ export const supportedAgents = [
   'gemini',
 ] as const;
 export type Agent = (typeof supportedAgents)[number];
-
 export const agentDisplayMap: Record<Agent, string> = {
   claude: 'Claude Code',
   gemini: 'Gemini',
@@ -43,6 +46,7 @@ export type AgentConfiguration = {
   rulesPath: string;
   mcpPath: string | null;
   outdated: boolean;
+  disabled?: boolean;
 };
 
 export async function getAgentConfigurations(
@@ -131,31 +135,38 @@ async function getAgentConfiguration(
     }
     case 'copilot': {
       const rulesPath = agentsMdPath(workspaceRoot);
+      const hasInstalledVSCode =
+        isEditorInstalled(SupportedEditor.VSCode) ||
+        isEditorInstalled(SupportedEditor.VSCodeInsiders);
       const hasInstalledNxConsole =
         !canInstallNxConsoleForEditor(SupportedEditor.VSCode) &&
         !canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
+
       const agentsMdExists = existsSync(rulesPath);
 
       agentConfiguration = {
-        mcp: hasInstalledNxConsole,
+        mcp: hasInstalledVSCode ? hasInstalledNxConsole : false,
         rules: agentsMdExists,
         rulesPath,
         mcpPath: null,
+        disabled: !hasInstalledVSCode,
       };
       break;
     }
     case 'cursor': {
       const rulesPath = agentsMdPath(workspaceRoot);
+      const hasInstalledCursor = isEditorInstalled(SupportedEditor.Cursor);
       const hasInstalledNxConsole = !canInstallNxConsoleForEditor(
         SupportedEditor.Cursor
       );
       const agentsMdExists = existsSync(rulesPath);
 
       agentConfiguration = {
-        mcp: hasInstalledNxConsole,
+        mcp: hasInstalledCursor ? hasInstalledNxConsole : false,
         rules: agentsMdExists,
         rulesPath,
         mcpPath: null,
+        disabled: !hasInstalledCursor,
       };
       break;
     }
