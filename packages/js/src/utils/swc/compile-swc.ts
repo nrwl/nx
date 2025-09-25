@@ -3,7 +3,7 @@ import { exec, execSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
+import { NormalizedSwcExecutorOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
 import { relative } from 'path';
@@ -13,25 +13,19 @@ function getSwcCmd(
     swcCliOptions: { swcrcPath, destPath, stripLeadingPaths },
     root,
     projectRoot,
-    originalProjectRoot,
     sourceRoot,
-    inline,
   }: NormalizedSwcExecutorOptions,
   watch = false
 ) {
   const swcCLI = require.resolve('@swc/cli/bin/swc.js');
   let inputDir: string;
-  // TODO(v22): remove inline feature
-  if (inline) {
-    inputDir = originalProjectRoot.split('/')[0];
+
+  if (sourceRoot) {
+    inputDir = relative(projectRoot, sourceRoot);
   } else {
-    if (sourceRoot) {
-      inputDir = relative(projectRoot, sourceRoot);
-    } else {
-      // If sourceRoot is not provided, check if `src` exists and use that instead.
-      // This is important for root projects to avoid compiling too many directories.
-      inputDir = existsSync(join(root, projectRoot, 'src')) ? 'src' : '.';
-    }
+    // If sourceRoot is not provided, check if `src` exists and use that instead.
+    // This is important for root projects to avoid compiling too many directories.
+    inputDir = existsSync(join(root, projectRoot, 'src')) ? 'src' : '.';
   }
 
   let swcCmd = `node ${swcCLI} ${

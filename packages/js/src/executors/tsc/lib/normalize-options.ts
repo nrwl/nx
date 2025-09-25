@@ -23,20 +23,6 @@ export function normalizeOptions(
     options.watch = false;
   }
 
-  // TODO: put back when inlining story is more stable
-  // if (options.external == null) {
-  //   options.external = 'all';
-  // } else if (Array.isArray(options.external) && options.external.length === 0) {
-  //   options.external = 'none';
-  // }
-
-  if (Array.isArray(options.external) && options.external.length > 0) {
-    const firstItem = options.external[0];
-    if (firstItem === 'all' || firstItem === 'none') {
-      options.external = firstItem;
-    }
-  }
-
   options.assets ??= [];
   const files: FileInputOutput[] = assetGlobsToFiles(
     options.assets,
