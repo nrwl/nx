@@ -1,26 +1,9 @@
-import {
-  cleanupProject,
-  newProject,
-  readFile,
-  runCLI,
-  uniq,
-  updateFile,
-  updateJson,
-} from '@nx/e2e-utils';
+import { readFile, runCLI, uniq, updateFile, updateJson } from '@nx/e2e-utils';
 import { join } from 'path';
+import { registerAngularProjectsSetup, esbuildApp } from './projects.setup';
 
 describe('Angular Projects - plugins and transformers', () => {
-  let esbuildApp: string;
-
-  beforeAll(() => {
-    newProject({ packages: ['@nx/angular'] });
-    esbuildApp = uniq('esbuild-app');
-    runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --no-interactive`
-    );
-  });
-
-  afterAll(() => cleanupProject());
+  registerAngularProjectsSetup();
 
   it('should support esbuild plugins', async () => {
     updateFile(

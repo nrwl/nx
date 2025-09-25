@@ -1,22 +1,8 @@
-import {
-  checkFilesDoNotExist,
-  cleanupProject,
-  createFile,
-  newProject,
-  runCLI,
-  runE2ETests,
-  uniq,
-  updateFile,
-  updateJson,
-} from '@nx/e2e-utils';
-import { names } from '@nx/devkit';
+import { checkFilesDoNotExist, createFile, runCLI, runE2ETests, uniq, updateFile } from '@nx/e2e-utils';
+import { registerAngularCypressCTSetup } from './cypress-component-tests.setup';
 
 describe('Angular Cypress Component Tests - buildable lib and tailwind', () => {
-  beforeAll(async () => {
-    newProject({ name: uniq('cy-ng'), packages: ['@nx/angular'] });
-  });
-
-  afterAll(() => cleanupProject());
+  registerAngularCypressCTSetup();
 
   it('should test buildable lib not being used in app and then with tailwind', () => {
     const appName = uniq('cy-angular-app');

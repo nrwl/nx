@@ -1,11 +1,9 @@
 import { names } from '@nx/devkit';
 import {
   checkFilesExist,
-  cleanupProject,
   getSize,
   killPort,
   killProcessAndPorts,
-  newProject,
   readFile,
   runCLI,
   runCommandUntil,
@@ -14,45 +12,10 @@ import {
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
+import { registerAngularProjectsSetup, app1, esbuildApp, lib1, proj } from './projects.setup';
 
 describe('Angular Projects - generate and build', () => {
-  let proj: string;
-  const app1 = uniq('app1');
-  const esbuildApp = uniq('esbuild-app');
-  const lib1 = uniq('lib1');
-  let app1DefaultModule: string;
-  let app1DefaultComponentTemplate: string;
-  let esbuildAppDefaultModule: string;
-  let esbuildAppDefaultComponentTemplate: string;
-
-  beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
-    runCLI(
-      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --no-interactive`
-    );
-    runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --no-interactive`
-    );
-    runCLI(`generate @nx/angular:lib ${lib1} --no-interactive`);
-    app1DefaultModule = readFile(`${app1}/src/app/app-module.ts`);
-    app1DefaultComponentTemplate = readFile(`${app1}/src/app/app.html`);
-    esbuildAppDefaultModule = readFile(`${esbuildApp}/src/app/app-module.ts`);
-    esbuildAppDefaultComponentTemplate = readFile(
-      `${esbuildApp}/src/app/app.html`
-    );
-  });
-
-  afterEach(() => {
-    updateFile(`${app1}/src/app/app-module.ts`, app1DefaultModule);
-    updateFile(`${app1}/src/app/app.html`, app1DefaultComponentTemplate);
-    updateFile(`${esbuildApp}/src/app/app-module.ts`, esbuildAppDefaultModule);
-    updateFile(
-      `${esbuildApp}/src/app/app.html`,
-      esbuildAppDefaultComponentTemplate
-    );
-  });
-
-  afterAll(() => cleanupProject());
+  registerAngularProjectsSetup();
 
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');

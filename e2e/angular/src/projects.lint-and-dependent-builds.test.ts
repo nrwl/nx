@@ -1,8 +1,6 @@
 import { names } from '@nx/devkit';
 import {
   checkFilesDoNotExist,
-  cleanupProject,
-  newProject,
   readFile,
   runCLI,
   uniq,
@@ -10,25 +8,10 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { join } from 'path';
+import { registerAngularProjectsSetup, app1, esbuildApp, proj } from './projects.setup';
 
 describe('Angular Projects - lint and dependent builds', () => {
-  let app1: string;
-  let esbuildApp: string;
-  let proj: string;
-
-  beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
-    app1 = uniq('app1');
-    esbuildApp = uniq('esbuild-app');
-    runCLI(
-      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --no-interactive`
-    );
-    runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --no-interactive`
-    );
-  });
-
-  afterAll(() => cleanupProject());
+  registerAngularProjectsSetup();
 
   it('should lint correctly with eslint and handle external HTML files and inline templates', async () => {
     // disable the prefer-standalone rule for app1 which is not standalone

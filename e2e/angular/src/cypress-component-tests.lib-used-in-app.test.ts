@@ -1,17 +1,8 @@
-import {
-  cleanupProject,
-  newProject,
-  runCLI,
-  runE2ETests,
-  uniq,
-} from '@nx/e2e-utils';
+import { runCLI, runE2ETests, uniq } from '@nx/e2e-utils';
+import { registerAngularCypressCTSetup } from './cypress-component-tests.setup';
 
 describe('Angular Cypress Component Tests - lib used in app', () => {
-  beforeAll(async () => {
-    newProject({ name: uniq('cy-ng'), packages: ['@nx/angular'] });
-  });
-
-  afterAll(() => cleanupProject());
+  registerAngularCypressCTSetup();
 
   it('should successfully component test lib being used in app', () => {
     const usedInAppLibName = uniq('cy-angular-lib');

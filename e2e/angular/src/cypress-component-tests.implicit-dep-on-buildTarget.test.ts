@@ -1,20 +1,9 @@
-import {
-  cleanupProject,
-  newProject,
-  runCLI,
-  runE2ETests,
-  uniq,
-  updateFile,
-  removeFile,
-} from '@nx/e2e-utils';
+import { runCLI, runE2ETests, uniq, updateFile, removeFile } from '@nx/e2e-utils';
 import { names } from '@nx/devkit';
+import { registerAngularCypressCTSetup } from './cypress-component-tests.setup';
 
 describe('Angular Cypress Component Tests - implicit dep on buildTarget', () => {
-  beforeAll(async () => {
-    newProject({ name: uniq('cy-ng'), packages: ['@nx/angular'] });
-  });
-
-  afterAll(() => cleanupProject());
+  registerAngularCypressCTSetup();
 
   it('should test lib with implicit dep on buildTarget', () => {
     const appName = uniq('cy-angular-app');
