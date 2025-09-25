@@ -26,4 +26,3 @@ describe('Angular Projects - rspack', () => {
     }
   }, 1000000);
 });
-

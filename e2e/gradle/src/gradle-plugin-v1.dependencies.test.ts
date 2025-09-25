@@ -13,7 +13,9 @@ describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
     const context = createGradleSuiteContext(type, { usePluginV1: true });
 
     setupGradleSuite(context);
-    addProjectReportToSettings(`settings.gradle${type === 'kotlin' ? '.kts' : ''}`);
+    addProjectReportToSettings(
+      `settings.gradle${type === 'kotlin' ? '.kts' : ''}`
+    );
 
     it('should track dependencies for new app', () => {
       addDependentApp(context);
@@ -35,4 +37,3 @@ describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
     });
   }
 );
-

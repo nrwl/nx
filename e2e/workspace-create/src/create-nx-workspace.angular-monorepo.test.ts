@@ -46,4 +46,3 @@ describe('create-nx-workspace angular monorepo', () => {
     ).toThrow();
   });
 });
-

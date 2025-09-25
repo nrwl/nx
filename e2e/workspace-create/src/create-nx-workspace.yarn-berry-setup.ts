@@ -24,4 +24,3 @@ export function registerYarnBerrySetup() {
 export function getYarnBerryVersion() {
   return yarnBerryVersion;
 }
-

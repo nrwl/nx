@@ -21,4 +21,3 @@ describe('React Cypress Component Tests - app', () => {
     }
   }, 300_000);
 });
-

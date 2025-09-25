@@ -9,4 +9,3 @@ export function getCreateNxWorkspacePackageManager() {
 export function registerCreateNxWorkspaceCleanup() {
   afterEach(() => cleanupProject());
 }
-

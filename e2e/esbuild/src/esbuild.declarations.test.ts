@@ -1,4 +1,11 @@
-import { checkFilesExist, runCLI, runCommand, uniq, updateFile, createFile } from '@nx/e2e-utils';
+import {
+  checkFilesExist,
+  runCLI,
+  runCommand,
+  uniq,
+  updateFile,
+  createFile,
+} from '@nx/e2e-utils';
 
 import { setupEsbuildSuite } from './esbuild.setup';
 
@@ -41,4 +48,3 @@ describe('Esbuild declarations', () => {
     );
   }, 300_000);
 });
-

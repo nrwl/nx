@@ -1,4 +1,10 @@
-import { checkFilesExist, readFile, runCLI, uniq, updateFile } from '@nx/e2e-utils';
+import {
+  checkFilesExist,
+  readFile,
+  runCLI,
+  uniq,
+  updateFile,
+} from '@nx/e2e-utils';
 
 import { setupNextSuite } from './next.setup';
 import { checkApp } from './utils';
@@ -57,4 +63,3 @@ describe('Next.js --js flag', () => {
     });
   }, 300_000);
 });
-

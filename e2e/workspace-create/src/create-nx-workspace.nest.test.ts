@@ -22,4 +22,3 @@ describe('create-nx-workspace nest', () => {
     expectCodeIsFormatted();
   });
 });
-

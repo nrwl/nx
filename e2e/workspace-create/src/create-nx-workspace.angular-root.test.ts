@@ -60,4 +60,3 @@ describe('create-nx-workspace angular root', () => {
     expectCodeIsFormatted();
   });
 });
-

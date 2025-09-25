@@ -34,4 +34,3 @@ export function readPort(appName: string): number {
       .port as number;
   }
 }
-

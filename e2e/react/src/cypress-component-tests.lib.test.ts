@@ -21,4 +21,3 @@ describe('React Cypress Component Tests - library usage', () => {
     }
   }, 300_000);
 });
-

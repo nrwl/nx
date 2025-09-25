@@ -97,4 +97,3 @@ describe('Angular Module Federation - federate module recursive remote', () => {
     }
   }, 500_000);
 });
-

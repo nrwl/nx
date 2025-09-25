@@ -33,10 +33,7 @@ describe('React Module Federation - new format', () => {
     });
     expect(buildOutputTsNode).toContain('Successfully ran target build');
 
-    const shellProcessSwc = await setupServeHostWithDevRemotes(
-      shell,
-      remote
-    );
+    const shellProcessSwc = await setupServeHostWithDevRemotes(shell, remote);
     await killProcessAndPorts(
       shellProcessSwc.pid,
       shellPort,
@@ -56,4 +53,3 @@ describe('React Module Federation - new format', () => {
     );
   }, 500_000);
 });
-

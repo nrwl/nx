@@ -25,4 +25,3 @@ describe('Esbuild external config', () => {
     expect(output).toContain('custom config loaded');
   }, 120_000);
 });
-

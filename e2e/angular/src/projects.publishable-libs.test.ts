@@ -1,9 +1,4 @@
-import {
-  checkFilesExist,
-  runCLI,
-  uniq,
-  updateFile,
-} from '@nx/e2e-utils';
+import { checkFilesExist, runCLI, uniq, updateFile } from '@nx/e2e-utils';
 import { names } from '@nx/devkit';
 
 import { getProjName, setupAngularProjectsSuite } from './projects.setup';
@@ -34,7 +29,9 @@ describe('Angular Projects - publishable libs', () => {
     const moduleContent = `
     import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
-          import { ${names(childLib).className}Module } from '@${proj}/${childLib}';
+          import { ${
+            names(childLib).className
+          }Module } from '@${proj}/${childLib}';
     import { SubModule } from '@${proj}/${childLib}/sub';
     @NgModule({
       imports: [CommonModule, ${names(childLib).className}Module, SubModule]
@@ -55,4 +52,3 @@ describe('Angular Projects - publishable libs', () => {
     expect(() => runCLI(`lint ${childLib} --fix`)).not.toThrow();
   });
 });
-

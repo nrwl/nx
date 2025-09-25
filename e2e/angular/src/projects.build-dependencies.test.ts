@@ -33,7 +33,9 @@ describe('Angular Projects - build dependencies', () => {
         import { App } from './app';
         import { appRoutes } from './app.routes';
         import { NxWelcome } from './nx-welcome';
-        import { ${names(buildableLib).className}Module } from '@${proj}/${buildableLib}';
+        import { ${
+          names(buildableLib).className
+        }Module } from '@${proj}/${buildableLib}';
 
         @NgModule({
           declarations: [App, NxWelcome],
@@ -57,7 +59,9 @@ describe('Angular Projects - build dependencies', () => {
         import { App } from './app';
         import { appRoutes } from './app.routes';
         import { NxWelcome } from './nx-welcome';
-        import { ${names(buildableLib).className}Module } from '@${proj}/${buildableLib}';
+        import { ${
+          names(buildableLib).className
+        }Module } from '@${proj}/${buildableLib}';
 
         @NgModule({
           declarations: [App, NxWelcome],
@@ -78,7 +82,9 @@ describe('Angular Projects - build dependencies', () => {
       `
         import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
-        import { ${names(buildableChildLib).className}Module } from '@${proj}/${buildableChildLib}';
+        import { ${
+          names(buildableChildLib).className
+        }Module } from '@${proj}/${buildableChildLib}';
 
         @NgModule({
           imports: [CommonModule, ${names(buildableChildLib).className}Module],
@@ -145,4 +151,3 @@ describe('Angular Projects - build dependencies', () => {
     expect(mainEsBuildBundle).toContain(`dist/${buildableLib}`);
   });
 });
-

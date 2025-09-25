@@ -22,4 +22,3 @@ describe('Next.js no swc', () => {
     });
   }, 300_000);
 });
-

@@ -12,7 +12,9 @@ describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
     const context = createGradleSuiteContext(type, { usePluginV1: true });
 
     setupGradleSuite(context);
-    addProjectReportToSettings(`settings.gradle${type === 'kotlin' ? '.kts' : ''}`);
+    addProjectReportToSettings(
+      `settings.gradle${type === 'kotlin' ? '.kts' : ''}`
+    );
 
     it('should run atomized test target', () => {
       updateJson('nx.json', (json) => {
@@ -29,4 +31,3 @@ describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
     });
   }
 );
-

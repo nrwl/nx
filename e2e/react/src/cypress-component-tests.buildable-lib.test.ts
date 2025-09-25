@@ -42,7 +42,9 @@ describe(Input.name, () => {
       ).toContain('All specs passed!');
     }
 
-    runCLI(`generate @nx/react:setup-tailwind --project=${context.buildableLibName}`);
+    runCLI(
+      `generate @nx/react:setup-tailwind --project=${context.buildableLibName}`
+    );
     updateFile(
       `libs/${context.buildableLibName}/src/styles.css`,
       `
@@ -68,4 +70,3 @@ ${content}`
     }
   }, 300_000);
 });
-

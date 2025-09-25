@@ -1,4 +1,11 @@
-import { checkFilesExist, runCLI, runCommand, uniq, updateFile, updateJson } from '@nx/e2e-utils';
+import {
+  checkFilesExist,
+  runCLI,
+  runCommand,
+  uniq,
+  updateFile,
+  updateJson,
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 import { setupEsbuildSuite } from './esbuild.setup';
@@ -22,9 +29,11 @@ describe('Esbuild additional entry points', () => {
 
     runCLI(`build ${myPkg}`);
 
-    checkFilesExist(`dist/libs/${myPkg}/index.cjs`, `dist/libs/${myPkg}/extra.cjs`);
+    checkFilesExist(
+      `dist/libs/${myPkg}/index.cjs`,
+      `dist/libs/${myPkg}/extra.cjs`
+    );
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/main/);
     expect(runCommand(`node dist/libs/${myPkg}/extra.cjs`)).toMatch(/extra/);
   }, 120_000);
 });
-

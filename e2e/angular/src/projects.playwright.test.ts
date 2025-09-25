@@ -18,4 +18,3 @@ describe('Angular Projects - playwright', () => {
     }
   }, 1000000);
 });
-

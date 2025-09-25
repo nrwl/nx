@@ -33,4 +33,3 @@ describe('Next.js new format', () => {
     );
   }, 600_000);
 });
-

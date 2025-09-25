@@ -18,4 +18,3 @@ describe('Angular Projects - scoped libs', () => {
     expect(() => runCLI(`test ${libName}`)).not.toThrow();
   }, 500_000);
 });
-

@@ -54,4 +54,3 @@ describe('create-nx-workspace react root', () => {
     expectCodeIsFormatted();
   });
 });
-

@@ -50,4 +50,3 @@ describe('Angular Module Federation - convert apps', () => {
     await killProcessAndPorts(processTsNode.pid, app1Port, app2Port);
   }, 20_000_000);
 });
-

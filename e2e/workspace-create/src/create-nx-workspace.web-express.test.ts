@@ -43,4 +43,3 @@ describe('create-nx-workspace web and express presets', () => {
     expectCodeIsFormatted();
   });
 });
-

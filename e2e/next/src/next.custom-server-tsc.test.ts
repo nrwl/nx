@@ -23,4 +23,3 @@ describe('Next.js custom server (tsc)', () => {
     );
   }, 300_000);
 });
-

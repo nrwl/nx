@@ -32,4 +32,3 @@ describe('Esbuild non-bundle build', () => {
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
   }, 300_000);
 });
-

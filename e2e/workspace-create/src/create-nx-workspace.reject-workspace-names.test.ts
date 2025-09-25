@@ -17,4 +17,3 @@ describe('create-nx-workspace', () => {
     }).toThrow();
   });
 });
-

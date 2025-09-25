@@ -20,4 +20,3 @@ describe('Next.js dev build', () => {
     }).not.toThrow();
   }, 300_000);
 });
-

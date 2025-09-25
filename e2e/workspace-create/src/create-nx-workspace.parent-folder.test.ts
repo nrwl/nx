@@ -27,4 +27,3 @@ describe('create-nx-workspace parent folder', () => {
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
   });
 });
-

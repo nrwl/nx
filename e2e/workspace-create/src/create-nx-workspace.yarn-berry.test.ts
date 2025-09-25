@@ -1,8 +1,4 @@
-import {
-  cleanupProject,
-  runCreateWorkspace,
-  uniq,
-} from '@nx/e2e-utils';
+import { cleanupProject, runCreateWorkspace, uniq } from '@nx/e2e-utils';
 import { existsSync, readFileSync } from 'fs';
 
 import {
@@ -62,4 +58,3 @@ yarnPath: .yarn/releases/yarn-${getYarnBerryVersion()}.cjs
     );
   });
 });
-

@@ -32,4 +32,3 @@ describe('Next.js next-env', () => {
     expect(postBuildPagesContent).toEqual(pagesDirNextEnvContent);
   });
 });
-

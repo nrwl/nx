@@ -38,4 +38,3 @@ describe('create-nx-workspace react native preset', () => {
     expectCodeIsFormatted();
   });
 });
-

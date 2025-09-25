@@ -64,4 +64,3 @@ describe('Esbuild bundle options', () => {
     expect(runResult).toMatch(/Hello from child lib/);
   }, 300_000);
 });
-

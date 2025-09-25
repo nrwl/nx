@@ -55,9 +55,7 @@ describe('React Rspack Module Federation - query params', () => {
 
     runCLI(`run ${shell}:build:production`);
 
-    const manifestJsonUpdated = readJson(
-      `dist/apps/${shell}/mf-manifest.json`
-    );
+    const manifestJsonUpdated = readJson(`dist/apps/${shell}/mf-manifest.json`);
     const remoteEntryUpdated = manifestJsonUpdated.remotes[0];
 
     expect(remoteEntryUpdated).toBeDefined();
@@ -66,4 +64,3 @@ describe('React Rspack Module Federation - query params', () => {
     );
   });
 });
-

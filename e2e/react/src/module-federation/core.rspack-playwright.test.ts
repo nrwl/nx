@@ -37,4 +37,3 @@ describe('React Rspack Module Federation - playwright e2e', () => {
     await runPlaywrightE2E(shell);
   }, 500_000);
 });
-

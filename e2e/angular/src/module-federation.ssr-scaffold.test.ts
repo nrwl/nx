@@ -71,4 +71,3 @@ test('renders remotes', async ({ page }) => {
     }
   }, 20_000_000);
 });
-

@@ -53,4 +53,3 @@ describe('Angular Projects - SSR conversion', () => {
     ).toThrow();
   }, 500_000);
 });
-

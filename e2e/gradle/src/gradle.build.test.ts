@@ -1,12 +1,6 @@
-import {
-  checkFilesExist,
-  runCLI,
-} from '@nx/e2e-utils';
+import { checkFilesExist, runCLI } from '@nx/e2e-utils';
 
-import {
-  createGradleSuiteContext,
-  setupGradleSuite,
-} from './gradle.setup';
+import { createGradleSuiteContext, setupGradleSuite } from './gradle.setup';
 
 describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
   'Gradle build - %s',
@@ -41,4 +35,3 @@ describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
     });
   }
 );
-

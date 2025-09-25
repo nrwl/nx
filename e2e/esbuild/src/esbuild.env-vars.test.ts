@@ -35,4 +35,3 @@ describe('Esbuild environment variables', () => {
     expect(output).toMatch(/foobar/);
   });
 });
-

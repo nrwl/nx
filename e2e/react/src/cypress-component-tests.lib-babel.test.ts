@@ -14,11 +14,13 @@ describe('React Cypress Component Tests - library babel compiler', () => {
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${context.usedInAppLibName} --generate-tests`
     );
-    updateFile(`libs/${context.usedInAppLibName}/cypress.config.ts`, (content) =>
-      content.replace(
-        'nxComponentTestingPreset(__filename)',
-        'nxComponentTestingPreset(__filename, {compiler: "babel"})'
-      )
+    updateFile(
+      `libs/${context.usedInAppLibName}/cypress.config.ts`,
+      (content) =>
+        content.replace(
+          'nxComponentTestingPreset(__filename)',
+          'nxComponentTestingPreset(__filename, {compiler: "babel"})'
+        )
     );
     if (runE2ETests()) {
       expect(
@@ -27,4 +29,3 @@ describe('React Cypress Component Tests - library babel compiler', () => {
     }
   }, 300_000);
 });
-

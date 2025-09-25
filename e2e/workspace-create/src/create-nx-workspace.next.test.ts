@@ -73,4 +73,3 @@ describe('create-nx-workspace next', () => {
     expectCodeIsFormatted();
   });
 });
-

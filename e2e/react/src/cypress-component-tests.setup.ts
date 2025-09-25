@@ -154,4 +154,3 @@ export function teardownReactCypressSuite() {
   cleanupProject();
   delete process.env.NX_ADD_PLUGINS;
 }
-

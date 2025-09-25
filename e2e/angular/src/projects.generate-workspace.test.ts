@@ -100,4 +100,3 @@ describe('Angular Projects - generate apps and libs', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 });
-

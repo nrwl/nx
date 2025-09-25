@@ -1,9 +1,6 @@
 import { checkFilesExist, runCLI } from '@nx/e2e-utils';
 
-import {
-  generateSSRHost,
-  setupReactModuleFederationSuite,
-} from './core.setup';
+import { generateSSRHost, setupReactModuleFederationSuite } from './core.setup';
 
 describe('React Module Federation - ssr config', () => {
   setupReactModuleFederationSuite();
@@ -25,4 +22,3 @@ describe('React Module Federation - ssr config', () => {
     });
   }, 500_000);
 });
-

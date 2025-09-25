@@ -74,4 +74,3 @@ describe('create-nx-workspace react monorepo', () => {
     expectCodeIsFormatted();
   });
 });
-

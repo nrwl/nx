@@ -1,9 +1,4 @@
-import {
-  readFile,
-  runCLI,
-  updateFile,
-  updateJson,
-} from '@nx/e2e-utils';
+import { readFile, runCLI, updateFile, updateJson } from '@nx/e2e-utils';
 import { join } from 'path';
 
 import { esbuildApp, setupAngularProjectsSuite } from './projects.setup';
@@ -76,4 +71,3 @@ describe('Angular Projects - esbuild plugins', () => {
     );
   });
 });
-

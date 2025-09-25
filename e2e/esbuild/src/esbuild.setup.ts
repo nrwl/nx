@@ -1,9 +1,4 @@
-import {
-  cleanupProject,
-  newProject,
-  runCLI,
-  uniq,
-} from '@nx/e2e-utils';
+import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e-utils';
 
 export function setupEsbuildSuite() {
   let proj: string;
@@ -30,4 +25,3 @@ export function resetFile(path: string, content: string) {
 export function runNodeInDist(path: string) {
   return runCommand(`node ${path}`);
 }
-

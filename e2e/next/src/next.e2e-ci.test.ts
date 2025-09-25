@@ -1,4 +1,9 @@
-import { getStrippedEnvironmentVariables, runCLI, runE2ETests, uniq } from '@nx/e2e-utils';
+import {
+  getStrippedEnvironmentVariables,
+  runCLI,
+  runE2ETests,
+  uniq,
+} from '@nx/e2e-utils';
 
 import { setupNextSuite } from './next.setup';
 
@@ -26,4 +31,3 @@ describe('Next.js e2e ci', () => {
     }
   }, 600_000);
 });
-

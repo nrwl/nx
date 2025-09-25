@@ -51,9 +51,15 @@ describe('React Rspack Module Federation - serve', () => {
           it('should display welcome message', () => {
             expect(cy.get('ul li').should('have.length', 4));
             expect(cy.get('ul li').eq(0).should('have.text', 'Home'));
-            expect(cy.get('ul li').eq(1).should('have.text', '${capitalize(remote1)}'));
-            expect(cy.get('ul li').eq(2).should('have.text', '${capitalize(remote2)}'));
-            expect(cy.get('ul li').eq(3).should('have.text', '${capitalize(remote3)}'));
+            expect(cy.get('ul li').eq(1).should('have.text', '${capitalize(
+              remote1
+            )}'));
+            expect(cy.get('ul li').eq(2).should('have.text', '${capitalize(
+              remote2
+            )}'));
+            expect(cy.get('ul li').eq(3).should('have.text', '${capitalize(
+              remote3
+            )}'));
           });
       });
         `;
@@ -68,4 +74,3 @@ describe('React Rspack Module Federation - serve', () => {
     }
   }, 600_000);
 });
-

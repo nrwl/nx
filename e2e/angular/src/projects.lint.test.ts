@@ -63,4 +63,3 @@ describe('Angular Projects - lint', () => {
     removeFile(`${app1}/src/app/inline-template.component.ts`);
   }, 1000000);
 });
-

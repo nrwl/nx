@@ -37,13 +37,21 @@ export async function generateHostWithRemotes(options: {
 
   const prefix = options.inAppsDir ? 'apps/' : '';
   runCLI(
-    `generate @nx/react:host ${prefix}${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --devServerPort=${shellPort} --bundler=${options.bundler ?? 'webpack'} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${options.js}`
+    `generate @nx/react:host ${prefix}${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --devServerPort=${shellPort} --bundler=${
+      options.bundler ?? 'webpack'
+    } --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${
+      options.js
+    }`
   );
 
   return { shell, remote1, remote2, remote3, shellPort };
 }
 
-export function updateCypressSpecs(shell: string, remotes: string[], js: boolean) {
+export function updateCypressSpecs(
+  shell: string,
+  remotes: string[],
+  js: boolean
+) {
   updateFile(
     `${shell}-e2e/src/integration/app.spec.${js ? 'js' : 'ts'}`,
     stripIndents`
@@ -108,7 +116,11 @@ export function generatePlaywrightHost(options: {
 }) {
   const prefix = options.inAppsDir ? 'apps/' : '';
   runCLI(
-    `generate @nx/react:host ${prefix}${options.shell} --name=${options.shell} --remotes=${options.remotes.join(',')} --bundler=${options.bundler} --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
+    `generate @nx/react:host ${prefix}${options.shell} --name=${
+      options.shell
+    } --remotes=${options.remotes.join(',')} --bundler=${
+      options.bundler
+    } --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
   );
 }
 
@@ -162,7 +174,9 @@ export function readMfManifest(shell: string) {
   return readJson(`dist/apps/${shell}/mf-manifest.json`);
 }
 
-export async function generateSSRHost(bundler: 'webpack' | 'rspack' = 'webpack') {
+export async function generateSSRHost(
+  bundler: 'webpack' | 'rspack' = 'webpack'
+) {
   const shell = uniq('shell');
   const remote1 = uniq('remote1');
   const remote2 = uniq('remote2');
@@ -186,8 +200,9 @@ export function setupServeHostWithDevRemotes(shell: string, remote: string) {
     `serve ${shell} --devRemotes=${remote} --verbose`,
     (output) =>
       output.includes(
-        `All remotes started, server ready at http://localhost:${readPort(shell)}`
+        `All remotes started, server ready at http://localhost:${readPort(
+          shell
+        )}`
       )
   );
 }
-

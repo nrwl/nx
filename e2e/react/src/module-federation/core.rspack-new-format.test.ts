@@ -37,7 +37,10 @@ describe('React Rspack Module Federation - new format', () => {
       remotePort
     );
 
-    const shellProcessTsNode = await setupServeHostWithDevRemotes(shell, remote1);
+    const shellProcessTsNode = await setupServeHostWithDevRemotes(
+      shell,
+      remote1
+    );
     await killProcessAndPorts(
       shellProcessTsNode.pid,
       shellPort,
@@ -46,4 +49,3 @@ describe('React Rspack Module Federation - new format', () => {
     );
   }, 500_000);
 });
-

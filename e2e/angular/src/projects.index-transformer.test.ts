@@ -36,4 +36,3 @@ describe('Angular Projects - index transformer', () => {
     );
   });
 });
-

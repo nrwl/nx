@@ -96,4 +96,3 @@ describe('create-nx-workspace package managers', () => {
     }
   });
 });
-

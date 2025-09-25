@@ -1,12 +1,15 @@
 import {
   cleanupProject,
   createFile,
+  fileExists,
   newProject,
+  readFile,
   runCLI,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
+import { basename, dirname, join } from 'path';
 
 import { createGradleProject } from './utils/create-gradle-project';
 
@@ -39,6 +42,40 @@ export function addDependentApp(context: GradleSuiteContext) {
       `app2/build.gradle`,
       `plugins {
     id 'buildlogic.groovy-application-conventions'
+}
+
+dependencies {
+    implementation project(':app')
+}`
+    );
+  } else {
+    createFile(
+      `app2/build.gradle.kts`,
+      `plugins {
+    id("buildlogic.kotlin-application-conventions")
+}
+
+dependencies {
+    implementation(project(":app"))
+}`
+    );
+    updateFile(`app/build.gradle.kts`, (content) => {
+      content += `
+Tasks.register("task1") {
+    println("REGISTER TASK1: This is executed during the configuration phase")
+}`;
+      return content;
+    });
+  }
+
+  updateFile(
+    `settings.gradle${context.type === 'kotlin' ? '.kts' : ''}`,
+    (content) => {
+      content += `
+include("app2")`;
+      return content;
+    }
+  );
 }
 
 export function addProjectReportToSettings(settingsGradleFile: string) {
@@ -85,43 +122,10 @@ tasks.register("projectReportAll") {
         }
     }`;
   }
+
   if (buildGradleContent) {
     updateFile(gradleFilePath, buildGradleContent);
   }
-}
-
-dependencies {
-    implementation project(':app')
-}`
-    );
-  } else {
-    createFile(
-      `app2/build.gradle.kts`,
-      `plugins {
-    id("buildlogic.kotlin-application-conventions")
-}
-
-dependencies {
-    implementation(project(":app"))
-}`
-    );
-    updateFile(`app/build.gradle.kts`, (content) => {
-      content += `
-tasks.register("task1"){
-    println("REGISTER TASK1: This is executed during the configuration phase")
-}`;
-      return content;
-    });
-  }
-
-  updateFile(
-    `settings.gradle${context.type === 'kotlin' ? '.kts' : ''}`,
-    (content) => {
-      content += `
-include("app2")`;
-      return content;
-    }
-  );
 }
 
 export function configureAtomizedTests() {
@@ -143,4 +147,3 @@ export function createGradleSuiteContext(
     usePluginV1: options?.usePluginV1,
   };
 }
-

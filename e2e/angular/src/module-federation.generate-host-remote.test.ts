@@ -156,4 +156,3 @@ describe('Angular Module Federation - generate host and remote', () => {
     await killProcessAndPorts(processTsNode.pid, hostPort, remotePort);
   }, 20_000_000);
 });
-

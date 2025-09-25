@@ -23,4 +23,3 @@ describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
     });
   }
 );
-

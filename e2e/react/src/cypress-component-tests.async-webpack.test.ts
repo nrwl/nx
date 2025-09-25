@@ -34,7 +34,9 @@ describe('React Cypress Component Tests - async webpack', () => {
       `
     );
     updateJson(join('apps', context.appName, 'project.json'), (config) => {
-      config.targets['build'].options.webpackConfig = `apps/${context.appName}/webpack.config.js`;
+      config.targets[
+        'build'
+      ].options.webpackConfig = `apps/${context.appName}/webpack.config.js`;
       return config;
     });
 
@@ -45,4 +47,3 @@ describe('React Cypress Component Tests - async webpack', () => {
     }
   });
 });
-
