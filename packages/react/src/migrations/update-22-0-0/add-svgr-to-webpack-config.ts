@@ -388,8 +388,9 @@ function withSvgr(svgrOptions = {}) {
     if (config.isWithReact) {
       // Find first composePlugins call (only one expected)
       const composePluginsMatch = content.match(
-        /composePlugins\s*\(([\s\S]*?)\)\s*\(/
+        /composePlugins\s*\(\s*([\s\S]*?)\s*\)/
       );
+
       if (composePluginsMatch) {
         const pluginsContent = composePluginsMatch[1];
 
@@ -405,7 +406,7 @@ function withSvgr(svgrOptions = {}) {
         const newPluginsContent = pluginsContent.trimEnd() + ', ' + svgrCallStr;
         content = content.replace(
           composePluginsMatch[0],
-          `composePlugins(${newPluginsContent})(`
+          `composePlugins(${newPluginsContent})`
         );
       }
     }

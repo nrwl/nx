@@ -171,9 +171,8 @@ module.exports = composePlugins(
     );
 
     await addSvgrToWebpackConfig(tree);
-    const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
 
-    // Should add withSvgr function
+    const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
     expect(content).toMatchInlineSnapshot(`
       "
       const { composePlugins, withNx } = require('@nx/webpack');
