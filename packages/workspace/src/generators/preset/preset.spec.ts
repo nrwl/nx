@@ -80,6 +80,7 @@ describe('preset', () => {
       module.exports = {
         output: {
           path: join(__dirname, '../../dist/apps/react-preset-monorepo'),
+          clean: true,
         },
         devServer: {
           port: 4200,
@@ -234,6 +235,7 @@ describe('preset', () => {
       module.exports = {
         output: {
           path: join(__dirname, 'dist/react-standalone-preset-webpack'),
+          clean: true,
         },
         devServer: {
           port: 4200,
