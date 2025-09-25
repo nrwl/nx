@@ -757,37 +757,39 @@ module.exports = {
 
           const options = { ...defaultOptions, ...svgrOptions };
 
-          return function configure(config) {
-            // Remove existing SVG loader if present
-            const svgLoaderIdx = config.module.rules.findIndex(
-              (rule) =>
-                typeof rule === 'object' &&
-                typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
-            );
+          return (config) => {
+            config.plugins.push({
+              apply: (compiler) => {
+                // Remove ALL existing SVG loaders
+                compiler.options.module.rules = compiler.options.module.rules.filter(
+                  (rule) =>
+                    !(
+                      rule &&
+                      typeof rule === 'object' &&
+                      rule.test &&
+                      rule.test.toString().includes('svg')
+                    )
+                );
 
-            if (svgLoaderIdx !== -1) {
-              config.module.rules.splice(svgLoaderIdx, 1);
-            }
-
-            // Add SVGR loader
-            config.module.rules.push({
-              test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
-                {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
-                },
-                {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
-                },
-              ],
+                // Add SVGR loader with both default and named exports
+                compiler.options.module.rules.push({
+                  test: /.svg$/,
+                  issuer: /.[jt]sx?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                    {
+                      loader: require.resolve('file-loader'),
+                      options: {
+                        name: '[name].[hash].[ext]',
+                      },
+                    },
+                  ],
+                });
+              },
             });
-
             return config;
           };
         }
@@ -918,37 +920,39 @@ module.exports = {
 
           const options = { ...defaultOptions, ...svgrOptions };
 
-          return function configure(config) {
-            // Remove existing SVG loader if present
-            const svgLoaderIdx = config.module.rules.findIndex(
-              (rule) =>
-                typeof rule === 'object' &&
-                typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
-            );
+          return (config) => {
+            config.plugins.push({
+              apply: (compiler) => {
+                // Remove ALL existing SVG loaders
+                compiler.options.module.rules = compiler.options.module.rules.filter(
+                  (rule) =>
+                    !(
+                      rule &&
+                      typeof rule === 'object' &&
+                      rule.test &&
+                      rule.test.toString().includes('svg')
+                    )
+                );
 
-            if (svgLoaderIdx !== -1) {
-              config.module.rules.splice(svgLoaderIdx, 1);
-            }
-
-            // Add SVGR loader
-            config.module.rules.push({
-              test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
-                {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
-                },
-                {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
-                },
-              ],
+                // Add SVGR loader with both default and named exports
+                compiler.options.module.rules.push({
+                  test: /.svg$/,
+                  issuer: /.[jt]sx?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                    {
+                      loader: require.resolve('file-loader'),
+                      options: {
+                        name: '[name].[hash].[ext]',
+                      },
+                    },
+                  ],
+                });
+              },
             });
-
             return config;
           };
         }
@@ -1033,37 +1037,39 @@ module.exports = webpackConfig;
 
           const options = { ...defaultOptions, ...svgrOptions };
 
-          return function configure(config) {
-            // Remove existing SVG loader if present
-            const svgLoaderIdx = config.module.rules.findIndex(
-              (rule) =>
-                typeof rule === 'object' &&
-                typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
-            );
+          return (config) => {
+            config.plugins.push({
+              apply: (compiler) => {
+                // Remove ALL existing SVG loaders
+                compiler.options.module.rules = compiler.options.module.rules.filter(
+                  (rule) =>
+                    !(
+                      rule &&
+                      typeof rule === 'object' &&
+                      rule.test &&
+                      rule.test.toString().includes('svg')
+                    )
+                );
 
-            if (svgLoaderIdx !== -1) {
-              config.module.rules.splice(svgLoaderIdx, 1);
-            }
-
-            // Add SVGR loader
-            config.module.rules.push({
-              test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
-                {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
-                },
-                {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
-                },
-              ],
+                // Add SVGR loader with both default and named exports
+                compiler.options.module.rules.push({
+                  test: /.svg$/,
+                  issuer: /.[jt]sx?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                    {
+                      loader: require.resolve('file-loader'),
+                      options: {
+                        name: '[name].[hash].[ext]',
+                      },
+                    },
+                  ],
+                });
+              },
             });
-
             return config;
           };
         }
@@ -1146,37 +1152,39 @@ export default webpackConfig;
 
           const options = { ...defaultOptions, ...svgrOptions };
 
-          return function configure(config) {
-            // Remove existing SVG loader if present
-            const svgLoaderIdx = config.module.rules.findIndex(
-              (rule) =>
-                typeof rule === 'object' &&
-                typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
-            );
+          return (config) => {
+            config.plugins.push({
+              apply: (compiler) => {
+                // Remove ALL existing SVG loaders
+                compiler.options.module.rules = compiler.options.module.rules.filter(
+                  (rule) =>
+                    !(
+                      rule &&
+                      typeof rule === 'object' &&
+                      rule.test &&
+                      rule.test.toString().includes('svg')
+                    )
+                );
 
-            if (svgLoaderIdx !== -1) {
-              config.module.rules.splice(svgLoaderIdx, 1);
-            }
-
-            // Add SVGR loader
-            config.module.rules.push({
-              test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
-                {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
-                },
-                {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
-                },
-              ],
+                // Add SVGR loader with both default and named exports
+                compiler.options.module.rules.push({
+                  test: /.svg$/,
+                  issuer: /.[jt]sx?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                    {
+                      loader: require.resolve('file-loader'),
+                      options: {
+                        name: '[name].[hash].[ext]',
+                      },
+                    },
+                  ],
+                });
+              },
             });
-
             return config;
           };
         }
@@ -1259,37 +1267,39 @@ export default {
 
           const options = { ...defaultOptions, ...svgrOptions };
 
-          return function configure(config) {
-            // Remove existing SVG loader if present
-            const svgLoaderIdx = config.module.rules.findIndex(
-              (rule) =>
-                typeof rule === 'object' &&
-                typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
-            );
+          return (config) => {
+            config.plugins.push({
+              apply: (compiler) => {
+                // Remove ALL existing SVG loaders
+                compiler.options.module.rules = compiler.options.module.rules.filter(
+                  (rule) =>
+                    !(
+                      rule &&
+                      typeof rule === 'object' &&
+                      rule.test &&
+                      rule.test.toString().includes('svg')
+                    )
+                );
 
-            if (svgLoaderIdx !== -1) {
-              config.module.rules.splice(svgLoaderIdx, 1);
-            }
-
-            // Add SVGR loader
-            config.module.rules.push({
-              test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
-                {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
-                },
-                {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
-                },
-              ],
+                // Add SVGR loader with both default and named exports
+                compiler.options.module.rules.push({
+                  test: /.svg$/,
+                  issuer: /.[jt]sx?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                    {
+                      loader: require.resolve('file-loader'),
+                      options: {
+                        name: '[name].[hash].[ext]',
+                      },
+                    },
+                  ],
+                });
+              },
             });
-
             return config;
           };
         }
@@ -1476,37 +1486,39 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
 
           const options = { ...defaultOptions, ...svgrOptions };
 
-          return function configure(config) {
-            // Remove existing SVG loader if present
-            const svgLoaderIdx = config.module.rules.findIndex(
-              (rule) =>
-                typeof rule === 'object' &&
-                typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
-            );
+          return (config) => {
+            config.plugins.push({
+              apply: (compiler) => {
+                // Remove ALL existing SVG loaders
+                compiler.options.module.rules = compiler.options.module.rules.filter(
+                  (rule) =>
+                    !(
+                      rule &&
+                      typeof rule === 'object' &&
+                      rule.test &&
+                      rule.test.toString().includes('svg')
+                    )
+                );
 
-            if (svgLoaderIdx !== -1) {
-              config.module.rules.splice(svgLoaderIdx, 1);
-            }
-
-            // Add SVGR loader
-            config.module.rules.push({
-              test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
-                {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
-                },
-                {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
-                },
-              ],
+                // Add SVGR loader with both default and named exports
+                compiler.options.module.rules.push({
+                  test: /.svg$/,
+                  issuer: /.[jt]sx?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                    {
+                      loader: require.resolve('file-loader'),
+                      options: {
+                        name: '[name].[hash].[ext]',
+                      },
+                    },
+                  ],
+                });
+              },
             });
-
             return config;
           };
         }

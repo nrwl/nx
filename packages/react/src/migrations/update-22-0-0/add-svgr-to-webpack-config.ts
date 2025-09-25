@@ -11,7 +11,7 @@ import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-optio
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
-const withSvgrFunction = `
+const withSvgrFunctionForWithReact = `
 
 // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
 function withSvgr(svgrOptions = {}) {
@@ -58,6 +58,57 @@ function withSvgr(svgrOptions = {}) {
   };
 }
 `;
+
+const withSvgrFunctionForNxReactWebpackPlugin = `
+
+// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+function withSvgr(svgrOptions = {}) {
+  const defaultOptions = {
+    svgo: false,
+    titleProp: true,
+    ref: true,
+  };
+
+  const options = { ...defaultOptions, ...svgrOptions };
+
+  return (config) => {
+    config.plugins.push({
+      apply: (compiler) => {
+        // Remove ALL existing SVG loaders
+        compiler.options.module.rules = compiler.options.module.rules.filter(
+          (rule) =>
+            !(
+              rule &&
+              typeof rule === 'object' &&
+              rule.test &&
+              rule.test.toString().includes('svg')
+            )
+        );
+
+        // Add SVGR loader with both default and named exports
+        compiler.options.module.rules.push({
+          test: /\.svg$/,
+          issuer: /\.[jt]sx?$/,
+          use: [
+            {
+              loader: require.resolve('@svgr/webpack'),
+              options,
+            },
+            {
+              loader: require.resolve('file-loader'),
+              options: {
+                name: '[name].[hash].[ext]',
+              },
+            },
+          ],
+        });
+      },
+    });
+    return config;
+  };
+}
+`;
+
 export default async function addSvgrToWebpackConfig(tree: Tree) {
   const projects = new Map<
     string,
@@ -239,14 +290,19 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         changes.push({
           type: ChangeType.Insert,
           index: lastImportOrRequire.getEnd(),
-          text: withSvgrFunction,
+          text: config.isWithReact
+            ? withSvgrFunctionForWithReact
+            : withSvgrFunctionForNxReactWebpackPlugin,
         });
       } else {
         // No imports or requires, add at the beginning
         changes.push({
           type: ChangeType.Insert,
           index: 0,
-          text: withSvgrFunction + '\n',
+          text:
+            (config.isWithReact
+              ? withSvgrFunctionForWithReact
+              : withSvgrFunctionForNxReactWebpackPlugin) + '\n',
         });
       }
     }
