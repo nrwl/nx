@@ -1,5 +1,7 @@
 import { vol } from 'memfs';
+import type { ProjectGraph } from '../../../config/project-graph';
 import type { CreateDependenciesContext } from '../../../project-graph/plugins';
+import type { NormalizedPackageJson } from './utils/package-json';
 import { aliasDependenciesBunLock } from './__fixtures__/bun/alias-dependencies.bun.lock';
 import { auxiliaryPackagesBunLock } from './__fixtures__/bun/auxiliary-packages.bun.lock';
 import { basicDependenciesBunLock } from './__fixtures__/bun/basic-dependencies.bun.lock';
@@ -19,6 +21,7 @@ import {
   clearCache,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
+  stringifyBunLockfile,
 } from './bun-parser';
 
 jest.mock('node:fs', () => {
@@ -2221,6 +2224,349 @@ describe('Bun Parser', () => {
           },
         ]
       `);
+    });
+  });
+
+  describe('stringifyBunLockfile', () => {
+    it('should serialize a basic Bun lockfile correctly', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        externalNodes: {
+          'npm:lodash@4.17.21': {
+            type: 'npm',
+            name: 'npm:lodash@4.17.21',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+          'npm:react@18.2.0': {
+            type: 'npm',
+            name: 'npm:react@18.2.0',
+            data: {
+              version: '18.2.0',
+              packageName: 'react',
+              hash: 'sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==',
+            },
+          },
+        },
+        dependencies: {},
+      };
+
+      const packageJson: NormalizedPackageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          react: '^18.2.0',
+        },
+        devDependencies: {},
+        peerDependencies: {},
+        optionalDependencies: {},
+      };
+
+      const existingLockfile = JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {
+          '': {
+            dependencies: {
+              lodash: '^4.17.21',
+            },
+          },
+        },
+        packages: {
+          lodash: [
+            'lodash@npm:4.17.21',
+            'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+            {},
+            'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+          ],
+        },
+      });
+
+      const result = stringifyBunLockfile(graph, existingLockfile, packageJson);
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(
+        expect.objectContaining({
+          lockfileVersion: 1,
+          workspaces: {
+            '': expect.objectContaining({
+              dependencies: {
+                lodash: '^4.17.21',
+                react: '^18.2.0',
+              },
+            }),
+          },
+          packages: expect.objectContaining({
+            lodash: [
+              'lodash@npm:4.17.21',
+              'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+              {},
+              'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            ],
+            'react@18.2.0': [
+              'react@npm:18.2.0',
+              'https://registry.npmjs.org/react/-/react-18.2.0.tgz',
+              {},
+              'sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==',
+            ],
+          }),
+        })
+      );
+    });
+
+    it('should preserve existing lockfile metadata', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        externalNodes: {
+          'npm:typescript@5.0.2': {
+            type: 'npm',
+            name: 'npm:typescript@5.0.2',
+            data: {
+              version: '5.0.2',
+              packageName: 'typescript',
+              hash: 'sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==',
+            },
+          },
+        },
+        dependencies: {},
+      };
+
+      const packageJson: NormalizedPackageJson = {
+        name: 'test-package',
+        version: '1.0.0',
+        dependencies: {},
+        devDependencies: {
+          typescript: '^5.0.2',
+        },
+        peerDependencies: {},
+        optionalDependencies: {},
+      };
+
+      const existingLockfile = JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {
+          '': {
+            name: 'test-package',
+            version: '1.0.0',
+          },
+        },
+        packages: {},
+        patches: {
+          'some-package': {
+            path: 'patches/some-package@1.0.0.patch',
+          },
+        },
+        manifests: {
+          'typescript@5.0.2': {
+            version: '5.0.2',
+            dist: {
+              shasum: 'some-manifest-hash',
+            },
+          },
+        },
+        workspacePackages: {
+          'test-package': {
+            name: 'test-package',
+            version: '1.0.0',
+            path: '.',
+          },
+        },
+      });
+
+      const result = stringifyBunLockfile(graph, existingLockfile, packageJson);
+      const parsed = JSON.parse(result);
+
+      // Should preserve all optional sections
+      expect(parsed.patches).toEqual({
+        'some-package': {
+          path: 'patches/some-package@1.0.0.patch',
+        },
+      });
+      expect(parsed.manifests).toEqual({
+        'typescript@5.0.2': {
+          version: '5.0.2',
+          dist: {
+            shasum: 'some-manifest-hash',
+          },
+        },
+      });
+      expect(parsed.workspacePackages).toEqual({
+        'test-package': {
+          name: 'test-package',
+          version: '1.0.0',
+          path: '.',
+        },
+      });
+    });
+
+    it('should skip workspace packages from external nodes', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        externalNodes: {
+          'npm:lodash@4.17.21': {
+            type: 'npm',
+            name: 'npm:lodash@4.17.21',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'test-hash',
+            },
+          },
+          'npm:workspace-lib@1.0.0': {
+            type: 'npm',
+            name: 'npm:workspace-lib@1.0.0',
+            data: {
+              version: '1.0.0',
+              packageName: 'workspace-lib',
+              hash: 'workspace-hash',
+            },
+          },
+        },
+        dependencies: {},
+      };
+
+      const packageJson: NormalizedPackageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          'workspace-lib': 'workspace:*',
+        },
+        devDependencies: {},
+        peerDependencies: {},
+        optionalDependencies: {},
+      };
+
+      const existingLockfile = JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {
+          '': {
+            dependencies: {
+              lodash: '^4.17.21',
+              'workspace-lib': 'workspace:*',
+            },
+          },
+        },
+        packages: {},
+        workspacePackages: {
+          'workspace-lib': {
+            name: 'workspace-lib',
+            version: '1.0.0',
+            path: 'packages/workspace-lib',
+          },
+        },
+      });
+
+      const result = stringifyBunLockfile(graph, existingLockfile, packageJson);
+      const parsed = JSON.parse(result);
+
+      // Should include external package but skip workspace package
+      expect(parsed.packages).toEqual(
+        expect.objectContaining({
+          'lodash@4.17.21': expect.any(Array),
+        })
+      );
+      expect(parsed.packages['workspace-lib@1.0.0']).toBeUndefined();
+      expect(parsed.packages['workspace-lib']).toBeUndefined();
+    });
+
+    it('should handle empty lockfile gracefully', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        externalNodes: {},
+        dependencies: {},
+      };
+
+      const packageJson: NormalizedPackageJson = {
+        name: 'empty-package',
+        version: '1.0.0',
+        dependencies: {},
+        devDependencies: {},
+        peerDependencies: {},
+        optionalDependencies: {},
+      };
+
+      const existingLockfile = JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {},
+        packages: {},
+      });
+
+      const result = stringifyBunLockfile(graph, existingLockfile, packageJson);
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual({
+        lockfileVersion: 1,
+        workspaces: {
+          '': {}, // Empty workspace since no dependencies exist
+        },
+        packages: {},
+      });
+    });
+
+    it('should sort packages for consistent output', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        externalNodes: {
+          'npm:zebra@1.0.0': {
+            type: 'npm',
+            name: 'npm:zebra@1.0.0',
+            data: {
+              version: '1.0.0',
+              packageName: 'zebra',
+              hash: 'zebra-hash',
+            },
+          },
+          'npm:alpha@1.0.0': {
+            type: 'npm',
+            name: 'npm:alpha@1.0.0',
+            data: {
+              version: '1.0.0',
+              packageName: 'alpha',
+              hash: 'alpha-hash',
+            },
+          },
+          'npm:beta@1.0.0': {
+            type: 'npm',
+            name: 'npm:beta@1.0.0',
+            data: {
+              version: '1.0.0',
+              packageName: 'beta',
+              hash: 'beta-hash',
+            },
+          },
+        },
+        dependencies: {},
+      };
+
+      const packageJson: NormalizedPackageJson = {
+        name: 'sort-test',
+        version: '1.0.0',
+        dependencies: {
+          zebra: '^1.0.0',
+          alpha: '^1.0.0',
+          beta: '^1.0.0',
+        },
+        devDependencies: {},
+        peerDependencies: {},
+        optionalDependencies: {},
+      };
+
+      const existingLockfile = JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {},
+        packages: {},
+      });
+
+      const result = stringifyBunLockfile(graph, existingLockfile, packageJson);
+      const parsed = JSON.parse(result);
+
+      // Packages should be sorted alphabetically
+      const packageKeys = Object.keys(parsed.packages);
+      expect(packageKeys).toEqual(['alpha@1.0.0', 'beta@1.0.0', 'zebra@1.0.0']);
     });
   });
 });
