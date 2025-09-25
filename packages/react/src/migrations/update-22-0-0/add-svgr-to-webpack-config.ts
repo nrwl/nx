@@ -1,7 +1,6 @@
 import {
   type Tree,
   formatFiles,
-  readProjectConfiguration,
   logger,
   applyChangesToString,
   ChangeType,
@@ -11,6 +10,52 @@ import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-optio
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
+const withSvgrFunction = `
+// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+function withSvgr(svgrOptions = {}) {
+  const defaultOptions = {
+    svgo: false,
+    titleProp: true,
+    ref: true,
+  };
+
+  const options = { ...defaultOptions, ...svgrOptions };
+
+  return function configure(config) {
+    // Remove existing SVG loader if present
+    const svgLoaderIdx = config.module.rules.findIndex(
+      (rule) =>
+        typeof rule === 'object' &&
+        typeof rule.test !== 'undefined' &&
+        rule.test.toString().includes('svg')
+    );
+
+    if (svgLoaderIdx !== -1) {
+      config.module.rules.splice(svgLoaderIdx, 1);
+    }
+
+    // Add SVGR loader
+    config.module.rules.push({
+      test: /\\.svg$/,
+      issuer: /\\.(js|ts|md)x?$/,
+      use: [
+        {
+          loader: require.resolve('@svgr/webpack'),
+          options,
+        },
+        {
+          loader: require.resolve('file-loader'),
+          options: {
+            name: '[name].[hash].[ext]',
+          },
+        },
+      ],
+    });
+
+    return config;
+  };
+}
+`;
 export default async function addSvgrToWebpackConfig(tree: Tree) {
   const projects = new Map<
     string,
@@ -22,7 +67,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
     tree,
     '@nx/webpack:webpack',
     (options: any, project, target) => {
-      const projectConfig = readProjectConfiguration(tree, project);
       if (!options.webpackConfig) return;
 
       const webpackConfigPath = options.webpackConfig as string;
@@ -36,9 +80,10 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
       // Check if this is a withReact setup (function composition style)
       if (content.includes('withReact')) {
         // Look for first withReact call with svgr option (only one expected)
+        // Use a more specific selector that finds CallExpression where the callee is 'withReact'
         const withReactCalls = tsquery(
           ast,
-          'CallExpression:has(Identifier[name=withReact])'
+          'CallExpression[expression.name=withReact]'
         );
 
         if (withReactCalls.length > 0) {
@@ -74,22 +119,15 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
                   svgrValue[key] = false;
                 }
               }
-            } else if (
-              svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword
-            ) {
-              svgrValue = true;
+            } else {
+              svgrValue =
+                svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword;
             }
 
-            // Only add to projects if svgr is explicitly set to true or has options
-            if (
-              svgrValue === true ||
-              (typeof svgrValue === 'object' && svgrValue !== null)
-            ) {
-              projects.set(webpackConfigPath, {
-                svgrOptions: svgrValue,
-                isWithReact: true,
-              });
-            }
+            projects.set(webpackConfigPath, {
+              svgrOptions: svgrValue,
+              isWithReact: true,
+            });
           }
         }
       }
@@ -98,7 +136,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         // Look for first NxReactWebpackPlugin call with svgr option (only one expected)
         const pluginCalls = tsquery(
           ast,
-          'NewExpression:has(Identifier[name=NxReactWebpackPlugin])'
+          'NewExpression[expression.name=NxReactWebpackPlugin]'
         );
 
         if (pluginCalls.length > 0) {
@@ -157,9 +195,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
   );
 
   // Early exit if no projects need migration
-  if (projects.size === 0) {
-    return;
-  }
+  if (projects.size === 0) return;
 
   // Update webpack configs to add withSvgr function inline
   for (const [webpackConfigPath, config] of projects.entries()) {
@@ -167,83 +203,40 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
     const ast = tsquery.ast(content);
     const changes: StringChange[] = [];
 
-    // Add the withSvgr function definition at the top of the file after imports
-    const importStatements = tsquery(ast, 'ImportDeclaration');
-    const lastImport = importStatements[importStatements.length - 1];
-
     // Build the svgr options for this specific config
     let svgrOptionsStr = '';
-    if (config.svgrOptions === true || config.svgrOptions === undefined) {
-      // Use default options
-      svgrOptionsStr = '';
-    } else if (typeof config.svgrOptions === 'object') {
-      // Build custom options as object literal
-      const options = Object.entries(config.svgrOptions)
-        .map(([key, value]) => `  ${key}: ${value}`)
-        .join(',\n');
-      svgrOptionsStr = `{\n${options}\n}`;
-    }
 
-    const withSvgrFunction = `
-// SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
-function withSvgr(svgrOptions = {}) {
-  const defaultOptions = {
-    svgo: false,
-    titleProp: true,
-    ref: true,
-  };
+    if (config.svgrOptions) {
+      // Add the withSvgr function definition at the top of the file after imports
+      // TODO: handle requires
+      const importStatements = tsquery(ast, 'ImportDeclaration');
+      const lastImport = importStatements[importStatements.length - 1];
 
-  const options = { ...defaultOptions, ...svgrOptions };
+      if (config.svgrOptions) {
+        // Use default options
+        svgrOptionsStr = '';
+      } else if (typeof config.svgrOptions === 'object') {
+        // Build custom options as object literal
+        const options = Object.entries(config.svgrOptions)
+          .map(([key, value]) => `  ${key}: ${value}`)
+          .join(',\n');
+        svgrOptionsStr = `{\n${options}\n}`;
+      }
 
-  return function configure(config) {
-    // Remove existing SVG loader if present
-    const svgLoaderIdx = config.module.rules.findIndex(
-      (rule) =>
-        typeof rule === 'object' &&
-        typeof rule.test !== 'undefined' &&
-        rule.test.toString().includes('svg')
-    );
-
-    if (svgLoaderIdx !== -1) {
-      config.module.rules.splice(svgLoaderIdx, 1);
-    }
-
-    // Add SVGR loader
-    config.module.rules.push({
-      test: /\\.svg$/,
-      issuer: /\\.(js|ts|md)x?$/,
-      use: [
-        {
-          loader: require.resolve('@svgr/webpack'),
-          options,
-        },
-        {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: '[name].[hash].[ext]',
-          },
-        },
-      ],
-    });
-
-    return config;
-  };
-}
-`;
-
-    if (lastImport) {
-      changes.push({
-        type: ChangeType.Insert,
-        index: lastImport.getEnd(),
-        text: withSvgrFunction,
-      });
-    } else {
-      // No imports, add at the beginning
-      changes.push({
-        type: ChangeType.Insert,
-        index: 0,
-        text: withSvgrFunction + '\n',
-      });
+      if (lastImport) {
+        changes.push({
+          type: ChangeType.Insert,
+          index: lastImport.getEnd(),
+          text: withSvgrFunction,
+        });
+      } else {
+        // No imports, add at the beginning
+        changes.push({
+          type: ChangeType.Insert,
+          index: 0,
+          text: withSvgrFunction + '\n',
+        });
+      }
     }
 
     // Remove svgr option based on the style (withReact OR NxReactWebpackPlugin)
@@ -251,7 +244,7 @@ function withSvgr(svgrOptions = {}) {
       // Remove svgr option from first withReact call (only one expected)
       const withReactCalls = tsquery(
         ast,
-        'CallExpression:has(Identifier[name=withReact])'
+        'CallExpression[expression.name=withReact]'
       );
       if (withReactCalls.length > 0) {
         const callExpr = withReactCalls[0] as ts.CallExpression;
@@ -266,48 +259,45 @@ function withSvgr(svgrOptions = {}) {
             ) as ts.PropertyAssignment | undefined;
 
             if (svgrProp) {
-              const hasOnlySvgrProperty = arg.properties.length === 1;
+              changes.push({
+                type: ChangeType.Delete,
+                start: arg.getStart(),
+                length: arg.getEnd() - arg.getStart(),
+              });
 
-              if (hasOnlySvgrProperty) {
-                // Replace entire object argument with empty parentheses
-                changes.push({
-                  type: ChangeType.Delete,
-                  start: arg.getStart(),
-                  length: arg.getEnd() - arg.getStart(),
-                });
-              } else {
-                // Remove just the svgr property
-                const propIndex = arg.properties.indexOf(svgrProp);
-                const isLastProp = propIndex === arg.properties.length - 1;
-                const isFirstProp = propIndex === 0;
+              if (config.svgrOptions) {
+                // Find the composePlugins call to insert withSvgr
+                const composePluginsCalls = tsquery(
+                  ast,
+                  'CallExpression[expression.name=composePlugins]'
+                );
 
-                // Calculate removal range including whitespace and comma
-                let removeStart = svgrProp.getFullStart();
-                let removeEnd = svgrProp.getEnd();
-
-                // Handle comma removal
-                if (!isLastProp) {
-                  // Remove trailing comma
-                  const nextProp = arg.properties[propIndex + 1];
-                  removeEnd = nextProp.getFullStart();
-                } else if (!isFirstProp) {
-                  // Remove preceding comma from previous property
-                  const prevProp = arg.properties[propIndex - 1];
-                  const textBetween = content.substring(
-                    prevProp.getEnd(),
-                    svgrProp.getFullStart()
+                if (composePluginsCalls.length > 0) {
+                  const composeCall =
+                    composePluginsCalls[0] as ts.CallExpression;
+                  // Build the withSvgr call string
+                  let svgrCallStr = '';
+                  if (
+                    config.svgrOptions === true ||
+                    config.svgrOptions === undefined
+                  ) {
+                    svgrCallStr = 'withSvgr()';
+                  } else if (typeof config.svgrOptions === 'object') {
+                    svgrCallStr = `withSvgr(${svgrOptionsStr})`;
+                  }
+                  const withReactIdx = composeCall.arguments.findIndex((arg) =>
+                    arg.getText().includes('withReact')
                   );
-                  const commaIndex = textBetween.indexOf(',');
-                  if (commaIndex !== -1) {
-                    removeStart = prevProp.getEnd() + commaIndex;
+                  // Insert withSvgr as the last argument before the closing paren
+                  const argToInsertAfter = composeCall.arguments[withReactIdx];
+                  if (argToInsertAfter) {
+                    changes.push({
+                      type: ChangeType.Insert,
+                      index: argToInsertAfter.getEnd(),
+                      text: `, ${svgrCallStr}`,
+                    });
                   }
                 }
-
-                changes.push({
-                  type: ChangeType.Delete,
-                  start: removeStart,
-                  length: removeEnd - removeStart,
-                });
               }
             }
           }
@@ -384,40 +374,29 @@ function withSvgr(svgrOptions = {}) {
     // Apply all AST-based changes
     content = applyChangesToString(content, changes);
 
-    // For withReact style, add withSvgr to composePlugins chain
-    if (config.isWithReact) {
-      // Find first composePlugins call (only one expected)
-      const composePluginsMatch = content.match(
-        /composePlugins\s*\(\s*([\s\S]*?)\s*\)/
-      );
-
-      if (composePluginsMatch) {
-        const pluginsContent = composePluginsMatch[1];
-
-        // Build the withSvgr call string
-        let svgrCallStr = '';
-        if (config.svgrOptions === true || config.svgrOptions === undefined) {
-          svgrCallStr = 'withSvgr()';
-        } else if (typeof config.svgrOptions === 'object') {
-          svgrCallStr = `withSvgr(${svgrOptionsStr})`;
-        }
-
-        // Add withSvgr as the last argument in composePlugins
-        const newPluginsContent = pluginsContent.trimEnd() + ', ' + svgrCallStr;
-        content = content.replace(
-          composePluginsMatch[0],
-          `composePlugins(${newPluginsContent})`
-        );
+    // For NxReactWebpackPlugin style, wrap the entire module.exports with withSvgr
+    if (!config.isWithReact) {
+      // For NxReactWebpackPlugin style, wrap the entire module.exports with withSvgr
+      // Build the withSvgr call string
+      let svgrCallStr = '';
+      if (config.svgrOptions === true || config.svgrOptions === undefined) {
+        svgrCallStr = 'withSvgr()';
+      } else if (typeof config.svgrOptions === 'object') {
+        svgrCallStr = `withSvgr(${svgrOptionsStr})`;
       }
+
+      // Find module.exports and wrap it
+      // Simply replace module.exports = with module.exports = withSvgr()(
+      // and add closing parenthesis before the semicolon
+      content = content.replace(
+        /module\.exports\s*=\s*{/,
+        `module.exports = ${svgrCallStr}({`
+      );
+      // Find the closing }; and add )
+      content = content.replace(/^};$/m, '});');
     }
-    // For NxReactWebpackPlugin style, the withSvgr function is added but needs to be called differently
-    // This would typically be done in the webpack config directly, not through composePlugins
 
     tree.write(webpackConfigPath, content);
-
-    logger.info(
-      `Updated ${webpackConfigPath}: Added SVGR webpack configuration directly to config`
-    );
   }
 
   await formatFiles(tree);
