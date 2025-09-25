@@ -279,12 +279,11 @@ export function withNx(
               tsconfig: tsConfigPath,
               compilerOptions: {
                 ...tsCompilerOptions,
+                composite: false,
                 outDir: rollupOutputDir,
                 declarationDir: rollupOutputDir,
+                noEmitOnError: !options.skipTypeCheck,
               },
-              declaration: true,
-              declarationMap: !!options.sourceMap,
-              noEmitOnError: !options.skipTypeCheck,
             });
           })(),
       typeDefinitions({
