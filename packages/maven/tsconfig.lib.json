@@ -1,8 +1,15 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true
+    "outDir": "../../dist/packages/maven",
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/maven/tsconfig.tsbuildinfo"
   },
-  "exclude": ["./jest.config.ts", "./src/**/*.spec.ts", "./src/**/*.test.ts", "./src/test-setup.ts"]
+  "include": ["**/*.ts"],
+  "exclude": ["jest.config.ts", "src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "references": [
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ]
 }

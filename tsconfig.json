@@ -405,6 +405,9 @@
     },
     {
       "path": "./graph/ui-render-config"
+    },
+    {
+      "path": "./packages/maven"
     }
   ],
   "extends": "./tsconfig.base.json"
