@@ -13,6 +13,7 @@ import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import {
   canInstallNxConsoleForEditor,
   installNxConsoleForEditor,
+  isEditorInstalled,
   SupportedEditor,
 } from '../../native';
 import {
@@ -162,7 +163,7 @@ export async function setupAiAgentsGeneratorImpl(
       if (existsSync(codexConfigTomlPath)) {
         const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
         if (!tomlContents.includes(nxMcpTomlHeader)) {
-          if (check === false) {
+          if (!check) {
             appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
           }
           messages.push({
@@ -170,7 +171,7 @@ export async function setupAiAgentsGeneratorImpl(
           });
         }
       } else {
-        if (check === false) {
+        if (!check) {
           mkdirSync(join(homedir(), '.codex'), { recursive: true });
           writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
         }
@@ -179,10 +180,14 @@ export async function setupAiAgentsGeneratorImpl(
         });
       }
     }
+
     if (hasAgent('copilot')) {
       try {
-        if (canInstallNxConsoleForEditor(SupportedEditor.VSCode)) {
-          if (check === false) {
+        if (
+          isEditorInstalled(SupportedEditor.VSCode) &&
+          canInstallNxConsoleForEditor(SupportedEditor.VSCode)
+        ) {
+          if (!check) {
             installNxConsoleForEditor(SupportedEditor.VSCode);
           }
           messages.push({
@@ -196,8 +201,11 @@ export async function setupAiAgentsGeneratorImpl(
         });
       }
       try {
-        if (canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders)) {
-          if (check === false) {
+        if (
+          isEditorInstalled(SupportedEditor.VSCodeInsiders) &&
+          canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders)
+        ) {
+          if (!check) {
             installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
           }
           messages.push({
@@ -213,8 +221,11 @@ export async function setupAiAgentsGeneratorImpl(
     }
     if (hasAgent('cursor')) {
       try {
-        if (canInstallNxConsoleForEditor(SupportedEditor.Cursor)) {
-          if (check === false) {
+        if (
+          isEditorInstalled(SupportedEditor.Cursor) &&
+          canInstallNxConsoleForEditor(SupportedEditor.Cursor)
+        ) {
+          if (!check) {
             installNxConsoleForEditor(SupportedEditor.Cursor);
           }
           messages.push({

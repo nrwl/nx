@@ -44,7 +44,7 @@ interface Schema {
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
-  aiAgents?: Agent[];
+  aiAgents?: Agent[] | Agent;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -52,6 +52,7 @@ export interface NormalizedSchema extends Schema {
   isCustomPreset: boolean;
   nxCloudToken?: string;
   workspaceGlobs?: string[];
+  aiAgents?: Agent[];
 }
 
 export async function newGenerator(tree: Tree, opts: Schema) {
@@ -159,6 +160,11 @@ function normalizeOptions(options: Schema): NormalizedSchema {
       ? options.workspaceGlobs
       : options.workspaceGlobs
       ? [options.workspaceGlobs]
+      : undefined,
+    aiAgents: Array.isArray(options.aiAgents)
+      ? options.aiAgents
+      : options.aiAgents
+      ? [options.aiAgents]
       : undefined,
   };
 

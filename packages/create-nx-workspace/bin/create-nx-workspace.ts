@@ -331,10 +331,10 @@ async function normalizeArgsMiddleware(
     }
 
     const packageManager = await determinePackageManager(argv);
+    const aiAgents = await determineAiAgents(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud =
       argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-    const aiAgents = await determineAiAgents(argv);
     const useGitHub =
       nxCloud === 'skip'
         ? undefined

@@ -56,15 +56,21 @@ export async function getAgentConfigurations(
   nonConfiguredAgents: Agent[];
   partiallyConfiguredAgents: Agent[];
   fullyConfiguredAgents: Agent[];
+  disabledAgents: Agent[];
   agentConfigurations: Map<Agent, AgentConfiguration>;
 }> {
   const nonConfiguredAgents: Agent[] = [];
   const partiallyConfiguredAgents: Agent[] = [];
   const fullyConfiguredAgents: Agent[] = [];
+  const disabledAgents: Agent[] = [];
   const agentConfigurations = new Map<Agent, AgentConfiguration>();
 
   for (const agent of agentsToConsider) {
     const configured = await getAgentConfiguration(agent, workspaceRoot);
+    if (configured.disabled) {
+      disabledAgents.push(agent);
+      continue;
+    }
     agentConfigurations.set(agent, configured);
     if (configured.mcp && configured.rules) {
       fullyConfiguredAgents.push(agent);
@@ -79,6 +85,7 @@ export async function getAgentConfigurations(
     nonConfiguredAgents,
     partiallyConfiguredAgents,
     fullyConfiguredAgents,
+    disabledAgents,
     agentConfigurations,
   };
 }
@@ -135,21 +142,27 @@ async function getAgentConfiguration(
     }
     case 'copilot': {
       const rulesPath = agentsMdPath(workspaceRoot);
-      const hasInstalledVSCode =
-        isEditorInstalled(SupportedEditor.VSCode) ||
-        isEditorInstalled(SupportedEditor.VSCodeInsiders);
-      const hasInstalledNxConsole =
-        !canInstallNxConsoleForEditor(SupportedEditor.VSCode) &&
+      const hasInstalledVSCode = isEditorInstalled(SupportedEditor.VSCode);
+      const hasInstalledVSCodeInsiders = isEditorInstalled(
+        SupportedEditor.VSCodeInsiders
+      );
+      const hasInstalledNxConsoleForVSCode =
+        hasInstalledVSCode &&
+        !canInstallNxConsoleForEditor(SupportedEditor.VSCode);
+      const hasInstalledNxConsoleForVSCodeInsiders =
+        hasInstalledVSCodeInsiders &&
         !canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
 
       const agentsMdExists = existsSync(rulesPath);
 
       agentConfiguration = {
-        mcp: hasInstalledVSCode ? hasInstalledNxConsole : false,
+        mcp:
+          hasInstalledNxConsoleForVSCode ||
+          hasInstalledNxConsoleForVSCodeInsiders,
         rules: agentsMdExists,
         rulesPath,
         mcpPath: null,
-        disabled: !hasInstalledVSCode,
+        disabled: !hasInstalledVSCode && !hasInstalledVSCodeInsiders,
       };
       break;
     }

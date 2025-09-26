@@ -59,12 +59,9 @@ export async function configureAiAgentsHandlerImpl(
     nonConfiguredAgents,
     partiallyConfiguredAgents,
     fullyConfiguredAgents,
+    disabledAgents,
     agentConfigurations,
   } = await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
-
-  const disabledAgents = normalizedOptions.agents.filter(
-    (a) => agentConfigurations.get(a)?.disabled
-  );
 
   if (disabledAgents.length > 0) {
     output.log({
@@ -72,7 +69,7 @@ export async function configureAiAgentsHandlerImpl(
         disabledAgents.length > 1 ? 's' : ''
       } ${disabledAgents
         .map((a) => agentDisplayMap[a])
-        .join(', ')} because editor is not installed.`,
+        .join(', ')} because editor is not available.`,
     });
   }
 
@@ -94,13 +91,22 @@ export async function configureAiAgentsHandlerImpl(
     if (outOfDateAgents.length === 0) {
       output.success({
         title: 'All configured AI agents are up to date',
-        bodyLines: fullyConfiguredAgents.map((a) => `- ${a}`),
+        bodyLines: fullyConfiguredAgents.map((a) => `- ${agentDisplayMap[a]}`),
       });
       process.exit(0);
     } else {
       output.log({
         title: 'The following AI agents are out of date:',
-        bodyLines: outOfDateAgents,
+        bodyLines: [
+          ...outOfDateAgents.map(
+            (a) =>
+              `- ${agentDisplayMap[a]} (${
+                agentConfigurations.get(a).rulesPath
+              })`
+          ),
+          '',
+          'You can update them by running `nx configure-ai-agents`.',
+        ],
       });
       process.exit(1);
     }
@@ -108,9 +114,6 @@ export async function configureAiAgentsHandlerImpl(
   // first, prompt for partially configured agents and out of date agents
   const agentsToUpdate: { name: string; message: string }[] = [];
   partiallyConfiguredAgents.forEach((a) => {
-    if (agentConfigurations.get(a).disabled) {
-      return;
-    }
     agentsToUpdate.push(getAgentChoiceForPrompt(a, true, false));
   });
 
@@ -156,8 +159,19 @@ export async function configureAiAgentsHandlerImpl(
 
   // then prompt for non-configured agents
   if (nonConfiguredAgents.length === 0) {
+    const subsetOfAgents =
+      normalizedOptions.agents.length < supportedAgents.length;
     output.success({
-      title: 'All selected AI agents are already configured',
+      title: `All ${
+        subsetOfAgents ? 'selected' : 'supported'
+      } AI agents are already configured:`,
+      // we let users know what agents are configured that didn't need to be updated before
+      // the list of updated agents is already visible above
+      bodyLines: [
+        ...normalizedOptions.agents
+          .filter((agent) => !agentsToUpdate.find((a) => a.name === agent))
+          .map((agent) => `- ${agentDisplayMap[agent]}`),
+      ],
     });
     process.exit(0);
   }
@@ -171,9 +185,9 @@ export async function configureAiAgentsHandlerImpl(
           name: 'agents',
           message:
             'Which AI agents would you like to configure? (space to select, enter to confirm)',
-          choices: nonConfiguredAgents
-            .filter((a) => !agentConfigurations.get(a)?.disabled)
-            .map((a) => getAgentChoiceForPrompt(a, false, false)),
+          choices: nonConfiguredAgents.map((a) =>
+            getAgentChoiceForPrompt(a, false, false)
+          ),
           required: true,
         } as any)
       ).agents;
@@ -186,9 +200,8 @@ export async function configureAiAgentsHandlerImpl(
   }
 
   if (configurationResult?.length === 0) {
-    output.error({
+    output.log({
       title: 'No agents selected',
-      bodyLines: ['Please select at least one AI agent to set up.'],
     });
     process.exit(0);
   }
