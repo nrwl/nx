@@ -579,8 +579,6 @@ jobs:
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        permissions:
-          pull-requests: write
         env:
           SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
         with:
