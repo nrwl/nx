@@ -681,6 +681,7 @@
           - [release](/reference/core-api/nx/documents/release)
           - [add](/reference/core-api/nx/documents/add)
           - [mcp](/reference/core-api/nx/documents/mcp)
+          - [configure-ai-agents](/reference/core-api/nx/documents/configure-ai-agents)
           - [login](/reference/core-api/nx/documents/login)
           - [logout](/reference/core-api/nx/documents/logout)
           - [fix-ci](/reference/core-api/nx/documents/fix-ci)
