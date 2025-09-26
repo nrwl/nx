@@ -13,6 +13,7 @@ import { installPackageToTmp } from '../../devkit-internals';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import ora = require('ora');
+import { relative } from 'path';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
@@ -73,6 +74,16 @@ export async function configureAiAgentsHandlerImpl(
     });
   }
 
+  if (
+    normalizedOptions.agents.filter((a) => !disabledAgents.includes(a))
+      .length === 0
+  ) {
+    output.error({
+      title: 'Please select at least one AI agent to configure.',
+    });
+    process.exit(1);
+  }
+
   if (options.check) {
     if (fullyConfiguredAgents.length === 0) {
       output.log({
@@ -98,12 +109,13 @@ export async function configureAiAgentsHandlerImpl(
       output.log({
         title: 'The following AI agents are out of date:',
         bodyLines: [
-          ...outOfDateAgents.map(
-            (a) =>
-              `- ${agentDisplayMap[a]} (${
-                agentConfigurations.get(a).rulesPath
-              })`
-          ),
+          ...outOfDateAgents.map((a) => {
+            const rulesPath = agentConfigurations.get(a).rulesPath;
+            const displayPath = rulesPath.startsWith(workspaceRoot)
+              ? relative(workspaceRoot, rulesPath)
+              : rulesPath;
+            return `- ${agentDisplayMap[a]} (${displayPath})`;
+          }),
           '',
           'You can update them by running `nx configure-ai-agents`.',
         ],
@@ -123,8 +135,9 @@ export async function configureAiAgentsHandlerImpl(
     }
   }
 
+  let updateResult: Agent[] = [];
+  let updateSucceeded = true;
   if (agentsToUpdate.length > 0) {
-    let updateResult: Agent[];
     if (options.interactive !== false) {
       try {
         updateResult = (
@@ -153,25 +166,28 @@ export async function configureAiAgentsHandlerImpl(
         updateSpinner.succeed('Agent configurations updated.');
       } catch {
         updateSpinner.fail('Failed to update agent configurations.');
+        updateSucceeded = false;
       }
     }
   }
 
   // then prompt for non-configured agents
   if (nonConfiguredAgents.length === 0) {
-    const subsetOfAgents =
-      normalizedOptions.agents.length < supportedAgents.length;
+    const usingAllAgents =
+      normalizedOptions.agents.length === supportedAgents.length;
+    const configuredOrUpdatedAgents = [
+      ...new Set([
+        ...fullyConfiguredAgents,
+        ...(updateSucceeded ? updateResult : []),
+      ]),
+    ];
     output.success({
-      title: `All ${
-        subsetOfAgents ? 'selected' : 'supported'
+      title: `No new agents to configure. All ${
+        !usingAllAgents ? 'selected' : 'supported'
       } AI agents are already configured:`,
-      // we let users know what agents are configured that didn't need to be updated before
-      // the list of updated agents is already visible above
-      bodyLines: [
-        ...normalizedOptions.agents
-          .filter((agent) => !agentsToUpdate.find((a) => a.name === agent))
-          .map((agent) => `- ${agentDisplayMap[agent]}`),
-      ],
+      bodyLines: configuredOrUpdatedAgents.map(
+        (agent) => `- ${agentDisplayMap[agent]}`
+      ),
     });
     process.exit(0);
   }
@@ -198,7 +214,6 @@ export async function configureAiAgentsHandlerImpl(
     // in non-interactive mode, configure all
     configurationResult = nonConfiguredAgents;
   }
-
   if (configurationResult?.length === 0) {
     output.log({
       title: 'No agents selected',
@@ -209,8 +224,19 @@ export async function configureAiAgentsHandlerImpl(
   try {
     await configureAgents(configurationResult, workspaceRoot, false);
 
+    const configuredOrUpdatedAgents = [
+      ...new Set([
+        ...fullyConfiguredAgents,
+        ...(updateSucceeded ? updateResult : []),
+        ...configurationResult,
+      ]),
+    ];
+
     output.success({
-      title: 'AI agents set up successfully',
+      title: 'AI agents set up successfully. Configured agents:',
+      bodyLines: configuredOrUpdatedAgents.map(
+        (agent) => `- ${agentDisplayMap[agent]}`
+      ),
     });
 
     return;
