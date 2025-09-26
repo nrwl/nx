@@ -28,11 +28,11 @@ describe('create-nx-workspace yarn berry', () => {
       readFileSync(`${yarnBerryTmpDir}/${wsName}/.yarnrc.yml`, {
         encoding: 'utf-8',
       })
-    ).toMatchInlineSnapshot(
-      `"nodeLinker: node-modules
+    ).toBe(
+      `nodeLinker: node-modules
 
 yarnPath: .yarn/releases/yarn-${getYarnBerryVersion()}.cjs
-"`
+`
     );
   });
 
@@ -50,11 +50,11 @@ yarnPath: .yarn/releases/yarn-${getYarnBerryVersion()}.cjs
       readFileSync(`${yarnBerryTmpDir}/${wsName}/.yarnrc.yml`, {
         encoding: 'utf-8',
       })
-    ).toMatchInlineSnapshot(
-      `"nodeLinker: node-modules
+    ).toBe(
+      `nodeLinker: node-modules
 
 yarnPath: .yarn/releases/yarn-${getYarnBerryVersion()}.cjs
-"`
+`
     );
   });
 });
