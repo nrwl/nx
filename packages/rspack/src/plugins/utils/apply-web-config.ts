@@ -309,7 +309,11 @@ export function applyWebConfig(
     plugins.push(
       // extract global css from js files into own css file
       new CssExtractRspackPlugin({
-        filename: `[name]${hashFormat.extract}.css`,
+        filename:
+          config.output?.cssFilename ??
+          (options.outputHashing
+            ? `[name]${hashFormat.extract}.css`
+            : '[name].css'),
       })
     );
   }
