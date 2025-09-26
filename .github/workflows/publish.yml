@@ -579,8 +579,6 @@ jobs:
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        permissions:
-          pull-requests: write
         env:
           SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
         with:
@@ -609,8 +607,18 @@ jobs:
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
           status: ${{ job.status }}
-          notification_title: ${{ needs.resolve-required-data.outputs.pr_number && format('📦 PR #{0} Publish Pending Review', needs.resolve-required-data.outputs.pr_number) || '📦 Publish Pending Review' }}
-          message_format: ${{ needs.resolve-required-data.outputs.pr_number && format('Version `{0}` from PR #{1} by @{2} is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version, needs.resolve-required-data.outputs.pr_number, needs.resolve-required-data.outputs.pr_author) || format('Version `{0}` is being published to NPM - manual review is required', needs.resolve-required-data.outputs.version) }}
+          notification_title: >-
+            ${{ needs.resolve-required-data.outputs.pr_number &&
+                format('📦 PR #{0} Publish Pending Review', needs.resolve-required-data.outputs.pr_number) ||
+                '📦 Publish Pending Review' }}
+          message_format: >-
+            ${{ needs.resolve-required-data.outputs.pr_number &&
+                format('Version {0} from PR #{1} by @{2} is being published to NPM - manual review is required',
+                       needs.resolve-required-data.outputs.version,
+                       needs.resolve-required-data.outputs.pr_number,
+                       needs.resolve-required-data.outputs.pr_author) ||
+                format('Version {0} is being published to NPM - manual review is required',
+                       needs.resolve-required-data.outputs.version) }}
           footer: '<{run_url}|View Workflow Run>'
           mention_users: 'U9NPA6C90' # Jason
         env:
