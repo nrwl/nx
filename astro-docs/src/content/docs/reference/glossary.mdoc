@@ -92,6 +92,11 @@ A script that performs some action on your code. This can include building, lint
 
 > See: [Executors and Configurations](/docs/concepts/executors-and-configurations)
 
+### Flake Rate
+The probability when a task fails, it's failing due to flakiness rather than a real issue. 
+
+> See: [Identify and Re-run Flaky Tasks](/docs/features/ci-features/flaky-tasks)
+
 ### Flaky Tasks
 
 Tasks that will sometimes succeed and sometimes fail without any change to the inputs. These tasks are often e2e tests and are particularly problematic in CI. Nx Cloud automatically detects flaky tasks and re-runs them.
@@ -175,6 +180,12 @@ The unit of code on which a [task](#task) can be run. A project can be an [appli
 A [library](#library) that has a `publish` [target](#target). Some libraries can be generated with a `publish` target using the `--publishable` flag.
 
 > See: [Publishable and Buildable Nx Libraries](/docs/concepts/buildable-and-publishable-libraries)
+
+### Recovery Rate
+
+The probability that a task which has previously failed due to flakiness will succeed when run again. 
+
+> See: [Identify and Re-run Flaky Tasks](/docs/features/ci-features/flaky-tasks)
 
 ### Remote Cache
 
