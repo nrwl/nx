@@ -274,6 +274,16 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, `my-lib/tsconfig.lib.json`);
       expect(tsconfigJson.compilerOptions.target).toEqual('es2021');
     });
+
+    it('should enable decorators in tsconfig.lib.json for NestJS support', async () => {
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+      });
+
+      const tsconfigJson = readJson(tree, `my-lib/tsconfig.lib.json`);
+      expect(tsconfigJson.compilerOptions.experimentalDecorators).toBe(true);
+      expect(tsconfigJson.compilerOptions.emitDecoratorMetadata).toBe(true);
+    });
   });
 
   describe('--skipFormat', () => {
@@ -440,6 +450,8 @@ describe('lib', () => {
           "compilerOptions": {
             "baseUrl": ".",
             "emitDeclarationOnly": true,
+            "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
             "forceConsistentCasingInFileNames": true,
             "importHelpers": true,
             "module": "nodenext",
