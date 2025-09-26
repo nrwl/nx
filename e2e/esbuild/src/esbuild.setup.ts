@@ -1,4 +1,11 @@
-import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e-utils';
+import {
+  cleanupProject,
+  newProject,
+  runCLI,
+  runCommand,
+  uniq,
+  updateFile,
+} from '@nx/e2e-utils';
 
 export function setupEsbuildSuite() {
   let proj: string;
