@@ -23,7 +23,43 @@ private const val APPLY_GOAL = "dev.nx.maven:nx-maven-plugin:apply"
 private const val RECORD_GOAL = "dev.nx.maven:nx-maven-plugin:record"
 
 
-data class GoalDescriptor(val pluginDescriptor: PluginDescriptor, val mojoDescriptor: MojoDescriptor, val goal: String, val goalSpecifier: String)
+data class GoalDescriptor(
+    val pluginDescriptor: PluginDescriptor,
+    val mojoDescriptor: MojoDescriptor,
+    val goal: String,
+    val goalSpecifier: String,
+    val executionPriority: Int = 50, // Default priority - Maven uses 50 as default
+    val executionId: String = "default"
+)
+
+/**
+ * Determines the execution priority for a goal within a phase.
+ * Maven uses priority to determine the order of execution when multiple goals are bound to the same phase.
+ * Lower numbers have higher priority (execute first).
+ */
+private fun getExecutionPriority(execution: PluginExecution, mojoDescriptor: MojoDescriptor?): Int {
+    // Maven assigns priorities based on several factors:
+    // 1. Explicit priority in execution configuration
+    // 2. Plugin goal priority from mojo descriptor
+    // 3. Default priority (50)
+    // 4. Alphabetical order as tiebreaker
+
+    // For now, we'll use a simple heuristic based on common plugin patterns
+    val executionId = execution.id ?: "default"
+
+    // Well-known execution IDs that should run early
+    return when {
+        executionId.contains("generate") -> 10
+        executionId.contains("process") -> 20
+        executionId.contains("compile") -> 30
+        executionId.contains("test-compile") -> 35
+        executionId.contains("test") -> 40
+        executionId.contains("package") -> 60
+        executionId.contains("install") -> 70
+        executionId.contains("deploy") -> 80
+        else -> 50 // Default Maven priority
+    }
+}
 
 /**
  * Collects lifecycle and plugin information directly from Maven APIs
@@ -104,8 +140,21 @@ class NxTargetFactory(
 
                     if (normalizedPhase != null) {
                         val goalSpec = "$goalPrefix:$goal@${execution.id}"
-                        phaseGoals.computeIfAbsent(normalizedPhase) { mutableListOf() }.add(GoalDescriptor(pluginDescriptor, mojoDescriptor, goal, goalSpec))
-                        log.info("Added goal $goalSpec to phase $normalizedPhase")
+
+                        // Determine execution priority - Maven uses priority to order goals within a phase
+                        val executionPriority = getExecutionPriority(execution, mojoDescriptor)
+
+                        val goalDescriptor = GoalDescriptor(
+                            pluginDescriptor = pluginDescriptor,
+                            mojoDescriptor = mojoDescriptor,
+                            goal = goal,
+                            goalSpecifier = goalSpec,
+                            executionPriority = executionPriority,
+                            executionId = execution.id
+                        )
+
+                        phaseGoals.computeIfAbsent(normalizedPhase) { mutableListOf() }.add(goalDescriptor)
+                        log.info("Added goal $goalSpec to phase $normalizedPhase with priority $executionPriority")
                     }
                 }
             }
@@ -267,6 +316,9 @@ class NxTargetFactory(
     private fun createPhaseTarget(
         project: MavenProject, phase: String, mavenCommand: String, goals: List<GoalDescriptor>
     ): NxTarget {
+        // Sort goals by priority (lower numbers execute first)
+        val sortedGoals = goals.sortedWith(compareBy<GoalDescriptor> { it.executionPriority }.thenBy { it.executionId })
+
         // Inline analysis logic from PhaseAnalyzer
         val plugins = project.build.plugins
         var isThreadSafe = true
@@ -330,8 +382,8 @@ class NxTargetFactory(
             commandParts.add(APPLY_GOAL)
         }
 
-        // Add all goals for this phase
-        commandParts.addAll(goals.map { it.goalSpecifier })
+        // Add all goals for this phase (sorted by priority)
+        commandParts.addAll(sortedGoals.map { it.goalSpecifier })
 
         // Add build state record if needed (after goals)
         if (shouldRecordBuildState()) {

@@ -5,21 +5,16 @@
   "projectType": "library",
   "targets": {
     "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish"],
+      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:install"],
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "dist/packages/maven"
+        "packageRoot": "packages/maven"
       }
     },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/maven/README.md"],
-      "command": "node ./scripts/copy-readme.js maven",
-      "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
-    },
-    "build-base": {
-      "dependsOn": [
-        "^build-base",
-        "maven-batch-runner:install"
+      "command": "node ./scripts/copy-readme.js maven packages/maven/README.md__tpl__ packages/maven/README.md",
+      "outputs": [
+        "{projectRoot}/README.md"
       ]
     },
     "legacy-post-build": {
@@ -66,6 +61,14 @@
           }
         ]
       }
+    }
+  },
+  "release": {
+    "version": {
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": [
+        "packages/{projectName}"
+      ]
     }
   },
   "tags": [],

@@ -111,6 +111,8 @@ node_modules/
 
 astro-docs/.netlify
 
+coverage
+
 # Angular Rspack Specific Options
 packages/angular-rspack/coverage
 packages/angular-rspack-compiler/coverage
@@ -119,6 +121,7 @@ packages/angular-rspack-compiler/coverage
 packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
 packages/dotnet/README.md
+packages/maven/README.md
 
 test-output
 test-results
