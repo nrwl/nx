@@ -14,12 +14,12 @@ Nx's policy is to support the LTS versions (i.e. actively maintained even number
 > _Note: Other versions of Node.js **may** still work without issue for these versions of Nx. Those include versions which are already EOL, or odd version numbers (e.g. 23), which Node.js actively
 > discourages using in production._
 
-| Nx Version      | Node Version       |
-| --------------- | ------------------ |
-| 21.x (current)  | ^22.12.0, ^20.19.0 |
-| 20.x (previous) | 22.x, 20.x, 18.x   |
-| 19.x            | 22.x, 20.x, 18.x   |
-| 18.x            | 20.x, 18.x         |
+| Nx Version      | Node Version             |
+| --------------- | ------------------------ |
+| 21.x (current)  | 24.x, ^22.12.0, ^20.19.0 |
+| 20.x (previous) | 22.x, 20.x, 18.x         |
+| 19.x            | 22.x, 20.x, 18.x         |
+| 18.x            | 20.x, 18.x               |
 
 We intentionally do not include an `"engines"` field in the `package.json` file for Nx in order to allow for user flexibility, but this page should be considered the official compatibility matrix.
 

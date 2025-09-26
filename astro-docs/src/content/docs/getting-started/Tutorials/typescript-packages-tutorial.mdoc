@@ -3,6 +3,7 @@ title: 'Building and Testing TypeScript Packages in Nx'
 description: In this tutorial you'll create a TypeScript monorepo with Nx.gradient
 sidebar:
   label: 'TypeScript Monorepo'
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through creating a TypeScript monorepo with Nx. You'll build a small example project to understand the core concepts and workflows.
@@ -21,11 +22,11 @@ What you'll learn:
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
 {% /aside %}
 
-### Step 1: Creating a new Nx TypeScript workspace
+### Step 1: Creating a new Nx TypeScript workspace (required)
 
-Let's create your workspace. The setup process takes about 2 minutes and will configure TypeScript, testing, and CI/CD automatically.
+Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/typescript/github) with our TypeScript preset to get started quickly.
 
-{% call_to_action variant="gradient" title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace/typescript/github" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
+{% call_to_action variant="simple" title="Create TypeScript Workspace" url="https://cloud.nx.app/create-nx-workspace/typescript/github" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -48,6 +49,7 @@ This is important for using remote caching and self-healing in CI later in the t
 Let's take a look at the structure of our new Nx workspace:
 
 {%filetree %}
+
 - acme/
   - .github/
     - workflows/
@@ -66,7 +68,6 @@ Let's take a look at the structure of our new Nx workspace:
   - tsconfig.json
 
 {% /filetree %}
-
 
 Here are some files that might jump to your eyes:
 
@@ -95,6 +96,7 @@ npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=
 Running these commands should lead to new directories and files in your workspace:
 
 {%filetree %}
+
 - acme/
   - packages/
     - animal/
@@ -209,6 +211,7 @@ npx nx show project animal
 
 {% project_details title="Project Details View (Simplified)" %}
 
+```json
 {
   "project": {
     "name": "@acme/animal",
@@ -329,6 +332,7 @@ npx nx show project animal
     "tags": ["packages/animal/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 
@@ -359,6 +363,7 @@ npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --li
 Now we have:
 
 {%filetree %}
+
 - acme/
   - packages/
     - animal/
@@ -449,6 +454,7 @@ You should be able to see something similar to the following in your browser.
 
 {% graph height="450px" %}
 
+```json
 {
   "projects": [
     {
@@ -487,6 +493,7 @@ You should be able to see something similar to the following in your browser.
   "focus": null,
   "groupByFolder": false
 }
+```
 
 {% /graph %}
 

@@ -71,6 +71,42 @@ With, `nx component-test your-lib --watch` Cypress will start in headed mode. Wh
 
 Running Cypress with `--watch` is a great way to iterate on your components since cypress will rerun your tests as you make those changes validating the new behavior.
 
+## Splitting Component Testing Tasks by File
+
+{% callout type="note" title="Available since Nx 21.6.1" %}
+Splitting component testing tasks by file is available since Nx 21.6.1.
+{% /callout %}
+
+Nx provides powerful features for [distributing tasks in CI](/ci/features/distribute-task-execution), including [splitting tasks by file](/ci/features/split-e2e-tasks) (also known as atomization). The `@nx/cypress` plugin facilitates this for Cypress projects, allowing you to run your tests more efficiently in your Continuous Integration (CI) environment.
+
+To enable component testing task splitting, set the `ciComponentTestingTargetName` option of the `@nx/cypress/plugin` in your `nx.json` file. It will look something like this:
+
+```json {% fileName="nx.json" highlightLines=[9] %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci",
+        "componentTestingTargetName": "component-test",
+        "ciComponentTestingTargetName": "component-test-ci",
+        "openTargetName": "open-cypress"
+      }
+    }
+  ]
+}
+```
+
+The plugin will infer the `component-test-ci` task, which depends on individual component testing tasks for each file. You can then replace the `component-test` task with the `component-test-ci` task in your CI configuration to run your tests in a distributed fashion:
+
+```diff {% fileName=".github/workflows/ci.yaml" %}
+-     - run: pnpm exec nx affected -t lint test build component-test
++     - run: pnpm exec nx affected -t lint test build component-test-ci
+```
+
+You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
+
 ## More Information
 
 You can read more on component testing in the [Cypress documentation](https://docs.cypress.io/guides/component-testing/writing-your-first-component-test).

@@ -670,27 +670,15 @@ impl App {
                                 Focus::TaskList => match key.code {
                                     KeyCode::Char('j') if !is_filter_mode => {
                                         self.dispatch_action(Action::NextTask);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Down => {
                                         self.dispatch_action(Action::NextTask);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Char('k') if !is_filter_mode => {
                                         self.dispatch_action(Action::PreviousTask);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Up => {
                                         self.dispatch_action(Action::PreviousTask);
-                                        let _ = self.debounce_pty_resize();
-                                    }
-                                    KeyCode::Left => {
-                                        self.dispatch_action(Action::PreviousPage);
-                                        let _ = self.debounce_pty_resize();
-                                    }
-                                    KeyCode::Right => {
-                                        self.dispatch_action(Action::NextPage);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Esc => {
                                         if matches!(self.focus, Focus::HelpPopup) {
@@ -729,13 +717,11 @@ impl App {
                                                                 self.dispatch_action(
                                                                     Action::NextTask,
                                                                 );
-                                                                let _ = self.debounce_pty_resize();
                                                             }
                                                             'k' => {
                                                                 self.dispatch_action(
                                                                     Action::PreviousTask,
                                                                 );
-                                                                let _ = self.debounce_pty_resize();
                                                             }
                                                             '1' => {
                                                                 self.assign_current_task_to_pane(0);
@@ -748,18 +734,6 @@ impl App {
                                                                 // No need to debounce
                                                             }
                                                             '0' => self.clear_all_panes(),
-                                                            'h' => {
-                                                                self.dispatch_action(
-                                                                    Action::PreviousPage,
-                                                                );
-                                                                let _ = self.debounce_pty_resize();
-                                                            }
-                                                            'l' => {
-                                                                self.dispatch_action(
-                                                                    Action::NextPage,
-                                                                );
-                                                                let _ = self.debounce_pty_resize();
-                                                            }
                                                             'b' => self.toggle_task_list(),
                                                             'm' => {
                                                                 if let Some(area) = self.frame_area
@@ -829,7 +803,7 @@ impl App {
                 match mouse.kind {
                     MouseEventKind::ScrollUp => {
                         if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::PreviousTask);
+                            self.dispatch_action(Action::ScrollUp);
                         } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Up,
@@ -840,7 +814,7 @@ impl App {
                     }
                     MouseEventKind::ScrollDown => {
                         if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::NextTask);
+                            self.dispatch_action(Action::ScrollDown);
                         } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Down,
@@ -1571,17 +1545,20 @@ impl App {
                 let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*pane_area);
 
                 // Get current dimensions before resize
-                let old_rows = if let Some(screen) = pty.get_screen() {
-                    let (rows, _) = screen.size();
-                    rows
-                } else {
-                    0
-                };
+                let (current_rows, current_cols) = pty.get_dimensions();
+
+                // Skip resize if dimensions haven't actually changed
+                if current_rows == pty_height && current_cols == pty_width {
+                    continue;
+                }
+
+                // With shared dimensions, we only need to call resize once per PTY instance
+                // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
                 let mut pty_clone = pty.as_ref().clone();
                 pty_clone.resize(pty_height, pty_width)?;
 
                 // If dimensions changed, mark for sort
-                if old_rows != pty_height {
+                if current_rows != pty_height {
                     needs_sort = true;
                 }
             }
@@ -1775,6 +1752,11 @@ impl App {
             if let Some(pty) = self.pty_instances.get(&task_name) {
                 terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
                 terminal_pane_data.pty = Some(pty.clone());
+
+                // Immediately resize PTY to match the current terminal pane dimensions
+                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(pane_area);
+                let mut pty_clone = pty.as_ref().clone();
+                pty_clone.resize(pty_height, pty_width).ok();
             } else {
                 // Clear PTY data if the task exists but doesn't have a PTY instance
                 terminal_pane_data.pty = None;
@@ -1886,6 +1868,16 @@ impl App {
         // Assign the PTY for the new task to this pane if available
         if let Some(pty_instance) = self.pty_instances.get(&task_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
+
+            // Immediately resize PTY to match the current terminal pane dimensions
+            if let Some(layout_areas) = &self.layout_areas {
+                if let Some(pane_area) = layout_areas.terminal_panes.get(pane_idx) {
+                    let (pty_height, pty_width) =
+                        TerminalPane::calculate_pty_dimensions(*pane_area);
+                    let mut pty_clone = pty_instance.as_ref().clone();
+                    pty_clone.resize(pty_height, pty_width).ok();
+                }
+            }
         }
 
         // Update the selection manager to prevent conflicts with manual selection

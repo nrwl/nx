@@ -12,16 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           # Ensure's validate-pr-title.js is the copy from master
           ref: master
-          
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 20
-          
+          package-manager-cache: false
+
       - name: Validate PR title
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

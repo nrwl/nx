@@ -3,6 +3,7 @@ title: 'Gradle Tutorial'
 description: In this tutorial you'll add Nx to an existing Gradle repo
 sidebar:
   label: 'Gradle Monorepo'
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through adding Nx to an existing Gradle project. You'll see how Nx enhances your Gradle workflow with caching, task orchestration, and better developer experience.
@@ -126,9 +127,9 @@ Finally, commit and push all the changes to GitHub and proceed with finishing yo
 
 > Nx Cloud provides self-healing CI, remote caching and many other features. [Learn more about Nx Cloud features](/docs/features/ci-features).
 
-Click the link printing in your terminal, or you can connect your existing workspace to Nx Cloud:
+Click the link printing in your terminal, or you can [finish setup in Nx Cloud](https://cloud.nx.app/setup/connect-workspace/github/select)
 
-{% call_to_action variant="gradient-alt" title="Finish Nx Cloud Setup ☁️" url="https://cloud.nx.app/setup/connect-workspace/github/select" description="Nx Cloud needs to be setup to complete the tutorial" /%}
+{% call_to_action variant="simple" title="Finish Nx Cloud Setup" url="https://cloud.nx.app/setup/connect-workspace/github/select" /%}
 
 ### Verify your setup
 
@@ -157,6 +158,7 @@ nx graph
 
 {% graph title="Gradle Projects" height="200px" %}
 
+```json
 {
   "hash": "ad0ea8f7ae85c873d6478c31b51a95c54115a49844d62a5b3972232ac82137d0",
   "projects": [
@@ -1117,6 +1119,8 @@ nx graph
   "exclude": [],
   "isPartial": false
 }
+```
+
 {% /graph %}
 
 ## Running Tasks
@@ -1128,12 +1132,13 @@ computation caching to reuse the results of tasks. We will explore how Nx adds t
 Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
 that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can view the available tasks either through [Nx Console](/docs/getting-started/editor-setup) or from the terminal:
 
-```shell {% frame="none" %} 
+```shell {% frame="none" %}
 nx show project application
 ```
 
 {% project_details title="Project Details View" expandedTargets=["build"] height="520px" %}
 
+```json
 {
   "project": {
     "name": "application",
@@ -2363,6 +2368,8 @@ nx show project application
     ]
   }
 }
+```
+
 {% /project_details %}
 
 The Nx command to run the `build` task for the `application` project is:
@@ -2527,7 +2534,7 @@ Now for demo purposes, we'll make a mistake in our `DemoApplication` class that 
 
 Commit the changes and open a new PR on GitHub.
 
-```shell {% frame="none" %} 
+```shell {% frame="none" %}
 git add .
 git commit -m 'demo self-healing ci'
 git push origin self-healing-ci

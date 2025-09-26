@@ -469,6 +469,38 @@ describe('app', () => {
     expect(tree.read('my-app/.eslintrc.json', 'utf-8')).toMatchSnapshot();
   });
 
+  it('should not ignore "out-tsc" from eslint', async () => {
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      linter: 'eslint',
+      style: 'none',
+      bundler: 'vite',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, 'myapp/.eslintrc.json');
+    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+  });
+
+  it('should not ignore "out-tsc" from eslint with flat config', async () => {
+    tree.write('eslint.config.mjs', 'export default [];');
+
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      linter: 'eslint',
+      style: 'none',
+      bundler: 'vite',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = tree.read('myapp/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
+  });
+
   describe('--prefix', () => {
     it('should use the prefix in the index.html', async () => {
       await applicationGenerator(tree, {
@@ -1009,6 +1041,42 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'apps/myapp-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        linter: 'eslint',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'apps/myapp/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        linter: 'eslint',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('apps/myapp/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 });

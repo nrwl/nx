@@ -370,8 +370,8 @@ function updateTsConfigReferences(
 
   // We have at least one dependency so we can safely set it to an empty array if not already set
   const references = [];
-  const originalReferencesSet = new Set();
-  const newReferencesSet = new Set();
+  const originalReferencesSet = new Set<string>();
+  const newReferencesSet = new Set<string>();
   const pathCounts = new Map<string, number>();
   let hasChanges = false;
 
@@ -419,10 +419,6 @@ function updateTsConfigReferences(
       // we keep all references within the current Nx project or that are ignored
       references.push(ref);
       newReferencesSet.add(normalizedPath);
-    }
-
-    if (!newReferencesSet.has(normalizedPath)) {
-      addChangedFile(changedFiles, tsConfigPath, resolvedRefPath, 'stale');
     }
   }
 
@@ -516,6 +512,17 @@ function updateTsConfigReferences(
         tsConfigPath,
         toFullProjectReferencePath(referencePath),
         'missing'
+      );
+    }
+  }
+
+  for (const ref of originalReferencesSet) {
+    if (!newReferencesSet.has(ref)) {
+      addChangedFile(
+        changedFiles,
+        tsConfigPath,
+        toFullProjectReferencePath(joinPathFragments(projectRoot, ref)),
+        'stale'
       );
     }
   }

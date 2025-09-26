@@ -1,12 +1,25 @@
-import type { Config } from 'jest';
+import { Config, getVersion } from 'jest';
+import { major } from 'semver';
+
+const jestMajorVersion = major(getVersion());
+
 export const nxPreset: Config = {
   // This is one of the patterns that jest finds by default https://jestjs.io/docs/configuration#testmatch-arraystring
-  testMatch: ['**/?(*.)+(spec|test).?([mc])[jt]s?(x)'],
+  testMatch: [
+    jestMajorVersion >= 30
+      ? '**/?(*.)+(spec|test).?([mc])[jt]s?(x)'
+      : '**/?(*.)+(spec|test).[jt]s?(x)',
+  ],
   resolver: '@nx/jest/plugins/resolver',
-  moduleFileExtensions: ['ts', 'js', 'mts', 'mjs', 'cts', 'cjs', 'html'],
+  moduleFileExtensions:
+    jestMajorVersion >= 30
+      ? ['ts', 'js', 'mts', 'mjs', 'cts', 'cjs', 'html']
+      : ['ts', 'js', 'mjs', 'html'],
   coverageReporters: ['html'],
   transform: {
-    '^.+\\.(ts|js|mts|mjs|cts|cjs|html)$': [
+    [jestMajorVersion >= 30
+      ? '^.+\\.(ts|js|mts|mjs|cts|cjs|html)$'
+      : '^.+\\.(ts|js|html)$']: [
       'ts-jest',
       { tsconfig: '<rootDir>/tsconfig.spec.json' },
     ],

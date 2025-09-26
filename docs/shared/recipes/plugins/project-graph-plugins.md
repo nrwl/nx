@@ -54,8 +54,13 @@ Note: This is a shallow merge, so if you have a target with the same name in bot
 
 A simplified version of Nx's built-in `project.json` plugin is shown below, which adds a new project to the project graph for each `project.json` file it finds. This should be exported from the entry point of your plugin, which is listed in `nx.json`
 
-```typescript {% fileName="/my-plugin/index.ts" %}
-import { createNodesFromFiles, readJsonFile } from '@nx/devkit';
+```typescript {% fileName="/my-plugin/src/index.ts" %}
+import {
+  CreateNodesContextV2,
+  createNodesFromFiles,
+  CreateNodesV2,
+  readJsonFile,
+} from '@nx/devkit';
 import { dirname } from 'path';
 
 export interface MyPluginOptions {}
@@ -75,7 +80,7 @@ export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
 
 async function createNodesInternal(
   configFilePath: string,
-  options: MyPluginOptions,
+  options: MyPluginOptions | undefined,
   context: CreateNodesContextV2
 ) {
   const projectConfiguration = readJsonFile(configFilePath);
@@ -105,9 +110,15 @@ When writing a plugin to add support for some tooling, it may need to add a targ
 
 Most of Nx's first party plugins are written to add a target to a given project based on the configuration files present for that project. The below example shows how a plugin could add a target to a project based on the presence of a `tsconfig.json` file.
 
-```typescript {% fileName="/my-plugin/index.ts" %}
-import { createNodesFromFiles, readJsonFile } from '@nx/devkit';
-import { dirname } from 'path';
+```typescript {% fileName="/my-plugin/src/index.ts" %}
+import {
+  CreateNodesContextV2,
+  createNodesFromFiles,
+  CreateNodesV2,
+  readJsonFile,
+} from '@nx/devkit';
+import { existsSync } from 'fs';
+import { dirname, join } from 'path';
 
 export interface MyPluginOptions {}
 
@@ -126,7 +137,7 @@ export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
 
 async function createNodesInternal(
   configFilePath: string,
-  options: MyPluginOptions,
+  options: MyPluginOptions | undefined,
   context: CreateNodesContextV2
 ) {
   const projectConfiguration = readJsonFile(configFilePath);
@@ -135,6 +146,7 @@ async function createNodesInternal(
   const isProject =
     existsSync(join(projectRoot, 'project.json')) ||
     existsSync(join(projectRoot, 'package.json'));
+
   if (!isProject) {
     return {};
   }
@@ -144,7 +156,7 @@ async function createNodesInternal(
       [projectRoot]: {
         targets: {
           build: {
-            command: `tsc -p ${fileName}`,
+            command: `tsc -p ${configFilePath}`,
           },
         },
       },

@@ -1,33 +1,43 @@
 ---
-import Default from '@astrojs/starlight/components/Sidebar.astro';
+import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro'
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro'
+import SidebarSublist from './SidebarSublist.astro'
+
+const { sidebar } = Astro.locals.starlightRoute
 ---
 
 <div class="sidebar-wrapper" data-testid="sidebar-wrapper">
-  <Default {...Astro.props} />
+    <SidebarPersister>
+        <SidebarSublist sublist={sidebar}/>
+    </SidebarPersister>
+    <div class="md:sl-hidden">
+        <MobileMenuFooter/>
+    </div>
 </div>
 
 <style>
-.sidebar-wrapper :global(a) {
-  color: var(--sl-color-gray-4);
-}
+    .sidebar-wrapper :global(a) {
+        color: var(--sl-color-gray-4);
+    }
 
-.sidebar-wrapper :global(a[aria-current=page]) {
-  background-color: transparent;
-  color: var(--sl-color-text-accent);
-  font-weight: var(--font-weight-semibold);
-}
-.sidebar-wrapper :global(ul ul .large) {
-  color: var(--sl-color-gray-3);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-}
+    .sidebar-wrapper :global(a[aria-current=page]) {
+        background-color: transparent;
+        color: var(--sl-color-text-accent);
+        font-weight: var(--font-weight-semibold);
+    }
 
-.sidebar-wrapper :global(details summary .group-label) {
-  font-size: var(--text-lg);
-  font-weight: var(--font-weight-semibold);
-}
+    .sidebar-wrapper :global(ul ul .large) {
+        color: var(--sl-color-gray-3);
+        font-size: var(--text-sm);
+        font-weight: var(--font-weight-medium);
+    }
 
-.sidebar-wrapper :global(details[open] summary .group-label) {
-  color: var(--sl-color-gray-2);
-}
+    .sidebar-wrapper :global(details summary .group-label) {
+        font-size: var(--text-lg);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .sidebar-wrapper :global(details[open] summary .group-label) {
+        color: var(--sl-color-gray-2);
+    }
 </style>

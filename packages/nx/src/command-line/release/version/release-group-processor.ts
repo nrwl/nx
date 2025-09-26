@@ -45,6 +45,7 @@ export interface FinalConfigForProject {
   fallbackCurrentVersionResolver: NxReleaseVersionConfiguration['fallbackCurrentVersionResolver'];
   versionPrefix: NxReleaseVersionConfiguration['versionPrefix'];
   preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
+  preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   // Consistently expanded to the object form for easier processing in VersionActions
   manifestRootsToUpdate: Array<Exclude<ManifestRootToUpdate, string>>;
@@ -827,21 +828,6 @@ export class ReleaseGroupProcessor {
       const projectLogger = this.getProjectLoggerForProject(project);
       projectLogger.flush();
     }
-
-    if (bumped) {
-      await this.propagateChangesToDependentGroups(releaseGroupName);
-    }
-  }
-
-  private async propagateChangesToDependentGroups(
-    changedReleaseGroupName: string
-  ): Promise<void> {
-    const changedGroupNode = this.groupGraph.get(changedReleaseGroupName)!;
-    for (const depGroupName of changedGroupNode.dependents) {
-      if (!this.processedGroups.has(depGroupName)) {
-        await this.propagateChanges(depGroupName, changedReleaseGroupName);
-      }
-    }
   }
 
   private async bumpVersions(
@@ -1351,6 +1337,12 @@ Valid values are: ${validReleaseVersionPrefixes
       releaseGroupVersionConfig?.preserveLocalDependencyProtocols ??
       true;
 
+    // TODO(v22): flip to true by default
+    const preserveMatchingDependencyRanges =
+      projectVersionConfig?.preserveMatchingDependencyRanges ??
+      releaseGroupVersionConfig?.preserveMatchingDependencyRanges ??
+      false;
+
     /**
      * fallbackCurrentVersionResolver, defaults to disk when performing a first release, otherwise undefined
      */
@@ -1395,6 +1387,7 @@ Valid values are: ${validReleaseVersionPrefixes
       fallbackCurrentVersionResolver,
       versionPrefix,
       preserveLocalDependencyProtocols,
+      preserveMatchingDependencyRanges,
       versionActionsOptions,
       manifestRootsToUpdate,
       dockerOptions,
@@ -1594,73 +1587,6 @@ Valid values are: ${validReleaseVersionPrefixes
     return this.originalDependentProjectsPerProject.get(project) || [];
   }
 
-  private async propagateChanges(
-    releaseGroupName: string,
-    changedDependencyGroup: string
-  ): Promise<void> {
-    const releaseGroup = this.groupGraph.get(releaseGroupName)!.group;
-    const releaseGroupFilteredProjects =
-      this.releaseGroupToFilteredProjects.get(releaseGroup);
-
-    // Get updateDependents from the release group level config
-    const releaseGroupVersionConfig =
-      releaseGroup.version as NxReleaseVersionConfiguration;
-    const updateDependents =
-      (releaseGroupVersionConfig?.updateDependents as 'auto' | 'never') ||
-      'auto';
-
-    // If updateDependents is not 'auto', skip propagating changes to this group
-    if (updateDependents !== 'auto') {
-      const projectLogger = this.getProjectLoggerForProject(
-        releaseGroupFilteredProjects.values().next().value
-      );
-      projectLogger.buffer(
-        `⏩ Skipping dependency updates for release group "${releaseGroupName}" as "updateDependents" is not "auto"`
-      );
-      return;
-    }
-
-    let groupBumped = false;
-    let bumpType: SemverBumpType = 'none';
-
-    if (releaseGroup.projectsRelationship === 'fixed') {
-      // For fixed groups, we only need to check one project
-      const project = releaseGroupFilteredProjects.values().next().value;
-      const dependencies = this.projectGraph.dependencies[project] || [];
-      const hasDependencyInChangedGroup = dependencies.some(
-        (dep) =>
-          this.getReleaseGroupNameForProject(dep.target) ===
-          changedDependencyGroup
-      );
-
-      if (hasDependencyInChangedGroup) {
-        const dependencyBumpType = await this.getFixedReleaseGroupBumpType(
-          changedDependencyGroup
-        );
-
-        bumpType = this.determineSideEffectBump(
-          releaseGroup,
-          dependencyBumpType as SemverBumpType
-        );
-        groupBumped = bumpType !== 'none';
-      }
-    }
-
-    if (groupBumped) {
-      for (const project of releaseGroupFilteredProjects) {
-        if (!this.bumpedProjects.has(project)) {
-          await this.bumpVersionForProject(
-            project,
-            bumpType,
-            'DEPENDENCY_ACROSS_GROUPS_WAS_BUMPED',
-            {}
-          );
-          this.bumpedProjects.add(project);
-        }
-      }
-    }
-  }
-
   private async getFixedReleaseGroupBumpType(
     releaseGroupName: string
   ): Promise<SemverBumpType | SemverVersion> {
@@ -1670,12 +1596,17 @@ Valid values are: ${validReleaseVersionPrefixes
     if (releaseGroupFilteredProjects.size === 0) {
       return 'none';
     }
-    const { newVersionInput } = await this.determineVersionBumpForProject(
-      releaseGroup,
-      // It's a fixed release group, so we can just pick any project in the group
-      releaseGroupFilteredProjects.values().next().value
-    );
-    return newVersionInput;
+
+    // It's a fixed release group, so we can just pick any project in the group
+    const anyProject = releaseGroupFilteredProjects.values().next().value;
+    // If already bumped, no need to re-calculate it
+    const { currentVersion, newVersion } = this.versionData.get(anyProject);
+    if (newVersion) {
+      return semver.diff(currentVersion, newVersion);
+    }
+
+    return (await this.determineVersionBumpForProject(releaseGroup, anyProject))
+      .newVersionInput;
   }
 
   // TODO: Support influencing the side effect bump in a future version, always patch for now like in legacy versioning

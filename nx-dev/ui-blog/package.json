@@ -7,6 +7,7 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@nx/nx-dev-data-access-documents": "workspace:*",
+    "@nx/nx-dev-feature-search": "workspace:*",
     "@nx/nx-dev-ui-icons": "workspace:*",
     "@nx/nx-dev-ui-primitives": "workspace:*",
     "@nx/nx-dev-ui-common": "workspace:*",

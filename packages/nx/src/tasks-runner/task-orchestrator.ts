@@ -804,8 +804,9 @@ export class TaskOrchestrator {
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
       }
-      this.runningTasksService.removeRunningTask(task.id);
-      this.runningContinuousTasks.delete(task.id);
+      if (this.runningContinuousTasks.delete(task.id)) {
+        this.runningTasksService.removeRunningTask(task.id);
+      }
     });
     await this.scheduleNextTasksAndReleaseThreads();
     if (this.initializingTaskIds.has(task.id)) {
@@ -1027,14 +1028,16 @@ export class TaskOrchestrator {
       ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
         try {
           await t.kill();
-          this.options.lifeCycle.setTaskStatus(
+          this.options.lifeCycle.setTaskStatus?.(
             taskId,
             NativeTaskStatus.Stopped
           );
         } catch (e) {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         } finally {
-          this.runningTasksService.removeRunningTask(taskId);
+          if (this.runningContinuousTasks.delete(taskId)) {
+            this.runningTasksService.removeRunningTask(taskId);
+          }
         }
       }),
       ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
@@ -1063,7 +1066,7 @@ export class TaskOrchestrator {
         const runningTask = this.runningContinuousTasks.get(taskId);
         if (runningTask) {
           runningTask.kill();
-          this.options.lifeCycle.setTaskStatus(
+          this.options.lifeCycle.setTaskStatus?.(
             taskId,
             NativeTaskStatus.Stopped
           );

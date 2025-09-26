@@ -3,87 +3,13 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.*
 import java.io.File
 import kotlin.test.*
-import org.gradle.api.tasks.SourceTask
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test as GradleTest
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
 class ProcessTargetsForProjectTest {
-  @Test
-  fun `should process targets correctly with custom test target name`(@TempDir workspaceDir: File) {
-    val workspaceRoot = workspaceDir.absolutePath
-    val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
-    val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
-
-    val buildFile = File(projectDir, "build.gradle")
-    buildFile.writeText("// test build file")
-
-    val testFile1 =
-        File(projectDir, "src/test/kotlin/MyFirstTest.kt").apply {
-          parentFile.mkdirs()
-          writeText("class MyFirstTest { @Test fun testMethod() {} }")
-        }
-
-    val testTask =
-        project.tasks.register("apiTest").get().apply {
-          group = "verification"
-          description = "Runs the tests"
-          inputs.files(project.files(testFile1))
-        }
-
-    // Dummy test task that we do NOT want to atomize
-    project.tasks.register("test").get().apply {
-      group = "verification"
-      description = "Runs the tests"
-    }
-
-    // Create a compile task with source files using SourceTask
-    val compileTask = project.tasks.register("compileTestKotlin", SourceTask::class.java).get()
-    compileTask.source(testFile1)
-    compileTask.dependsOn(testTask)
-
-    val targetNameOverrides =
-        mapOf(
-            "testTargetName" to "apiTest",
-            "ciTestTargetName" to "ciTest",
-        )
-    val dependencies = mutableSetOf<Dependency>() // Empty for this test's scope
-
-    // Act
-    val gradleTargets =
-        processTargetsForProject(
-            project = project,
-            dependencies = dependencies,
-            targetNameOverrides = targetNameOverrides,
-            workspaceRoot = workspaceRoot,
-            atomized = true)
-
-    val apiTestTarget = gradleTargets.targets["apiTest"]
-    assertNotNull(apiTestTarget)
-    val targetOptions = apiTestTarget["options"] as Map<*, *>
-    assertEquals(":apiTest", targetOptions["taskName"])
-    val targetMetadata = apiTestTarget["metadata"] as Map<*, *>
-    assertEquals("./gradlew help --task :apiTest", (targetMetadata["help"] as Map<*, *>)["command"])
-
-    val ciTestTarget = gradleTargets.targets["ciTest"]
-    assertNotNull(ciTestTarget)
-    val ciDependsOn = ciTestTarget["dependsOn"] as List<*>
-    assertEquals("self", (ciDependsOn.first() as Map<*, *>)["projects"])
-    assertEquals("ciTest--MyFirstTest", (ciDependsOn.first() as Map<*, *>)["target"])
-    val ciTargetMetadata = ciTestTarget["metadata"] as Map<*, *>
-    assertEquals(
-        "./gradlew help --task :apiTest", (ciTargetMetadata["help"] as Map<*, *>)["command"])
-
-    val ciTestAtomizedTarget = gradleTargets.targets["ciTest--MyFirstTest"]
-    assertNotNull(ciTestAtomizedTarget)
-    val ciTestAtomizedTargetOptions = ciTestAtomizedTarget["options"] as Map<*, *>
-    assertEquals(":apiTest", ciTestAtomizedTargetOptions["taskName"])
-    assertEquals("MyFirstTest", ciTestAtomizedTargetOptions["testClassName"])
-    val ciTestAtomizedTargetMetadata = ciTestAtomizedTarget["metadata"] as Map<*, *>
-    assertEquals(
-        "./gradlew help --task :apiTest",
-        (ciTestAtomizedTargetMetadata["help"] as Map<*, *>)["command"])
-  }
 
   @Test
   fun `should process targets correctly when atomized is true`(@TempDir workspaceDir: File) {
@@ -104,7 +30,7 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.tasks.register("test").get().apply {
+        project.tasks.register("test", GradleTest::class.java).get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
@@ -208,7 +134,7 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.tasks.register("test").get().apply {
+        project.tasks.register("test", GradleTest::class.java).get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
@@ -311,5 +237,134 @@ class ProcessTargetsForProjectTest {
     assertTrue(
         buildCiDependsOn.contains("${project.name}:ci-check"),
         "Expected 'ci-build' to depend on 'ci-check' in processed targets")
+  }
+
+  @Test
+  fun `should process multiple test suites with different ci targets when atomized`(
+      @TempDir workspaceDir: File
+  ) {
+    // Arrange
+    val workspaceRoot = workspaceDir.absolutePath
+    val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
+    val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = File(projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
+
+    // Create test files for different test suites - multiple files to trigger atomization
+    val unitTestFile1 =
+        File(projectDir, "src/test/kotlin/UnitTest1.kt").apply {
+          parentFile.mkdirs()
+          writeText("@Test class UnitTest1")
+        }
+    val unitTestFile2 =
+        File(projectDir, "src/test/kotlin/UnitTest2.kt").apply {
+          parentFile.mkdirs()
+          writeText("@Test class UnitTest2")
+        }
+
+    val integrationTestFile1 =
+        File(projectDir, "src/integrationTest/kotlin/IntegrationTest1.kt").apply {
+          parentFile.mkdirs()
+          writeText("@Test class IntegrationTest1")
+        }
+    val integrationTestFile2 =
+        File(projectDir, "src/integrationTest/kotlin/IntegrationTest2.kt").apply {
+          parentFile.mkdirs()
+          writeText("@Test class IntegrationTest2")
+        }
+
+    // Create the default test task
+    val testTask =
+        project.tasks.register("test", GradleTest::class.java).get().apply {
+          group = "verification"
+          description = "Runs the unit tests"
+          inputs.files(project.files(unitTestFile1, unitTestFile2))
+          testClassesDirs = project.files(File(projectDir, "build/classes/kotlin/test"))
+        }
+
+    // Create an integration test task
+    val integrationTestTask =
+        project.tasks.register("integrationTest", GradleTest::class.java).get().apply {
+          group = "verification"
+          description = "Runs the integration tests"
+          inputs.files(project.files(integrationTestFile1, integrationTestFile2))
+          testClassesDirs = project.files(File(projectDir, "build/classes/kotlin/integrationTest"))
+        }
+
+    // Create compile tasks that would trigger CI target creation
+    val compileTestKotlinTask =
+        project.tasks.register("compileTestJava", JavaCompile::class.java).get().apply {
+          source(project.files(unitTestFile1, unitTestFile2))
+        }
+
+    val compileIntegrationTestKotlinTask =
+        project.tasks.register("compileIntegrationTestJava", JavaCompile::class.java).get().apply {
+          source(project.files(integrationTestFile1, integrationTestFile2))
+        }
+
+    // Set up classpath dependencies
+    testTask.classpath = project.files(compileTestKotlinTask.outputs.files)
+    integrationTestTask.classpath = project.files(compileIntegrationTestKotlinTask.outputs.files)
+
+    val checkTask =
+        project.tasks.register("check").get().apply {
+          group = "verification"
+          description = "Runs all checks"
+          dependsOn(testTask, integrationTestTask)
+        }
+
+    val targetNameOverrides =
+        mapOf("ciTestTargetName" to "ci-test", "ciCheckTargetName" to "ci-check")
+
+    val dependencies = mutableSetOf<Dependency>()
+
+    // Act
+    val gradleTargets =
+        processTargetsForProject(
+            project = project,
+            dependencies = dependencies,
+            targetNameOverrides = targetNameOverrides,
+            workspaceRoot = workspaceRoot,
+            atomized = true)
+
+    // Assert
+    // CI test targets should be created as group targets when atomized
+    // The actual individual test targets are ci-test--UnitTest1, ci-test--UnitTest2, etc.
+    // But ci-test and ci-test-integrationTest should exist as parent targets
+    assertNotNull(
+        gradleTargets.targets["ci-test"],
+        "Expected ci-test target to be present for default test task")
+    assertNotNull(
+        gradleTargets.targets["ci-test-integrationTest"],
+        "Expected ci-test-integrationTest target to be present for integration test task")
+
+    // Check that ci-check depends on both ci test targets
+    val checkCiTarget = gradleTargets.targets["ci-check"]
+    assertNotNull(checkCiTarget, "Check CI target should exist in processed targets")
+    val checkCiDependsOn = checkCiTarget["dependsOn"] as? List<*>
+    assertNotNull(checkCiDependsOn, "Check CI dependsOn should not be null in processed targets")
+
+    assertTrue(
+        checkCiDependsOn.contains("${project.name}:ci-test"),
+        "Expected 'ci-check' to depend on 'ci-test' in processed targets")
+    assertTrue(
+        checkCiDependsOn.contains("${project.name}:ci-test-integrationTest"),
+        "Expected 'ci-check' to depend on 'ci-test-integrationTest' in processed targets")
+
+    // Verify that individual atomized test targets exist
+    assertTrue(
+        gradleTargets.targets.containsKey("ci-test--UnitTest1"),
+        "Expected atomized target ci-test--UnitTest1 to exist")
+    assertTrue(
+        gradleTargets.targets.containsKey("ci-test--UnitTest2"),
+        "Expected atomized target ci-test--UnitTest2 to exist")
+    assertTrue(
+        gradleTargets.targets.containsKey("ci-test-integrationTest--IntegrationTest1"),
+        "Expected atomized target ci-test-integrationTest--IntegrationTest1 to exist")
+    assertTrue(
+        gradleTargets.targets.containsKey("ci-test-integrationTest--IntegrationTest2"),
+        "Expected atomized target ci-test-integrationTest--IntegrationTest2 to exist")
   }
 }

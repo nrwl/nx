@@ -1,9 +1,15 @@
 # Enterprise Release Notes
 
+### 2025.07.2
+
+- Feat: Support Valkey TLS
+  - Enable by setting `VALKEY_SSL_ENABLED: true` on the `nx-api` pod and `--valkey-ssl-enabled=true` on the `workflow-controller`
+
 ### 2025.07.1
 
 - Fix: auth redirect loop when using admin login
 - Fix: improvement to the flaky task retry mechanism
+- Fix: enable run hooks on DTE
 
 ### 2025.07
 

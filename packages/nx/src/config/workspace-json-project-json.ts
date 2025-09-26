@@ -198,9 +198,14 @@ export interface TargetDependencyConfig {
   target: string;
 
   /**
-   * Configuration for params handling.
+   * Whether to forward CLI params to the dependency target.
    */
   params?: 'ignore' | 'forward';
+
+  /**
+   * Whether to forward task options to the dependency target.
+   */
+  options?: 'ignore' | 'forward';
 }
 
 export type InputDefinition =

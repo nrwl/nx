@@ -20,7 +20,7 @@ export default function Index(): JSX.Element {
           url: 'https://nx.dev',
           title: 'Nx: Smart Repos · Fast Builds',
           description:
-            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+            'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',

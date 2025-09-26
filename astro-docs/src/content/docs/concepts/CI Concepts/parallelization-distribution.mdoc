@@ -1,5 +1,6 @@
 ---
 title: Parallelization and Distribution
+filter: 'type:Concepts'
 ---
 
 Nx speeds up your CI in several ways. One method is to reduce wasted calculations with the [affected command](/docs/features/ci-features/affected) and [remote caching](/docs/features/ci-features/remote-cache). No matter how effective you are at eliminating wasted calculations in CI, there will always be some tasks that really do need to be executed and sometimes that list of tasks will be everything in the repository.
@@ -32,7 +33,7 @@ You can either distribute tasks across machines manually, or use Nx Cloud distri
 
 One way to manually distribute tasks is to use binning. Binning is a distribution strategy where there is a main job that divides the work into bins, one for each agent machine. Then every agent executes the work prepared for it. Here is a simplified version of the binning strategy.
 
-```yaml 
+```yaml
 // main-job.yml
 # Get the list of affected projects
 - nx show projects --affected --json > affected-projects.json
@@ -41,13 +42,13 @@ One way to manually distribute tasks is to use binning. Binning is a distributio
 - node storeAffectedProjects.js
 ```
 
-```yaml 
+```yaml
 // lint-agent.yml
 # Run lint for all projects defined in PROJECTS
 - nx run-many --projects=$PROJECTS -t lint
 ```
 
-```yaml 
+```yaml
 // test-agent.yml
 # Run test for all projects defined in PROJECTS
 - nx run-many --projects=$PROJECTS -t test

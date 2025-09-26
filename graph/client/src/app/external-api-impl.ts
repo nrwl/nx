@@ -1,17 +1,9 @@
 import { ExternalApi, getExternalApiService } from '@nx/graph-shared';
 import { getRouter } from './get-router';
-import { getProjectGraphService } from './machines/get-services';
+import { GraphStateSerializer } from '@nx/graph';
+import { ProjectElement } from '@nx/graph/projects';
 
 export class ExternalApiImpl extends ExternalApi {
-  _projectGraphService = getProjectGraphService();
-  _graphIsReady = new Promise<void>((resolve) => {
-    this._projectGraphService.subscribe((state) => {
-      if (!state.matches('idle')) {
-        resolve();
-      }
-    });
-  });
-
   router = getRouter();
   externalApiService = getExternalApiService();
 
@@ -69,43 +61,48 @@ export class ExternalApiImpl extends ExternalApi {
   }
 
   focusProject(projectName: string) {
-    this.router.navigate(`/projects/${encodeURIComponent(projectName)}`);
-  }
-
-  toggleSelectProject(projectName: string) {
-    this._graphIsReady.then(() => {
-      const projectSelected = this._projectGraphService
-        .getSnapshot()
-        .context.selectedProjects.find((p) => p === projectName);
-      if (!projectSelected) {
-        this._projectGraphService.send({ type: 'selectProject', projectName });
-      } else {
-        this._projectGraphService.send({
-          type: 'deselectProject',
-          projectName,
-        });
-      }
+    const serializedState = GraphStateSerializer.serialize({
+      c: {},
+      s: {
+        type: 'focused',
+        nodeId: ProjectElement.makeId('project', projectName),
+      },
     });
+    const searchParams = new URLSearchParams();
+    searchParams.set('graph', serializedState);
+    this.router.navigate(`/projects?${searchParams.toString()}`);
   }
 
   selectAllProjects() {
-    this.router.navigate(`/projects/all`);
+    const serializedState = GraphStateSerializer.serialize({
+      c: { showMode: 'all' },
+    });
+    const searchParams = new URLSearchParams();
+    searchParams.set('graph', serializedState);
+    this.router.navigate(`/projects?${searchParams.toString()}`);
   }
 
   showAffectedProjects() {
-    this.router.navigate(`/projects/affected`);
+    const serializedState = GraphStateSerializer.serialize({
+      c: { showMode: 'affected' },
+    });
+    const searchParams = new URLSearchParams();
+    searchParams.set('graph', serializedState);
+    this.router.navigate(`/projects?${searchParams.toString()}`);
   }
 
   focusTarget(projectName: string, targetName: string) {
     this.router.navigate(
-      `/tasks/${encodeURIComponent(targetName)}?projects=${encodeURIComponent(
-        projectName
-      )}`
+      `/tasks?targets=${encodeURIComponent(
+        targetName
+      )}&projects=${encodeURIComponent(projectName)}`
     );
   }
 
   selectAllTargetsByName(targetName: string) {
-    this.router.navigate(`/tasks/${encodeURIComponent(targetName)}/all`);
+    this.router.navigate(
+      `/tasks/all?targets=${encodeURIComponent(targetName)}`
+    );
   }
 
   enableExperimentalFeatures() {

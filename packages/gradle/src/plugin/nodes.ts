@@ -88,11 +88,11 @@ export const makeCreateNodesForGradleConfigFile =
     options: GradlePluginOptions | undefined,
     context: CreateNodesContext
   ) => {
-    if (process.env.VERCEL) {
-      // Vercel does not allow JAVA_VERSION to be set
-      // skip on Vercel
-      return {};
-    }
+    // Vercel does not allow JAVA_VERSION to be set, skip on Vercel
+    if (process.env.VERCEL) return {};
+
+    // Netlify only supports Java 8 but we require 17, skip on Netlify
+    if (process.env.NETLIFY) return {};
 
     const projectRoot = dirname(gradleFilePath);
     options = normalizeOptions(options);

@@ -1,8 +1,8 @@
 ---
 title: Integrate a New Tool with a Tooling Plugin
 description: Learn how to create a custom Nx plugin that integrates a tool or framework into an Nx repository, using Astro as an example.
+filter: 'type:Guides'
 ---
-
 
 Nx Plugins can be used to easily integrate a tool or framework into an Nx repository. If there is no plugin available for your favorite tool or framework, you can write your own.
 
@@ -246,7 +246,7 @@ export interface InitGeneratorSchema {}
 {% /tabitem %}
 {% tabitem label="schema.json" %}
 
-```json 
+```json
 // src/generators/init/schema.json
 {
   "$schema": "https://json-schema.org/schema",
@@ -316,7 +316,7 @@ The `generateFiles` function will use the template files in the `files` folder t
 {% /tabitem %}
 {% tabitem label="astro.config.mjs" %}
 
-```js 
+```js
 // src/generators/application/files/astro.config.mjs
 import { defineConfig } from 'astro/config';
 

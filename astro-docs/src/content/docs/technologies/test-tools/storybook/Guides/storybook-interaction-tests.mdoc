@@ -3,6 +3,7 @@ title: Setting up Storybook Interaction Tests with Nx
 description: This guide shows you how to set up Storybook interaction tests in your Nx workspace and how to run them.
 sidebar:
   label: Setting up Storybook Interaction Tests with Nx
+filter: 'type:Guides'
 ---
 
 [Storybook interaction tests](https://storybook.js.org/docs/react/writing-tests/interaction-testing) allow you to test user interactions within your Storybook stories. It enhances your [Storybook](https://storybook.js.org/) setup, ensuring that not only do your components look right, but they also work correctly when interacted with.
@@ -24,7 +25,7 @@ nx g @nx/storybook:configuration my-project --interactionTests=true
 This will set up:
 
 - The `@storybook/addon-interactions` addon
-- The `@storybook/testing-library` and `@storybook/jest` dependencies 
+- The `@storybook/testing-library` and `@storybook/jest` dependencies
 - A `test-storybook` target for running the interaction tests
 
 ### Writing interaction tests
@@ -61,7 +62,7 @@ export const Primary: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button');
-    
+
     await expect(button).toBeInTheDocument();
     await userEvent.click(button);
     await expect(button).toHaveFocus();

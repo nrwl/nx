@@ -80,14 +80,16 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.'
+          'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.'
         }
+        noindex={!!process.env.NEXT_PUBLIC_ASTRO_URL}
+        nofollow={!!process.env.NEXT_PUBLIC_ASTRO_URL}
         openGraph={{
           url: 'https://nx.dev' + currentPath,
           title: vm.title,
           description:
             vm.description ??
-            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+            'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${currentPath

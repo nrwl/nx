@@ -119,17 +119,11 @@ const currentVersion = versions.find(v => v.current);
 						<!-- Events Section -->
 						<div class="space-y-1">
 							<h5 class="text-xs font-semibold uppercase tracking-wider text-slate-500 px-2 pb-2 dark:text-slate-400">Events</h5>
-							<a href="https://go.nx.dev/office-hours" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
-								<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-									<path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
-								</svg>
-								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Office Hours</span>
-							</a>
-							<a href="https://www.youtube.com/@nxdevtools/streams" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
+							<a href="https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5" class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60">
 								<svg class="w-5 h-5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
 									<path stroke-linecap="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
 								</svg>
-								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Live Streams</span>
+								<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Nx Live</span>
 							</a>
 						</div>
 						<!-- Company Section -->
@@ -175,10 +169,31 @@ const currentVersion = versions.find(v => v.current);
 		{shouldRenderSearch && <Search />}
 	</div>
 	<div class="hidden md:flex items-center gap-4 print:hidden">
-		<div class="flex items-center gap-4">
+		<!-- CTA Buttons - Hide on screens smaller than xl (1280px) -->
+		<div class="hidden xl:flex items-center gap-2">
+			<a 
+				href="https://nx.dev/contact"
+				class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
+				title="Contact Us"
+			>
+				Contact
+			</a>
+			<a 
+				href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
+				title="Try Nx Cloud for free"
+			>
+				Try Nx Cloud for free	
+			</a>
+		</div>
+		<!-- Social Icons - Hide on screens smaller than 2xl (1536px) -->
+		<div class="hidden 2xl:flex items-center gap-4">
 			<SocialIcons />
 		</div>
 		<div class="after:content-[''] after:h-8 after:border-l after:border-slate-200 dark:after:border-slate-700"></div>
+		<!-- Theme Switcher - Always visible (highest priority) -->
 		<ThemeSelect />
 	</div>
 </div>

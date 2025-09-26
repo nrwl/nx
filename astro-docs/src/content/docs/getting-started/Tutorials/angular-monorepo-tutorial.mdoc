@@ -3,6 +3,7 @@ title: 'Building and Testing Angular Apps in Nx'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 sidebar:
   label: 'Angular Monorepo'
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through creating an Angular monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
@@ -23,9 +24,9 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 ### Step 1: Creating a new Nx Angular workspace
 
-Let's create your workspace. The setup process takes about 2 minutes and will configure Angular, testing, and CI/CD automatically.
+Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/angular/github) with our Angular preset to get started quickly.
 
-{% call_to_action variant="default" title="Create Angular Workspace in 2 Minutes ⚡" url="https://cloud.nx.app/create-nx-workspace/angular/github" description="Skip the setup hassle - Get coding instantly with pre-configured CI/CD" /%}
+{% call_to_action variant="default" title="Create Angular Workspace" url="https://cloud.nx.app/create-nx-workspace/angular/github" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -47,17 +48,18 @@ This is important for using remote caching and self-healing in CI later in the t
 
 Let's take a look at the structure of our new Nx workspace:
 {%filetree%}
-  - acme
-    - apps
-      - demo
-    - packages
-      - ui
-    - eslint.config.mjs
-    - nx.json
-    - package-lock.json
-    - package.json
-    - tsconfig.base.json
-    - vitest.workspace.ts
+
+- acme
+  - apps
+    - demo
+  - packages
+    - ui
+  - eslint.config.mjs
+  - nx.json
+  - package-lock.json
+  - package.json
+  - tsconfig.base.json
+  - vitest.workspace.ts
 
 {%/filetree%}
 
@@ -146,6 +148,7 @@ npx nx show project demo
 
 {% project_details title="Project Details View (Simplified)" %}
 
+```json
 {
   "project": {
     "name": "demo",
@@ -211,6 +214,7 @@ npx nx show project demo
     "tags": ["apps/demo/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 
@@ -218,7 +222,7 @@ npx nx show project demo
 
 When you develop your Angular application, usually all your logic sits in the app's `src` folder. Ideally separated by various folder names which represent your domains or features. As your app grows, however, the app becomes more and more monolithic, which makes building and testing it harder and slower.
 
-{%filetree %}
+{% filetree %}
 
 - acme/
   - apps/
@@ -229,6 +233,7 @@ When you develop your Angular application, usually all your logic sits in the ap
         - products/
         - orders/
         - ui/
+
 {%/filetree %}
 
 Nx allows you to separate this logic into "local libraries." The main benefits include
@@ -251,7 +256,8 @@ Note how we type out the full path in the command to place the library into a su
 
 Running the above command should lead to the following directory structure:
 
-{%filetree %}
+{% filetree %}
+
 - acme/
   - apps/
     - demo/
@@ -263,6 +269,7 @@ Running the above command should lead to the following directory structure:
   - package.json
   - tsconfig.base.json
   - vitest.workspace.ts
+
 {%/filetree %}
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
@@ -417,6 +424,7 @@ You should be able to see something similar to the following in your browser.
 
 {% graph height="450px" %}
 
+```json
 {
   "projects": [
     {
@@ -442,6 +450,7 @@ You should be able to see something similar to the following in your browser.
   "focus": null,
   "groupByFolder": false
 }
+```
 
 {% /graph %}
 

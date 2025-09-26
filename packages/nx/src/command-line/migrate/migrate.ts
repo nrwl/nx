@@ -79,6 +79,10 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import {
+  ensurePackageHasProvenance,
+  getNxPackageGroup,
+} from '../../utils/provenance';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -922,6 +926,12 @@ function createFetcher() {
     packageVersion,
     setCache: (packageName: string, packageVersion: string) => void
   ): Promise<ResolvedMigrationConfiguration> {
+    if (process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH === 'true') {
+      // Skip registry fetch and use installation method directly
+      logger.info(`Fetching ${packageName}@${packageVersion}`);
+      return getPackageMigrationsUsingInstall(packageName, packageVersion);
+    }
+
     const cacheKey = packageName + '-' + packageVersion;
     return Promise.resolve(resolvedVersionCache[cacheKey])
       .then((cachedResolvedVersion) => {
@@ -990,6 +1000,9 @@ async function getPackageMigrationsUsingRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
+  if (getNxPackageGroup().includes(packageName)) {
+    await ensurePackageHasProvenance(packageName, packageVersion);
+  }
   // check if there are migrations in the packages by looking at the
   // registry directly
   const migrationsConfig = await getPackageMigrationsConfigFromRegistry(
@@ -1102,6 +1115,10 @@ async function getPackageMigrationsUsingInstall(
   const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
+
+  if (getNxPackageGroup().includes(packageName)) {
+    await ensurePackageHasProvenance(packageName, packageVersion);
+  }
 
   try {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
@@ -1464,10 +1481,13 @@ function runInstall(nxWorkspaceRoot?: string) {
   if (packageManager ?? detectPackageManager() === 'npm') {
     process.env.npm_config_legacy_peer_deps ??= 'true';
   }
+  const installCommand = `${pmCommands.install} ${
+    pmCommands.ignoreScriptsFlag ?? ''
+  }`;
   output.log({
-    title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
+    title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
-  execSync(pmCommands.install, {
+  execSync(installCommand, {
     stdio: [0, 1, 2],
     windowsHide: false,
     cwd: nxWorkspaceRoot ?? process.cwd(),
@@ -1792,14 +1812,14 @@ export async function migrate(
   });
 }
 
-export function runMigration() {
+export async function runMigration() {
   const runLocalMigrate = () => {
     runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
   if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-    const p = nxCliPath();
+    const p = await nxCliPath();
     if (p === null) {
       runLocalMigrate();
     } else {
@@ -1867,9 +1887,11 @@ export function getImplementationPath(
   return { path: implPath, fnSymbol };
 }
 
-export function nxCliPath(nxWorkspaceRoot?: string) {
+export async function nxCliPath(nxWorkspaceRoot?: string) {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
+  await ensurePackageHasProvenance('nx', version);
 
   try {
     const packageManager = detectPackageManager();
@@ -1913,7 +1935,7 @@ export function nxCliPath(nxWorkspaceRoot?: string) {
       }
     }
 
-    execSync(pmc.install, {
+    execSync(`${pmc.install} ${pmc.ignoreScriptsFlag ?? ''}`, {
       cwd: tmpDir,
       stdio,
       windowsHide: false,

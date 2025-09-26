@@ -3,14 +3,15 @@ title: Setting Up CI for Nx Cloud
 description: Learn how to set up CI for your Nx workspace with Nx Cloud across different CI platforms including GitHub Actions, CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket.
 sidebar:
   label: Setup CI
+filter: 'type:Guides'
 ---
 
 Learn how to set up Nx Cloud for your workspace with your preferred CI platform. Get started connecting to Nx Cloud by running `nx connect`.
 
 Each platform has specific configurations and optimizations that help you build and test only what is affected, retrieve previous successful builds, and optimize CI performance.
 
-
 ## CI Configuration
+
 {% tabs syncKey="ci-provider" %}
 {% tabitem label="GitHub" %}
 Need a starting point? Generate a new workflow file with the following command:
@@ -76,6 +77,7 @@ Need a starting point? Generate a new workflow file with the following command:
 ```shell {% frame="none" %}
 nx g ci-workflow --ci=circleci
 ```
+
 Below is an example of a Circle CI setup, building, and testing only what is affected.
 
 ```yaml
@@ -161,6 +163,7 @@ CI:
   after_script:
     - npx nx fix-ci
 ```
+
 {% /tabitem %}
 
 {% tabitem label="Azure" %}
@@ -170,8 +173,6 @@ Need a starting point? Generate a new workflow file with the following command:
 ```shell {% frame="none" %}
 nx g ci-workflow --ci=azure-pipelines
 ```
-
-
 
 Below is an example of an Azure Pipelines setup building and testing only what is affected.
 
@@ -309,8 +310,6 @@ Need a starting point? Generate a new workflow file with the following command:
 ```shell {% frame="none" %}
 nx g ci-workflow --ci=bitbucket-pipelines
 ```
-
-
 
 Below is an example of a Bitbucket Pipelines, building and testing only what is affected.
 
@@ -480,6 +479,7 @@ Learn more about [Self-Healing CI features](https://nx.dev/ci/features/self-heal
 You can record any command's logs to Nx Cloud by prepending it with `nx-cloud record --`. This helps with debugging and monitoring your CI pipeline.
 
 Example:
+
 ```bash
 npx nx-cloud record -- echo Hello World
 ```

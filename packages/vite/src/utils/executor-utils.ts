@@ -1,6 +1,4 @@
-import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ExecutorContext, getPackageManagerCommand } from '@nx/devkit';
-import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,

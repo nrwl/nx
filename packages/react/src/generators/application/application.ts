@@ -115,6 +115,7 @@ export async function applicationGeneratorInternal(
   const initTask = await reactInitGenerator(tree, {
     ...options,
     skipFormat: true,
+    useReactRouterPlugin: options.useReactRouter,
   });
   tasks.push(initTask);
 

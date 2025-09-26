@@ -2,6 +2,7 @@
 import { useTheme } from '@nx/nx-dev-ui-theme';
 import dynamic from 'next/dynamic';
 import { ReactElement, useEffect, useState } from 'react';
+import { parseAstroHtmlWrappedJson } from '../utils/parse-astro-html-wrapped-json';
 
 export function Loading() {
   return (
@@ -40,15 +41,6 @@ function getInitialPropsForAstro(children: ReactElement) {
   } catch {
     return null;
   }
-}
-
-function parseAstroHtmlWrappedJson(htmlString: string) {
-  const cleanedString = htmlString
-    .trim()
-    .replace(/^<\w>|<\/\w>$/g, '')
-    .trim()
-    .replace(/&quot;/g, '"');
-  return JSON.parse(cleanedString);
 }
 
 export type GraphProps = {
@@ -112,7 +104,7 @@ export function Graph({
   }
 
   return parsedProps ? (
-    <div className="not-content w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+    <div className="not-content mt-4 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
         {title}
       </div>

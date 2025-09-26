@@ -1,23 +1,15 @@
-import { execSync } from 'child_process';
-import { Module } from 'module';
 import { clean, coerce, gt } from 'semver';
-
-import { installPackagesTask } from '../tasks/install-packages-task';
-import { dirSync } from 'tmp';
-import { join } from 'path';
 import {
-  detectPackageManager,
   GeneratorCallback,
-  getPackageManagerCommand,
-  getPackageManagerVersion,
-  PackageManager,
   readJson,
   Tree,
   updateJson,
   workspaceRoot,
 } from 'nx/src/devkit-exports';
-import { createTempNpmDirectory } from 'nx/src/devkit-internals';
-import { writeFileSync } from 'fs';
+import { installPackageToTmp } from 'nx/src/devkit-internals';
+import { join } from 'path';
+import { installPackagesTask } from '../tasks/install-packages-task';
+import { Module } from 'module';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -486,33 +478,7 @@ export function ensurePackage<T extends any = any>(
     );
   }
 
-  const { dir: tempDir } = createTempNpmDirectory?.() ?? {
-    dir: dirSync().name,
-  };
-
-  console.log(`Fetching ${pkg}...`);
-  const packageManager = detectPackageManager();
-  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  generatePackageManagerFiles(tempDir, packageManager);
-  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
-  if (preInstallCommand) {
-    // ensure package.json and repo in tmp folder is set to a proper package manager state
-    execSync(preInstallCommand, {
-      cwd: tempDir,
-      stdio: isVerbose ? 'inherit' : 'ignore',
-      windowsHide: false,
-    });
-  }
-  let addCommand = getPackageManagerCommand(packageManager).addDev;
-  if (packageManager === 'pnpm') {
-    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
-  }
-
-  execSync(`${addCommand} ${pkg}@${requiredVersion}`, {
-    cwd: tempDir,
-    stdio: isVerbose ? 'inherit' : 'ignore',
-    windowsHide: false,
-  });
+  const { tempDir } = installPackageToTmp(pkg, requiredVersion);
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));
@@ -536,27 +502,6 @@ export function ensurePackage<T extends any = any>(
       return null;
     }
     throw e;
-  }
-}
-
-/**
- * Generates necessary files needed for the package manager to work
- * and for the node_modules to be accessible.
- */
-function generatePackageManagerFiles(
-  root: string,
-  packageManager: PackageManager = detectPackageManager()
-) {
-  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
-  switch (packageManager) {
-    case 'yarn':
-      if (+pmMajor >= 2) {
-        writeFileSync(
-          join(root, '.yarnrc.yml'),
-          'nodeLinker: node-modules\nenableScripts: false'
-        );
-      }
-      break;
   }
 }
 

@@ -1,12 +1,12 @@
 ---
 title: Build Before Versioning
 description: Learn how to configure Nx Release to build your projects before applying version updates, ensuring that distribution files are properly generated before publishing.
+filter: 'type:Guides'
 ---
-
 
 In order to ensure that projects are built before the new version is applied to their package manifest, you can use the `preVersionCommand` property in `nx.json`:
 
-```json 
+```json
 // nx.json
 {
   "release": {
@@ -21,7 +21,7 @@ This command will run the `build` target for all projects before the version ste
 
 When using release groups in which the member projects are versioned together, you can use `groupPreVersionCommand` and it will be executed before the versioning step for that release group.
 
-```json 
+```json
 // nx.json
 {
   "release": {
@@ -43,7 +43,7 @@ The `groupPreVersionCommand` will run in addition to the global `preVersionComma
 
 In order to ensure that images are built before versioning, use the `preVersionCommand` property in the `docker` section of `nx.json`.
 
-```jsonc 
+```jsonc
 // nx.json
 {
   "release": {
@@ -58,7 +58,7 @@ If `preVersionCommand` is not set, the default is `npx nx run-many -t docker:bui
 
 When using release groups with Docker, use the `groupPreVersionCommand` option to run a command before the versioning step for that group.
 
-```jsonc 
+```jsonc
 // nx.json
 {
   "release": {

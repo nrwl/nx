@@ -1,7 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 import type { Declaration } from 'postcss';
-import * as url from 'node:url';
 import type { LoaderContext } from '@rspack/core';
 
 function wrapUrl(url: string): string {
@@ -94,7 +93,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       resourceCache.set(cacheKey, outputUrl);
       return outputUrl;
     }
-    const normalizedUrl = inputUrl.replace(/\\/g, '/');
+    const normalizedUrl = path.resolve(context, inputUrl.replace(/\\/g, '/'));
     const parsedUrl = new URL(normalizedUrl, 'file:///');
     const { pathname, hash, search } = parsedUrl;
     const resolver = (file: string, base: string) =>

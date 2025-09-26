@@ -3,8 +3,8 @@ title: Inputs and Named Inputs
 description: Learn how Nx uses inputs to compute cache hashes for tasks, including file sets, runtime inputs, and environment variables that affect task outputs.
 sidebar:
   order: 4
+filter: 'type:References'
 ---
-
 
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
@@ -44,6 +44,7 @@ Source file inputs are defined like this:
 Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
 
 #### Token Behavior with Nested Projects
+
 These tokens behave differently when dealing with nested projects:
 
 - `{projectRoot}/**/*` only includes files that are assigned to the specific project. Files in nested projects are excluded.
@@ -81,9 +82,7 @@ You can use a Runtime input to provide a script which will output the informatio
 
 ```jsonc
 {
-  "inputs": [
-    { "runtime": "node --version" }
-  ]
+  "inputs": [{ "runtime": "node --version" }]
 }
 ```
 
@@ -97,9 +96,7 @@ External dependencies can also be tools used to run tasks. Updating the versions
 
 ```jsonc
 {
-  "inputs": [
-    { "externalDependencies": ["jest"] }
-  ]
+  "inputs": [{ "externalDependencies": ["jest"] }]
 }
 ```
 

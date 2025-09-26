@@ -212,6 +212,13 @@
       }
     },
     {
+      "plugin": "@nx/vite/plugin",
+      "include": ["astro-docs/**"],
+      "options": {
+        "testTargetName": "vite:test"
+      }
+    },
+    {
       "plugin": "@nx/js/typescript",
       "exclude": ["examples/angular-rspack/**/*"],
       "options": {
@@ -277,6 +284,15 @@
         "buildTargetName": "next:build",
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static"
+      }
+    },
+    {
+      "plugin": "@nx/gradle",
+      "exclude": [
+        "packages/react-native/src/generators/application/files/**/*"
+      ],
+      "options": {
+        "testTargetName": "test-kt"
       }
     },
     "@nx/enterprise-cloud",
@@ -410,6 +426,9 @@
             ]
           ]
         }
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
       }
     ]
   }

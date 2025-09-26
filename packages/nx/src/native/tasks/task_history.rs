@@ -1,7 +1,6 @@
 use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::types::TaskTarget;
 use napi::bindgen_prelude::*;
-use rusqlite::vtab::array;
 use rusqlite::{params, types::Value};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -33,12 +32,6 @@ impl NxTaskHistory {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        array::load_module(
-            self.db
-                .conn
-                .as_ref()
-                .expect("Database connection should be available"),
-        )?;
         self.db
             .execute_batch(
                 "
@@ -53,6 +46,7 @@ impl NxTaskHistory {
                 FOREIGN KEY (hash) REFERENCES task_details (hash)
             );
             CREATE INDEX IF NOT EXISTS hash_idx ON task_history (hash);
+            CREATE INDEX IF NOT EXISTS status_idx ON task_history (status);
             COMMIT;
             ",
             )
@@ -133,7 +127,7 @@ impl NxTaskHistory {
                     AVG(end - start) AS duration
                     FROM task_history
                         JOIN task_details ON task_history.hash = task_details.hash
-                    WHERE target_string in rarray(?1)
+                    WHERE target_string in rarray(?1) AND status = 'success'
                     GROUP BY target_string
                 ",
             )?

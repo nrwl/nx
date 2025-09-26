@@ -319,7 +319,9 @@ export function SidebarMobile({
       },
       {
         name: 'CI',
-        href: '/ci/features',
+        href: process.env.NEXT_PUBLIC_ASTRO_URL
+          ? '/docs/features/ci-features'
+          : '/ci/features',
         current: isCI,
       },
       {
@@ -377,9 +379,11 @@ export function SidebarMobile({
                 </button>
 
                 {/*SEARCH*/}
-                <div className="mx-4 w-auto">
-                  <AlgoliaSearch />
-                </div>
+                {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+                  <div className="mx-4 w-auto">
+                    <AlgoliaSearch />
+                  </div>
+                )}
                 {/*LOGO*/}
                 <div className="ml-auto flex items-center">
                   <Link

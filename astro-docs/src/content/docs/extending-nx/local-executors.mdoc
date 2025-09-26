@@ -1,6 +1,7 @@
 ---
 title: Write a Simple Executor
 description: Learn how to create, run, and customize local executors in your Nx workspace to standardize development, building, and deployment tasks.
+filter: 'type:Guides'
 ---
 
 Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to provide guidance in the terminal with `--help` and when invoking with [Nx Console](/docs/getting-started/editor-setup)
@@ -25,6 +26,7 @@ nx generate @nx/plugin:executor tools/my-plugin/src/executors/echo
 After the command is finished, the executor is created in the plugin `executors` folder.
 
 {% filetree %}
+
 - happynrwl/
   - apps/
   - tools/

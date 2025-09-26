@@ -13,7 +13,8 @@ tmp
 jest.debug.config.js
 .tool-versions
 /.nx-cache
-/.nx
+/.nx/cache
+/.nx/workspace-data
 /.verdaccio/build/local-registry
 /graph/client/src/assets/environment.js
 /graph/client/src/assets/dev/environment.js
@@ -51,8 +52,6 @@ out
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
-.nx
-!.nx/workflows
 
 .cargo/.package-cache
 .cargo/bin/
@@ -103,8 +102,8 @@ node_modules/
 .cursorindexingignore
 # OS specific
 # Task files
-tasks.json
-tasks/
+/tasks.json
+/tasks
 
 # Upstream docs local configuration (machine-specific)
 .upstreamdocs.local.json
@@ -118,3 +117,5 @@ packages/angular-rspack-compiler/coverage
 # Angular Rspack Packages use a template to generate the correct README
 packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
+
+test-output

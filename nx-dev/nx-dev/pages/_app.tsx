@@ -9,6 +9,7 @@ import '../styles/main.css';
 import Link from 'next/link';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
+import { WebinarNotifier } from 'nx-dev/ui-common/src';
 
 export default function CustomApp({
   Component,
@@ -29,12 +30,12 @@ export default function CustomApp({
       <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Repos · Fast Builds"
-        description="An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things."
+        description="Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Repos · Fast Builds',
           description:
-            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+            'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
@@ -97,7 +98,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      {/* <WebinarNotifier /> */}
+      <WebinarNotifier />
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

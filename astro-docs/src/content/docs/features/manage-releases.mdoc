@@ -3,6 +3,7 @@ title: 'Manage Releases'
 description: 'Learn how to use Nx release tools to version, generate changelogs, and publish your projects with confidence using conventional commits.'
 sidebar:
   order: 9
+filter: 'type:Features'
 ---
 
 Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
@@ -76,7 +77,7 @@ See the [configuration reference](/docs/reference/nx-json#release) for all avail
 
 For maximum control, use the programmatic API to create custom release workflows:
 
-```ts 
+```ts
 // tools/scripts/release.ts
 import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
 import * as yargs from 'yargs';

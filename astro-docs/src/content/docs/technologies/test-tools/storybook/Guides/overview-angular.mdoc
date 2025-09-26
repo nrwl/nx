@@ -3,6 +3,7 @@ title: Set up Storybook for Angular Projects
 description: This guide explains how to set up Storybook for Angular projects in your Nx workspace.
 sidebar:
   label: Set up Storybook for Angular Projects
+filter: 'type:Guides'
 ---
 
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.
@@ -23,8 +24,8 @@ nx g @nx/angular:storybook-configuration project-name
 
 The [`@nx/angular:storybook-configuration` generator](/docs/technologies/angular/generators#storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
-
 {%filetree %}
+
 - <some-folder>/
   - my-component.ts
   - my-component.stories.ts
@@ -36,8 +37,8 @@ If you add more components to your project, and want to generate stories for all
 nx g @nx/angular:stories --project=<project-name>
 ```
 
-
 ### Example library
+
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.
 
 The command to generate stories for that library would be:
@@ -56,11 +57,11 @@ and the result would be the following:
     - feature/
       - ui/
         - .storybook/
-      - src/ 
-        - lib 
-          - my-button 
-            - my-button.ts 
-            - my-button.stories.ts 
+      - src/
+        - lib
+          - my-button
+            - my-button.ts
+            - my-button.stories.ts
             - etc...
         - etc...
       - README.md
@@ -72,9 +73,8 @@ and the result would be the following:
   - package.json
   - README.md
   - etc...
+
 {% /filetree %}
-
-
 
 ## Example Files
 
@@ -82,7 +82,7 @@ Let's take for example a library in your workspace, under `libs/feature/ui`, cal
 
 Let's say that the template for that component looks like this:
 
-```html 
+```html
 // libs/feature/ui/src/lib/my-button/my-button.html
 <button [disabled]="disabled" [ngStyle]="{ 'padding.px': padding }">
   {{ text }}
@@ -159,7 +159,7 @@ You can read more about the `browserTarget` in the [official Angular documentati
 
 Your Storybook targets in your `project.json` (or if you run `nx show project my-project --web`) will look like this:
 
-```jsonc 
+```jsonc
 // project.json
     "storybook": {
       "executor": "@storybook/angular:start-storybook",

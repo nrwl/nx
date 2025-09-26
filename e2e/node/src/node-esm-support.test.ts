@@ -440,16 +440,13 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${nestApp}`);
       checkFilesExist(`dist/apps/${nestApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${nestApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
+      const serveProcess = await runCommandUntil(
+        `serve ${nestApp}`,
+        (output) => {
+          return output.includes('Nest ESM server ready on port');
         }
-      ).toString();
-      expect(result).toContain('Nest ESM app starting');
-      expect(result).toContain('Nest ESM server ready on port');
-      expect(result).toContain('fetch type: function');
+      );
+      await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
     }, 600000);
 
     it('should serve Nest app with ESM modules', async () => {

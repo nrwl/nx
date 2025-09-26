@@ -3,6 +3,7 @@ title: 'Maintain TypeScript Monorepos'
 description: 'Learn how Nx simplifies TypeScript monorepo maintenance by auto-configuring tools, managing project references, and enhancing tooling for better monorepo support.'
 sidebar:
   order: 6
+filter: 'type:Features'
 ---
 
 Keeping all the industry-standard tools involved in a large TypeScript monorepo correctly configured and working well together is a difficult task. And the more tools you add, the more opportunity there is for tools to conflict with each other in some way.
@@ -31,6 +32,7 @@ If your repository is using package manager workspaces, Nx will use those settin
 
 {% graph height="200px" title="Project View" %}
 
+```json
 {
   "composite": false,
   "projects": [
@@ -77,6 +79,7 @@ If your repository is using package manager workspaces, Nx will use those settin
   "exclude": [],
   "enableTooltips": false
 }
+```
 
 {% /graph %}
 
@@ -115,6 +118,7 @@ export default defineConfig({
 
 {% project_details %}
 
+```json
 {
   "project": {
     "name": "cart",
@@ -176,6 +180,7 @@ export default defineConfig({
     "tags": ["apps/cart/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 
@@ -195,6 +200,7 @@ The main downside of this feature is that you have to manually define each proje
 
 {% graph height="200px" title="Project View" %}
 
+```json
 {
   "composite": false,
   "projects": [
@@ -241,6 +247,7 @@ The main downside of this feature is that you have to manually define each proje
   "exclude": [],
   "enableTooltips": false
 }
+```
 
 {% /graph %}
 

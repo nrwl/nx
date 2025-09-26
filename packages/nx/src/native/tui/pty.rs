@@ -33,8 +33,7 @@ impl std::ops::Deref for PtyScreenRef<'_> {
 pub struct PtyInstance {
     parser: Arc<RwLock<Parser>>,
     writer: Option<Arc<Mutex<Box<dyn Write + Send>>>>,
-    rows: u16,
-    cols: u16,
+    dimensions: Arc<RwLock<(u16, u16)>>,
     scroll_momentum: Arc<Mutex<ScrollMomentum>>,
 }
 
@@ -44,12 +43,14 @@ impl PtyInstance {
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
     ) -> Self {
         // Read the dimensions from the parser
-        let (rows, cols) = parser.read().unwrap().screen().size();
+        let (rows, cols) = parser
+            .read()
+            .map(|guard| guard.screen().size())
+            .unwrap_or((24, 80)); // Fallback to sane defaults
         Self {
             parser,
             writer: Some(writer),
-            rows,
-            cols,
+            dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
         }
     }
@@ -62,8 +63,7 @@ impl PtyInstance {
         Self {
             parser,
             writer: None,
-            rows,
-            cols,
+            dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
         }
     }
@@ -77,22 +77,38 @@ impl PtyInstance {
         let rows = rows.max(3);
         let cols = cols.max(20);
 
-        // Skip resize if dimensions haven't changed
-        if rows == self.rows && cols == self.cols {
+        // Check dimensions and get old values in a single lock scope
+        let (should_resize, old_rows, old_scrollback) = {
+            let dimensions_guard = self
+                .dimensions
+                .read()
+                .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to read dimensions"))?;
+            let current_dimensions = *dimensions_guard;
+
+            // Skip resize if dimensions haven't changed
+            if rows == current_dimensions.0 && cols == current_dimensions.1 {
+                return Ok(());
+            }
+
+            let old_scrollback = self
+                .parser
+                .read()
+                .map(|guard| guard.screen().scrollback())
+                .unwrap_or(0);
+
+            (true, current_dimensions.0, old_scrollback)
+        };
+
+        if !should_resize {
             return Ok(());
         }
 
-        // Get current dimensions and scroll position before resize
-        let old_rows = self.rows;
-        let old_scrollback = if let Ok(parser_guard) = self.parser.read() {
-            parser_guard.screen().scrollback()
-        } else {
-            0
-        };
-
-        // Update the stored dimensions
-        self.rows = rows;
-        self.cols = cols;
+        // Update dimensions
+        let mut dimensions_guard = self
+            .dimensions
+            .write()
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to write dimensions"))?;
+        *dimensions_guard = (rows, cols);
 
         // Create a new parser with the new dimensions while preserving state
         if let Ok(mut parser_guard) = self.parser.write() {
@@ -103,21 +119,21 @@ impl PtyInstance {
             new_parser.process(&raw_output);
 
             // Preserve scroll position when possible
-            if rows < old_rows {
-                // If we lost height and were scrolled up, try to maintain scroll position
+            // Calculate target scroll position based on dimension changes
+            let target_scrollback = if rows < old_rows {
+                // If we lost height and were scrolled up, adjust scroll position
                 if old_scrollback > 0 {
-                    // Adjust scrollback to account for lost rows
-                    let adjusted_scrollback =
-                        old_scrollback.saturating_sub((old_rows - rows) as usize);
-                    new_parser.screen_mut().set_scrollback(adjusted_scrollback);
+                    old_scrollback.saturating_sub((old_rows - rows) as usize)
                 } else {
-                    // If we weren't scrolled, keep at bottom
-                    new_parser.screen_mut().set_scrollback(0);
+                    0 // Keep at bottom
                 }
             } else {
                 // If we gained height or stayed the same, preserve exact scroll position
-                new_parser.screen_mut().set_scrollback(old_scrollback);
-            }
+                old_scrollback
+            };
+
+            // Set target scroll position before processing
+            new_parser.screen_mut().set_scrollback(target_scrollback);
 
             *parser_guard = new_parser;
         }
@@ -136,6 +152,13 @@ impl PtyInstance {
         }
 
         Ok(())
+    }
+
+    pub fn get_dimensions(&self) -> (u16, u16) {
+        self.dimensions
+            .read()
+            .map(|guard| *guard)
+            .unwrap_or((24, 80)) // Fallback to sane defaults
     }
 
     pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
@@ -242,6 +265,22 @@ impl PtyInstance {
         }
     }
 
+    pub fn scroll_to_top(&mut self) {
+        if let Ok(mut parser) = self.parser.write() {
+            let screen = parser.screen();
+            let total_content = screen.get_total_content_rows();
+            let viewport_height = screen.size().0 as usize;
+            let max_scrollback = total_content.saturating_sub(viewport_height);
+            parser.screen_mut().set_scrollback(max_scrollback);
+        }
+    }
+
+    pub fn scroll_to_bottom(&mut self) {
+        if let Ok(mut parser) = self.parser.write() {
+            parser.screen_mut().set_scrollback(0);
+        }
+    }
+
     pub fn get_scroll_offset(&self) -> usize {
         if let Ok(parser) = self.parser.read() {
             return parser.screen().scrollback();
@@ -330,8 +369,7 @@ mod tests {
         PtyInstance {
             parser,
             writer: None,
-            rows: 24,
-            cols: 80,
+            dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
         }
     }
@@ -356,7 +394,7 @@ mod tests {
 
     #[test]
     fn test_handles_arrow_keys_cursor_movement() {
-        let mut pty = create_test_pty_instance(false);
+        let pty = create_test_pty_instance(false);
 
         // Initially should not be interactive
         assert!(!pty.handles_arrow_keys());
@@ -371,7 +409,7 @@ mod tests {
 
     #[test]
     fn test_handles_arrow_keys_enquirer_style_output() {
-        let mut pty = create_test_pty_instance(false);
+        let pty = create_test_pty_instance(false);
 
         // Simulate enquirer output with cursor positioning
         let enquirer_output =

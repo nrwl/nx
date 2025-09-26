@@ -5,6 +5,7 @@ import {
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
+  detectPackageManager,
   getPackageManagerCommand,
   logger,
   readJsonFile,
@@ -15,6 +16,8 @@ import {
   calculateHashesForCreateNodes,
   calculateHashForCreateNodes,
 } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { getLockFileName } from '@nx/js';
+import type { ESLint as ESLintType } from 'eslint';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -22,10 +25,9 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
-import type { ESLint as ESLintType } from 'eslint';
 import {
-  baseEsLintConfigFile,
   BASE_ESLINT_CONFIG_FILENAMES,
+  baseEsLintConfigFile,
   ESLINT_CONFIG_FILENAMES,
   isFlatConfig,
 } from '../utils/config-file';
@@ -135,14 +137,13 @@ const internalCreateNodes = async (
       );
       const hash = await calculateHashForCreateNodes(
         childProjectRoot,
-        {
-          ...options,
-          // change this to bust the cache when making changes that would yield
-          // different results for the same hash
-          bust: 1,
-        },
+        options,
         context,
-        [...parentConfigs, join(childProjectRoot, '.eslintignore')]
+        [
+          ...parentConfigs,
+          join(childProjectRoot, '.eslintignore'),
+          getLockFileName(detectPackageManager(context.workspaceRoot)),
+        ]
       );
 
       if (projectsCache[hash]) {
@@ -280,20 +281,18 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
       options,
       context
     );
+    const lockFilePattern = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      {
-        ...options,
-        // change this to bust the cache when making changes that would yield
-        // different results for the same hash
-        bust: 1,
-      },
+      options,
       context,
       projectRoots.map((root) => {
         const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
           isSubDir(root, dirname(eslintConfig))
         );
-        return [...parentConfigs, join(root, '.eslintignore')];
+        return [...parentConfigs, join(root, '.eslintignore'), lockFilePattern];
       })
     );
     const hashByRoot = new Map<string, string>(

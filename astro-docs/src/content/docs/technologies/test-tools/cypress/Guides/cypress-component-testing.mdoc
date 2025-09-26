@@ -3,6 +3,7 @@ title: Cypress Component Testing
 description: Learn how to set up and use Cypress component testing in your Nx workspace for React, Angular, and Next.js projects, including configuration and test execution.
 sidebar:
   label: Component Testing
+filter: 'type:Guides'
 ---
 
 > Component testing requires Cypress v10 and above.
@@ -71,6 +72,42 @@ terminal. Screenshots and videos will be accessible in `dist/cypress/libs/your-l
 With, `nx component-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.
 
 Running Cypress with `--watch` is a great way to iterate on your components since cypress will rerun your tests as you make those changes validating the new behavior.
+
+## Splitting Component Testing Tasks by File
+
+{% aside type="note" title="Available since Nx 21.6.1" %}
+Splitting component testing tasks by file is available since Nx 21.6.1.
+{% /aside %}
+
+Nx provides powerful features for [distributing tasks in CI](/docs/features/ci-features/distribute-task-execution), including [splitting tasks by file](/docs/features/ci-features/split-e2e-tasks) (also known as atomization). The `@nx/cypress` plugin facilitates this for Cypress projects, allowing you to run your tests more efficiently in your Continuous Integration (CI) environment.
+
+To enable component testing task splitting, set the `ciComponentTestingTargetName` option of the `@nx/cypress/plugin` in your `nx.json` file. It will look something like this:
+
+```json {% meta="{10}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci",
+        "componentTestingTargetName": "component-test",
+        "ciComponentTestingTargetName": "component-test-ci",
+        "openTargetName": "open-cypress"
+      }
+    }
+  ]
+}
+```
+
+The plugin will infer the `component-test-ci` task, which depends on individual component testing tasks for each file. You can then replace the `component-test` task with the `component-test-ci` task in your CI configuration to run your tests in a distributed fashion:
+
+```diff {% meta="lang='yaml'" %}
+// .github/workflows/ci.yaml
+-     - run: pnpm exec nx affected -t lint test build component-test
++     - run: pnpm exec nx affected -t lint test build component-test-ci
+```
 
 ## More Information
 

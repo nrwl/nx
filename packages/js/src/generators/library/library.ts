@@ -406,6 +406,7 @@ export type AddLintOptions = Pick<
   | 'rootProject'
   | 'bundler'
   | 'addPlugin'
+  | 'isUsingTsSolutionConfig'
 >;
 
 export async function addLint(
@@ -433,6 +434,7 @@ export async function addLint(
     lintConfigHasOverride,
     isEslintConfigSupported,
     updateOverrideInLintConfig,
+    addIgnoresToLintConfig,
     // nx-ignore-next-line
   } = require('@nx/eslint/src/generators/utils/eslint-file');
 
@@ -511,6 +513,12 @@ export async function addLint(
       }
     );
   }
+
+  // Add out-tsc ignore pattern when using TS solution setup
+  if (options.isUsingTsSolutionConfig) {
+    addIgnoresToLintConfig(tree, options.projectRoot, ['**/out-tsc']);
+  }
+
   return task;
 }
 

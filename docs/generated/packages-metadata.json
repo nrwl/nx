@@ -440,6 +440,46 @@
     ],
     "migrations": [
       {
+        "description": "Update the @angular/cli package version to ~20.3.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-3-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-3-0",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-angular-cli-version-20-3-0",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.6.1-package-updates.json",
+        "hidden": false,
+        "name": "21.6.1-package-updates",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.6.1-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.6.1-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.6.1-angular-eslint-package-updates",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.6.1-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.6.1-@angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.6.1-@angular-eslint-package-updates",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.6.1-@angular-eslint-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Update the @angular/cli package version to ~20.2.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-2-0.json",
         "hidden": false,
@@ -507,16 +547,6 @@
         "version": "21.4.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/21.4.0-ngrx-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
-        "hidden": false,
-        "name": "21.3.5-jest-package-updates",
-        "version": "21.3.5-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "angular/migrations/21.3.5-jest-package-updates",
         "type": "migration"
       },
       {
@@ -2489,6 +2519,26 @@
     ],
     "migrations": [
       {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.8 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-8.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-8",
+        "version": "21.6.1-beta.2",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-8",
+        "type": "migration"
+      },
+      {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.7 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-7.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-7",
+        "version": "21.5.1-beta.5",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-7",
+        "type": "migration"
+      },
+      {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.6 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-6.json",
         "hidden": false,
@@ -3979,6 +4029,15 @@
         "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
         "path": "nx/generators/connect-to-nx-cloud",
         "type": "generator"
+      },
+      {
+        "description": "Sets up the Nx MCP & rule files for common AI Agents",
+        "file": "generated/packages/nx/generators/set-up-ai-agents.json",
+        "hidden": true,
+        "name": "set-up-ai-agents",
+        "originalFilePath": "/packages/nx/src/ai/set-up-ai-agents/schema.json",
+        "path": "nx/generators/set-up-ai-agents",
+        "type": "generator"
       }
     ],
     "migrations": [
@@ -4172,6 +4231,15 @@
         "name": "playwright",
         "originalFilePath": "/packages/playwright/src/executors/playwright/schema.json",
         "path": "playwright/executors/playwright",
+        "type": "executor"
+      },
+      {
+        "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
+        "file": "generated/packages/playwright/executors/merge-reports.json",
+        "hidden": true,
+        "name": "merge-reports",
+        "originalFilePath": "/packages/playwright/src/executors/merge-reports/schema.json",
+        "path": "playwright/executors/merge-reports",
         "type": "executor"
       }
     ],

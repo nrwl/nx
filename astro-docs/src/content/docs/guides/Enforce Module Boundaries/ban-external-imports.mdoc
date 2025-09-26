@@ -1,6 +1,7 @@
 ---
 title: Ban External Imports
 description: Learn how to use ESLint module boundary constraints to prevent projects from importing specific external packages and enforce separation of concerns.
+filter: 'type:Guides'
 ---
 
 **This constraint is only available for projects using ESLint.**
@@ -9,7 +10,7 @@ You may want to constrain what external packages a project may import. For examp
 
 A common example of this is for backend projects that use NestJS and frontend projects that use Angular. Both frameworks contain a class named `Injectable`. It's very easy for a developer to import the wrong one by mistake, especially when using auto-import in an IDE. To prevent this, add tags to define the type of project to distinguish between backend and frontend projects. Each tag should define its own list of banned external imports.
 
-```jsonc 
+```jsonc
 // .eslintrc.json
 {
   // ... more ESLint config here
@@ -70,7 +71,7 @@ Another common example is ensuring that util libraries stay framework-free by ba
 If you need a more restrictive approach, you can use the `allowedExternalImports` option to ensure that a project only imports from a specific set of packages.
 This is useful if you want to enforce separation of concerns _(e.g. keeping your domain logic clean from infrastructure concerns, or ui libraries clean from data access concerns)_ or keep some parts of your codebase framework-free or library-free.
 
-```jsonc 
+```jsonc
 // .eslintrc.json
 {
   // ... more ESLint config here

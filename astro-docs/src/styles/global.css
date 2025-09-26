@@ -39,6 +39,18 @@
   --sl-color-gray-4: var(--color-slate-500);
   --sl-color-gray-5: var(--color-slate-700);
   --sl-color-gray-6: var(--color-slate-800);
+  --sl-badge-success-bg: var(--color-green-950);
+  --sl-badge-success-border: var(--color-green-600);
+  --sl-badge-success-text: var(--color-green-200);
+  --sl-badge-tip-bg: var(--color-indigo-900);
+  --sl-badge-tip-border: var(--color-indigo-600);
+  --sl-badge-tip-text: var(--color-indigo-200);
+  --sl-badge-note-bg: var(--color-blue-950);
+  --sl-badge-note-border: var(--color-blue-600);
+  --sl-badge-note-text: var(--color-blue-200);
+  --sl-badge-caution-bg: var(--color-yellow-800);
+  --sl-badge-caution-border: var(--color-yellow-600);
+  --sl-badge-caution-text: var(--color-yellow-100);
 }
 
 /* Light mode colors. */
@@ -58,6 +70,18 @@
   --sl-color-gray-4: var(--color-slate-500);
   --sl-color-gray-5: var(--color-slate-300);
   --sl-color-gray-6: var(--color-slate-200);
+  --sl-badge-success-bg: var(--color-green-50);
+  --sl-badge-success-border: var(--color-green-300);
+  --sl-badge-success-text: var(--color-green-600);
+  --sl-badge-tip-bg: var(--color-indigo-50);
+  --sl-badge-tip-border: var(--color-indigo-300);
+  --sl-badge-tip-text: var(--color-blue-600);
+  --sl-badge-note-bg: var(--color-blue-50);
+  --sl-badge-note-border: var(--color-blue-300);
+  --sl-badge-note-text: var(--color-blue-600);
+  --sl-badge-caution-bg: var(--color-yellow-50);
+  --sl-badge-caution-border: var(--color-yellow-300);
+  --sl-badge-caution-text: var(--color-yellow-600);
 }
 
 /* Adaptive icons, like GitHub logo, etc. */
@@ -72,8 +96,8 @@
 /* Custom font for code blocks */
 @font-face {
   font-family: 'Input Mono';
-  src: url('/fonts/InputMono-Regular.woff2') format('woff2'),
-    url('/fonts/InputMono-Regular.woff') format('woff');
+  src: url('/docs/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('/docs/fonts/InputMono-Regular.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -170,6 +194,14 @@ pre {
     border-radius: var(--radius-lg);
   }
 
+  aside a {
+    color: var(--sl-color-accent);
+  }
+
+  aside a:hover {
+    color: var(--sl-color-accent-high);
+  }
+
   /* Align TOC with sidebar styling */
   starlight-toc ul {
     line-height: var(--leading-relaxed);
@@ -189,14 +221,158 @@ pre {
     color: var(--sl-color-text-accent);
     font-weight: var(--font-weight-semibold);
   }
+
+  /* Override Starlight Aside component colors to match Nx design system */
+  /* Note type - Slate/gray theme */
+  :global([data-aside-type='note']) {
+    --sl-color-aside-bg: theme('colors.slate.50');
+    --sl-color-aside-border: theme('colors.slate.200');
+    --sl-color-aside-text: theme('colors.slate.700');
+    --sl-color-aside-title: theme('colors.slate.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='note']) {
+    --sl-color-aside-bg: rgb(30 41 59 / 0.4); /* slate-800/40 */
+    --sl-color-aside-border: theme('colors.slate.700');
+    --sl-color-aside-text: theme('colors.slate.400');
+    --sl-color-aside-title: theme('colors.slate.300');
+  }
+
+  /* Tip type - Green theme (check) */
+  :global([data-aside-type='tip']) {
+    --sl-color-aside-bg: theme('colors.green.50');
+    --sl-color-aside-border: theme('colors.green.200');
+    --sl-color-aside-text: theme('colors.green.700');
+    --sl-color-aside-title: theme('colors.green.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='tip']) {
+    --sl-color-aside-bg: rgb(20 83 45 / 0.3); /* green-900/30 */
+    --sl-color-aside-border: theme('colors.green.800');
+    --sl-color-aside-text: theme('colors.green.400');
+    --sl-color-aside-title: theme('colors.green.400');
+  }
+
+  /* Caution type - Yellow theme (warning) */
+  :global([data-aside-type='caution']) {
+    --sl-color-aside-bg: theme('colors.yellow.50');
+    --sl-color-aside-border: theme('colors.yellow.200');
+    --sl-color-aside-text: theme('colors.yellow.700');
+    --sl-color-aside-title: theme('colors.yellow.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='caution']) {
+    --sl-color-aside-bg: rgb(113 63 18 / 0.3); /* yellow-900/30 */
+    --sl-color-aside-border: theme('colors.yellow.800');
+    --sl-color-aside-text: theme('colors.yellow.400');
+    --sl-color-aside-title: theme('colors.yellow.400');
+  }
+
+  /* Danger type - Red theme */
+  :global([data-aside-type='danger']) {
+    --sl-color-aside-bg: theme('colors.red.50');
+    --sl-color-aside-border: theme('colors.red.200');
+    --sl-color-aside-text: theme('colors.red.700');
+    --sl-color-aside-title: theme('colors.red.600');
+  }
+
+  :global([data-theme='dark'] [data-aside-type='danger']) {
+    --sl-color-aside-bg: rgb(127 29 29 / 0.3); /* red-900/30 */
+    --sl-color-aside-border: theme('colors.red.800');
+    --sl-color-aside-text: theme('colors.red.400');
+    --sl-color-aside-title: theme('colors.red.400');
+  }
+
+  /* Override Starlight Badge component colors */
+  /* Success/Tip variant - Green theme */
+  :global(.sl-badge.success),
+  :global(.sl-badge.tip) {
+    --sl-color-bg-badge: theme('colors.green.50');
+    --sl-color-border-badge: theme('colors.green.200');
+    --sl-color-text-badge: theme('colors.green.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.success),
+  :global([data-theme='dark'] .sl-badge.tip) {
+    --sl-color-bg-badge: rgb(20 83 45 / 0.3); /* green-900/30 */
+    --sl-color-border-badge: theme('colors.green.800');
+    --sl-color-text-badge: theme('colors.green.400');
+  }
+
+  /* Caution variant - Yellow theme */
+  :global(.sl-badge.caution) {
+    --sl-color-bg-badge: theme('colors.yellow.50');
+    --sl-color-border-badge: theme('colors.yellow.200');
+    --sl-color-text-badge: theme('colors.yellow.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.caution) {
+    --sl-color-bg-badge: rgb(113 63 18 / 0.3); /* yellow-900/30 */
+    --sl-color-border-badge: theme('colors.yellow.800');
+    --sl-color-text-badge: theme('colors.yellow.400');
+  }
+
+  /* Danger variant - Red theme */
+  :global(.sl-badge.danger) {
+    --sl-color-bg-badge: theme('colors.red.50');
+    --sl-color-border-badge: theme('colors.red.200');
+    --sl-color-text-badge: theme('colors.red.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.danger) {
+    --sl-color-bg-badge: rgb(127 29 29 / 0.3); /* red-900/30 */
+    --sl-color-border-badge: theme('colors.red.800');
+    --sl-color-text-badge: theme('colors.red.400');
+  }
+
+  /* Note variant - Slate/gray theme */
+  :global(.sl-badge.note) {
+    --sl-color-bg-badge: theme('colors.slate.50');
+    --sl-color-border-badge: theme('colors.slate.200');
+    --sl-color-text-badge: theme('colors.slate.700');
+  }
+
+  :global([data-theme='dark'] .sl-badge.note) {
+    --sl-color-bg-badge: rgb(30 41 59 / 0.4); /* slate-800/40 */
+    --sl-color-border-badge: theme('colors.slate.700');
+    --sl-color-text-badge: theme('colors.slate.400');
+  }
+
+  starlight-menu-button button {
+    color: theme('colors.slate.600');
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  [data-theme='dark'] starlight-menu-button button {
+    color: theme('colors.slate.200');
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  starlight-menu-button button[aria-expanded='true'] {
+    background-color: theme('colors.white');
+    box-shadow: none;
+  }
+
+  [data-theme='dark'] starlight-menu-button button[aria-expanded='true'] {
+    background-color: theme('colors.slate.900');
+    box-shadow: none;
+  }
 } /* end component layer */
 
 /* Additional custom styles can be added here */
 
 /* For deepdive callouts that are still used, need to space out content */
-.callout div:not(:last-child),
+.callout div:not(:last-child):not(.ec-line),
 .callout p:not(:last-child) {
   @apply mb-4;
+}
+.callout a {
+  color: var(--sl-color-accent);
+}
+.callout a:hover {
+  color: var(--sl-color-accent-high);
 }
 
 /* Align top with breadcrumbs */
@@ -224,7 +400,7 @@ h6:hover .anchor-link {
 }
 
 .anchor-link:hover {
-  color: var(--sl-color-accent);
+  color: var(--sl-color-accent-high);
 }
 
 .right-sidebar {
@@ -241,4 +417,9 @@ iframe[src*='youtube'] {
 
 table code {
   word-wrap: break-word;
+}
+
+[role='tablist'] {
+  font-size: var(--text-sm);
+  align-items: end; /* Fix tab alignment */
 }

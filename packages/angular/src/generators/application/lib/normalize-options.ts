@@ -13,6 +13,15 @@ function arePluginsExplicitlyDisabled(host: Tree) {
   return useInferencePlugins === false || addPluginEnvVar === 'false';
 }
 
+function validateBundler(bundler: string): 'esbuild' | 'webpack' | 'rspack' {
+  if (['esbuild', 'webpack', 'rspack'].includes(bundler)) {
+    return bundler as 'esbuild' | 'webpack' | 'rspack';
+  }
+  throw new Error(
+    `Invalid bundler: ${bundler}. Please use one of the following: 'esbuild', 'webpack', 'rspack'.`
+  );
+}
+
 export async function normalizeOptions(
   host: Tree,
   options: Partial<Schema>,
@@ -35,7 +44,7 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const bundler = options.bundler ?? 'esbuild';
+  const bundler = validateBundler(options.bundler ?? 'esbuild');
 
   const addPlugin =
     options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);

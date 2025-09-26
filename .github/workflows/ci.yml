@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
@@ -41,12 +41,12 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
 
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
         with:
           main-branch-name: 'master'
 
       - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+        run: npx nx-cloud@next start-ci-run --auto-apply-fixes="*format:check*,*documentation*" --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
 
       - name: Install dependencies
         run: |
@@ -54,43 +54,32 @@ jobs:
           sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
 
       - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
+        uses: browser-actions/setup-chrome@2dbff04819ebbfd5c974947148805a825b8a07fd # v2.1.0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         name: Install pnpm
         with:
           version: 10.11.1
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Cache Rust toolchain and cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
+        with:
+          rustflags: ''
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           distribution: temurin
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4.4.3
 
       - name: Install project dependencies
         run: |
@@ -117,13 +106,16 @@ jobs:
           pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native &
+          pnpm nx affected --targets=lint,test,test-kt,build,e2e,e2e-ci,format-native,lint-native &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
             wait "$pid"
           done
         timeout-minutes: 100
+      - name: Fix CI
+        run: pnpm nx-cloud fix-ci
+        if: failure()
 
   main-macos:
     runs-on: macos-latest
@@ -147,7 +139,7 @@ jobs:
         if: always()
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           filter: tree:0
@@ -157,7 +149,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
 
       - name: Restore Homebrew packages
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             /opt/homebrew
@@ -262,39 +254,28 @@ jobs:
           ls -la ~/Library/Logs/CoreSimulator/ || echo "No simulator logs found"
 
       - name: Save Homebrew Cache
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             /opt/homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
         name: Install pnpm
         with:
           version: 10.11.1
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Cache Rust toolchain and cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
+        with:
+          rustflags: ''
 
       - name: Install project dependencies
         run: |
@@ -302,7 +283,7 @@ jobs:
           pnpm playwright install --with-deps
 
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
         with:
           main-branch-name: 'master'
 

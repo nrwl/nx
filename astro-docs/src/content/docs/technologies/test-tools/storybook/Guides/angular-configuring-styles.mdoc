@@ -3,6 +3,7 @@ title: Angular - Configuring styles and preprocessor options
 description: This guide explains how to configure styles and preprocessor options for Angular Storybook projects in your Nx workspace.
 sidebar:
   label: Angular - Configuring styles and preprocessor options
+filter: 'type:Guides'
 ---
 
 When working with Angular and Storybook in an Nx workspace, you may need to configure styles and CSS preprocessors to ensure your components render correctly in Storybook.
@@ -59,10 +60,7 @@ import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: [
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-  ],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/angular',
     options: {},
@@ -76,7 +74,8 @@ const config: StorybookConfig = {
     reactDocgen: 'react-docgen-typescript',
     reactDocgenTypescriptOptions: {
       shouldExtractLiteralValuesFromEnum: true,
-      propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+      propFilter: (prop) =>
+        prop.parent ? !/node_modules/.test(prop.parent.fileName) : true,
     },
   },
 };
@@ -88,7 +87,7 @@ export default config;
 
 To use SCSS variables and mixins in your stories, you may need to configure additional include paths:
 
-```typescript 
+```typescript
 // .storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 
@@ -96,15 +95,15 @@ const config: StorybookConfig = {
   // ... other config
   webpackFinal: async (config) => {
     // Add SCSS support with include paths
-    const scssRule = config.module?.rules?.find((rule: any) => 
+    const scssRule = config.module?.rules?.find((rule: any) =>
       rule.test?.toString().includes('scss')
     );
-    
+
     if (scssRule && scssRule.use) {
-      const sassLoaderOptions = scssRule.use.find((use: any) => 
+      const sassLoaderOptions = scssRule.use.find((use: any) =>
         use.loader?.includes('sass-loader')
       );
-      
+
       if (sassLoaderOptions) {
         sassLoaderOptions.options = {
           ...sassLoaderOptions.options,
@@ -136,7 +135,7 @@ npm install -D @storybook/addon-postcss
 
 2. Add the addon to your Storybook configuration:
 
-```typescript 
+```typescript
 // .storybook/main.ts
 import type { StorybookConfig } from '@storybook/angular';
 

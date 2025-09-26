@@ -4,8 +4,8 @@ description: A comprehensive reference for the nx.json configuration file, which
 sidebar:
   order: 2
   label: Nx configuration
+filter: 'type:References'
 ---
-
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
 
@@ -262,7 +262,9 @@ When defining any options or configurations inside of a target default, you may 
   }
 }
 ```
+
 #### Target Default Priority
+
 Note that the inputs and outputs are specified on both the `@nx/js:tsc` and `build` default configurations. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for `build` uses the `@nx/js:tsc executor`. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 
 {% cardgrid %}
@@ -661,7 +663,7 @@ This allows you to have other releases such as [NPM](/docs/guides/nx-release/rel
 
 ## Sync
 
-These are global configuration options for the [`nx sync`](/docs/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/docs/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
+These are global configuration options for the [`nx sync`](/docs/reference/nx-commands#nx-sync) command. The `nx sync` command runs all global and task-specific [sync generators](/docs/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
 
 ```jsonc
 // nx.json

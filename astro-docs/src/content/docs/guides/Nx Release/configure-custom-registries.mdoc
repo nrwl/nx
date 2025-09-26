@@ -1,6 +1,7 @@
 ---
 title: Configure Custom Registries
 description: Learn how to configure Nx Release to publish packages to custom npm registries, including setting up multiple registries for different package scopes and per-package registry configuration.
+filter: 'type:Guides'
 ---
 
 To publish JavaScript packages, Nx Release uses the `npm` CLI under the hood, which defaults to publishing to the `npm` registry (`https://registry.npmjs.org/`). If you need to publish to a different registry, you can configure the registry in the `.npmrc` file in the root of your workspace or at the project level in the project configuration.
@@ -9,7 +10,7 @@ To publish JavaScript packages, Nx Release uses the `npm` CLI under the hood, wh
 
 The easiest way to configure a custom registry is to set it in the `npm` configuration via the root `.npmrc` file. This file is located in the root of your workspace, and Nx Release will use it for publishing all projects. To set the registry, add the 'registry' property to your root `.npmrc` file:
 
-```bash 
+```bash
 // .npmrc
 registry=https://my-custom-registry.com/
 ```
@@ -18,7 +19,7 @@ registry=https://my-custom-registry.com/
 
 To authenticate with a custom registry in CI, you can add authentication tokens to the `.npmrc` file:
 
-```bash 
+```bash
 // .npmrc
 registry=https://my-custom-registry.com/
 //my-custom-registry.com/:_authToken=<TOKEN>
@@ -30,7 +31,7 @@ See the [npm documentation](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc
 
 The recommended way to determine which registry packages are published to is by using [npm scopes](https://docs.npmjs.com/cli/v10/using-npm/scope). All packages with a name that starts with your scope will be published to the registry specified in the `.npmrc` file for that scope. Consider the following example:
 
-```bash 
+```bash
 // .npmrc
 @my-scope:registry=https://my-custom-registry.com/
 //my-custom-registry.com/:_authToken=<TOKEN>
@@ -68,7 +69,7 @@ The version step of Nx Release is responsible for determining the new version of
 
 To set custom registry options for the current version lookup, add the registry and/or tag to the `currentVersionResolverMetadata` in the project configuration:
 
-```json 
+```json
 // project.json
 {
   "name": "pkg-5",
@@ -91,7 +92,7 @@ To set custom registry options for the current version lookup, add the registry 
 
 The publish step of Nx Release is responsible for publishing the package to the registry. To set custom registry options for publishing, you can add the `registry` and/or `tag` options for the `nx-release-publish` target in the project configuration:
 
-```json 
+```json
 // project.json
 {
   "name": "pkg-5",
@@ -110,5 +111,5 @@ The publish step of Nx Release is responsible for publishing the package to the 
 
 ### Set the Registry in the Package Manifest
 
-It is not recommended to set the registry for a package in the `publishConfig` property of its `package.json` file. `npm publish` will always prefer the registry from the `publishConfig` over the `--registry` argument. 
+It is not recommended to set the registry for a package in the `publishConfig` property of its `package.json` file. `npm publish` will always prefer the registry from the `publishConfig` over the `--registry` argument.
 Because of this, the `--registry` CLI and programmatic API options of Nx Release will no longer be able to override the registry for purposes such as publishing locally for end to end testing.

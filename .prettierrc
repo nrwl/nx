@@ -1,5 +1,13 @@
 {
   "singleQuote": true,
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss"]
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "overrides": [
+    {
+      "files": "*.mdoc",
+      "options": {
+        "parser": "markdown"
+      }
+    }
+  ]
 }

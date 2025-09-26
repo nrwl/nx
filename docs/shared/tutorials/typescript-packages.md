@@ -21,11 +21,11 @@ What you'll learn:
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
 {% /callout %}
 
-### Step 1: Creating a new Nx TypeScript workspace
+### Step 1: Creating a new Nx TypeScript workspace (required)
 
-Let's create your workspace. The setup process takes about 2 minutes and will configure TypeScript, testing, and CI/CD automatically.
+Let's [create your workspace](https://cloud.nx.app/create-nx-workspace/typescript/github) with our TypeScript preset to get started quickly.
 
-{% call-to-action variant="gradient" title="Join 1M+ Developers Using Nx Cloud 🚀" url="https://cloud.nx.app/create-nx-workspace/typescript/github" description="Transform your TypeScript workflow - Setup takes less than 2 minutes" /%}
+{% call-to-action variant="simple" title="Create TypeScript Workspace" url="https://cloud.nx.app/create-nx-workspace/typescript/github" /%}
 
 ### Step 2: Verify Your Setup
 

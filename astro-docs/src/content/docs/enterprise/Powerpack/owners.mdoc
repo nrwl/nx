@@ -1,6 +1,7 @@
 ---
 title: 'Define Code Ownership at the Project Level'
 description: 'Learn how to use Nx Powerpack owners plugin to manage code ownership at the project level and automatically generate CODEOWNERS files for GitHub, Bitbucket, or GitLab.'
+filter: 'type:Guides'
 ---
 
 {% youtube src="https://youtu.be/mor6urvw-L0" title="Nx Powerpack Codeowners" /%}
@@ -23,10 +24,9 @@ Then, add the Owners plugin to your workspace.
 
 The ownership configuration is defined in the `nx.json` file or in individual project configuration files. Nx then uses a [sync generator](/docs/concepts/sync-generators) to automatically compile those settings into a valid CODEOWNERS file for GitHub, Bitbucket or GitLab. See the [plugin documentation](/docs/reference/core-api/owners) for more details.
 
-
 **Define Project Owners**:
 
-```json 
+```json
 // nx.json
 {
   "owners": {
@@ -56,7 +56,6 @@ The ownership configuration is defined in the `nx.json` file or in individual pr
   }
 }
 ```
-
 
 ```json
 // packages/my-project/project.json

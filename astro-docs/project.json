@@ -48,11 +48,23 @@
       }
     },
     "test": {
-      "dependsOn": ["validate-links"],
-      "command": "echo done"
+      "executor": "nx:noop",
+      "dependsOn": ["vite:test", "validate-links", "format"]
+    },
+    "pw-e2e": {
+      "dependsOn": ["serve"],
+      "parallelism": true
+    },
+    "e2e-ci--**/*": {
+      "dependsOn": ["preview"],
+      "parallelism": true
+    },
+    "show-report": {
+      "command": "playwright show-report dist/astro-docs/playwright-report"
     },
     "validate-links": {
       "dependsOn": ["build"],
+      "cache": true,
       "inputs": [
         "{projectRoot}/src/**/*",
         "{projectRoot}/astro.config.mjs",
@@ -61,10 +73,18 @@
         "{projectRoot}/tsconfig.json",
         "{projectRoot}/package.json"
       ],
-      "command": "npx tsx validate-links.ts",
+      "command": "tsx validate-links.ts",
       "options": {
         "cwd": "astro-docs"
       }
+    },
+    "format": {
+      "cache": true,
+      "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
+      "command": "prettier **/*.mdoc --check"
+    },
+    "format:write": {
+      "command": "prettier **/*.mdoc --write"
     }
   }
 }

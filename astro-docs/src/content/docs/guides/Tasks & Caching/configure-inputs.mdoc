@@ -1,8 +1,8 @@
 ---
 title: Configure Inputs for Task Caching
 description: 'Learn how to optimize when Nx restores from the cache by customizing what should be taken into consideration when calculating computation hashes for tasks'
+filter: 'type:Guides'
 ---
-
 
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
@@ -16,6 +16,7 @@ Throughout this recipe, the following project structure of a simple workspace wi
 
 {% graph height="450px" %}
 
+```json
 {
   "projects": [
     {
@@ -44,6 +45,7 @@ Throughout this recipe, the following project structure of a simple workspace wi
   "focus": null,
   "groupByFolder": false
 }
+```
 
 {% /graph %}
 
@@ -64,130 +66,130 @@ Doing so will show a view such as the one below:
 {% project_details%}
 
 {
-  "project": {
-    "name": "myreactapp",
-    "type": "app",
-    "data": {
-      "root": "apps/myreactapp",
-      "targets": {
-        "build": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vite build"
-          },
-          "cache": true,
-          "dependsOn": [
-            "^build"
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "vite"
-              ]
-            }
-          ],
-          "outputs": [
-            "{workspaceRoot}/dist/apps/myreactapp"
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "serve": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vite serve",
-            "continuous": true
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "preview": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vite preview"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "serve-static": {
-          "executor": "@nx/web:file-server",
-          "options": {
-            "buildTarget": "build",
-            "continuous": true
-          },
-          "configurations": {}
-        },
-        "test": {
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "vitest run"
-          },
-          "cache": true,
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": [
-                "vitest"
-              ]
-            }
-          ],
-          "outputs": [
-            "{workspaceRoot}/coverage/apps/myreactapp"
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "vite"
-            ]
-          }
-        },
-        "lint": {
-          "cache": true,
-          "options": {
-            "cwd": "apps/myreactapp",
-            "command": "eslint ."
-          },
-          "inputs": [
-            "default",
-            "{workspaceRoot}/.eslintrc.json",
-            "{workspaceRoot}/apps/myreactapp/.eslintrc.json",
-            "{workspaceRoot}/tools/eslint-rules/**/*",
-            {
-              "externalDependencies": [
-                "eslint"
-              ]
-            }
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": [
-              "eslint"
-            ]
-          }
-        }
-      },
-      "name": "myreactapp",
-      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+"project": {
+"name": "myreactapp",
+"type": "app",
+"data": {
+"root": "apps/myreactapp",
+"targets": {
+"build": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vite build"
+},
+"cache": true,
+"dependsOn": [
+"^build"
+],
+"inputs": [
+"production",
+"^production",
+{
+"externalDependencies": [
+"vite"
+]
+}
+],
+"outputs": [
+"{workspaceRoot}/dist/apps/myreactapp"
+],
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"serve": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vite serve",
+"continuous": true
+},
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"preview": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vite preview"
+},
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"serve-static": {
+"executor": "@nx/web:file-server",
+"options": {
+"buildTarget": "build",
+"continuous": true
+},
+"configurations": {}
+},
+"test": {
+"options": {
+"cwd": "apps/myreactapp",
+"command": "vitest run"
+},
+"cache": true,
+"inputs": [
+"default",
+"^production",
+{
+"externalDependencies": [
+"vitest"
+]
+}
+],
+"outputs": [
+"{workspaceRoot}/coverage/apps/myreactapp"
+],
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"vite"
+]
+}
+},
+"lint": {
+"cache": true,
+"options": {
+"cwd": "apps/myreactapp",
+"command": "eslint ."
+},
+"inputs": [
+"default",
+"{workspaceRoot}/.eslintrc.json",
+"{workspaceRoot}/apps/myreactapp/.eslintrc.json",
+"{workspaceRoot}/tools/eslint-rules/\*_/_",
+{
+"externalDependencies": [
+"eslint"
+]
+}
+],
+"executor": "nx:run-commands",
+"configurations": {},
+"metadata": {
+"technologies": [
+"eslint"
+]
+}
+}
+},
+"name": "myreactapp",
+"$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "sourceRoot": "apps/myreactapp/src",
       "projectType": "application",
       "tags": [],
@@ -345,22 +347,22 @@ Doing so will show a view such as the one below:
       "nx/core/project-json"
     ],
     "$schema": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "sourceRoot": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "projectType": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "tags": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ]
-  }
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+],
+"sourceRoot": [
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+],
+"projectType": [
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+],
+"tags": [
+"apps/myreactapp/project.json",
+"nx/core/project-json"
+]
+}
 }
 
 {% /project_details %}

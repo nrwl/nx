@@ -775,7 +775,6 @@ describe('syncGenerator()', () => {
         'tsconfig.json:',
         '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
         'packages/b/tsconfig.json:',
-        '  - Stale references: packages/a/tsconfig.json',
         '  - Duplicate references: packages/a/tsconfig.json',
       ]);
       const { references } = readJson(tree, 'packages/b/tsconfig.json');
@@ -810,7 +809,6 @@ describe('syncGenerator()', () => {
         'tsconfig.json:',
         '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
         'packages/b/tsconfig.lib.json:',
-        '  - Stale references: packages/a/tsconfig.lib.json',
         '  - Duplicate references: packages/a/tsconfig.lib.json',
         'packages/b/tsconfig.json:',
         '  - Missing references: packages/a/tsconfig.json',

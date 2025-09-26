@@ -5,6 +5,7 @@
 ### Properties
 
 - [dependencies](/reference/core-api/devkit/documents/TargetDependencyConfig#dependencies): boolean
+- [options](/reference/core-api/devkit/documents/TargetDependencyConfig#options): "ignore" | "forward"
 - [params](/reference/core-api/devkit/documents/TargetDependencyConfig#params): "ignore" | "forward"
 - [projects](/reference/core-api/devkit/documents/TargetDependencyConfig#projects): string | string[]
 - [target](/reference/core-api/devkit/documents/TargetDependencyConfig#target): string
@@ -20,11 +21,19 @@ Should not be specified together with `projects`.
 
 ---
 
+### options
+
+• `Optional` **options**: `"ignore"` \| `"forward"`
+
+Whether to forward task options to the dependency target.
+
+---
+
 ### params
 
 • `Optional` **params**: `"ignore"` \| `"forward"`
 
-Configuration for params handling.
+Whether to forward CLI params to the dependency target.
 
 ---
 

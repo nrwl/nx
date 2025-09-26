@@ -25,7 +25,11 @@ export function AiHero(): ReactElement {
           </SectionHeading>
           <div className="mt-6">
             <ButtonLink
-              href="/getting-started/ai-integration"
+              href={
+                process.env.NEXT_PUBLIC_ASTRO_URL
+                  ? '/docs/getting-started/ai-setup'
+                  : '/getting-started/ai-integration'
+              }
               title="Nx AI Integration"
               variant="primary"
               size="small"

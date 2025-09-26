@@ -3,6 +3,7 @@ title: Cloud Commands
 description: Complete reference for all Nx Cloud CLI commands
 sidebar:
   order: 2
+filter: 'type:References'
 ---
 
 The Nx Cloud command line interface provides various commands to connect and interact with Nx Cloud, manage distributed task execution, and handle authentication.
@@ -42,11 +43,11 @@ We look for this file at the following locations:
 If we don't find an existing config file, we create one at `$HOME/config/nxcloud/nxcloud.ini`
 
 {% /tabitem %}
-  {% tabitem label="Windows" %}
+{% tabitem label="Windows" %}
 
 We look for this file within the `%LOCALAPPDATA%/nxcloud` directory and if it does not exist, we will create a new `nxcloud.ini` file there.
 
-  {% /tabitem %}
+{% /tabitem %}
 {% /tabs %}
 The format of this file is as follows:
 
@@ -150,7 +151,7 @@ using the `linux-medium-js` launch template.
 You can also [define the configuration in a file](/docs/features/ci-features/dynamic-agents) and reference it as follows:
 `npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"`.
 
-```yaml 
+```yaml
 // .nx/workflows/dynamic-changesets.yaml
 distribute-on:
   small-changeset: 3 linux-medium-js
@@ -195,7 +196,8 @@ executed.
 - run: nx affected -t test
 - run: nx affected -t build
 ```
-  {% /tabitem %}
+
+{% /tabitem %}
 {% tabitem label="Parallel command execution" %}
 
 #### Incorrect example:

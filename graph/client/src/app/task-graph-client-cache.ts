@@ -1,4 +1,5 @@
-import type { TaskGraphClientResponse } from '@nx/graph-shared';
+// nx-ignore-next-line
+import type { TaskGraphClientResponse } from 'nx/src/command-line/graph/graph';
 
 class TaskGraphClientCache {
   private cached: TaskGraphClientResponse | null = null;
