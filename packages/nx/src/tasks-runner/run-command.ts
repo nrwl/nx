@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logDebug, RunMode } from '../native';
+import { hashArray, logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -68,6 +68,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
 import chalk = require('chalk');
+import { randomUUID } from 'node:crypto';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -133,8 +134,6 @@ async function getTerminalOutputLifeCycle(
     const isRunOne = initiatingProject != null;
 
     const pinnedTasks: string[] = [];
-    const taskText = tasks.length === 1 ? 'task' : 'tasks';
-    const projectText = projectNames.length === 1 ? 'project' : 'projects';
     let titleText = '';
 
     if (isRunOne) {
@@ -439,7 +438,9 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
+      const taskId = hashArray([...process.argv, Date.now().toString()]);
       await runPreTasksExecution({
+        taskId,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
@@ -474,6 +475,7 @@ export async function runCommand(
         : 0;
 
       await runPostTasksExecution({
+        taskId,
         taskResults,
         workspaceRoot,
         nxJsonConfiguration: nxJson,

@@ -7,6 +7,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
+import { hashArray } from '../../native';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import {
   runPostTasksExecution,
@@ -272,7 +273,9 @@ async function runPublishOnProjects(
       ].join('\n')}\n`
     );
   }
+  const taskId = hashArray([...process.argv, Date.now().toString()]);
   await runPreTasksExecution({
+    taskId,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
     argv: process.argv,
@@ -309,6 +312,7 @@ async function runPublishOnProjects(
     };
   }
   await runPostTasksExecution({
+    taskId,
     taskResults,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
