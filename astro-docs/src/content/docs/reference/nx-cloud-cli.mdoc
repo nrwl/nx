@@ -121,35 +121,23 @@ npx nx-cloud start-ci-run
 
 {% aside type="caution" title="Do not run start-ci-run locally" %}
 
-`npx nx-cloud start-ci-run` generates a temporary marker file that can cause a
-local Nx repo to behave as if it is a part of a CI run. This can cause strange
-behavior like Nx commands timing out or throwing unexpected errors. To
-discourage this from happening, this command will run a check to see if it is
-running in a CI environment. You can bypass this check with
-`npx nx-cloud start-ci-run --force`.
-local Nx repo to behave as if it is a part of a CI run. This can cause strange
-If you accidentally run this command locally, remove all generated marker files
-with `npx nx-cloud cleanup`.
-discourage this from happening, this command will run a check to see if it is
-running in a CI environment. You can bypass this check with
-`npx nx-cloud start-ci-run --force`.
-If you accidentally run this command locally, remove all generated marker files
-with `npx nx-cloud cleanup`.
+`npx nx-cloud start-ci-run` generates a temporary marker file that can cause a local Nx repo to behave as if it is a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors. To discourage this from happening, this command will run a check to see if it is running in a CI environment. You can bypass this check with `npx nx-cloud start-ci-run --force`.
+
+If you accidentally run this command locally, remove all generated marker files with `npx nx-cloud cleanup`.
 
 {% /aside %}
 
 #### Options
 
-| Option                          | Type    | Description                                                                             | Default |
-| ------------------------------- | ------- | --------------------------------------------------------------------------------------- | ------- |
-| `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/reference/nx-cloud/launch-templates) and [assignment rules](/docs/reference/nx-cloud/assignment-rules) for distributed execution           |         |
-| `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally. |         |
-| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx-cloud complete-ci-run` | `false` |
-| `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                     |         |
-| `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails                                               | `true`  |
-| `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                      | `true`  |
-| `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally. |         |
-| `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                             |         |
+| Option                          | Type    | Description                                                                                                                                                                               | Default |
+| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/reference/nx-cloud/launch-templates) and [assignment rules](/docs/reference/nx-cloud/assignment-rules) for distributed execution |         |
+| `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                                                     |         |
+| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx-cloud complete-ci-run`                                                                                                   | `false` |
+| `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                                       |         |
+| `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails                                                                                                                                                 | `true`  |
+| `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                                        | `true`  |
+| `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Nx Agents                                                                                                                        |         |
 
 #### Detailed Option Usage
 
@@ -174,10 +162,7 @@ distribute-on:
 
 ##### --stop-agents-after
 
-For the best results, always tell Nx Cloud about all targets that should be
-expected during your pipeline. This will prevent your CI Pipeline Execution
-from ending prematurely, cutting off any unfinished work.
-target or group of targets: `npx nx-cloud start-ci-run --stop-agents-after=build,test,e2e`.
+You can tell Nx Cloud to terminate agents after it sees a certain target or group of targets: `npx nx-cloud start-ci-run --stop-agents-after=build,test,e2e`.
 
 {% aside type="tip" title="Be specific!" %}
 For the best results, always tell Nx Cloud about all targets that should be
@@ -186,7 +171,7 @@ from ending prematurely, cutting off any unfinished work.
 
 {% /aside %}
 
-include one or more targets from each command.
+Whether you are running commands serially or in parallel (through use of the `&` operand or discrete jobs), you should include one or more targets from each command.
 
 {% tabs %}
 {% tabitem label="Serial command execution" %}
@@ -273,35 +258,26 @@ This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main 
 
 #### Enabling/Disabling Distribution
 
-Invoking `npx nx-cloud start-ci-run` will tell Nx to distribute by default. You can enable/disable distribution for
-
-```shell {% frame="none" %}
+Invoking `npx nx-cloud start-ci-run` will tell Nx to distribute by default. You can enable/disable distribution for individual commands as follows:
 
 {% tabs %}
-{% tabitem  label="Nx >= 18" %}
+{% tabitem label="Nx >= 18" %}
 
-
-```shell {% frame="none" %}
+Explicitly enable distribution:
 
 ```shell {% frame="none" %}
 nx affected -t build --agents
+```
 
 Explicitly disable distribution:
 
 ```shell {% frame="none" %}
-
-```shell {% frame="none" %}
+nx affected -t build --no-agents
 ```
 
 {% /tabitem %}
-{% tabitem  label="Nx >= 14.7" %}
+{% tabitem label="Nx >= 14.7" %}
 
-```shell {% frame="none" %}
-Explicitly enable distribution:
-
-
-```shell {% frame="none" %}
-nx affected -t build --dte
 Explicitly enable distribution:
 
 ```shell {% frame="none" %}
@@ -314,10 +290,6 @@ Explicitly disable distribution:
 nx affected -t build --no-dte
 ```
 
-{% /tabitem %}
-{% /tabs %}
-nx affected -t build --no-dte
-```
 {% /tabitem %}
 {% /tabs %}
 
