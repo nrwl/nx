@@ -438,9 +438,9 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
-      const taskId = hashArray([...process.argv, Date.now().toString()]);
+      const id = hashArray([...process.argv, Date.now().toString()]);
       await runPreTasksExecution({
-        taskId,
+        id,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
@@ -475,7 +475,7 @@ export async function runCommand(
         : 0;
 
       await runPostTasksExecution({
-        taskId,
+        id,
         taskResults,
         workspaceRoot,
         nxJsonConfiguration: nxJson,

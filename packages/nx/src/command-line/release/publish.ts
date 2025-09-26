@@ -273,9 +273,9 @@ async function runPublishOnProjects(
       ].join('\n')}\n`
     );
   }
-  const taskId = hashArray([...process.argv, Date.now().toString()]);
+  const id = hashArray([...process.argv, Date.now().toString()]);
   await runPreTasksExecution({
-    taskId,
+    id,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
     argv: process.argv,
@@ -312,7 +312,7 @@ async function runPublishOnProjects(
     };
   }
   await runPostTasksExecution({
-    taskId,
+    id,
     taskResults,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
