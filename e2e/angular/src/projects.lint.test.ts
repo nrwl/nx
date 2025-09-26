@@ -1,9 +1,4 @@
-import {
-  readFile,
-  removeFile,
-  runCLI,
-  updateFile,
-} from '@nx/e2e-utils';
+import { readFile, removeFile, runCLI, updateFile } from '@nx/e2e-utils';
 import { normalize } from 'path';
 
 import { app1, lib1, setupAngularProjectsSuite } from './projects.setup';
