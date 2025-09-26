@@ -1,8 +1,73 @@
 {
-  "name": "@nx/maven",
+  "name": "maven",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/src",
   "projectType": "library",
-  "targets": {},
-  "tags": []
+  "targets": {
+    "nx-release-publish": {
+      "dependsOn": ["^nx-release-publish"],
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "dist/packages/maven"
+      }
+    },
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/maven/README.md"],
+      "command": "node ./scripts/copy-readme.js maven",
+      "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build-base",
+        "maven-batch-runner:install"
+      ]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "packages/maven",
+            "glob": "**/@(files|files-angular)/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven/batch-runner",
+            "glob": "**/*.jar",
+            "output": "/batch-runner"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["nx-maven-plugin"]
 }
