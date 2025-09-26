@@ -267,6 +267,8 @@ export class ReleaseGroupProcessor {
   private projectToUpdateDependentsSetting: Map<string, 'auto' | 'never'> =
     new Map();
 
+  private cachedIsDependentUpdate: Map<string, boolean> = new Map();
+
   constructor(
     private tree: Tree,
     private projectGraph: ProjectGraph,
@@ -321,6 +323,18 @@ export class ReleaseGroupProcessor {
         dependencies: new Set(),
         dependents: new Set(),
       });
+    }
+
+    for (const [groupName, group] of Object.entries(
+      this.nxReleaseConfig.groups
+    )) {
+      if (!this.groupGraph.has(groupName)) {
+        this.groupGraph.set(groupName, {
+          group: { ...group, name: groupName, resolvedVersionPlans: false },
+          dependencies: new Set(),
+          dependents: new Set(),
+        });
+      }
     }
 
     // Process each project within each release group
@@ -421,6 +435,26 @@ export class ReleaseGroupProcessor {
           ((group.version as NxReleaseVersionConfiguration)
             ?.updateDependents as 'auto' | 'never') || 'auto';
         this.projectToUpdateDependentsSetting.set(project, updateDependents);
+      }
+    }
+
+    for (const [groupName, group] of Object.entries(
+      this.nxReleaseConfig.groups
+    )) {
+      for (const project of group.projects) {
+        if (!this.projectToReleaseGroup.has(project)) {
+          this.projectToReleaseGroup.set(project, {
+            ...group,
+            name: groupName,
+            resolvedVersionPlans: false,
+          });
+
+          // Cache updateDependents setting relevant for each project
+          const updateDependents =
+            ((group.version as NxReleaseVersionConfiguration)
+              ?.updateDependents as 'auto' | 'never') || 'auto';
+          this.projectToUpdateDependentsSetting.set(project, updateDependents);
+        }
       }
     }
   }
@@ -669,7 +703,10 @@ export class ReleaseGroupProcessor {
     const processOrder: string[] = [];
 
     // Use the topologically sorted groups instead of getNextGroup
-    for (const nextGroup of this.sortedReleaseGroups) {
+    const filteredSortedReleaseGroups = this.sortedReleaseGroups.filter(
+      (name) => this.releaseGroups.find((group) => group.name === name)
+    );
+    for (const nextGroup of filteredSortedReleaseGroups) {
       // Skip groups that have already been processed (could happen with circular dependencies)
       if (this.processedGroups.has(nextGroup)) {
         continue;
@@ -1064,7 +1101,8 @@ export class ReleaseGroupProcessor {
     for (const project of sortedProjects) {
       if (
         projectsToUpdate.has(project) &&
-        releaseGroupFilteredProjects.has(project)
+        (releaseGroupFilteredProjects?.has(project) ||
+          this.isDependentUpdate(project))
       ) {
         await this.updateDependenciesForProject(project);
       }
@@ -1721,5 +1759,33 @@ Valid values are: ${validReleaseVersionPrefixes
 
   private getProjectDependencies(project: string): Set<string> {
     return this.projectToDependencies.get(project) || new Set();
+  }
+
+  private isDependentUpdate(project: string) {
+    if (this.cachedIsDependentUpdate.has(project)) {
+      return this.cachedIsDependentUpdate.get(project)!;
+    }
+
+    if (!this.hasAutoUpdateDependents(project)) {
+      this.cachedIsDependentUpdate.set(project, false);
+      return false;
+    }
+
+    // Check if the project depends on any project in the filtered release groups
+    const dependencies = this.projectToDependencies.get(project);
+    if (dependencies) {
+      for (const dependency of dependencies) {
+        if (
+          this.releaseGroups.some((group) =>
+            group.projects.includes(dependency)
+          )
+        ) {
+          this.cachedIsDependentUpdate.set(project, true);
+          return true;
+        }
+      }
+    }
+    this.cachedIsDependentUpdate.set(project, false);
+    return false;
   }
 }
