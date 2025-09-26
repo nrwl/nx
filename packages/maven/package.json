@@ -1,6 +1,6 @@
 {
   "name": "@nx/maven",
-  "version": "0.0.1",
+  "version": "21.6.0",
   "description": "Nx plugin for Maven integration",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,7 +22,7 @@
   "author": "Nx Team",
   "license": "MIT",
   "dependencies": {
-    "@nx/devkit": "workspace:*",
+    "@nx/devkit": "21.6.0",
     "tslib": "^2.3.0",
     "xmldom": "^0.6.0"
   },
