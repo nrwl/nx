@@ -24,6 +24,7 @@ import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitByColons } from '../utils/split-target';
 import { workspaceRoot } from '../utils/workspace-root';
+import { homedir } from 'os';
 import { isTuiEnabled } from './is-tui-enabled';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
@@ -336,12 +337,15 @@ export function getOutputsForTargetAndConfiguration(
       const interpolatedOutput = interpolate(output, {
         projectRoot: node.data.root,
         projectName: node.name,
+        userHome: homedir(),
         project: { ...node.data, name: node.name }, // this is legacy
         options,
       });
       if (
         !!interpolatedOutput &&
-        !interpolatedOutput.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+        !interpolatedOutput.match(
+          /{(projectRoot|workspaceRoot|userHome|(options.*))}/
+        )
       ) {
         result.add(interpolatedOutput);
       }
@@ -384,6 +388,12 @@ export function interpolate(template: string, data: any): string {
     );
   }
 
+  if (template.includes('{userHome}', 1)) {
+    throw new Error(
+      `Output '${template}' is invalid. {userHome} can only be used at the beginning of the expression.`
+    );
+  }
+
   if (data.projectRoot == '.' && template.includes('{projectRoot}', 1)) {
     throw new Error(
       `Output '${template}' is invalid. When {projectRoot} is '.', it can only be used at the beginning of the expression.`
@@ -392,7 +402,9 @@ export function interpolate(template: string, data: any): string {
 
   const parts = template.split('/').map((s) => _interpolate(s, data));
 
-  return join(...parts).replace('{workspaceRoot}/', '');
+  return join(...parts)
+    .replace('{workspaceRoot}/', '')
+    .replace('{userHome}/', '');
 }
 
 function _interpolate(template: string, data: any): string {
