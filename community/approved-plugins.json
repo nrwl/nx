@@ -528,5 +528,10 @@
     "name": "@aws/nx-plugin",
     "description": "Nx Plugin for AWS: Accelerate building cloud-native applications with AWS",
     "url": "https://github.com/awslabs/nx-plugin-for-aws"
+  },
+  {
+    "name": "nx-oxlint",
+    "description": "Nx plugin for oxlint - a fast linter written in Rust",
+    "url": "https://github.com/Nas3nmann/nx-oxlint"
   }
 ]
