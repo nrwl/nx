@@ -1,5 +1,12 @@
 {
-  "generators": {},
+  "generators": {
+    "update-22-0-0-add-svgr-to-next-config": {
+      "cli": "nx",
+      "version": "22.0.0-beta.0",
+      "description": "Updates next.config.js files to add SVGR webpack configuration directly instead of using the nx.svgr option in withNx.",
+      "factory": "./src/migrations/update-22-0-0/add-svgr-to-next-config"
+    }
+  },
   "packageJsonUpdates": {
     "19.0.3": {
       "version": "19.0.3-beta.0",
