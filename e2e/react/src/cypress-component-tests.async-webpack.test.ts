@@ -4,6 +4,7 @@ import { join } from 'path';
 import {
   setupReactCypressSuite,
   teardownReactCypressSuite,
+  updateJson,
 } from './cypress-component-tests.setup';
 
 describe('React Cypress Component Tests - async webpack', () => {

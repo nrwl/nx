@@ -2,7 +2,6 @@ import { readJson, runCLI, updateFile } from '@nx/e2e-utils';
 
 import {
   generatePlaywrightHost,
-  regenerateMFManifest,
   setupReactModuleFederationSuite,
 } from './core.setup';
 
@@ -13,12 +12,17 @@ describe('React Module Federation - query params', () => {
     const shell = 'shell';
     const remote1 = 'remote1';
 
-    generatePlaywrightHost(shell, [remote1]);
+    generatePlaywrightHost({
+      shell,
+      remotes: [remote1],
+      bundler: 'webpack',
+      inAppsDir: true,
+    });
 
     updateFile(`apps/${shell}/webpack.config.prod.ts`, (content) =>
       content.replace(
-        `'http://localhost:4201/'`,
-        `'http://localhost:4201/remoteEntry.js?param=value'`
+        `"${remote1}"`,
+        `['${remote1}', 'http://localhost:4201/remoteEntry.js?param=value']`
       )
     );
 
@@ -42,11 +46,18 @@ describe('React Module Federation - query params', () => {
         ]
       `);
 
-    regenerateMFManifest(shell, 'http://localhost:4201?param=newValue');
+    updateFile(`apps/${shell}/webpack.config.prod.ts`, (content) =>
+      content.replace(
+        'http://localhost:4201/remoteEntry.js?param=value',
+        'http://localhost:4201?param=newValue'
+      )
+    );
 
     runCLI(`run ${shell}:build:production`);
 
-    const manifestJsonUpdated = readJson(`dist/apps/${shell}/mf-manifest.json`);
+    const manifestJsonUpdated = readJson(
+      `dist/apps/${shell}/mf-manifest.json`
+    );
     const remoteEntryUpdated = manifestJsonUpdated.remotes[0];
 
     expect(remoteEntryUpdated).toBeDefined();

@@ -1,9 +1,10 @@
 import { runCLI, runCommandUntil } from '@nx/e2e-utils';
 
 import {
-  generateSSRHost,
+  killProcessAndPorts,
+  runE2ETests,
   setupReactModuleFederationSuite,
-  setupServeHostWithDevRemotes,
+  updateFile,
 } from './core.setup';
 
 describe('React Module Federation - ssr serve', () => {

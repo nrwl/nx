@@ -1,8 +1,12 @@
-import { runCLI, runCommandUntil, runE2ETests } from '@nx/e2e-utils';
+import { runCLI, runCommandUntil } from '@nx/e2e-utils';
 
 import {
   generatePlaywrightHost,
+  killProcessAndPorts,
+  readPort,
+  runE2ETests,
   setupReactModuleFederationSuite,
+  updateFile,
 } from './core.setup';
 
 describe('React Rspack Module Federation - serve', () => {

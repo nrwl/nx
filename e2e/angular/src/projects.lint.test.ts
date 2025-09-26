@@ -1,11 +1,10 @@
 import {
-  checkFilesDoNotExist,
-  normalizePath,
   readFile,
   removeFile,
   runCLI,
   updateFile,
 } from '@nx/e2e-utils';
+import { normalize } from 'path';
 
 import { app1, lib1, setupAngularProjectsSuite } from './projects.setup';
 
@@ -47,11 +46,11 @@ describe('Angular Projects - lint', () => {
     const appLintStdOut = runCLI(`lint ${app1}`, {
       silenceError: true,
     });
-    expect(appLintStdOut).toContain(normalizePath(`${app1}/src/app/app.html`));
+    expect(appLintStdOut).toContain(normalize(`${app1}/src/app/app.html`));
     expect(appLintStdOut).toContain(`1:6`);
     expect(appLintStdOut).toContain(`Invalid binding syntax`);
     expect(appLintStdOut).toContain(
-      normalizePath(`${app1}/src/app/inline-template.component.ts`)
+      normalize(`${app1}/src/app/inline-template.component.ts`)
     );
     expect(appLintStdOut).toContain(`5:19`);
     expect(appLintStdOut).toContain(

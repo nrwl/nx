@@ -1,4 +1,4 @@
-import { checkFilesExist, runCLI, runCLIAsync } from '@nx/e2e-utils';
+import { checkFilesExist, runCLIAsync } from '@nx/e2e-utils';
 
 import {
   generatePlaywrightHost,
@@ -16,7 +16,12 @@ describe('React Module Federation - playwright e2e', () => {
     const remote2 = 'remote2';
     const remote3 = 'remote3';
 
-    generatePlaywrightHost(shell, [remote1, remote2, remote3]);
+    generatePlaywrightHost({
+      shell,
+      remotes: [remote1, remote2, remote3],
+      bundler: 'webpack',
+      inAppsDir: true,
+    });
 
     checkFilesExist(`apps/${shell}/module-federation.config.ts`);
     checkFilesExist(`apps/${remote1}/module-federation.config.ts`);

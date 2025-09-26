@@ -19,6 +19,8 @@ export interface ReactCypressSetupContext {
   buildableLibName: string;
 }
 
+export { updateJson };
+
 export function setupReactCypressSuite(): ReactCypressSetupContext {
   process.env.NX_ADD_PLUGINS = 'false';
   const projectName = newProject({

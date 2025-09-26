@@ -16,6 +16,14 @@ import { stripIndents } from '@nx/devkit';
 
 import { readPort } from './utils';
 
+export {
+  readPort,
+  killProcessAndPorts,
+  updateFile,
+  runE2ETests,
+  updateJson,
+};
+
 export function setupReactModuleFederationSuite() {
   beforeAll(() => {
     newProject({ packages: ['@nx/react', '@nx/webpack'] });

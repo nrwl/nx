@@ -1,9 +1,9 @@
 import { cleanupProject, getSelectedPackageManager } from '@nx/e2e-utils';
 
-const basePackageManager = getSelectedPackageManager() || 'pnpm';
+const packageManager = getSelectedPackageManager() || 'pnpm';
 
 export function getCreateNxWorkspacePackageManager() {
-  return basePackageManager;
+  return packageManager;
 }
 
 export function registerCreateNxWorkspaceCleanup() {
