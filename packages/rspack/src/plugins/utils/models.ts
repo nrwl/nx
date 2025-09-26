@@ -2,6 +2,10 @@ import type { DevTool, Mode } from '@rspack/core';
 import type { ProjectGraph } from '@nx/devkit';
 import type { AssetGlob } from '@nx/js/src/utils/assets/assets';
 
+/**
+ * @deprecated SVGR support is deprecated and will be removed in Nx 23.
+ * TODO(v23): Remove SVGR support
+ */
 export interface SvgrOptions {
   svgo?: boolean;
   titleProp?: boolean;
