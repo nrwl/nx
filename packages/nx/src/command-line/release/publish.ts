@@ -7,6 +7,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
+import { hashArray } from '../../native';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import {
   runPostTasksExecution,
@@ -272,11 +273,14 @@ async function runPublishOnProjects(
       ].join('\n')}\n`
     );
   }
+  const id = hashArray([...process.argv, Date.now().toString()]);
   await runPreTasksExecution({
+    id,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
     argv: process.argv,
   });
+  const startTime = Date.now();
 
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
@@ -299,6 +303,7 @@ async function runPublishOnProjects(
     {},
     extraOptions
   );
+  const endTime = Date.now();
 
   const publishProjectsResult: PublishProjectsResult = {};
   for (const taskData of Object.values(taskResults)) {
@@ -307,10 +312,13 @@ async function runPublishOnProjects(
     };
   }
   await runPostTasksExecution({
+    id,
     taskResults,
     workspaceRoot,
     nxJsonConfiguration: nxJson,
     argv: process.argv,
+    startTime,
+    endTime,
   });
 
   return publishProjectsResult;
