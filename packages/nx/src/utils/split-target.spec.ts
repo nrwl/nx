@@ -35,7 +35,7 @@ describe('splitTarget', () => {
       type: 'app',
     });
     builder.addNode({
-      name: ':utils:common:target',
+      name: ':utils:common:test',
       data: {
         root: '',
         targets: {
@@ -100,13 +100,6 @@ describe('splitTarget', () => {
       ':utils:common',
       'target',
       'dev',
-    ]);
-  });
-
-  it('should use the last matching configuration when there are multiple matches', () => {
-    expect(splitTarget(':utils:common:target:prod', projectGraph)).toEqual([
-      ':utils:common:target',
-      'prod',
     ]);
   });
 });

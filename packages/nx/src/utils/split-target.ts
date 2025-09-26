@@ -1,58 +1,53 @@
 import { ProjectGraph } from '../config/project-graph';
 
-let runCommandsCache: Map<string, [string, string?, string?]>;
-let cachedGraph: ProjectGraph;
-
-function getCommandCache(projectGraph: ProjectGraph) {
-  if (runCommandsCache && cachedGraph === projectGraph) {
-    return runCommandsCache;
+function findMatchingSegments(
+  s: string,
+  projectGraph: ProjectGraph
+): [string, string?, string?] | undefined {
+  const projectNames = Object.keys(projectGraph.nodes);
+  // return project if matching
+  if (projectNames.includes(s)) {
+    return [s];
   }
-  runCommandsCache = new Map<string, [string, string?, string?]>();
-  cachedGraph = projectGraph;
-  for (const [projectName, projectNode] of Object.entries(projectGraph.nodes)) {
+  if (!s.includes(':')) {
+    return;
+  }
+  for (const projectName of projectNames) {
     for (const [targetName, targetConfig] of Object.entries(
-      projectNode.data.targets || {}
+      projectGraph.nodes[projectName].data.targets || {}
     )) {
-      // TODO (meeroslav): consider what to do with duplicates, otherwise next one overrides it
-      runCommandsCache.set(`${projectName}:${targetName}`, [
-        projectName,
-        targetName,
-      ]);
+      if (s === `${projectName}:${targetName}`) {
+        return [projectName, targetName];
+      }
       if (targetConfig.configurations) {
         for (const configurationName of Object.keys(
           targetConfig.configurations
         )) {
-          runCommandsCache.set(
-            `${projectName}:${targetName}:${configurationName}`,
-            [projectName, targetName, configurationName]
-          );
+          if (s === `${projectName}:${targetName}:${configurationName}`) {
+            return [projectName, targetName, configurationName];
+          }
         }
       }
     }
   }
-
-  return runCommandsCache;
 }
 
 export function splitTarget(
   s: string,
   projectGraph: ProjectGraph
 ): [project: string, target?: string, configuration?: string] {
-  const cache = getCommandCache(projectGraph);
-  if (cache.has(s)) {
-    return cache.get(s);
+  const matchingSegments = findMatchingSegments(s, projectGraph);
+  if (matchingSegments) {
+    return matchingSegments;
   }
-  // if the string is a project, return it
-  if (projectGraph.nodes[s]) {
-    return [s];
-  }
-  if (s.includes(':')) {
+  if (s.indexOf(':') > 0) {
     let [project, ...segments] = splitByColons(s);
     // if only configuration cannot be matched, try to match project and target
     const configuration = segments[segments.length - 1];
     const rest = s.slice(0, -(configuration.length + 1));
-    if (cache.has(rest) && cache.get(rest).length === 2) {
-      return [...(cache.get(rest) as [string, string]), configuration];
+    const matchingSegments = findMatchingSegments(rest, projectGraph);
+    if (matchingSegments && matchingSegments.length === 2) {
+      return [...(matchingSegments as [string, string]), configuration];
     }
     // no project-target pair found, do the naive matching
     const validTargets = projectGraph.nodes[project]
