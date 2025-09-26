@@ -158,4 +158,34 @@ describe('js:node executor', () => {
     const output = runCLI(`run ${webpackProject}:run-node`);
     expect(output).toContain('Hello from my webpack app!');
   }, 240_000);
+
+  it('should execute an esbuild tool', async () => {
+    const esbuildLib = uniq('esbuildlib');
+
+    runCLI(
+      `generate @nx/js:lib libs/${esbuildLib} --bundler=esbuild --no-interactive`
+    );
+
+    updateFile(`libs/${esbuildLib}/src/index.ts`, () => {
+      return `
+        setTimeout(() => {
+          console.log('Hello from my esbuild library!');
+        }, 1000);
+        `;
+    });
+
+    updateJson(join('libs', esbuildLib, 'project.json'), (config) => {
+      config.targets['run-node'] = {
+        executor: '@nx/js:node',
+        options: {
+          buildTarget: `${esbuildLib}:build`,
+          watch: false,
+        },
+      };
+      return config;
+    });
+
+    const output = runCLI(`run ${esbuildLib}:run-node`);
+    expect(output).toContain('Hello from my esbuild library!');
+  }, 240_000);
 });
