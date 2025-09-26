@@ -33,6 +33,7 @@ const scopes = [
   { value: 'web',               name: 'web:                   anything Web specific' },
   { value: 'webpack',           name: 'webpack:               anything Webpack specific' },
   { value: 'gradle',            name: 'gradle:                anything Gradle specific'},
+  { value: 'maven',             name: 'maven:                 anything Maven specific'},
   { value: 'module-federation', name: 'module-federation:     anything Module Federation specific'},
   { value: 'docker',            name: 'docker:                anything Docker specific'},
   { value: 'dotnet',            name: 'dotnet:                anything .NET specific'},
