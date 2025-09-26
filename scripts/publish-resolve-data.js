@@ -115,7 +115,7 @@ async function getPublishResolveData({ github, context }) {
     }
 
     case 'workflow_dispatch': {
-      const prNumber = process.env.PR_NUMBER;
+      const prNumber = context.payload.inputs?.pr;
 
       if (!prNumber) {
         const data = {
