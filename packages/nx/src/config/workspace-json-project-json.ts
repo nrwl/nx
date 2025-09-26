@@ -157,6 +157,7 @@ export interface ProjectMetadata {
   };
   js?: {
     packageName: string;
+    packageVersion?: string;
     packageExports?: PackageJson['exports'];
     packageMain?: string;
     isInPackageManagerWorkspaces?: boolean;
