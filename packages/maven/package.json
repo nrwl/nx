@@ -1,6 +1,6 @@
 {
   "name": "@nx/maven",
-  "version": "0.0.2-31",
+  "version": "0.0.1",
   "description": "Nx plugin for Maven integration",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,13 +21,8 @@
   ],
   "author": "Nx Team",
   "license": "MIT",
-  "scripts": {
-    "test:unit": "nx test --testPathIgnorePatterns=\".*\\.e2e\\.spec\\.ts\"",
-    "test:e2e": "nx test --testPathPattern=\".*\\.e2e\\.spec\\.ts\" --testTimeout=400000",
-    "test:maven-cli": "nx test --testPathPattern=\".*\\.e2e\\.spec\\.ts\" --testNamePattern=\"maven-cli install\" --testTimeout=400000"
-  },
   "dependencies": {
-    "@nx/devkit": "^21.4.0",
+    "@nx/devkit": "workspace:*",
     "tslib": "^2.3.0",
     "xmldom": "^0.6.0"
   },
