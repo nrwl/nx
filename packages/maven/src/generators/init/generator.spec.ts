@@ -21,7 +21,7 @@ describe('Maven Init Generator', () => {
   <artifactId>test-project</artifactId>
   <version>1.0.0</version>
 </project>`;
-      
+
       tree.write('pom.xml', pomContent);
       tree.write('package.json', JSON.stringify({ name: 'test' }));
 
@@ -52,7 +52,7 @@ describe('Maven Init Generator', () => {
     <finalName>test-project</finalName>
   </build>
 </project>`;
-      
+
       tree.write('pom.xml', pomContent);
       tree.write('package.json', JSON.stringify({ name: 'test' }));
 
@@ -90,7 +90,7 @@ describe('Maven Init Generator', () => {
     </plugins>
   </build>
 </project>`;
-      
+
       tree.write('pom.xml', pomContent);
       tree.write('package.json', JSON.stringify({ name: 'test' }));
 
@@ -126,7 +126,7 @@ describe('Maven Init Generator', () => {
     </plugins>
   </build>
 </project>`;
-      
+
       tree.write('pom.xml', pomContent);
       tree.write('package.json', JSON.stringify({ name: 'test' }));
 
@@ -135,7 +135,8 @@ describe('Maven Init Generator', () => {
 
       // Assert
       const updatedPom = tree.read('pom.xml', 'utf-8')!;
-      const pluginOccurrences = (updatedPom.match(/nx-maven-plugin/g) || []).length;
+      const pluginOccurrences = (updatedPom.match(/nx-maven-plugin/g) || [])
+        .length;
       expect(pluginOccurrences).toBe(1);
     });
 
@@ -167,7 +168,7 @@ describe('Maven Init Generator', () => {
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.example</groupId>
   <!-- Missing closing tag`;
-      
+
       tree.write('pom.xml', pomContent);
       tree.write('package.json', JSON.stringify({ name: 'test' }));
 
@@ -175,7 +176,7 @@ describe('Maven Init Generator', () => {
       expect(async () => {
         await mavenInitGenerator(tree, {});
       }).not.toThrow();
-      
+
       // The XML parser should fix the malformed XML and add the plugin
       const updatedPom = tree.read('pom.xml', 'utf-8')!;
       expect(updatedPom).toContain('dev.nx.maven');
@@ -188,13 +189,16 @@ describe('Maven Init Generator', () => {
     it('should add @nx/maven to plugins array', async () => {
       // Arrange
       tree.write('nx.json', JSON.stringify({ plugins: [] }));
-      tree.write('pom.xml', `<?xml version="1.0" encoding="UTF-8"?>
+      tree.write(
+        'pom.xml',
+        `<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.example</groupId>
   <artifactId>test-project</artifactId>
   <version>1.0.0</version>
-</project>`);
+</project>`
+      );
 
       // Act
       await mavenInitGenerator(tree, {});
@@ -206,21 +210,29 @@ describe('Maven Init Generator', () => {
 
     it('should not add @nx/maven if already present', async () => {
       // Arrange
-      tree.write('nx.json', JSON.stringify({ plugins: ['@nx/maven', '@nx/js'] }));
-      tree.write('pom.xml', `<?xml version="1.0" encoding="UTF-8"?>
+      tree.write(
+        'nx.json',
+        JSON.stringify({ plugins: ['@nx/maven', '@nx/js'] })
+      );
+      tree.write(
+        'pom.xml',
+        `<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.example</groupId>
   <artifactId>test-project</artifactId>
   <version>1.0.0</version>
-</project>`);
+</project>`
+      );
 
       // Act
       await mavenInitGenerator(tree, {});
 
       // Assert
       const nxJson = JSON.parse(tree.read('nx.json', 'utf-8')!);
-      const mavenPluginOccurrences = nxJson.plugins.filter((p: string) => p === '@nx/maven').length;
+      const mavenPluginOccurrences = nxJson.plugins.filter(
+        (p: string) => p === '@nx/maven'
+      ).length;
       expect(mavenPluginOccurrences).toBe(1);
       expect(nxJson.plugins).toContain('@nx/js');
     });

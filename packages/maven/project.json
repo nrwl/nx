@@ -13,9 +13,7 @@
     },
     "build": {
       "command": "node ./scripts/copy-readme.js maven packages/maven/README.md__tpl__ packages/maven/README.md",
-      "outputs": [
-        "{projectRoot}/README.md"
-      ]
+      "outputs": ["{projectRoot}/README.md"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -66,9 +64,7 @@
   "release": {
     "version": {
       "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": [
-        "packages/{projectName}"
-      ]
+      "manifestRootsToUpdate": ["packages/{projectName}"]
     }
   },
   "tags": [],

@@ -4,18 +4,18 @@ import * as path from 'path';
 // E2E tests for Maven plugin integration
 describe('Maven Plugin E2E Tests', () => {
   const workspaceRoot = path.resolve(__dirname, '../../..');
-  
+
   beforeEach(() => {
     // Change to workspace root for each test
     process.chdir(workspaceRoot);
   });
-  
+
   beforeAll(() => {
     // Ensure root Maven POM is installed for tests
     try {
-      execSync('mvn install -N -q -Drat.skip=true', { 
+      execSync('mvn install -N -q -Drat.skip=true', {
         cwd: workspaceRoot,
-        stdio: 'pipe'
+        stdio: 'pipe',
       });
     } catch (error) {
       console.warn('Failed to install root POM, tests may fail:', error);
@@ -29,60 +29,80 @@ describe('Maven Plugin E2E Tests', () => {
         cwd: workspaceRoot,
         encoding: 'utf8',
         timeout,
-        stdio: 'pipe'
+        stdio: 'pipe',
       });
     } catch (error: any) {
-      throw new Error(`Command failed: nx ${command}\n${error.stdout || ''}\n${error.stderr || ''}`);
+      throw new Error(
+        `Command failed: nx ${command}\n${error.stdout || ''}\n${
+          error.stderr || ''
+        }`
+      );
     }
   };
 
   describe('Project Detection', () => {
     it('should detect Maven projects', () => {
       const projects = runNx('show projects');
-      
+
       // Check that key Maven projects are detected
       expect(projects).toContain('org.apache.maven.maven-cli');
-      expect(projects).toContain('org.apache.maven.maven-core'); 
+      expect(projects).toContain('org.apache.maven.maven-core');
       expect(projects).toContain('org.apache.maven.maven-api-xml');
       expect(projects).toContain('org.apache.maven.maven-api-core');
     });
 
     it('should create projects with proper Maven targets', () => {
-      const project = JSON.parse(runNx('show project org.apache.maven.maven-cli --json'));
-      
+      const project = JSON.parse(
+        runNx('show project org.apache.maven.maven-cli --json')
+      );
+
       expect(project.targets).toBeDefined();
       expect(project.targets.install).toBeDefined();
       expect(project.targets.compile).toBeDefined();
       expect(project.targets.test).toBeDefined();
       expect(project.targets.package).toBeDefined();
-      
+
       // Check that install target uses Maven command
       expect(project.targets.install.options.command).toContain('mvn install');
-      expect(project.targets.install.options.command).toContain('org.apache.maven:maven-cli');
+      expect(project.targets.install.options.command).toContain(
+        'org.apache.maven:maven-cli'
+      );
     });
   });
 
   describe('Dependency Relationships', () => {
     it('should create correct dependsOn relationships for parent POMs', () => {
-      const project = JSON.parse(runNx('show project org.apache.maven.maven-api-xml --json'));
-      
+      const project = JSON.parse(
+        runNx('show project org.apache.maven.maven-api-xml --json')
+      );
+
       expect(project.targets.install.dependsOn).toBeDefined();
-      expect(project.targets.install.dependsOn).toContain('org.apache.maven.maven-api:install');
-      expect(project.targets.install.dependsOn).toContain('org.apache.maven.maven-api-annotations:install');
+      expect(project.targets.install.dependsOn).toContain(
+        'org.apache.maven.maven-api:install'
+      );
+      expect(project.targets.install.dependsOn).toContain(
+        'org.apache.maven.maven-api-annotations:install'
+      );
     });
 
     it('should create dependsOn relationships for regular dependencies', () => {
-      const project = JSON.parse(runNx('show project org.apache.maven.maven-core --json'));
-      
+      const project = JSON.parse(
+        runNx('show project org.apache.maven.maven-core --json')
+      );
+
       expect(project.targets.install.dependsOn).toBeDefined();
       expect(project.targets.install.dependsOn.length).toBeGreaterThan(10); // maven-core has many dependencies
     });
 
     it('should handle test scope dependencies', () => {
-      const project = JSON.parse(runNx('show project org.apache.maven.maven-core --json'));
-      
+      const project = JSON.parse(
+        runNx('show project org.apache.maven.maven-core --json')
+      );
+
       // maven-core should depend on maven-toolchain-builder (test scope)
-      expect(project.targets.install.dependsOn).toContain('org.apache.maven.maven-toolchain-builder:install');
+      expect(project.targets.install.dependsOn).toContain(
+        'org.apache.maven.maven-toolchain-builder:install'
+      );
     });
   });
 
@@ -106,21 +126,25 @@ describe('Maven Plugin E2E Tests', () => {
       expect(() => {
         runNx('run org.apache.maven.maven-api-annotations:compile', 60000);
       }).not.toThrow();
-      
+
       expect(() => {
-        runNx('run org.apache.maven.maven-api-xml:compile', 60000);  
+        runNx('run org.apache.maven.maven-api-xml:compile', 60000);
       }).not.toThrow();
     }, 150000);
   });
 
   describe('Complex Dependencies - maven-cli', () => {
     it('should have all required dependencies for maven-cli', () => {
-      const project = JSON.parse(runNx('show project org.apache.maven.maven-cli --json'));
-      
+      const project = JSON.parse(
+        runNx('show project org.apache.maven.maven-cli --json')
+      );
+
       expect(project.targets.install.dependsOn).toBeDefined();
-      
+
       // maven-cli depends on maven-core and other components
-      expect(project.targets.install.dependsOn).toContain('org.apache.maven.maven-core:install');
+      expect(project.targets.install.dependsOn).toContain(
+        'org.apache.maven.maven-core:install'
+      );
     });
 
     // This is the main test requested - can be slow due to many dependencies
@@ -136,9 +160,9 @@ describe('Maven Plugin E2E Tests', () => {
       // Run multiple independent projects that can be built in parallel
       const projects = [
         'org.apache.maven.maven-api-annotations',
-        'org.apache.maven.maven-api-di'
+        'org.apache.maven.maven-api-di',
       ];
-      
+
       for (const project of projects) {
         expect(() => {
           runNx(`run ${project}:compile`, 60000);
