@@ -15,18 +15,26 @@ let cachedData: CacheEntry | null = null;
 /**
  * Get cached Maven analysis data or read from file if cache is stale
  */
-export function getCachedMavenData(workspaceRoot: string, skipCache = false): MavenAnalysisData | null {
+export function getCachedMavenData(
+  workspaceRoot: string,
+  skipCache = false
+): MavenAnalysisData | null {
   // Skip cache if requested (e.g., in verbose mode)
   if (skipCache) {
     return null;
   }
-  const analysisFile = join(workspaceRoot, '.nx', 'workspace-data', 'nx-maven-projects.json');
-  
+  const analysisFile = join(
+    workspaceRoot,
+    '.nx',
+    'workspace-data',
+    'nx-maven-projects.json'
+  );
+
   if (!existsSync(analysisFile)) {
     console.log('[Maven Cache] Analysis file not found:', analysisFile);
     return null;
   }
-  
+
   console.log('[Maven Cache] Found analysis file:', analysisFile);
 
   try {
@@ -34,9 +42,11 @@ export function getCachedMavenData(workspaceRoot: string, skipCache = false): Ma
     const lastModified = fileStats.mtime.getTime();
 
     // Check if we have cached data and if it's still fresh
-    if (cachedData && 
-        cachedData.filePath === analysisFile && 
-        cachedData.lastModified === lastModified) {
+    if (
+      cachedData &&
+      cachedData.filePath === analysisFile &&
+      cachedData.lastModified === lastModified
+    ) {
       return cachedData.data;
     }
 
@@ -47,7 +57,7 @@ export function getCachedMavenData(workspaceRoot: string, skipCache = false): Ma
     cachedData = {
       data,
       lastModified,
-      filePath: analysisFile
+      filePath: analysisFile,
     };
 
     return data;

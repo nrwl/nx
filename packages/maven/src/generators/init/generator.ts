@@ -52,9 +52,11 @@ export async function mavenInitGenerator(
 
 function addNxMavenAnalyzerPlugin(tree: Tree) {
   const rootPomPath = 'pom.xml';
-  
+
   if (!tree.exists(rootPomPath)) {
-    logger.warn('Root pom.xml not found, skipping nx-maven-analyzer plugin addition');
+    logger.warn(
+      'Root pom.xml not found, skipping nx-maven-analyzer plugin addition'
+    );
     return;
   }
 
@@ -65,7 +67,10 @@ function addNxMavenAnalyzerPlugin(tree: Tree) {
   }
 
   // Check if plugin is already present
-  if (pomContent.includes('dev.nx.maven') && pomContent.includes('nx-maven-plugin')) {
+  if (
+    pomContent.includes('dev.nx.maven') &&
+    pomContent.includes('nx-maven-plugin')
+  ) {
     logger.info('nx-maven plugin already present in pom.xml');
     return;
   }
@@ -95,8 +100,10 @@ function addPluginToNxJson(tree: Tree) {
   }
 
   // Check if @nx/maven is already in plugins
-  const pluginExists = nxJson.plugins.some(plugin => 
-    typeof plugin === 'string' ? plugin === '@nx/maven' : plugin?.plugin === '@nx/maven'
+  const pluginExists = nxJson.plugins.some((plugin) =>
+    typeof plugin === 'string'
+      ? plugin === '@nx/maven'
+      : plugin?.plugin === '@nx/maven'
   );
 
   if (pluginExists) {
@@ -115,7 +122,7 @@ function addPluginToPom(pomContent: string): string {
     const parser = new DOMParser();
     const serializer = new XMLSerializer();
     const doc = parser.parseFromString(pomContent, 'application/xml');
-    
+
     const project = doc.getElementsByTagName('project')[0];
     if (!project) {
       logger.warn('Could not find <project> element in pom.xml');
@@ -142,17 +149,17 @@ function addPluginToPom(pomContent: string): string {
 
     // Create the nx-maven-analyzer plugin element
     const plugin = doc.createElement('plugin');
-    
+
     const groupId = doc.createElement('groupId');
     groupId.appendChild(doc.createTextNode('dev.nx.maven'));
     plugin.appendChild(doc.createTextNode('\n        '));
     plugin.appendChild(groupId);
-    
+
     const artifactId = doc.createElement('artifactId');
     artifactId.appendChild(doc.createTextNode('nx-maven-plugin'));
     plugin.appendChild(doc.createTextNode('\n        '));
     plugin.appendChild(artifactId);
-    
+
     const version = doc.createElement('version');
     version.appendChild(doc.createTextNode('0.0.1-SNAPSHOT'));
     plugin.appendChild(doc.createTextNode('\n        '));
@@ -166,7 +173,11 @@ function addPluginToPom(pomContent: string): string {
 
     return serializer.serializeToString(doc);
   } catch (error) {
-    logger.error(`Failed to parse or modify pom.xml: ${error instanceof Error ? error.message : error}`);
+    logger.error(
+      `Failed to parse or modify pom.xml: ${
+        error instanceof Error ? error.message : error
+      }`
+    );
     return pomContent;
   }
 }
