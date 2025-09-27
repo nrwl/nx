@@ -1,6 +1,10 @@
 import { createNodesV2 } from './plugins/nodes';
 import { createDependencies } from './plugins/dependencies';
-import { CreateNodesContext, CreateDependenciesContext, DependencyType } from '@nx/devkit';
+import {
+  CreateNodesContext,
+  CreateDependenciesContext,
+  DependencyType,
+} from '@nx/devkit';
 import { vol } from 'memfs';
 import { join } from 'path';
 
@@ -17,13 +21,13 @@ jest.mock('child_process', () => ({
       if (event === 'close') cb(0);
     }),
     stdout: { on: jest.fn() },
-    stderr: { on: jest.fn() }
-  }))
+    stderr: { on: jest.fn() },
+  })),
 }));
 
 describe('Maven Plugin', () => {
   const workspaceRoot = '/workspace';
-  
+
   beforeEach(() => {
     vol.reset();
     // Clear any cached data
@@ -55,8 +59,8 @@ describe('Maven Plugin', () => {
               groupId: 'org.apache.maven',
               artifactId: 'maven-api-core',
               version: '4.1.0-SNAPSHOT',
-              scope: 'compile'
-            }
+              scope: 'compile',
+            },
           ],
           tags: ['maven:org.apache.maven', 'maven:jar'],
           hasTests: true,
@@ -68,16 +72,16 @@ describe('Maven Plugin', () => {
               {
                 plugin: 'maven-compiler-plugin',
                 goal: 'compile',
-                phase: 'compile'
+                phase: 'compile',
               },
               {
-                plugin: 'maven-surefire-plugin', 
+                plugin: 'maven-surefire-plugin',
                 goal: 'test',
-                phase: 'test'
-              }
+                phase: 'test',
+              },
             ],
-            plugins: []
-          }
+            plugins: [],
+          },
         },
         {
           artifactId: 'maven-api-core',
@@ -100,24 +104,24 @@ describe('Maven Plugin', () => {
               {
                 plugin: 'maven-compiler-plugin',
                 goal: 'compile',
-                phase: 'compile'
-              }
+                phase: 'compile',
+              },
             ],
-            plugins: []
-          }
-        }
+            plugins: [],
+          },
+        },
       ],
       generatedAt: Date.now(),
       workspaceRoot: workspaceRoot,
-      totalProjects: 2
+      totalProjects: 2,
     };
 
     it('should return empty array when no root pom.xml exists', async () => {
       const configFiles = ['sub-project/pom.xml'];
       const [, createNodesFn] = createNodesV2;
-      
+
       const result = await createNodesFn(configFiles, {}, context);
-      
+
       expect(result).toEqual([]);
     });
 
@@ -125,86 +129,98 @@ describe('Maven Plugin', () => {
       // Setup file system
       vol.fromJSON({
         [join(workspaceRoot, 'pom.xml')]: '<project></project>',
-        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]: JSON.stringify(mockMavenAnalysisData)
+        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]:
+          JSON.stringify(mockMavenAnalysisData),
       });
 
       const configFiles = ['pom.xml'];
       const [, createNodesFn] = createNodesV2;
-      
-      const result = await createNodesFn(configFiles, { verbose: false }, context);
-      
+
+      const result = await createNodesFn(
+        configFiles,
+        { verbose: false },
+        context
+      );
+
       expect(result).toMatchSnapshot('maven-projects-nodes');
       expect(result).toHaveLength(2);
-      
+
       // Check first project structure
       const firstProject = result[0];
       expect(firstProject).toBeDefined();
       expect(firstProject[0]).toBe('impl/maven-core');
-      
+
       const projectConfig = firstProject[1]?.projects?.['impl/maven-core'];
       expect(projectConfig).toBeDefined();
       expect(projectConfig?.name).toBe('org.apache.maven.maven-core');
       expect(projectConfig?.targets).toHaveProperty('validate');
       expect(projectConfig?.targets).toHaveProperty('compile');
       expect(projectConfig?.targets).toHaveProperty('test');
-      expect(projectConfig?.targets).toHaveProperty('maven-compiler-plugin-compile');
+      expect(projectConfig?.targets).toHaveProperty(
+        'maven-compiler-plugin-compile'
+      );
     });
 
     it('should generate correct targets from lifecycle data', async () => {
       vol.fromJSON({
         [join(workspaceRoot, 'pom.xml')]: '<project></project>',
-        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]: JSON.stringify(mockMavenAnalysisData)
+        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]:
+          JSON.stringify(mockMavenAnalysisData),
       });
 
       const configFiles = ['pom.xml'];
       const [, createNodesFn] = createNodesV2;
-      
+
       const result = await createNodesFn(configFiles, {}, context);
-      
+
       const coreProject = result[0]?.[1]?.projects?.['impl/maven-core'];
       expect(coreProject).toBeDefined();
-      
+
       // Check phase targets
       expect(coreProject?.targets?.validate).toEqual({
         executor: 'nx:run-commands',
         options: {
           command: 'mvn validate -pl org.apache.maven:maven-core',
-          cwd: '{workspaceRoot}'
-        }
+          cwd: '{workspaceRoot}',
+        },
       });
 
       // Check goal targets
       expect(coreProject?.targets?.['maven-compiler-plugin-compile']).toEqual({
         executor: 'nx:run-commands',
         options: {
-          command: 'mvn maven-compiler-plugin:compile -pl org.apache.maven:maven-core',
-          cwd: '{workspaceRoot}'
-        }
+          command:
+            'mvn maven-compiler-plugin:compile -pl org.apache.maven:maven-core',
+          cwd: '{workspaceRoot}',
+        },
       });
     });
 
     it('should handle projects with no lifecycle data gracefully', async () => {
       const projectWithoutLifecycle = {
         ...mockMavenAnalysisData,
-        projects: [{
-          ...mockMavenAnalysisData.projects[0],
-          lifecycle: null
-        }]
+        projects: [
+          {
+            ...mockMavenAnalysisData.projects[0],
+            lifecycle: null,
+          },
+        ],
       };
 
       vol.fromJSON({
         [join(workspaceRoot, 'pom.xml')]: '<project></project>',
-        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]: JSON.stringify(projectWithoutLifecycle)
+        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]:
+          JSON.stringify(projectWithoutLifecycle),
       });
 
       const configFiles = ['pom.xml'];
       const [, createNodesFn] = createNodesV2;
-      
+
       const result = await createNodesFn(configFiles, {}, context);
-      
+
       const coreProject = result[0]?.[1]?.projects?.['impl/maven-core'];
       expect(coreProject).toBeDefined();
-      
+
       // Should have fallback targets
       expect(coreProject?.targets).toHaveProperty('compile');
       expect(coreProject?.targets).toHaveProperty('test');
@@ -219,7 +235,7 @@ describe('Maven Plugin', () => {
       externalNodes: {},
       fileMap: { projectFileMap: {}, nonProjectFiles: [] },
       filesToProcess: { projectFileMap: {}, nonProjectFiles: [] },
-      nxJsonConfiguration: {}
+      nxJsonConfiguration: {},
     };
 
     const mockMavenAnalysisData = {
@@ -232,21 +248,21 @@ describe('Maven Plugin', () => {
               groupId: 'org.apache.maven',
               artifactId: 'maven-api-core',
               version: '4.1.0-SNAPSHOT',
-              scope: 'compile'
+              scope: 'compile',
             },
             {
               groupId: 'org.apache.maven',
               artifactId: 'maven-model',
-              version: '4.1.0-SNAPSHOT', 
-              scope: 'compile'
+              version: '4.1.0-SNAPSHOT',
+              scope: 'compile',
             },
             {
               groupId: 'external.library',
               artifactId: 'external-lib',
               version: '1.0.0',
-              scope: 'compile'
-            }
-          ]
+              scope: 'compile',
+            },
+          ],
         },
         {
           artifactId: 'maven-api-core',
@@ -256,79 +272,81 @@ describe('Maven Plugin', () => {
               groupId: 'org.apache.maven',
               artifactId: 'maven-model',
               version: '4.1.0-SNAPSHOT',
-              scope: 'compile'
-            }
-          ]
+              scope: 'compile',
+            },
+          ],
         },
         {
           artifactId: 'maven-model',
           groupId: 'org.apache.maven',
-          dependencies: []
-        }
-      ]
+          dependencies: [],
+        },
+      ],
     };
 
     beforeEach(() => {
       vol.fromJSON({
-        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]: JSON.stringify(mockMavenAnalysisData)
+        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]:
+          JSON.stringify(mockMavenAnalysisData),
       });
     });
 
     it('should create dependencies between reactor projects', () => {
       const result = createDependencies({}, context);
-      
+
       expect(result).toMatchSnapshot('maven-dependencies');
       expect(result).toHaveLength(3);
-      
+
       // Check specific dependencies
       expect(result).toContainEqual({
         source: 'org.apache.maven.maven-core',
         target: 'org.apache.maven.maven-api-core',
         type: DependencyType.static,
-        sourceFile: 'pom.xml'
+        sourceFile: 'pom.xml',
       });
 
       expect(result).toContainEqual({
         source: 'org.apache.maven.maven-core',
         target: 'org.apache.maven.maven-model',
         type: DependencyType.static,
-        sourceFile: 'pom.xml'
+        sourceFile: 'pom.xml',
       });
 
       expect(result).toContainEqual({
         source: 'org.apache.maven.maven-api-core',
         target: 'org.apache.maven.maven-model',
         type: DependencyType.static,
-        sourceFile: 'pom.xml'
+        sourceFile: 'pom.xml',
       });
     });
 
     it('should ignore external dependencies not in reactor', () => {
       const result = createDependencies({}, context);
-      
+
       // Should not include dependency to external.library:external-lib
       expect(result).not.toContainEqual(
         expect.objectContaining({
-          target: 'external.library.external-lib'
+          target: 'external.library.external-lib',
         })
       );
     });
 
     it('should return empty array when analysis file does not exist', () => {
       vol.fromJSON({}); // Empty file system
-      
+
       const result = createDependencies({}, context);
-      
+
       expect(result).toEqual([]);
     });
 
     it('should handle malformed analysis data gracefully', () => {
       vol.fromJSON({
-        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]: 'invalid json'
+        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]:
+          'invalid json',
       });
-      
+
       const result = createDependencies({}, context);
-      
+
       expect(result).toEqual([]);
     });
 
@@ -338,17 +356,18 @@ describe('Maven Plugin', () => {
           {
             artifactId: 'standalone-project',
             groupId: 'org.apache.maven',
-            dependencies: []
-          }
-        ]
+            dependencies: [],
+          },
+        ],
       };
 
       vol.fromJSON({
-        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]: JSON.stringify(dataWithoutDeps)
+        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]:
+          JSON.stringify(dataWithoutDeps),
       });
-      
+
       const result = createDependencies({}, context);
-      
+
       expect(result).toEqual([]);
     });
 
@@ -363,19 +382,20 @@ describe('Maven Plugin', () => {
                 groupId: 'org.apache.maven',
                 artifactId: 'maven-core', // Self dependency
                 version: '4.1.0-SNAPSHOT',
-                scope: 'compile'
-              }
-            ]
-          }
-        ]
+                scope: 'compile',
+              },
+            ],
+          },
+        ],
       };
 
       vol.fromJSON({
-        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]: JSON.stringify(dataWithSelfDep)
+        [join(workspaceRoot, '.nx/workspace-data/nx-maven-projects.json')]:
+          JSON.stringify(dataWithSelfDep),
       });
-      
+
       const result = createDependencies({}, context);
-      
+
       expect(result).toEqual([]);
     });
   });
