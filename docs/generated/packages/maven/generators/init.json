@@ -1,0 +1,25 @@
+{
+  "name": "init",
+  "implementation": "/packages/maven/src/generators/init/generator.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "id": "MavenInit",
+    "title": "Initialize Maven support",
+    "type": "object",
+    "description": "Initializes @nx/maven in the workspace.",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize Maven support in an Nx workspace",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/maven/src/generators/init/schema.json",
+  "type": "generator"
+}
