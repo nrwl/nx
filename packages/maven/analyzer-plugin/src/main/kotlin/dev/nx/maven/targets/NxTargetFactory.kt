@@ -24,12 +24,12 @@ private const val RECORD_GOAL = "dev.nx.maven:nx-maven-plugin:record"
 
 
 data class GoalDescriptor(
-    val pluginDescriptor: PluginDescriptor,
-    val mojoDescriptor: MojoDescriptor,
-    val goal: String,
-    val goalSpecifier: String,
-    val executionPriority: Int = 50, // Default priority - Maven uses 50 as default
-    val executionId: String = "default"
+  val pluginDescriptor: PluginDescriptor,
+  val mojoDescriptor: MojoDescriptor,
+  val goal: String,
+  val goalSpecifier: String,
+  val executionPriority: Int = 50, // Default priority - Maven uses 50 as default
+  val executionId: String = "default"
 )
 
 /**
@@ -38,514 +38,531 @@ data class GoalDescriptor(
  * Lower numbers have higher priority (execute first).
  */
 private fun getExecutionPriority(execution: PluginExecution, mojoDescriptor: MojoDescriptor?): Int {
-    // Maven assigns priorities based on several factors:
-    // 1. Explicit priority in execution configuration
-    // 2. Plugin goal priority from mojo descriptor
-    // 3. Default priority (50)
-    // 4. Alphabetical order as tiebreaker
+  // Maven assigns priorities based on several factors:
+  // 1. Explicit priority in execution configuration
+  // 2. Plugin goal priority from mojo descriptor
+  // 3. Default priority (50)
+  // 4. Alphabetical order as tiebreaker
 
-    // For now, we'll use a simple heuristic based on common plugin patterns
-    val executionId = execution.id ?: "default"
+  // For now, we'll use a simple heuristic based on common plugin patterns
+  val executionId = execution.id ?: "default"
 
-    // Well-known execution IDs that should run early
-    return when {
-        executionId.contains("generate") -> 10
-        executionId.contains("process") -> 20
-        executionId.contains("compile") -> 30
-        executionId.contains("test-compile") -> 35
-        executionId.contains("test") -> 40
-        executionId.contains("package") -> 60
-        executionId.contains("install") -> 70
-        executionId.contains("deploy") -> 80
-        else -> 50 // Default Maven priority
-    }
+  // Well-known execution IDs that should run early
+  return when {
+    executionId.contains("generate") -> 10
+    executionId.contains("process") -> 20
+    executionId.contains("compile") -> 30
+    executionId.contains("test-compile") -> 35
+    executionId.contains("test") -> 40
+    executionId.contains("package") -> 60
+    executionId.contains("install") -> 70
+    executionId.contains("deploy") -> 80
+    else -> 50 // Default Maven priority
+  }
 }
 
 /**
  * Collects lifecycle and plugin information directly from Maven APIs
  */
 class NxTargetFactory(
-    private val lifecycles: DefaultLifecycles,
-    private val objectMapper: ObjectMapper,
-    private val testClassDiscovery: TestClassDiscovery,
-    private val pluginManager: MavenPluginManager,
-    private val session: MavenSession,
-    private val mojoAnalyzer: MojoAnalyzer,
-    private val pathFormatter: PathFormatter,
-    private val gitIgnoreClassifier: GitIgnoreClassifier,
+  private val lifecycles: DefaultLifecycles,
+  private val objectMapper: ObjectMapper,
+  private val testClassDiscovery: TestClassDiscovery,
+  private val pluginManager: MavenPluginManager,
+  private val session: MavenSession,
+  private val mojoAnalyzer: MojoAnalyzer,
+  private val pathFormatter: PathFormatter,
+  private val gitIgnoreClassifier: GitIgnoreClassifier,
 ) {
-    private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
+  private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
-    // All goals now get build state management for maximum compatibility
-    private fun shouldApplyBuildState(): Boolean = true
-    private fun shouldRecordBuildState(): Boolean = true
+  // All goals now get build state management for maximum compatibility
+  private fun shouldApplyBuildState(): Boolean = true
+  private fun shouldRecordBuildState(): Boolean = true
 
-    /**
-     * Normalizes Maven 3 phase names to Maven 4 equivalents when running Maven 4.
-     * Returns the original phase name when running Maven 3.
-     */
-    private fun normalizePhase(phase: String?): String? {
-        if (phase == null) return null
+  /**
+   * Normalizes Maven 3 phase names to Maven 4 equivalents when running Maven 4.
+   * Returns the original phase name when running Maven 3.
+   */
+  private fun normalizePhase(phase: String?): String? {
+    if (phase == null) return null
 
-        val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
-        if (!mavenVersion.startsWith("4")) {
-            return phase // Keep original phase names for Maven 3
-        }
-
-        return when (phase) {
-            "generate-sources" -> "sources"
-            "process-sources" -> "after:sources"
-            "generate-resources" -> "resources"
-            "process-resources" -> "after:resources"
-            "process-classes" -> "after:compile"
-            "generate-test-sources" -> "test-sources"
-            "process-test-sources" -> "after:test-sources"
-            "generate-test-resources" -> "test-resources"
-            "process-test-resources" -> "after:test-resources"
-            "process-test-classes" -> "after:test-compile"
-            "prepare-package" -> "before:package"
-            "pre-integration-test" -> "before:integration-test"
-            "post-integration-test" -> "after:integration-test"
-            else -> phase
-        }
+    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
+    if (!mavenVersion.startsWith("4")) {
+      return phase // Keep original phase names for Maven 3
     }
 
+    return when (phase) {
+      "generate-sources" -> "sources"
+      "process-sources" -> "after:sources"
+      "generate-resources" -> "resources"
+      "process-resources" -> "after:resources"
+      "process-classes" -> "after:compile"
+      "generate-test-sources" -> "test-sources"
+      "process-test-sources" -> "after:test-sources"
+      "generate-test-resources" -> "test-resources"
+      "process-test-resources" -> "after:test-resources"
+      "process-test-classes" -> "after:test-compile"
+      "prepare-package" -> "before:package"
+      "pre-integration-test" -> "before:integration-test"
+      "post-integration-test" -> "after:integration-test"
+      else -> phase
+    }
+  }
 
-    fun createNxTargets(
-        mavenCommand: String, project: MavenProject
-    ): Pair<ObjectNode, ObjectNode> {
-        val nxTargets = objectMapper.createObjectNode()
-        val targetGroups = mutableMapOf<String, List<String>>()
 
-        val phaseDependsOn = mutableMapOf<String, MutableList<String>>()
-        val phaseGoals = mutableMapOf<String, MutableList<GoalDescriptor>>()
+  fun createNxTargets(
+    mavenCommand: String, project: MavenProject
+  ): Pair<ObjectNode, ObjectNode> {
+    val nxTargets = objectMapper.createObjectNode()
+    val targetGroups = mutableMapOf<String, List<String>>()
 
-        // First pass: collect all goals by phase from plugin executions
-        val plugins = getExecutablePlugins(project)
-        plugins.forEach { plugin: Plugin ->
-            val pluginDescriptor = getPluginDescriptor(plugin, project)
-            val goalPrefix = pluginDescriptor.goalPrefix
+    val phaseDependsOn = mutableMapOf<String, MutableList<String>>()
+    val phaseGoals = mutableMapOf<String, MutableList<GoalDescriptor>>()
 
-            plugin.executions.forEach { execution ->
-                execution.goals.forEach { goal ->
-                    // Skip build-helper attach-artifact goal as it's not relevant for Nx
-                    if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
-                        return@forEach
-                    }
+    // First pass: collect all goals by phase from plugin executions
+    val plugins = getExecutablePlugins(project)
+    plugins.forEach { plugin: Plugin ->
+      val pluginDescriptor = getPluginDescriptor(plugin, project)
+      val goalPrefix = pluginDescriptor.goalPrefix
 
-                    val mojoDescriptor = pluginDescriptor.getMojo(goal)
-                    val phase = execution.phase ?: mojoDescriptor?.phase
+      plugin.executions.forEach { execution ->
+        execution.goals.forEach { goal ->
+          // Skip build-helper attach-artifact goal as it's not relevant for Nx
+          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
+            return@forEach
+          }
 
-                    val normalizedPhase = normalizePhase(phase)
+          val mojoDescriptor = pluginDescriptor.getMojo(goal)
+          val phase = execution.phase ?: mojoDescriptor?.phase
 
-                    if (normalizedPhase != null) {
-                        val goalSpec = "$goalPrefix:$goal@${execution.id}"
+          val normalizedPhase = normalizePhase(phase)
 
-                        // Determine execution priority - Maven uses priority to order goals within a phase
-                        val executionPriority = getExecutionPriority(execution, mojoDescriptor)
+          if (normalizedPhase != null) {
+            val goalSpec = "$goalPrefix:$goal@${execution.id}"
 
-                        val goalDescriptor = GoalDescriptor(
-                            pluginDescriptor = pluginDescriptor,
-                            mojoDescriptor = mojoDescriptor,
-                            goal = goal,
-                            goalSpecifier = goalSpec,
-                            executionPriority = executionPriority,
-                            executionId = execution.id
-                        )
+            // Determine execution priority - Maven uses priority to order goals within a phase
+            val executionPriority = getExecutionPriority(execution, mojoDescriptor)
 
-                        phaseGoals.computeIfAbsent(normalizedPhase) { mutableListOf() }.add(goalDescriptor)
-                        log.info("Added goal $goalSpec to phase $normalizedPhase with priority $executionPriority")
-                    }
-                }
-            }
-        }
-
-        val phaseTargets = mutableMapOf<String, NxTarget>()
-        val ciPhaseTargets = mutableMapOf<String, NxTarget>()
-        // Create phase targets from lifecycle, but only for phases that have goals
-        lifecycles.lifeCycles.forEach { lifecycle ->
-            log.info(
-                "Analyzing ${lifecycle.phases.size} phases for ${project.artifactId}: ${
-                    lifecycle.phases.joinToString(
-                        ", "
-                    )
-                }"
+            val goalDescriptor = GoalDescriptor(
+              pluginDescriptor = pluginDescriptor,
+              mojoDescriptor = mojoDescriptor,
+              goal = goal,
+              goalSpecifier = goalSpec,
+              executionPriority = executionPriority,
+              executionId = execution.id
             )
 
-            val hasInstall = lifecycle.phases.contains("install")
-            val testIndex = lifecycle.phases.indexOf("test")
+            phaseGoals.computeIfAbsent(normalizedPhase) { mutableListOf() }.add(goalDescriptor)
+            log.info("Added goal $goalSpec to phase $normalizedPhase with priority $executionPriority")
+          }
+        }
+      }
+    }
 
-            lifecycle.phases.forEachIndexed { index, phase ->
-                val goalsForPhase = phaseGoals[phase]
-                val hasGoals = goalsForPhase?.isNotEmpty() == true
+    val phaseTargets = mutableMapOf<String, NxTarget>()
+    val ciPhaseTargets = mutableMapOf<String, NxTarget>()
+    // Create phase targets from lifecycle, but only for phases that have goals
+    lifecycles.lifeCycles.forEach { lifecycle ->
+      log.info(
+        "Analyzing ${lifecycle.phases.size} phases for ${project.artifactId}: ${
+          lifecycle.phases.joinToString(
+            ", "
+          )
+        }"
+      )
 
-                // Create target for all phases - either with goals or as noop
-                val target = if (hasGoals) {
-                    createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
-                } else {
-                    createNoopPhaseTarget(phase)
-                }
+      val hasInstall = lifecycle.phases.contains("install")
+      val testIndex = lifecycle.phases.indexOf("test")
 
-                phaseDependsOn[phase] = mutableListOf()
-                target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
+      lifecycle.phases.forEachIndexed { index, phase ->
+        val goalsForPhase = phaseGoals[phase]
+        val hasGoals = goalsForPhase?.isNotEmpty() == true
 
-                if (hasInstall) {
-                    target.dependsOn?.add("^install")
-                    phaseDependsOn[phase]?.add("^install")
-                }
+        // Create target for all phases - either with goals or as noop
+        val target = if (hasGoals) {
+          createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+        } else {
+          createNoopPhaseTarget(phase)
+        }
 
-                // Add dependency on immediate previous phase (if exists)
-                val previousPhase = lifecycle.phases.getOrNull(index - 1)
-                if (previousPhase != null) {
-                    target.dependsOn?.add(previousPhase)
-                    phaseDependsOn[phase]?.add(previousPhase)
-                }
+        phaseDependsOn[phase] = mutableListOf()
+        target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
 
-                phaseTargets[phase] = target
+        if (hasInstall) {
+          target.dependsOn?.add("^install")
+          phaseDependsOn[phase]?.add("^install")
+        }
+
+        // Add dependency on immediate previous phase (if exists)
+        val previousPhase = lifecycle.phases.getOrNull(index - 1)
+        if (previousPhase != null) {
+          target.dependsOn?.add(previousPhase)
+          phaseDependsOn[phase]?.add(previousPhase)
+        }
+
+        phaseTargets[phase] = target
 
 //                    if (testIndex > -1 && index >= testIndex) {
-                if (testIndex > -1) {
-                    val ciPhaseName = "$phase-ci"
-                    // Test and later phases get a CI counterpart
+        if (testIndex > -1) {
+          val ciPhaseName = "$phase-ci"
+          // Test and later phases get a CI counterpart
 
-                    val ciTarget = if (hasGoals && phase !== "test") {
-                        createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
-                    } else {
-                        createNoopPhaseTarget(phase)
-                    }
-                    val ciPhaseDependsOn = mutableListOf<String>()
+          val ciTarget = if (hasGoals && phase !== "test") {
+            createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+          } else {
+            createNoopPhaseTarget(phase)
+          }
+          val ciPhaseDependsOn = mutableListOf<String>()
 
-                    if (previousPhase != null) {
-                        ciPhaseDependsOn.add("$previousPhase-ci")
-                        log.info("Phase '$phase' depends on previous phase: '$previousPhase'")
-                    }
+          if (previousPhase != null) {
+            ciPhaseDependsOn.add("$previousPhase-ci")
+            log.info("Phase '$phase' depends on previous phase: '$previousPhase'")
+          }
 
-                    if (hasInstall) {
-                        ciPhaseDependsOn.add("^install-ci")
-                    }
+          if (hasInstall) {
+            ciPhaseDependsOn.add("^install-ci")
+          }
 
-                    ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
-                    ciPhaseDependsOn.forEach {
-                        ciTarget.dependsOn?.add(it)
-                    }
+          ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
+          ciPhaseDependsOn.forEach {
+            ciTarget.dependsOn?.add(it)
+          }
 
-                    phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
-                    ciPhaseTargets[ciPhaseName] = ciTarget
-                }
+          phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
+          ciPhaseTargets[ciPhaseName] = ciTarget
+        }
 
 //                target.dependsOn?.add("^$phase")
 //                phaseDependsOn[phase]?.add("^$phase")
 
-                if (hasGoals) {
-                    log.info("Created phase target '$phase' with ${goalsForPhase?.size ?: 0} goals")
-                } else {
-                    log.info("Created noop phase target '$phase' (no goals)")
-                }
-            }
-        }
-
-        // Also create individual goal targets for granular execution
-        plugins.forEach { plugin: Plugin ->
-            val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
-                .getOrElse { throwable ->
-                    log.warn(
-                        "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
-                    )
-                    return@forEach
-                }
-            val goalPrefix = pluginDescriptor.goalPrefix
-
-            plugin.executions.forEach { execution ->
-                execution.goals.forEach { goal ->
-                    // Skip build-helper attach-artifact goal as it's not relevant for Nx
-                    if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
-                        return@forEach
-                    }
-
-                    val goalTargetName = "$goalPrefix:$goal@${execution.id}"
-                    val goalTarget = createSimpleGoalTarget(
-                        mavenCommand,
-                        project,
-                        pluginDescriptor,
-                        goalPrefix,
-                        goal,
-                        execution
-                    ) ?: return@forEach
-                    nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
-
-                    log.info("Created individual goal target: $goalTargetName")
-                }
-            }
-        }
-
-        val mavenPhasesGroup = mutableListOf<String>()
-        phaseTargets.forEach { (phase, target) ->
-            nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
-            mavenPhasesGroup.add(phase)
-        }
-        targetGroups["Phases"] = mavenPhasesGroup
-
-        val ciPhasesGroup = mutableListOf<String>()
-        ciPhaseTargets.forEach { (phase, target) ->
-            nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
-            ciPhasesGroup.add(phase)
-        }
-        targetGroups["CI Phases"] = ciPhasesGroup
-
-        if (phaseGoals.contains("test")) {
-            val atomizedTestTargets = generateAtomizedTestTargets(project, mavenCommand, ciPhaseTargets["test-ci"]!!, phaseGoals["test"]!!, phaseDependsOn["test-ci"]!!)
-
-            atomizedTestTargets.forEach { (goal, target) ->
-                nxTargets.set<ObjectNode>(goal, target.toJSON(objectMapper))
-            }
-            targetGroups["Test CI"] = atomizedTestTargets.keys.toList()
+        if (hasGoals) {
+          log.info("Created phase target '$phase' with ${goalsForPhase?.size ?: 0} goals")
         } else {
-            log.info("No test goals found for project ${project.artifactId}, skipping atomized test target generation")
+          log.info("Created noop phase target '$phase' (no goals)")
         }
-
-        val targetGroupsJson = objectMapper.createObjectNode()
-        targetGroups.forEach { (groupName, targets) ->
-            val targetsArray = objectMapper.createArrayNode()
-            targets.forEach { target -> targetsArray.add(target) }
-            targetGroupsJson.set<ArrayNode>(groupName, targetsArray)
-        }
-
-        return Pair(nxTargets, targetGroupsJson)
+      }
     }
 
-    private fun createPhaseTarget(
-        project: MavenProject, phase: String, mavenCommand: String, goals: List<GoalDescriptor>
-    ): NxTarget {
-        // Sort goals by priority (lower numbers execute first)
-        val sortedGoals = goals.sortedWith(compareBy<GoalDescriptor> { it.executionPriority }.thenBy { it.executionId })
-
-        // Inline analysis logic from PhaseAnalyzer
-        val plugins = project.build.plugins
-        var isThreadSafe = true
-        var isCacheable = true
-        val inputs = objectMapper.createArrayNode()
-        val outputs = mutableSetOf<String>()
-
-        val analyses = plugins
-            .flatMap { plugin ->
-                val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
-                    .getOrElse { throwable ->
-                        log.warn(
-                            "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
-                        )
-                        return@flatMap emptyList()
-                    }
-
-                plugin.executions
-                    .filter { execution -> execution.phase == phase }
-                    .flatMap { execution ->
-                        log.info(
-                            "Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}"
-                        )
-
-                        execution.goals.filterNotNull().mapNotNull { goal ->
-                            mojoAnalyzer.analyzeMojo(pluginDescriptor, goal, project)
-                        }
-                    }
-            }
-
-        // Aggregate analysis results
-        analyses.forEach { analysis ->
-
-            if (!analysis.isThreadSafe) {
-                isThreadSafe = false
-            }
-            if (!analysis.isCacheable) {
-                isCacheable = false
-            }
-
-            analysis.inputs.forEach { input -> inputs.add(input) }
-            analysis.outputs.forEach { output -> outputs.add(output) }
-            analysis.dependentTaskOutputInputs.forEach { input ->
-                val obj = objectMapper.createObjectNode()
-                obj.put("dependentTasksOutputFiles", input.path)
-                if (input.transitive) obj.put("transitive", true)
-                inputs.add(obj)
-            }
+    // Also create individual goal targets for granular execution
+    plugins.forEach { plugin: Plugin ->
+      val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
+        .getOrElse { throwable ->
+          log.warn(
+            "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
+          )
+          return@forEach
         }
+      val goalPrefix = pluginDescriptor.goalPrefix
 
-        log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
+      plugin.executions.forEach { execution ->
+        execution.goals.forEach { goal ->
+          // Skip build-helper attach-artifact goal as it's not relevant for Nx
+          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
+            return@forEach
+          }
 
-        val options = objectMapper.createObjectNode()
+          val goalTargetName = "$goalPrefix:$goal@${execution.id}"
+          val goalTarget = createSimpleGoalTarget(
+            mavenCommand,
+            project,
+            pluginDescriptor,
+            goalPrefix,
+            goal,
+            execution
+          ) ?: return@forEach
+          nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
 
-        // Build command with goals bundled together
-        val commandParts = mutableListOf<String>()
-        commandParts.add(mavenCommand)
-
-        // Add build state apply if needed (before goals)
-        if (shouldApplyBuildState()) {
-            commandParts.add(APPLY_GOAL)
+          log.info("Created individual goal target: $goalTargetName")
         }
-
-        // Add all goals for this phase (sorted by priority)
-        commandParts.addAll(sortedGoals.map { it.goalSpecifier })
-
-        // Add build state record if needed (after goals)
-        if (shouldRecordBuildState()) {
-            commandParts.add(RECORD_GOAL)
-        }
-
-        // Add project selection and non-recursive flag
-        commandParts.add("-pl")
-        commandParts.add("${project.groupId}:${project.artifactId}")
-        commandParts.add("-N")
-        commandParts.add("--batch-mode")
-
-        val command = commandParts.joinToString(" ")
-        options.put("command", command)
-
-        log.info("Created phase target '$phase' with command: $command")
-
-        val target = NxTarget("nx:run-commands", options, isCacheable, isThreadSafe)
-
-        addBuildStateJsonInputsAndOutputs(project, target)
-
-        // Copy caching info from analysis
-        if (isCacheable) {
-            // Convert inputs to JsonNode array
-            val inputsArray = objectMapper.createArrayNode()
-            inputs.forEach { input -> inputsArray.add(input) }
-            target.inputs = inputsArray
-
-            // Convert outputs to JsonNode array
-            val outputsArray = objectMapper.createArrayNode()
-            outputs.forEach { output -> outputsArray.add(output) }
-            target.outputs = outputsArray
-        }
-
-        return target
+      }
     }
 
-    private fun createNoopPhaseTarget(
-        phase: String
-    ): NxTarget {
-        log.info("Creating noop target for phase '$phase' (no goals)")
-        return NxTarget("nx:noop", null, cache = true, parallelism = true)
+    val mavenPhasesGroup = mutableListOf<String>()
+    phaseTargets.forEach { (phase, target) ->
+      nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
+      mavenPhasesGroup.add(phase)
+    }
+    targetGroups["Phases"] = mavenPhasesGroup
+
+    val ciPhasesGroup = mutableListOf<String>()
+    ciPhaseTargets.forEach { (phase, target) ->
+      nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
+      ciPhasesGroup.add(phase)
+    }
+    targetGroups["CI Phases"] = ciPhasesGroup
+
+    if (phaseGoals.contains("test")) {
+      val atomizedTestTargets = generateAtomizedTestTargets(
+        project,
+        mavenCommand,
+        ciPhaseTargets["test-ci"]!!,
+        phaseGoals["test"]!!,
+        phaseDependsOn["test-ci"]!!
+      )
+
+      atomizedTestTargets.forEach { (goal, target) ->
+        nxTargets.set<ObjectNode>(goal, target.toJSON(objectMapper))
+      }
+      targetGroups["Test CI"] = atomizedTestTargets.keys.toList()
+    } else {
+      log.info("No test goals found for project ${project.artifactId}, skipping atomized test target generation")
     }
 
-    private fun createSimpleGoalTarget(
-        mavenCommand: String,
-        project: MavenProject,
-        pluginDescriptor: PluginDescriptor,
-        goalPrefix: String,
-        goalName: String,
-        execution: PluginExecution
-    ): NxTarget? {
-        val options = objectMapper.createObjectNode()
-
-        // Simple command without nx:apply/nx:record
-        val command =
-            "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
-        options.put("command", command)
-        val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
-            ?: return null
-
-        val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
-
-        // Add inputs and outputs if cacheable
-        if (analysis.isCacheable) {
-            // Convert inputs to JsonNode array
-            val inputsArray = objectMapper.createArrayNode()
-            addBuildStateJsonInputsAndOutputs(project, target)
-            analysis.inputs.forEach { input -> inputsArray.add(input) }
-            analysis.dependentTaskOutputInputs.forEach { input ->
-                val obj = objectMapper.createObjectNode()
-                obj.put("dependentTasksOutputFiles", input.path)
-                if (input.transitive) obj.put("transitive", true)
-                inputsArray.add(obj)
-            }
-            target.inputs = inputsArray
-
-            // Convert outputs to JsonNode array
-            val outputsArray = objectMapper.createArrayNode()
-            analysis.outputs.forEach { output -> outputsArray.add(output) }
-            target.outputs = outputsArray
-        }
-
-        return target
+    val targetGroupsJson = objectMapper.createObjectNode()
+    targetGroups.forEach { (groupName, targets) ->
+      val targetsArray = objectMapper.createArrayNode()
+      targets.forEach { target -> targetsArray.add(target) }
+      targetGroupsJson.set<ArrayNode>(groupName, targetsArray)
     }
 
-    private fun getExecutablePlugins(project: MavenProject): List<Plugin> {
-        return project.build.plugins
-    }
+    return Pair(nxTargets, targetGroupsJson)
+  }
 
-    private fun generateAtomizedTestTargets(
-        project: MavenProject, mavenCommand: String, testCiTarget: NxTarget, testGoals: MutableList<GoalDescriptor>, testDependsOn: MutableList<String>
-    ): Map<String, NxTarget> {
-        val goalDescriptor = testGoals.first()
-        val targets = mutableMapOf<String, NxTarget>()
+  private fun createPhaseTarget(
+    project: MavenProject, phase: String, mavenCommand: String, goals: List<GoalDescriptor>
+  ): NxTarget {
+    // Sort goals by priority (lower numbers execute first)
+    val sortedGoals = goals.sortedWith(compareBy<GoalDescriptor> { it.executionPriority }.thenBy { it.executionId })
 
-        val testClasses = testClassDiscovery.discoverTestClasses(project)
-        val testCiTargetGroup = mutableListOf<String>()
+    // Inline analysis logic from PhaseAnalyzer
+    val plugins = project.build.plugins
+    var isThreadSafe = true
+    var isCacheable = true
+    val inputs = objectMapper.createArrayNode()
+    val outputs = mutableSetOf<String>()
 
-        val analysis = mojoAnalyzer.analyzeMojo(goalDescriptor.pluginDescriptor, goalDescriptor.goal, project)
-            ?: return emptyMap()
+    val analyses = plugins
+      .flatMap { plugin ->
+        val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
+          .getOrElse { throwable ->
+            log.warn(
+              "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
+            )
+            return@flatMap emptyList()
+          }
 
-        testClasses.forEach { testClass ->
-            val targetName = "${goalDescriptor.goalSpecifier}--${testClass.packagePath}.${testClass.className}"
-
-            log.info("Generating target for test class: $targetName'")
-
-            val options = objectMapper.createObjectNode()
-            options.put(
-                "command",
-                "$mavenCommand $APPLY_GOAL ${goalDescriptor.goalSpecifier} $RECORD_GOAL -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className} -Dsurefire.failIfNoSpecifiedTests=false"
+        plugin.executions
+          .filter { execution -> execution.phase == phase }
+          .flatMap { execution ->
+            log.info(
+              "Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}"
             )
 
-            val dependsOn = objectMapper.createArrayNode()
-            testDependsOn.forEach { dependsOn.add(it) }
-
-            val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe, dependsOn, objectMapper.createArrayNode(), objectMapper.createArrayNode())
-
-            addBuildStateJsonInputsAndOutputs(project, target)
-
-            analysis.inputs.forEach { input -> target.inputs?.add(input) }
-            analysis.outputs.forEach { output -> target.outputs?.add(output) }
-            analysis.dependentTaskOutputInputs.forEach { input ->
-                val obj = objectMapper.createObjectNode()
-                obj.put("dependentTasksOutputFiles", input.path)
-                if (input.transitive) obj.put("transitive", true)
-                target.inputs?.add(obj)
+            execution.goals.filterNotNull().mapNotNull { goal ->
+              mojoAnalyzer.analyzeMojo(pluginDescriptor, goal, project)
             }
+          }
+      }
 
-            targets[targetName] = target
-            testCiTargetGroup.add(targetName)
+    // Aggregate analysis results
+    analyses.forEach { analysis ->
 
-            testCiTarget.dependsOn!!.add(targetName)
-        }
+      if (!analysis.isThreadSafe) {
+        isThreadSafe = false
+      }
+      if (!analysis.isCacheable) {
+        isCacheable = false
+      }
 
-        return targets
+      analysis.inputs.forEach { input -> inputs.add(input) }
+      analysis.outputs.forEach { output -> outputs.add(output) }
+      analysis.dependentTaskOutputInputs.forEach { input ->
+        val obj = objectMapper.createObjectNode()
+        obj.put("dependentTasksOutputFiles", input.path)
+        if (input.transitive) obj.put("transitive", true)
+        inputs.add(obj)
+      }
     }
 
-    private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
-        val buildJsonFile = File("${project.build.directory}/nx-build-state.json")
+    log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
 
-        val isIgnored = gitIgnoreClassifier.isIgnored(buildJsonFile)
-        if (isIgnored) {
-            log.warn("Input path is gitignored: ${buildJsonFile.path}")
-            val input = pathFormatter.toDependentTaskOutputs(buildJsonFile, project.basedir)
-            val obj = objectMapper.createObjectNode()
-            obj.put("dependentTasksOutputFiles", input.path)
-            if (input.transitive) obj.put("transitive", true)
-            target.inputs?.add(obj)
-        } else {
-            val input = pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir)
+    val options = objectMapper.createObjectNode()
 
-            target.inputs?.add(input)
-        }
-        target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
+    // Build command with goals bundled together
+    val commandParts = mutableListOf<String>()
+    commandParts.add(mavenCommand)
+
+    // Add build state apply if needed (before goals)
+    if (shouldApplyBuildState()) {
+      commandParts.add(APPLY_GOAL)
     }
 
+    // Add all goals for this phase (sorted by priority)
+    commandParts.addAll(sortedGoals.map { it.goalSpecifier })
 
-    private fun getPluginDescriptor(
-        plugin: Plugin,
-        project: MavenProject
-    ): PluginDescriptor = pluginManager.getPluginDescriptor(
-        plugin, project.remotePluginRepositories, session.repositorySession
-    )
+    // Add build state record if needed (after goals)
+    // TODO: install cannot record because it attaches a unique timestamp to artifacts, breaking caching
+    if (shouldRecordBuildState() && phase !== "install") {
+      commandParts.add(RECORD_GOAL)
+    }
+
+    // Add project selection and non-recursive flag
+    commandParts.add("-pl")
+    commandParts.add("${project.groupId}:${project.artifactId}")
+    commandParts.add("-N")
+    commandParts.add("--batch-mode")
+
+    val command = commandParts.joinToString(" ")
+    options.put("command", command)
+
+    log.info("Created phase target '$phase' with command: $command")
+
+    val target = NxTarget("nx:run-commands", options, isCacheable, isThreadSafe)
+
+    // Copy caching info from analysis
+    if (isCacheable) {
+      // Convert inputs to JsonNode array
+      val inputsArray = objectMapper.createArrayNode()
+      inputs.forEach { input -> inputsArray.add(input) }
+      target.inputs = inputsArray
+
+      // Convert outputs to JsonNode array
+      val outputsArray = objectMapper.createArrayNode()
+      outputs.forEach { output -> outputsArray.add(output) }
+      target.outputs = outputsArray
+      addBuildStateJsonInputsAndOutputs(project, target)
+    }
+
+    return target
+  }
+
+  private fun createNoopPhaseTarget(
+    phase: String
+  ): NxTarget {
+    log.info("Creating noop target for phase '$phase' (no goals)")
+    return NxTarget("nx:noop", null, cache = true, parallelism = true)
+  }
+
+  private fun createSimpleGoalTarget(
+    mavenCommand: String,
+    project: MavenProject,
+    pluginDescriptor: PluginDescriptor,
+    goalPrefix: String,
+    goalName: String,
+    execution: PluginExecution
+  ): NxTarget? {
+    val options = objectMapper.createObjectNode()
+
+    // Simple command without nx:apply/nx:record
+    val command =
+      "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
+    options.put("command", command)
+    val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
+      ?: return null
+
+    val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+
+    // Add inputs and outputs if cacheable
+    if (analysis.isCacheable) {
+      // Convert inputs to JsonNode array
+      val inputsArray = objectMapper.createArrayNode()
+      analysis.inputs.forEach { input -> inputsArray.add(input) }
+      analysis.dependentTaskOutputInputs.forEach { input ->
+        val obj = objectMapper.createObjectNode()
+        obj.put("dependentTasksOutputFiles", input.path)
+        if (input.transitive) obj.put("transitive", true)
+        inputsArray.add(obj)
+      }
+      target.inputs = inputsArray
+
+      // Convert outputs to JsonNode array
+      val outputsArray = objectMapper.createArrayNode()
+      analysis.outputs.forEach { output -> outputsArray.add(output) }
+      target.outputs = outputsArray
+    }
+
+    addBuildStateJsonInputsAndOutputs(project, target)
+    return target
+  }
+
+  private fun getExecutablePlugins(project: MavenProject): List<Plugin> {
+    return project.build.plugins
+  }
+
+  private fun generateAtomizedTestTargets(
+    project: MavenProject,
+    mavenCommand: String,
+    testCiTarget: NxTarget,
+    testGoals: MutableList<GoalDescriptor>,
+    testDependsOn: MutableList<String>
+  ): Map<String, NxTarget> {
+    val goalDescriptor = testGoals.first()
+    val targets = mutableMapOf<String, NxTarget>()
+
+    val testClasses = testClassDiscovery.discoverTestClasses(project)
+    val testCiTargetGroup = mutableListOf<String>()
+
+    val analysis = mojoAnalyzer.analyzeMojo(goalDescriptor.pluginDescriptor, goalDescriptor.goal, project)
+      ?: return emptyMap()
+
+    testClasses.forEach { testClass ->
+      val targetName = "${goalDescriptor.goalSpecifier}--${testClass.packagePath}.${testClass.className}"
+
+      log.info("Generating target for test class: $targetName'")
+
+      val options = objectMapper.createObjectNode()
+      options.put(
+        "command",
+        "$mavenCommand $APPLY_GOAL ${goalDescriptor.goalSpecifier} $RECORD_GOAL -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className} -Dsurefire.failIfNoSpecifiedTests=false"
+      )
+
+      val dependsOn = objectMapper.createArrayNode()
+      testDependsOn.forEach { dependsOn.add(it) }
+
+      val target = NxTarget(
+        "nx:run-commands",
+        options,
+        analysis.isCacheable,
+        analysis.isThreadSafe,
+        dependsOn,
+        objectMapper.createArrayNode(),
+        objectMapper.createArrayNode()
+      )
+
+      analysis.inputs.forEach { input -> target.inputs?.add(input) }
+      analysis.outputs.forEach { output -> target.outputs?.add(output) }
+      analysis.dependentTaskOutputInputs.forEach { input ->
+        val obj = objectMapper.createObjectNode()
+        obj.put("dependentTasksOutputFiles", input.path)
+        if (input.transitive) obj.put("transitive", true)
+        target.inputs?.add(obj)
+      }
+
+      targets[targetName] = target
+      testCiTargetGroup.add(targetName)
+
+      testCiTarget.dependsOn!!.add(targetName)
+      addBuildStateJsonInputsAndOutputs(project, target)
+    }
+
+    return targets
+  }
+
+  private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
+    val buildJsonFile = File("${project.build.directory}/nx-build-state.json")
+
+    val isIgnored = gitIgnoreClassifier.isIgnored(buildJsonFile)
+    if (isIgnored) {
+      log.warn("Input path is gitignored: ${buildJsonFile.path}")
+      val input = pathFormatter.toDependentTaskOutputs(buildJsonFile, project.basedir)
+      val obj = objectMapper.createObjectNode()
+      obj.put("dependentTasksOutputFiles", input.path)
+      if (input.transitive) obj.put("transitive", true)
+      target.inputs?.add(obj)
+    } else {
+      val input = pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir)
+
+      target.inputs?.add(input)
+    }
+    target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
+  }
+
+
+  private fun getPluginDescriptor(
+    plugin: Plugin,
+    project: MavenProject
+  ): PluginDescriptor = pluginManager.getPluginDescriptor(
+    plugin, project.remotePluginRepositories, session.repositorySession
+  )
 }
