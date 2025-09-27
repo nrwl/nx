@@ -161,7 +161,7 @@ function addPluginToPom(pomContent: string): string {
     plugin.appendChild(artifactId);
 
     const version = doc.createElement('version');
-    version.appendChild(doc.createTextNode('0.0.1-SNAPSHOT'));
+    version.appendChild(doc.createTextNode('1.0.0-SNAPSHOT'));
     plugin.appendChild(doc.createTextNode('\n        '));
     plugin.appendChild(version);
     plugin.appendChild(doc.createTextNode('\n      '));
