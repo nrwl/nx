@@ -2901,6 +2901,28 @@
     "source": "/packages/js/src"
   },
   {
+    "description": "Nx plugin for Maven integration",
+    "documents": [],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Initialize Maven support in an Nx workspace",
+        "file": "generated/packages/maven/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/packages/maven/src/generators/init/schema.json",
+        "path": "maven/generators/init",
+        "type": "generator"
+      }
+    ],
+    "migrations": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "maven",
+    "packageName": "@nx/maven",
+    "root": "/packages/maven",
+    "source": "/packages/maven/src"
+  },
+  {
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
     "documents": [
       {
