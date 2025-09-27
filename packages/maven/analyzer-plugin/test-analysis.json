@@ -1,191 +1,231 @@
 {
-  "artifactId" : "nx-maven-analyzer-plugin",
-  "groupId" : "dev.nx.maven",
-  "version" : "0.0.1-SNAPSHOT",
-  "packaging" : "maven-plugin",
-  "name" : "Nx Maven Analyzer Plugin",
-  "description" : "Maven plugin to analyze project structure for Nx integration",
-  "root" : "",
-  "projectType" : "library",
-  "sourceRoots" : [ "src/main/kotlin" ],
-  "testSourceRoots" : [ "src/test/kotlin" ],
-  "dependencies" : [ {
-    "groupId" : "org.apache.maven",
-    "artifactId" : "maven-plugin-api",
-    "version" : "3.9.6",
-    "scope" : "provided",
-    "coordinates" : "org.apache.maven:maven-plugin-api"
-  }, {
-    "groupId" : "org.apache.maven",
-    "artifactId" : "maven-core",
-    "version" : "3.9.6",
-    "scope" : "provided",
-    "coordinates" : "org.apache.maven:maven-core"
-  }, {
-    "groupId" : "org.apache.maven.plugin-tools",
-    "artifactId" : "maven-plugin-annotations",
-    "version" : "3.11.0",
-    "scope" : "provided",
-    "coordinates" : "org.apache.maven.plugin-tools:maven-plugin-annotations"
-  }, {
-    "groupId" : "com.fasterxml.jackson.core",
-    "artifactId" : "jackson-databind",
-    "version" : "2.16.1",
-    "scope" : "compile",
-    "coordinates" : "com.fasterxml.jackson.core:jackson-databind"
-  }, {
-    "groupId" : "commons-io",
-    "artifactId" : "commons-io",
-    "version" : "2.11.0",
-    "scope" : "compile",
-    "coordinates" : "commons-io:commons-io"
-  }, {
-    "groupId" : "org.apache.maven",
-    "artifactId" : "maven-model",
-    "version" : "3.9.6",
-    "scope" : "provided",
-    "coordinates" : "org.apache.maven:maven-model"
-  }, {
-    "groupId" : "org.apache.maven",
-    "artifactId" : "maven-project",
-    "version" : "2.2.1",
-    "scope" : "provided",
-    "coordinates" : "org.apache.maven:maven-project"
-  }, {
-    "groupId" : "org.jetbrains.kotlin",
-    "artifactId" : "kotlin-stdlib",
-    "version" : "1.9.22",
-    "scope" : "compile",
-    "coordinates" : "org.jetbrains.kotlin:kotlin-stdlib"
-  }, {
-    "groupId" : "org.apache.maven",
-    "artifactId" : "maven-compat",
-    "version" : "3.9.6",
-    "scope" : "provided",
-    "coordinates" : "org.apache.maven:maven-compat"
-  }, {
-    "groupId" : "org.apache.maven",
-    "artifactId" : "maven-artifact",
-    "version" : "3.9.6",
-    "scope" : "provided",
-    "coordinates" : "org.apache.maven:maven-artifact"
-  }, {
-    "groupId" : "org.apache.maven.extensions",
-    "artifactId" : "maven-build-cache-extension",
-    "version" : "1.2.0",
-    "scope" : "compile",
-    "coordinates" : "org.apache.maven.extensions:maven-build-cache-extension"
-  }, {
-    "groupId" : "org.junit.jupiter",
-    "artifactId" : "junit-jupiter",
-    "version" : "5.10.1",
-    "scope" : "test",
-    "coordinates" : "org.junit.jupiter:junit-jupiter"
-  }, {
-    "groupId" : "org.mockito.kotlin",
-    "artifactId" : "mockito-kotlin",
-    "version" : "5.2.1",
-    "scope" : "test",
-    "coordinates" : "org.mockito.kotlin:mockito-kotlin"
-  }, {
-    "groupId" : "org.jetbrains.kotlin",
-    "artifactId" : "kotlin-test-junit5",
-    "version" : "1.9.22",
-    "scope" : "test",
-    "coordinates" : "org.jetbrains.kotlin:kotlin-test-junit5"
-  } ],
-  "phases" : {
-    "process-resources" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      } ],
-      "outputs" : [ "{projectRoot}/target/classes" ]
+  "artifactId": "nx-maven-analyzer-plugin",
+  "groupId": "dev.nx.maven",
+  "version": "0.0.1-SNAPSHOT",
+  "packaging": "maven-plugin",
+  "name": "Nx Maven Analyzer Plugin",
+  "description": "Maven plugin to analyze project structure for Nx integration",
+  "root": "",
+  "projectType": "library",
+  "sourceRoots": ["src/main/kotlin"],
+  "testSourceRoots": ["src/test/kotlin"],
+  "dependencies": [
+    {
+      "groupId": "org.apache.maven",
+      "artifactId": "maven-plugin-api",
+      "version": "3.9.6",
+      "scope": "provided",
+      "coordinates": "org.apache.maven:maven-plugin-api"
     },
-    "compile" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      }, "{projectRoot}/target/generated-sources/annotations/**/*", "{projectRoot}/src/main/kotlin/**/*" ],
-      "outputs" : [ "{projectRoot}/target", "{projectRoot}/target/classes" ]
+    {
+      "groupId": "org.apache.maven",
+      "artifactId": "maven-core",
+      "version": "3.9.6",
+      "scope": "provided",
+      "coordinates": "org.apache.maven:maven-core"
     },
-    "process-classes" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      } ],
-      "outputs" : [ "{projectRoot}/target/classes/META-INF/maven" ]
+    {
+      "groupId": "org.apache.maven.plugin-tools",
+      "artifactId": "maven-plugin-annotations",
+      "version": "3.11.0",
+      "scope": "provided",
+      "coordinates": "org.apache.maven.plugin-tools:maven-plugin-annotations"
     },
-    "process-test-resources" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      } ],
-      "outputs" : [ "{projectRoot}/target/test-classes" ]
+    {
+      "groupId": "com.fasterxml.jackson.core",
+      "artifactId": "jackson-databind",
+      "version": "2.16.1",
+      "scope": "compile",
+      "coordinates": "com.fasterxml.jackson.core:jackson-databind"
     },
-    "test-compile" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      }, "{projectRoot}/src/test/kotlin/**/*" ],
-      "outputs" : [ "{projectRoot}/target", "{projectRoot}/target/test-classes" ]
+    {
+      "groupId": "commons-io",
+      "artifactId": "commons-io",
+      "version": "2.11.0",
+      "scope": "compile",
+      "coordinates": "commons-io:commons-io"
     },
-    "test" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      } ],
-      "outputs" : [ "{projectRoot}/target/classes", "{projectRoot}/target", "{projectRoot}/target/surefire-reports", "{projectRoot}/target/test-classes" ]
+    {
+      "groupId": "org.apache.maven",
+      "artifactId": "maven-model",
+      "version": "3.9.6",
+      "scope": "provided",
+      "coordinates": "org.apache.maven:maven-model"
     },
-    "package" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      }, "{projectRoot}/target/classes" ],
-      "outputs" : [ "{projectRoot}/target" ]
+    {
+      "groupId": "org.apache.maven",
+      "artifactId": "maven-project",
+      "version": "2.2.1",
+      "scope": "provided",
+      "coordinates": "org.apache.maven:maven-project"
     },
-    "install" : {
-      "cacheable" : false,
-      "reason" : "Phase 'install' has inherent side effects"
+    {
+      "groupId": "org.jetbrains.kotlin",
+      "artifactId": "kotlin-stdlib",
+      "version": "1.9.22",
+      "scope": "compile",
+      "coordinates": "org.jetbrains.kotlin:kotlin-stdlib"
     },
-    "deploy" : {
-      "cacheable" : false,
-      "reason" : "Phase 'deploy' has inherent side effects"
+    {
+      "groupId": "org.apache.maven",
+      "artifactId": "maven-compat",
+      "version": "3.9.6",
+      "scope": "provided",
+      "coordinates": "org.apache.maven:maven-compat"
     },
-    "clean" : {
-      "cacheable" : false,
-      "reason" : "Phase 'clean' has inherent side effects"
+    {
+      "groupId": "org.apache.maven",
+      "artifactId": "maven-artifact",
+      "version": "3.9.6",
+      "scope": "provided",
+      "coordinates": "org.apache.maven:maven-artifact"
     },
-    "site" : {
-      "cacheable" : true,
-      "reason" : "Cacheable: All mojos are cacheable based on parameter analysis",
-      "inputs" : [ {
-        "dependentTasksOutputFiles" : "**/*",
-        "transitive" : true
-      } ],
-      "outputs" : [ ]
+    {
+      "groupId": "org.apache.maven.extensions",
+      "artifactId": "maven-build-cache-extension",
+      "version": "1.2.0",
+      "scope": "compile",
+      "coordinates": "org.apache.maven.extensions:maven-build-cache-extension"
     },
-    "validate" : {
-      "cacheable" : false,
-      "reason" : "No analysis available for phase 'validate'"
+    {
+      "groupId": "org.junit.jupiter",
+      "artifactId": "junit-jupiter",
+      "version": "5.10.1",
+      "scope": "test",
+      "coordinates": "org.junit.jupiter:junit-jupiter"
+    },
+    {
+      "groupId": "org.mockito.kotlin",
+      "artifactId": "mockito-kotlin",
+      "version": "5.2.1",
+      "scope": "test",
+      "coordinates": "org.mockito.kotlin:mockito-kotlin"
+    },
+    {
+      "groupId": "org.jetbrains.kotlin",
+      "artifactId": "kotlin-test-junit5",
+      "version": "1.9.22",
+      "scope": "test",
+      "coordinates": "org.jetbrains.kotlin:kotlin-test-junit5"
+    }
+  ],
+  "phases": {
+    "process-resources": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "outputs": ["{projectRoot}/target/classes"]
+    },
+    "compile": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        },
+        "{projectRoot}/target/generated-sources/annotations/**/*",
+        "{projectRoot}/src/main/kotlin/**/*"
+      ],
+      "outputs": ["{projectRoot}/target", "{projectRoot}/target/classes"]
+    },
+    "process-classes": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "outputs": ["{projectRoot}/target/classes/META-INF/maven"]
+    },
+    "process-test-resources": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "outputs": ["{projectRoot}/target/test-classes"]
+    },
+    "test-compile": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        },
+        "{projectRoot}/src/test/kotlin/**/*"
+      ],
+      "outputs": ["{projectRoot}/target", "{projectRoot}/target/test-classes"]
+    },
+    "test": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/target/classes",
+        "{projectRoot}/target",
+        "{projectRoot}/target/surefire-reports",
+        "{projectRoot}/target/test-classes"
+      ]
+    },
+    "package": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        },
+        "{projectRoot}/target/classes"
+      ],
+      "outputs": ["{projectRoot}/target"]
+    },
+    "install": {
+      "cacheable": false,
+      "reason": "Phase 'install' has inherent side effects"
+    },
+    "deploy": {
+      "cacheable": false,
+      "reason": "Phase 'deploy' has inherent side effects"
+    },
+    "clean": {
+      "cacheable": false,
+      "reason": "Phase 'clean' has inherent side effects"
+    },
+    "site": {
+      "cacheable": true,
+      "reason": "Cacheable: All mojos are cacheable based on parameter analysis",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "outputs": []
+    },
+    "validate": {
+      "cacheable": false,
+      "reason": "No analysis available for phase 'validate'"
     }
   },
-  "hasTests" : false,
-  "hasResources" : false,
-  "generatedAt" : 1756275646791,
-  "projectName" : "dev.nx.maven.nx-maven-analyzer-plugin"
+  "hasTests": false,
+  "hasResources": false,
+  "generatedAt": 1756275646791,
+  "projectName": "dev.nx.maven.nx-maven-analyzer-plugin"
 }
