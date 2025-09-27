@@ -126,6 +126,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/angular-rspack',
     'packages/angular-rspack-compiler',
     'packages/dotnet',
+    'packages/maven'
   ];
 
   const packageSnapshots: { [key: string]: string } = {};
@@ -237,7 +238,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   execSync(
-    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
+    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json packages/maven/package.json`,
     {
       cwd: workspaceRoot,
     }
