@@ -37,6 +37,7 @@ The plugin consists of two main components that work together:
 ### 1. Entry Point (`src/index.ts`)
 
 Exports the main plugin functions:
+
 - `createNodesV2` - Project discovery and configuration
 - `createDependencies` - Inter-project dependency resolution
 - `getCachedMavenData` / `clearMavenDataCache` - Cache management
@@ -47,25 +48,26 @@ Implements Nx's `CreateNodesV2` interface:
 
 ```typescript
 export const createNodesV2: CreateNodesV2 = [
-  '**/pom.xml',  // Discovers all Maven projects
+  '**/pom.xml', // Discovers all Maven projects
   async (configFiles, options, context) => {
     // Only process if root pom.xml exists
-    const rootPomExists = configFiles.some(file => file === 'pom.xml');
+    const rootPomExists = configFiles.some((file) => file === 'pom.xml');
     if (!rootPomExists) return [];
-    
+
     // Get cached data or run fresh analysis
     let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
     if (!mavenData) {
-      mavenData = await runMavenAnalysis({...opts, verbose: isVerbose});
+      mavenData = await runMavenAnalysis({ ...opts, verbose: isVerbose });
     }
-    
+
     // Return pre-computed Nx configurations
     return mavenData.createNodesResults || [];
-  }
+  },
 ];
 ```
 
 **Key Features:**
+
 - **Root POM Guard**: Only analyzes when root `pom.xml` present to avoid partial processing
 - **Verbose Mode Support**: Bypasses cache when `NX_VERBOSE_LOGGING=true` or `verbose` option set
 - **Error Resilience**: Returns empty array on analysis failure with warning message
@@ -76,18 +78,20 @@ export const createNodesV2: CreateNodesV2 = [
 Orchestrates external Kotlin analyzer execution:
 
 ```typescript
-export async function runMavenAnalysis(options: MavenPluginOptions): Promise<MavenAnalysisData> {
+export async function runMavenAnalysis(
+  options: MavenPluginOptions
+): Promise<MavenAnalysisData> {
   // Detect Maven wrapper or fallback to 'mvn'
   const mavenExecutable = detectMavenWrapper();
-  
+
   // Configure Maven command
   const mavenArgs = [
     'dev.nx.maven:nx-maven-analyzer-plugin:1.0.1:analyze',
     `-Dnx.outputFile=${outputFile}`,
     '--batch-mode',
-    '--no-transfer-progress'
+    '--no-transfer-progress',
   ];
-  
+
   // Execute and parse JSON output
   const result = JSON.parse(jsonContent) as MavenAnalysisData;
   return result;
@@ -95,6 +99,7 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
 ```
 
 **Key Features:**
+
 - **Maven Wrapper Detection**: Automatically uses `./mvnw` or `mvnw.cmd` if present
 - **External Plugin Execution**: Runs `dev.nx.maven:nx-maven-analyzer-plugin:1.0.1:analyze`
 - **Output File Management**: Writes analysis to workspace data directory
@@ -106,15 +111,19 @@ export async function runMavenAnalysis(options: MavenPluginOptions): Promise<Mav
 Manages analysis result caching to improve performance:
 
 ```typescript
-export function getCachedMavenData(workspaceRoot: string, ignoreCache?: boolean): MavenAnalysisData | null {
+export function getCachedMavenData(
+  workspaceRoot: string,
+  ignoreCache?: boolean
+): MavenAnalysisData | null {
   if (ignoreCache) return null;
-  
+
   // Check if cache exists and is newer than any POM files
   // Return cached data if valid, null if stale
 }
 ```
 
 **Cache Strategy:**
+
 - **File-based**: Stores JSON analysis in workspace data directory
 - **Staleness Detection**: Invalidates when any POM file is newer than cache
 - **Verbose Override**: Bypasses cache entirely in verbose mode
@@ -127,7 +136,7 @@ Creates Nx dependency graph from Maven analysis:
 ```typescript
 export const createDependencies: CreateDependencies = (_options, context) => {
   const mavenData = getCachedMavenData(context.workspaceRoot);
-  
+
   // Extract dependencies from compile target's dependsOn
   for (const [projectRoot, projectsWrapper] of mavenData.createNodesResults) {
     const compileTarget = projectConfig.targets?.compile;
@@ -135,12 +144,13 @@ export const createDependencies: CreateDependencies = (_options, context) => {
       // Process project:phase dependencies
     }
   }
-  
+
   return dependencies;
 };
 ```
 
 **Dependency Sources:**
+
 - **Compile Dependencies**: Extracted from `compile` target's `dependsOn` array
 - **Format Handling**: Supports both string (`"projectName:phase"`) and object formats
 - **Static Type**: All dependencies marked as `DependencyType.static`
@@ -163,7 +173,7 @@ The Kotlin analyzer produces a complete `MavenAnalysisData` structure:
 
 ```typescript
 export interface MavenAnalysisData {
-  createNodesResults: CreateNodesResult[];  // Complete Nx project configurations
+  createNodesResults: CreateNodesResult[]; // Complete Nx project configurations
   generatedAt?: number;
   workspaceRoot?: string;
   totalProjects?: number;
@@ -172,11 +182,12 @@ export interface MavenAnalysisData {
 export type CreateNodesResult = [string, ProjectsWrapper];
 
 export interface ProjectsWrapper {
-  projects: Record<string, ProjectConfiguration>;  // Full Nx ProjectConfiguration
+  projects: Record<string, ProjectConfiguration>; // Full Nx ProjectConfiguration
 }
 ```
 
 **Key Aspects:**
+
 - **Complete Configuration**: Each project includes full target definitions with executors, options, and dependencies
 - **Maven Command Generation**: Targets use `nx:run-commands` executor with proper Maven commands
 - **Dependency Chains**: Inter-project dependencies pre-computed in `dependsOn` arrays
