@@ -38,8 +38,6 @@ export const createNodesV2: CreateNodesV2 = [
       mavenData = await runMavenAnalysis({ ...opts, verbose: isVerbose });
     }
 
-    console.log('GOT RESULTS', mavenData.createNodesResults.length);
-
     // Return createNodesResults (atomization now handled in Kotlin)
     return mavenData.createNodesResults.map(
       ([configFile, createNodesResult]) => {

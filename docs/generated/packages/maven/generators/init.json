@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "implementation": "/packages/maven/src/generators/init/generator.ts",
+  "implementation": "/packages/maven/dist/generators/init/generator.ts",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "id": "MavenInit",
@@ -20,6 +20,6 @@
   "description": "Initialize Maven support in an Nx workspace",
   "aliases": [],
   "hidden": false,
-  "path": "/packages/maven/src/generators/init/schema.json",
+  "path": "/packages/maven/dist/generators/init/schema.json",
   "type": "generator"
 }

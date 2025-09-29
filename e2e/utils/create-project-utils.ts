@@ -48,6 +48,7 @@ const nxPackages = [
   `@nx/jest`,
   `@nx/js`,
   `@nx/eslint`,
+  '@nx/maven',
   `@nx/nest`,
   `@nx/next`,
   `@nx/node`,
