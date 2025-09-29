@@ -1,11 +1,84 @@
 {
-  "name": "nx-plugin",
-  "version": "0.0.1",
-  "private": true,
+  "name": "@nx/dotnet",
+  "version": "22.0.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.",
+  "author": "Nx Team",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/dotnet"
+  },
+  "keywords": [
+    "Monorepo",
+    ".NET",
+    "C#",
+    "F#",
+    "VB.NET",
+    "MSBuild",
+    "CLI"
+  ],
+  "scripts": {},
   "type": "commonjs",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typings": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    }
+  },
   "dependencies": {
+    "@nx/devkit": "workspace:*s",
     "tslib": "^2.3.0"
+  },
+  "nx": {
+    "name": "dotnet",
+    "sourceRoot": "packages/dotnet/src",
+    "projectType": "library",
+    "release": {
+      "version": {
+        "preserveLocalDependencyProtocols": false,
+        "manifestRootsToUpdate": [
+          "packages/{projectName}"
+        ]
+      }
+    },
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{projectRoot}/dist"
+        ],
+        "options": {
+          "outputPath": "{projectRoot}/dist",
+          "tsConfig": "{projectRoot}/tsconfig.lib.json",
+          "main": "{projectRoot}/src/index.ts",
+          "assets": []
+        }
+      },
+      "nx-release-publish": {
+        "executor": "@nx/js:release-publish",
+        "options": {
+          "packageRoot": "packages/dotnet"
+        },
+        "dependsOn": [
+          "^nx-release-publish"
+        ]
+      }
+    }
   }
 }

@@ -1,9 +1,21 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "emitDeclarationOnly": false,
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "module": "commonjs",
+    "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "plugin.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "dist/**/*"],
+  "references": [
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ]
 }
