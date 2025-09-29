@@ -400,7 +400,13 @@ class NxTargetFactory(
     // Add project selection and non-recursive flag
     commandParts.add("-pl")
     commandParts.add("${project.groupId}:${project.artifactId}")
-    commandParts.add("-N")
+
+    // Only add -N flag for Maven 4
+    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
+    if (mavenVersion.startsWith("4")) {
+      commandParts.add("-N")
+    }
+
     commandParts.add("--batch-mode")
 
     val command = commandParts.joinToString(" ")
@@ -445,8 +451,10 @@ class NxTargetFactory(
     val options = objectMapper.createObjectNode()
 
     // Simple command without nx:apply/nx:record
+    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
+    val nonRecursiveFlag = if (mavenVersion.startsWith("4")) "-N" else ""
     val command =
-      "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} -N --batch-mode"
+      "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} $nonRecursiveFlag --batch-mode".replace("  ", " ")
     options.put("command", command)
     val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
       ?: return null

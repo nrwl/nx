@@ -31,30 +31,8 @@
             "output": "/"
           },
           {
-            "input": "packages/maven",
+            "input": "packages/maven/src",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json", "analyzer-plugin/**/*.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/maven",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/maven",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/maven/batch-runner",
-            "glob": "**/*.jar",
-            "output": "/batch-runner"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
             "output": "/"
           }
         ]
