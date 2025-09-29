@@ -47,12 +47,6 @@
       "version": "21.0.0-beta.11",
       "description": "Replaces `classProperties.loose` option with `loose`.",
       "factory": "./src/migrations/update-21-0-0/update-babel-loose"
-    },
-    "update-22-0-0-add-svgr-to-webpack-config": {
-      "cli": "nx",
-      "version": "22.0.0-beta.0",
-      "description": "Updates webpack configs using React to use the new withSvgr composable function instead of the svgr option in withReact or NxReactWebpackPlugin.",
-      "factory": "./src/migrations/update-22-0-0/add-svgr-to-webpack-config"
     }
   },
   "packageJsonUpdates": {

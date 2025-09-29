@@ -4,7 +4,18 @@ import { applyReactConfig } from './nx-react-webpack-plugin/lib/apply-react-conf
 
 const processed = new Set();
 
-export interface WithReactOptions extends WithWebOptions {}
+export interface SvgrOptions {
+  svgo?: boolean;
+  titleProp?: boolean;
+  ref?: boolean;
+}
+export interface WithReactOptions extends WithWebOptions {
+  /**
+   * @deprecated Add SVGR support in your Webpack configuration without relying on Nx. See https://react-svgr.com/docs/webpack/
+   * TODO(v22): Remove this option and migrate userland webpack config to explicitly configure @svgr/webpack
+   * */
+  svgr?: boolean | SvgrOptions;
+}
 
 /**
  * @param {WithReactOptions} pluginOptions
@@ -22,7 +33,7 @@ export function withReact(pluginOptions: WithReactOptions = {}) {
     // Apply web config for CSS, JSX, index.html handling, etc.
     config = withWeb(pluginOptions)(config, context);
 
-    applyReactConfig({}, config);
+    applyReactConfig(pluginOptions, config);
 
     processed.add(config);
     return config;
