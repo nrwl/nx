@@ -33,7 +33,7 @@
           {
             "input": "packages/maven",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json", "analyzer-plugin/**/*.json"],
             "output": "/"
           },
           {
