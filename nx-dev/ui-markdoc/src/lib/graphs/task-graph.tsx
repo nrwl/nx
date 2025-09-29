@@ -5,7 +5,7 @@ import { TaskGraph } from 'nx/src/config/task-graph';
 import { useEffect, useMemo } from 'react';
 import { RenderTheme } from '@nx/graph';
 import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';
-import { resolveTheme } from './resolve-theme';
+import { useThemeSync } from './resolve-theme';
 import {
   NxGraphElementPanel,
   NxGraphTaskNodePanelContent,
@@ -49,12 +49,12 @@ export function NxDevTaskGraphInner({
 
   const [element] = useElementPanel(eventBus);
 
-  useEffect(() => {
+  useThemeSync(theme, (resolvedTheme) => {
     sendRendererConfigEvent({
       type: 'themeChange',
-      theme: resolveTheme(theme),
+      theme: resolvedTheme,
     });
-  }, [theme]);
+  });
 
   useEffect(() => {
     if (!orchestrator) return;

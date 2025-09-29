@@ -102,9 +102,11 @@ export function Graph({
 
   return parsedProps ? (
     <div className="not-content mt-4 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
-      <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
-        {title}
-      </div>
+      {title ? (
+        <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
+          {title}
+        </div>
+      ) : null}
 
       <div style={{ height }}>
         {type === 'project' ? (
