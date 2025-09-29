@@ -660,6 +660,52 @@ export default composePlugins(
         "
       `);
     });
+
+    it('should remove svgr: false from withReact', async () => {
+      tree.write(
+        'apps/my-app/project.json',
+        JSON.stringify({
+          root: 'apps/my-app',
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                webpackConfig: 'apps/my-app/webpack.config.js',
+              },
+            },
+          },
+        })
+      );
+
+      tree.write(
+        'apps/my-app/webpack.config.js',
+        `const { composePlugins, withNx } = require('@nx/next');
+const { withReact } = require('@nx/react');
+
+module.exports = composePlugins(
+  withNx(),
+  withReact({
+    svgr: false,
+  }),
+  (config) => {
+    return config;
+  }
+);`
+      );
+
+      await addSvgrToWebpackConfig(tree);
+      const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+
+      expect(content).toMatchInlineSnapshot(`
+        "const { composePlugins, withNx } = require('@nx/next');
+        const { withReact } = require('@nx/react');
+
+        module.exports = composePlugins(withNx(), withReact(), (config) => {
+          return config;
+        });
+        "
+      `);
+    });
   });
 
   describe('NxReactWebpackPlugin configurations', () => {
@@ -812,7 +858,7 @@ module.exports = {
       `);
     });
 
-    it('should not modify when svgr: false', async () => {
+    it('should not modify when svgr not used', async () => {
       tree.write(
         'apps/my-app/project.json',
         JSON.stringify({
@@ -843,9 +889,7 @@ module.exports = {
       main: './src/main.tsx',
       index: './src/index.html',
     }),
-    new NxReactWebpackPlugin({
-      svgr: false
-    }),
+    new NxReactWebpackPlugin(),
   ],
 };
 `;
@@ -1318,6 +1362,72 @@ export default {
             new NxReactWebpackPlugin(),
           ],
         });
+        "
+      `);
+    });
+
+    it('should remove svgr: false from plugin options', async () => {
+      tree.write(
+        'apps/my-app/project.json',
+        JSON.stringify({
+          root: 'apps/my-app',
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                webpackConfig: 'apps/my-app/webpack.config.js',
+              },
+            },
+          },
+        })
+      );
+
+      tree.write(
+        'apps/my-app/webpack.config.js',
+        `
+import { NxWebpackPlugin } from '@nx/webpack';
+import { NxReactWebpackPlugin } from '@nx/react';
+
+export default {
+  output: {
+    path: join(__dirname, '../dist/apps/my-app'),
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+    }),
+    new NxReactWebpackPlugin({
+      svgr: false
+    }),
+  ],
+};
+`
+      );
+
+      await addSvgrToWebpackConfig(tree);
+      const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+
+      expect(content).toMatchInlineSnapshot(`
+        "import { NxWebpackPlugin } from '@nx/webpack';
+        import { NxReactWebpackPlugin } from '@nx/react';
+
+        export default {
+          output: {
+            path: join(__dirname, '../dist/apps/my-app'),
+          },
+          plugins: [
+            new NxWebpackPlugin({
+              tsConfig: './tsconfig.app.json',
+              compiler: 'babel',
+              main: './src/main.tsx',
+              index: './src/index.html',
+            }),
+            new NxReactWebpackPlugin(),
+          ],
+        };
         "
       `);
     });

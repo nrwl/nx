@@ -229,13 +229,14 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
               svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword
             ) {
               svgrValue = true;
+            } else if (
+              svgrProp.initializer.kind === ts.SyntaxKind.FalseKeyword
+            ) {
+              svgrValue = false;
             }
 
-            // Only add to projects if svgr is explicitly set to true or has options
-            if (
-              svgrValue === true ||
-              (typeof svgrValue === 'object' && svgrValue !== null)
-            ) {
+            // Add to projects if svgr is explicitly set (true, false, or options)
+            if (svgrValue !== undefined) {
               projects.set(webpackConfigPath, {
                 svgrOptions: svgrValue,
                 isWithReact: false,

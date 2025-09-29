@@ -4,6 +4,9 @@ import {
   readProjectConfiguration,
   logger,
   addDependenciesToPackageJson,
+  applyChangesToString,
+  ChangeType,
+  type StringChange,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
@@ -100,22 +103,87 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   // Update next.config.js files to add SVGR webpack configuration
   for (const [nextConfigPath, config] of projects.entries()) {
     let content = tree.read(nextConfigPath, 'utf-8');
+    const ast = tsquery.ast(content);
+    const changes: StringChange[] = [];
 
-    // Remove nx.svgr option using regex
-    // First pattern: svgr is the first property (svgr: X,)
-    content = content.replace(
-      /(nx:\s*\{)(\s*svgr:\s*(?:true|false|\{[^}]*\}),)(\s*)/g,
-      '$1$3'
+    // Remove nx.svgr option using AST
+    const nextConfigDeclarations = tsquery(
+      ast,
+      'VariableDeclaration:has(Identifier[name=nextConfig]) > ObjectLiteralExpression'
     );
 
-    // Second pattern: svgr is not the first property (, svgr: X)
-    content = content.replace(/(,)(\s*svgr:\s*(?:true|false|\{[^}]*\}))/g, '');
+    if (nextConfigDeclarations.length > 0) {
+      const objLiteral = nextConfigDeclarations[0] as ts.ObjectLiteralExpression;
 
-    // Third pattern: svgr is the only property
-    content = content.replace(
-      /(nx:\s*\{)(\s*svgr:\s*(?:true|false|\{[^}]*\}))(\s*\})/g,
-      '$1$3'
-    );
+      // Find nx property
+      const nxProp = objLiteral.properties.find(
+        (prop) =>
+          ts.isPropertyAssignment(prop) &&
+          ts.isIdentifier(prop.name) &&
+          prop.name.text === 'nx'
+      ) as ts.PropertyAssignment | undefined;
+
+      if (nxProp && ts.isObjectLiteralExpression(nxProp.initializer)) {
+        // Find svgr property in nx object
+        const svgrProp = nxProp.initializer.properties.find(
+          (prop) =>
+            ts.isPropertyAssignment(prop) &&
+            ts.isIdentifier(prop.name) &&
+            prop.name.text === 'svgr'
+        ) as ts.PropertyAssignment | undefined;
+
+        if (svgrProp) {
+          const nxObj = nxProp.initializer;
+          const hasOnlySvgrProperty = nxObj.properties.length === 1;
+
+          if (hasOnlySvgrProperty) {
+            // Replace the nx object with an empty object if svgr is the only property
+            changes.push({
+              type: ChangeType.Delete,
+              start: nxObj.getStart(),
+              length: nxObj.getEnd() - nxObj.getStart(),
+            });
+            changes.push({
+              type: ChangeType.Insert,
+              index: nxObj.getStart(),
+              text: '{}',
+            });
+          } else {
+            // Remove just the svgr property from nx object
+            const propIndex = nxObj.properties.indexOf(svgrProp);
+            const isLastProp = propIndex === nxObj.properties.length - 1;
+            const isFirstProp = propIndex === 0;
+
+            let removeStart = svgrProp.getFullStart();
+            let removeEnd = svgrProp.getEnd();
+
+            // Handle comma removal
+            if (!isLastProp) {
+              // Remove trailing comma
+              const nextProp = nxObj.properties[propIndex + 1];
+              removeEnd = nextProp.getFullStart();
+            } else if (!isFirstProp) {
+              // Remove preceding comma from previous property
+              const prevProp = nxObj.properties[propIndex - 1];
+              const textBetween = content.substring(
+                prevProp.getEnd(),
+                svgrProp.getFullStart()
+              );
+              const commaIndex = textBetween.indexOf(',');
+              if (commaIndex !== -1) {
+                removeStart = prevProp.getEnd() + commaIndex;
+              }
+            }
+
+            changes.push({
+              type: ChangeType.Delete,
+              start: removeStart,
+              length: removeEnd - removeStart,
+            });
+          }
+        }
+      }
+    }
 
     // Only add SVGR webpack config if svgrOptions is true or an object (not false)
     if (config.svgrOptions === true || typeof config.svgrOptions === 'object') {
@@ -163,26 +231,51 @@ export default async function addSvgrToNextConfig(tree: Tree) {
     return config;
   }`;
 
-      // Since we're using the nextConfig pattern, we know there's a plugins array
-      // Add the withSvgr function definition after the plugins array
-      content = content.replace(
-        /const plugins = \[([\s\S]*?)\];/,
-        (match, pluginList) => {
-          return `const plugins = [${pluginList}];
+      // Find the plugins array declaration
+      const pluginsArrayDeclarations = tsquery(
+        ast,
+        'VariableDeclaration:has(Identifier[name=plugins]) ArrayLiteralExpression'
+      );
 
-// Add SVGR webpack config function
-const withSvgr = ${svgrWebpackFunction};
-`;
+      if (pluginsArrayDeclarations.length > 0) {
+        const pluginsArray = pluginsArrayDeclarations[0] as ts.ArrayLiteralExpression;
+
+        // Add the withSvgr function definition after the plugins array
+        const pluginsStatement = pluginsArray.parent.parent;
+        changes.push({
+          type: ChangeType.Insert,
+          index: pluginsStatement.getEnd(),
+          text: `\n\n// Add SVGR webpack config function\nconst withSvgr = ${svgrWebpackFunction};`,
+        });
+      }
+
+      // Find and update the composePlugins call
+      const composePluginsCalls = tsquery(
+        ast,
+        'CallExpression[expression.name=composePlugins]'
+      );
+
+      if (composePluginsCalls.length > 0) {
+        const composeCall = composePluginsCalls[0] as ts.CallExpression;
+
+        // Find the spread argument (...plugins)
+        const spreadArg = composeCall.arguments.find(
+          (arg) => ts.isSpreadElement(arg)
+        ) as ts.SpreadElement | undefined;
+
+        if (spreadArg) {
+          // Insert withSvgr after the spread
+          changes.push({
+            type: ChangeType.Insert,
+            index: spreadArg.getEnd(),
+            text: ', withSvgr',
+          });
         }
-      );
-
-      // Update the composePlugins call to include withSvgr as the last argument
-      content = content.replace(
-        /composePlugins\s*\(\s*\.\.\.plugins\s*\)\s*\(\s*nextConfig\s*\)/,
-        'composePlugins(...plugins, withSvgr)(nextConfig)'
-      );
+      }
     }
 
+    // Apply all AST-based changes
+    content = applyChangesToString(content, changes);
     tree.write(nextConfigPath, content);
 
     if (config.svgrOptions === false) {
