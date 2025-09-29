@@ -72,17 +72,12 @@ export async function configureAiAgentsHandlerImpl(
       return a;
     });
 
-    const agentNames = disabledAgents.map((a) => agentDisplayMap[a]).join(', ');
-
-    const pluralS = disabledAgents.length > 1 ? 's' : '';
     const title =
       commandNames.length === 1
-        ? `${commandNames[0]} command not available. Ignoring ${agentNames} agent${pluralS}.`
+        ? `${commandNames[0]} command not available.`
         : `CLI commands ${commandNames
             .map((c) => `${c}`)
-            .join(
-              ', '
-            )} not available. Ignoring ${agentNames} agent${pluralS}.`;
+            .join('/')} not available.`;
 
     output.log({
       title,
