@@ -375,8 +375,11 @@ export async function createProjectConfigurationsWithPlugins(
     }
   }
 
+  const createNodesPlugins = plugins.filter(
+    (plugin) => plugin.createNodes?.[0]
+  );
   spinner = new DelayedSpinner(
-    `Creating project graph nodes with ${plugins.length} plugins`
+    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
   );
 
   const results: Promise<
@@ -404,12 +407,8 @@ export async function createProjectConfigurationsWithPlugins(
       exclude,
       name: pluginName,
     },
-  ] of plugins.entries()) {
-    const [pattern, createNodes] = createNodesTuple ?? [];
-
-    if (!pattern) {
-      continue;
-    }
+  ] of createNodesPlugins.entries()) {
+    const [pattern, createNodes] = createNodesTuple;
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
       projectFiles[index],
