@@ -1,7 +1,6 @@
-// Re-export everything from the new plugin structure
 export {
   createNodes,
   createNodesV2,
   DotNetPluginOptions,
   createDependencies,
-} from './plugins/plugin';
+} from './src/plugins/plugin';

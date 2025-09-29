@@ -1199,6 +1199,12 @@ importers:
         specifier: workspace:*
         version: link:../utils
 
+  e2e/dotnet:
+    dependencies:
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+
   e2e/esbuild:
     dependencies:
       '@nx/e2e-utils':
@@ -2750,6 +2756,15 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
+
+  packages/dotnet:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*s
+        version: link:../devkit
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
 
   packages/esbuild:
     dependencies:

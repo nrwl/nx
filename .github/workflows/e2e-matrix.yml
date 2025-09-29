@@ -7,14 +7,14 @@ on:
     inputs:
       debug_enabled:
         type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: false
         default: false
 
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
 
-permissions: { }
+permissions: {}
 jobs:
   preinstall:
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -38,7 +38,7 @@ jobs:
           # - os: macos-latest
           #   node_version: 23
           # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-            # node_version: 22
+          # node_version: 22
           # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 23
 
@@ -60,7 +60,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ matrix.node_version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -104,7 +104,7 @@ jobs:
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           lookup-only: true
-          path: '${{ github.workspace }}/.cypress'
+          path: "${{ github.workspace }}/.cypress"
           key: ${{ runner.os }}-cypress
 
       - name: Install Cypress
@@ -127,8 +127,7 @@ jobs:
 
       - name: Process matrix data
         id: process-json
-        run:
-          echo "MATRIX=$(npx tsx .github/workflows/nightly/process-matrix.ts | jq -c .)" >> $GITHUB_OUTPUT
+        run: echo "MATRIX=$(npx tsx .github/workflows/nightly/process-matrix.ts | jq -c .)" >> $GITHUB_OUTPUT
 
   e2e:
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -138,7 +137,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 200     # <- cap each job to 200 minutes
+    timeout-minutes: 200 # <- cap each job to 200 minutes
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
@@ -164,7 +163,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ matrix.node_version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install Rust
         if: ${{ matrix.os != 'windows-latest' }}
@@ -176,7 +175,12 @@ jobs:
       - name: Load Cargo Env
         if: ${{ matrix.os != 'windows-latest' }}
         run: echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
-  
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@07f4723ee5cddb1f6b7feb9a6bbfaac42ebabb1a # v4.2.0
+        with:
+          dotnet-version: "10.0.x"
+
       - name: Install bun
         if: ${{ matrix.os != 'windows-latest' }}
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
@@ -218,7 +222,7 @@ jobs:
         id: cache-cypress
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
-          path: '${{ github.workspace }}/.cypress'
+          path: "${{ github.workspace }}/.cypress"
           key: ${{ runner.os }}-cypress
 
       - name: Install Cypress
@@ -231,7 +235,7 @@ jobs:
           # Ensure Xcode command line tools are installed and configured
           xcode-select --print-path || sudo xcode-select --reset
           sudo xcode-select -s /Applications/Xcode.app
-          
+
           # Install or update applesimutils with error handling
           if ! brew list applesimutils &>/dev/null; then
             echo "Installing applesimutils..."
@@ -245,21 +249,21 @@ jobs:
             echo "Updating applesimutils..."
             HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade applesimutils || true
           fi
-          
+
           # Verify applesimutils installation
           applesimutils --version || (echo "applesimutils installation failed" && exit 1)
-          
+
           # Configure environment for M-series Mac
           echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
           echo "PLATFORM_NAME=iOS Simulator" >> $GITHUB_ENV
-          
+
           # Set additional environment variables for better debugging
           echo "DETOX_DISABLE_TELEMETRY=1" >> $GITHUB_ENV
           echo "DETOX_LOG_LEVEL=trace" >> $GITHUB_ENV
-          
+
           # Verify Xcode installation
           xcodebuild -version
-          
+
         timeout-minutes: 10
         continue-on-error: false
 
@@ -268,20 +272,20 @@ jobs:
         id: reset-simulators
         run: |
           echo "Resetting iOS Simulators..."
-          
+
           # Kill simulator processes
           sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
           killall "Simulator" 2>/dev/null || true
           killall "iOS Simulator" 2>/dev/null || true
-          
+
           # Wait for processes to terminate
           sleep 3
-          
+
           # Shutdown and erase all simulators (ignore failures)
           xcrun simctl shutdown all 2>/dev/null || true
           sleep 5
           xcrun simctl erase all 2>/dev/null || true
-          
+
           # If erase failed, try the nuclear option
           if xcrun simctl list devices | grep -q "Booted" 2>/dev/null; then
             echo "Standard reset failed, using nuclear option..."
@@ -289,12 +293,12 @@ jobs:
             launchctl remove com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
             sleep 3
           fi
-          
+
           # Clean up additional directories
           rm -rf ~/Library/Developer/CoreSimulator/Caches/* 2>/dev/null || true
           rm -rf ~/Library/Logs/CoreSimulator/* 2>/dev/null || true
           rm -rf ~/Library/Developer/Xcode/DerivedData/* 2>/dev/null || true
-          
+
           echo "Simulator reset completed"
         timeout-minutes: 5
         continue-on-error: true
@@ -304,7 +308,7 @@ jobs:
         run: |
           # Verify CoreSimulator service restarted
           pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
-          
+
           # Verify simulator runtime paths exist and are writable
           test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
           touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
@@ -340,19 +344,19 @@ jobs:
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
-          NX_DAEMON: 'true'
-          NX_PERF_LOGGING: 'false'
-          NX_E2E_VERBOSE_LOGGING: 'true'
-          NX_NATIVE_LOGGING: 'false'
-          NX_E2E_RUN_E2E: 'true'
-          NX_CLOUD_NO_TIMEOUTS: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_DAEMON: "true"
+          NX_PERF_LOGGING: "false"
+          NX_E2E_VERBOSE_LOGGING: "true"
+          NX_NATIVE_LOGGING: "false"
+          NX_E2E_RUN_E2E: "true"
+          NX_CLOUD_NO_TIMEOUTS: "true"
+          NX_E2E_SKIP_CLEANUP: "true"
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
           CI: true
-  
+
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
         if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
@@ -363,20 +367,20 @@ jobs:
           else
             NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local
           fi
-        
+
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
-          NX_PERF_LOGGING: 'false'
-          NX_CI_EXECUTION_ENV: 'macos'
-          NX_E2E_VERBOSE_LOGGING: 'true'
-          NX_NATIVE_LOGGING: 'false'
-          NX_E2E_RUN_E2E: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_PERF_LOGGING: "false"
+          NX_CI_EXECUTION_ENV: "macos"
+          NX_E2E_VERBOSE_LOGGING: "true"
+          NX_NATIVE_LOGGING: "false"
+          NX_E2E_RUN_E2E: "true"
+          NX_E2E_SKIP_CLEANUP: "true"
           NODE_OPTIONS: --max_old_space_size=8192
-          SELECTED_PM: 'npm'
+          SELECTED_PM: "npm"
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
-          DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
+          DEVELOPER_DIR: "/Applications/Xcode.app/Contents/Developer"
           CI: true
 
       - name: Save matrix config in file
@@ -387,10 +391,10 @@ jobs:
           before=${{ steps.before-e2e.outputs.timestamp }}
           now=$(date +%s)
           delta=$(($now - $before))
-          
+
           # Determine the outcome based on which step ran
           outcome="${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}"
-          
+
           matrix=$((
             echo '${{ toJSON(matrix) }}'
           ) | jq --argjson delta $delta -c '. + { "status": "'"$outcome"'", "duration": $delta }')
@@ -402,8 +406,8 @@ jobs:
         with:
           name: ${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           overwrite: true
-          if-no-files-found: 'ignore'
-          path: 'outputs/matrix.json'
+          if-no-files-found: "ignore"
+          path: "outputs/matrix.json"
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
@@ -459,10 +463,10 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: 'failure'
-          message_format: '${{ needs.process-result.outputs.message }}'
-          notification_title: 'Golden Test Failure'
-          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+          status: "failure"
+          message_format: "${{ needs.process-result.outputs.message }}"
+          notification_title: "Golden Test Failure"
+          footer: "<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>"
           mention_groups: ${{ needs.process-result.outputs.codeowners }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
@@ -477,10 +481,10 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: 'success'
-          message_format: '${{ needs.process-result.outputs.message }}'
-          notification_title: '✅ Golden Tests: All Passed!'
-          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+          status: "success"
+          message_format: "${{ needs.process-result.outputs.message }}"
+          notification_title: "✅ Golden Tests: All Passed!"
+          footer: "<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -494,9 +498,9 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: 'skipped'
-          message_format: '${{ needs.process-result.outputs.pm_duration }}'
-          notification_title: '⌛ Total duration per package manager (ubuntu only)'
+          status: "skipped"
+          message_format: "${{ needs.process-result.outputs.pm_duration }}"
+          notification_title: "⌛ Total duration per package manager (ubuntu only)"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -510,8 +514,8 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: 'skipped'
-          message_format: '${{ needs.process-result.outputs.proj_duration }}'
-          notification_title: '⌛ E2E Project duration stats'
+          status: "skipped"
+          message_format: "${{ needs.process-result.outputs.proj_duration }}"
+          notification_title: "⌛ E2E Project duration stats"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
