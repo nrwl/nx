@@ -115,7 +115,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
     { svgrOptions?: any; isWithReact: boolean }
   >();
 
-  // Find all React webpack projects using either withReact OR NxReactWebpackPlugin (never both)
+  // Find all React webpack projects using either withReact OR NxReactWebpackPlugin
   forEachExecutorOptions(
     tree,
     '@nx/webpack:webpack',
@@ -127,13 +127,10 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
 
       const content = tree.read(webpackConfigPath, 'utf-8');
 
-      // Parse the file to check for svgr options
       const ast = tsquery.ast(content);
 
-      // Check if this is a withReact setup (function composition style)
+      // Check if this is a withReact setup
       if (content.includes('withReact')) {
-        // Look for first withReact call with svgr option (only one expected)
-        // Use a more specific selector that finds CallExpression where the callee is 'withReact'
         const withReactCalls = tsquery(
           ast,
           'CallExpression[expression.name=withReact]'
@@ -154,10 +151,8 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           ) as ts.PropertyAssignment | undefined;
 
           if (svgrProp) {
-            // Found svgr option
             let svgrValue: boolean | Record<string, unknown> | undefined;
             if (ts.isObjectLiteralExpression(svgrProp.initializer)) {
-              // It's an object with options
               svgrValue = {};
               for (const prop of svgrProp.initializer.properties) {
                 if (!ts.isPropertyAssignment(prop)) continue;
@@ -184,9 +179,8 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           }
         }
       }
-      // Otherwise check if this is NxReactWebpackPlugin setup (plugin style)
+      // Otherwise check if this is NxReactWebpackPlugin setup
       else if (content.includes('NxReactWebpackPlugin')) {
-        // Look for first NxReactWebpackPlugin call with svgr option (only one expected)
         const pluginCalls = tsquery(
           ast,
           'NewExpression[expression.name=NxReactWebpackPlugin]'
@@ -207,10 +201,8 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           ) as ts.PropertyAssignment | undefined;
 
           if (svgrProp) {
-            // Found svgr option
             let svgrValue: boolean | Record<string, unknown> | undefined;
             if (ts.isObjectLiteralExpression(svgrProp.initializer)) {
-              // It's an object with options
               svgrValue = {};
               for (const prop of svgrProp.initializer.properties) {
                 if (!ts.isPropertyAssignment(prop)) continue;
@@ -235,7 +227,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
               svgrValue = false;
             }
 
-            // Add to projects if svgr is explicitly set (true, false, or options)
+            // Add to projects if svgr is explicitly set
             if (svgrValue !== undefined) {
               projects.set(webpackConfigPath, {
                 svgrOptions: svgrValue,
@@ -248,7 +240,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
     }
   );
 
-  // Early exit if no projects need migration
   if (projects.size === 0) return;
 
   // Update webpack configs to add withSvgr function inline
@@ -261,14 +252,12 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
     let svgrOptionsStr = '';
 
     if (config.svgrOptions) {
-      // Add the withSvgr function definition at the top of the file after imports/requires
       const importStatements = tsquery(ast, 'ImportDeclaration');
       const requireStatements = tsquery(
         ast,
         'VariableStatement:has(CallExpression[expression.name=require])'
       );
 
-      // Combine and sort by position to find the last import/require
       const allImportRequires = [
         ...importStatements,
         ...requireStatements,
@@ -277,10 +266,8 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         allImportRequires[allImportRequires.length - 1];
 
       if (config.svgrOptions === true || config.svgrOptions === undefined) {
-        // Use default options
         svgrOptionsStr = '';
       } else if (typeof config.svgrOptions === 'object') {
-        // Build custom options as object literal
         const options = Object.entries(config.svgrOptions)
           .map(([key, value]) => `  ${key}: ${value}`)
           .join(',\n');
@@ -296,7 +283,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
             : withSvgrFunctionForNxReactWebpackPlugin,
         });
       } else {
-        // No imports or requires, add at the beginning
         changes.push({
           type: ChangeType.Insert,
           index: 0,
@@ -335,7 +321,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
               });
 
               if (config.svgrOptions) {
-                // Find the composePlugins call to insert withSvgr
                 const composePluginsCalls = tsquery(
                   ast,
                   'CallExpression[expression.name=composePlugins]'
@@ -344,7 +329,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
                 if (composePluginsCalls.length > 0) {
                   const composeCall =
                     composePluginsCalls[0] as ts.CallExpression;
-                  // Build the withSvgr call string
                   let svgrCallStr = '';
                   if (
                     config.svgrOptions === true ||
@@ -373,7 +357,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         }
       }
     } else {
-      // Remove svgr option from first NxReactWebpackPlugin call (only one expected)
+      // Remove svgr option from first NxReactWebpackPlugin call
       const pluginCalls = tsquery(
         ast,
         'NewExpression[expression.name=NxReactWebpackPlugin]'
@@ -393,30 +377,27 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
             if (svgrProp) {
               const hasOnlySvgrProperty = arg.properties.length === 1;
 
+              // Replace entire object argument with empty parentheses when only svgr property exists
               if (hasOnlySvgrProperty) {
-                // Replace entire object argument with empty parentheses
                 changes.push({
                   type: ChangeType.Delete,
                   start: arg.getStart(),
                   length: arg.getEnd() - arg.getStart(),
                 });
-              } else {
-                // Remove just the svgr property
+              }
+              // If more properties exist, just remove the svgr property
+              else {
                 const propIndex = arg.properties.indexOf(svgrProp);
                 const isLastProp = propIndex === arg.properties.length - 1;
                 const isFirstProp = propIndex === 0;
 
-                // Calculate removal range including whitespace and comma
                 let removeStart = svgrProp.getFullStart();
                 let removeEnd = svgrProp.getEnd();
 
-                // Handle comma removal
                 if (!isLastProp) {
-                  // Remove trailing comma
                   const nextProp = arg.properties[propIndex + 1];
                   removeEnd = nextProp.getFullStart();
                 } else if (!isFirstProp) {
-                  // Remove preceding comma from previous property
                   const prevProp = arg.properties[propIndex - 1];
                   const textBetween = content.substring(
                     prevProp.getEnd(),
@@ -441,7 +422,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
 
       // For NxReactWebpackPlugin style, wrap the entire module.exports or export default with withSvgr
       if (config.svgrOptions) {
-        // Find module.exports statement - look for all BinaryExpressions in the original AST
         const allAssignments = tsquery(ast, 'BinaryExpression');
 
         // Find the one that has module.exports on the left side
@@ -472,7 +452,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         }
 
         if (exportValue) {
-          // Build the withSvgr call string
           let svgrCallStr = '';
           if (config.svgrOptions === true || config.svgrOptions === undefined) {
             svgrCallStr = 'withSvgr()';
@@ -483,14 +462,12 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
             svgrCallStr = `withSvgr({\n${options}\n})`;
           }
 
-          // Insert withSvgr( at the start of the export value
           changes.push({
             type: ChangeType.Insert,
             index: exportValue.getStart(),
             text: `${svgrCallStr}(`,
           });
 
-          // Insert ) at the end of the export value
           changes.push({
             type: ChangeType.Insert,
             index: exportValue.getEnd(),
@@ -500,7 +477,6 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
       }
     }
 
-    // Apply all AST-based changes
     content = applyChangesToString(content, changes);
 
     tree.write(webpackConfigPath, content);

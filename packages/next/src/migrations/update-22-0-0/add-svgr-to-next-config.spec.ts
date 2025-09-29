@@ -180,35 +180,43 @@ module.exports = composePlugins(...plugins)(nextConfig);
       const plugins = [withNx];
 
       // Add SVGR webpack config function
+      // @ts-ignore
       const withSvgr = (config) => {
-        // Add SVGR support
-        config.module.rules.push({
-          test: /\\.svg$/,
-          issuer: { not: /\\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
+        const originalWebpack = config.webpack;
+        // @ts-ignore
+        config.webpack = (webpackConfig, ctx) => {
+          // Add SVGR support
+          webpackConfig.module.rules.push({
+            test: /.svg$/,
+            issuer: { not: /.(css|scss|sass)$/ },
+            resourceQuery: {
+              not: [
+                /__next_metadata__/,
+                /__next_metadata_route__/,
+                /__next_metadata_image_meta__/,
+              ],
+            },
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: false,
+                  titleProp: true,
+                  ref: true,
+                },
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: 'static/media/[name].[hash].[ext]',
+                },
+              },
             ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: false,
-                titleProp: true,
-                ref: true,
-              },
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
+          });
+          return originalWebpack
+            ? originalWebpack(webpackConfig, ctx)
+            : webpackConfig;
+        };
         return config;
       };
 
@@ -269,35 +277,43 @@ module.exports = composePlugins(...plugins)(nextConfig);
       const plugins = [withNx];
 
       // Add SVGR webpack config function
+      // @ts-ignore
       const withSvgr = (config) => {
-        // Add SVGR support
-        config.module.rules.push({
-          test: /\\.svg$/,
-          issuer: { not: /\\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
+        const originalWebpack = config.webpack;
+        // @ts-ignore
+        config.webpack = (webpackConfig, ctx) => {
+          // Add SVGR support
+          webpackConfig.module.rules.push({
+            test: /.svg$/,
+            issuer: { not: /.(css|scss|sass)$/ },
+            resourceQuery: {
+              not: [
+                /__next_metadata__/,
+                /__next_metadata_route__/,
+                /__next_metadata_image_meta__/,
+              ],
+            },
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: true,
+                  titleProp: false,
+                  ref: false,
+                },
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: 'static/media/[name].[hash].[ext]',
+                },
+              },
             ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: true,
-                titleProp: false,
-                ref: false,
-              },
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
+          });
+          return originalWebpack
+            ? originalWebpack(webpackConfig, ctx)
+            : webpackConfig;
+        };
         return config;
       };
 
@@ -354,35 +370,43 @@ module.exports = composePlugins(...plugins)(nextConfig);
       const plugins = [withNx];
 
       // Add SVGR webpack config function
+      // @ts-ignore
       const withSvgr = (config) => {
-        // Add SVGR support
-        config.module.rules.push({
-          test: /\\.svg$/,
-          issuer: { not: /\\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
+        const originalWebpack = config.webpack;
+        // @ts-ignore
+        config.webpack = (webpackConfig, ctx) => {
+          // Add SVGR support
+          webpackConfig.module.rules.push({
+            test: /.svg$/,
+            issuer: { not: /.(css|scss|sass)$/ },
+            resourceQuery: {
+              not: [
+                /__next_metadata__/,
+                /__next_metadata_route__/,
+                /__next_metadata_image_meta__/,
+              ],
+            },
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: false,
+                  titleProp: true,
+                  ref: true,
+                },
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: 'static/media/[name].[hash].[ext]',
+                },
+              },
             ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: false,
-                titleProp: true,
-                ref: true,
-              },
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
+          });
+          return originalWebpack
+            ? originalWebpack(webpackConfig, ctx)
+            : webpackConfig;
+        };
         return config;
       };
 
@@ -471,35 +495,43 @@ module.exports = composePlugins(...plugins)(nextConfig);
       const plugins = [withNx];
 
       // Add SVGR webpack config function
+      // @ts-ignore
       const withSvgr = (config) => {
-        // Add SVGR support
-        config.module.rules.push({
-          test: /\\.svg$/,
-          issuer: { not: /\\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
+        const originalWebpack = config.webpack;
+        // @ts-ignore
+        config.webpack = (webpackConfig, ctx) => {
+          // Add SVGR support
+          webpackConfig.module.rules.push({
+            test: /.svg$/,
+            issuer: { not: /.(css|scss|sass)$/ },
+            resourceQuery: {
+              not: [
+                /__next_metadata__/,
+                /__next_metadata_route__/,
+                /__next_metadata_image_meta__/,
+              ],
+            },
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: false,
+                  titleProp: true,
+                  ref: true,
+                },
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: 'static/media/[name].[hash].[ext]',
+                },
+              },
             ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: false,
-                titleProp: true,
-                ref: true,
-              },
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
+          });
+          return originalWebpack
+            ? originalWebpack(webpackConfig, ctx)
+            : webpackConfig;
+        };
         return config;
       };
 
@@ -562,35 +594,43 @@ module.exports = composePlugins(...plugins)(nextConfig);
       const plugins = [withNx];
 
       // Add SVGR webpack config function
+      // @ts-ignore
       const withSvgr = (config) => {
-        // Add SVGR support
-        config.module.rules.push({
-          test: /\\.svg$/,
-          issuer: { not: /\\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
+        const originalWebpack = config.webpack;
+        // @ts-ignore
+        config.webpack = (webpackConfig, ctx) => {
+          // Add SVGR support
+          webpackConfig.module.rules.push({
+            test: /.svg$/,
+            issuer: { not: /.(css|scss|sass)$/ },
+            resourceQuery: {
+              not: [
+                /__next_metadata__/,
+                /__next_metadata_route__/,
+                /__next_metadata_image_meta__/,
+              ],
+            },
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: false,
+                  titleProp: true,
+                  ref: true,
+                },
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: 'static/media/[name].[hash].[ext]',
+                },
+              },
             ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: false,
-                titleProp: true,
-                ref: true,
-              },
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
+          });
+          return originalWebpack
+            ? originalWebpack(webpackConfig, ctx)
+            : webpackConfig;
+        };
         return config;
       };
 
@@ -647,35 +687,43 @@ module.exports = composePlugins(...plugins)(nextConfig);
       const plugins = [withNx];
 
       // Add SVGR webpack config function
+      // @ts-ignore
       const withSvgr = (config) => {
-        // Add SVGR support
-        config.module.rules.push({
-          test: /\\.svg$/,
-          issuer: { not: /\\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
+        const originalWebpack = config.webpack;
+        // @ts-ignore
+        config.webpack = (webpackConfig, ctx) => {
+          // Add SVGR support
+          webpackConfig.module.rules.push({
+            test: /.svg$/,
+            issuer: { not: /.(css|scss|sass)$/ },
+            resourceQuery: {
+              not: [
+                /__next_metadata__/,
+                /__next_metadata_route__/,
+                /__next_metadata_image_meta__/,
+              ],
+            },
+            use: [
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: false,
+                  titleProp: true,
+                  ref: true,
+                },
+              },
+              {
+                loader: require.resolve('file-loader'),
+                options: {
+                  name: 'static/media/[name].[hash].[ext]',
+                },
+              },
             ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: false,
-                titleProp: true,
-                ref: true,
-              },
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
+          });
+          return originalWebpack
+            ? originalWebpack(webpackConfig, ctx)
+            : webpackConfig;
+        };
         return config;
       };
 
