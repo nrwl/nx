@@ -7,5 +7,6 @@
 | Name                  | Type                                                                              |
 | :-------------------- | :-------------------------------------------------------------------------------- |
 | `argv`                | `string`[]                                                                        |
+| `id`                  | `string`                                                                          |
 | `nxJsonConfiguration` | [`NxJsonConfiguration`](/reference/core-api/devkit/documents/NxJsonConfiguration) |
 | `workspaceRoot`       | `string`                                                                          |
