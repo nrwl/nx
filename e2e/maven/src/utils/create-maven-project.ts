@@ -250,7 +250,13 @@ function createMavenProjectManually(
   writeFileSync(join(cwd, 'pom.xml'), parentPom);
 
   // Create modules manually
-  createModuleManually(cwd, 'app', projectName, ['lib'], addProjectJsonNamePrefix);
+  createModuleManually(
+    cwd,
+    'app',
+    projectName,
+    ['lib'],
+    addProjectJsonNamePrefix
+  );
   createModuleManually(
     cwd,
     'lib',
