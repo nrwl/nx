@@ -2,7 +2,6 @@
 import { useTheme } from '@nx/nx-dev-ui-theme';
 import dynamic from 'next/dynamic';
 import { ReactElement, useEffect, useState } from 'react';
-import { parseAstroHtmlWrappedJson } from '../utils/parse-astro-html-wrapped-json';
 
 export function Loading() {
   return (
@@ -33,16 +32,6 @@ const NxDevTaskGraph = dynamic(
   { ssr: false, loading: () => <Loading /> }
 );
 
-function getInitialPropsForAstro(children: ReactElement) {
-  if (!children || !children.hasOwnProperty('props') || !children.props.value)
-    return null;
-  try {
-    return parseAstroHtmlWrappedJson(children.props.value.toString() as any);
-  } catch {
-    return null;
-  }
-}
-
 export type GraphProps = {
   height: string;
   title: string;
@@ -50,7 +39,16 @@ export type GraphProps = {
   jsonFile?: string;
   children: ReactElement;
   isAstro?: boolean;
+  astroRawData?: string;
 };
+
+function safeParse(jsonString: string) {
+  try {
+    return JSON.parse(jsonString);
+  } catch {
+    return null;
+  }
+}
 
 export function Graph({
   height,
@@ -58,11 +56,11 @@ export function Graph({
   type,
   jsonFile,
   children,
-  isAstro = false,
+  astroRawData,
 }: GraphProps): JSX.Element {
   const [theme] = useTheme();
   const [parsedProps, setParsedProps] = useState<any>(
-    isAstro ? getInitialPropsForAstro(children) : null
+    astroRawData ? safeParse(astroRawData) : null
   );
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
@@ -80,7 +78,7 @@ export function Graph({
     }
   }, [jsonFile, setParsedProps]);
   if (!jsonFile && !parsedProps) {
-    if (!children || !children.hasOwnProperty('props')) {
+    if (!astroRawData) {
       return (
         <div className="no-prose block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">
@@ -91,13 +89,12 @@ export function Graph({
       );
     }
 
-    try {
-      setParsedProps(JSON.parse(children?.props.children as any));
-    } catch {
+    // If raw data is passed but props are not set, it must be invalid JSON
+    if (astroRawData && !parsedProps) {
       return (
         <div className="not-prose block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">Could not parse JSON for graph:</p>
-          <pre className="p-4 text-sm">{children?.props.children as any}</pre>
+          <pre className="p-4 text-sm">{astroRawData}</pre>
         </div>
       );
     }
