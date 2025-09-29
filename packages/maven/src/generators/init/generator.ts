@@ -8,6 +8,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { DOMParser, XMLSerializer } from 'xmldom';
+import { mavenPluginVersion, nxVersion } from '../../utils/versions';
 
 export interface MavenInitGeneratorSchema {
   skipFormat?: boolean;
@@ -25,7 +26,7 @@ export async function mavenInitGenerator(
       tree,
       {},
       {
-        '@nx/maven': 'latest',
+        '@nx/maven': nxVersion,
       }
     );
     tasks.push(installTask);
@@ -161,7 +162,7 @@ function addPluginToPom(pomContent: string): string {
     plugin.appendChild(artifactId);
 
     const version = doc.createElement('version');
-    version.appendChild(doc.createTextNode('1.0.0-SNAPSHOT'));
+    version.appendChild(doc.createTextNode(mavenPluginVersion));
     plugin.appendChild(doc.createTextNode('\n        '));
     plugin.appendChild(version);
     plugin.appendChild(doc.createTextNode('\n      '));

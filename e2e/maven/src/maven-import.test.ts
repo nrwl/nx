@@ -53,19 +53,12 @@ describe('Nx Import Maven', () => {
 
   it('should be able to import a Maven project', () => {
     const tempMavenProjectName = 'created-maven-app';
-    const tempMavenProjectPath = join(
-      tempImportE2ERoot,
-      tempMavenProjectName
-    );
+    const tempMavenProjectPath = join(tempImportE2ERoot, tempMavenProjectName);
     try {
       rmdirSync(tempMavenProjectPath, { recursive: true });
     } catch {}
     mkdirSync(tempMavenProjectPath, { recursive: true });
-    createMavenProject(
-      tempMavenProjectName,
-      tempMavenProjectPath,
-      'maven-'
-    );
+    createMavenProject(tempMavenProjectName, tempMavenProjectPath, 'maven-');
     setupMavenProjectGit(tempMavenProjectPath, tempMavenProjectName);
 
     const remote = tempMavenProjectPath;

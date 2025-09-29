@@ -1,16 +1,26 @@
 {
   "name": "@nx/maven",
-  "version": "0.0.1",
+  "version": "22.0.0",
   "description": "Nx plugin for Maven integration",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json"
+  },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "files": [
     "dist",
     "generators.json",
     "executors.json",
-    "src"
+    "!README.md__tpl__"
   ],
   "keywords": [
     "nx",
