@@ -1241,6 +1241,12 @@ importers:
         specifier: workspace:*
         version: link:../utils
 
+  e2e/maven:
+    dependencies:
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+
   e2e/next:
     dependencies:
       '@nx/e2e-utils':
@@ -3065,9 +3071,6 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      tslib:
-        specifier: ^2.3.0
-        version: 2.8.1
       xmldom:
         specifier: ^0.6.0
         version: 0.6.0
