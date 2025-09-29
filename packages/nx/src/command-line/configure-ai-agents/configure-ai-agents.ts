@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import * as chalk from 'chalk';
 
 import {
   Agent,
@@ -65,12 +66,31 @@ export async function configureAiAgentsHandlerImpl(
   } = await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
 
   if (disabledAgents.length > 0) {
+    const commandNames = disabledAgents.map((a) => {
+      if (a === 'cursor') return '"cursor"';
+      if (a === 'copilot') return '"code"/"code-insiders"';
+      return a;
+    });
+
+    const agentNames = disabledAgents.map((a) => agentDisplayMap[a]).join(', ');
+
+    const pluralS = disabledAgents.length > 1 ? 's' : '';
+    const title =
+      commandNames.length === 1
+        ? `${commandNames[0]} command not available. Ignoring ${agentNames} agent${pluralS}.`
+        : `CLI commands ${commandNames
+            .map((c) => `${c}`)
+            .join(
+              ', '
+            )} not available. Ignoring ${agentNames} agent${pluralS}.`;
+
     output.log({
-      title: `Ignoring agent${
-        disabledAgents.length > 1 ? 's' : ''
-      } ${disabledAgents
-        .map((a) => agentDisplayMap[a])
-        .join(', ')} because editor is not available.`,
+      title,
+      bodyLines: [
+        chalk.dim(
+          'To manually configure the Nx MCP in your editor, install Nx Console (https://nx.dev/getting-started/editor-setup)'
+        ),
+      ],
     });
   }
 
