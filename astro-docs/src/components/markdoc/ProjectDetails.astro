@@ -4,9 +4,7 @@ type Props = ProjectDetailsProps;
 ---
 
 <div class="pdv">
-  <Default client:visible {...Astro.props} isAstro={true}>
-    <slot />
-  </Default>
+  <Default client:visible {...Astro.props} />
 </div>
 
 
