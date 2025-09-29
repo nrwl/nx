@@ -408,6 +408,9 @@
     },
     {
       "path": "./packages/maven"
+    },
+    {
+      "path": "./e2e/maven"
     }
   ],
   "extends": "./tsconfig.base.json"
