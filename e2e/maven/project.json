@@ -1,0 +1,9 @@
+{
+  "name": "e2e-maven",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/maven",
+  "projectType": "application",
+  "implicitDependencies": ["maven", "nx-maven-plugin"],
+  "// targets": "to see all targets run: nx show project e2e-maven --web",
+  "targets": {}
+}
