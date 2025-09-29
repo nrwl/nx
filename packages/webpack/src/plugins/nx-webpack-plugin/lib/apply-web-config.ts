@@ -360,20 +360,9 @@ export function applyWebConfig(
     ...config.module,
     rules: [
       ...(config.module.rules ?? []),
-      // Images: Inline small images, and emit a separate file otherwise.
+      // Images: Inline small images, and emit a separate file otherwise (including SVGs).
       {
-        test: /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 10_000, // 10 kB
-          },
-        },
-      },
-      // TODO(v22): Remove this but provide a migration in `@nx/react` to add @svgr/webpack in userland webpack config
-      // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
-      {
-        test: /\.svg$/,
+        test: /\.(avif|bmp|gif|ico|jpe?g|png|svg|webp)$/,
         type: 'asset',
         parser: {
           dataUrlCondition: {

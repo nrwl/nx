@@ -3160,6 +3160,16 @@
       }
     },
     "migrations": {
+      "/technologies/react/next/api/migrations/update-22-0-0-add-svgr-to-next-config": {
+        "description": "Updates next.config.js files to add SVGR webpack configuration directly instead of using the nx.svgr option in withNx.",
+        "file": "generated/packages/next/migrations/update-22-0-0-add-svgr-to-next-config.json",
+        "hidden": false,
+        "name": "update-22-0-0-add-svgr-to-next-config",
+        "version": "22.0.0-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "/technologies/react/next/api/migrations/update-22-0-0-add-svgr-to-next-config",
+        "type": "migration"
+      },
       "/technologies/react/next/api/migrations/20.7.1-beta.0-package-updates": {
         "description": "",
         "file": "generated/packages/next/migrations/20.7.1-beta.0-package-updates.json",
@@ -4247,6 +4257,16 @@
       }
     },
     "migrations": {
+      "/technologies/react/api/migrations/update-22-0-0-add-svgr-to-webpack-config": {
+        "description": "Updates webpack configs using React to use the new withSvgr composable function instead of the svgr option in withReact or NxReactWebpackPlugin.",
+        "file": "generated/packages/react/migrations/update-22-0-0-add-svgr-to-webpack-config.json",
+        "hidden": false,
+        "name": "update-22-0-0-add-svgr-to-webpack-config",
+        "version": "22.0.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/technologies/react/api/migrations/update-22-0-0-add-svgr-to-webpack-config",
+        "type": "migration"
+      },
       "/technologies/react/api/migrations/21.4.0-package-updates": {
         "description": "",
         "file": "generated/packages/react/migrations/21.4.0-package-updates.json",
