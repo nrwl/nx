@@ -241,16 +241,10 @@ export async function createNxReleaseConfig(
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
-  /**
-   * TODO(v22): in v22, make it so that this pattern is used by default when any custom groups are used
-   */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
   const defaultReleaseTagPatternRequireSemver = true;
-  /**
-   * TODO(v22): in v22, set this to true by default
-   */
-  const defaultReleaseTagPatternStrictPreid = false;
+  const defaultReleaseTagPatternStrictPreid = true;
 
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
@@ -351,16 +345,14 @@ export async function createNxReleaseConfig(
       git: versionGitDefaults,
       conventionalCommits: userConfig.version?.conventionalCommits || false,
       preVersionCommand: userConfig.version?.preVersionCommand || '',
-
       versionActions: DEFAULT_VERSION_ACTIONS_PATH,
       versionActionsOptions: {},
       currentVersionResolver: defaultGeneratorOptions.currentVersionResolver,
       specifierSource: defaultGeneratorOptions.specifierSource,
       preserveLocalDependencyProtocols:
         userConfig.version?.preserveLocalDependencyProtocols ?? true,
-      // TODO(v22): flip default to true
       preserveMatchingDependencyRanges:
-        userConfig.version?.preserveMatchingDependencyRanges ?? false,
+        userConfig.version?.preserveMatchingDependencyRanges ?? true,
       logUnchangedProjects: userConfig.version?.logUnchangedProjects ?? true,
       updateDependents: userConfig.version?.updateDependents ?? 'auto',
     } as DeepRequired<NxReleaseConfiguration['version']>,
@@ -665,6 +657,13 @@ export async function createNxReleaseConfig(
           nxReleaseConfig: null,
         };
       }
+    } else {
+      releaseGroup.releaseTagPattern =
+        releaseGroup.projectsRelationship === 'independent'
+          ? WORKSPACE_DEFAULTS.releaseTagPattern?.includes('{projectName}')
+            ? WORKSPACE_DEFAULTS.releaseTagPattern
+            : defaultIndependentReleaseTagPattern
+          : userConfig?.releaseTagPattern ?? defaultFixedGroupReleaseTagPattern;
     }
 
     for (const project of matchingProjects) {

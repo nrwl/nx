@@ -61,7 +61,7 @@ expect.addSnapshotSerializer({
   },
 });
 
-describe('debug nx release - independent projects', () => {
+describe('nx release - independent projects', () => {
   let pkg1: string;
   let pkg2: string;
   let pkg3: string;
@@ -322,6 +322,7 @@ describe('debug nx release - independent projects', () => {
               fixed: {
                 projects: [pkg3],
                 projectsRelationship: 'fixed',
+                releaseTagPattern: `${pkg3}@{version}`,
               },
             },
           },
@@ -390,7 +391,7 @@ describe('debug nx release - independent projects', () => {
           Tagging the current commit in git with the following command:
           git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
           Tagging the current commit in git with the following command:
-          git tag --annotate v999.9.9-version-git-operations-test.3 --message v999.9.9-version-git-operations-test.3
+          git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
 
         `);
 
@@ -411,7 +412,7 @@ describe('debug nx release - independent projects', () => {
       expect(runCommand('git tag --points-at HEAD')).toMatchInlineSnapshot(`
                   {project-name}@999.9.9-version-git-operations-test.3
                   {project-name}@999.9.9-version-git-operations-test.3
-                  v999.9.9-version-git-operations-test.3
+                  {project-name}@999.9.9-version-git-operations-test.3
 
               `);
     });
@@ -606,6 +607,7 @@ describe('debug nx release - independent projects', () => {
               fixed: {
                 projects: [pkg3],
                 projectsRelationship: 'fixed',
+                releaseTagPattern: `${pkg3}@{version}`,
               },
             },
           },

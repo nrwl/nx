@@ -209,14 +209,15 @@ export default class JsVersionActions extends VersionActions {
           'peerDependencies',
           'optionalDependencies',
         ];
-        // TODO(v22): Flip this to all by default
+
         const preserveMatchingDependencyRanges =
           this.finalConfigForProject.preserveMatchingDependencyRanges === true
             ? dependencyTypes
             : this.finalConfigForProject.preserveMatchingDependencyRanges ===
               false
             ? []
-            : this.finalConfigForProject.preserveMatchingDependencyRanges || [];
+            : this.finalConfigForProject.preserveMatchingDependencyRanges ||
+              dependencyTypes;
 
         for (const depType of dependencyTypes) {
           if (json[depType]) {
