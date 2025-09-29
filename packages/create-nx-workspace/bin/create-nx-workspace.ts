@@ -2,7 +2,10 @@ import * as enquirer from 'enquirer';
 import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 
-import { CreateWorkspaceOptions } from '../src/create-workspace-options';
+import {
+  supportedAgents,
+  CreateWorkspaceOptions,
+} from '../src/create-workspace-options';
 import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
@@ -11,6 +14,7 @@ import { nxVersion } from '../src/utils/nx/nx-version';
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
+  determineAiAgents,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
@@ -216,6 +220,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('prefix', {
             describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
             type: 'string',
+          })
+          .option('aiAgents', {
+            describe: chalk.dim`List of AI agents to configure.`,
+            type: 'array',
+            choices: [...supportedAgents],
           }),
         withNxCloud,
         withUseGitHub,
@@ -322,6 +331,7 @@ async function normalizeArgsMiddleware(
     }
 
     const packageManager = await determinePackageManager(argv);
+    const aiAgents = await determineAiAgents(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud =
       argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
@@ -334,6 +344,7 @@ async function normalizeArgsMiddleware(
       useGitHub,
       packageManager,
       defaultBase,
+      aiAgents,
     });
   } catch (e) {
     console.error(e);

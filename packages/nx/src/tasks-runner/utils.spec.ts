@@ -478,6 +478,9 @@ describe('utils', () => {
             type: 'app',
             data: {
               root: 'libs/project',
+              targets: {
+                build: {},
+              },
             },
           },
         },

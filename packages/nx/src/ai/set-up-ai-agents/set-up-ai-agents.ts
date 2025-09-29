@@ -1,20 +1,53 @@
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
-import { updateJson, writeJson } from '../../generators/utils/json';
+import { readJson, updateJson, writeJson } from '../../generators/utils/json';
+import {
+  canInstallNxConsoleForEditor,
+  installNxConsoleForEditor,
+  isEditorInstalled,
+  SupportedEditor,
+} from '../../native';
+import {
+  CLIErrorMessageConfig,
+  CLINoteMessageConfig,
+} from '../../utils/output';
 import { installPackageToTmp } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { getAgentRules } from './get-agent-rules';
+import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants';
+import { Agent, supportedAgents } from '../utils';
+import {
+  getAgentRulesWrapped,
+  nxMcpTomlConfig,
+  nxMcpTomlHeader,
+  nxRulesMarkerCommentDescription,
+  nxRulesMarkerCommentEnd,
+  nxRulesMarkerCommentStart,
+  rulesRegex,
+} from '../constants';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
 
+export type ModificationResults = {
+  messages: CLINoteMessageConfig[];
+  errors: CLIErrorMessageConfig[];
+};
+
 export async function setupAiAgentsGenerator(
   tree: Tree,
   options: SetupAiAgentsGeneratorSchema,
   inner = false
-) {
+): Promise<(check?: boolean) => Promise<ModificationResults>> {
   const normalizedOptions: NormalizedSetupAiAgentsGeneratorSchema =
     normalizeOptions(options);
 
@@ -58,43 +91,194 @@ function normalizeOptions(
     directory: options.directory,
     writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
+    agents: options.agents ?? [...supportedAgents],
   };
 }
 
 export async function setupAiAgentsGeneratorImpl(
   tree: Tree,
   options: NormalizedSetupAiAgentsGeneratorSchema
-) {
-  const claudePath = join(options.directory, 'CLAUDE.md');
-  if (!tree.exists(claudePath)) {
-    tree.write(claudePath, getAgentRules(options.writeNxCloudRules));
-  }
-  const agentsPath = join(options.directory, 'AGENTS.md');
-  if (!tree.exists(agentsPath)) {
-    tree.write(agentsPath, getAgentRules(options.writeNxCloudRules));
+): Promise<() => Promise<ModificationResults>> {
+  const hasAgent = (agent: Agent) => options.agents.includes(agent);
+
+  const agentsMd = agentsMdPath(options.directory);
+
+  // write AGENTS.md for most agents
+  if (hasAgent('cursor') || hasAgent('copilot') || hasAgent('codex')) {
+    writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
   }
 
-  const mcpJsonPath = join(options.directory, '.mcp.json');
-  if (!tree.exists(mcpJsonPath)) {
-    writeJson(tree, mcpJsonPath, {});
-  }
-  updateJson(tree, mcpJsonPath, mcpConfigUpdater);
+  if (hasAgent('claude')) {
+    const claudePath = join(options.directory, 'CLAUDE.md');
+    writeAgentRules(tree, claudePath, options.writeNxCloudRules);
 
-  const geminiPath = join(options.directory, '.gemini', 'settings.json');
-  if (!tree.exists(geminiPath)) {
-    writeJson(tree, geminiPath, {});
+    const mcpJsonPath = join(options.directory, '.mcp.json');
+    if (!tree.exists(mcpJsonPath)) {
+      writeJson(tree, mcpJsonPath, {});
+    }
+    updateJson(tree, mcpJsonPath, mcpConfigUpdater);
   }
-  updateJson(tree, geminiPath, mcpConfigUpdater);
 
-  // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
-  if (!tree.exists(join(options.directory, 'GEMINI.md'))) {
-    updateJson(tree, geminiPath, (json) => ({
-      ...json,
-      contextFileName: 'AGENTS.md',
-    }));
+  if (hasAgent('gemini')) {
+    const geminiSettingsPath = join(
+      options.directory,
+      '.gemini',
+      'settings.json'
+    );
+    if (!tree.exists(geminiSettingsPath)) {
+      writeJson(tree, geminiSettingsPath, {});
+    }
+    updateJson(tree, geminiSettingsPath, mcpConfigUpdater);
+
+    const contextFileName: string | undefined = readJson(
+      tree,
+      geminiSettingsPath
+    ).contextFileName;
+
+    const geminiMd = geminiMdPath(options.directory);
+
+    // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
+    if (!contextFileName && !tree.exists(geminiMd)) {
+      writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
+      updateJson(tree, geminiSettingsPath, (json) => ({
+        ...json,
+        contextFileName: 'AGENTS.md',
+      }));
+    } else {
+      writeAgentRules(
+        tree,
+        contextFileName ?? geminiMd,
+        options.writeNxCloudRules
+      );
+    }
   }
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
+
+  // we use the check variable to determine if we should actually make changes or just report what would be changed
+  return async (check: boolean = false) => {
+    const messages: CLINoteMessageConfig[] = [];
+    const errors: CLIErrorMessageConfig[] = [];
+    if (hasAgent('codex')) {
+      if (existsSync(codexConfigTomlPath)) {
+        const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
+        if (!tomlContents.includes(nxMcpTomlHeader)) {
+          if (!check) {
+            appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
+          }
+          messages.push({
+            title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
+          });
+        }
+      } else {
+        if (!check) {
+          mkdirSync(join(homedir(), '.codex'), { recursive: true });
+          writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
+        }
+        messages.push({
+          title: `Created ${codexConfigTomlPath} with nx-mcp server`,
+        });
+      }
+    }
+
+    if (hasAgent('copilot')) {
+      try {
+        if (
+          isEditorInstalled(SupportedEditor.VSCode) &&
+          canInstallNxConsoleForEditor(SupportedEditor.VSCode)
+        ) {
+          if (!check) {
+            installNxConsoleForEditor(SupportedEditor.VSCode);
+          }
+          messages.push({
+            title: `Installed Nx Console for VSCode`,
+          });
+        }
+      } catch (e) {
+        errors.push({
+          title: `Failed to install Nx Console for VSCode. Please install it manually.`,
+          bodyLines: [(e as Error).message],
+        });
+      }
+      try {
+        if (
+          isEditorInstalled(SupportedEditor.VSCodeInsiders) &&
+          canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders)
+        ) {
+          if (!check) {
+            installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
+          }
+          messages.push({
+            title: `Installed Nx Console for VSCode Insiders`,
+          });
+        }
+      } catch (e) {
+        errors.push({
+          title: `Failed to install Nx Console for VSCode Insiders. Please install it manually.`,
+          bodyLines: [(e as Error).message],
+        });
+      }
+    }
+    if (hasAgent('cursor')) {
+      try {
+        if (
+          isEditorInstalled(SupportedEditor.Cursor) &&
+          canInstallNxConsoleForEditor(SupportedEditor.Cursor)
+        ) {
+          if (!check) {
+            installNxConsoleForEditor(SupportedEditor.Cursor);
+          }
+          messages.push({
+            title: `Installed Nx Console for Cursor`,
+          });
+        }
+      } catch (e) {
+        errors.push({
+          title: `Failed to install Nx Console for Cursor. Please install it manually.`,
+          bodyLines: [(e as Error).message],
+        });
+      }
+    }
+    return {
+      messages,
+      errors,
+    };
+  };
+}
+
+function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
+  const expectedRules = getAgentRulesWrapped(writeNxCloudRules);
+
+  if (!tree.exists(path)) {
+    tree.write(path, expectedRules);
+    return;
+  }
+
+  const existing = tree.read(path, 'utf-8');
+
+  const regex = rulesRegex;
+  const existingNxConfiguration = existing.match(regex);
+
+  if (existingNxConfiguration) {
+    const contentOnly = (str: string) =>
+      str
+        .replace(nxRulesMarkerCommentStart, '')
+        .replace(nxRulesMarkerCommentEnd, '')
+        .replace(nxRulesMarkerCommentDescription, '')
+        .replace(/\s/g, '');
+
+    // we don't want to make updates on whitespace-only changes
+    if (
+      contentOnly(existingNxConfiguration[0]) === contentOnly(expectedRules)
+    ) {
+      return;
+    }
+    // otherwise replace the existing configuration
+    const updatedContent = existing.replace(regex, expectedRules);
+    tree.write(path, updatedContent);
+  } else {
+    tree.write(path, existing + '\n\n' + expectedRules);
+  }
 }
 
 function mcpConfigUpdater(existing: any): any {

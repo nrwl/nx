@@ -3936,6 +3936,17 @@
         "originalFilePath": "generated/cli/mcp"
       },
       {
+        "id": "configure-ai-agents",
+        "name": "configure-ai-agents",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/configure-ai-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/configure-ai-agents",
+        "tags": ["configure-ai-agents"],
+        "originalFilePath": "generated/cli/configure-ai-agents"
+      },
+      {
         "id": "login",
         "name": "login",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

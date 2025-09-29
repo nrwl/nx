@@ -1,6 +1,8 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  detectPackageManager,
+  getPackageManagerCommand,
   newProject,
   readFile,
   runCLI,
@@ -8,6 +10,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e-utils';
+import { setupWorkspaces } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -85,6 +88,10 @@ describe('nx release conventional commits config', () => {
       };
       return nxJson;
     });
+
+    setupWorkspaces(detectPackageManager(), pkg1, pkg2, pkg3, pkg4, pkg5, pkg6);
+    const pmc = getPackageManagerCommand();
+    await runCommandAsync(pmc.install);
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);

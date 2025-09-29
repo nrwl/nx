@@ -35,7 +35,9 @@ fn is_nx_console_installed(command: &str) -> Result<bool, Error> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
-    if output.status.success() {
+    // Check if we got extension list in stdout even if command failed
+    // This handles the VS Code Insiders crash that happens after listing extensions
+    if !stdout.is_empty() {
         let is_installed = stdout
             .lines()
             .any(|line| line.trim() == NX_CONSOLE_EXTENSION_ID);
@@ -47,16 +49,15 @@ fn is_nx_console_installed(command: &str) -> Result<bool, Error> {
         return Ok(is_installed);
     }
 
-    // Log the error output for debugging
-    debug!("Command failed with status: {:?}", output.status);
-    if !stdout.is_empty() {
-        trace!("Command stdout: {}", stdout.trim());
-    }
-    if !stderr.is_empty() {
-        trace!("Command stderr: {}", stderr.trim());
+    // Log the error output for debugging if no stdout
+    if !output.status.success() {
+        debug!("Command failed with status: {:?}", output.status);
+        if !stderr.is_empty() {
+            trace!("Command stderr: {}", stderr.trim());
+        }
     }
 
-    // Command failed, assume not installed
+    // No output or command failed without output, assume not installed
     Ok(false)
 }
 
@@ -127,9 +128,19 @@ fn install_extension(command: &str) -> Result<(), Error> {
 pub fn can_install_nx_console() -> bool {
     enable_logger();
 
-    if let Some(command) = get_install_command() {
-        if let Ok(installed) = is_nx_console_installed(command) {
-            !installed
+    let current_editor = get_current_editor();
+    debug!("Detected editor: {:?}", current_editor);
+
+    can_install_nx_console_for_editor(*current_editor)
+}
+
+#[napi]
+pub fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool {
+    enable_logger();
+
+    if let Some(command) = get_command_for_editor(&editor) {
+        if let Ok(installed) = is_nx_console_installed(&command) {
+            !installed // Can install if NOT installed
         } else {
             false
         }
@@ -138,7 +149,29 @@ pub fn can_install_nx_console() -> bool {
     }
 }
 
-pub fn get_install_command() -> Option<&'static str> {
+#[napi]
+pub fn install_nx_console() {
+    enable_logger();
+
+    let current_editor = get_current_editor();
+    debug!("Detected editor: {:?}", current_editor);
+
+    install_nx_console_for_editor(*current_editor);
+}
+
+#[napi]
+pub fn install_nx_console_for_editor(editor: SupportedEditor) {
+    enable_logger();
+
+    if let Some(command) = get_command_for_editor(&editor) {
+        // Try to install the extension
+        if let Err(e) = install_extension(command) {
+            debug!("Failed to install Nx Console extension: {}", e);
+        }
+    }
+}
+
+fn get_command_for_editor(editor: &SupportedEditor) -> Option<&'static str> {
     // Check if installation should be skipped
     let skip_install = std::env::var("NX_SKIP_VSCODE_EXTENSION_INSTALL")
         .map(|v| v == "true")
@@ -161,13 +194,8 @@ pub fn get_install_command() -> Option<&'static str> {
         }
     }
 
-    // Use the sophisticated editor detection from nx_console
-    let current_editor = get_current_editor();
-    debug!("Detected editor: {:?}", current_editor);
-
-    match current_editor {
+    match editor {
         SupportedEditor::VSCode => {
-            debug!("Installing Nx Console extension for VS Code");
             #[cfg(target_os = "windows")]
             {
                 Some("code.cmd")
@@ -178,7 +206,6 @@ pub fn get_install_command() -> Option<&'static str> {
             }
         }
         SupportedEditor::VSCodeInsiders => {
-            debug!("Installing Nx Console extension for VS Code Insiders");
             #[cfg(target_os = "windows")]
             {
                 Some("code-insiders.cmd")
@@ -189,7 +216,6 @@ pub fn get_install_command() -> Option<&'static str> {
             }
         }
         SupportedEditor::Cursor => {
-            debug!("Installing Nx Console extension for Cursor");
             if cfg!(target_os = "windows") {
                 Some("cursor.cmd")
             } else if cfg!(target_os = "macos") {
@@ -200,7 +226,6 @@ pub fn get_install_command() -> Option<&'static str> {
             }
         }
         SupportedEditor::Windsurf => {
-            debug!("Installing Nx Console extension for Windsurf");
             #[cfg(target_os = "windows")]
             {
                 Some("windsurf.cmd")
@@ -210,23 +235,34 @@ pub fn get_install_command() -> Option<&'static str> {
                 Some("windsurf")
             }
         }
-        editor => {
-            trace!(
-                "Unknown editor ({editor:?}) detected, skipping Nx Console extension installation"
-            );
-            None
-        }
+        _ => None,
     }
 }
 
 #[napi]
-pub fn install_nx_console() {
+pub fn is_editor_installed(editor: SupportedEditor) -> bool {
     enable_logger();
 
-    if let Some(command) = get_install_command() {
-        // Try to install the extension
-        if let Err(e) = install_extension(command) {
-            debug!("Failed to install Nx Console extension: {}", e);
+    if let Some(command) = get_command_for_editor(&editor) {
+        // Just check if the command exists and is executable
+        match Command::new(command).arg("--version").output() {
+            Ok(_) => {
+                debug!("Editor command '{}' is installed", command);
+                true
+            }
+            Err(e) => match e.kind() {
+                std::io::ErrorKind::NotFound => {
+                    debug!("Editor command '{}' not found", command);
+                    false
+                }
+                _ => {
+                    debug!("Could not determine if '{}' is installed: {}", command, e);
+                    false
+                }
+            },
         }
+    } else {
+        debug!("No command available for editor: {:?}", editor);
+        false
     }
 }

@@ -38,6 +38,7 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
+import { yargsConfigureAiAgentsCommand } from './configure-ai-agents/command-object';
 import { yargsLoginCommand } from './nx-cloud/login/command-object';
 import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
 import { yargsRecordCommand } from './nx-cloud/record/command-object';
@@ -71,6 +72,7 @@ export const commandsObject = yargs
   .demandCommand(1, '')
   .command(yargsRegisterCommand)
   .command(yargsAddCommand)
+  .command(yargsConfigureAiAgentsCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
   .command(yargsAffectedE2ECommand)

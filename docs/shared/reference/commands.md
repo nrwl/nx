@@ -87,6 +87,19 @@ nx migrate --run-migrations
 {% link-card title="Automate Updating Dependencies" type="Feature" url="/features/automate-updating-dependencies" /%}
 {% /cards %}
 
+### configure-ai-agents
+
+Configures AI agent context files (like `AGENTS.md`, `CLAUDE.md` etc.) and configures the Nx MCP server. Prompts for individual agents to configure.
+
+```shell
+nx configure-ai-agents
+nx configure-ai-agents --check
+```
+
+{% cards %}
+{% link-card title="nx import" type="API Reference" url="/reference/core-api/nx/documents/configure-ai-agents" /%}
+{% /cards %}
+
 ### import
 
 Import code and git history from another repository into this repository.

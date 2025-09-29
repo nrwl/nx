@@ -5640,6 +5640,14 @@
                         "disableCollapsible": false
                       },
                       {
+                        "id": "configure-ai-agents",
+                        "path": "/reference/core-api/nx/documents/configure-ai-agents",
+                        "name": "configure-ai-agents",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
                         "id": "login",
                         "path": "/reference/core-api/nx/documents/login",
                         "name": "login",

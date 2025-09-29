@@ -1687,6 +1687,15 @@
       "path": "/reference/core-api/nx/documents/mcp"
     }
   ],
+  "configure-ai-agents": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/configure-ai-agents",
+      "id": "configure-ai-agents",
+      "name": "configure-ai-agents",
+      "path": "/reference/core-api/nx/documents/configure-ai-agents"
+    }
+  ],
   "nx-cloud": [
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

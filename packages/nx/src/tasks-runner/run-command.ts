@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logDebug, RunMode } from '../native';
+import { hashArray, logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -133,8 +133,6 @@ async function getTerminalOutputLifeCycle(
     const isRunOne = initiatingProject != null;
 
     const pinnedTasks: string[] = [];
-    const taskText = tasks.length === 1 ? 'task' : 'tasks';
-    const projectText = projectNames.length === 1 ? 'project' : 'projects';
     let titleText = '';
 
     if (isRunOne) {
@@ -439,12 +437,15 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
+      const id = hashArray([...process.argv, Date.now().toString()]);
       await runPreTasksExecution({
+        id,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
       });
 
+      const startTime = Date.now();
       const { taskResults, completed } = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
@@ -461,6 +462,7 @@ export async function runCommand(
         extraTargetDependencies,
         extraOptions
       );
+      const endTime = Date.now();
 
       const exitCode = !completed
         ? signalToCode('SIGINT')
@@ -472,10 +474,13 @@ export async function runCommand(
         : 0;
 
       await runPostTasksExecution({
+        id,
         taskResults,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
+        startTime,
+        endTime,
       });
 
       return exitCode;
