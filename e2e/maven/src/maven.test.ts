@@ -4,7 +4,7 @@ import {
   newProject,
   runCLI,
   uniq,
-  updateJson,
+  readJson,
 } from '@nx/e2e-utils';
 
 import { createMavenProject } from './utils/create-maven-project';
@@ -13,7 +13,9 @@ describe('Maven', () => {
   let mavenProjectName = uniq('my-maven-project');
 
   beforeAll(() => {
-    newProject();
+    newProject({
+      packages: ['@nx/maven'],
+    });
     createMavenProject(mavenProjectName);
     runCLI(`add @nx/maven`);
   });
@@ -59,14 +61,15 @@ describe('Maven', () => {
 
   it('should handle Maven project with complex dependencies', () => {
     // Verify that app's dependencies are tracked correctly
-    const graph = JSON.parse(runCLI('graph --file=graph.json'));
+    runCLI('graph --file=graph.json');
+    const graph = readJson('graph.json');
 
     // Check that dependencies exist in the graph
     const appDeps = graph.dependencies.app;
-    expect(appDeps).toBeDefined();
-
-    // App should depend on lib
-    const libDep = appDeps.find((d) => d.target === 'lib');
-    expect(libDep).toBeDefined();
+    expect(appDeps).toContainEqual({
+      source: 'app',
+      target: 'lib',
+      type: 'static',
+    });
   });
 });
