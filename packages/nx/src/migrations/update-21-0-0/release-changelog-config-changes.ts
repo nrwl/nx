@@ -1,7 +1,6 @@
 import {
   NxJsonConfiguration,
   NxReleaseChangelogConfiguration,
-  NxReleaseVersionConfiguration,
 } from '../../config/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';

@@ -902,17 +902,15 @@ describe('project-configuration-utils', () => {
         name: 'lib-a',
         release: {
           version: {
-            generatorOptions: {
-              packageRoot: 'dist/libs/lib-a',
-            },
+            versionActionsOptions: { fo: 'bar' },
           },
         },
       });
       expect(rootMap['libs/lib-a'].release).toMatchInlineSnapshot(`
         {
           "version": {
-            "generatorOptions": {
-              "packageRoot": "dist/libs/lib-a",
+            "versionActionsOptions": {
+              "fo": "bar",
             },
           },
         }

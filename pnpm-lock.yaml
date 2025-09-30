@@ -3010,9 +3010,6 @@ importers:
       detect-port:
         specifier: ^1.5.1
         version: 1.6.1
-      enquirer:
-        specifier: ~2.3.6
-        version: 2.3.6
       ignore:
         specifier: ^5.0.4
         version: 5.3.2
@@ -3022,15 +3019,9 @@ importers:
       jsonc-parser:
         specifier: 3.2.0
         version: 3.2.0
-      npm-package-arg:
-        specifier: 11.0.1
-        version: 11.0.1
       npm-run-path:
         specifier: ^4.0.1
         version: 4.0.1
-      ora:
-        specifier: 5.3.0
-        version: 5.3.0
       picocolors:
         specifier: ^1.1.0
         version: 1.1.1
@@ -3172,6 +3163,12 @@ importers:
         specifier: ^5.8.0
         version: 5.10.0
     devDependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3501,6 +3498,12 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
     devDependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       nx:
         specifier: workspace:*
         version: link:../nx

@@ -34,7 +34,6 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
-import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import {
   GroupVersionPlan,
   ProjectsVersionPlan,
@@ -134,13 +133,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
-        userProvidedReleaseConfig
-      );
-      return await handleNxReleaseConfigError(
-        configError,
-        USE_LEGACY_VERSIONING
-      );
+      return await handleNxReleaseConfigError(configError);
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {

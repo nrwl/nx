@@ -1,5 +1,8 @@
 import { join } from 'node:path';
-import type { NxJsonConfiguration } from '../../config/nx-json';
+import type {
+  NxJsonConfiguration,
+  NxReleaseVersionConfiguration,
+} from '../../config/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import type { Tree } from '../../generators/tree';
 import { readJson, writeJson } from '../../generators/utils/json';
@@ -35,14 +38,15 @@ export default async function update(tree: Tree) {
       if (versionConfig.generatorOptions.preserveLocalDependencyProtocols) {
         delete versionConfig.generatorOptions.preserveLocalDependencyProtocols;
       } else {
-        versionConfig.preserveLocalDependencyProtocols = false;
+        (
+          versionConfig as NxReleaseVersionConfiguration
+        ).preserveLocalDependencyProtocols = false;
       }
 
       // packageRoot has been replaced by manifestRootsToUpdate
       if (typeof versionConfig.generatorOptions.packageRoot === 'string') {
-        versionConfig.manifestRootsToUpdate = [
-          versionConfig.generatorOptions.packageRoot,
-        ];
+        (versionConfig as NxReleaseVersionConfiguration).manifestRootsToUpdate =
+          [versionConfig.generatorOptions.packageRoot];
         delete versionConfig.generatorOptions.packageRoot;
       }
 
@@ -54,9 +58,14 @@ export default async function update(tree: Tree) {
       ];
       for (const option of versionActionsOptions) {
         if (versionConfig.generatorOptions[option]) {
-          versionConfig.versionActionsOptions =
-            versionConfig.versionActionsOptions || {};
-          versionConfig.versionActionsOptions[option] =
+          (
+            versionConfig as NxReleaseVersionConfiguration
+          ).versionActionsOptions =
+            (versionConfig as NxReleaseVersionConfiguration)
+              .versionActionsOptions || {};
+          (
+            versionConfig as NxReleaseVersionConfiguration
+          ).versionActionsOptions[option] =
             versionConfig.generatorOptions[option];
           delete versionConfig.generatorOptions[option];
         }

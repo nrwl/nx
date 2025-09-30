@@ -31,7 +31,6 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
-import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import { printConfigAndExit } from './utils/print-config';
 
 export interface PublishProjectsResult {
@@ -85,13 +84,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
-        userProvidedReleaseConfig
-      );
-      return await handleNxReleaseConfigError(
-        configError,
-        USE_LEGACY_VERSIONING
-      );
+      return await handleNxReleaseConfigError(configError);
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {

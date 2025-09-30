@@ -12,6 +12,7 @@ jest.mock('../../../config/nx-json', () => ({
   ...jest.requireActual('../../../config/nx-json'),
   readNxJson: jest.fn(),
 }));
+import { createVersionConfig } from './test/test-utils';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -23,10 +24,8 @@ describe('shared', () => {
             projectsRelationship: 'independent',
             projects: ['foo'], // single project, will get flattened in the final commit message
             version: {
+              ...createVersionConfig(),
               conventionalCommits: false,
-              generator: '@nx/js:version',
-              generatorOptions: {},
-              groupPreVersionCommand: '',
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
@@ -41,10 +40,8 @@ describe('shared', () => {
             projectsRelationship: 'fixed',
             projects: ['bar', 'baz'],
             version: {
+              ...createVersionConfig(),
               conventionalCommits: false,
-              generator: '@nx/js:version',
-              generatorOptions: {},
-              groupPreVersionCommand: '',
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
@@ -102,10 +99,8 @@ describe('shared', () => {
             projectsRelationship: 'independent',
             projects: ['foo'], // single project, will get flattened in the final commit message
             version: {
+              ...createVersionConfig(),
               conventionalCommits: false,
-              generator: '@nx/js:version',
-              generatorOptions: {},
-              groupPreVersionCommand: '',
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
@@ -120,10 +115,8 @@ describe('shared', () => {
             projectsRelationship: 'fixed',
             projects: ['bar', 'baz'],
             version: {
+              ...createVersionConfig(),
               conventionalCommits: false,
-              generator: '@nx/js:version',
-              generatorOptions: {},
-              groupPreVersionCommand: '',
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
@@ -186,13 +179,10 @@ describe('shared', () => {
               'node',
             ],
             version: {
+              ...createVersionConfig(),
               conventionalCommits: true,
-              generator: '@nx/js:release-version',
-              generatorOptions: {
-                specifierSource: 'conventional-commits',
-                currentVersionResolver: 'git-tag',
-              },
-              groupPreVersionCommand: '',
+              specifierSource: 'conventional-commits',
+              currentVersionResolver: 'git-tag',
             },
             changelog: {
               createRelease: 'github',

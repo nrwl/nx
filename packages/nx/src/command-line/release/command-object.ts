@@ -51,12 +51,6 @@ export type VersionOptions = NxReleaseArgs &
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
-    /**
-     * @deprecated Use versionActionsOptionsOverrides instead.
-     *
-     * Using generatorOptionsOverrides is only valid when release.version.useLegacyVersioning is set to true.
-     */
-    generatorOptionsOverrides?: Record<string, unknown>;
     versionActionsOptionsOverrides?: Record<string, unknown>;
   };
 

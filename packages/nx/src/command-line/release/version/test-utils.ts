@@ -41,7 +41,6 @@ export async function createNxReleaseConfigAndPopulateWorkspace(
       groups,
       version: {
         ...additionalNxReleaseConfig.version,
-        useLegacyVersioning: false,
       },
     }
   );
@@ -96,6 +95,7 @@ interface CargoToml {
     string,
     string | { version: string; features: string[] }
   >;
+
   [key: string]: any;
 }
 

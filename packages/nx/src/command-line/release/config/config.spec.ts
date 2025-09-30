@@ -1,5 +1,4 @@
 import { join } from 'path';
-import type { LegacyNxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type {
   ProjectFileMap,
   ProjectGraph,
@@ -297,7 +296,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -329,7 +327,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -506,7 +503,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -538,7 +534,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -718,7 +713,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -750,7 +744,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -961,7 +954,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -993,7 +985,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -1188,7 +1179,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -1220,7 +1210,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -1423,7 +1412,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -1455,7 +1443,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -1659,7 +1646,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -1691,7 +1677,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -1875,7 +1860,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -1907,7 +1891,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -2090,7 +2073,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -2122,255 +2104,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
-              "versionActions": "@nx/js/src/release/version-actions",
-              "versionActionsOptions": {},
-            },
-            "versionPlans": false,
-          },
-        }
-      `);
-    });
-
-    it('should respect user overrides for "version" config at the group level', async () => {
-      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        groups: {
-          'group-1': {
-            projects: ['lib-a'],
-            version: {
-              generator: '@custom/generator',
-              generatorOptions: {
-                optionsOverride: 'something',
-              },
-              preserveMatchingDependencyRanges: ['peerDependencies'],
-            },
-          },
-          'group-2': {
-            projects: ['lib-b'],
-            version: {
-              generator: '@custom/generator-alternative',
-              preserveMatchingDependencyRanges: true,
-            },
-          },
-        },
-      });
-      expect(res).toMatchInlineSnapshot(`
-        {
-          "error": null,
-          "nxReleaseConfig": {
-            "changelog": {
-              "automaticFromRef": false,
-              "git": {
-                "commit": true,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "push": false,
-                "pushArgs": "",
-                "stageChanges": false,
-                "tag": true,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "projectChangelogs": false,
-              "workspaceChangelog": false,
-            },
-            "conventionalCommits": {
-              "types": {
-                "__INVALID__": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "Invalid based on conventional commits specification",
-                  },
-                  "semverBump": "none",
-                },
-                "build": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📦 Build",
-                  },
-                  "semverBump": "none",
-                },
-                "chore": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏡 Chore",
-                  },
-                  "semverBump": "none",
-                },
-                "ci": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🤖 CI",
-                  },
-                  "semverBump": "none",
-                },
-                "docs": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📖 Documentation",
-                  },
-                  "semverBump": "none",
-                },
-                "examples": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏀 Examples",
-                  },
-                  "semverBump": "none",
-                },
-                "feat": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🚀 Features",
-                  },
-                  "semverBump": "minor",
-                },
-                "fix": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🩹 Fixes",
-                  },
-                  "semverBump": "patch",
-                },
-                "perf": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🔥 Performance",
-                  },
-                  "semverBump": "none",
-                },
-                "refactor": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "💅 Refactors",
-                  },
-                  "semverBump": "none",
-                },
-                "revert": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "⏪ Revert",
-                  },
-                  "semverBump": "none",
-                },
-                "style": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🎨 Styles",
-                  },
-                  "semverBump": "none",
-                },
-                "test": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "✅ Tests",
-                  },
-                  "semverBump": "none",
-                },
-                "types": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🌊 Types",
-                  },
-                  "semverBump": "none",
-                },
-              },
-            },
-            "docker": undefined,
-            "git": {
-              "commit": false,
-              "commitArgs": "",
-              "commitMessage": "chore(release): publish {version}",
-              "push": false,
-              "pushArgs": "",
-              "stageChanges": false,
-              "tag": false,
-              "tagArgs": "",
-              "tagMessage": "",
-            },
-            "groups": {
-              "group-1": {
-                "changelog": false,
-                "docker": undefined,
-                "projects": [
-                  "lib-a",
-                ],
-                "projectsRelationship": "fixed",
-                "releaseTagPattern": "v{version}",
-                "releaseTagPatternCheckAllBranchesWhen": undefined,
-                "releaseTagPatternRequireSemver": true,
-                "releaseTagPatternStrictPreid": false,
-                "version": {
-                  "conventionalCommits": false,
-                  "generator": "@custom/generator",
-                  "generatorOptions": {
-                    "optionsOverride": "something",
-                  },
-                  "groupPreVersionCommand": "",
-                  "logUnchangedProjects": true,
-                  "preserveLocalDependencyProtocols": true,
-                  "preserveMatchingDependencyRanges": [
-                    "peerDependencies",
-                  ],
-                  "updateDependents": "auto",
-                  "useLegacyVersioning": false,
-                  "versionActions": "@nx/js/src/release/version-actions",
-                  "versionActionsOptions": {},
-                },
-                "versionPlans": false,
-              },
-              "group-2": {
-                "changelog": false,
-                "docker": undefined,
-                "projects": [
-                  "lib-b",
-                ],
-                "projectsRelationship": "fixed",
-                "releaseTagPattern": "v{version}",
-                "releaseTagPatternCheckAllBranchesWhen": undefined,
-                "releaseTagPatternRequireSemver": true,
-                "releaseTagPatternStrictPreid": false,
-                "version": {
-                  "conventionalCommits": false,
-                  "generator": "@custom/generator-alternative",
-                  "groupPreVersionCommand": "",
-                  "logUnchangedProjects": true,
-                  "preserveLocalDependencyProtocols": true,
-                  "preserveMatchingDependencyRanges": true,
-                  "updateDependents": "auto",
-                  "useLegacyVersioning": false,
-                  "versionActions": "@nx/js/src/release/version-actions",
-                  "versionActionsOptions": {},
-                },
-                "versionPlans": false,
-              },
-            },
-            "projectsRelationship": "fixed",
-            "releaseTagPattern": "v{version}",
-            "releaseTagPatternCheckAllBranchesWhen": undefined,
-            "releaseTagPatternRequireSemver": true,
-            "releaseTagPatternStrictPreid": false,
-            "version": {
-              "conventionalCommits": false,
-              "currentVersionResolver": undefined,
-              "git": {
-                "commit": false,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "push": false,
-                "pushArgs": "",
-                "stageChanges": true,
-                "tag": false,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "logUnchangedProjects": true,
-              "preVersionCommand": "",
-              "preserveLocalDependencyProtocols": true,
-              "preserveMatchingDependencyRanges": false,
-              "specifierSource": undefined,
-              "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -2564,7 +2297,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -2596,7 +2328,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -2784,7 +2515,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -2819,7 +2549,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -2851,7 +2580,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -3037,7 +2765,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -3069,7 +2796,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -3246,7 +2972,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -3270,7 +2995,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -3302,7 +3026,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -3495,7 +3218,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -3525,7 +3247,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -3557,7 +3278,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -3752,7 +3472,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -3782,7 +3501,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -3814,7 +3532,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -4011,7 +3728,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -4041,7 +3757,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -4073,7 +3788,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -4088,10 +3802,8 @@ describe('createNxReleaseConfig()', () => {
     it('should respect modifying version at the top level and it should be inherited by the implicit default group', async () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
-          // only modifying options, use default generator
-          generatorOptions: {
-            foo: 'bar',
-          },
+          // only modifying options
+          conventionalCommits: false,
         },
       });
       expect(res).toMatchInlineSnapshot(`
@@ -4255,15 +3967,11 @@ describe('createNxReleaseConfig()', () => {
                 "releaseTagPatternStrictPreid": false,
                 "version": {
                   "conventionalCommits": false,
-                  "generatorOptions": {
-                    "foo": "bar",
-                  },
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -4278,9 +3986,6 @@ describe('createNxReleaseConfig()', () => {
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
-              "generatorOptions": {
-                "foo": "bar",
-              },
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -4298,7 +4003,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -4481,7 +4185,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -4513,7 +4216,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -4699,7 +4401,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -4731,7 +4432,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -4913,7 +4613,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -4945,7 +4644,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -5130,7 +4828,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -5162,7 +4859,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -5339,7 +5035,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -5363,7 +5058,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -5395,7 +5089,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -5572,7 +5265,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -5596,7 +5288,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -5628,7 +5319,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -5832,7 +5522,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -5864,7 +5553,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -6061,7 +5749,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -6093,7 +5780,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -6275,7 +5961,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": true,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -6307,7 +5992,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": true,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -6495,7 +6179,6 @@ describe('createNxReleaseConfig()', () => {
                     "peerDependencies",
                   ],
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -6530,7 +6213,6 @@ describe('createNxReleaseConfig()', () => {
               ],
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -6730,7 +6412,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -6762,7 +6443,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -6944,7 +6624,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -6976,7 +6655,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -6993,10 +6671,7 @@ describe('createNxReleaseConfig()', () => {
           npm: {
             projects: ['nx'],
             version: {
-              generatorOptions: {
-                currentVersionResolver: 'git-tag',
-                specifierSource: 'conventional-commits',
-              },
+              preVersionCommand: 'npx nx run nx:build',
             },
             changelog: true,
           },
@@ -7172,16 +6847,12 @@ describe('createNxReleaseConfig()', () => {
                 "releaseTagPatternStrictPreid": false,
                 "version": {
                   "conventionalCommits": false,
-                  "generatorOptions": {
-                    "currentVersionResolver": "git-tag",
-                    "specifierSource": "conventional-commits",
-                  },
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
+                  "preVersionCommand": "npx nx run nx:build",
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -7213,7 +6884,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -7387,7 +7057,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -7419,7 +7088,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -7634,7 +7302,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -7666,7 +7333,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -7871,7 +7537,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -7903,7 +7568,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -8086,7 +7750,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -8118,7 +7781,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -8306,7 +7968,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -8338,7 +7999,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -8529,7 +8189,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -8561,7 +8220,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -8752,7 +8410,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -8784,7 +8441,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -8976,7 +8632,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -9008,7 +8663,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -9278,7 +8932,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -9310,7 +8963,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -9518,7 +9170,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -9550,7 +9201,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -9924,7 +9574,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -9956,7 +9605,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -10137,7 +9785,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -10169,7 +9816,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -10386,7 +10032,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -10418,7 +10063,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -10611,7 +10255,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -10643,7 +10286,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -10839,7 +10481,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -10871,7 +10512,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -11068,7 +10708,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -11100,7 +10739,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -11300,7 +10938,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -11332,7 +10969,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -11557,7 +11193,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -11581,7 +11216,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -11616,7 +11250,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -11648,7 +11281,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -11875,7 +11507,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -11907,7 +11538,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -12131,7 +11761,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -12163,7 +11792,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -12368,7 +11996,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -12400,7 +12027,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -12826,7 +12452,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -12858,7 +12483,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -13251,7 +12875,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -13276,7 +12899,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -13308,7 +12930,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -13478,7 +13099,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -13510,7 +13130,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -13525,10 +13144,7 @@ describe('createNxReleaseConfig()', () => {
     it('should be implicitly false and not interfere with its long-form equivalent generatorOptions when not explicitly set', async () => {
       const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
-          generatorOptions: {
-            currentVersionResolver: 'git-tag',
-            specifierSource: 'conventional-commits',
-          },
+          currentVersionResolver: 'git-tag',
         },
       });
       expect(res1).toMatchInlineSnapshot(`
@@ -13692,16 +13308,12 @@ describe('createNxReleaseConfig()', () => {
                 "releaseTagPatternStrictPreid": false,
                 "version": {
                   "conventionalCommits": false,
-                  "generatorOptions": {
-                    "currentVersionResolver": "git-tag",
-                    "specifierSource": "conventional-commits",
-                  },
+                  "currentVersionResolver": "git-tag",
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -13715,11 +13327,7 @@ describe('createNxReleaseConfig()', () => {
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
-              "currentVersionResolver": undefined,
-              "generatorOptions": {
-                "currentVersionResolver": "git-tag",
-                "specifierSource": "conventional-commits",
-              },
+              "currentVersionResolver": "git-tag",
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -13737,7 +13345,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -13748,10 +13355,7 @@ describe('createNxReleaseConfig()', () => {
 
       const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
-          generatorOptions: {
-            currentVersionResolver: 'registry',
-            specifierSource: 'prompt',
-          },
+          currentVersionResolver: 'registry',
         },
       });
       expect(res2).toMatchInlineSnapshot(`
@@ -13915,16 +13519,12 @@ describe('createNxReleaseConfig()', () => {
                 "releaseTagPatternStrictPreid": false,
                 "version": {
                   "conventionalCommits": false,
-                  "generatorOptions": {
-                    "currentVersionResolver": "registry",
-                    "specifierSource": "prompt",
-                  },
+                  "currentVersionResolver": "registry",
                   "groupPreVersionCommand": "",
                   "logUnchangedProjects": true,
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -13938,11 +13538,7 @@ describe('createNxReleaseConfig()', () => {
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
-              "currentVersionResolver": undefined,
-              "generatorOptions": {
-                "currentVersionResolver": "registry",
-                "specifierSource": "prompt",
-              },
+              "currentVersionResolver": "registry",
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -13960,7 +13556,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -14144,7 +13739,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveMatchingDependencyRanges": false,
                   "specifierSource": "conventional-commits",
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -14176,7 +13770,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": "conventional-commits",
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -14366,7 +13959,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -14399,275 +13991,11 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": "conventional-commits",
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
-        }
-      `);
-    });
-
-    it('should not error if the shorthand is combined with unrelated generatorOptions', async () => {
-      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        version: {
-          conventionalCommits: true,
-          generatorOptions: {
-            someUnrelatedOption: 'foobar',
-          },
-        },
-      });
-      expect(res).toMatchInlineSnapshot(`
-        {
-          "error": null,
-          "nxReleaseConfig": {
-            "changelog": {
-              "automaticFromRef": false,
-              "git": {
-                "commit": true,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "push": false,
-                "pushArgs": "",
-                "stageChanges": false,
-                "tag": true,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "projectChangelogs": false,
-              "workspaceChangelog": {
-                "createRelease": false,
-                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
-                "file": "{workspaceRoot}/CHANGELOG.md",
-                "renderOptions": {
-                  "applyUsernameToAuthors": true,
-                  "authors": true,
-                  "commitReferences": true,
-                  "versionTitleDate": true,
-                },
-                "renderer": "<dirname>/release/changelog-renderer",
-              },
-            },
-            "conventionalCommits": {
-              "types": {
-                "__INVALID__": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "Invalid based on conventional commits specification",
-                  },
-                  "semverBump": "none",
-                },
-                "build": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📦 Build",
-                  },
-                  "semverBump": "none",
-                },
-                "chore": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏡 Chore",
-                  },
-                  "semverBump": "none",
-                },
-                "ci": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🤖 CI",
-                  },
-                  "semverBump": "none",
-                },
-                "docs": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📖 Documentation",
-                  },
-                  "semverBump": "none",
-                },
-                "examples": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏀 Examples",
-                  },
-                  "semverBump": "none",
-                },
-                "feat": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🚀 Features",
-                  },
-                  "semverBump": "minor",
-                },
-                "fix": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🩹 Fixes",
-                  },
-                  "semverBump": "patch",
-                },
-                "perf": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🔥 Performance",
-                  },
-                  "semverBump": "none",
-                },
-                "refactor": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "💅 Refactors",
-                  },
-                  "semverBump": "none",
-                },
-                "revert": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "⏪ Revert",
-                  },
-                  "semverBump": "none",
-                },
-                "style": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🎨 Styles",
-                  },
-                  "semverBump": "none",
-                },
-                "test": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "✅ Tests",
-                  },
-                  "semverBump": "none",
-                },
-                "types": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🌊 Types",
-                  },
-                  "semverBump": "none",
-                },
-              },
-            },
-            "docker": undefined,
-            "git": {
-              "commit": false,
-              "commitArgs": "",
-              "commitMessage": "chore(release): publish {version}",
-              "push": false,
-              "pushArgs": "",
-              "stageChanges": false,
-              "tag": false,
-              "tagArgs": "",
-              "tagMessage": "",
-            },
-            "groups": {
-              "__default__": {
-                "changelog": false,
-                "docker": undefined,
-                "projects": [
-                  "lib-a",
-                  "lib-b",
-                  "nx",
-                ],
-                "projectsRelationship": "fixed",
-                "releaseTagPattern": "v{version}",
-                "releaseTagPatternCheckAllBranchesWhen": undefined,
-                "releaseTagPatternRequireSemver": true,
-                "releaseTagPatternStrictPreid": false,
-                "version": {
-                  "conventionalCommits": true,
-                  "currentVersionResolver": "git-tag",
-                  "generatorOptions": {
-                    "someUnrelatedOption": "foobar",
-                  },
-                  "groupPreVersionCommand": "",
-                  "logUnchangedProjects": true,
-                  "preserveLocalDependencyProtocols": true,
-                  "preserveMatchingDependencyRanges": false,
-                  "specifierSource": "conventional-commits",
-                  "updateDependents": "auto",
-                  "useLegacyVersioning": false,
-                  "versionActions": "@nx/js/src/release/version-actions",
-                  "versionActionsOptions": {},
-                },
-                "versionPlans": false,
-              },
-            },
-            "projectsRelationship": "fixed",
-            "releaseTagPattern": "v{version}",
-            "releaseTagPatternCheckAllBranchesWhen": undefined,
-            "releaseTagPatternRequireSemver": true,
-            "releaseTagPatternStrictPreid": false,
-            "version": {
-              "conventionalCommits": true,
-              "currentVersionResolver": "git-tag",
-              "generatorOptions": {
-                "someUnrelatedOption": "foobar",
-              },
-              "git": {
-                "commit": false,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "push": false,
-                "pushArgs": "",
-                "stageChanges": true,
-                "tag": false,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "logUnchangedProjects": true,
-              "preVersionCommand": "",
-              "preserveLocalDependencyProtocols": true,
-              "preserveMatchingDependencyRanges": false,
-              "specifierSource": "conventional-commits",
-              "updateDependents": "auto",
-              "useLegacyVersioning": false,
-              "versionActions": "@nx/js/src/release/version-actions",
-              "versionActionsOptions": {},
-            },
-            "versionPlans": false,
-          },
-        }
-      `);
-    });
-
-    it('should error if the shorthand is combined with related generatorOptions', async () => {
-      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        version: {
-          conventionalCommits: true,
-          generatorOptions: {
-            specifierSource: 'prompt',
-          },
-        },
-      });
-      expect(res1).toMatchInlineSnapshot(`
-        {
-          "error": {
-            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS",
-            "data": {},
-          },
-          "nxReleaseConfig": null,
-        }
-      `);
-
-      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        version: {
-          conventionalCommits: true,
-          generatorOptions: {
-            currentVersionResolver: 'registry',
-          },
-        },
-      });
-      expect(res2).toMatchInlineSnapshot(`
-        {
-          "error": {
-            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS",
-            "data": {},
-          },
-          "nxReleaseConfig": null,
         }
       `);
     });
@@ -14850,7 +14178,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveMatchingDependencyRanges": false,
                   "specifierSource": "version-plans",
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -14882,7 +14209,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": "version-plans",
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -15068,7 +14394,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveMatchingDependencyRanges": false,
                   "specifierSource": "version-plans",
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -15104,7 +14429,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": "version-plans",
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -15290,7 +14614,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveMatchingDependencyRanges": false,
                   "specifierSource": "version-plans",
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -15314,7 +14637,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -15346,7 +14668,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -15528,7 +14849,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveMatchingDependencyRanges": false,
                   "specifierSource": "version-plans",
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -15556,7 +14876,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -15588,7 +14907,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": undefined,
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -15769,7 +15087,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -15794,7 +15111,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveMatchingDependencyRanges": false,
                   "specifierSource": "version-plans",
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -15826,7 +15142,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": "version-plans",
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -16009,7 +15324,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveLocalDependencyProtocols": true,
                   "preserveMatchingDependencyRanges": false,
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -16034,7 +15348,6 @@ describe('createNxReleaseConfig()', () => {
                   "preserveMatchingDependencyRanges": false,
                   "specifierSource": "version-plans",
                   "updateDependents": "auto",
-                  "useLegacyVersioning": false,
                   "versionActions": "@nx/js/src/release/version-actions",
                   "versionActionsOptions": {},
                 },
@@ -16070,7 +15383,6 @@ describe('createNxReleaseConfig()', () => {
               "preserveMatchingDependencyRanges": false,
               "specifierSource": "version-plans",
               "updateDependents": "auto",
-              "useLegacyVersioning": false,
               "versionActions": "@nx/js/src/release/version-actions",
               "versionActionsOptions": {},
             },
@@ -16079,252 +15391,6 @@ describe('createNxReleaseConfig()', () => {
                 "**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
               ],
             },
-          },
-        }
-      `);
-    });
-  });
-
-  describe('useLegacyVersioning', () => {
-    it('should be false by default', async () => {
-      const res = await createNxReleaseConfig(projectGraph, projectFileMap);
-      expect(res.nxReleaseConfig.version.useLegacyVersioning).toBe(false);
-    });
-
-    it('should be respected if set to true by the user', async () => {
-      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        version: { useLegacyVersioning: true },
-      });
-      expect(res.nxReleaseConfig.version.useLegacyVersioning).toBe(true);
-    });
-
-    it('should set the generator and generatorOptions, and not set versionActions and versionActionsOptions, if set to true by the user', async () => {
-      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        version: { useLegacyVersioning: true },
-      });
-      const version = res.nxReleaseConfig
-        .version as LegacyNxReleaseVersionConfiguration;
-      expect(version.generator).toBe('@nx/js:release-version');
-      expect(version.generatorOptions).toEqual({});
-
-      expect((version as any).versionActions).toBeUndefined();
-      expect((version as any).versionActionsOptions).toBeUndefined();
-    });
-
-    it('should respect custom generator and generatorOptions if set by the user', async () => {
-      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        version: {
-          useLegacyVersioning: true,
-          generator: '/path/to/custom-generator',
-          generatorOptions: {
-            foo: true,
-            baz: ['bar'],
-          },
-        },
-      });
-      expect(res).toMatchInlineSnapshot(`
-        {
-          "error": null,
-          "nxReleaseConfig": {
-            "changelog": {
-              "automaticFromRef": false,
-              "git": {
-                "commit": true,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "push": false,
-                "pushArgs": "",
-                "stageChanges": false,
-                "tag": true,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "projectChangelogs": false,
-              "workspaceChangelog": {
-                "createRelease": false,
-                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
-                "file": "{workspaceRoot}/CHANGELOG.md",
-                "renderOptions": {
-                  "applyUsernameToAuthors": true,
-                  "authors": true,
-                  "commitReferences": true,
-                  "versionTitleDate": true,
-                },
-                "renderer": "<dirname>/release/changelog-renderer",
-              },
-            },
-            "conventionalCommits": {
-              "types": {
-                "__INVALID__": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "Invalid based on conventional commits specification",
-                  },
-                  "semverBump": "none",
-                },
-                "build": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📦 Build",
-                  },
-                  "semverBump": "none",
-                },
-                "chore": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏡 Chore",
-                  },
-                  "semverBump": "none",
-                },
-                "ci": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🤖 CI",
-                  },
-                  "semverBump": "none",
-                },
-                "docs": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📖 Documentation",
-                  },
-                  "semverBump": "none",
-                },
-                "examples": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏀 Examples",
-                  },
-                  "semverBump": "none",
-                },
-                "feat": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🚀 Features",
-                  },
-                  "semverBump": "minor",
-                },
-                "fix": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🩹 Fixes",
-                  },
-                  "semverBump": "patch",
-                },
-                "perf": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🔥 Performance",
-                  },
-                  "semverBump": "none",
-                },
-                "refactor": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "💅 Refactors",
-                  },
-                  "semverBump": "none",
-                },
-                "revert": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "⏪ Revert",
-                  },
-                  "semverBump": "none",
-                },
-                "style": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🎨 Styles",
-                  },
-                  "semverBump": "none",
-                },
-                "test": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "✅ Tests",
-                  },
-                  "semverBump": "none",
-                },
-                "types": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🌊 Types",
-                  },
-                  "semverBump": "none",
-                },
-              },
-            },
-            "docker": undefined,
-            "git": {
-              "commit": false,
-              "commitArgs": "",
-              "commitMessage": "chore(release): publish {version}",
-              "push": false,
-              "pushArgs": "",
-              "stageChanges": false,
-              "tag": false,
-              "tagArgs": "",
-              "tagMessage": "",
-            },
-            "groups": {
-              "__default__": {
-                "changelog": false,
-                "docker": undefined,
-                "projects": [
-                  "lib-a",
-                  "lib-b",
-                  "nx",
-                ],
-                "projectsRelationship": "fixed",
-                "releaseTagPattern": "v{version}",
-                "releaseTagPatternCheckAllBranchesWhen": undefined,
-                "releaseTagPatternRequireSemver": true,
-                "releaseTagPatternStrictPreid": false,
-                "version": {
-                  "conventionalCommits": false,
-                  "generator": "/path/to/custom-generator",
-                  "generatorOptions": {
-                    "baz": [
-                      "bar",
-                    ],
-                    "foo": true,
-                  },
-                  "groupPreVersionCommand": "",
-                  "useLegacyVersioning": true,
-                },
-                "versionPlans": false,
-              },
-            },
-            "projectsRelationship": "fixed",
-            "releaseTagPattern": "v{version}",
-            "releaseTagPatternCheckAllBranchesWhen": undefined,
-            "releaseTagPatternRequireSemver": true,
-            "releaseTagPatternStrictPreid": false,
-            "version": {
-              "conventionalCommits": false,
-              "generator": "/path/to/custom-generator",
-              "generatorOptions": {
-                "baz": [
-                  "bar",
-                ],
-                "foo": true,
-              },
-              "git": {
-                "commit": false,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "push": false,
-                "pushArgs": "",
-                "stageChanges": true,
-                "tag": false,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "preVersionCommand": "",
-              "useLegacyVersioning": true,
-            },
-            "versionPlans": false,
           },
         }
       `);

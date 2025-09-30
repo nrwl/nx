@@ -39,10 +39,8 @@ import {
   createGitTagValues,
   handleDuplicateGitTags,
 } from './utils/shared';
-import { releaseVersionLegacy } from './version-legacy';
 import { ReleaseGroupProcessor } from './version/release-group-processor';
 import { SemverBumpType } from './version/version-actions';
-import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils';
 
 const LARGE_BUFFER = 1024 * 1000000;
@@ -84,9 +82,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       nxJson.release ?? {},
       overrideReleaseConfig ?? {}
     );
-    const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
-      userProvidedReleaseConfig
-    );
 
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
@@ -95,10 +90,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(
-        configError,
-        USE_LEGACY_VERSIONING
-      );
+      return await handleNxReleaseConfigError(configError);
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -107,17 +99,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         nxReleaseConfig,
         isDebug: args.printConfig === 'debug',
       });
-    }
-
-    // TODO(v22): Remove support for the legacy versioning implementation in Nx v22
-    if (USE_LEGACY_VERSIONING) {
-      return await releaseVersionLegacy(
-        projectGraph,
-        args,
-        nxJson,
-        nxReleaseConfig,
-        userProvidedReleaseConfig
-      );
     }
 
     // The nx release top level command will always override these three git args. This is how we can tell

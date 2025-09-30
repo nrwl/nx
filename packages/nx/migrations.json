@@ -88,6 +88,11 @@
       "version": "21.1.0-beta.2",
       "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
       "implementation": "./src/migrations/update-21-1-0/add-gitignore-entry"
+    },
+    "22-0-0-release-version-config-changes": {
+      "version": "22.0.0-beta.1",
+      "description": "Updates release version config based on the breaking changes in Nx v22",
+      "implementation": "./src/migrations/update-22-0-0/release-version-config-changes"
     }
   }
 }
