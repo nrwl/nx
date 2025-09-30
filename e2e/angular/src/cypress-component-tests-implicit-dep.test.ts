@@ -25,7 +25,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
   it('should test lib with implicit dep on buildTarget', () => {
     const { projectName, appName, buildableLibName, usedInAppLibName } = setup;
-    
+
     // creates graph like buildableLib -> lib -> app
     // updates the apps styles and they should apply to the buildableLib
     // even though app is not directly connected to buildableLib
@@ -42,7 +42,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
   it('should use root level tailwinds config', () => {
     const { buildableLibName } = setup;
-    
+
     useRootLevelTailwindConfig(join(buildableLibName, 'tailwind.config.js'));
     checkFilesExist('tailwind.config.js');
     checkFilesDoNotExist(`${buildableLibName}/tailwind.config.js`);

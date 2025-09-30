@@ -22,7 +22,7 @@ describe('Angular Cypress Component Tests - Buildable Lib', () => {
 
   it('should test buildable lib not being used in app', () => {
     const { appName, buildableLibName } = setup;
-    
+
     expect(() => {
       // should error since no edge in graph between lib and app
       runCLI(

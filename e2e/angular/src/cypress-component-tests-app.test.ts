@@ -1,7 +1,4 @@
-import {
-  runCLI,
-  runE2ETests,
-} from '@nx/e2e-utils';
+import { runCLI, runE2ETests } from '@nx/e2e-utils';
 import {
   setupCypressComponentTests,
   cleanupCypressComponentTests,
@@ -19,7 +16,7 @@ describe('Angular Cypress Component Tests - App', () => {
 
   it('should test app', () => {
     const { appName } = setup;
-    
+
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
