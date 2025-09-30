@@ -9,6 +9,7 @@ import {
   supportedAgents,
   configureAgents,
   getAgentConfigurations,
+  AgentConfiguration,
 } from '../../ai/utils';
 import { installPackageToTmp } from '../../devkit-internals';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -62,13 +63,12 @@ export async function configureAiAgentsHandlerImpl(
     partiallyConfiguredAgents,
     fullyConfiguredAgents,
     disabledAgents,
-    agentConfigurations,
   } = await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
 
   if (disabledAgents.length > 0) {
     const commandNames = disabledAgents.map((a) => {
-      if (a === 'cursor') return '"cursor"';
-      if (a === 'copilot') return '"code"/"code-insiders"';
+      if (a.name === 'cursor') return '"cursor"';
+      if (a.name === 'copilot') return '"code"/"code-insiders"';
       return a;
     });
 
@@ -90,8 +90,9 @@ export async function configureAiAgentsHandlerImpl(
   }
 
   if (
-    normalizedOptions.agents.filter((a) => !disabledAgents.includes(a))
-      .length === 0
+    normalizedOptions.agents.filter(
+      (agentName) => !disabledAgents.find((a) => a.name === agentName)
+    ).length === 0
   ) {
     output.error({
       title: 'Please select at least one AI agent to configure.',
@@ -110,14 +111,12 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(0);
     }
 
-    const outOfDateAgents = fullyConfiguredAgents.filter(
-      (a) => agentConfigurations.get(a)?.outdated
-    );
+    const outOfDateAgents = fullyConfiguredAgents.filter((a) => a?.outdated);
 
     if (outOfDateAgents.length === 0) {
       output.success({
         title: 'All configured AI agents are up to date',
-        bodyLines: fullyConfiguredAgents.map((a) => `- ${agentDisplayMap[a]}`),
+        bodyLines: fullyConfiguredAgents.map((a) => `- ${a.displayName}`),
       });
       process.exit(0);
     } else {
@@ -125,11 +124,11 @@ export async function configureAiAgentsHandlerImpl(
         title: 'The following AI agents are out of date:',
         bodyLines: [
           ...outOfDateAgents.map((a) => {
-            const rulesPath = agentConfigurations.get(a).rulesPath;
+            const rulesPath = a.rulesPath;
             const displayPath = rulesPath.startsWith(workspaceRoot)
               ? relative(workspaceRoot, rulesPath)
               : rulesPath;
-            return `- ${agentDisplayMap[a]} (${displayPath})`;
+            return `- ${a.displayName} (${displayPath})`;
           }),
           '',
           'You can update them by running `nx configure-ai-agents`.',
@@ -138,88 +137,59 @@ export async function configureAiAgentsHandlerImpl(
       process.exit(1);
     }
   }
-  // first, prompt for partially configured agents and out of date agents
-  const agentsToUpdate: { name: string; message: string }[] = [];
-  partiallyConfiguredAgents.forEach((a) => {
-    agentsToUpdate.push(getAgentChoiceForPrompt(a, true, false));
+  const allAgentChoices: AgentPromptChoice[] = [];
+  const preselectedIndices: number[] = [];
+  let currentIndex = 0;
+
+  nonConfiguredAgents.forEach((a) => {
+    allAgentChoices.push(getAgentChoiceForPrompt(a, false, false));
+    currentIndex++;
   });
 
   for (const a of fullyConfiguredAgents) {
-    if (agentConfigurations.get(a).outdated) {
-      agentsToUpdate.push(getAgentChoiceForPrompt(a, false, true));
+    if (a.outdated) {
+      allAgentChoices.push(getAgentChoiceForPrompt(a, false, true));
+      preselectedIndices.push(currentIndex);
+      currentIndex++;
     }
   }
 
-  let updateResult: Agent[] = [];
-  let updateSucceeded = true;
-  if (agentsToUpdate.length > 0) {
-    if (options.interactive !== false) {
-      try {
-        updateResult = (
-          await prompt<{ agents: Agent[] }>({
-            type: 'multiselect',
-            name: 'agents',
-            message:
-              'The following agents are not configured completely or are out of date. Which would you like to update?',
-            choices: agentsToUpdate,
-            initial: agentsToUpdate.map((_, i) => i),
-            required: true,
-          } as any)
-        ).agents;
-      } catch {
-        process.exit(1);
-      }
-    } else {
-      // in non-interactive mode, update all
-      updateResult = agentsToUpdate.map((a) => a.name as Agent);
-    }
+  partiallyConfiguredAgents.forEach((a) => {
+    allAgentChoices.push(getAgentChoiceForPrompt(a, true, false));
+    preselectedIndices.push(currentIndex);
+    currentIndex++;
+  });
 
-    if (updateResult?.length > 0) {
-      const updateSpinner = ora(`Updating agent configurations...`).start();
-      try {
-        await configureAgents(updateResult, workspaceRoot, false);
-        updateSpinner.succeed('Agent configurations updated.');
-      } catch {
-        updateSpinner.fail('Failed to update agent configurations.');
-        updateSucceeded = false;
-      }
-    }
-  }
-
-  // then prompt for non-configured agents
-  if (nonConfiguredAgents.length === 0) {
+  if (allAgentChoices.length === 0) {
     const usingAllAgents =
       normalizedOptions.agents.length === supportedAgents.length;
-    const configuredOrUpdatedAgents = [
-      ...new Set([
-        ...fullyConfiguredAgents,
-        ...(updateSucceeded ? updateResult : []),
-      ]),
-    ];
     output.success({
       title: `No new agents to configure. All ${
         !usingAllAgents ? 'selected' : 'supported'
       } AI agents are already configured:`,
-      bodyLines: configuredOrUpdatedAgents.map(
-        (agent) => `- ${agentDisplayMap[agent]}`
-      ),
+      bodyLines: fullyConfiguredAgents.map((agent) => `- ${agent.displayName}`),
     });
     process.exit(0);
   }
 
-  let configurationResult: Agent[];
+  let selectedAgents: Agent[];
   if (options.interactive !== false) {
     try {
-      configurationResult = (
+      selectedAgents = (
         await prompt<{ agents: Agent[] }>({
           type: 'multiselect',
           name: 'agents',
           message:
             'Which AI agents would you like to configure? (space to select, enter to confirm)',
-          choices: nonConfiguredAgents.map((a) =>
-            getAgentChoiceForPrompt(a, false, false)
-          ),
+          choices: allAgentChoices,
+          initial: preselectedIndices,
           required: true,
+          footer: function () {
+            const focused = this.focused as AgentPromptChoice;
+            if (focused.partial) {
+              return chalk.dim(focused.partialReason);
+            }
+          },
         } as any)
       ).agents;
     } catch {
@@ -227,28 +197,32 @@ export async function configureAiAgentsHandlerImpl(
     }
   } else {
     // in non-interactive mode, configure all
-    configurationResult = nonConfiguredAgents;
+    selectedAgents = allAgentChoices.map((a) => a.name);
   }
-  if (configurationResult?.length === 0) {
+
+  if (selectedAgents?.length === 0) {
     output.log({
       title: 'No agents selected',
     });
     process.exit(0);
   }
 
+  // Configure/update all selected agents
+  const configSpinner = ora(`Configuring agent(s)...`).start();
   try {
-    await configureAgents(configurationResult, workspaceRoot, false);
+    await configureAgents(selectedAgents, workspaceRoot, false);
 
     const configuredOrUpdatedAgents = [
       ...new Set([
-        ...fullyConfiguredAgents,
-        ...(updateSucceeded ? updateResult : []),
-        ...configurationResult,
+        ...fullyConfiguredAgents.map((a) => a.name),
+        ...selectedAgents,
       ]),
     ];
 
-    output.success({
-      title: 'AI agents set up successfully. Configured agents:',
+    configSpinner.succeed('AI agents set up successfully.');
+
+    output.log({
+      title: 'Configured Agents',
       bodyLines: configuredOrUpdatedAgents.map(
         (agent) => `- ${agentDisplayMap[agent]}`
       ),
@@ -256,28 +230,52 @@ export async function configureAiAgentsHandlerImpl(
 
     return;
   } catch (e) {
+    configSpinner.fail('Failed to set up AI agents');
     output.error({
-      title: 'Failed to set up AI agents',
+      title: 'Error details:',
       bodyLines: [e.message],
     });
     process.exit(1);
   }
 }
 
+type AgentPromptChoice = {
+  name: Agent;
+  message: string;
+  partial: boolean;
+  outdated: boolean;
+  partialReason?: string;
+  agentConfiguration: AgentConfiguration;
+};
+
 function getAgentChoiceForPrompt(
-  agent: Agent,
+  agent: AgentConfiguration,
   partiallyConfigured: boolean,
   outdated: boolean
-): { name: string; message: string } {
-  let message: string = agentDisplayMap[agent];
+): AgentPromptChoice {
+  let message: string = agent.displayName;
   if (partiallyConfigured) {
-    message += ' (partially configured)';
+    message += ` (${agent.rules ? 'MCP missing' : 'rules missing'})`;
   } else if (outdated) {
     message += ' (out of date)';
   }
+  const displayPath = agent.rulesPath.startsWith(workspaceRoot)
+    ? relative(workspaceRoot, agent.rulesPath)
+    : agent.rulesPath;
+  const partialReason = partiallyConfigured
+    ? agent.rules
+      ? `  Partially configured: MCP missing ${
+          agent.mcpPath ? `at ${agent.mcpPath}` : 'via Nx Console'
+        }`
+      : `  Partially configured: rules file missing at ${displayPath}`
+    : undefined;
   return {
-    name: agent,
+    name: agent.name,
     message,
+    outdated,
+    partial: partiallyConfigured,
+    partialReason,
+    agentConfiguration: agent,
   };
 }
 
