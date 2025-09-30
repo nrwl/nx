@@ -1,38 +1,38 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
-  cleanupProject,
-  getStrippedEnvironmentVariables,
-  newProject,
   readFile,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
 import { checkApp } from './utils';
+import {
+  setupNextTest,
+  resetNextEnv,
+  cleanupNextTest,
+  NextTestSetup,
+} from './next-setup';
 
-describe('Next.js Applications', () => {
-  let proj: string;
-  let originalEnv: string;
+describe('Next.js Applications - Generation', () => {
+  let setup: NextTestSetup;
 
   beforeAll(() => {
-    proj = newProject({
-      packages: ['@nx/next', '@nx/cypress'],
-    });
+    setup = setupNextTest();
   });
 
   beforeEach(() => {
-    originalEnv = process.env.NODE_ENV;
+    resetNextEnv(setup);
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
+    resetNextEnv(setup);
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => cleanupNextTest());
 
   it('should support generating projects with the new name and root format', () => {
+    const { proj } = setup;
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
@@ -82,6 +82,7 @@ describe('Next.js Applications', () => {
   }, 300_000);
 
   it('should support --js flag', async () => {
+    const { proj } = setup;
     const appName = uniq('app');
 
     runCLI(
@@ -149,93 +150,4 @@ describe('Next.js Applications', () => {
       checkE2E: false,
     });
   }, 300_000);
-
-  it('should support --custom-server flag (swc)', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --custom-server --linter=eslint --unitTestRunner=jest`
-    );
-
-    // Check for custom server files added to source
-    checkFilesExist(`${appName}/server/main.ts`);
-    checkFilesExist(`${appName}/.server.swcrc`);
-
-    const result = runCLI(`build ${appName}`);
-
-    checkFilesExist(`dist/${appName}-server/server/main.js`);
-
-    expect(result).toContain(
-      `Successfully ran target build for project ${appName}`
-    );
-  }, 300_000);
-
-  it('should support --custom-server flag (tsc)', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server --linter=eslint --unitTestRunner=jest`
-    );
-
-    checkFilesExist(`${appName}/server/main.ts`);
-
-    const result = runCLI(`build ${appName}`);
-
-    checkFilesExist(`dist/${appName}-server/server/main.js`);
-
-    expect(result).toContain(
-      `Successfully ran target build for project ${appName}`
-    );
-  }, 300_000);
-
-  it('should run e2e-ci test', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --linter=eslint --unitTestRunner=jest`
-    );
-
-    if (runE2ETests('playwright')) {
-      const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
-        verbose: true,
-        env: {
-          ...getStrippedEnvironmentVariables(),
-          NX_SKIP_ATOMIZER_VALIDATION: 'true',
-        },
-      });
-      expect(e2eResults).toContain(
-        'Successfully ran target e2e-ci for project'
-      );
-    }
-  }, 600_000);
-
-  it('next-env.d.ts should remain the same after a build', async () => {
-    const appName = uniq('app');
-    const pagesAppName = uniq('pages-app');
-
-    runCLI(
-      `generate @nx/next:app ${appName} --style=css --no-interactive --linter=eslint --unitTestRunner=jest`
-    );
-    runCLI(
-      `generate @nx/next:app ${pagesAppName} --appDir=false --style=css --no-interactive --linter=eslint --unitTestRunner=jest`
-    );
-
-    const appDirNextEnv = `${appName}/next-env.d.ts`;
-    const appDirNextEnvContent = readFile(appDirNextEnv);
-
-    const pagesDirNextEnv = `${pagesAppName}/next-env.d.ts`;
-    const pagesDirNextEnvContent = readFile(pagesDirNextEnv);
-
-    runCLI(`build ${appName}`);
-    runCLI(`build ${pagesAppName}`);
-
-    const postBuildAppContent = readFile(appDirNextEnv);
-    const postBuildPagesContent = readFile(pagesDirNextEnv);
-
-    expect(postBuildAppContent).toEqual(appDirNextEnvContent);
-    expect(postBuildAppContent).toMatchSnapshot();
-
-    expect(postBuildPagesContent).toEqual(pagesDirNextEnvContent);
-    expect(postBuildPagesContent).toMatchSnapshot();
-  });
 });

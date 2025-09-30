@@ -1,135 +1,51 @@
 import {
-  checkFilesDoNotExist,
+  checkFilesExist,
   cleanupProject,
   createFile,
   newProject,
+  removeFile,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
-  removeFile,
-  checkFilesExist,
   updateJson,
 } from '@nx/e2e-utils';
 import { names } from '@nx/devkit';
 import { join } from 'path';
 
-describe('Angular Cypress Component Tests', () => {
-  let projectName: string;
+export interface CypressComponentTestsSetup {
+  projectName: string;
+  appName: string;
+  usedInAppLibName: string;
+  buildableLibName: string;
+}
+
+export function setupCypressComponentTests(): CypressComponentTestsSetup {
+  const projectName = newProject({
+    name: uniq('cy-ng'),
+    packages: ['@nx/angular'],
+  });
+
   const appName = uniq('cy-angular-app');
   const usedInAppLibName = uniq('cy-angular-lib');
   const buildableLibName = uniq('cy-angular-buildable-lib');
 
-  beforeAll(async () => {
-    projectName = newProject({
-      name: uniq('cy-ng'),
-      packages: ['@nx/angular'],
-    });
+  createApp(appName);
+  createLib(projectName, appName, usedInAppLibName);
+  useLibInApp(projectName, appName, usedInAppLibName);
+  createBuildableLib(projectName, buildableLibName);
+  useWorkspaceAssetsInApp(appName);
 
-    createApp(appName);
+  return {
+    projectName,
+    appName,
+    usedInAppLibName,
+    buildableLibName,
+  };
+}
 
-    createLib(projectName, appName, usedInAppLibName);
-    useLibInApp(projectName, appName, usedInAppLibName);
-
-    createBuildableLib(projectName, buildableLibName);
-
-    await useWorkspaceAssetsInApp(appName);
-  });
-
-  afterAll(() => cleanupProject());
-
-  it('should test app', () => {
-    runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
-    );
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  }, 300_000);
-
-  it('should successfully component test lib being used in app', () => {
-    runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
-    );
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  }, 300_000);
-
-  it('should test buildable lib not being used in app', () => {
-    expect(() => {
-      // should error since no edge in graph between lib and app
-      runCLI(
-        `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --no-interactive`
-      );
-    }).toThrow();
-
-    updateTestToAssertTailwindIsNotApplied(buildableLibName);
-
-    runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
-    );
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-    // add tailwind
-    runCLI(`generate @nx/angular:setup-tailwind --project=${buildableLibName}`);
-    updateFile(
-      `${buildableLibName}/src/lib/input/input.component.cy.ts`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-    updateFile(
-      `${buildableLibName}/src/lib/input-standalone/input-standalone.cy.ts`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-      checkFilesDoNotExist(`tmp${buildableLibName}/ct-styles.css`);
-    }
-  }, 300_000);
-
-  it('should test lib with implicit dep on buildTarget', () => {
-    // creates graph like buildableLib -> lib -> app
-    // updates the apps styles and they should apply to the buildableLib
-    // even though app is not directly connected to buildableLib
-    useBuildableLibInLib(projectName, buildableLibName, usedInAppLibName);
-
-    updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
-
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
-
-  it('should use root level tailwinds config', () => {
-    useRootLevelTailwindConfig(join(buildableLibName, 'tailwind.config.js'));
-    checkFilesExist('tailwind.config.js');
-    checkFilesDoNotExist(`${buildableLibName}/tailwind.config.js`);
-
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
-});
+export function cleanupCypressComponentTests(): void {
+  cleanupProject();
+}
 
 function createApp(appName: string) {
   runCLI(
@@ -268,7 +184,7 @@ export class AppModule {}
   );
 }
 
-async function useWorkspaceAssetsInApp(appName: string) {
+function useWorkspaceAssetsInApp(appName: string) {
   // make sure assets from the workspace root work.
   createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
   createFile(
@@ -295,7 +211,7 @@ async function useWorkspaceAssetsInApp(appName: string) {
   });
 }
 
-function updateTestToAssertTailwindIsNotApplied(libName: string) {
+export function updateTestToAssertTailwindIsNotApplied(libName: string) {
   createFile(
     `${libName}/src/lib/input/input.component.cy.ts`,
     `
@@ -359,7 +275,7 @@ describe(InputStandalone.name, () => {
   );
 }
 
-function useBuildableLibInLib(
+export function useBuildableLibInLib(
   projectName: string,
   buildableLibName: string,
   libName: string
@@ -386,7 +302,7 @@ export class BtnStandalone {
   );
 }
 
-function updateBuilableLibTestsToAssertAppStyles(
+export function updateBuilableLibTestsToAssertAppStyles(
   appName: string,
   buildableLibName: string
 ) {
@@ -402,7 +318,7 @@ function updateBuilableLibTestsToAssertAppStyles(
   );
 }
 
-function useRootLevelTailwindConfig(existingConfigPath: string) {
+export function useRootLevelTailwindConfig(existingConfigPath: string) {
   createFile(
     'tailwind.config.js',
     `const { join } = require('path');
