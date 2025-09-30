@@ -1589,6 +1589,8 @@ const docsToAstroRedirects = {
   '/technologies/angular/api/executors': '/docs/technologies/angular/executors',
   '/technologies/angular/api/executors/delegate-build':
     '/docs/technologies/angular/executors',
+  '/technologies/angular/api/executors/ng-packagr':
+    '/docs/technologies/angular/executors',
   '/technologies/angular/api/executors/ng-packagr-lite':
     '/docs/technologies/angular/executors',
   '/technologies/angular/api/executors/package':
@@ -1622,6 +1624,8 @@ const docsToAstroRedirects = {
   '/technologies/angular/api/generators/component-test':
     '/docs/technologies/angular/generators',
   '/technologies/angular/api/generators/convert-to-application-executor':
+    '/docs/technologies/angular/generators',
+  '/technologies/angular/api/generators/convert-tslint-to-eslint':
     '/docs/technologies/angular/generators',
   '/technologies/angular/api/generators/convert-to-rspack':
     '/docs/technologies/angular/generators',
@@ -1886,6 +1890,20 @@ const docsToAstroRedirects = {
   // "/deprecated/v1-nx-plugin-api": "/docs/deprecated/v1-nx-plugin-api",
   // "/deprecated/rescope": "/docs/deprecated/rescope",
   // "/deprecated/integrated-vs-package-based": "/docs/deprecated/integrated-vs-package-based",
+
+  // ===== MISSING PREVIOUS REDIRECTS =====
+  '/reference/workspace': '/docs/reference/workspace',
+  '/reference/workspace/generators': '/docs/reference/workspace/generators',
+  '/reference/workspace/migrations': '/docs/reference/workspace/migrations',
+  '/reference/nx': '/docs/reference/nx',
+  '/reference/nx/executors': '/docs/reference/nx/executors',
+  '/reference/nx/generators': '/docs/reference/nx/generators',
+  '/reference/nx/migrations': '/docs/reference/nx/migrations',
+  '/reference/plugin': '/docs/reference/plugin',
+  '/reference/plugin/generators': '/docs/reference/plugin/generators',
+  '/reference/web': '/docs/reference/web',
+  '/reference/web/executors': '/docs/reference/web/executors',
+  '/reference/web/generators': '/docs/reference/web/generators',
 };
 
 module.exports = docsToAstroRedirects;
