@@ -419,7 +419,7 @@ export function Pricing(): ReactElement {
               <Link
                 href={
                   process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/reference'
+                    ? '/docs/reference/nx-cloud/credits-pricing'
                     : '/ci/reference/credits-pricing'
                 }
                 className="font-semibold underline"
