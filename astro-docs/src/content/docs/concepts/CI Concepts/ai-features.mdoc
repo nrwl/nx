@@ -8,27 +8,28 @@ filter: 'type:Concepts'
 
 Nx Cloud AI offers a suite of features designed to **enhance your development workflow with AI-driven capabilities**. These tools assist in troubleshooting, optimizing resource allocation, and improving your overall development process.
 
-- **[Explain with AI](/docs/features/ci-features/explain-with-ai)** - This feature uses AI to provide detailed explanations about failed tasks.
+- **[Self-Healing CI](/docs/features/ci-features/self-healing-ci)** - Have AI automatically analyze failed PR runs and propose fixes.
+- **[Explain with AI](/docs/features/ci-features/explain-with-ai)** - Have AI provide detailed explanations and resolution steps for failed tasks.
 
 ## Enable Nx Cloud AI Features
 
-To enable AI features for your organization, go to your organization's settings on [Nx Cloud](https://cloud.nx.app/orgs?utm_source=nx.dev&utm_campaign=ai) and select the organization where you want to enable AI.
+To enable AI features for your organization, go to [your organization's settings](https://cloud.nx.app/go/organization/edit) on Nx Cloud and select the organization where you want to enable AI.
 
 In the **settings** menu, find the "AI Features" section and toggle it to "On".
 
-![enable ai features](../../../../assets/features/ci-features/ai-features.png)
+![enable ai features](../../../../assets/features/ci-features/ai-features.avif)
 
 Ensure that you **accept the AI terms** to start using the AI features.
 
 {% aside type="note" title="AI Features Availability" %}
 
-AI features are available only for the [Nx Cloud Team plan](https://nx.dev/pricing).
+AI features are available on Hobby, Team and Enterprise [Nx Cloud plans](https://nx.dev/pricing).
 
 {% /aside %}
 
-### Enable AI Features for Enterprise On-Prem Installations
+## Explain with AI for Enterprise On-Prem Installations
 
-To enable AI features for enterprise on-prem installations, add the following configuration to your `helm-values.yaml` file:
+To enable the Explain with AI feature for enterprise on-prem installations, add the following configuration to your `helm-values.yaml` file:
 
 ```yaml
 nxApi
@@ -49,8 +50,54 @@ frontend
         value: 'true'
 ```
 
-Ensure your OpenAI secret key is correctly configured to provide the necessary credits for `gpt-3.5-turbo` and `gpt-4`.
+_(We use gpt-4o for the Explain with AI feature)_
 
-### Regional Availability
+Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit).
 
-This feature is not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use this feature by providing their own OpenAI secret key and enabling the required environment variables.
+## Self-Healing CI for Enterprise On-Prem Installations
+
+To enable Self-Healing CI for enterprise on-prem installations, follow these steps:
+
+### Setup
+
+Add the following configuration to your `helm-values.yaml` file:
+
+```yaml
+nxApi
+  deployment:
+    env:
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+      - name: NX_CLOUD_AI_TOKEN_PROVIDER_TYPE
+        value: 'fixed'
+      - name: NX_CLOUD_ANTHROPIC_API_KEY
+        value: 'sk-ant-...'
+
+frontend
+  deployment:
+    env:
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+```
+
+Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit) and enable Self-Healing CI in the [workspace settings](https://cloud.nx.app/go/workspace/settings).
+
+### Running Self-Healing CI
+
+#### Automatic DTE Agents
+
+If using DTE agents, the self-healing CI step will be automatically added when the setting is enabled in the workspace settings.
+
+#### Manual DTE
+
+For manual DTE configurations, the `nx fix-ci` command must be included in the agent configuration after running nx tasks.
+
+**Important:** This command must run **always**, meaning that even when previous nx tasks fail, the `fix-ci` command should still execute.
+
+#### Non-DTE
+
+For non-DTE setups, refer to the [Self-Healing CI documentation](/docs/features/ci-features/self-healing-ci) for detailed configuration instructions.
+
+## Regional Availability
+
+AI features are not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use these features by providing their own OpenAI secret key (for Explain with AI) or Anthropic API key (for Self-Healing CI) and enabling the required environment variables.
