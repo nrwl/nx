@@ -143,6 +143,7 @@ export async function loadDevkitPackage(
         category: mappedCategory,
         weight: 1.0,
         filter: 'type:References',
+        description: `${title} Devkit documentation`,
       },
     };
 
