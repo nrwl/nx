@@ -103,11 +103,6 @@ const teamMembers = [
     imageUrl: 'jonathan-cammisuli.avif',
   },
   {
-    name: 'Jordan Powell',
-    title: 'Developer Productivity Engineer',
-    imageUrl: 'jordan-powell.avif',
-  },
-  {
     name: 'Josh VanAllen',
     title: 'Developer Productivity Engineer',
     imageUrl: 'josh-vanallen.avif',
