@@ -1,19 +1,17 @@
-import { stripVTControlCharacters } from 'util';
 import { EOL } from 'os';
-
-import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
+import { stripVTControlCharacters } from 'util';
 import { Task } from '../../config/task-graph';
 import { TaskStatus as NativeTaskStatus } from '../../native';
+import * as taskHistoryUtils from '../../utils/task-history';
+import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
 
 let originalHrTime;
 let originalColumns;
-let originalDbEnabled;
 
 describe('getTuiTerminalSummaryLifeCycle', () => {
   beforeAll(() => {
     originalHrTime = process.hrtime;
     originalColumns = process.stdout.columns;
-    originalDbEnabled = process.env.NX_DISABLE_DB;
     process.stdout.columns = 80;
     process.hrtime = ((x) => {
       if (x !== undefined) {
@@ -21,14 +19,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       }
       return [22229415, 668399708];
     }) as any;
-    // Disable DB to avoid issues when running tests
-    process.env.NX_DISABLE_DB = 'true';
+    jest.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(null);
   });
 
   afterAll(() => {
     process.hrtime = originalHrTime;
     process.stdout.columns = originalColumns;
-    process.env.NX_DISABLE_DB = originalDbEnabled;
   });
 
   beforeEach(() => {});
