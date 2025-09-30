@@ -110,11 +110,12 @@ export function TrialNxEnterprise(): ReactElement {
           </section>
           <section className="flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
             <HubspotForm
-              region="na1"
-              portalId="2757427"
               formId="e7f05c82-b56c-4a31-8cf8-a53ca8d69c5b"
-              noScript={true}
+              calendlyFormId="fd9d9be5-55cd-4b49-874b-ee54deb141f1"
               loading={<div>Loading...</div>}
+              noScript={true}
+              portalId="2757427"
+              region="na1"
             />
           </section>
         </div>
