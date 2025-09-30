@@ -1,8 +1,11 @@
-import { exec, execFile } from 'child_process';
+import { exec } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
-import { platform } from 'os';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from './package-manager';
 
 /*
  * Verifies that the given npm package has provenance attestations
@@ -34,7 +37,7 @@ export async function ensurePackageHasProvenance(
     const attURL = npmViewResult.dist?.attestations?.url;
 
     if (!attURL)
-      throw new ProvenanceError(
+      throw await createProvenanceError(
         packageName,
         packageVersion,
         'No attestation URL found'
@@ -43,7 +46,7 @@ export async function ensurePackageHasProvenance(
     const response = await fetch(attURL);
 
     if (!response.ok) {
-      throw new ProvenanceError(
+      throw await createProvenanceError(
         packageName,
         packageVersion,
         `HTTP ${response.status}: ${response.statusText}`
@@ -71,7 +74,7 @@ export async function ensurePackageHasProvenance(
 
     // verify that provenance was actually generated from the right publishing workflow
     if (!workflowParameters) {
-      throw new ProvenanceError(
+      throw await createProvenanceError(
         packageName,
         packageVersion,
         'Missing workflow parameters in attestation'
@@ -79,21 +82,21 @@ export async function ensurePackageHasProvenance(
     }
 
     if (workflowParameters.repository !== 'https://github.com/nrwl/nx') {
-      throw new ProvenanceError(
+      throw await createProvenanceError(
         packageName,
         packageVersion,
         'Repository does not match nrwl/nx'
       );
     }
     if (workflowParameters.path !== '.github/workflows/publish.yml') {
-      throw new ProvenanceError(
+      throw await createProvenanceError(
         packageName,
         packageVersion,
         'Publishing workflow does not match .github/workflows/publish.yml'
       );
     }
     if (workflowParameters.ref !== `refs/tags/${npmViewResult.version}`) {
-      throw new ProvenanceError(
+      throw await createProvenanceError(
         packageName,
         packageVersion,
         `Version ref does not match refs/tags/${npmViewResult.version}`
@@ -107,7 +110,7 @@ export async function ensurePackageHasProvenance(
     ).toString('hex');
     const attestationSha = dsseEnvelopePayload.subject[0].digest.sha512;
     if (distSha !== attestationSha) {
-      throw new ProvenanceError(
+      throw await createProvenanceError(
         packageName,
         packageVersion,
         'Integrity hash does not match attestation hash'
@@ -118,7 +121,7 @@ export async function ensurePackageHasProvenance(
     if (error instanceof ProvenanceError) {
       throw error;
     }
-    throw new ProvenanceError(
+    throw await createProvenanceError(
       packageName,
       packageVersion,
       error.message || error
@@ -126,10 +129,61 @@ export async function ensurePackageHasProvenance(
   }
 }
 
+async function createProvenanceError(
+  packageName: string,
+  packageVersion: string,
+  error?: string
+): Promise<ProvenanceError> {
+  let customRegistry: string | undefined;
+
+  try {
+    const packageManager = detectPackageManager();
+    const commands = getPackageManagerCommand(packageManager);
+
+    // Try to get registry from current package manager, fall back to npm
+    const registryCommand =
+      commands.getRegistryUrl ?? 'npm config get registry';
+
+    const execAsync = promisify(exec);
+    const result = await execAsync(registryCommand, {
+      timeout: 5000,
+      windowsHide: true,
+    });
+
+    const registry = result.stdout.trim();
+
+    // Only consider it custom if it's not the default npm registry
+    if (
+      registry &&
+      registry !== 'undefined' &&
+      !registry.includes('registry.npmjs.org')
+    ) {
+      customRegistry = registry;
+    }
+  } catch {
+    // If we can't determine the registry, proceed with default error message
+  }
+
+  return new ProvenanceError(
+    packageName,
+    packageVersion,
+    customRegistry,
+    error
+  );
+}
+
 export class ProvenanceError extends Error {
-  constructor(packageName: string, packageVersion: string, error?: string) {
+  constructor(
+    packageName: string,
+    packageVersion: string,
+    customRegistry?: string,
+    error?: string
+  ) {
+    const registryNote = customRegistry
+      ? `This might be due to a custom registry configuration (${customRegistry}). Please check whether provenance is correctly configured for your registry.`
+      : 'This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues.';
     super(
-      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues. To disable this check at your own risk, you can set the NX_SKIP_PROVENANCE_CHECK environment variable to true. \n Error: ${
+      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. ${registryNote} To disable this check at your own risk, you can set the NX_SKIP_PROVENANCE_CHECK environment variable to true. \n Error: ${
         error ?? ''
       }`
     );
