@@ -7,14 +7,15 @@ import { readJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-} from '../../utils/package-manager';
+import { getPackageManagerCommand } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { configurePlugins, installPluginPackages } from './configure-plugins';
+import { determineAiAgents } from './ai-agent-prompts';
+import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
+import { FsTree, flushChanges } from '../../generators/tree';
+import { Agent } from '../../ai/utils';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -37,6 +38,7 @@ export interface InitArgs {
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
   force?: boolean;
+  aiAgents?: Agent[];
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
@@ -162,6 +164,30 @@ export async function initHandler(options: InitArgs): Promise<void> {
       repoRoot,
       options.verbose
     );
+  }
+
+  const selectedAgents = await determineAiAgents(
+    options.aiAgents,
+    options.interactive && guided
+  );
+
+  if (selectedAgents && selectedAgents.length > 0) {
+    const tree = new FsTree(repoRoot, false);
+    const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+      directory: repoRoot,
+      writeNxCloudRules: options.nxCloud !== false,
+      packageVersion: 'latest',
+      agents: [...selectedAgents],
+    });
+
+    const changes = tree.listChanges();
+    flushChanges(repoRoot, changes);
+
+    if (aiAgentsCallback) {
+      const results = await aiAgentsCallback();
+      results.messages.forEach((m) => output.log(m));
+      results.errors.forEach((e) => output.error(e));
+    }
   }
 
   let useNxCloud: any = options.nxCloud;
