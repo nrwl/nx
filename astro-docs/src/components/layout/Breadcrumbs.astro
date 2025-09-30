@@ -18,8 +18,9 @@ type Crumb = {
 }
 
 function findDocByPath (path: string) {
-  return allDocs.find(d => d.id === `${path}.mdoc`)
-      ?? allDocs.find(d => d.id === `${path}/index.mdoc`);
+  path = path.replace(/^docs\//, '');
+  return allDocs.find(d => d.id === `${path}`)
+      ?? allDocs.find(d => d.id === `${path}/index`);
 }
 
 function createNameFromSegment(segment: string): string {

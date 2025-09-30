@@ -103,7 +103,7 @@ Fortunately, Nx has a solution that does not require complicated pipeline files 
 
 If you view the `my-app-e2e` project (`npx nx show project my-app-e2e`), you will notice that there is an `e2e-ci` target, with additional targets created for each test file. This is the task splitting feature that `@nx/playwright` enables. Whereas the `e2e` target runs the full Playwright suite, the `e2e-ci` task runs additional tasks created from test files.
 
-When run on a single machine, `e2e-ci` will be slower because it starts multiple Playwright processes, which is why we only allow it to run through distribution. To [enable distribution](/ci/features/split-e2e-tasks#enable-automated-e2e-task-splitting), you must connect your workspace to [Nx Cloud](/nx-cloud). This is easily done with the `connect` command.
+When run on a single machine, `e2e-ci` will be slower because it starts multiple Playwright processes, which is why we only allow it to run through distribution. To [enable distribution](/ci/features/split-e2e-tasks#enable-automated-task-splitting), you must connect your workspace to [Nx Cloud](/nx-cloud). This is easily done with the `connect` command.
 
 ```shell
 npx nx@latest connect
