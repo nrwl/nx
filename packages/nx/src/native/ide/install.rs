@@ -61,7 +61,7 @@ fn is_nx_console_installed(command: &str) -> Result<bool, Error> {
     Ok(false)
 }
 
-fn install_extension(command: &str) -> Result<(), Error> {
+fn install_extension(command: &str) -> Result<bool, Error> {
     debug!(
         "Attempting to install Nx Console extension with: {} --install-extension {}",
         command, NX_CONSOLE_EXTENSION_ID
@@ -79,7 +79,7 @@ fn install_extension(command: &str) -> Result<(), Error> {
                     "Command '{}' not found, skipping extension installation",
                     command
                 );
-                return Ok(());
+                return Ok(false);
             }
             _ => {
                 debug!("Failed to execute command: {}", e);
@@ -95,20 +95,21 @@ fn install_extension(command: &str) -> Result<(), Error> {
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     if output.status.success() {
+        trace!("Command output: {}", stdout.trim());
         if stdout.contains("already installed") {
             debug!("Nx Console extension is already installed");
+        return Ok(false);
         } else {
-            info!("Successfully installed Nx Console");
+            debug!("Successfully installed Nx Console");
+            return Ok(true)
         }
-        trace!("Command output: {}", stdout.trim());
-        return Ok(());
     }
 
     // Check for "already installed" message in stdout or stderr
     let combined_output = format!("{} {}", stdout, stderr);
     if combined_output.contains("already installed") {
         debug!("Nx Console extension is already installed");
-        return Ok(());
+        return Ok(false);
     }
 
     // Log the error output for debugging
@@ -121,7 +122,7 @@ fn install_extension(command: &str) -> Result<(), Error> {
     }
 
     // Command failed but this is OK - we don't want to crash Nx
-    Ok(())
+    Ok(false)
 }
 
 #[napi]
@@ -150,24 +151,39 @@ pub fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool {
 }
 
 #[napi]
-pub fn install_nx_console() {
+pub fn install_nx_console() -> bool {
     enable_logger();
 
     let current_editor = get_current_editor();
     debug!("Detected editor: {:?}", current_editor);
 
-    install_nx_console_for_editor(*current_editor);
+    return install_nx_console_for_editor(*current_editor);
 }
 
 #[napi]
-pub fn install_nx_console_for_editor(editor: SupportedEditor) {
+pub fn install_nx_console_for_editor(editor: SupportedEditor) -> bool {
     enable_logger();
 
     if let Some(command) = get_command_for_editor(&editor) {
-        // Try to install the extension
-        if let Err(e) = install_extension(command) {
-            debug!("Failed to install Nx Console extension: {}", e);
+        debug!("Attempting to install Nx Console for {:?}", editor);
+        match install_extension(command) {
+            Ok(installed) => {
+                if installed {
+                    debug!("Nx Console extension installed successfully");
+                }
+                installed
+            }
+            Err(e) => {
+                debug!("Failed to install Nx Console extension: {}", e);
+                false
+            }
         }
+    } else {
+        debug!(
+            "Could not get command for editor {:?}, skipping installation",
+            editor
+        );
+        false
     }
 }
 
