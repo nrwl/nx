@@ -8,9 +8,9 @@ filter: 'type:Features'
 
 {% youtube src="https://youtu.be/dRQq_B1HSLA" title="We Just Shipped the Monorepo MCP for Copilot" /%}
 
-Monorepos **provide an ideal foundation for AI-powered development**, enabling cross-project reasoning and code generation. However, without proper context, **LLMs struggle to understand your workspace architecture**, seeing only individual files rather than the complete picture.
+Monorepos [provide an ideal foundation for AI-powered development](https://nx.dev/blog/nx-and-ai-why-they-work-together), enabling cross-project reasoning and code generation. However, without proper context, **LLMs struggle to understand your workspace architecture**, seeing only individual files rather than the complete picture.
 
-Nx's transforms your AI assistant by providing rich workspace metadata that enables it to:
+Nx transforms your AI assistant by providing rich workspace metadata that enables it to:
 
 - Understand your **workspace architecture** and project relationships
 - Identify **project owners** and team responsibilities
@@ -24,7 +24,7 @@ The goal is to transform your AI assistant from a generic code helper into an ar
 
 The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) is an open standard that enables AI models to interact with your development environment through a standardized interface. Nx implements an MCP server via the [Nx Console](/docs/getting-started/editor-setup) that exposes workspace metadata to compatible AI assistants like GitHub Copilot, Claude, and others.
 
-With the Nx MCP server, your AI assistant gains a "map" of your entire system being able to go from just reasoning at the file level to seeing the more high level picture. This allows the LLM to move between different abstraction levels - from high-level architecture down to specific implementation details:
+With the Nx MCP server, your AI assistant gains a "map" of your entire system being able to go from just reasoning at the file level to seeing the higher-level picture. This allows the LLM to move between different abstraction levels - from high-level architecture down to specific implementation details:
 
 ![Different abstraction levels](../../../assets/features/nx-ai-abstraction-levels.avif)
 
@@ -41,18 +41,17 @@ These are some of the available tools which the Nx MCP server exposes:
 
 ## Setting Up Nx MCP
 
-The Nx MCP server is part of Nx Console and can be easily configured in supported editors:
+To configure Nx for AI agents and AI-Assistants, run the following command:
 
-### VS Code Setup
+```shell {% frame="none" %}
+npx nx configure-ai-agents
+```
 
-For VS Code users, the MCP is configured **completely automatically** via the Nx Console extension:
+This configures Nx Console which automatically configures and serves the Nx MCP server for you if you're using VSCode or Cursor. It also sets up the corresponding AI agent configuration files (e.g. `CLAUDE.md`, `AGENTS.md`,...).
 
-1. Install [Nx Console](/docs/getting-started/editor-setup) from the marketplace
-2. The MCP server is automatically configured - no additional setup needed!
+### JetBrains Setup
 
-### Cursor / JetBrains Setup
-
-For Cursor and JetBrains IDE users:
+For JetBrains IDE users:
 
 1. Install [Nx Console](/docs/getting-started/editor-setup) from the marketplace
 2. You'll receive a notification to "Improve Copilot/AI agent with Nx-specific context"
@@ -64,7 +63,7 @@ If you miss the notification, run the `nx.configureMcpServer` (`Nx: Setup MCP Se
 
 ### Other MCP-Compatible Clients
 
-For other MCP-compatible clients (that do not have Nx Console available) like Claude Desktop you can use the Nx MCP by configuring it manually as follows:
+For other MCP-compatible clients (that do not have Nx Console available) like Claude Desktop, you can use the Nx MCP by configuring it manually as follows:
 
 ```json
 // mcp.json
@@ -78,7 +77,7 @@ For other MCP-compatible clients (that do not have Nx Console available) like Cl
 }
 ```
 
-For Claude Code:
+Here's an example of how to register it for Claude Code:
 
 ```shell {% frame="none" %}
 claude mcp add nx-mcp npx nx-mcp@latest
