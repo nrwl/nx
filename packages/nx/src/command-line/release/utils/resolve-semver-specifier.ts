@@ -11,7 +11,6 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
   projectGraph: ProjectGraph,
   projectNames: string[],
-  projectToDependencies: Map<string, Set<string>>,
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): // Map of projectName to semver bump type
 Promise<Map<string, SemverSpecifier | null>> {
@@ -20,8 +19,7 @@ Promise<Map<string, SemverSpecifier | null>> {
   const relevantCommits = await getCommitsRelevantToProjects(
     projectGraph,
     parsedCommits,
-    projectNames,
-    projectToDependencies
+    projectNames
   );
   return determineSemverChange(relevantCommits, conventionalCommitsConfig);
 }
