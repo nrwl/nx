@@ -46,8 +46,7 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/vue": "workspace:*",
-    "@nx/vite": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1"
+    "@nx/vite": "workspace:*"
   },
   "devDependencies": {
     "nx": "workspace:*"

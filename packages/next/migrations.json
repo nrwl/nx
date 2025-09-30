@@ -1,19 +1,6 @@
 {
   "generators": {},
   "packageJsonUpdates": {
-    "19.0.3": {
-      "version": "19.0.3-beta.0",
-      "packages": {
-        "next": {
-          "version": "14.2.3",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-config-next": {
-          "version": "14.2.3",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "20.7.1-beta.0": {
       "version": "20.7.1-beta.0",
       "packages": {

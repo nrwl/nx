@@ -1582,7 +1582,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^29.4.1
-        version: 29.7.0(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@24.2.0)(typescript@5.9.2))
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.9.2))
 
   graph/migrate:
     dependencies:
@@ -1595,7 +1595,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.9.2))
+        version: 29.7.0(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@24.2.0)(typescript@5.9.2))
 
   graph/project-details:
     dependencies:
@@ -3236,9 +3236,6 @@ importers:
       '@nx/vue':
         specifier: workspace:*
         version: link:../vue
-      '@phenomnomnominal/tsquery':
-        specifier: ~5.0.1
-        version: 5.0.1(typescript@5.9.2)
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
@@ -3403,9 +3400,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: ~5.0.1
-        version: 5.0.1(typescript@5.9.2)
       '@playwright/test':
         specifier: ^1.36.0
         version: 1.54.0

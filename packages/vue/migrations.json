@@ -21,15 +21,6 @@
           "alwaysAddToPackageJson": false
         }
       }
-    },
-    "19.4.3": {
-      "version": "19.4.3-beta.0",
-      "packages": {
-        "vue-tsc": {
-          "version": "^2.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
     }
   }
 }

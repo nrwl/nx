@@ -2977,14 +2977,6 @@
                         ],
                         "isExternal": false,
                         "disableCollapsible": false
-                      },
-                      {
-                        "id": "migrations",
-                        "path": "/technologies/vue/nuxt/api/migrations",
-                        "name": "migrations",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
                       }
                     ],
                     "disableCollapsible": false
@@ -3723,16 +3715,7 @@
                     "path": "/technologies/eslint/eslint-plugin/api",
                     "id": "api",
                     "isExternal": false,
-                    "children": [
-                      {
-                        "id": "migrations",
-                        "path": "/technologies/eslint/eslint-plugin/api/migrations",
-                        "name": "migrations",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
+                    "children": [],
                     "disableCollapsible": false
                   }
                 ],
@@ -4113,14 +4096,6 @@
                             "disableCollapsible": false
                           }
                         ],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "migrations",
-                        "path": "/technologies/build-tools/rollup/api/migrations",
-                        "name": "migrations",
-                        "children": [],
                         "isExternal": false,
                         "disableCollapsible": false
                       }
@@ -4739,14 +4714,6 @@
                             "disableCollapsible": false
                           }
                         ],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "migrations",
-                        "path": "/technologies/test-tools/playwright/api/migrations",
-                        "name": "migrations",
-                        "children": [],
                         "isExternal": false,
                         "disableCollapsible": false
                       }

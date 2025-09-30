@@ -1,11 +1,5 @@
 {
   "generators": {
-    "update-19-6-3-proxy-config": {
-      "cli": "nx",
-      "version": "19.6.3-beta.0",
-      "description": "Migrate proxy config files to match new format from webpack-dev-server v5.",
-      "implementation": "./src/migrations/update-19-6-3/proxy-config"
-    },
     "update-21-0-0-remove-isolated-config": {
       "cli": "nx",
       "version": "21.0.0-beta.11",
@@ -20,28 +14,6 @@
     }
   },
   "packageJsonUpdates": {
-    "19.6.0": {
-      "version": "19.6.0-beta.1",
-      "packages": {
-        "webpack-dev-server": {
-          "version": "^5.0.4",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.7.0": {
-      "version": "19.7.0-beta.4",
-      "packages": {
-        "@module-federation/enhanced": {
-          "version": "~0.6.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/sdk": {
-          "version": "~0.6.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "20.5.0": {
       "version": "20.5.0-beta.3",
       "packages": {
