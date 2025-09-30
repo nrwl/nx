@@ -124,11 +124,12 @@ export function TalkToOurTeam(): ReactElement {
           </section>
           <section className="w-full flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
             <HubspotForm
-              region="na1"
-              portalId="2757427"
+              calendlyFormId="436b5997-6d7f-4220-8726-0ac417eb8f54"
               formId="2e492124-843c-4a6d-87fe-93db27ab4323"
-              noScript={true}
               loading={<div>Loading...</div>}
+              noScript={true}
+              portalId="2757427"
+              region="na1"
             />
           </section>
         </div>

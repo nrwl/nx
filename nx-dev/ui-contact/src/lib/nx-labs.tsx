@@ -114,11 +114,12 @@ export function NxLabsContact(): ReactElement {
           </section>
           <section className="flex-1 self-start rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
             <HubspotForm
-              region="na1"
-              portalId="2757427"
+              calendlyFormId="e0d476c6-2a39-4cd3-91bc-e9bff0d0f75d"
               formId="d5710d48-85de-4b17-ab97-4c22c25a8f02"
-              noScript={true}
               loading={<div>Loading...</div>}
+              noScript={true}
+              portalId="2757427"
+              region="na1"
             />
           </section>
         </div>
