@@ -41,7 +41,7 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "nx": ">= 20 <= 22"
+    "nx": ">= 21 <= 23"
   },
   "publishConfig": {
     "access": "public"
