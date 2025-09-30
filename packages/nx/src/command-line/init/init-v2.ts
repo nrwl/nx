@@ -184,7 +184,9 @@ export async function initHandler(options: InitArgs): Promise<void> {
     flushChanges(repoRoot, changes);
 
     if (aiAgentsCallback) {
-      await aiAgentsCallback();
+      const results = await aiAgentsCallback();
+      results.messages.forEach((m) => output.log(m));
+      results.errors.forEach((e) => output.error(e));
     }
   }
 
