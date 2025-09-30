@@ -75,7 +75,7 @@ export class DbCache {
     workspaceRoot,
     cacheDir,
     getDbConnection(),
-    process.env.NX_DISABLE_DB !== 'true',
+    undefined,
     resolveMaxCacheSize(this.nxJson)
   );
 

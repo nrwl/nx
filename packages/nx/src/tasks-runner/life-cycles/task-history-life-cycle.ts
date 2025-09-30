@@ -17,10 +17,9 @@ export function getTasksHistoryLifeCycle():
   | TaskHistoryLifeCycle
   | LegacyTaskHistoryLifeCycle {
   if (!tasksHistoryLifeCycle) {
-    tasksHistoryLifeCycle =
-      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
-        ? new TaskHistoryLifeCycle()
-        : new LegacyTaskHistoryLifeCycle();
+    tasksHistoryLifeCycle = !IS_WASM
+      ? new TaskHistoryLifeCycle()
+      : new LegacyTaskHistoryLifeCycle();
   }
 
   return tasksHistoryLifeCycle;
