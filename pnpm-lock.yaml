@@ -772,9 +772,6 @@ importers:
       identity-obj-proxy:
         specifier: 3.0.0
         version: 3.0.0
-      ignore:
-        specifier: ^5.0.4
-        version: 5.3.2
       immer:
         specifier: ^9.0.6
         version: 9.0.21
@@ -2706,9 +2703,6 @@ importers:
       enquirer:
         specifier: ~2.3.6
         version: 2.3.6
-      ignore:
-        specifier: ^5.0.4
-        version: 5.3.2
       minimatch:
         specifier: 9.0.3
         version: 9.0.3
@@ -3298,8 +3292,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
       ignore:
-        specifier: ^5.0.4
-        version: 5.3.2
+        specifier: ^7.0.5
+        version: 7.0.5
       jest-diff:
         specifier: ^30.0.2
         version: 30.0.2

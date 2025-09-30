@@ -16,6 +16,7 @@ export {
   readProjectConfigurationsFromRootMap,
   findMatchingConfigFiles,
 } from './project-graph/utils/project-configuration-utils';
+export { getIgnoreObjectForTree } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
