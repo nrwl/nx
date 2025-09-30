@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Next.js Applications next-env.d.ts should remain the same after a build 1`] = `
+exports[`Next.js Applications - E2E and Snapshots next-env.d.ts should remain the same after a build 1`] = `
 "/// <reference types="next" />
 /// <reference types="next/image-types/global" />
 
@@ -9,7 +9,7 @@ exports[`Next.js Applications next-env.d.ts should remain the same after a build
 "
 `;
 
-exports[`Next.js Applications next-env.d.ts should remain the same after a build 2`] = `
+exports[`Next.js Applications - E2E and Snapshots next-env.d.ts should remain the same after a build 2`] = `
 "/// <reference types="next" />
 /// <reference types="next/image-types/global" />
 
