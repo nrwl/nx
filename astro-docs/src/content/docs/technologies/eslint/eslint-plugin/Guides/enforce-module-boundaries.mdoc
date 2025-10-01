@@ -9,6 +9,10 @@ filter: 'type:Guides'
 The `@nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between
 different projects in the repository. Enforcing strict boundaries helps to prevent unplanned cross-dependencies.
 
+{% aside type="note" %}
+This rule requires ESLint and only works for JavaScript/TypeScript projects. For language-agnostic boundary enforcement across all project dependencies, see the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/powerpack/conformance).
+{% /aside %}
+
 ## Usage
 
 You can use the `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:
