@@ -344,13 +344,17 @@ export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
   projects: string[]
-): Promise<GitCommit[]> {
+): // Map of projectName to GitCommit[]
+Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   const projectSet = new Set(projects);
-  const relevantCommits: GitCommit[] = [];
+  const relevantCommits: Map<
+    string,
+    { commit: GitCommit; isProjectScopedCommit: boolean }[]
+  > = new Map();
 
   for (const commit of commits) {
     // Convert affectedFiles to FileChange[] format
-    const fileChanges = commit.affectedFiles.map((f) => ({
+    const touchedFiles = commit.affectedFiles.map((f) => ({
       file: f,
       ext: extname(f),
       hash: '', // Not needed for affected detection
@@ -358,11 +362,27 @@ export async function getCommitsRelevantToProjects(
     }));
 
     // Use the same affected detection logic as `nx affected`
-    const affectedGraph = await filterAffected(projectGraph, fileChanges);
+    const affectedGraph = await filterAffected(projectGraph, touchedFiles);
 
-    // Check if any of our target projects are in the affected graph
-    if (Object.keys(affectedGraph.nodes).some((p) => projectSet.has(p))) {
-      relevantCommits.push(commit);
+    for (const projectName of Object.keys(affectedGraph.nodes)) {
+      if (projectSet.has(projectName)) {
+        if (!relevantCommits.has(projectName)) {
+          relevantCommits.set(projectName, []);
+        }
+        if (
+          commit.scope === projectName ||
+          commit.scope.split(',').includes(projectName) ||
+          !commit.scope
+        ) {
+          relevantCommits
+            .get(projectName)
+            ?.push({ commit, isProjectScopedCommit: true });
+        } else {
+          relevantCommits
+            .get(projectName)
+            ?.push({ commit, isProjectScopedCommit: false });
+        }
+      }
     }
   }
 

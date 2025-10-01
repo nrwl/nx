@@ -28,7 +28,11 @@ import {
   resolveSemverSpecifierFromConventionalCommits,
   resolveSemverSpecifierFromPrompt,
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
-import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
+import {
+  isValidSemverSpecifier,
+  SemverSpecifier,
+  SemverSpecifierType,
+} from 'nx/src/command-line/release/utils/semver';
 import {
   ReleaseVersionGeneratorResult,
   VersionData,
@@ -426,12 +430,30 @@ To fix this you will either need to add a package.json file at that location, or
               );
             }
 
-            specifier = await resolveSemverSpecifierFromConventionalCommits(
-              previousVersionRef,
-              options.projectGraph,
-              affectedProjects,
-              options.conventionalCommitsConfig
-            );
+            const projectToSpecifiers =
+              await resolveSemverSpecifierFromConventionalCommits(
+                previousVersionRef,
+                options.projectGraph,
+                affectedProjects,
+                options.conventionalCommitsConfig
+              );
+
+            const getHighestSemverChange = (
+              semverSpecifiersItr: MapIterator<SemverSpecifier>
+            ) => {
+              const semverSpecifiers = Array.from(semverSpecifiersItr);
+              return semverSpecifiers.sort((a, b) => b - a)[0];
+            };
+
+            const semverSpecifier =
+              options.releaseGroup.projectsRelationship === 'independent'
+                ? projectToSpecifiers.get(projectName)
+                : getHighestSemverChange(projectToSpecifiers.values());
+
+            specifier =
+              semverSpecifier === null
+                ? null
+                : SemverSpecifierType[semverSpecifier];
 
             if (!specifier) {
               if (

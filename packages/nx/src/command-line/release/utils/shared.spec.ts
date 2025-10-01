@@ -6,6 +6,12 @@ import {
 } from './shared';
 import { ProjectGraph } from '../../../config/project-graph';
 import { GitCommit } from './git';
+import { readNxJson } from '../../../config/nx-json';
+
+jest.mock('../../../config/nx-json', () => ({
+  ...jest.requireActual('../../../config/nx-json'),
+  readNxJson: jest.fn(),
+}));
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -313,6 +319,8 @@ describe('shared', () => {
     let mockProjectGraph: ProjectGraph;
 
     beforeEach(() => {
+      (readNxJson as jest.Mock).mockReturnValue({});
+
       mockProjectGraph = {
         nodes: {
           'lib-a': {
@@ -373,8 +381,12 @@ describe('shared', () => {
         ['lib-a', 'lib-b']
       );
 
-      expect(result).toHaveLength(2);
-      expect(result.map((c) => c.shortHash)).toEqual(['abc123', 'def456']);
+      expect(result.size).toBe(2);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0]?.commit.shortHash).toBe('abc123');
+      expect(result.get('lib-b')).toHaveLength(1);
+      expect(result.get('lib-b')?.[0]?.commit.shortHash).toBe('def456');
+      expect(result.has('lib-c')).toBe(false);
     });
 
     it('should include commits that touch global files affecting all projects', async () => {
@@ -390,8 +402,11 @@ describe('shared', () => {
       );
 
       // Both commits should be included - nx.json affects all, and lib-a is directly touched
-      expect(result).toHaveLength(2);
-      expect(result.map((c) => c.shortHash)).toEqual(['abc123', 'def456']);
+      expect(result.size).toBe(1);
+      expect(result.get('lib-a')).toHaveLength(2);
+      const commitHashes = result.get('lib-a')?.map((c) => c.commit.shortHash);
+      expect(commitHashes).toContain('abc123');
+      expect(commitHashes).toContain('def456');
     });
 
     it('should exclude commits that only touch unrelated projects', async () => {
@@ -406,8 +421,10 @@ describe('shared', () => {
         ['lib-a']
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].shortHash).toEqual('def456');
+      expect(result.size).toBe(1);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0]?.commit.shortHash).toBe('def456');
+      expect(result.has('lib-c')).toBe(false);
     });
 
     it('should include commits that touch dependencies of target projects', async () => {
@@ -431,8 +448,9 @@ describe('shared', () => {
       );
 
       // lib-a depends on lib-c, so commit touching lib-c should affect lib-a
-      expect(result).toHaveLength(1);
-      expect(result[0].shortHash).toEqual('abc123');
+      expect(result.size).toBe(1);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0]?.commit.shortHash).toBe('abc123');
     });
 
     it('should handle commits with multiple affected files', async () => {
@@ -450,8 +468,64 @@ describe('shared', () => {
         ['lib-a']
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].shortHash).toEqual('abc123');
+      expect(result.size).toBe(1);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0]?.commit.shortHash).toBe('abc123');
+    });
+
+    it('should include the same commit for multiple projects when it affects both', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', [
+          'libs/lib-a/src/index.ts',
+          'libs/lib-b/src/index.ts',
+        ]),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a', 'lib-b']
+      );
+
+      // Same commit should appear for both projects
+      expect(result.size).toBe(2);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0]?.commit.shortHash).toBe('abc123');
+      expect(result.get('lib-b')).toHaveLength(1);
+      expect(result.get('lib-b')?.[0]?.commit.shortHash).toBe('abc123');
+    });
+
+    it('should include global file commits for all requested projects', async () => {
+      const commits: GitCommit[] = [createMockCommit('abc123', ['nx.json'])];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a', 'lib-b']
+      );
+
+      // Global file should appear for all requested projects
+      expect(result.size).toBe(2);
+      expect(result.get('lib-a')).toBeDefined();
+      expect(result.get('lib-b')).toBeDefined();
+      expect(result.get('lib-a')?.[0]?.commit.shortHash).toBe('abc123');
+      expect(result.get('lib-b')?.[0]?.commit.shortHash).toBe('abc123');
+    });
+
+    it('should not include projects with no relevant commits in the map', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['libs/lib-c/src/index.ts']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a', 'lib-b']
+      );
+
+      expect(result.has('lib-a')).toBe(false);
+      expect(result.has('lib-b')).toBe(false);
+      expect(result.size).toBe(0);
     });
 
     it('should handle empty commit list', async () => {
@@ -461,7 +535,7 @@ describe('shared', () => {
         ['lib-a']
       );
 
-      expect(result).toHaveLength(0);
+      expect(result.size).toBe(0);
     });
 
     it('should handle empty project list', async () => {
@@ -475,7 +549,7 @@ describe('shared', () => {
         []
       );
 
-      expect(result).toHaveLength(0);
+      expect(result.size).toBe(0);
     });
 
     it('should include commits touching lock files when they affect target projects', async () => {
@@ -492,7 +566,7 @@ describe('shared', () => {
 
       // Lock file changes typically affect all or many projects
       // The exact behavior depends on the lock file locator logic
-      expect(result.length).toBeGreaterThanOrEqual(0);
+      expect(result.size).toBeGreaterThanOrEqual(0);
     });
 
     it('should include commits touching root package.json', async () => {
@@ -507,7 +581,7 @@ describe('shared', () => {
       );
 
       // package.json changes typically affect projects
-      expect(result.length).toBeGreaterThanOrEqual(0);
+      expect(result.size).toBeGreaterThanOrEqual(0);
     });
 
     function createMockCommit(
