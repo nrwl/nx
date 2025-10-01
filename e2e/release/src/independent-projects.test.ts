@@ -193,43 +193,40 @@ describe('nx release - independent projects', () => {
         `release version 999.9.9-package.3 -p ${pkg3}`
       );
       expect(versionPkg3Output).toMatchInlineSnapshot(`
+NX   Your filter "{project-name}" matched the following projects:
 
-          NX   Your filter "{project-name}" matched the following projects:
-
-          - {project-name}
-
-
-          NX   Running release version for project: {project-name}
-
-        {project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
-        {project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
-        {project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
-
-          NX   Running release version for project: {project-name}
-
-          {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
-          {project-name} ❓ Applied explicit semver value "999.9.9-package.3", from the given specifier, to get new version 999.9.9-package.3
-          {project-name} ✍️  New version 999.9.9-package.3 written to manifest: {project-name}/package.json
+- {project-name}
 
 
-          "name": "@proj/{project-name}",
-          -   "version": "0.0.0",
-          +   "version": "999.9.9-package.3",
-          "exports": {
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
+{project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
+{project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+
+NX   Running release version for project: {project-name}
+
+{project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+{project-name} ❓ Applied explicit semver value "999.9.9-package.3", from the given specifier, to get new version 999.9.9-package.3
+{project-name} ✍️  New version 999.9.9-package.3 written to manifest: {project-name}/package.json
 
 
-          "name": "@proj/{project-name}",
-          -   "version": "999.9.9-package.2",
-          +   "version": "999.9.9",
-          "exports": {
+"name": "@proj/{project-name}",
+-   "version": "0.0.0",
++   "version": "999.9.9-package.3",
+"exports": {
 
 
-          NX   Updating {package-manager} lock file
+"name": "@proj/{project-name}",
+-   "version": "999.9.9-package.2",
++   "version": "999.9.9",
+"exports": {
 
 
-          NX   Staging changed files with git
+NX   Updating {package-manager} lock file
+
+
+NX   Staging changed files with git
 
 
         `);
