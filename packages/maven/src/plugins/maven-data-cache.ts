@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { existsSync, readFileSync, statSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenAnalysisData } from './types';
+import { logger } from '@nx/devkit';
 
 interface CacheEntry {
   data: MavenAnalysisData;
@@ -31,11 +31,11 @@ export function getCachedMavenData(
   );
 
   if (!existsSync(analysisFile)) {
-    console.log('[Maven Cache] Analysis file not found:', analysisFile);
+    logger.verbose('[Maven Cache] Analysis file not found:', analysisFile);
     return null;
   }
 
-  console.log('[Maven Cache] Found analysis file:', analysisFile);
+  logger.verbose('[Maven Cache] Found analysis file:', analysisFile);
 
   try {
     const fileStats = statSync(analysisFile);

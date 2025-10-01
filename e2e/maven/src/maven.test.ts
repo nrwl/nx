@@ -65,7 +65,7 @@ describe('Maven', () => {
     const graph = readJson('graph.json');
 
     // Check that dependencies exist in the graph
-    const appDeps = graph.dependencies.app;
+    const appDeps = graph.graph.dependencies['com.example:app'];
     expect(appDeps).toContainEqual({
       source: 'app',
       target: 'lib',
