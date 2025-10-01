@@ -141,11 +141,14 @@ export async function configureAiAgentsHandlerImpl(
   const preselectedIndices: number[] = [];
   let currentIndex = 0;
 
-  nonConfiguredAgents.forEach((a) => {
+  // Partially configured agents first (highest priority)
+  partiallyConfiguredAgents.forEach((a) => {
     allAgentChoices.push(getAgentChoiceForPrompt(a));
+    preselectedIndices.push(currentIndex);
     currentIndex++;
   });
 
+  // Outdated agents second
   for (const a of fullyConfiguredAgents) {
     if (a.outdated) {
       allAgentChoices.push(getAgentChoiceForPrompt(a));
@@ -154,9 +157,9 @@ export async function configureAiAgentsHandlerImpl(
     }
   }
 
-  partiallyConfiguredAgents.forEach((a) => {
+  // Non-configured agents last
+  nonConfiguredAgents.forEach((a) => {
     allAgentChoices.push(getAgentChoiceForPrompt(a));
-    preselectedIndices.push(currentIndex);
     currentIndex++;
   });
 
@@ -199,7 +202,7 @@ export async function configureAiAgentsHandlerImpl(
               !focused.agentConfiguration.rules
             ) {
               return chalk.dim(
-                `  Will configure agent rules at ${
+                `  Configures agent rules at ${
                   focused.rulesDisplayPath
                 } and the Nx MCP server ${
                   focused.mcpDisplayPath
