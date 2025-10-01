@@ -1,0 +1,43 @@
+{
+  "migrations": [
+    {
+      "version": "22.0.0-beta.0",
+      "description": "Remove the deprecated `external` and `externalBuildTargets` options from the `@nx/js:swc` and `@nx/js:tsc` executors.",
+      "factory": "./src/migrations/update-22-0-0/remove-external-options-from-js-executors",
+      "package": "@nx/js",
+      "name": "remove-external-options-from-js-executors"
+    },
+    {
+      "cli": "nx",
+      "version": "22.0.0-beta.0",
+      "description": "Remove deprecated deleteOutputPath and sassImplementation options from @nx/webpack:webpack",
+      "implementation": "./src/migrations/update-22-0-0/remove-deprecated-options",
+      "package": "@nx/webpack",
+      "name": "update-22-0-0-remove-deprecated-options"
+    },
+    {
+      "cli": "nx",
+      "version": "22.0.0-beta.0",
+      "description": "Updates webpack configs using React to use the new withSvgr composable function instead of the svgr option in withReact or NxReactWebpackPlugin.",
+      "factory": "./src/migrations/update-22-0-0/add-svgr-to-webpack-config",
+      "package": "@nx/react",
+      "name": "update-22-0-0-add-svgr-to-webpack-config"
+    },
+    {
+      "cli": "nx",
+      "version": "22.0.0-beta.1",
+      "description": "Remove deprecated deleteOutputPath and sassImplementation options from rspack configurations.",
+      "factory": "./src/migrations/update-22-0-0/remove-deprecated-options",
+      "package": "@nx/rspack",
+      "name": "remove-deprecated-rspack-options"
+    },
+    {
+      "cli": "nx",
+      "version": "22.0.0-beta.0",
+      "description": "Updates next.config.js files to add SVGR webpack configuration directly instead of using the nx.svgr option in withNx.",
+      "factory": "./src/migrations/update-22-0-0/add-svgr-to-next-config",
+      "package": "@nx/next",
+      "name": "update-22-0-0-add-svgr-to-next-config"
+    }
+  ]
+}
