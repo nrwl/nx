@@ -120,3 +120,6 @@ packages/angular-rspack-compiler/README.md
 
 test-output
 test-results
+
+# TypeScript build info files
+*.tsbuildinfo
