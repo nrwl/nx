@@ -53,6 +53,7 @@ import {
   gitTag,
   parseCommits,
   parseGitCommit,
+  parseVersionPlanCommit,
 } from './utils/git';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
@@ -311,8 +312,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const postGitTasks: PostGitTask[] = [];
 
     let workspaceChangelogChanges: ChangelogChange[] = [];
-    // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
-    let workspaceChangelogCommits: GitCommit[] = [];
 
     // If there are multiple release groups, we'll just skip the workspace changelog anyway.
     const versionPlansEnabledForWorkspaceChangelog =
@@ -329,13 +328,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 vp.groupVersionBump
               );
               let githubReferences = [];
-              let author = undefined;
+              let authors = undefined;
               const parsedCommit = vp.commit
-                ? parseGitCommit(vp.commit, true)
+                ? parseVersionPlanCommit(vp.commit)
                 : null;
               if (parsedCommit) {
                 githubReferences = parsedCommit.references;
-                author = parsedCommit.author;
+                authors = parsedCommit.authors;
               }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
@@ -346,8 +345,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       body: '',
                       isBreaking: releaseType.isBreaking,
                       githubReferences,
-                      // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                      authors: [author],
+                      authors,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -358,8 +356,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         body: '',
                         isBreaking: releaseType.isBreaking,
                         githubReferences,
-                        // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                        authors: [author],
+                        authors,
                         affectedProjects: [project],
                       };
                     });
@@ -408,13 +405,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         workspaceChangelogFromRef
       );
 
-      workspaceChangelogCommits = await getCommits(
-        workspaceChangelogFromSHA,
-        toSHA
-      );
-
       workspaceChangelogChanges = filterHiddenChanges(
-        workspaceChangelogCommits.map((c) => {
+        (await getCommits(workspaceChangelogFromSHA, toSHA)).map((c) => {
           return {
             type: c.type,
             scope: c.scope,
@@ -422,7 +414,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             body: c.body,
             isBreaking: c.isBreaking,
             githubReferences: c.references,
-            authors: [c.author],
+            authors: c.authors,
             shortHash: c.shortHash,
             revertedHashes: c.revertedHashes,
             affectedProjects: '*',
@@ -523,8 +515,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
           let changes: ChangelogChange[] | null = null;
-          // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
-          let commits: GitCommit[];
 
           if (releaseGroup.resolvedVersionPlans) {
             changes = (
@@ -540,12 +530,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 let githubReferences = [];
                 let authors = [];
                 const parsedCommit = vp.commit
-                  ? parseGitCommit(vp.commit, true)
+                  ? parseVersionPlanCommit(vp.commit)
                   : null;
                 if (parsedCommit) {
                   githubReferences = parsedCommit.references;
-                  // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                  authors = [parsedCommit.author];
+                  authors = parsedCommit.authors;
                 }
                 return {
                   type: releaseType.type,
@@ -581,6 +570,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 )
               )?.tag;
 
+            let commits: GitCommit[];
             if (!fromRef && useAutomaticFromRef) {
               const firstCommit = await getFirstGitCommit();
               commits = await filterProjectCommits({
@@ -626,8 +616,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 body: c.body,
                 isBreaking: c.isBreaking,
                 githubReferences: c.references,
-                // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                authors: [c.author],
+                authors: c.authors,
                 shortHash: c.shortHash,
                 revertedHashes: c.revertedHashes,
                 affectedProjects: commitChangesNonProjectFiles(
@@ -666,8 +655,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         }
       } else {
         let changes: ChangelogChange[] = [];
-        // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
-        let commits: GitCommit[] = [];
         if (releaseGroup.resolvedVersionPlans) {
           changes = (releaseGroup.resolvedVersionPlans as GroupVersionPlan[])
             .flatMap((vp) => {
@@ -675,13 +662,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 vp.groupVersionBump
               );
               let githubReferences = [];
-              let author = undefined;
+              let authors = undefined;
               const parsedCommit = vp.commit
-                ? parseGitCommit(vp.commit, true)
+                ? parseVersionPlanCommit(vp.commit)
                 : null;
               if (parsedCommit) {
                 githubReferences = parsedCommit.references;
-                author = parsedCommit.author;
+                authors = parsedCommit.authors;
               }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
@@ -692,8 +679,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       body: '',
                       isBreaking: releaseType.isBreaking,
                       githubReferences,
-                      // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                      authors: [author],
+                      authors,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -704,8 +690,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         body: '',
                         isBreaking: releaseType.isBreaking,
                         githubReferences,
-                        // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                        authors: [author],
+                        authors,
                         affectedProjects: [project],
                       };
                     });
@@ -757,17 +742,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             fileMap.projectFileMap
           );
 
-          commits = await getCommits(fromSHA, toSHA);
           changes = filterHiddenChanges(
-            commits.map((c) => ({
+            (await getCommits(fromSHA, toSHA)).map((c) => ({
               type: c.type,
               scope: c.scope,
               description: c.description,
               body: c.body,
               isBreaking: c.isBreaking,
               githubReferences: c.references,
-              // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-              authors: [c.author],
+              authors: c.authors,
               shortHash: c.shortHash,
               revertedHashes: c.revertedHashes,
               affectedProjects: commitChangesNonProjectFiles(

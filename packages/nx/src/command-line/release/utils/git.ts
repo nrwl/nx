@@ -644,29 +644,17 @@ const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
-export function parseGitCommit(
-  commit: RawGitCommit,
-  isVersionPlanCommit = false
-): GitCommit | null {
-  // For version plans, we do not require conventional commits and therefore cannot extract data based on that format
-  if (isVersionPlanCommit) {
-    return {
-      ...commit,
-      description: commit.message,
-      type: '',
-      scope: '',
-      references: extractReferencesFromCommit(commit),
-      // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
-      // TODO(v22): Make the current GitCommit interface more clearly tied to conventional commits
-      isBreaking: false,
-      authors: getAllAuthorsForCommit(commit),
-      // Not applicable to version plans
-      affectedFiles: [],
-      // Not applicable, a version plan cannot have been added in a commit that also reverts another commit
-      revertedHashes: [],
-    };
-  }
+export function parseVersionPlanCommit(commit: RawGitCommit): {
+  references: Reference[];
+  authors: GitCommitAuthor[];
+} {
+  return {
+    references: extractReferencesFromCommit(commit),
+    authors: getAllAuthorsForCommit(commit),
+  };
+}
 
+export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const parsedMessage = parseConventionalCommitsMessage(commit.message);
   if (!parsedMessage) {
     return null;
@@ -753,6 +741,7 @@ async function getGitRoot() {
 }
 
 let gitRootRelativePath: string;
+
 async function getGitRootRelativePath() {
   if (!gitRootRelativePath) {
     const gitRoot = await getGitRoot();
