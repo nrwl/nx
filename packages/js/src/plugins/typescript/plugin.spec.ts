@@ -96,11 +96,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -150,11 +145,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -207,11 +197,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -264,11 +249,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -319,11 +299,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -377,11 +352,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -476,11 +446,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -536,11 +501,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -598,11 +558,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -678,11 +633,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -745,11 +695,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -811,11 +756,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -882,11 +822,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -957,11 +892,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1032,11 +962,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1112,11 +1037,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1187,11 +1107,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1265,11 +1180,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1356,12 +1266,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                          "@tsconfig/strictest",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1465,11 +1369,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.d.ts",
                       },
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1513,11 +1412,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/lib/**/*.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1610,11 +1504,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tests/**/*.d.mts",
                       "{projectRoot}/tests/**/*.mjs",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1679,11 +1568,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -1716,11 +1600,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -1753,11 +1632,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -1790,11 +1664,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -1831,11 +1700,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.spec.ts",
             "!{projectRoot}/src/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
       });
@@ -1860,11 +1724,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1934,11 +1793,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1998,11 +1852,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2069,11 +1918,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -2110,11 +1954,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2170,11 +2009,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2281,11 +2115,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.d.ts",
                       },
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2332,11 +2161,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2397,11 +2221,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2462,11 +2281,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2538,11 +2352,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2603,11 +2412,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2664,11 +2468,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2865,11 +2664,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2942,11 +2736,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3017,11 +2806,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3095,11 +2879,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3171,11 +2950,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3238,11 +3012,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3305,11 +3074,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3394,11 +3158,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3465,11 +3224,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3539,11 +3293,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3617,11 +3366,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3692,11 +3436,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3775,11 +3514,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3855,11 +3589,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3936,11 +3665,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4032,12 +3756,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                          "@tsconfig/strictest",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4117,11 +3835,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/foo.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.d.ts",
-                      },
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
                       },
                     ],
                     "metadata": {
@@ -4205,11 +3918,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.json",
                       "{projectRoot}/src/**/foo.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4272,11 +3980,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -4308,11 +4011,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -4344,11 +4042,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -4380,11 +4073,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
@@ -4420,11 +4108,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/foo.ts",
             "!{projectRoot}/src/**/bar.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
       });
@@ -4457,11 +4140,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4526,11 +4204,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4597,11 +4270,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4661,11 +4329,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4750,11 +4413,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/other/**/*.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4824,11 +4482,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4894,11 +4547,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4975,11 +4623,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5045,11 +4688,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5112,11 +4750,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5186,11 +4819,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/typescript/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5257,11 +4885,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5359,11 +4982,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5430,11 +5048,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5501,11 +5114,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/source/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5603,11 +5211,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/**/src/**/*.ts",
                     "{projectRoot}/utils/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5674,11 +5277,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5745,11 +5343,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5843,11 +5436,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5940,11 +5528,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6041,11 +5624,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/lib/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
