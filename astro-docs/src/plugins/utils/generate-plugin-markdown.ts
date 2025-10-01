@@ -81,7 +81,7 @@ export function getMigrationsMarkdown(
   if (items.size === 0) {
     markdown += `No migrations found for \`${packageName}\`.
 Nx only retains migrations for the last 2 major versions of Nx.
-It's possible migrations existed in previous verions of \`${packageName}\`.\n\n`;
+It's possible migrations existed in previous versions of \`${packageName}\`.\n\n`;
     if (NX_VERSION) {
       const majorVersion = Number(NX_VERSION.split('.')[0]);
       const previousMajor = majorVersion - 1;
