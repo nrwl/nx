@@ -1818,6 +1818,18 @@
     "source": "/packages/docker/src"
   },
   {
+    "description": "The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.",
+    "documents": [],
+    "executors": [],
+    "generators": [],
+    "migrations": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "dotnet",
+    "packageName": "@nx/dotnet",
+    "root": "/packages/dotnet",
+    "source": "/packages/dotnet/src"
+  },
+  {
     "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
     "documents": [
       {

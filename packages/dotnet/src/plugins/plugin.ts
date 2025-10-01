@@ -89,45 +89,6 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
   },
 ];
 
-// Deprecated createNodes export for backward compatibility
-export const createNodes: CreateNodes<DotNetPluginOptions> = [
-  dotnetProjectGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Please update your plugin to use `createNodesV2` instead.'
-    );
-    const projectRoot = dirname(configFilePath);
-    const projectFiles = [configFilePath];
-
-    const normalizedOptions = normalizeOptions(options);
-    const optionsHash = hashObject(options);
-    const cachePath = join(
-      workspaceDataDirectory,
-      `dotnet-${optionsHash}.hash`
-    );
-    const targetsCache = readTargetsCache(cachePath);
-
-    const hash = await calculateHashesForCreateNodes(
-      [projectRoot],
-      normalizedOptions,
-      context
-    );
-
-    try {
-      return await createNodesInternal(
-        projectRoot,
-        options,
-        context,
-        targetsCache,
-        projectFiles,
-        hash[0]
-      );
-    } finally {
-      writeTargetsToCache(cachePath, targetsCache);
-    }
-  },
-];
-
 async function createNodesInternal(
   projectRoot: string,
   options: DotNetPluginOptions,
