@@ -593,13 +593,15 @@ function getInputs(
   projectRoot: string
 ): TargetConfiguration['inputs'] {
   const configFiles = new Set<string>();
-  const externalDependencies = ['typescript'];
+  // TODO(leo): temporary disable external dependencies until we support hashing
+  // glob patterns from external dependencies
+  // const externalDependencies = ['typescript'];
 
   const extendedConfigFiles = getExtendedConfigFiles(tsConfig, workspaceRoot);
   extendedConfigFiles.files.forEach((configPath) => {
     configFiles.add(configPath);
   });
-  externalDependencies.push(...extendedConfigFiles.packages);
+  // externalDependencies.push(...extendedConfigFiles.packages);
 
   const includePaths = new Set<string>();
   const excludePaths = new Set<string>();
@@ -756,7 +758,7 @@ function getInputs(
     inputs.push('production' in namedInputs ? '^production' : '^default');
   }
 
-  inputs.push({ externalDependencies });
+  // inputs.push({ externalDependencies });
 
   return inputs;
 }
