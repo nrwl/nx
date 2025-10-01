@@ -1,5 +1,5 @@
 import { Tree } from '../../generators/tree';
-import ignore from 'ignore';
+import ignore = require('ignore');
 
 export default function moveCacheDirectory(tree: Tree) {
   // If nx.json doesn't exist the repo can't utilize
