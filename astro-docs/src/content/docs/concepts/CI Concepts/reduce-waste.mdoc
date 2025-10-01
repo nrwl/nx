@@ -18,8 +18,6 @@ How much benefit you gain from this is different for each repository, but there 
 
 If we look at these two trivial examples, you can see that the repository with more projects gains more value from the affected command.
 
-{% cards smCols=2 mdCols=2 lgCols=2 %}
-
 {% graph title="One Project" height="200px" %}
 
 ```json
@@ -100,8 +98,6 @@ If we look at these two trivial examples, you can see that the repository with m
 
 {% /graph %}
 
-{% /cards %}
-
 In the one project example, every PR will affect the entire repository. In the four project example, modifying one project only affects 25% of the repository. For the one project repository `nx affected -t build` is identical to `nx run-many -t build`, whereas for the four project repository, `nx affected -t build` cuts out the 75% of wasted work.
 
 With this principle in mind, you can add more applications to the repository to gain the [benefits of a monorepo](https://monorepo.tools) without suffering an exponential increase in CI execution time. This principle also encourages splitting projects into multiple projects in order to have a faster CI pipeline for the existing applications.
@@ -110,9 +106,7 @@ With this principle in mind, you can add more applications to the repository to 
 
 Consider the following example repo structures.
 
-{% cards mdCols=3 lgCols=3 %}
-
-{% graph title="Stacked" height="200px" %}
+{% graph title="Stacked" height="350px" %}
 
 ```json
 {
@@ -241,8 +235,6 @@ Consider the following example repo structures.
 
 {% /graph %}
 
-{% /cards %}
-
 If we assume that each project has an independent 50% chance of being modified on a given PR, we can calculate the expected average number of affected projects. Intuitively, the flat structure should have less affected projects than the stacked structure and the grouped structure should fall somewhere in between. That is, in fact, the case.
 
 If we don't use the `nx affected` command in CI, no matter how our repo is structured, the expected number of projects run in CI will be 3 - all of them.
@@ -308,8 +300,7 @@ The first time CI runs for a particular PR, affected is doing most of the work t
 
 Take a look at the example below. The projects are setup in the suboptimal stacked arrangement from before. On the first CI run, `project3` was modified, so every project is affected. Then the developer realizes that `project2` should be changed as well and pushes a new commit. For the second CI run, every project is still affected when compared against the `main` branch, but `project3` hasn't changed between the first CI run and the second, so the cache from the first CI run can be used instead of re-running that task. `project2` tasks need to be re-run since it was modified and `project1` tasks need to be re-run since it depends on a project that was modified.
 
-{% cards smCols=2 mdCols=2 lgCols=2 %}
-{% graph title="First CI Run" height="200px" %}
+{% graph title="First CI Run" height="300px" %}
 
 ```json
 {
@@ -352,7 +343,7 @@ Take a look at the example below. The projects are setup in the suboptimal stack
 
 {% /graph %}
 
-{% graph title="Second CI Run (project2 Changed)" height="200px" %}
+{% graph title="Second CI Run (project2 Changed)" height="300px" %}
 
 ```json
 {
@@ -394,8 +385,6 @@ Take a look at the example below. The projects are setup in the suboptimal stack
 ```
 
 {% /graph %}
-
-{% /cards %}
 
 ### Caching Provides More Value When There are More Projects and a Flatter Structure
 
