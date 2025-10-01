@@ -64,7 +64,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,
@@ -94,7 +93,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,
@@ -129,7 +127,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,
@@ -159,7 +156,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Deleted,
@@ -197,7 +193,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Added,
@@ -236,7 +231,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -262,7 +256,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: 'JsonPropertyAdded',
@@ -302,7 +295,6 @@ describe('getTouchedNpmPackages', () => {
         [
           {
             file: 'package.json',
-            hash: 'some-hash',
             getChanges: () => [
               {
                 type: 'JsonPropertyAdded',
