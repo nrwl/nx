@@ -11,11 +11,17 @@ filter: 'type:Guides'
 
 The [`@nx/conformance`](/docs/reference/core-api/conformance) plugin allows [Nx Powerpack](https://nx.dev/powerpack) and [Nx Enterprise](https://nx.dev/enterprise) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
 
-The conformance plugin allows you to **encode your own organization's standards** so that they can be enforced automatically. Conformance rules can also **complement linting tools** by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be **applied to any language in the codebase** or focus entirely on configuration files.
+## Why Conformance?
+
+Large organizations struggle with maintaining consistency across teams and projects. Manual audits don't scale and developers can't remember every standard. Conformance provides **automated governance** that catches issues before they reach production and enforces policies without manual intervention.
+
+## What Does Conformance Do?
+
+The `@nx/conformance` plugin lets you write custom rules in TypeScript that enforce your organization's standards across **any language or technology** in your codebase. Rules can complement existing linting tools by verifying proper configuration, or enforce entirely new policies around security, architecture, or documentation requirements.
 
 The plugin also provides the following pre-written rules:
 
-- **Enforce Project Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/docs/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+- **Enforce Project Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - **Ensure Owners**: Require every project to have an owner defined for the [`@nx/owners` plugin](/docs/reference/core-api/owners)
 
 ## Setup
@@ -113,3 +119,11 @@ Simply add an appropriate invocation of the `nx-cloud conformance:check` command
 ```
 
 Learn more about [publishing](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud) and [configuring conformance rules in Nx Cloud](/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud).
+
+## Learn More
+
+- [Conformance Plugin API Reference](/docs/reference/powerpack/conformance/overview) - Detailed documentation on configuration options and provided rules
+- [Create a Custom Conformance Rule](/docs/reference/powerpack/conformance/create-conformance-rule) - Step-by-step guide to writing your own rules
+- [Publish Conformance Rules to Nx Cloud](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud) - Share rules across your organization
+- [Configure Conformance Rules in Nx Cloud](/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud) - Manage rules via the Nx Cloud dashboard
+- [Blog: Automating Consistency with Nx Cloud Conformance](https://nx.dev/blog/nx-cloud-conformance-automate-consistency) - Learn about the philosophy and benefits of conformance

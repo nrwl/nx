@@ -158,29 +158,14 @@ export function ScaleYourOrganization(): ReactElement {
                         <Link
                           href={
                             process.env.NEXT_PUBLIC_ASTRO_URL
-                              ? '/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud'
-                              : '/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud'
+                              ? '/docs/reference/powerpack/conformance/overview'
+                              : '/ci/recipes/enterprise/conformance'
                           }
                           prefetch={false}
-                          title="Configure Conformance Rules"
+                          title="Learn More About Conformance"
                           className="text-sm/6 font-semibold"
                         >
-                          Configure Conformance Rules{' '}
-                          <span aria-hidden="true">→</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href={
-                            process.env.NEXT_PUBLIC_ASTRO_URL
-                              ? '/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud'
-                              : '/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud'
-                          }
-                          prefetch={false}
-                          title="Publish Conformance Rules"
-                          className="text-sm/6 font-semibold"
-                        >
-                          Publish Conformance Rules{' '}
+                          Learn More About Conformance
                           <span aria-hidden="true">→</span>
                         </Link>
                       </li>

@@ -1,6 +1,6 @@
 ---
 title: 'Enforce Module Boundaries'
-description: 'Learn how to use Nx module boundaries to maintain a clean architecture by controlling dependencies between projects using tags and ESLint rules.'
+description: 'Learn how to use Nx module boundaries to maintain a clean architecture by controlling dependencies between projects using tags and dependency constraints.'
 sidebar:
   order: 8
 filter: 'type:Features'
@@ -8,40 +8,22 @@ filter: 'type:Features'
 
 If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, chaos will ensue, and the workspace will become unmanageable.
 
-To help with that Nx uses code analysis to make sure projects can only depend on each other's well-defined public API. It also allows you to declaratively impose constraints on how projects can depend on each other.
+To help with that, Nx provides powerful mechanisms to enforce architectural boundaries and ensure projects can only depend on each other according to your organization's rules. You can declaratively define constraints using project tags and enforce them automatically.
 
 {% youtube
 src="https://www.youtube.com/embed/q0en5vlOsWY"
 title="Applying Module Boundaries"
 /%}
 
-## Project APIs
+## How to Enforce Boundaries
 
-Nx provides an `enforce-module-boundaries` eslint rule that enforces the public API of projects in the repo. Each project defines its public API in an `index.ts` (or `index.js`) file. If another project tries to import a variable from a file deep within a different project, an error will be thrown during linting.
+Nx offers two complementary approaches to enforce module boundaries:
 
-To set up the lint rule, install these dependencies:
+**ESLint Integration** - For JavaScript/TypeScript projects, enforce boundaries on code imports using the `@nx/enforce-module-boundaries` ESLint rule. This checks TypeScript imports and `package.json` dependencies during linting.
 
-```shell {% frame="none" %}
-nx add @nx/eslint-plugin @nx/devkit
-```
+**Language-Agnostic Conformance** - For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/powerpack/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`. Requires [Nx Powerpack or Enterprise](https://nx.dev/enterprise).
 
-And configure the rule in your root `.eslintrc.json` file:
-
-```jsonc
-// .eslintrc.json
-{
-  "plugins": ["@nx"],
-  // ...
-  "rules": {
-    "@nx/enforce-module-boundaries": [
-      "error",
-      {
-        /* options */
-      }
-    ]
-  }
-}
-```
+Both approaches use the same tag-based constraint system described below.
 
 ## Tags
 
@@ -112,9 +94,20 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% /tabitem %}
 {% /tabs %}
 
-Next, you should update your root lint configuration:
+## Configure Boundary Rules
 
-- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `@nx/enforce-module-boundaries` and you should update the `depConstraints`:
+Once you have tagged your projects, configure the dependency constraints based on your chosen approach:
+
+{% tabs %}
+{% tabitem label="ESLint" %}
+
+For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries` ESLint rule:
+
+```shell {% frame="none" %}
+nx add @nx/eslint-plugin @nx/devkit
+```
+
+Update your root `.eslintrc.json` file:
 
 ```jsonc
 // .eslintrc.json
@@ -148,16 +141,70 @@ Next, you should update your root lint configuration:
 }
 ```
 
-With these constraints in place, `scope:client` projects can only depend on projects with `scope:client` or `scope:shared`. And `scope:admin` projects can only depend on projects with `scope:admin` or `scope:shared`. So `scope:client` and `scope:admin` cannot depend on each other.
-
-Projects without any tags cannot depend on any other projects. If you try to violate the constraints, you will get an error when linting:
+If you violate the constraints, you will get an error when linting:
 
 ```plaintext
 A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```
 
-The exception to this rule is by explicitly allowing all tags (see below).
+Read more about [ESLint rule options](/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries).
+
+{% /tabitem %}
+{% tabitem label="Conformance" %}
+
+For any project type or to enforce boundaries on the complete dependency graph, use the Conformance plugin:
+
+```shell {% frame="none" %}
+nx add @nx/conformance
+```
+
+Configure rules in your `nx.json`:
+
+```jsonc
+// nx.json
+{
+  "conformance": {
+    "rules": [
+      {
+        "rule": "@nx/conformance/enforce-project-boundaries",
+        "options": {
+          "depConstraints": [
+            {
+              "sourceTag": "scope:shared",
+              "onlyDependOnProjectsWithTags": ["scope:shared"]
+            },
+            {
+              "sourceTag": "scope:admin",
+              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:admin"]
+            },
+            {
+              "sourceTag": "scope:client",
+              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:client"]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+Run conformance checks in CI:
+
+```yaml
+- name: Enforce all conformance rules
+  run: npx nx conformance:check
+```
+
+Learn more about [Conformance rules](/docs/enterprise/powerpack/conformance).
+
+{% /tabitem %}
+{% /tabs %}
+
+With these constraints in place, `scope:client` projects can only depend on projects with `scope:client` or `scope:shared`. And `scope:admin` projects can only depend on projects with `scope:admin` or `scope:shared`. So `scope:client` and `scope:admin` cannot depend on each other.
+
+Projects without any tags cannot depend on any other projects. The exception to this rule is by explicitly allowing all tags (see below).
 
 ### Tag formats
 
