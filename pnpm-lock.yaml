@@ -2763,7 +2763,7 @@ importers:
   packages/dotnet:
     dependencies:
       '@nx/devkit':
-        specifier: workspace:*s
+        specifier: workspace:*
         version: link:../devkit
       tslib:
         specifier: ^2.3.0
