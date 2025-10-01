@@ -12,7 +12,8 @@ export interface Change {
   type: string;
 }
 
-export interface FileChange<T extends Change = Change> extends FileData {
+export interface FileChange<T extends Change = Change> {
+  file: string;
   getChanges: () => T[];
 }
 
@@ -36,25 +37,19 @@ export function isDeletedFileChange(
 
 export function calculateFileChanges(
   files: string[],
-  allWorkspaceFiles: FileData[],
   nxArgs?: NxArgs,
-  readFileAtRevision: (
-    f: string,
-    r: void | string
-  ) => string = defaultReadFileAtRevision,
+  readFileAtRevision: {
+    (f: string, r: string | void): string;
+  } = defaultReadFileAtRevision,
   ignore = getIgnoreObject() as ReturnType<typeof ignore>
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 
   return files.map((f) => {
     const ext = extname(f);
-    const file = allWorkspaceFiles.find((fileData) => fileData.file == f);
-    const hash = file?.hash;
 
     return {
       file: f,
-      ext,
-      hash,
       getChanges: (): Change[] => {
         if (!existsSync(join(workspaceRoot, f))) {
           return [new DeletedFileChange()];

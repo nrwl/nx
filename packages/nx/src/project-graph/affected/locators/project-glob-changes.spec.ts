@@ -29,7 +29,6 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
       [
         {
           file: 'libs/proj1/project.json',
-          hash: 'some-hash',
           getChanges: () => [new DeletedFileChange()],
         },
       ],
