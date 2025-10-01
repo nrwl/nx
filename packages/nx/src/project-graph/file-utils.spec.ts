@@ -12,7 +12,6 @@ describe('calculateFileChanges', () => {
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     const changes = calculateFileChanges(
       ['proj/index.ts'],
-      [],
       undefined,
       (path, revision) => {
         return revision === 'sha1' ? '' : 'const a = 0;';
@@ -25,7 +24,6 @@ describe('calculateFileChanges', () => {
   it('should return a json changes for json files', () => {
     const changes = calculateFileChanges(
       ['package.json'],
-      [],
       {
         base: 'sha1',
         head: 'sha2',
@@ -77,7 +75,6 @@ describe('calculateFileChanges', () => {
     jest.spyOn(fs, 'existsSync').mockReturnValue(false);
     const changes = calculateFileChanges(
       ['i-dont-exist.json'],
-      [],
       {
         base: 'sha1',
         head: 'sha2',
@@ -95,7 +92,6 @@ describe('calculateFileChanges', () => {
     ig.add('*.md');
     const changes = calculateFileChanges(
       ['proj/readme.md'],
-      [],
       undefined,
       (path, revision) => {
         return revision === 'sha1' ? '' : 'const a = 0;';
