@@ -41,8 +41,17 @@ impl HashPlanner {
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
+        let function_start = std::time::Instant::now();
+
+        trace!("Starting get_plans_internal for {} tasks", task_ids.len());
+
         let external_deps_mapped = self.setup_external_deps();
-        task_ids
+        let setup_duration = function_start.elapsed();
+
+        trace!("External deps setup completed in {:?}", setup_duration);
+
+        let parallel_start = std::time::Instant::now();
+        let result: anyhow::Result<HashMap<String, Vec<HashInstruction>>> = task_ids
             .par_iter()
             .map(|id| {
                 let task = &task_graph
@@ -86,7 +95,28 @@ impl HashPlanner {
 
                 Ok((id.to_string(), inputs))
             })
-            .collect()
+            .collect();
+
+        let parallel_duration = parallel_start.elapsed();
+        let total_duration = function_start.elapsed();
+
+        if result.is_ok() {
+            tracing::debug!(
+                "get_plans_internal COMPLETED in {:?} - processed {} tasks (setup: {:?}, parallel_planning: {:?})",
+                total_duration,
+                task_ids.len(),
+                setup_duration,
+                parallel_duration
+            );
+        } else {
+            tracing::debug!(
+                "get_plans_internal FAILED in {:?} for {} tasks",
+                total_duration,
+                task_ids.len()
+            );
+        }
+
+        result
     }
 
     #[napi(ts_return_type = "Record<string, string[]>")]
