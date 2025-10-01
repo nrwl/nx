@@ -83,12 +83,12 @@ launch-templates:
           ./gradlew wrapper
           ./gradlew --version
 
-      - name: Setup .NET 10
+      - name: Setup .NET 9
         script: |
           wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
           sudo dpkg -i packages-microsoft-prod.deb
           sudo apt-get update
-          sudo apt-get install -y dotnet-sdk-10.0
+          sudo apt-get install -y dotnet-sdk-9.0
           dotnet --version
 
   linux-extra-large:
@@ -175,10 +175,10 @@ launch-templates:
           ./gradlew wrapper
           ./gradlew --version
 
-      - name: Setup .NET 10
+      - name: Setup .NET 9
         script: |
           wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
           sudo dpkg -i packages-microsoft-prod.deb
           sudo apt-get update
-          sudo apt-get install -y dotnet-sdk-10.0
+          sudo apt-get install -y dotnet-sdk-9.0
           dotnet --version

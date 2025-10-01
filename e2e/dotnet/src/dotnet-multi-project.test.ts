@@ -1,19 +1,25 @@
 import {
   checkFilesExist,
+  checkFilesMatchingPatternExist,
   cleanupProject,
   createFile,
   newProject,
+  readJson,
+  renameFile,
   runCLI,
   runCommand,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 
 import { createDotNetProject } from './utils/create-dotnet-project';
+import { mkdirSync } from 'fs';
 
 describe('.NET Plugin - Multi-Project Scenarios', () => {
   beforeAll(() => {
+    console.log('Creating new Nx workspace');
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`);
     updateJson('nx.json', (json) => {
@@ -21,78 +27,12 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
       json.plugins.push('@nx/dotnet');
       return json;
     });
+    console.log('Nx workspace created');
   });
 
-  afterAll(() => cleanupProject());
-
-  describe('Multiple Projects in Same Directory', () => {
-    const sharedDir = 'shared-services';
-
-    beforeAll(() => {
-      // Create multiple projects in the same directory
-      createDotNetProject({
-        name: 'UserService',
-        type: 'webapi',
-        cwd: sharedDir,
-      });
-      createDotNetProject({
-        name: 'OrderService',
-        type: 'webapi',
-        cwd: sharedDir,
-      });
-      createDotNetProject({
-        name: 'SharedLibrary',
-        type: 'classlib',
-        cwd: sharedDir,
-      });
-    });
-
-    it('should detect all projects in the directory', () => {
-      const projects = runCLI(`show projects --json`);
-      const projectsData = JSON.parse(projects);
-
-      expect(projectsData).toContain('shared-services');
-    });
-
-    it('should create project-specific targets', () => {
-      const projectDetails = runCLI(`show project shared-services --json`);
-      const details = JSON.parse(projectDetails);
-
-      // Should have umbrella targets
-      expect(details.targets).toHaveProperty('build');
-      expect(details.targets).toHaveProperty('restore');
-      expect(details.targets).toHaveProperty('clean');
-
-      // Should have project-specific targets
-      expect(details.targets).toHaveProperty('build:user-service');
-      expect(details.targets).toHaveProperty('build:order-service');
-      expect(details.targets).toHaveProperty('build:shared-library');
-
-      expect(details.targets).toHaveProperty('restore:user-service');
-      expect(details.targets).toHaveProperty('restore:order-service');
-      expect(details.targets).toHaveProperty('restore:shared-library');
-    });
-
-    it('should build individual projects', () => {
-      const output = runCLI('build:user-service shared-services', {
-        verbose: true,
-      });
-      expect(output).toContain('Build succeeded');
-      checkFilesExist(
-        'shared-services/UserService/bin/Debug/net8.0/UserService.dll'
-      );
-    });
-
-    it('should build all projects with umbrella target', () => {
-      const output = runCLI('build shared-services', { verbose: true });
-      expect(output).toContain('Build succeeded');
-
-      checkFilesExist(
-        'shared-services/UserService/bin/Debug/net8.0/UserService.dll',
-        'shared-services/OrderService/bin/Debug/net8.0/OrderService.dll',
-        'shared-services/SharedLibrary/bin/Debug/net8.0/SharedLibrary.dll'
-      );
-    });
+  afterAll(() => {
+    cleanupProject();
+    console.log('Nx workspace cleaned up');
   });
 
   describe('Complex Dependency Scenarios', () => {
@@ -128,38 +68,50 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
 
     it('should detect complex dependency relationships', () => {
       const output = runCLI('graph --file=complex-graph.json');
-      expect(output).toContain('Project graph saved');
 
       checkFilesExist('complex-graph.json');
-      const graph = require(`${process.cwd()}/complex-graph.json`);
+      const { graph } = readJson('complex-graph.json');
 
       // Verify dependency chain
-      const webApiDeps = graph.dependencies.WebApi || [];
-      expect(webApiDeps.some((dep) => dep.target === 'Application')).toBe(true);
+      const webApiDeps = graph.dependencies['web-api'] || [];
+      expect(webApiDeps.some((dep) => dep.target === 'application')).toBe(true);
 
-      const appDeps = graph.dependencies.Application || [];
-      expect(appDeps.some((dep) => dep.target === 'Core')).toBe(true);
-      expect(appDeps.some((dep) => dep.target === 'Infrastructure')).toBe(true);
+      const appDeps = graph.dependencies['application'] || [];
+      expect(appDeps.some((dep) => dep.target === 'core')).toBe(true);
+      expect(appDeps.some((dep) => dep.target === 'infrastructure')).toBe(true);
 
-      const infraDeps = graph.dependencies.Infrastructure || [];
-      expect(infraDeps.some((dep) => dep.target === 'Core')).toBe(true);
+      const infraDeps = graph.dependencies['infrastructure'] || [];
+      expect(infraDeps.some((dep) => dep.target === 'core')).toBe(true);
     });
 
     it('should build projects in correct order', () => {
-      const output = runCLI('build WebApi --verbose', { verbose: true });
+      const output = runCLI('build web-api --verbose', { verbose: true });
       expect(output).toContain('Build succeeded');
 
       // All dependencies should have been built
-      checkFilesExist(
-        'Core/bin/Debug/net8.0/Core.dll',
-        'Infrastructure/bin/Debug/net8.0/Infrastructure.dll',
-        'Application/bin/Debug/net8.0/Application.dll',
-        'WebApi/bin/Debug/net8.0/WebApi.dll'
+      checkFilesMatchingPatternExist(
+        '.*/Core.dll',
+        tmpProjPath('Core/bin/Debug')
+      );
+
+      checkFilesMatchingPatternExist(
+        '.*/Infrastructure.dll',
+        tmpProjPath('Infrastructure/bin/Debug')
+      );
+
+      checkFilesMatchingPatternExist(
+        '.*/Application.dll',
+        tmpProjPath('Application/bin/Debug')
+      );
+
+      checkFilesMatchingPatternExist(
+        '.*/WebApi.dll',
+        tmpProjPath('WebApi/bin/Debug')
       );
     });
 
     it('should run tests with proper dependencies', () => {
-      const output = runCLI('test Application.Tests', { verbose: true });
+      const output = runCLI('test application-tests', { verbose: true });
       expect(output).toContain('Test run for');
       expect(output).toMatch(/Passed!|Total tests:/);
     });

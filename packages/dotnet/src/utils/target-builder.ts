@@ -176,7 +176,8 @@ function addRestoreTargets(
         cache: true,
         inputs: [
           '{projectRoot}/**/*.{cs,csproj,fs,fsproj,vb,vbproj}',
-          { externalDependencies: info.packageReferences },
+          // @todo(@AgentEnder): we should include these, but right now we aren't adding them to graph.
+          // { externalDependencies: info.packageReferences },
         ],
         outputs: ['{projectRoot}/obj'],
         metadata: {
@@ -213,7 +214,7 @@ function addRestoreTargets(
       cache: true,
       inputs: [
         '{projectRoot}/**/*.{cs,csproj,fs,fsproj,vb,vbproj}',
-        { externalDependencies: info.packageReferences },
+        // { externalDependencies: info.packageReferences },
       ],
       outputs: ['{projectRoot}/obj'],
       metadata: {
@@ -337,7 +338,7 @@ function addTestTargets(
           cache: true,
           inputs: [
             ...baseInputs,
-            { externalDependencies: info.packageReferences },
+            // { externalDependencies: info.packageReferences },
           ],
           outputs: ['{projectRoot}/TestResults'],
           metadata: {
@@ -379,11 +380,14 @@ function addTestTargets(
       command: 'dotnet test',
       options: {
         cwd: '{projectRoot}',
-        args: ['--no-dependencies', '--no-build'],
+        args: ['--no-build'],
       },
       dependsOn: [options.buildTargetName],
       cache: true,
-      inputs: [...baseInputs, { externalDependencies: info.packageReferences }],
+      inputs: [
+        ...baseInputs,
+        //  { externalDependencies: info.packageReferences }
+      ],
       outputs: ['{projectRoot}/TestResults'],
       metadata: {
         technologies,

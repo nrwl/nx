@@ -1,5 +1,4 @@
 export {
-  createNodes,
   createNodesV2,
   DotNetPluginOptions,
   createDependencies,

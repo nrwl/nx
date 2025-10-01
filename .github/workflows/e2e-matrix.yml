@@ -176,10 +176,10 @@ jobs:
         if: ${{ matrix.os != 'windows-latest' }}
         run: echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Setup .NET 8
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@07f4723ee5cddb1f6b7feb9a6bbfaac42ebabb1a # v4.2.0
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: "9.0.x"
 
       - name: Install bun
         if: ${{ matrix.os != 'windows-latest' }}

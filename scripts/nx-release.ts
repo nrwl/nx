@@ -123,21 +123,26 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   // TODO(colum): Remove when we have a better way to handle this
-  let angularRspackPrevVersion = '0.0.1';
-  let angularRspackCompilerPrevVersion = '0.0.1';
+
+  const packagesToReset = [
+    'angular-rspack',
+    'angular-rspack-compiler',
+    'dotnet',
+  ];
+  const packagePrevVersions: { [packageName: string]: string } =
+    Object.fromEntries(packagesToReset.map((p) => [p, '0.0.1']));
+
   if (options.local) {
-    angularRspackPrevVersion = JSON.parse(
-      readFileSync(
-        join(workspaceRoot, 'packages/angular-rspack/package.json'),
-        'utf-8'
-      )
-    ).version;
-    angularRspackCompilerPrevVersion = JSON.parse(
-      readFileSync(
-        join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-        'utf-8'
-      )
-    ).version;
+    for (const packageName of packagesToReset) {
+      const packageJsonPath = join(
+        workspaceRoot,
+        'packages',
+        packageName,
+        'package.json'
+      );
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+      packagePrevVersions[packageName] = packageJson.version;
+    }
   }
 
   runNxReleaseVersion();
@@ -231,40 +236,29 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   // TODO(colum): Remove when we have a better way to handle this
+  for (const packageName of packagesToReset) {
+    console.log(
+      `Resetting ${packageName} package.json version to previous version`
+    );
+    const packageJsonPath = join(
+      workspaceRoot,
+      'packages',
+      packageName,
+      'package.json'
+    );
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+    packageJson.version = packagePrevVersions[packageName];
+    packageJson.dependencies['@nx/devkit'] &&= 'workspace:*';
+    packageJson.dependencies['@nx/angular-rspack-compiler'] &&= 'workspace:*';
+    packageJson.dependencies['@nx/dotnet'] &&= 'workspace:*';
 
-  console.log(
-    'Resetting angular-rspack package.json versions to previous versions'
-  );
-  const angularRspackPackageJson = JSON.parse(
-    readFileSync(
-      join(workspaceRoot, 'packages/angular-rspack/package.json'),
-      'utf-8'
-    )
-  );
-  angularRspackPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
-  angularRspackPackageJson.dependencies['@nx/angular-rspack-compiler'] =
-    'workspace:*';
-  angularRspackPackageJson.version = angularRspackPrevVersion;
-  writeFileSync(
-    join(workspaceRoot, 'packages/angular-rspack/package.json'),
-    JSON.stringify(angularRspackPackageJson)
-  );
-
-  writeFileSync(
-    join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-    JSON.stringify({
-      ...JSON.parse(
-        readFileSync(
-          join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-          'utf-8'
-        )
-      ),
-      version: angularRspackCompilerPrevVersion,
-    })
-  );
+    writeFileSync(packageJsonPath, JSON.stringify(packageJson));
+  }
 
   execSync(
-    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
+    `npx prettier --write ${packagesToReset
+      .map((p) => `packages/${p}/package.json`)
+      .join(' ')}`,
     {
       cwd: workspaceRoot,
     }
