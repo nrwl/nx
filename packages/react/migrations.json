@@ -1,23 +1,5 @@
 {
   "generators": {
-    "update-19-6-0-turn-module-federation-dts-off": {
-      "cli": "nx",
-      "version": "19.6.0-beta.4",
-      "description": "Ensure Module Federation DTS is turned off by default.",
-      "factory": "./src/migrations/update-19-6-0/turn-off-dts-by-default"
-    },
-    "update-module-federation-ssr-server-file": {
-      "cli": "nx",
-      "version": "19.6.0-beta.4",
-      "description": "Update the server file for Module Federation SSR port value to be the same as the 'serve' target port value.",
-      "factory": "./src/migrations/update-19-6-0/update-ssr-server-port"
-    },
-    "update-19-6-1-ensure-module-federation-target-defaults": {
-      "cli": "nx",
-      "version": "19.6.1-beta.0",
-      "description": "Ensure Target Defaults are set correctly for Module Federation.",
-      "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf"
-    },
     "update-20-2-0-update-module-federation-config-import": {
       "cli": "nx",
       "version": "20.2.0-beta.2",
@@ -50,79 +32,6 @@
     }
   },
   "packageJsonUpdates": {
-    "19.0.0": {
-      "version": "19.0.0-beta.12",
-      "packages": {
-        "react": {
-          "version": "18.3.1",
-          "alwaysAddToPackageJson": false
-        },
-        "react-dom": {
-          "version": "18.3.1",
-          "alwaysAddToPackageJson": false
-        },
-        "react-is": {
-          "version": "18.3.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react": {
-          "version": "18.3.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-dom": {
-          "version": "18.3.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-is": {
-          "version": "18.3.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@testing-library/react": {
-          "version": "15.0.6",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.0.3": {
-      "version": "19.0.3-beta.0",
-      "packages": {
-        "tailwindcss": {
-          "version": "3.4.3",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.2.0": {
-      "version": "19.2.0-beta.8",
-      "packages": {
-        "postcss": {
-          "version": "8.4.38",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.5.0-module-federation": {
-      "version": "19.5.0-beta.0",
-      "packages": {
-        "@module-federation/node": {
-          "version": "^2.3.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.7.0": {
-      "version": "19.7.0-beta.0",
-      "packages": {
-        "@module-federation/enhanced": {
-          "version": "~0.6.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/node": {
-          "version": "~2.5.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "20.0.0": {
       "version": "20.0.0-beta.8",
       "packages": {

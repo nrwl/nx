@@ -1,18 +1,4 @@
 {
   "generators": {},
-  "packageJsonUpdates": {
-    "19.0.0": {
-      "version": "19.0.0-beta.0",
-      "packages": {
-        "@rollup/plugin-url": {
-          "version": "^8.0.2",
-          "alwaysAddToPackageJson": false
-        },
-        "@svgr/rollup": {
-          "version": "^8.1.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    }
-  }
+  "packageJsonUpdates": {}
 }
