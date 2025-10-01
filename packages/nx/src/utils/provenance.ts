@@ -1,8 +1,12 @@
-import { exec, execFile } from 'child_process';
+import { execSync } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
-import { platform } from 'os';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  packageRegistryView,
+} from './package-manager';
 
 /*
  * Verifies that the given npm package has provenance attestations
@@ -21,15 +25,13 @@ export async function ensurePackageHasProvenance(
     return;
   }
 
-  const execAsync = promisify(exec);
   try {
-    const result = await execAsync(
-      `npm view ${packageName}@${packageVersion} --json --silent`,
-      {
-        timeout: 20000,
-      }
+    const result = await packageRegistryView(
+      packageName,
+      packageVersion,
+      '--json --silent'
     );
-    const npmViewResult = JSON.parse(result.stdout.trim());
+    const npmViewResult = JSON.parse(result);
 
     const attURL = npmViewResult.dist?.attestations?.url;
 
@@ -128,8 +130,37 @@ export async function ensurePackageHasProvenance(
 
 export class ProvenanceError extends Error {
   constructor(packageName: string, packageVersion: string, error?: string) {
+    let customRegistry: string | undefined = undefined;
+    try {
+      const packageManager = detectPackageManager();
+      const commands = getPackageManagerCommand(packageManager);
+
+      // Try to get registry from current package manager, fall back to npm
+      const registryCommand =
+        commands.getRegistryUrl ?? 'npm config get registry';
+
+      const registry = execSync(registryCommand, {
+        timeout: 5000,
+        windowsHide: true,
+        encoding: 'utf-8',
+      }).trim();
+
+      // Only consider it custom if it's not the default npm registry
+      if (
+        registry &&
+        registry !== 'undefined' &&
+        !registry.includes('registry.npmjs.org')
+      ) {
+        customRegistry = registry;
+      }
+    } catch {
+      // If we can't determine the registry, proceed with default error message
+    }
+    const registryNote = customRegistry
+      ? `This might be due to a custom registry configuration (${customRegistry}). Please check whether provenance is correctly configured for your registry.`
+      : `This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues.`;
     super(
-      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. This could indicate a security risk. Please double check https://www.npmjs.com/package/${packageName} to see if the package is published correctly or file an issue at https://github.com/nrwl/nx/issues. To disable this check at your own risk, you can set the NX_SKIP_PROVENANCE_CHECK environment variable to true. \n Error: ${
+      `An error occurred while checking the provenance of ${packageName}@${packageVersion}. ${registryNote} To disable this check at your own risk, you can set the NX_SKIP_PROVENANCE_CHECK environment variable to true. \n Error: ${
         error ?? ''
       }`
     );
