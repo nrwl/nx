@@ -98,10 +98,10 @@ fn install_extension(command: &str) -> Result<bool, Error> {
         trace!("Command output: {}", stdout.trim());
         if stdout.contains("already installed") {
             debug!("Nx Console extension is already installed");
-        return Ok(false);
+            return Ok(false);
         } else {
             debug!("Successfully installed Nx Console");
-            return Ok(true)
+            return Ok(true);
         }
     }
 

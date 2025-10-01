@@ -207,13 +207,16 @@ async function getAgentConfiguration(
 
   return {
     ...agentConfiguration,
-    outdated: await isAgentOutdated(agent, workspaceRoot),
+    outdated:
+      agentConfiguration.mcp &&
+      agentConfiguration.rules &&
+      (await agentWouldChangeWithGenerator(agent, workspaceRoot)),
     name: agent,
     displayName: agentDisplayMap[agent],
   };
 }
 
-async function isAgentOutdated(
+async function agentWouldChangeWithGenerator(
   agent: Agent,
   workspaceRoot: string
 ): Promise<boolean> {

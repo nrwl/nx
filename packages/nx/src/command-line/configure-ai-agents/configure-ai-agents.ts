@@ -142,20 +142,20 @@ export async function configureAiAgentsHandlerImpl(
   let currentIndex = 0;
 
   nonConfiguredAgents.forEach((a) => {
-    allAgentChoices.push(getAgentChoiceForPrompt(a, false, false));
+    allAgentChoices.push(getAgentChoiceForPrompt(a));
     currentIndex++;
   });
 
   for (const a of fullyConfiguredAgents) {
     if (a.outdated) {
-      allAgentChoices.push(getAgentChoiceForPrompt(a, false, true));
+      allAgentChoices.push(getAgentChoiceForPrompt(a));
       preselectedIndices.push(currentIndex);
       currentIndex++;
     }
   }
 
   partiallyConfiguredAgents.forEach((a) => {
-    allAgentChoices.push(getAgentChoiceForPrompt(a, true, false));
+    allAgentChoices.push(getAgentChoiceForPrompt(a));
     preselectedIndices.push(currentIndex);
     currentIndex++;
   });
@@ -189,6 +189,25 @@ export async function configureAiAgentsHandlerImpl(
             if (focused.partial) {
               return chalk.dim(focused.partialReason);
             }
+            if (focused.agentConfiguration.outdated) {
+              return chalk.dim(
+                `  The rules file at ${focused.rulesDisplayPath} can be updated with the latest Nx recommendations`
+              );
+            }
+            if (
+              !focused.agentConfiguration.mcp &&
+              !focused.agentConfiguration.rules
+            ) {
+              return chalk.dim(
+                `  Will configure agent rules at ${
+                  focused.rulesDisplayPath
+                } and the Nx MCP server ${
+                  focused.mcpDisplayPath
+                    ? `at ${focused.mcpDisplayPath}`
+                    : 'via Nx Console'
+                }`
+              );
+            }
           },
         } as any)
       ).agents;
@@ -207,7 +226,6 @@ export async function configureAiAgentsHandlerImpl(
     process.exit(0);
   }
 
-  // Configure/update all selected agents
   const configSpinner = ora(`Configuring agent(s)...`).start();
   try {
     await configureAgents(selectedAgents, workspaceRoot, false);
@@ -219,10 +237,10 @@ export async function configureAiAgentsHandlerImpl(
       ]),
     ];
 
-    configSpinner.succeed('AI agents set up successfully.');
+    configSpinner.stop();
 
     output.log({
-      title: 'Configured Agents',
+      title: 'AI agents set up successfully. Configured Agents:',
       bodyLines: configuredOrUpdatedAgents.map(
         (agent) => `- ${agentDisplayMap[agent]}`
       ),
@@ -243,39 +261,41 @@ type AgentPromptChoice = {
   name: Agent;
   message: string;
   partial: boolean;
-  outdated: boolean;
   partialReason?: string;
   agentConfiguration: AgentConfiguration;
+  rulesDisplayPath: string;
+  mcpDisplayPath: string;
 };
 
-function getAgentChoiceForPrompt(
-  agent: AgentConfiguration,
-  partiallyConfigured: boolean,
-  outdated: boolean
-): AgentPromptChoice {
+function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
+  const partiallyConfigured = agent.mcp !== agent.rules;
   let message: string = agent.displayName;
   if (partiallyConfigured) {
     message += ` (${agent.rules ? 'MCP missing' : 'rules missing'})`;
-  } else if (outdated) {
+  } else if (agent.outdated) {
     message += ' (out of date)';
   }
-  const displayPath = agent.rulesPath.startsWith(workspaceRoot)
+  const rulesDisplayPath = agent.rulesPath.startsWith(workspaceRoot)
     ? relative(workspaceRoot, agent.rulesPath)
     : agent.rulesPath;
+  const mcpDisplayPath = agent.mcpPath?.startsWith(workspaceRoot)
+    ? relative(workspaceRoot, agent.mcpPath)
+    : agent.mcpPath;
   const partialReason = partiallyConfigured
     ? agent.rules
       ? `  Partially configured: MCP missing ${
-          agent.mcpPath ? `at ${agent.mcpPath}` : 'via Nx Console'
+          agent.mcpPath ? `at ${mcpDisplayPath}` : 'via Nx Console'
         }`
-      : `  Partially configured: rules file missing at ${displayPath}`
+      : `  Partially configured: rules file missing at ${rulesDisplayPath}`
     : undefined;
   return {
     name: agent.name,
     message,
-    outdated,
     partial: partiallyConfigured,
     partialReason,
     agentConfiguration: agent,
+    rulesDisplayPath,
+    mcpDisplayPath,
   };
 }
 
