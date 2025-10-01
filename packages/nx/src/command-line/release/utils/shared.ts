@@ -1,9 +1,11 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
+import { extname } from 'path';
 import { ProjectGraph } from '../../../config/project-graph';
-import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
+import { WholeFileChange } from '../../../project-graph/file-utils';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
 
@@ -343,27 +345,26 @@ export async function getCommitsRelevantToProjects(
   commits: GitCommit[],
   projects: string[]
 ): Promise<GitCommit[]> {
-  const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
-  const filesInReleaseGroup = new Set<string>(
-    projects.reduce(
-      (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
-      [] as string[]
-    )
-  );
+  const projectSet = new Set(projects);
+  const relevantCommits: GitCommit[] = [];
 
-  /**
-   * The relevant commits are those that either:
-   * - touch project files which are contained within the list of projects directly
-   * - touch non-project files and the commit is not scoped
-   */
-  return commits.filter((c) =>
-    c.affectedFiles.some(
-      (f) =>
-        filesInReleaseGroup.has(f) ||
-        (!c.scope &&
-          fileMap.nonProjectFiles.some(
-            (nonProjectFile) => nonProjectFile.file === f
-          ))
-    )
-  );
+  for (const commit of commits) {
+    // Convert affectedFiles to FileChange[] format
+    const fileChanges = commit.affectedFiles.map((f) => ({
+      file: f,
+      ext: extname(f),
+      hash: '', // Not needed for affected detection
+      getChanges: () => [new WholeFileChange()],
+    }));
+
+    // Use the same affected detection logic as `nx affected`
+    const affectedGraph = await filterAffected(projectGraph, fileChanges);
+
+    // Check if any of our target projects are in the affected graph
+    if (Object.keys(affectedGraph.nodes).some((p) => projectSet.has(p))) {
+      relevantCommits.push(commit);
+    }
+  }
+
+  return relevantCommits;
 }

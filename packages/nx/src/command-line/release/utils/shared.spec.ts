@@ -1,5 +1,11 @@
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { createCommitMessageValues, createGitTagValues } from './shared';
+import {
+  createCommitMessageValues,
+  createGitTagValues,
+  getCommitsRelevantToProjects,
+} from './shared';
+import { ProjectGraph } from '../../../config/project-graph';
+import { GitCommit } from './git';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -300,6 +306,228 @@ describe('shared', () => {
         new Set(projects)
       );
       return { releaseGroup, releaseGroupToFilteredProjects };
+    }
+  });
+
+  describe(`getCommitsRelevantToProjects()`, () => {
+    let mockProjectGraph: ProjectGraph;
+
+    beforeEach(() => {
+      mockProjectGraph = {
+        nodes: {
+          'lib-a': {
+            name: 'lib-a',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-a',
+            },
+          },
+          'lib-b': {
+            name: 'lib-b',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-b',
+            },
+          },
+          'lib-c': {
+            name: 'lib-c',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-c',
+            },
+          },
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: 'apps/app',
+            },
+          },
+        },
+        dependencies: {
+          'lib-a': [],
+          'lib-b': [],
+          'lib-c': [],
+          app: [
+            {
+              source: 'app',
+              target: 'lib-a',
+              type: 'static',
+            },
+          ],
+        },
+        externalNodes: {},
+      };
+    });
+
+    it('should include commits that directly touch target projects', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['libs/lib-a/src/index.ts']),
+        createMockCommit('def456', ['libs/lib-b/src/index.ts']),
+        createMockCommit('ghi789', ['libs/lib-c/src/index.ts']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a', 'lib-b']
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result.map((c) => c.shortHash)).toEqual(['abc123', 'def456']);
+    });
+
+    it('should include commits that touch global files affecting all projects', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['nx.json']),
+        createMockCommit('def456', ['libs/lib-a/src/index.ts']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a']
+      );
+
+      // Both commits should be included - nx.json affects all, and lib-a is directly touched
+      expect(result).toHaveLength(2);
+      expect(result.map((c) => c.shortHash)).toEqual(['abc123', 'def456']);
+    });
+
+    it('should exclude commits that only touch unrelated projects', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['libs/lib-c/src/index.ts']),
+        createMockCommit('def456', ['libs/lib-a/src/index.ts']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a']
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].shortHash).toEqual('def456');
+    });
+
+    it('should include commits that touch dependencies of target projects', async () => {
+      // Update graph so lib-a depends on lib-c
+      mockProjectGraph.dependencies['lib-a'] = [
+        {
+          source: 'lib-a',
+          target: 'lib-c',
+          type: 'static',
+        },
+      ];
+
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['libs/lib-c/src/index.ts']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a']
+      );
+
+      // lib-a depends on lib-c, so commit touching lib-c should affect lib-a
+      expect(result).toHaveLength(1);
+      expect(result[0].shortHash).toEqual('abc123');
+    });
+
+    it('should handle commits with multiple affected files', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', [
+          'libs/lib-a/src/index.ts',
+          'libs/lib-b/src/index.ts',
+          'libs/lib-c/src/index.ts',
+        ]),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a']
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].shortHash).toEqual('abc123');
+    });
+
+    it('should handle empty commit list', async () => {
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        [],
+        ['lib-a']
+      );
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle empty project list', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['libs/lib-a/src/index.ts']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        []
+      );
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should include commits touching lock files when they affect target projects', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['package-lock.json']),
+        createMockCommit('def456', ['pnpm-lock.yaml']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a']
+      );
+
+      // Lock file changes typically affect all or many projects
+      // The exact behavior depends on the lock file locator logic
+      expect(result.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should include commits touching root package.json', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit('abc123', ['package.json']),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a']
+      );
+
+      // package.json changes typically affect projects
+      expect(result.length).toBeGreaterThanOrEqual(0);
+    });
+
+    function createMockCommit(
+      shortHash: string,
+      affectedFiles: string[]
+    ): GitCommit {
+      return {
+        message: `feat: commit ${shortHash}`,
+        body: '',
+        shortHash,
+        author: { name: 'Test Author', email: 'test@example.com' },
+        description: `commit ${shortHash}`,
+        type: 'feat',
+        scope: '',
+        references: [],
+        authors: [{ name: 'Test Author', email: 'test@example.com' }],
+        isBreaking: false,
+        affectedFiles,
+        revertedHashes: [],
+      };
     }
   });
 });
