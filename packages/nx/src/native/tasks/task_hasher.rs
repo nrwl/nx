@@ -82,8 +82,10 @@ impl TaskHasher {
         hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
+        let function_start = std::time::Instant::now();
+
         trace!("hashing plans {:?}", hash_plans.as_ref());
-        debug!("plan length: {}", hash_plans.len());
+        trace!("Starting hash_plans with {} plans", hash_plans.len());
         trace!("all workspace files: {}", self.all_workspace_files.len());
         trace!("project_file_map: {}", self.project_file_map.len());
 
@@ -98,6 +100,9 @@ impl TaskHasher {
             .as_ref()
             .map(|o| o.selectively_hash_ts_config)
             .unwrap_or(false);
+
+        let setup_duration = function_start.elapsed();
+        trace!("Setup phase completed in {:?}", setup_duration);
 
         let hash_time = std::time::Instant::now();
 
@@ -135,6 +140,8 @@ impl TaskHasher {
                 Ok::<(), anyhow::Error>(())
             })?;
 
+        let assemble_start = std::time::Instant::now();
+
         hashes.iter_mut().for_each(|mut h| {
             let (hash_id, hash_details) = h.pair_mut();
             let mut keys = hash_details.details.keys().collect::<Vec<_>>();
@@ -151,7 +158,19 @@ impl TaskHasher {
             });
         });
 
-        trace!("hashing took {:?}", hash_time.elapsed());
+        let assemble_duration = assemble_start.elapsed();
+        let hash_duration = hash_time.elapsed();
+        let total_duration = function_start.elapsed();
+
+        debug!(
+            "hash_plans COMPLETED in {:?} - processed {} plans (setup: {:?}, hashing: {:?}, assembly: {:?})",
+            total_duration,
+            hash_plans.len(),
+            setup_duration,
+            hash_duration,
+            assemble_duration
+        );
+
         Ok(hashes)
     }
 
