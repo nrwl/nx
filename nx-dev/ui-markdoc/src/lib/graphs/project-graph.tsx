@@ -81,6 +81,9 @@ function NxDevProjectGraphInner({
     });
 
     send({ type: 'showAll' });
+    // make sure the graph sized to fix into the box
+    const el = orchestrator['renderer'].cy.elements();
+    orchestrator['renderer'].cy.fit(el, 1).center().resize();
   }, [orchestrator]);
 
   return (
