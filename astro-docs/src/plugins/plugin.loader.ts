@@ -219,7 +219,10 @@ export async function generateAllPluginDocs(
 
       // Process migrations
       const migrations = parseMigrations(pluginPath);
-      if (migrations && migrations.size > 0) {
+      // parseMigrations will return null if the plugin doesn't define migration.json
+      // if there are not migrations then getMigrationsMarkdown will render a custom message
+      // to check previous Nx version docs
+      if (migrations) {
         const markdown = getMigrationsMarkdown(pluginName, migrations);
         const slug = getPluginSlug(pluginName, 'migrations');
         if (slug) {
