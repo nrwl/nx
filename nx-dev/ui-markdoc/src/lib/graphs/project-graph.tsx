@@ -10,7 +10,7 @@ import {
   NxGraphProjectGraphProvider,
   useProjectGraphContext,
 } from '@nx/graph/projects';
-import { resolveTheme } from './resolve-theme';
+import { useThemeSync } from './resolve-theme';
 import {
   NxGraphCompositeProjectNodePanelContent,
   NxGraphCompositeProjectNodePanelHeader,
@@ -59,12 +59,12 @@ function NxDevProjectGraphInner({
     ElementData.ProjectNode | ElementData.CompositeProjectNode
   >(eventBus);
 
-  useEffect(() => {
+  useThemeSync(theme, (resolvedTheme) => {
     sendRendererConfigEvent({
       type: 'themeChange',
-      theme: resolveTheme(theme),
+      theme: resolvedTheme,
     });
-  }, [theme]);
+  });
 
   useEffect(() => {
     if (!orchestrator) return;
