@@ -19,6 +19,7 @@
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "packages/maven/dist",
         "assets": [
           {
             "input": "packages/maven",
@@ -33,6 +34,7 @@
           {
             "input": "packages/maven/src",
             "glob": "**/*.json",
+            "ignore": ["analyzer-plugin/**/*"],
             "output": "/"
           }
         ]
