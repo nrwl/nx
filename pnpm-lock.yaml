@@ -3383,6 +3383,26 @@ importers:
         specifier: '*'
         version: 21.6.2
 
+  packages/nx/native-packages/darwin-arm64: {}
+
+  packages/nx/native-packages/darwin-x64: {}
+
+  packages/nx/native-packages/freebsd-x64: {}
+
+  packages/nx/native-packages/linux-arm-gnueabihf: {}
+
+  packages/nx/native-packages/linux-arm64-gnu: {}
+
+  packages/nx/native-packages/linux-arm64-musl: {}
+
+  packages/nx/native-packages/linux-x64-gnu: {}
+
+  packages/nx/native-packages/linux-x64-musl: {}
+
+  packages/nx/native-packages/win32-arm64-msvc: {}
+
+  packages/nx/native-packages/win32-x64-msvc: {}
+
   packages/playwright:
     dependencies:
       '@nx/devkit':
