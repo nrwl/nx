@@ -53,6 +53,10 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         log.info("Analyzing Maven projects using optimized two-tier approach...")
         log.info("Parameters: outputFile='$outputFile', workspaceRoot='$workspaceRoot'")
 
+        // Canonicalize workspace root in place to resolve symlinks (e.g., /tmp -> /private/tmp on macOS)
+        workspaceRoot = workspaceRoot.canonicalFile
+        log.info("Canonical workspace root: $workspaceRoot")
+
         try {
             val allProjects = session.allProjects
             log.info("Found ${allProjects.size} Maven projects")
@@ -202,7 +206,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
         inMemoryAnalyses.forEach { analysis ->
             val resultTuple = objectMapper.createArrayNode()
-            resultTuple.add(analysis.pomFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
+            resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
 
             // Group projects by root directory (for now, assume all projects are at workspace root)
             val projects = objectMapper.createObjectNode()

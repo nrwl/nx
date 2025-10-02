@@ -12,11 +12,12 @@ import { createMavenProject } from './utils/create-maven-project';
 describe('Maven', () => {
   let mavenProjectName = uniq('my-maven-project');
 
-  beforeAll(() => {
+  beforeAll(async () => {
     newProject({
+      preset: 'empty',
       packages: ['@nx/maven'],
     });
-    createMavenProject(mavenProjectName);
+    await createMavenProject(mavenProjectName);
     runCLI(`add @nx/maven`);
   });
 
@@ -31,13 +32,16 @@ describe('Maven', () => {
   });
 
   it('should have proper Maven targets', () => {
-    const project = JSON.parse(runCLI('show project app --json'));
+    const output = runCLI('show project app --json=false');
 
-    expect(project.targets).toBeDefined();
-    expect(project.targets.install).toBeDefined();
+    // Check that the project name appears
+    expect(output).toContain('Name: com.example:app');
 
-    // Check that install target uses Maven command
-    expect(project.targets.install.options.command).toContain('mvn install');
+    // Check that install target appears
+    expect(output).toContain('- install:');
+
+    // Check that install-ci target appears
+    expect(output).toContain('- install-ci:');
   });
 
   it('should build Maven project with dependencies', () => {
@@ -67,8 +71,13 @@ describe('Maven', () => {
     // Check that dependencies exist in the graph
     const appDeps = graph.graph.dependencies['com.example:app'];
     expect(appDeps).toContainEqual({
-      source: 'app',
-      target: 'lib',
+      source: 'com.example:app',
+      target: 'com.example:lib',
+      type: 'static',
+    });
+    expect(appDeps).toContainEqual({
+      source: 'com.example:app',
+      target: `com.example:${mavenProjectName}`,
       type: 'static',
     });
   });
