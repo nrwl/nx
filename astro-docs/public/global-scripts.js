@@ -134,13 +134,13 @@
   function setupSearchTracking() {
     const observer = new MutationObserver(() => {
       const searchDialog = document.querySelector(
-        'dialog[open] .search-container',
+        'dialog[open] .search-container'
       );
       // If dialog is found, then set up tracking
       if (searchDialog) {
         if (currentSearchInput && inputHandler) return; // Already tracking
         const searchInput = searchDialog.querySelector(
-          'input[type="search"], input[type="text"]',
+          'input[type="search"], input[type="text"]'
         );
         if (searchInput) {
           inputHandler = (e) => {
