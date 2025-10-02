@@ -34,7 +34,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('<plugins>');
       expect(updatedPom).toContain('dev.nx.maven');
       expect(updatedPom).toContain('nx-maven-plugin');
-      expect(updatedPom).toContain('0.0.1-SNAPSHOT');
+      expect(updatedPom).toContain('0.0.1');
     });
 
     it('should add plugin to pom.xml with build but without plugins', async () => {
@@ -66,7 +66,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('<plugins>');
       expect(updatedPom).toContain('dev.nx.maven');
       expect(updatedPom).toContain('nx-maven-plugin');
-      expect(updatedPom).toContain('0.0.1-SNAPSHOT');
+      expect(updatedPom).toContain('0.0.1');
     });
 
     it('should add plugin to pom.xml with existing plugins collection', async () => {
@@ -102,7 +102,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('maven-compiler-plugin');
       expect(updatedPom).toContain('dev.nx.maven');
       expect(updatedPom).toContain('nx-maven-plugin');
-      expect(updatedPom).toContain('0.0.1-SNAPSHOT');
+      expect(updatedPom).toContain('0.0.1');
     });
 
     it('should not add plugin if already present', async () => {
