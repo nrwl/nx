@@ -7,7 +7,7 @@ const p = process.argv[2];
 
 const nativeFiles = glob.globSync(`packages/${p}/**/*.{node,wasm,js,mjs,cjs}`);
 
-console.log({ nativeFiles });
+console.log(JSON.stringify({ nativeFiles }, null, 2));
 
 nativeFiles.forEach((file) => {
   const destFile = `dist/${file}`;
