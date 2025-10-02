@@ -17,4 +17,5 @@ export interface Schema {
   publishable?: boolean;
   useProjectJson?: boolean;
   addPlugin?: boolean;
+  includeCreateNodes?: boolean;
 }

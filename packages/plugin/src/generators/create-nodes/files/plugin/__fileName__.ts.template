@@ -1,0 +1,179 @@
+import {
+  CreateNodesV2,
+  CreateNodesContext,
+  createNodesFromFiles,
+  type TargetConfiguration,
+  readJsonFile,
+  writeJsonFile,
+} from '@nx/devkit';
+import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { existsSync, readdirSync } from 'fs';
+import { dirname, join } from 'path';
+
+/**
+ * Plugin options for the <%= className %> plugin.
+ */
+export interface <%= className %>PluginOptions {
+  /**
+   * The name of the target to create.
+   * @default '<%= targetName %>'
+   */
+  targetName: string;
+}
+
+type <%= className %>Targets = Pick<
+  ReturnType<typeof createTargets>,
+  'targets' | 'metadata'
+>;
+
+function readTargetsCache(cachePath: string): Record<string, <%= className %>Targets> {
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+}
+
+function writeTargetsCache(
+  cachePath: string,
+  results?: Record<string, <%= className %>Targets>
+) {
+  writeJsonFile(cachePath, results);
+}
+
+/**
+ * The glob pattern for the configuration file.
+ * Update this to match your plugin's configuration file.
+ */
+const configGlob = '<%= configFile %>';
+
+/**
+ * Inference plugin for <%= className %>.
+ *
+ * This plugin automatically creates targets for projects that have a
+ * configuration file matching the glob pattern defined in `configGlob`.
+ *
+ * @example
+ * ```json
+ * // In nx.json
+ * {
+ *   "plugins": [
+ *     {
+ *       "plugin": "<%= importPath %>",
+ *       "options": {
+ *         "targetName": "<%= targetName %>"
+ *       }
+ *     }
+ *   ]
+ * }
+ * ```
+ */
+export const createNodesV2: CreateNodesV2<<%= className %>PluginOptions> = [
+  configGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `<%= fileName %>-${optionsHash}.hash`
+    );
+    const targetsCache = readTargetsCache(cachePath);
+
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsCache(cachePath, targetsCache);
+    }
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: <%= className %>PluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<string, <%= className %>Targets>
+) {
+  const projectRoot = dirname(configFilePath);
+
+  // Only create a project if package.json or project.json exists
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const normalizedOptions = normalizeOptions(options);
+
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    normalizedOptions,
+    context
+  );
+
+  targetsCache[hash] ??= createTargets(
+    projectRoot,
+    normalizedOptions,
+    context
+  );
+
+  const { targets, metadata } = targetsCache[hash];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets,
+        metadata,
+      },
+    },
+  };
+}
+
+function createTargets(
+  projectRoot: string,
+  options: <%= className %>PluginOptions,
+  context: CreateNodesContext
+) {
+  const namedInputs = getNamedInputs(projectRoot, context);
+
+  const targets: Record<string, TargetConfiguration> = {};
+
+  // Create the main target
+  targets[options.targetName] = {
+    command: `echo "Hello from <%= className %>!"`,
+    options: { cwd: projectRoot },
+    cache: true,
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+    ],
+    metadata: {
+      technologies: ['<%= fileName %>'],
+      description: 'Run <%= className %> target',
+      help: {
+        command: 'echo "Hello from <%= className %>!"',
+        example: {
+          args: [],
+        },
+      },
+    },
+  };
+
+  return { targets, metadata: {} };
+}
+
+function normalizeOptions(
+  options: <%= className %>PluginOptions
+): <%= className %>PluginOptions {
+  return {
+    ...options,
+    targetName: options.targetName ?? '<%= targetName %>',
+  };
+}

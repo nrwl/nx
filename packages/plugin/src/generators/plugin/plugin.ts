@@ -21,6 +21,7 @@ import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-se
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import pluginLintCheckGenerator from '../lint-checks/generator';
+import { createNodesGenerator } from '../create-nodes/create-nodes';
 import type { Schema } from './schema';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
@@ -165,6 +166,20 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
 
   if (options.linter === 'eslint' && !options.skipLintChecks) {
     await pluginLintCheckGenerator(host, { projectName: options.projectName });
+  }
+
+  if (schema.includeCreateNodes !== false) {
+    await createNodesGenerator(host, {
+      name: options.projectName,
+      path: joinPathFragments(
+        options.projectRoot,
+        'src/plugins',
+        options.projectName,
+        'plugin'
+      ),
+      unitTestRunner: options.unitTestRunner,
+      skipFormat: true,
+    });
   }
 
   if (!options.skipFormat) {

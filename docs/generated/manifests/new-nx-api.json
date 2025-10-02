@@ -3837,6 +3837,15 @@
         "path": "/reference/core-api/plugin/generators/executor",
         "type": "generator"
       },
+      "/reference/core-api/plugin/generators/create-nodes": {
+        "description": "Create an Inference Plugin (createNodes) for an Nx Plugin.",
+        "file": "generated/packages/plugin/generators/create-nodes.json",
+        "hidden": false,
+        "name": "create-nodes",
+        "originalFilePath": "/packages/plugin/src/generators/create-nodes/schema.json",
+        "path": "/reference/core-api/plugin/generators/create-nodes",
+        "type": "generator"
+      },
       "/reference/core-api/plugin/generators/plugin-lint-checks": {
         "description": "Adds linting configuration to validate common json files for nx plugins.",
         "file": "generated/packages/plugin/generators/plugin-lint-checks.json",

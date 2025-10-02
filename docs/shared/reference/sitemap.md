@@ -745,6 +745,7 @@
           - [migration](/reference/core-api/plugin/generators/migration)
           - [generator](/reference/core-api/plugin/generators/generator)
           - [executor](/reference/core-api/plugin/generators/executor)
+          - [create-nodes](/reference/core-api/plugin/generators/create-nodes)
           - [plugin-lint-checks](/reference/core-api/plugin/generators/plugin-lint-checks)
           - [preset](/reference/core-api/plugin/generators/preset)
       - [web](/reference/core-api/web)

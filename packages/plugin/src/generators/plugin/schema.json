@@ -96,6 +96,12 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "includeCreateNodes": {
+      "type": "boolean",
+      "description": "Generate an Inference Plugin (createNodes) example with the plugin.",
+      "default": true,
+      "x-priority": "important"
     }
   },
   "required": ["directory"]
