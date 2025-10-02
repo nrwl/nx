@@ -6,12 +6,14 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import type { CreateNodesGeneratorSchema } from './schema';
+import { nxVersion } from '../../utils/versions';
 
 interface NormalizedSchema extends CreateNodesGeneratorSchema {
   className: string;
@@ -23,6 +25,29 @@ interface NormalizedSchema extends CreateNodesGeneratorSchema {
   project: string;
   isTsSolutionSetup: boolean;
   importPath: string;
+}
+
+function updatePackageJsonDependencies(host: Tree, options: NormalizedSchema) {
+  const packageJsonPath = joinPathFragments(
+    options.projectRoot,
+    'package.json'
+  );
+
+  if (!host.exists(packageJsonPath)) {
+    return;
+  }
+
+  updateJson(host, packageJsonPath, (json) => {
+    json.dependencies = json.dependencies || {};
+
+    // Add nx dependency if not already present
+    if (!json.dependencies['nx'] && !json.devDependencies?.['nx']) {
+      json.dependencies['nx'] = nxVersion;
+      json.dependencies['@nx/devkit'] = nxVersion;
+    }
+
+    return json;
+  });
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {
@@ -143,6 +168,7 @@ export async function createNodesGenerator(
 
   addFiles(tree, options);
   addReadmeFile(tree, options);
+  updatePackageJsonDependencies(tree, options);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

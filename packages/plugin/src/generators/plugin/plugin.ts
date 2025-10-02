@@ -177,7 +177,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         options.projectName,
         'plugin'
       ),
-      unitTestRunner: options.unitTestRunner,
       skipFormat: true,
     });
   }

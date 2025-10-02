@@ -87,17 +87,6 @@ describe('create-nodes generator', () => {
     expect(readmeContent).not.toContain('## What is an Inference Plugin?');
   });
 
-  it('should skip test file when unitTestRunner is none', async () => {
-    await createNodesGenerator(tree, {
-      name: 'my-plugin',
-      path: 'my-plugin/src/plugins/my-plugin/plugin',
-    });
-
-    expect(
-      tree.exists('my-plugin/src/plugins/my-plugin/plugin.ts')
-    ).toBeTruthy();
-  });
-
   it('should use custom targetName', async () => {
     await createNodesGenerator(tree, {
       name: 'my-plugin',
