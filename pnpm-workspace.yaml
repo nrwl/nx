@@ -7,3 +7,4 @@ packages:
   - 'typedoc-theme'
   - 'astro-docs'
   - 'examples/*/*'
+  - 'packages/nx/native-packages/*'

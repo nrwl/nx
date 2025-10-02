@@ -41,6 +41,8 @@ export const agentDisplayMap: Record<Agent, string> = {
 };
 
 export type AgentConfiguration = {
+  name: Agent;
+  displayName: string;
   rules: boolean;
   mcp: boolean;
   rulesPath: string;
@@ -53,31 +55,28 @@ export async function getAgentConfigurations(
   agentsToConsider: Agent[],
   workspaceRoot: string
 ): Promise<{
-  nonConfiguredAgents: Agent[];
-  partiallyConfiguredAgents: Agent[];
-  fullyConfiguredAgents: Agent[];
-  disabledAgents: Agent[];
-  agentConfigurations: Map<Agent, AgentConfiguration>;
+  nonConfiguredAgents: AgentConfiguration[];
+  partiallyConfiguredAgents: AgentConfiguration[];
+  fullyConfiguredAgents: AgentConfiguration[];
+  disabledAgents: AgentConfiguration[];
 }> {
-  const nonConfiguredAgents: Agent[] = [];
-  const partiallyConfiguredAgents: Agent[] = [];
-  const fullyConfiguredAgents: Agent[] = [];
-  const disabledAgents: Agent[] = [];
-  const agentConfigurations = new Map<Agent, AgentConfiguration>();
+  const nonConfiguredAgents: AgentConfiguration[] = [];
+  const partiallyConfiguredAgents: AgentConfiguration[] = [];
+  const fullyConfiguredAgents: AgentConfiguration[] = [];
+  const disabledAgents: AgentConfiguration[] = [];
 
   for (const agent of agentsToConsider) {
-    const configured = await getAgentConfiguration(agent, workspaceRoot);
-    if (configured.disabled) {
-      disabledAgents.push(agent);
+    const configuration = await getAgentConfiguration(agent, workspaceRoot);
+    if (configuration.disabled) {
+      disabledAgents.push(configuration);
       continue;
     }
-    agentConfigurations.set(agent, configured);
-    if (configured.mcp && configured.rules) {
-      fullyConfiguredAgents.push(agent);
-    } else if (!configured.mcp && !configured.rules) {
-      nonConfiguredAgents.push(agent);
+    if (configuration.mcp && configuration.rules) {
+      fullyConfiguredAgents.push(configuration);
+    } else if (!configuration.mcp && !configuration.rules) {
+      nonConfiguredAgents.push(configuration);
     } else {
-      partiallyConfiguredAgents.push(agent);
+      partiallyConfiguredAgents.push(configuration);
     }
   }
 
@@ -86,7 +85,6 @@ export async function getAgentConfigurations(
     partiallyConfiguredAgents,
     fullyConfiguredAgents,
     disabledAgents,
-    agentConfigurations,
   };
 }
 
@@ -94,7 +92,10 @@ async function getAgentConfiguration(
   agent: Agent,
   workspaceRoot: string
 ): Promise<AgentConfiguration> {
-  let agentConfiguration: Omit<AgentConfiguration, 'outdated'>;
+  let agentConfiguration: Omit<
+    AgentConfiguration,
+    'outdated' | 'name' | 'displayName'
+  >;
   switch (agent) {
     case 'claude': {
       const mcpPath = claudeMcpPath(workspaceRoot);
@@ -206,11 +207,16 @@ async function getAgentConfiguration(
 
   return {
     ...agentConfiguration,
-    outdated: await isAgentOutdated(agent, workspaceRoot),
+    outdated:
+      agentConfiguration.mcp &&
+      agentConfiguration.rules &&
+      (await agentWouldChangeWithGenerator(agent, workspaceRoot)),
+    name: agent,
+    displayName: agentDisplayMap[agent],
   };
 }
 
-async function isAgentOutdated(
+async function agentWouldChangeWithGenerator(
   agent: Agent,
   workspaceRoot: string
 ): Promise<boolean> {
