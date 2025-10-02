@@ -371,7 +371,21 @@ export function runCreateWorkspace(
 
     return create;
   } catch (e) {
-    logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    let errorDetails = `${e.stdout}\n\n${e.stderr}`;
+
+    // Try to find and read the error.log file mentioned in the output
+    const logFileMatch = errorDetails.match(/Log file: (.+)/);
+    if (logFileMatch) {
+      const logFilePath = logFileMatch[1];
+      try {
+        const errorLogContent = readFileSync(logFilePath, 'utf-8');
+        errorDetails += `\n\nError log contents (${logFilePath}):\n${errorLogContent}`;
+      } catch (readError) {
+        errorDetails += `\n\nFailed to read error log at ${logFilePath}: ${readError.message}`;
+      }
+    }
+
+    logError(`Original command: ${command}`, errorDetails);
     throw e;
   }
 }
@@ -422,7 +436,21 @@ export function runCreatePlugin(
 
     return create;
   } catch (e) {
-    logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    let errorDetails = `${e.stdout}\n\n${e.stderr}`;
+
+    // Try to find and read the error.log file mentioned in the output
+    const logFileMatch = errorDetails.match(/Log file: (.+)/);
+    if (logFileMatch) {
+      const logFilePath = logFileMatch[1];
+      try {
+        const errorLogContent = readFileSync(logFilePath, 'utf-8');
+        errorDetails += `\n\nError log contents (${logFilePath}):\n${errorLogContent}`;
+      } catch (readError) {
+        errorDetails += `\n\nFailed to read error log at ${logFilePath}: ${readError.message}`;
+      }
+    }
+
+    logError(`Original command: ${command}`, errorDetails);
     throw e;
   }
 }
