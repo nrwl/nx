@@ -356,8 +356,6 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
     // Convert affectedFiles to FileChange[] format
     const touchedFiles = commit.affectedFiles.map((f) => ({
       file: f,
-      ext: extname(f),
-      hash: '', // Not needed for affected detection
       getChanges: () => [new WholeFileChange()],
     }));
 
