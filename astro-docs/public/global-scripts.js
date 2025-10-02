@@ -108,16 +108,77 @@
     window.twq('config', 'obtp4');
   };
 
+  const SEARCH_DEBOUNCE_MS = 1000;
+  let searchDebounceTimer;
+  let lastSearchQuery = '';
+  let currentSearchInput = null;
+  let inputHandler = null;
+
+  function sendSearchEvent(eventType, data) {
+    if (typeof window.gtag !== 'undefined')
+      window.gtag('event', eventType, data);
+  }
+
+  function trackSearchQuery(query) {
+    if (!query || query === lastSearchQuery) return;
+
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      lastSearchQuery = query;
+      sendSearchEvent('search_query', {
+        query: query,
+      });
+    }, SEARCH_DEBOUNCE_MS);
+  }
+
+  function setupSearchTracking() {
+    const observer = new MutationObserver(() => {
+      const searchDialog = document.querySelector(
+        'dialog[open] .search-container'
+      );
+      // If dialog is found, then set up tracking
+      if (searchDialog) {
+        if (currentSearchInput && inputHandler) return; // Already tracking
+        const searchInput = searchDialog.querySelector(
+          'input[type="search"], input[type="text"]'
+        );
+        if (searchInput) {
+          inputHandler = (e) => {
+            const query = e.target.value.trim();
+            trackSearchQuery(query);
+          };
+          searchInput.addEventListener('input', inputHandler);
+          currentSearchInput = searchInput;
+        }
+      }
+      // If dialog is not found but we have handler, etc. then it must be closed and we should clean up
+      else if (currentSearchInput && inputHandler) {
+        currentSearchInput.removeEventListener('input', inputHandler);
+        currentSearchInput = null;
+        inputHandler = null;
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['open'],
+    });
+  }
+
   const checkAndLoadScripts = () => {
     if (isCookiebotDisabled) {
       loadGoogleAnalytics();
       loadGTM();
       loadHubSpot();
+      setupSearchTracking();
     } else if (window.Cookiebot && window.Cookiebot.consent) {
-      // Statistics cookies (Google Analytics, GTM)
+      // Statistics cookies (Google Analytics, GTM, Search Tracking)
       if (window.Cookiebot.consent.statistics) {
         loadGoogleAnalytics();
         loadGTM();
+        setupSearchTracking();
       }
 
       // Marketing cookies (HubSpot, Apollo, Hotjar, Twitter)
