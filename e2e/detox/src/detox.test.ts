@@ -7,6 +7,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 
+// bump 1
 describe('@nx/detox', () => {
   let project: string;
   let reactNativeAppName: string;
