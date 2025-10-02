@@ -251,9 +251,9 @@ export interface InputsInput {
   projects?: string | Array<string>
 }
 
-export declare export declare function installNxConsole(): void
+export declare export declare function installNxConsole(): boolean
 
-export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): void
+export declare export declare function installNxConsoleForEditor(editor: SupportedEditor): boolean
 
 export const IS_WASM: boolean
 
