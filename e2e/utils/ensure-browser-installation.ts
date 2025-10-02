@@ -1,5 +1,14 @@
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync, openSync, closeSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+  openSync,
+  closeSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { tmpProjPath } from './create-project-utils';
@@ -11,9 +20,8 @@ import { isVerbose } from './get-env-info';
 const LOCK_DIR = join(tmpdir(), 'nx-e2e-locks');
 const PLAYWRIGHT_LOCK_FILE = join(LOCK_DIR, 'playwright-install.lock');
 const PLAYWRIGHT_STATUS_FILE = join(LOCK_DIR, 'playwright-install.status');
-const LOCK_TIMEOUT_MS = 5 * 60 * 1000;
-const POLL_INTERVAL_MS = 1000;
-const MAX_WAIT_MS = 3 * 60 * 1000;
+const POLL_INTERVAL_MS = 5000;
+const MAX_WAIT_MS = 5 * 60 * 1000;
 
 interface InstallStatus {
   status: 'installing' | 'success' | 'failed';
@@ -28,38 +36,13 @@ function ensureLockDir() {
   }
 }
 
-function isLockStale(lockPath: string): boolean {
-  try {
-    const stats = statSync(lockPath);
-    const age = Date.now() - stats.mtimeMs;
-    return age > LOCK_TIMEOUT_MS;
-  } catch {
-    return true; // If we can't read it, consider it stale
-  }
-}
-
-function acquireLock(lockFile: string, statusFile: string): boolean {
+function tryAcquireLock(lockFile: string, statusFile: string): boolean {
   ensureLockDir();
-
-  // Check if lock is stale and clean it up
-  if (existsSync(lockFile) && isLockStale(lockFile)) {
-    e2eConsoleLogger('Cleaning up stale browser installation lock');
-    try {
-      unlinkSync(lockFile);
-      if (existsSync(statusFile)) {
-        unlinkSync(statusFile);
-      }
-    } catch (err) {
-      // Someone else might have cleaned it up
-    }
-  }
-
   try {
     // Atomic operation - fails if file exists
     const fd = openSync(lockFile, 'wx');
     closeSync(fd);
 
-    // Write initial status
     const status: InstallStatus = {
       status: 'installing',
       pid: process.pid,
@@ -131,9 +114,9 @@ async function waitForInstallation(
       }
 
       if (status?.status === 'failed') {
-        const errorMsg = `${toolName} browser installation failed in process ${status.pid}: ${
-          status.error || 'Unknown error'
-        }`;
+        const errorMsg = `${toolName} browser installation failed in process ${
+          status.pid
+        }: ${status.error || 'Unknown error'}`;
         e2eConsoleLogger(errorMsg);
         throw new Error(errorMsg);
       }
@@ -174,8 +157,8 @@ export function ensureCypressInstallation() {
 }
 
 export async function ensurePlaywrightBrowsersInstallation() {
-  // Try to acquire lock
-  if (acquireLock(PLAYWRIGHT_LOCK_FILE, PLAYWRIGHT_STATUS_FILE)) {
+  // If lock is acquired, perform installation, otherwise it must in progress or already done
+  if (tryAcquireLock(PLAYWRIGHT_LOCK_FILE, PLAYWRIGHT_STATUS_FILE)) {
     // We got the lock - we're responsible for installation
     e2eConsoleLogger(
       `Process ${process.pid} acquired lock, installing Playwright browsers...`
@@ -193,7 +176,9 @@ export async function ensurePlaywrightBrowsersInstallation() {
 
       const version = execSync('npx playwright --version').toString().trim();
 
-      e2eConsoleLogger(`Playwright browsers ${version} installed successfully.`);
+      e2eConsoleLogger(
+        `Playwright browsers ${version} installed successfully.`
+      );
 
       releaseLock(PLAYWRIGHT_LOCK_FILE, PLAYWRIGHT_STATUS_FILE, true);
     } catch (error) {
@@ -207,7 +192,6 @@ export async function ensurePlaywrightBrowsersInstallation() {
       throw error;
     }
   } else {
-    // Lock is held by another process - wait for it
     e2eConsoleLogger(
       `Process ${process.pid} waiting for Playwright browser installation...`
     );
