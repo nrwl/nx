@@ -19,6 +19,16 @@ assignment-rules:
           parallelism: 1
         - agent: linux-extra-large
           parallelism: 1
+  
+  - projects:
+      - e2e-react
+    targets:
+      - e2e-ci**react-package**
+    run-on:
+        - agent: linux-large
+          parallelism: 1
+        - agent: linux-extra-large
+          parallelism: 1
 
   # All other e2e tests can run in parallel
   - targets:
