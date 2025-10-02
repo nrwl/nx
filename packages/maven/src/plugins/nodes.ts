@@ -1,8 +1,14 @@
-import { CreateNodesResultV2, CreateNodesV2 } from '@nx/devkit';
-import { relative } from 'path';
+import { CreateNodesResultV2, CreateNodesV2, hashArray } from '@nx/devkit';
+import { dirname, relative } from 'path';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
 import { runMavenAnalysis } from './maven-analyzer';
-import { getCachedMavenData } from './maven-data-cache';
+import {
+  readMavenCache,
+  writeMavenCache,
+  getCachePath,
+} from './maven-data-cache';
+import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { hashObject } from 'nx/src/devkit-internals';
 
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
@@ -30,19 +36,46 @@ export const createNodesV2: CreateNodesV2 = [
       return [];
     }
 
-    // Try to get cached data first (skip cache if in verbose mode)
-    let mavenData = getCachedMavenData(context.workspaceRoot, isVerbose);
+    // Get cache path based on options
+    const optionsHash = hashObject(opts);
+    const cachePath = getCachePath(context.workspaceRoot, optionsHash);
+    const mavenCache = readMavenCache(cachePath);
 
-    // If no cached data or cache is stale, run fresh Maven analysis
-    if (!mavenData) {
-      mavenData = await runMavenAnalysis({ ...opts, verbose: isVerbose });
-    }
-
-    // Return createNodesResults (atomization now handled in Kotlin)
-    return mavenData.createNodesResults.map(
-      ([configFile, createNodesResult]) => {
-        return [relative(context.workspaceRoot, configFile), createNodesResult];
-      }
+    // Calculate hashes for all pom.xml directories
+    const projectRoots = configFiles.map((file) => dirname(file));
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      opts,
+      context
     );
+    // Combine all hashes into a single hash for the cache key
+    const hash = hashArray(hashes);
+
+    try {
+      // Try to get cached data first (skip cache if in verbose mode)
+      let mavenData = isVerbose ? null : mavenCache[hash];
+
+      // If no cached data or cache is stale, run fresh Maven analysis
+      if (!mavenData) {
+        mavenData = await runMavenAnalysis(context.workspaceRoot, {
+          ...opts,
+          verbose: isVerbose,
+        });
+        // Cache the results with the hash
+        mavenCache[hash] = mavenData;
+      }
+
+      // Return createNodesResults (atomization now handled in Kotlin)
+      return mavenData.createNodesResults.map(
+        ([configFile, createNodesResult]) => {
+          return [
+            relative(context.workspaceRoot, configFile),
+            createNodesResult,
+          ];
+        }
+      );
+    } finally {
+      writeMavenCache(cachePath, mavenCache);
+    }
   },
 ];
