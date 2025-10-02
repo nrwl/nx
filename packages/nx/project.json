@@ -67,6 +67,9 @@
         "production",
         "^production",
         {
+          "runtime": "node -e 'console.log(process.platform)'"
+        },
+        {
           "dependentTasksOutputFiles": "**/*.node"
         }
       ],
