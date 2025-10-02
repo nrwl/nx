@@ -70,6 +70,15 @@ const nxPackages = [
 
 type NxPackage = (typeof nxPackages)[number];
 
+export function openInEditor(projectDirectory: string = tmpProjPath()) {
+  if (process.env.NX_E2E_EDITOR) {
+    const editor = process.env.NX_E2E_EDITOR;
+    execSync(`${editor} ${projectDirectory}`, {
+      stdio: 'inherit',
+    });
+  }
+}
+
 /**
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
@@ -197,12 +206,7 @@ ${
       );
     }
 
-    if (process.env.NX_E2E_EDITOR) {
-      const editor = process.env.NX_E2E_EDITOR;
-      execSync(`${editor} ${projectDirectory}`, {
-        stdio: 'inherit',
-      });
-    }
+    openInEditor(projectDirectory);
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
@@ -696,6 +700,11 @@ export function createNonNxProjectDirectory(
       workspaces: addWorkspaces ? ['packages/*'] : undefined,
     })
   );
+}
+
+export function createEmptyProjectDirectory(name = uniq('proj')) {
+  projName = name;
+  ensureDirSync(tmpProjPath());
 }
 
 export function uniq(prefix: string): string {

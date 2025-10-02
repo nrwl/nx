@@ -1243,6 +1243,9 @@ importers:
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
+      extract-zip:
+        specifier: ^2.0.1
+        version: 2.0.1(supports-color@8.1.1)
 
   e2e/next:
     dependencies:

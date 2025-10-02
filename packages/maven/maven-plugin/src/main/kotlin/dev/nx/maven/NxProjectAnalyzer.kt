@@ -31,8 +31,11 @@ class NxProjectAnalyzer(
         log.info("Starting analysis for project: ${project.artifactId}")
 
         // Calculate relative path from workspace root
+        // Canonicalize both paths to resolve symlinks (e.g., /tmp -> /private/tmp on macOS)
         val pathCalculationStart = System.currentTimeMillis()
-        val root = project.basedir.relativeTo(workspaceRoot).path
+        val canonicalWorkspaceRoot = workspaceRoot.canonicalFile
+        val canonicalBasedir = project.basedir.canonicalFile
+        val root = canonicalBasedir.relativeTo(canonicalWorkspaceRoot).path
         val projectName = "${project.groupId}:${project.artifactId}"
         val projectType = determineProjectType(project.packaging)
         val pathCalculationTime = System.currentTimeMillis() - pathCalculationStart
@@ -99,7 +102,7 @@ class NxProjectAnalyzer(
             dependency.put("type", nxDependency.type.name.lowercase())
             dependency.put("source", nxDependency.source)
             dependency.put("target", nxDependency.target)
-            dependency.put("sourceFile", nxDependency.sourceFile.relativeTo(workspaceRoot).path)
+            dependency.put("sourceFile", nxDependency.sourceFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path)
             dependency
         }
 
