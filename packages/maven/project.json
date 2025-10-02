@@ -34,7 +34,7 @@
           {
             "input": "packages/maven/src",
             "glob": "**/*.json",
-            "ignore": ["analyzer-plugin/**/*"],
+            "ignore": ["maven-plugin/**/*"],
             "output": "/"
           }
         ]

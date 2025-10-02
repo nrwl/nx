@@ -1,10 +1,51 @@
-import { e2eConsoleLogger, runCommand, tmpProjPath } from '@nx/e2e-utils';
+import { e2eConsoleLogger, tmpProjPath } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
-import { createFileSync, writeFileSync, mkdirSync } from 'fs-extra';
+import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync as fsWriteFileSync, unlinkSync } from 'fs';
+import * as extract from 'extract-zip';
 
-export function createMavenProject(
+async function downloadFile(
+  url: string,
+  params: Record<string, string>,
+  outputPath: string
+): Promise<void> {
+  e2eConsoleLogger(`Downloading from ${url} to ${outputPath}...`);
+  e2eConsoleLogger(`Parameters: ${JSON.stringify(params, null, 2)}`);
+
+  const formData = new URLSearchParams(params);
+
+  e2eConsoleLogger(`Making POST request...`);
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+
+  e2eConsoleLogger(
+    `Response status: ${response.status} ${response.statusText}`
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    e2eConsoleLogger(`Error response body: ${errorText}`);
+    throw new Error(
+      `HTTP error! status: ${response.status}, body: ${errorText}`
+    );
+  }
+
+  e2eConsoleLogger(`Reading response as array buffer...`);
+  const buffer = await response.arrayBuffer();
+  e2eConsoleLogger(`Buffer size: ${buffer.byteLength} bytes`);
+
+  e2eConsoleLogger(`Writing to file: ${outputPath}`);
+  fsWriteFileSync(outputPath, Buffer.from(buffer));
+  e2eConsoleLogger(`File written successfully`);
+}
+
+export async function createMavenProject(
   projectName: string,
   cwd: string = tmpProjPath(),
   addProjectJsonNamePrefix: string = ''
@@ -12,179 +53,12 @@ export function createMavenProject(
   e2eConsoleLogger(`Using java version: ${execSync('java -version 2>&1')}`);
   e2eConsoleLogger(`Using maven version: ${execSync('mvn --version')}`);
 
-  // Use Spring Initializr to create a realistic multi-module Maven project
   e2eConsoleLogger(
-    'Creating Spring Boot multi-module project using Spring Initializr...'
+    'Creating multi-module Maven project using Spring Initializr...'
   );
 
-  try {
-    // Generate the parent project
-    execSync(
-      `curl https://start.spring.io/starter.zip ` +
-        `-d type=maven-project ` +
-        `-d language=java ` +
-        `-d bootVersion=3.2.0 ` +
-        `-d baseDir=. ` +
-        `-d groupId=com.example ` +
-        `-d artifactId=${projectName} ` +
-        `-d name=${projectName} ` +
-        `-d packageName=com.example ` +
-        `-d packaging=pom ` +
-        `-d javaVersion=17 ` +
-        `-o ${projectName}.zip`,
-      { cwd, stdio: 'pipe' }
-    );
-
-    // Unzip the project
-    execSync(`unzip -q -o ${projectName}.zip`, { cwd });
-    execSync(`rm ${projectName}.zip`, { cwd });
-
-    // Update the parent POM to be a proper multi-module parent
-    const parentPomPath = join(cwd, 'pom.xml');
-    let parentPom = readFileSync(parentPomPath, 'utf-8');
-
-    // Change packaging to pom
-    parentPom = parentPom.replace(
-      /<packaging>jar<\/packaging>/,
-      '<packaging>pom</packaging>'
-    );
-
-    // Add modules section before </project>
-    parentPom = parentPom.replace(
-      /<\/project>/,
-      `
-  <modules>
-    <module>app</module>
-    <module>lib</module>
-    <module>utils</module>
-  </modules>
-</project>`
-    );
-
-    writeFileSync(parentPomPath, parentPom);
-
-    // Create the sub-modules
-    createModule(cwd, 'app', projectName, ['lib'], addProjectJsonNamePrefix);
-    createModule(cwd, 'lib', projectName, ['utils'], addProjectJsonNamePrefix);
-    createModule(cwd, 'utils', projectName, [], addProjectJsonNamePrefix);
-
-    // Remove the parent project's src directory since it's just a parent POM
-    try {
-      execSync(`rm -rf ${join(cwd, 'src')}`, { stdio: 'pipe' });
-    } catch {}
-
-    e2eConsoleLogger('Created Maven multi-module project with Spring Boot');
-  } catch (error) {
-    e2eConsoleLogger(
-      `Failed to use Spring Initializr, falling back to manual creation: ${error}`
-    );
-    createMavenProjectManually(projectName, cwd, addProjectJsonNamePrefix);
-  }
-}
-
-function createModule(
-  basePath: string,
-  moduleName: string,
-  parentArtifactId: string,
-  dependencies: string[],
-  addProjectJsonNamePrefix: string = ''
-) {
-  const modulePath = join(basePath, moduleName);
-
-  e2eConsoleLogger(`Creating ${moduleName} module...`);
-
-  try {
-    // Generate Spring Boot module
-    execSync(
-      `curl https://start.spring.io/starter.zip ` +
-        `-d type=maven-project ` +
-        `-d language=java ` +
-        `-d bootVersion=3.2.0 ` +
-        `-d baseDir=${moduleName} ` +
-        `-d groupId=com.example ` +
-        `-d artifactId=${moduleName} ` +
-        `-d name=${capitalize(moduleName)} ` +
-        `-d packageName=com.example.${moduleName} ` +
-        `-d packaging=jar ` +
-        `-d javaVersion=17 ` +
-        `-d dependencies=web ` +
-        `-o ${moduleName}.zip`,
-      { cwd: basePath, stdio: 'pipe' }
-    );
-
-    // Unzip the module
-    execSync(`unzip -q -o ${moduleName}.zip -d .`, { cwd: basePath });
-    execSync(`rm ${moduleName}.zip`, { cwd: basePath });
-
-    // Update the module's POM to reference parent
-    const pomPath = join(modulePath, 'pom.xml');
-    let pomContent = readFileSync(pomPath, 'utf-8');
-
-    // Add parent section after <modelVersion>
-    pomContent = pomContent.replace(
-      /<modelVersion>4\.0\.0<\/modelVersion>/,
-      `<modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>com.example</groupId>
-    <artifactId>${parentArtifactId}</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-  </parent>`
-    );
-
-    // Remove version and groupId since they're inherited from parent
-    pomContent = pomContent.replace(/<version>.*?<\/version>/, '');
-    pomContent = pomContent.replace(/<groupId>com\.example<\/groupId>/, '');
-
-    // Add project dependencies if any
-    if (dependencies.length > 0) {
-      const depsXml = dependencies
-        .map(
-          (dep) => `    <dependency>
-      <groupId>com.example</groupId>
-      <artifactId>${dep}</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-    </dependency>`
-        )
-        .join('\n');
-
-      pomContent = pomContent.replace(
-        /<dependencies>/,
-        `<dependencies>\n${depsXml}`
-      );
-    }
-
-    writeFileSync(pomPath, pomContent);
-
-    // Add project.json if needed
-    if (addProjectJsonNamePrefix) {
-      writeFileSync(
-        join(modulePath, 'project.json'),
-        `{"name": "${addProjectJsonNamePrefix}${moduleName}"}`
-      );
-    }
-
-    e2eConsoleLogger(`Created ${moduleName} module`);
-  } catch (error) {
-    e2eConsoleLogger(
-      `Failed to create ${moduleName} with Spring Initializr, using manual creation: ${error}`
-    );
-    createModuleManually(
-      basePath,
-      moduleName,
-      parentArtifactId,
-      dependencies,
-      addProjectJsonNamePrefix
-    );
-  }
-}
-
-function createMavenProjectManually(
-  projectName: string,
-  cwd: string,
-  addProjectJsonNamePrefix: string
-) {
-  // Create parent POM
+  // Create parent POM (Spring Initializr doesn't support packaging=pom)
+  const parentPomPath = join(cwd, 'pom.xml');
   const parentPom = `<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -209,7 +83,7 @@ function createMavenProjectManually(
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spring-boot.version>3.2.0</spring-boot.version>
+    <spring-boot.version>3.4.0</spring-boot.version>
   </properties>
 
   <dependencyManagement>
@@ -247,29 +121,29 @@ function createMavenProjectManually(
   </build>
 </project>`;
 
-  writeFileSync(join(cwd, 'pom.xml'), parentPom);
+  writeFileSync(parentPomPath, parentPom);
 
-  // Create modules manually
-  createModuleManually(
+  // Create modules with dependencies: app -> lib -> utils
+  await createModule(
     cwd,
     'app',
     projectName,
     ['lib'],
     addProjectJsonNamePrefix
   );
-  createModuleManually(
+  await createModule(
     cwd,
     'lib',
     projectName,
     ['utils'],
     addProjectJsonNamePrefix
   );
-  createModuleManually(cwd, 'utils', projectName, [], addProjectJsonNamePrefix);
+  await createModule(cwd, 'utils', projectName, [], addProjectJsonNamePrefix);
 
-  e2eConsoleLogger('Created Maven multi-module project manually');
+  e2eConsoleLogger('Created multi-module Maven project with Spring Boot');
 }
 
-function createModuleManually(
+async function createModule(
   basePath: string,
   moduleName: string,
   parentArtifactId: string,
@@ -277,86 +151,82 @@ function createModuleManually(
   addProjectJsonNamePrefix: string = ''
 ) {
   const modulePath = join(basePath, moduleName);
-  const srcPath = join(modulePath, 'src/main/java/com/example');
-  const testPath = join(modulePath, 'src/test/java/com/example');
 
-  // Create directories
-  createFileSync(join(srcPath, '.gitkeep'));
-  createFileSync(join(testPath, '.gitkeep'));
+  e2eConsoleLogger(`Creating ${moduleName} module...`);
 
-  // Create module POM
-  const modulePom = `<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+  // Generate Spring Boot module
+  const zipPath = join(basePath, `${moduleName}.zip`);
+  await downloadFile(
+    'https://start.spring.io/starter.zip',
+    {
+      type: 'maven-project',
+      language: 'java',
+      bootVersion: '3.4.0',
+      baseDir: moduleName,
+      groupId: 'com.example',
+      artifactId: moduleName,
+      name: capitalize(moduleName),
+      packageName: `com.example.${moduleName}`,
+      javaVersion: '17',
+      dependencies: 'web',
+    },
+    zipPath
+  );
 
-  <parent>
-    <groupId>com.example</groupId>
-    <artifactId>${parentArtifactId}</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-  </parent>
+  // Unzip the module using Node.js (cross-platform)
+  e2eConsoleLogger(`Unzipping ${moduleName}.zip to ${basePath}...`);
 
-  <artifactId>${moduleName}</artifactId>
-  <packaging>jar</packaging>
+  await extract(zipPath, { dir: basePath });
 
-  <name>${moduleName}</name>
+  // Delete zip file
+  unlinkSync(zipPath);
 
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    ${
-      dependencies.length > 0
-        ? dependencies
-            .map(
-              (dep) => `<dependency>
-      <groupId>com.example</groupId>
-      <artifactId>${dep}</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-    </dependency>`
-            )
-            .join('\n    ')
-        : ''
-    }
-  </dependencies>
-</project>`;
+  e2eConsoleLogger(`Extracted and cleaned up ${moduleName}.zip`);
 
-  writeFileSync(join(modulePath, 'pom.xml'), modulePom);
+  // Modify the module's POM to link to parent and add dependencies
+  const pomPath = join(modulePath, 'pom.xml');
+  let pomContent = readFileSync(pomPath, 'utf-8');
 
-  // Create a simple Java class
-  const javaClass = `package com.example;
+  // Replace Spring Boot starter parent with our custom parent
+  pomContent = pomContent.replace(
+    /<parent>[\s\S]*?<\/parent>/,
+    `<parent>
+        <groupId>com.example</groupId>
+        <artifactId>${parentArtifactId}</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>`
+  );
 
-public class ${capitalize(moduleName)} {
-    public String getName() {
-        return "${moduleName}";
-    }
-}`;
+  // Remove the project's standalone groupId and version (after </parent>, before <artifactId>)
+  // Match from after </parent> to before </project> to avoid touching parent's groupId
+  pomContent = pomContent.replace(
+    /(<\/parent>[\s\S]*?)<groupId>com\.example<\/groupId>\s*/,
+    '$1'
+  );
+  pomContent = pomContent.replace(
+    /(<\/parent>[\s\S]*?)<version>[^<]*<\/version>\s*(?=<name>)/,
+    '$1'
+  );
 
-  writeFileSync(join(srcPath, `${capitalize(moduleName)}.java`), javaClass);
+  // Add inter-module dependencies if any
+  if (dependencies.length > 0) {
+    const depsXml = dependencies
+      .map(
+        (dep) => `        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>${dep}</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>`
+      )
+      .join('\n');
 
-  // Create a simple test
-  const javaTest = `package com.example;
+    pomContent = pomContent.replace(
+      /<dependencies>/,
+      `<dependencies>\n${depsXml}`
+    );
+  }
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-public class ${capitalize(moduleName)}Test {
-    @Test
-    public void testGetName() {
-        ${capitalize(moduleName)} obj = new ${capitalize(moduleName)}();
-        assertEquals("${moduleName}", obj.getName());
-    }
-}`;
-
-  writeFileSync(join(testPath, `${capitalize(moduleName)}Test.java`), javaTest);
+  writeFileSync(pomPath, pomContent);
 
   // Add project.json if needed
   if (addProjectJsonNamePrefix) {
@@ -365,6 +235,8 @@ public class ${capitalize(moduleName)}Test {
       `{"name": "${addProjectJsonNamePrefix}${moduleName}"}`
     );
   }
+
+  e2eConsoleLogger(`Created ${moduleName} module`);
 }
 
 function capitalize(str: string): string {
