@@ -1,14 +1,14 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { spawn } from 'child_process';
-import { workspaceRoot, logger, readJsonFile } from '@nx/devkit';
+import { logger, readJsonFile } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
 
 /**
  * Detect Maven executable: mvnd > mvnw > mvn
  */
-function detectMavenExecutable(): string {
+function detectMavenExecutable(workspaceRoot: string): string {
   logger.verbose(
     `[Maven Analyzer] Detecting Maven executable in workspace: ${workspaceRoot}`
   );
@@ -47,6 +47,7 @@ function detectMavenExecutable(): string {
  * Run Maven analysis using our Kotlin analyzer plugin
  */
 export async function runMavenAnalysis(
+  workspaceRoot: string,
   options: MavenPluginOptions
 ): Promise<MavenAnalysisData> {
   console.log(`[Maven Analyzer] Starting analysis with options:`, options);
@@ -57,15 +58,16 @@ export async function runMavenAnalysis(
 
   logger.verbose(`[Maven Analyzer] Output file: ${outputFile}`);
   logger.verbose(`[Maven Analyzer] Verbose mode: ${isVerbose}`);
+  logger.verbose(`[Maven Analyzer] Workspace root: ${workspaceRoot}`);
   logger.verbose(
     `[Maven Analyzer] Workspace data directory: ${workspaceDataDirectory}`
   );
 
   // Detect Maven executable (mvnw > mvn)
-  const mavenExecutable = detectMavenExecutable();
+  const mavenExecutable = detectMavenExecutable(workspaceRoot);
 
   const mavenArgs = [
-    'dev.nx.maven:nx-maven-plugin:1.0.0-SNAPSHOT:analyze',
+    'dev.nx.maven:nx-maven-plugin:0.0.1:analyze',
     '-am',
     `-DoutputFile=${outputFile}`,
     `-DworkspaceRoot=${workspaceRoot}`,
