@@ -163,6 +163,9 @@ impl HttpRemoteCache {
             })?;
 
         match response.status() {
+            // Nx <= 21 expected implementations to return 200, but it should be 202. Keeping 200
+            // to not break existing implementations.
+            StatusCode::ACCEPTED => Ok(true), // Added in Nx 22
             StatusCode::OK => Ok(true),
             // Cache entry already exists, silently do not store new data
             StatusCode::CONFLICT => Ok(false),
