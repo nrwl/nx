@@ -343,7 +343,7 @@ class NxTargetFactory(
           }
 
         plugin.executions
-          .filter { execution -> execution.phase == phase }
+          .filter { execution -> normalizePhase(execution.phase) == phase }
           .flatMap { execution ->
             log.info(
               "Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}"
