@@ -1,13 +1,10 @@
 import {
-  CreateNodes,
-  CreateNodesContext,
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  logger,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -263,7 +260,7 @@ const internalCreateNodesV2 = async (
   };
 };
 
-export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
+export const createNodes: CreateNodesV2<EslintPluginOptions> = [
   ESLINT_CONFIG_GLOB_V2,
   async (configFiles, options, context) => {
     options = normalizeOptions(options);
@@ -327,15 +324,7 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<EslintPluginOptions> = [
-  ESLINT_CONFIG_GLOB_V1,
-  (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return internalCreateNodes(configFilePath, options, context, {});
-  },
-];
+export const createNodesV2 = createNodes;
 
 function splitConfigFiles(configFiles: readonly string[]): {
   eslintConfigFiles: string[];
@@ -391,7 +380,7 @@ function groupProjectRootsByEslintRoots(
 async function collectLintableFilesByProjectRoot(
   projectRoots: string[],
   options: EslintPluginOptions,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): Promise<Map<string, string[]>> {
   const lintableFilesPerProjectRoot = new Map<string, string[]>();
 
@@ -437,7 +426,7 @@ function getProjectUsingESLintConfig(
   projectRoot: string,
   eslintVersion: string,
   options: EslintPluginOptions,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
