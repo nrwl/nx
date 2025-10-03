@@ -71,7 +71,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["devkit", "typedoc-theme"]
+          "projects": ["devkit", "typedoc-theme", "maven"]
         }
       ],
       "outputs": [
