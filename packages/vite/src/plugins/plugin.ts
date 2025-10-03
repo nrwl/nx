@@ -1,6 +1,5 @@
 import {
   CreateDependencies,
-  CreateNodes,
   CreateNodesContext,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -8,7 +7,6 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -70,7 +68,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const viteVitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
+export const createNodes: CreateNodesV2<VitePluginOptions> = [
   viteVitestConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -175,65 +173,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<VitePluginOptions> = [
-  viteVitestConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    const tsConfigFiles =
-      siblingFiles.filter((p) => picomatch('tsconfig*{.json,.*.json}')(p)) ??
-      [];
-
-    const hasReactRouterConfig = siblingFiles.some((configFile) => {
-      const parts = configFile.split('.');
-      return (
-        parts[0] === 'react-router' && parts[1] === 'config' && parts.length > 2
-      );
-    });
-
-    const normalizedOptions = normalizeOptions(options);
-
-    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
-
-    const { projectType, metadata, targets } = await buildViteTargets(
-      configFilePath,
-      projectRoot,
-      normalizedOptions,
-      tsConfigFiles,
-      hasReactRouterConfig,
-      isUsingTsSolutionSetup,
-      context
-    );
-    const project: ProjectConfiguration = {
-      root: projectRoot,
-      targets,
-      metadata,
-    };
-
-    // If project is buildable, then the project type.
-    // If it is not buildable, then leave it to other plugins/project.json to set the project type.
-    if (project.targets[normalizedOptions.buildTargetName]) {
-      project.projectType = projectType;
-    }
-
-    return {
-      projects: {
-        [projectRoot]: project,
-      },
-    };
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function buildViteTargets(
   configFilePath: string,
