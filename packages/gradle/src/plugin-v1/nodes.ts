@@ -111,7 +111,7 @@ export const makeCreateNodesForGradleConfigFile =
     gradleReport: GradleReport,
     targetsCache: GradleTargets = {},
     gradleProjectRootToTestFilesMap: Record<string, string[]> = {}
-  ): CreateNodesFunction =>
+  ) =>
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,

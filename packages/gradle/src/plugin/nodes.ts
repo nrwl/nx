@@ -81,7 +81,7 @@ export const makeCreateNodesForGradleConfigFile =
     projects: Record<string, Partial<ProjectConfiguration>>,
     projectsCache: GradleTargets = {},
     externalNodes: Record<string, ProjectGraphExternalNode> = {}
-  ): CreateNodesFunction =>
+  ) =>
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,

@@ -1,9 +1,12 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
-{
-  "projects": {
-    "my-app": {
+[
+  [
+    "my-app/nuxt.config.ts",
+    {
+      "projects": {
+        "my-app": {
       "root": "my-app",
       "targets": {
         "acme-build-static": {
@@ -87,13 +90,18 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
       },
     },
   },
-}
+    },
+  ],
+]
 `;
 
 exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
-{
-  "projects": {
-    ".": {
+[
+  [
+    "nuxt.config.ts",
+    {
+      "projects": {
+        ".": {
       "root": ".",
       "targets": {
         "build": {
@@ -177,5 +185,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
       },
     },
   },
-}
+    },
+  ],
+]
 `;
