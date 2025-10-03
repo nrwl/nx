@@ -174,6 +174,21 @@ data class CacheConfig(
                     outputParameters = setOf(
                         Parameter("outputDirectory", "*.jar"),
                     )
+                ),
+                "modello-maven-plugin:velocity" to MojoConfig(
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", null),
+                    )
+                ),
+                "modello-maven-plugin:xdoc" to MojoConfig(
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", null),
+                    )
+                ),
+                "modello-maven-plugin:xsd" to MojoConfig(
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", null),
+                    )
                 )
             ),
             nonCacheable = setOf(
