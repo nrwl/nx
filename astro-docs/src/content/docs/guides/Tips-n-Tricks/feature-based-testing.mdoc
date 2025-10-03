@@ -1,0 +1,189 @@
+---
+title: Improve Testing with Feature Based Testing
+sidebar:
+  label: Feature Based Testing
+description: Improve testing performance by breaking down large testing projects and test only specific features.
+filter: 'type:Guides'
+---
+
+## Problem: Slow tests always running
+
+Commonly projects will have a large monolithic testing project that depends directly on the application it tests.
+This allows running tests when the application becomes affected by any of it's dependencies changing.
+
+The following project graph illustrates this common setup.
+{% graph height="400px" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "fancy-app-e2e",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "fancy-app",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "shared-ui",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "feat-cart",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "feat-products",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "fancy-app-e2e": [
+      { "source": "fancy-app-e2e", "target": "fancy-app", "type": "implicit" }
+    ],
+    "fancy-app": [
+      { "source": "fancy-app", "target": "feat-products", "type": "static" },
+      { "source": "fancy-app", "target": "feat-cart", "type": "static" }
+    ],
+    "shared-ui": [],
+    "feat-cart": [
+      {
+        "source": "feat-cart",
+        "target": "shared-ui",
+        "type": "static"
+      }
+    ],
+    "feat-products": [
+      {
+        "source": "feat-products",
+        "target": "shared-ui",
+        "type": "static"
+      }
+    ]
+  },
+  "workspaceLayout": { "appsDir": "", "libsDir": "" },
+  "affectedProjectIds": [],
+  "groupByFolder": false,
+  "showAffectedWithNodes": true
+}
+```
+
+{% /graph %}
+
+When one of the feature projects, `feature-cart` or `feature-products`, the other tests for that feature will still run inside the `fancy-app-e2e`.
+
+Since the features have minimal overlap. You can optimize the project graph to be split apart based around these features.
+
+## Solution: Breakdown large testing projects
+
+Instead of keeping all the tests in one large project at the top of the graph, you can break down the large testing project into sub features and place those feature based tests next to the projects that comprise the feature.
+
+You can generate a new testing configuration with the given plugin generators. Here are some common testing tool configuration generators:
+
+- [Playwright](https://nx.dev/docs/technologies/test-tools/playwright/generators#configuration)
+- [Cypress](https://nx.dev/docs/technologies/test-tools/cypress/generators#configuration)
+- [Vitest](https://nx.dev/docs/technologies/build-tools/vite/generators#configuration)
+- [Jest](https://nx.dev/docs/technologies/test-tools/jest/introduction#using-jest)
+
+Each feature project will now get their own targets to run the tests (`e2e`, `test`, etc), where the feature project is only concerned with itself. This allows for more focused tests without worrying about forcing unrelated tests to also run.
+
+While the project graph will look the same, the task graph will be slightly modified for running the testing targets.
+
+{% graph type="task" height="300px" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "fancy-app-e2e",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "e2e": {}
+        }
+      }
+    },
+    {
+      "name": "fancy-app",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "shared-ui",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "feat-cart",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "e2e": {}
+        }
+      }
+    },
+    {
+      "name": "feat-products",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "taskIds": ["fancy-app-e2e:e2e", "feat-cart:e2e"],
+  "taskGraph": {
+    "roots": ["feat-cart:e2e"],
+    "tasks": {
+      "fancy-app-e2e:e2e": {
+        "id": "fancy-app-e2e:e2e",
+        "target": {
+          "project": "fancy-app-e2e",
+          "target": "e2e"
+        },
+        "projectRoot": "apps/fancy-app-e2e",
+        "overrides": {}
+      },
+      "feat-cart:e2e": {
+        "id": "feat-cart:e2e",
+        "target": {
+          "project": "feat-cart",
+          "target": "e2e"
+        },
+        "projectRoot": "libs/feat-cart",
+        "overrides": {}
+      }
+    },
+    "dependencies": {
+      "fancy-app-e2e:e2e": ["feat-cart:e2e"]
+    }
+  }
+}
+```
+
+{% /graph %}
+
+You should still keep the top level testing project around, to handle things like smoke tests or cross feature integration tests.
+
+It's important to remember that these feature tests are still going to be leveraging the same resources to run the tests against so if you plan to run in parallel, make sure there is not shared state your tests rely on such as a database or ports the application runs on.
