@@ -1000,7 +1000,7 @@ describe('debug nx release - independent projects', () => {
             'g'
           )
         ).length
-      ).toEqual(1);
+      ).toEqual(2);
       expect(
         releaseOutput.match(
           new RegExp(
@@ -1012,6 +1012,15 @@ describe('debug nx release - independent projects', () => {
       expect(
         releaseOutput.match(
           new RegExp(`- \\*\\*${pkg1}:\\*\\* new feature 1`, 'g')
+        ).length
+      ).toEqual(1);
+
+      expect(
+        releaseOutput.match(
+          new RegExp(
+            `New version 1\\.6\\.0 written to manifest: my-pkg-2\\d*`,
+            'g'
+          )
         ).length
       ).toEqual(1);
 

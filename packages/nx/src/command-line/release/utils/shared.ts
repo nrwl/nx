@@ -1,9 +1,11 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
+import { extname } from 'path';
 import { ProjectGraph } from '../../../config/project-graph';
-import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
+import { WholeFileChange } from '../../../project-graph/file-utils';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
 
@@ -342,28 +344,45 @@ export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
   projects: string[]
-): Promise<GitCommit[]> {
-  const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
-  const filesInReleaseGroup = new Set<string>(
-    projects.reduce(
-      (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
-      [] as string[]
-    )
-  );
+): // Map of projectName to GitCommit[]
+Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
+  const projectSet = new Set(projects);
+  const relevantCommits: Map<
+    string,
+    { commit: GitCommit; isProjectScopedCommit: boolean }[]
+  > = new Map();
 
-  /**
-   * The relevant commits are those that either:
-   * - touch project files which are contained within the list of projects directly
-   * - touch non-project files and the commit is not scoped
-   */
-  return commits.filter((c) =>
-    c.affectedFiles.some(
-      (f) =>
-        filesInReleaseGroup.has(f) ||
-        (!c.scope &&
-          fileMap.nonProjectFiles.some(
-            (nonProjectFile) => nonProjectFile.file === f
-          ))
-    )
-  );
+  for (const commit of commits) {
+    // Convert affectedFiles to FileChange[] format
+    const touchedFiles = commit.affectedFiles.map((f) => ({
+      file: f,
+      getChanges: () => [new WholeFileChange()],
+    }));
+
+    // Use the same affected detection logic as `nx affected`
+    const affectedGraph = await filterAffected(projectGraph, touchedFiles);
+
+    for (const projectName of Object.keys(affectedGraph.nodes)) {
+      if (projectSet.has(projectName)) {
+        if (!relevantCommits.has(projectName)) {
+          relevantCommits.set(projectName, []);
+        }
+        if (
+          commit.scope === projectName ||
+          commit.scope.split(',').includes(projectName) ||
+          !commit.scope
+        ) {
+          relevantCommits
+            .get(projectName)
+            ?.push({ commit, isProjectScopedCommit: true });
+        } else {
+          relevantCommits
+            .get(projectName)
+            ?.push({ commit, isProjectScopedCommit: false });
+        }
+      }
+    }
+  }
+
+  return relevantCommits;
 }
