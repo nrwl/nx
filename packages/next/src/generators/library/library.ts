@@ -117,10 +117,10 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       `hello-server.${options.js ? 'js' : 'tsx'}`
     ),
     `// React server components are async so you make database or API calls.
-      export async function HelloServer() {
-        return <h1>Hello Server</h1>
-      }
-    `
+export async function HelloServer() {
+  return <h1>Hello Server</h1>;
+}
+`
   );
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
