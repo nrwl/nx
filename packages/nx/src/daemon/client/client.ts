@@ -584,14 +584,20 @@ export class DaemonClient {
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
+      let daemonPid: number | null = null;
       if (!(await this.isServerAvailable())) {
-        await this.startInBackground();
+        daemonPid = await this.startInBackground();
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;
       this._daemonReady();
+
+      daemonPid ??= getDaemonProcessIdSync();
+      await this.registerDaemonProcessWithMetricsService(daemonPid);
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
+      const daemonPid = getDaemonProcessIdSync();
+      await this.registerDaemonProcessWithMetricsService(daemonPid);
     }
     // An open promise isn't enough to keep the event loop
     // alive, so we set a timeout here and clear it when we hear
@@ -608,6 +614,23 @@ export class DaemonClient {
     }).finally(() => {
       clearTimeout(keepAlive);
     });
+  }
+
+  private async registerDaemonProcessWithMetricsService(
+    daemonPid: number | null
+  ) {
+    if (!daemonPid) {
+      return;
+    }
+
+    try {
+      const { getProcessMetricsService } = await import(
+        '../../tasks-runner/process-metrics-service'
+      );
+      getProcessMetricsService().registerDaemonProcess(daemonPid);
+    } catch {
+      // don't error, this is a secondary concern that should not break task execution
+    }
   }
 
   private retryMessageAfterNewDaemonStarts() {

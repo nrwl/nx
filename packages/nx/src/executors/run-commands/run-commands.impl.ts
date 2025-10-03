@@ -2,6 +2,7 @@ import * as yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
+import { createTaskId } from '../../tasks-runner/utils';
 import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process';
 import {
   ParallelRunningTasks,
@@ -97,7 +98,8 @@ export default async function (
 
 export async function runCommands(
   options: RunCommandsOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  taskId?: string
 ) {
   const normalized = normalizeOptions(options);
 
@@ -138,11 +140,27 @@ export async function runCommands(
   const tuiEnabled = isTuiEnabled();
 
   try {
+    const resolvedTaskId =
+      taskId ??
+      createTaskId(
+        context.projectName,
+        context.targetName,
+        context.configurationName
+      );
     const runningTask = isSingleCommandAndCanUsePseudoTerminal
-      ? await runSingleCommandWithPseudoTerminal(normalized, context)
+      ? await runSingleCommandWithPseudoTerminal(
+          normalized,
+          context,
+          resolvedTaskId
+        )
       : options.parallel
-      ? new ParallelRunningTasks(normalized, context)
-      : new SeriallyRunningTasks(normalized, context, tuiEnabled);
+      ? new ParallelRunningTasks(normalized, context, resolvedTaskId)
+      : new SeriallyRunningTasks(
+          normalized,
+          context,
+          tuiEnabled,
+          resolvedTaskId
+        );
     return runningTask;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
