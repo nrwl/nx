@@ -214,7 +214,9 @@ describe('Maven Analyzer', () => {
         mockChild.emit('close', 1);
       });
 
-      await expect(promise).rejects.toThrow('Maven analysis failed with code 1');
+      await expect(promise).rejects.toThrow(
+        'Maven analysis failed with code 1'
+      );
     });
 
     it('should handle spawn error', async () => {
@@ -262,8 +264,12 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      const stdoutSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
-      const stderrSpy = jest.spyOn(process.stderr, 'write').mockImplementation();
+      const stdoutSpy = jest
+        .spyOn(process.stdout, 'write')
+        .mockImplementation();
+      const stderrSpy = jest
+        .spyOn(process.stderr, 'write')
+        .mockImplementation();
 
       (spawn as jest.Mock).mockReturnValue(mockChild);
       (readJsonFile as jest.Mock).mockReturnValue({
