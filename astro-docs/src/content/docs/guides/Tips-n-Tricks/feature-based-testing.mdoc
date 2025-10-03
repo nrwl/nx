@@ -10,13 +10,14 @@ Feature-based testing is a strategy that co-locates tests with the features they
 
 ## The Problem: Monolithic Test Projects
 
-Many projects start with a single, large test project that depends on the entire application. While this setup ensures tests run when any dependency changes, it also means **all tests run even when only one feature changes**.
+Many projects have a single, large test project that depends on the entire application, such as e2e projects. While this setup ensures tests run when any dependency changes, it also means **all tests run even when only one subset of the app changes**.
 
 {% aside type="tip" title="Beyond E2E Tests" %}
-While this guide uses end-to-end (e2e) tests as examples, the same strategy applies to any type of testing—integration tests, component tests, or even large unit test suites. The principles of feature-based testing work wherever you have monolithic test projects that could benefit from being split by feature.
+While this guide uses end-to-end (e2e) tests as examples, the same strategy applies to any type of testing—integration tests, component tests, or even large unit test suites.
+The principles of feature-based testing work wherever you have monolithic test projects that could benefit from being split by feature.
 {% /aside %}
 
-Consider a typical setup where all e2e tests live in a single project:
+Consider a typical setup where all e2e tests live in a single project at the top of the graph:
 {% graph height="400px" %}
 
 ```json
@@ -83,7 +84,7 @@ Consider a typical setup where all e2e tests live in a single project:
     ]
   },
   "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [],
+  "affectedProjectIds": ["feat-cart", "fancy-app-e2e", "fancy-app"],
   "groupByFolder": false,
   "showAffectedWithNodes": true
 }
@@ -91,7 +92,7 @@ Consider a typical setup where all e2e tests live in a single project:
 
 {% /graph %}
 
-In this example, when `feat-cart` changes, **all tests in `fancy-app-e2e` run**—including tests for `feat-products` and other unrelated features. This happens because `fancy-app-e2e` depends on the entire application.
+In this example, when `feat-cart` changes, **all tests in `fancy-app-e2e` run**, which includes tests for `feat-products` along with other unrelated features. This happens because `fancy-app-e2e` depends on the entire application.
 
 Since these features have minimal overlap, you can optimize testing by splitting the monolithic test project into smaller, feature-scoped test projects.
 
@@ -101,117 +102,43 @@ Instead of keeping all tests in one large project, break them down by feature an
 
 ### How to Implement Feature-Based Testing
 
-To set up feature-based testing, add test configurations directly to your feature projects. This includes adding your testing targets to the project, e.g. `test`, `e2e`. Next, add any relevant configuration files for your testing framework of choice.
+To set up feature-based testing, add test configurations directly to your feature projects.
+Nx provides plugins to automate and speed up the test configuration for common testing tools.
+Here are some guides for using each plugins generators:
 
-Nx provides plugins to automate and speed up the testing configuration for common testing frameworks:
 - [Playwright](/docs/technologies/test-tools/playwright/introduction#add-playwright-e2e-to-an-existing-project)
 - [Cypress](/docs/technologies/test-tools/cypress/introduction#configure-cypress-for-an-existing-project)
 - [Vitest](/docs/technologies/build-tools/vite/generators#configuration)
 - [Jest](/docs/technologies/test-tools/jest/introduction#add-jest-to-a-project)
 
-The end result of refactoring testing into the feature project level results in:
+If there isn't a generator for your testing tool of choice, you can manually set up the configuration on each feature project.
+This includes adding relevant configuration files for the testing framework and adding the test target (e.g. `test`, `e2e`) to the project's `project.json` or `package.json`. Typically these can be copied and slightly modified from the existing top-level monolithic project that is being split apart.
 
-- **Focused testing**: Tests only run when their specific feature changes
-- **Faster feedback**: Smaller test suites complete more quickly
-- **Better organization**: Tests live alongside the code they verify
-
-### Understanding the Task Graph changes
-
-The project graph structure remains the same, but the task graph changes to more closely align with the project graph.
-Before we only has 1 single task `fancy-app-e2e:e2e` that ran all tests. The feature-based setup creates multiple tasks mapping to each project containing the feature.
-
-{% graph type="task" height="300px" %}
-
-```json
-{
-  "projects": [
-    {
-      "name": "fancy-app-e2e",
-      "type": "app",
-      "data": {
-        "tags": [],
-        "targets": {
-          "e2e": {}
-        }
-      }
-    },
-    {
-      "name": "fancy-app",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "feat-cart",
-      "type": "lib",
-      "data": {
-        "tags": [],
-        "targets": {
-          "e2e": {}
-        }
-      }
-    },
-    {
-      "name": "feat-products",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "taskIds": ["fancy-app-e2e:e2e", "feat-cart:e2e"],
-  "taskGraph": {
-    "roots": ["feat-cart:e2e"],
-    "tasks": {
-      "fancy-app-e2e:e2e": {
-        "id": "fancy-app-e2e:e2e",
-        "target": {
-          "project": "fancy-app-e2e",
-          "target": "e2e"
-        },
-        "projectRoot": "apps/fancy-app-e2e",
-        "overrides": {}
-      },
-      "feat-cart:e2e": {
-        "id": "feat-cart:e2e",
-        "target": {
-          "project": "feat-cart",
-          "target": "e2e"
-        },
-        "projectRoot": "libs/feat-cart",
-        "overrides": {}
-      }
-    },
-    "dependencies": {
-      "fancy-app-e2e:e2e": ["feat-cart:e2e"]
-    }
-  }
-}
-```
-
-{% /graph %}
-
-In this task graph, when `feat-cart` changes:
-
-- `feat-cart:e2e` runs only the cart specific tests
-- `fancy-app-e2e:e2e` runs application wide tests such as smoke tests
-- `feat-products:e2e` **does not run** since it wasn't affected)
-
-This is the key optimization only relevant tests execute based on what changed.
+With this setup, when you run `nx affected -t e2e`, only the tests for changed features will execute.
+For example, when `feat-cart` changes, only `feat-cart:e2e` runs and `feat-products:e2e` does not run since it wasn't affected.
 
 ## Best Practices
 
+### Combining with Automated Task Splitting (Atomizer)
+
+Typically, teams enable [Atomizer, also known as task splitting](/docs/features/ci-features/split-e2e-tasks), for a quick win to improve CI times when using [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+Combining both strategies yields the best results.
+Here's how they complement each other:
+
+- **Feature-based testing** ensures only relevant feature tests run when code changes
+- **Atomizer** splits each feature's test suite into individual file-level tasks that can be distributed across multiple CI agents.
+
+For example, if `feat-cart` has 10 test files and `feat-products` has 15 test files, when you change the cart feature:
+
+1. Feature-based testing runs only `feat-cart:e2e-ci` (skipping `feat-products:e2e-ci`)
+2. Atomizer splits `feat-cart:e2e-ci` into 10 parallel tasks, one per test file
+3. These tasks get distributed across your CI agents for faster execution
+
+Learn more about [setting up Automated Task Splitting](/docs/features/ci-features/split-e2e-tasks).
+
 ### Keep the Top-Level Test Project
 
-Don't delete your top level test project,  `fancy-app-e2e` in this example. Instead, repurpose it for:
+Don't delete your top level test project, `fancy-app-e2e` in this example. Instead, repurpose it for:
 
 - **Smoke tests**: Quick sanity checks that the app starts and critical paths work
 - **Cross-feature integration tests**: Tests that verify multiple features work together
@@ -221,7 +148,7 @@ This gives you a balanced testing strategy: focused feature tests that run frequ
 
 ### Running Tests in Parallel
 
-When running feature tests in parallel, be mindful of shared resources. Since all feature tests run against the same application instance, avoid conflicts by:
+When running tests from multiple features in parallel, be mindful of shared resources. Since all feature tests run against the same application instance, avoid conflicts by:
 
 - **Using unique test data**: Don't rely on specific database records or application state
 - **Managing ports**: Configure each test to use different ports, or let the test framework find free ports automatically
@@ -233,7 +160,7 @@ When running feature tests in parallel, be mindful of shared resources. Since al
 
 With feature-based testing, you can leverage Nx's affected commands to run only the tests that matter:
 
-```shell
+```shell {% frame="none" %}
 # Run all affected tests based on your changes
 nx affected -t test
 
@@ -242,21 +169,3 @@ nx affected -t e2e
 ```
 
 This ensures you're only testing what changed, whether locally or in CI.
-
-### Combining with Automated Task Splitting (Atomizer)
-
-Feature-based testing and [Automated Task Splitting](/docs/features/ci-features/split-e2e-tasks) (also known as Atomizer) work great together. While feature-based testing breaks down tests by feature, Atomizer automatically splits individual test projects into file-level tasks for parallel execution.
-
-Here's how they complement each other:
-
-- **Feature-based testing** ensures only relevant feature tests run when code changes
-- **Atomizer** splits each feature's test suite into individual file-level tasks that can be distributed across multiple CI agents
-
-For example, if `feat-cart` has 10 test files and `feat-products` has 15 test files, when you change the cart feature:
-
-1. Feature-based testing runs only `feat-cart:e2e-ci` (skipping `feat-products:e2e-ci`)
-2. Atomizer splits `feat-cart:e2e-ci` into 10 parallel tasks, one per test file
-3. These tasks get distributed across your CI agents for faster execution
-
-
-Learn more about [setting up Automated Task Splitting](/docs/features/ci-features/split-e2e-tasks).
