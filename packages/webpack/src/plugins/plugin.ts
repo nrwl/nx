@@ -1,13 +1,11 @@
 import {
   CreateDependencies,
-  CreateNodes,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  logger,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -59,7 +57,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
-export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
+export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
   webpackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -90,22 +88,7 @@ export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<WebpackPluginOptions> = [
-  webpackConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    const normalizedOptions = normalizeOptions(options);
-    return createNodesInternal(
-      configFilePath,
-      normalizedOptions,
-      context,
-      {},
-      isUsingTsSolutionSetup()
-    );
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
