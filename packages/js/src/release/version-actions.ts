@@ -30,7 +30,6 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   return {
     changedFiles: await updateLockFile(cwd, {
       ...opts,
-      useLegacyVersioning: false,
       options: rootVersionActionsOptions,
     }),
     deletedFiles: [],

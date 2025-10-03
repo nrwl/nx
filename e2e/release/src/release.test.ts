@@ -290,8 +290,6 @@ describe('nx release', () => {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
             version: {
-              generator: '@nx/js:release-version',
-
               // Resolve the latest version from the custom registry instance, therefore finding the previously published versions
               currentVersionResolver: 'registry',
               currentVersionResolverMetadata: {
@@ -771,7 +769,6 @@ describe('nx release', () => {
             projects: ['*', '!@proj/source'],
             releaseTagPattern: 'xx{version}',
             version: {
-              generator: '@nx/js:release-version',
               // Resolve the latest version from the git tag
               currentVersionResolver: 'git-tag',
             },

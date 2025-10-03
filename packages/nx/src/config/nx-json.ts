@@ -56,28 +56,6 @@ interface NxInstallationConfiguration {
   plugins?: Record<string, string>;
 }
 
-/**
- * This named configuration interface represents the options prior to Nx v21. This interface will be made available
- * under LegacyNxReleaseVersionConfiguration throughout the lifetime of Nx v21.
- *
- * In Nx v22, this configuration interface will no longer be valid.
- */
-export interface LegacyNxReleaseVersionConfiguration {
-  generator?: string;
-  generatorOptions?: Record<string, unknown>;
-  /**
-   * Enabling support for parsing semver bumps via conventional commits and reading the current version from
-   * git tags is so common that we have a first class shorthand for it, which is false by default.
-   *
-   * Setting this to true is the same as adding the following to version.generatorOptions:
-   * - currentVersionResolver: "git-tag"
-   * - specifierSource: "conventional-commits"
-   *
-   * If the user attempts to mix and match these options with the shorthand, we will provide a helpful error.
-   */
-  conventionalCommits?: boolean;
-}
-
 export type ManifestRootToUpdate =
   | string
   | { path: string; preserveLocalDependencyProtocols: boolean };
@@ -125,11 +103,6 @@ export interface NxReleaseDockerConfiguration {
 
 // NOTE: It's important to keep the nx-schema.json in sync with this interface. If you make changes here, make sure they are reflected in the schema.
 export interface NxReleaseVersionConfiguration {
-  /**
-   * Whether to use the legacy versioning strategy. This value was true in Nx v20 and became false in Nx v21.
-   * The legacy versioning implementation will be removed in Nx v22, as will this flag.
-   */
-  useLegacyVersioning?: boolean;
   /**
    * Shorthand for enabling the current version of projects to be resolved from git tags,
    * and the next version to be determined by analyzing commit messages according to the
@@ -215,8 +188,6 @@ export interface NxReleaseVersionConfiguration {
   /**
    * Whether to preserve local dependency protocols (e.g. file references, or the `workspace:` protocol in package.json files)
    * of local dependencies when updating them during versioning.
-   *
-   * This was false by default in legacy versioning, but is true by default now.
    */
   preserveLocalDependencyProtocols?: boolean;
   // TODO(v22): change the default value of this to true
@@ -424,10 +395,7 @@ export interface NxReleaseConfiguration {
        *
        * NOTE: git configuration is not supported at the group level, only the root/command level
        */
-      version?: (
-        | LegacyNxReleaseVersionConfiguration
-        | NxReleaseVersionConfiguration
-      ) & {
+      version?: NxReleaseVersionConfiguration & {
         /**
          * A command to run after validation of nx release configuration, but before versioning begins.
          * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
@@ -532,11 +500,7 @@ export interface NxReleaseConfiguration {
    * If no version configuration is provided, we will assume that TypeScript/JavaScript experience is what is desired,
    * allowing for terser release configuration for the common case.
    */
-  version?: (
-    | LegacyNxReleaseVersionConfiguration
-    | NxReleaseVersionConfiguration
-  ) & {
-    useLegacyVersioning?: boolean;
+  version?: NxReleaseVersionConfiguration & {
     git?: NxReleaseGitConfiguration;
     preVersionCommand?: string;
   };

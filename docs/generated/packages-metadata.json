@@ -2766,15 +2766,6 @@
         "type": "generator"
       },
       {
-        "description": "DO NOT INVOKE DIRECTLY WITH `nx generate`. Use `nx release version` instead.",
-        "file": "generated/packages/js/generators/release-version.json",
-        "hidden": true,
-        "name": "release-version",
-        "originalFilePath": "/packages/js/src/generators/release-version/schema.json",
-        "path": "js/generators/release-version",
-        "type": "generator"
-      },
-      {
         "description": "Setup Verdaccio for local package management.",
         "file": "generated/packages/js/generators/setup-verdaccio.json",
         "hidden": false,
@@ -3870,6 +3861,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Updates release version config based on the breaking changes in Nx v22",
+        "file": "generated/packages/nx/migrations/22-0-0-release-version-config-changes.json",
+        "hidden": false,
+        "name": "22-0-0-release-version-config-changes",
+        "version": "22.0.0-beta.1",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/22-0-0-release-version-config-changes",
+        "type": "migration"
+      },
       {
         "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
         "file": "generated/packages/nx/migrations/21-1-0-add-ignore-entries-for-nx-rule-files.json",

@@ -1130,14 +1130,6 @@
                         "disableCollapsible": false
                       },
                       {
-                        "id": "release-version",
-                        "path": "/technologies/typescript/api/generators/release-version",
-                        "name": "release-version",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
                         "id": "setup-verdaccio",
                         "path": "/technologies/typescript/api/generators/setup-verdaccio",
                         "name": "setup-verdaccio",

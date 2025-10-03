@@ -133,7 +133,6 @@
           - [library](/technologies/typescript/api/generators/library)
           - [init](/technologies/typescript/api/generators/init)
           - [convert-to-swc](/technologies/typescript/api/generators/convert-to-swc)
-          - [release-version](/technologies/typescript/api/generators/release-version)
           - [setup-verdaccio](/technologies/typescript/api/generators/setup-verdaccio)
           - [setup-build](/technologies/typescript/api/generators/setup-build)
           - [typescript-sync](/technologies/typescript/api/generators/typescript-sync)

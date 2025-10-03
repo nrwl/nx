@@ -28,6 +28,12 @@
       "path": "../devkit"
     },
     {
+      "path": "../playwright"
+    },
+    {
+      "path": "../cypress"
+    },
+    {
       "path": "../nx"
     },
     {
