@@ -42,7 +42,7 @@
 
   <properties>
     <!-- Version -->
-    <revision>0.0.1-SNAPSHOT</revision>
+    <revision>0.0.1</revision>
 
     <!-- Skip deploying parent POM -->
     <maven.deploy.skip>true</maven.deploy.skip>
