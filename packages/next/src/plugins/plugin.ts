@@ -1,12 +1,10 @@
 import {
   CreateDependencies,
-  CreateNodes,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  logger,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -63,7 +61,7 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-export const createNodesV2: CreateNodesV2<NextPluginOptions> = [
+export const createNodes: CreateNodesV2<NextPluginOptions> = [
   nextConfigBlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -91,33 +89,7 @@ export const createNodesV2: CreateNodesV2<NextPluginOptions> = [
   },
 ];
 
-/**
- * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
- * This function will change to the v2 function in Nx 21.
- */
-export const createNodes: CreateNodes<NextPluginOptions> = [
-  nextConfigBlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 21, this will change to the createNodesV2 API.'
-    );
-
-    const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
-    const targetsCache = readTargetsCache(cachePath);
-    const isTsSolutionSetup = isUsingTsSolutionSetup();
-
-    const result = await createNodesInternal(
-      configFilePath,
-      options,
-      context,
-      targetsCache,
-      isTsSolutionSetup
-    );
-    writeTargetsToCache(cachePath, targetsCache);
-    return result;
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
