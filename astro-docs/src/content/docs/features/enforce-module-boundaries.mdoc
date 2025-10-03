@@ -107,7 +107,35 @@ For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries
 nx add @nx/eslint-plugin @nx/devkit
 ```
 
-Update your root `.eslintrc.json` file:
+And configure the rule in your ESLint configuration:
+
+{% tabs %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// eslint.config.mjs
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          /* options */
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
 
 ```jsonc
 // .eslintrc.json
@@ -140,6 +168,9 @@ Update your root `.eslintrc.json` file:
   // ... more ESLint config here
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 If you violate the constraints, you will get an error when linting:
 
