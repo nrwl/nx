@@ -1,12 +1,10 @@
 import {
-  type CreateNodes,
-  type CreateNodesContext,
   createNodesFromFiles,
+  type CreateNodesContextV2,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   normalizePath,
   type ProjectConfiguration,
   readJsonFile,
@@ -62,7 +60,7 @@ function writeTargetsToCache(
 }
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
-export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
+export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
   playwrightConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -85,24 +83,12 @@ export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
   },
 ];
 
-/**
- * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
- * This function will change to the v2 function in Nx 20.
- */
-export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
-  playwrightConfigGlob,
-  async (configFile, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(configFile, options, context, {});
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: PlaywrightPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, PlaywrightTargets>
 ) {
   const projectRoot = dirname(configFilePath);
@@ -151,7 +137,7 @@ async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<PlaywrightTargets> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -384,7 +370,7 @@ async function buildPlaywrightTargets(
 }
 
 async function getAllTestFiles(opts: {
-  context: CreateNodesContext;
+  context: CreateNodesContextV2;
   path: string;
   config: PlaywrightTestConfig;
 }) {
