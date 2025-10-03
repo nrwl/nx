@@ -1,17 +1,12 @@
 ---
-title: Nx Cloud AI
-description: Enable and configure AI-powered features in Nx Cloud to enhance your development workflow
-sidebar:
-  order: 100
-filter: 'type:Concepts'
+title: Enable AI Features
+description: Learn how to enable and configure AI-powered features in Nx Cloud
+filter: 'type:Guides'
 ---
 
-Nx Cloud AI offers a suite of features designed to **enhance your development workflow with AI-driven capabilities**. These tools assist in troubleshooting, optimizing resource allocation, and improving your overall development process.
+This guide walks you through enabling AI features in Nx Cloud for both cloud-hosted and on-prem installations.
 
-- **[Self-Healing CI](/docs/features/ci-features/self-healing-ci)** - Have AI automatically analyze failed PR runs and propose fixes.
-- **[Explain with AI](/docs/features/ci-features/explain-with-ai)** - Have AI provide detailed explanations and resolution steps for failed tasks.
-
-## Enable Nx Cloud AI Features
+## Nx Cloud Hosted Setup
 
 To enable AI features for your organization, go to [your organization's settings](https://cloud.nx.app/go/organization/edit) on Nx Cloud and select the organization where you want to enable AI.
 
@@ -26,33 +21,6 @@ Ensure that you **accept the AI terms** to start using the AI features.
 AI features are available on Hobby, Team and Enterprise [Nx Cloud plans](https://nx.dev/pricing).
 
 {% /aside %}
-
-## Explain with AI for Enterprise On-Prem Installations
-
-To enable the Explain with AI feature for enterprise on-prem installations, add the following configuration to your `helm-values.yaml` file:
-
-```yaml
-nxApi
-  deployment:
-    env:
-      - name: NX_CLOUD_AI_ENABLED
-        value: 'true'
-
-frontend
-  deployment:
-    env:
-      - name: OPENAI_SECRET_KEY
-        valueFrom:
-          secretKeyRef:
-            name: open-ai-secrets
-            key: OPENAI_SECRET_KEY
-      - name: NX_CLOUD_AI_ENABLED
-        value: 'true'
-```
-
-_(We use gpt-4o for the Explain with AI feature)_
-
-Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit).
 
 ## Self-Healing CI for Enterprise On-Prem Installations
 
@@ -82,7 +50,7 @@ frontend
 
 Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit) and enable Self-Healing CI in the [workspace settings](https://cloud.nx.app/go/workspace/settings).
 
-### Running Self-Healing CI
+### Running Self-Healing CI On-Prem
 
 #### Automatic DTE Agents
 
@@ -97,6 +65,33 @@ For manual DTE configurations, the `nx fix-ci` command must be included in the a
 #### Non-DTE
 
 For non-DTE setups, refer to the [Self-Healing CI documentation](/docs/features/ci-features/self-healing-ci) for detailed configuration instructions.
+
+## Explain with AI for Enterprise On-Prem Installations
+
+To enable the Explain with AI feature for enterprise on-prem installations, add the following configuration to your `helm-values.yaml` file:
+
+```yaml
+nxApi
+  deployment:
+    env:
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+
+frontend
+  deployment:
+    env:
+      - name: OPENAI_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: open-ai-secrets
+            key: OPENAI_SECRET_KEY
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+```
+
+_(We use gpt-4o for the Explain with AI feature)_
+
+Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit).
 
 ## Regional Availability
 
