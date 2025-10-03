@@ -5,7 +5,7 @@
   <parent>
     <groupId>dev.nx</groupId>
     <artifactId>nx-parent</artifactId>
-    <version>0.0.1</version>
+    <version>${revision}</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
 
@@ -16,6 +16,12 @@
   <name>Nx Maven Plugin</name>
   <description>Maven plugin for Nx integration and project analysis</description>
 
+  <properties>
+    <!-- Enable install, deploy, and signing for this module -->
+    <maven.install.skip>false</maven.install.skip>
+    <maven.deploy.skip>false</maven.deploy.skip>
+    <maven.gpg.skip>false</maven.gpg.skip>
+  </properties>
 
   <dependencies>
     <!-- Maven Plugin API -->
@@ -182,4 +188,30 @@
     <sourceDirectory>src/main/kotlin</sourceDirectory>
     <testSourceDirectory>src/test/kotlin</testSourceDirectory>
   </build>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
