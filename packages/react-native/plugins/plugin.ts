@@ -135,7 +135,7 @@ async function createNodesInternal(
 function buildReactNativeTargets(
   projectRoot: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -196,7 +196,7 @@ function buildReactNativeTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 

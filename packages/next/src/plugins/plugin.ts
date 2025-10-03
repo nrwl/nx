@@ -264,7 +264,7 @@ async function getOutputs(projectRoot, nextConfig) {
 
 function getNextConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 

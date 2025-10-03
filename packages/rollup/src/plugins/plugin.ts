@@ -3,7 +3,7 @@ import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import {
   type CreateDependencies,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -88,7 +88,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: Required<RollupPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, Record<string, TargetConfiguration>>,
   isTsSolutionSetup: boolean
 ) {
@@ -133,7 +133,7 @@ async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   isTsSolutionSetup: boolean
 ): Promise<Record<string, TargetConfiguration>> {
   let loadConfigFile: (

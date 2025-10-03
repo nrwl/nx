@@ -1,5 +1,5 @@
 import {
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
@@ -81,7 +81,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFile: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<ExpoPluginOptions>>
@@ -133,7 +133,7 @@ async function createNodesInternal(
 function buildExpoTargets(
   projectRoot: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -193,7 +193,7 @@ function buildExpoTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 

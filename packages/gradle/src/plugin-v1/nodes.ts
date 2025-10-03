@@ -1,7 +1,7 @@
 import {
   CreateNodes,
   CreateNodesV2,
-  CreateNodesContext,
+  CreateNodesContextV2,
   ProjectConfiguration,
   TargetConfiguration,
   createNodesFromFiles,
@@ -117,7 +117,7 @@ export const makeCreateNodesForGradleConfigFile =
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
-    context: CreateNodesContext
+    context: CreateNodesContextV2
   ) => {
     const projectRoot = dirname(gradleFilePath);
     options = normalizeOptions(options);
@@ -168,7 +168,7 @@ async function createGradleProject(
   gradleReport: GradleReport,
   gradleFilePath: string,
   options: GradlePluginOptions | undefined,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   testFiles = []
 ) {
   try {
@@ -244,7 +244,7 @@ async function createGradleProject(
 async function createGradleTargets(
   tasks: GradleTask[],
   options: GradlePluginOptions | undefined,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   outputDirs: Map<string, string>,
   gradleProject: string,
   gradleBuildFilePath: string,
@@ -320,7 +320,7 @@ async function createGradleTargets(
 }
 
 function createInputsMap(
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Record<string, TargetConfiguration['inputs']> {
   const namedInputs = context.nxJsonConfiguration.namedInputs;
   return {

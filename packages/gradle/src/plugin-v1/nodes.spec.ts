@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { type GradleReport } from './utils/get-gradle-report';
@@ -16,7 +16,7 @@ import { createNodesV2 } from './nodes';
 
 describe('@nx/gradle/plugin-v1/nodes', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let cwd: string;
 

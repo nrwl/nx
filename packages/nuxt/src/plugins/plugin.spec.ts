@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
@@ -19,7 +19,7 @@ jest.mock('../utils/executor-utils', () => ({
 }));
 describe('@nx/nuxt/plugin', () => {
   let createNodesFunction = createNodes[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
 
   describe('root project', () => {
     beforeEach(async () => {

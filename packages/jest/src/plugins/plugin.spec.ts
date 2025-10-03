@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 import { createNodesV2 } from './plugin';
@@ -10,7 +10,7 @@ jest.mock('nx/src/utils/cache-directory', () => ({
 
 describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let cwd: string;
 
@@ -870,7 +870,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   });
 });
 
-function mockJestConfig(config: any, context: CreateNodesContext) {
+function mockJestConfig(config: any, context: CreateNodesContextV2) {
   jest.mock(join(context.workspaceRoot, 'proj/jest.config.js'), () => config, {
     virtual: true,
   });

@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { join } from 'node:path';
@@ -6,7 +6,7 @@ import { createNodesV2 } from './plugin';
 
 describe('@nx/storybook/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
 
   beforeEach(async () => {

@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2 } from './plugin-v1';
 import { type GradleReport } from './src/plugin-v1/utils/get-gradle-report';
@@ -14,7 +14,7 @@ jest.mock('./src/plugin-v1/utils/get-gradle-report', () => {
 
 describe('@nx/gradle/plugin-v1', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
 
   beforeEach(async () => {

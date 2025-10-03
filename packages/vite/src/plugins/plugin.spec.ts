@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
@@ -17,7 +17,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);

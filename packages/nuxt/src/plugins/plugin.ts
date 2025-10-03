@@ -1,7 +1,7 @@
 import type { NuxtOptions } from '@nuxt/schema';
 import {
   CreateDependencies,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -70,7 +70,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -111,7 +111,7 @@ async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const nuxtConfig: {
     buildDir: string;
@@ -236,7 +236,7 @@ function buildStaticTarget(
 
 async function getInfoFromNuxtConfig(
   configFilePath: string,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   projectRoot: string
 ): Promise<{
   buildDir: string;

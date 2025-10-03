@@ -1,6 +1,6 @@
 import {
   CreateDependencies,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
@@ -93,7 +93,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, WebpackTargets>,
   isTsSolutionSetup: boolean
 ): Promise<CreateNodesResult> {
@@ -140,7 +140,7 @@ async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   isTsSolutionSetup: boolean
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);

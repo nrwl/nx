@@ -1,6 +1,5 @@
 import {
   CreateDependencies,
-  CreateNodesContext,
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
@@ -182,7 +181,7 @@ async function buildViteTargets(
   tsConfigFiles: string[],
   hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -571,7 +570,7 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));

@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodes, createNodesV2 } from './plugin';
 
 // This will only create test targets since no build targets are defined in vite.config.ts
@@ -15,7 +15,7 @@ jest.mock('../utils/executor-utils', () => ({
 
 describe('@nx/vite/plugin with test node', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   describe('root project', () => {
     beforeEach(async () => {
       context = {

@@ -2,7 +2,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   type CreateDependencies,
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -91,7 +91,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, RemixTargets>,
   isUsingTsSolutionSetup: boolean
 ) {
@@ -154,7 +154,7 @@ async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   siblingFiles: string[],
   remixCompiler: RemixCompiler,
   isUsingTsSolutionSetup: boolean

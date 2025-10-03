@@ -313,7 +313,7 @@ function serveStaticTarget(
 
 async function getStorybookFramework(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<string | undefined> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const mainTsJs = readFileSync(resolvedPath, 'utf-8');
@@ -370,7 +370,7 @@ function parseFrameworkName(mainTsJs: string) {
 
 async function getStorybookFullyResolvedFramework(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<string> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const { framework } = await loadConfigFile<StorybookConfig>(resolvedPath);

@@ -1,6 +1,6 @@
 import {
   CreateNodesV2,
-  CreateNodesContext,
+  CreateNodesContextV2,
   ProjectConfiguration,
   createNodesFromFiles,
   readJsonFile,
@@ -86,7 +86,7 @@ export const makeCreateNodesForGradleConfigFile =
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
-    context: CreateNodesContext
+    context: CreateNodesContextV2
   ) => {
     // Vercel does not allow JAVA_VERSION to be set, skip on Vercel
     if (process.env.VERCEL) return {};

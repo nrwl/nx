@@ -1,5 +1,5 @@
 import {
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   detectPackageManager,
   joinPathFragments,
 } from '@nx/devkit';
@@ -22,7 +22,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/remix/plugin', () => {
   let createNodesFunction = createNodes[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let cwd = process.cwd();
 
   beforeEach(() => {

@@ -1,5 +1,5 @@
 import {
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
@@ -75,7 +75,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFile: string,
   options: DetoxPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<DetoxPluginOptions>>
@@ -105,7 +105,7 @@ async function createNodesInternal(
 function buildDetoxTargets(
   projectRoot: string,
   options: DetoxPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
