@@ -2,8 +2,6 @@ import { output, PackageManager, ProjectConfiguration } from '@nx/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
-  ensureCypressInstallation,
-  ensurePlaywrightBrowsersInstallation,
   getNpmMajorVersion,
   getPnpmVersion,
   getPublishedVersion,
@@ -11,6 +9,10 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
+import {
+  ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
+} from './ensure-browser-installation';
 import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
