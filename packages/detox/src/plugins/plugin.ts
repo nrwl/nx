@@ -1,5 +1,4 @@
 import {
-  CreateNodes,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
@@ -50,7 +49,7 @@ function writeTargetsToCache(
   });
 }
 
-export const createNodesV2: CreateNodesV2<DetoxPluginOptions> = [
+export const createNodes: CreateNodesV2<DetoxPluginOptions> = [
   '**/{detox.config,.detoxrc}.{json,js}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -71,25 +70,7 @@ export const createNodesV2: CreateNodesV2<DetoxPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<DetoxPluginOptions> = [
-  '**/{detox.config,.detoxrc}.{json,js}',
-  async (configFilePath, options, context) => {
-    const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `detox-${optionsHash}.hash`);
-
-    const targetsCache = readTargetsCache(cachePath);
-    const result = await createNodesInternal(
-      configFilePath,
-      options,
-      context,
-      targetsCache
-    );
-
-    writeTargetsToCache(cachePath, targetsCache);
-
-    return result;
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFile: string,
