@@ -72,7 +72,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       .toMatchInlineSnapshot(`
       {
         "projects": {},
-      } 
+      }
     `);
   });
 
