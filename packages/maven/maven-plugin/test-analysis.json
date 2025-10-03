@@ -1,7 +1,7 @@
 {
   "artifactId": "nx-maven-analyzer-plugin",
   "groupId": "dev.nx.maven",
-  "version": "0.0.1-SNAPSHOT",
+  "version": "0.0.1",
   "packaging": "maven-plugin",
   "name": "Nx Maven Analyzer Plugin",
   "description": "Maven plugin to analyze project structure for Nx integration",
