@@ -220,12 +220,20 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*"],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
           "targetName": "build-base"
         }
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["e2e/**/*"],
+      "options": {
+        "typecheck": true,
+        "build": false
       }
     },
     {
