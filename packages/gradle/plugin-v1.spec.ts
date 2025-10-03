@@ -47,7 +47,6 @@ describe('@nx/gradle/plugin-v1', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
     tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
     tempFs.createFileSync(

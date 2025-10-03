@@ -9,7 +9,6 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   type ProjectConfiguration,
-  type CreateNodesContextV2,
 } from '@nx/devkit';
 
 import { dirname, join } from 'path';

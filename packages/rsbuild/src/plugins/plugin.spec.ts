@@ -25,7 +25,6 @@ describe('@nx/rsbuild', () => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
     tempFs = new TempFs('rsbuild-test');
     context = {
-      configFiles: [],
       nxJsonConfiguration: {
         namedInputs: {
           default: ['{projectRoot}/**/*'],

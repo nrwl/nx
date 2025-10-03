@@ -58,7 +58,6 @@ describe('@nx/gradle/plugin-v1/nodes', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     await tempFs.createFiles({

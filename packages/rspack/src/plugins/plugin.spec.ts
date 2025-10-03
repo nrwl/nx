@@ -18,7 +18,6 @@ describe('@nx/rspack', () => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
     tempFs = new TempFs('rspack-test');
     context = {
-      configFiles: [],
       nxJsonConfiguration: {
         namedInputs: {
           default: ['{projectRoot}/**/*'],

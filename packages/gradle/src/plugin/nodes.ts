@@ -5,7 +5,6 @@ import {
   createNodesFromFiles,
   readJsonFile,
   writeJsonFile,
-  CreateNodesFunction,
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,

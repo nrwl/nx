@@ -37,7 +37,6 @@ describe('@nx/cypress/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     process.chdir(tempFs.tempDir);

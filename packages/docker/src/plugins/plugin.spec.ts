@@ -25,7 +25,6 @@ describe('@nx/docker', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
   });
 

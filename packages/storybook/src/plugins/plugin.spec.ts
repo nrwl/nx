@@ -19,7 +19,6 @@ describe('@nx/storybook/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
     tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
     tempFs.createFileSync(

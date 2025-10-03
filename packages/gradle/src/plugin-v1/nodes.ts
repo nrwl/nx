@@ -1,5 +1,4 @@
 import {
-  CreateNodes,
   CreateNodesV2,
   CreateNodesContextV2,
   ProjectConfiguration,
@@ -7,7 +6,6 @@ import {
   createNodesFromFiles,
   readJsonFile,
   writeJsonFile,
-  CreateNodesFunction,
   logger,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -149,20 +147,7 @@ export const makeCreateNodesForGradleConfigFile =
  @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
   This function will change to the v2 function in Nx 20.
  */
-export const createNodes: CreateNodes<GradlePluginOptions> = [
-  gradleConfigGlob,
-  async (buildFile, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    const { gradlewFiles } = splitConfigFiles(context.configFiles);
-    await populateGradleReport(context.workspaceRoot, gradlewFiles);
-    const gradleReport = getCurrentGradleReport();
-    const internalCreateNodes =
-      makeCreateNodesForGradleConfigFile(gradleReport);
-    return await internalCreateNodes(buildFile, options, context);
-  },
-];
+export const createNodes = createNodesV2;
 
 async function createGradleProject(
   gradleReport: GradleReport,

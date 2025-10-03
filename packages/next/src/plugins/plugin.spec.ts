@@ -18,7 +18,6 @@ describe('@nx/next/plugin', () => {
           },
         },
         workspaceRoot: '',
-        configFiles: [],
       };
     });
 
@@ -54,7 +53,6 @@ describe('@nx/next/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
 
       tempFs.createFileSync(

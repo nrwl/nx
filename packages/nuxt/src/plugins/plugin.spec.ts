@@ -38,7 +38,6 @@ describe('@nx/nuxt/plugin', () => {
           },
         },
         workspaceRoot: '',
-        configFiles: [],
       };
     });
 
@@ -48,7 +47,7 @@ describe('@nx/nuxt/plugin', () => {
 
     it('should create nodes', async () => {
       const nodes = await createNodesFunction(
-        'nuxt.config.ts',
+        ['nuxt.config.ts'],
         {
           buildTargetName: 'build',
           serveTargetName: 'serve',
@@ -73,7 +72,6 @@ describe('@nx/nuxt/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
 
       tempFs.createFileSync(
@@ -89,7 +87,7 @@ describe('@nx/nuxt/plugin', () => {
 
     it('should create nodes', async () => {
       const nodes = await createNodesFunction(
-        'my-app/nuxt.config.ts',
+        ['my-app/nuxt.config.ts'],
         {
           buildTargetName: 'build-something',
           serveTargetName: 'my-serve',

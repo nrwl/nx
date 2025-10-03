@@ -38,7 +38,6 @@ describe('@nx/react/react-router-plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
 
       await tempFs.createFiles({

@@ -28,7 +28,6 @@ describe('@nx/vite/plugin', () => {
     beforeEach(async () => {
       tempFs = new TempFs('vite-plugin-tests');
       context = {
-        configFiles: [],
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
           targetDefaults: {
@@ -247,7 +246,6 @@ describe('@nx/vite/plugin', () => {
     beforeEach(() => {
       tempFs = new TempFs('test');
       context = {
-        configFiles: [],
         nxJsonConfiguration: {
           namedInputs: {
             default: ['{projectRoot}/**/*'],
@@ -334,7 +332,6 @@ describe('@nx/vite/plugin', () => {
         }),
       }),
         (context = {
-          configFiles: [],
           nxJsonConfiguration: {
             namedInputs: {
               default: ['{projectRoot}/**/*'],
@@ -378,7 +375,6 @@ describe('@nx/vite/plugin', () => {
         }),
       }),
         (context = {
-          configFiles: [],
           nxJsonConfiguration: {
             namedInputs: {
               default: ['{projectRoot}/**/*'],

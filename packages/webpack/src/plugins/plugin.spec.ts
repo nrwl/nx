@@ -32,7 +32,6 @@ describe('@nx/webpack/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     tempFs.createFileSync(

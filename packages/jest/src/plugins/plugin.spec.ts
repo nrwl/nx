@@ -26,7 +26,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     await tempFs.createFiles({

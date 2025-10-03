@@ -46,7 +46,6 @@ describe('@nx/rollup/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
       const rollupConfigOptions = {
         options: [
@@ -114,7 +113,6 @@ describe('@nx/rollup/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
       const rollupConfigOptions = {
         options: [

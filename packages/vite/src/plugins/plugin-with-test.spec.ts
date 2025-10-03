@@ -19,7 +19,6 @@ describe('@nx/vite/plugin with test node', () => {
   describe('root project', () => {
     beforeEach(async () => {
       context = {
-        configFiles: [],
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
           targetDefaults: {
