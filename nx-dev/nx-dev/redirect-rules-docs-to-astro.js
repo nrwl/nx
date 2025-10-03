@@ -1904,6 +1904,7 @@ const docsToAstroRedirects = {
   '/reference/web': '/docs/reference/web',
   '/reference/web/executors': '/docs/reference/web/executors',
   '/reference/web/generators': '/docs/reference/web/generators',
+  '/ci/intro': '/docs/getting-started/nx-cloud',
 };
 
 module.exports = docsToAstroRedirects;
