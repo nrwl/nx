@@ -1,6 +1,6 @@
 import {
   CreateDependencies,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -94,7 +94,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NextPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<NextPluginOptions>>
@@ -142,7 +142,7 @@ async function buildNextTargets(
   nextConfigPath: string,
   projectRoot: string,
   options: NextPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   isTsSolutionSetup: boolean
 ) {
   const nextConfig = await getNextConfig(nextConfigPath, context);

@@ -1,6 +1,6 @@
 import {
   CreateDependencies,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -85,7 +85,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: Required<StorybookPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, Record<string, TargetConfiguration>>
 ) {
   let projectRoot = '';
@@ -141,7 +141,7 @@ async function buildStorybookTargets(
   configFilePath: string,
   projectRoot: string,
   options: StorybookPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   projectName: string
 ) {
   const buildOutputs = getOutputs();

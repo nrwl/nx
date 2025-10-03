@@ -76,7 +76,7 @@ function writeTargetsToCache(
 const internalCreateNodes = async (
   configFilePath: string,
   options: EslintPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   projectsCache: Record<string, CreateNodesResult['projects']>
 ): Promise<CreateNodesResult> => {
   options = normalizeOptions(options);
