@@ -5,7 +5,7 @@
 
   <groupId>dev.nx</groupId>
   <artifactId>nx-parent</artifactId>
-  <version>0.0.1</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
 
   <name>Nx Parent</name>
@@ -35,11 +35,20 @@
     <url>https://github.com/nrwl/nx/tree/master</url>
   </scm>
 
+
   <modules>
     <module>packages/maven/maven-plugin</module>
   </modules>
 
   <properties>
+    <!-- Version -->
+    <revision>0.0.1-SNAPSHOT</revision>
+
+    <!-- Skip deploying parent POM -->
+    <maven.deploy.skip>true</maven.deploy.skip>
+    <maven.install.skip>true</maven.install.skip>
+    <maven.gpg.skip>true</maven.gpg.skip>
+
     <!-- Build Properties -->
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
@@ -64,7 +73,6 @@
     <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
     <maven.javadoc.plugin.version>3.6.3</maven.javadoc.plugin.version>
     <maven.gpg.plugin.version>3.1.0</maven.gpg.plugin.version>
-    <nexus.staging.plugin.version>1.6.13</nexus.staging.plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -255,45 +263,37 @@
   </build>
 
   <profiles>
-    <!-- Release Profile -->
+    <!-- Release Profile - plugins configured here are inherited by child modules -->
     <profile>
       <id>release</id>
       <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>${maven.gpg.plugin.version}</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>${nexus.staging.plugin.version}</version>
-            <extensions>true</extensions>
-            <configuration>
-              <serverId>ossrh</serverId>
-              <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-              <autoReleaseAfterClose>true</autoReleaseAfterClose>
-            </configuration>
-          </plugin>
-        </plugins>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-gpg-plugin</artifactId>
+              <version>${maven.gpg.plugin.version}</version>
+              <executions>
+                <execution>
+                  <id>sign-artifacts</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>sign</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+              <groupId>org.sonatype.central</groupId>
+              <artifactId>central-publishing-maven-plugin</artifactId>
+              <version>0.9.0</version>
+              <extensions>true</extensions>
+              <configuration>
+                <publishingServerId>central</publishingServerId>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
       </build>
     </profile>
   </profiles>
