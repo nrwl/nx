@@ -67,7 +67,8 @@
         "production",
         "^production",
         {
-          "dependentTasksOutputFiles": "**/*.node"
+          "dependentTasksOutputFiles": "**/*.node",
+          "transitive": true
         }
       ],
       "executor": "nx:run-commands",
