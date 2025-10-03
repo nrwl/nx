@@ -3,14 +3,12 @@ import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import {
   type CreateDependencies,
-  type CreateNodes,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   readJsonFile,
   type TargetConfiguration,
   writeJsonFile,
@@ -53,23 +51,7 @@ export interface RollupPluginOptions {
 
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodes: CreateNodes<RollupPluginOptions> = [
-  rollupConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(
-      configFilePath,
-      normalizeOptions(options),
-      context,
-      {},
-      isUsingTsSolutionSetup()
-    );
-  },
-];
-
-export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
+export const createNodes: CreateNodesV2<RollupPluginOptions> = [
   rollupConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -100,6 +82,8 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
     }
   },
 ];
+
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
