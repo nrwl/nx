@@ -24,7 +24,7 @@ Library generators from `@nx` packages will configure this rule automatically wh
 
 To set it up manually for existing libraries, you need to add the `dependency-checks` rule to your project's ESLint configuration:
 
-{% tabs %}
+{% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
 
 ```javascript
@@ -98,7 +98,7 @@ Additionally, you need to adjust your `lintFilePatterns` to include the project'
 
 Sometimes we intentionally want to add or remove a dependency from our `package.json` despite what the rule suggests. We can use the rule's options to override default behavior:
 
-{% tabs %}
+{% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
 
 ```javascript

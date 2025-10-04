@@ -85,7 +85,7 @@ We can now restrict projects within the same group to depend on each other based
 - `ui` can only depend on other `ui`
 - everyone can depend on `util` including `util` itself
 
-{% tabs %}
+{% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
 
 ```javascript
@@ -205,7 +205,7 @@ There are no limits to the number of tags, but as you add more tags the complexi
 
 Matching just a single source tag is sometimes not enough for solving complex restrictions. To avoid creating ad-hoc tags that are only meant for specific constraints, you can also combine multiple tags with `allSourceTags`. Each tag in the array must be matched for a constraint to be applied:
 
-{% tabs %}
+{% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
 
 ```javascript

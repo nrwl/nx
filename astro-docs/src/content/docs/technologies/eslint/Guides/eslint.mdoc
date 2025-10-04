@@ -12,7 +12,7 @@ By default, Nx sets up your ESLint configs with performance in mind - we want yo
 
 Let's take an example of an ESLint config that Nx might generate for you out of the box for a Next.js project called `tuskdesk`:
 
-{% tabs %}
+{% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
 
 ```javascript
@@ -78,7 +78,7 @@ Here we do _not_ have `parserOptions.project`, which is appropriate because we a
 
 If we now come in and add a rule which does require type information, for example `@typescript-eslint/await-thenable`, our config will look as follows:
 
-{% tabs %}
+{% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
 
 ```javascript
@@ -163,7 +163,7 @@ Linting "tuskdesk"...
 
 The solution is to update our config once more, this time to set `parserOptions.project` to appropriately point at our various tsconfig.json files which belong to our project:
 
-{% tabs %}
+{% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
 
 ```javascript
