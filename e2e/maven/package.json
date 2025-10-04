@@ -1,0 +1,9 @@
+{
+  "name": "e2e-maven",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@nx/e2e-utils": "workspace:*",
+    "extract-zip": "^2.0.1"
+  }
+}
