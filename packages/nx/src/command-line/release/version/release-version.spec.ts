@@ -62,6 +62,7 @@ jest.mock('./project-logger', () => ({
   // Don't slow down or add noise to unit tests output unnecessarily
   ProjectLogger: class ProjectLogger {
     buffer() {}
+
     flush() {}
   },
 }));
@@ -1069,6 +1070,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           version: {
             specifierSource: 'prompt',
             versionPrefix: '',
+            preserveMatchingDependencyRanges: false,
           },
         }
       );
@@ -1143,6 +1145,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           version: {
             specifierSource: 'prompt',
             versionPrefix: '^',
+            preserveMatchingDependencyRanges: false,
           },
         }
       );
@@ -1217,6 +1220,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           version: {
             specifierSource: 'prompt',
             versionPrefix: '~',
+            preserveMatchingDependencyRanges: false,
           },
         }
       );
@@ -1291,6 +1295,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           version: {
             specifierSource: 'prompt',
             versionPrefix: 'auto',
+            preserveMatchingDependencyRanges: false,
           },
         }
       );
@@ -1366,6 +1371,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
             specifierSource: 'prompt',
             // No value, should default to "auto"
             versionPrefix: undefined,
+            preserveMatchingDependencyRanges: false,
           },
         }
       );
@@ -1587,6 +1593,7 @@ Valid values are: "auto", "", "~", "^", "="`,
         {
           version: {
             updateDependents: 'auto',
+            preserveMatchingDependencyRanges: false,
           },
         },
         undefined,
