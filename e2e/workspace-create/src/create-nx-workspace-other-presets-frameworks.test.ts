@@ -1,62 +1,16 @@
 import {
-  checkFilesDoNotExist,
-  checkFilesExist,
   cleanupProject,
-  expectCodeIsFormatted,
   expectNoAngularDevkit,
+  expectCodeIsFormatted,
   getSelectedPackageManager,
-  packageManagerLockFile,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
 
-describe('create-nx-workspace --preset=other', () => {
+describe('create-nx-workspace --preset=other - Framework Presets', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject());
-
-  it('should reject workspace names starting with numbers', () => {
-    expect(() => {
-      runCreateWorkspace('4invalidname', {
-        preset: 'apps',
-        packageManager,
-      });
-    }).toThrow();
-  });
-
-  it('should be able to create an empty workspace built for apps', () => {
-    const wsName = uniq('apps');
-    runCreateWorkspace(wsName, {
-      preset: 'apps',
-      packageManager,
-    });
-
-    checkFilesExist('package.json', packageManagerLockFile[packageManager]);
-
-    expectNoAngularDevkit();
-  });
-
-  it('should be able to create an empty workspace with npm capabilities', () => {
-    const wsName = uniq('npm');
-    runCreateWorkspace(wsName, {
-      preset: 'npm',
-      packageManager,
-    });
-
-    expectNoAngularDevkit();
-    checkFilesDoNotExist('tsconfig.base.json');
-  });
-
-  it('should be able to create an empty workspace with ts/js capabilities', () => {
-    const wsName = uniq('ts');
-    runCreateWorkspace(wsName, {
-      preset: 'ts',
-      packageManager,
-    });
-
-    expectNoAngularDevkit();
-    expectCodeIsFormatted();
-  });
 
   it('should be able to create an web-components workspace', () => {
     const wsName = uniq('web-components');
@@ -112,25 +66,6 @@ describe('create-nx-workspace --preset=other', () => {
 
     expectNoAngularDevkit();
     expectCodeIsFormatted();
-  });
-
-  it('should be able to create a workspace with a custom base branch and HEAD', () => {
-    const wsName = uniq('branch');
-    runCreateWorkspace(wsName, {
-      preset: 'apps',
-      base: 'main',
-      packageManager,
-    });
-  });
-
-  it('should be able to create a workspace with custom commit information', () => {
-    const wsName = uniq('branch');
-    runCreateWorkspace(wsName, {
-      preset: 'apps',
-      extraArgs:
-        '--commit.name="John Doe" --commit.email="myemail@test.com" --commit.message="Custom commit message!"',
-      packageManager,
-    });
   });
 
   it('should be able to create a nest workspace', () => {

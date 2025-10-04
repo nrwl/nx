@@ -14,7 +14,7 @@ import {
 import { join } from 'path';
 import { setupEsbuildTest, cleanupEsbuildTest } from './esbuild-setup';
 
-describe('EsBuild Plugin - Basic', () => {
+describe('EsBuild Plugin - Basic - Build and Generate', () => {
   let proj: string;
 
   beforeEach(() => (proj = setupEsbuildTest()));
@@ -118,104 +118,4 @@ describe('EsBuild Plugin - Basic', () => {
     // ).resolves.not.toThrow();
     // watchProcess.kill();
   }, 300_000);
-
-  it('should support non-bundle builds', () => {
-    const myPkg = uniq('my-pkg');
-    runCLI(
-      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
-    );
-    updateFile(`libs/${myPkg}/src/lib/${myPkg}.ts`, `console.log('Hello');\n`);
-    updateFile(`libs/${myPkg}/src/index.ts`, `import './lib/${myPkg}.cjs';\n`);
-
-    runCLI(`build ${myPkg} --bundle=false`);
-
-    checkFilesExist(
-      `dist/libs/${myPkg}/libs/${myPkg}/src/lib/${myPkg}.cjs`,
-      `dist/libs/${myPkg}/index.cjs`
-    );
-    // Test files are excluded in tsconfig (e.g. tsconfig.lib.json)
-    checkFilesDoNotExist(
-      `dist/libs/${myPkg}/libs/${myPkg}/src/lib/${myPkg}.spec.cjs`
-    );
-    // Can run package (package.json fields are correctly generated)
-    expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
-  }, 300_000);
-
-  it('should support additional entry points', async () => {
-    const myPkg = uniq('my-pkg');
-    runCLI(
-      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
-    );
-    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
-    updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
-    updateJson(join('libs', myPkg, 'project.json'), (json) => {
-      json.targets.build.options.additionalEntryPoints = [
-        `libs/${myPkg}/src/extra.ts`,
-      ];
-      return json;
-    });
-
-    runCLI(`build ${myPkg}`);
-
-    checkFilesExist(
-      `dist/libs/${myPkg}/index.cjs`,
-      `dist/libs/${myPkg}/extra.cjs`
-    );
-    expect(
-      runCommand(`node dist/libs/${myPkg}/index.cjs`, { failOnError: true })
-    ).toMatch(/main/);
-    expect(
-      runCommand(`node dist/libs/${myPkg}/extra.cjs`, { failOnError: true })
-    ).toMatch(/extra/);
-  }, 120_000);
-
-  it('should support external esbuild.config.js file', async () => {
-    const myPkg = uniq('my-pkg');
-    runCLI(
-      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
-    );
-    updateFile(
-      `libs/${myPkg}/esbuild.config.js`,
-      `console.log('custom config loaded');\nmodule.exports = {};\n`
-    );
-    updateJson(join('libs', myPkg, 'project.json'), (json) => {
-      delete json.targets.build.options.esbuildOptions;
-      json.targets.build.options.esbuildConfig = `libs/${myPkg}/esbuild.config.js`;
-      return json;
-    });
-
-    const output = runCLI(`build ${myPkg}`);
-    expect(output).toContain('custom config loaded');
-  }, 120_000);
-
-  it('should bundle in non-sensitive NX_ environment variables', () => {
-    const myPkg = uniq('my-pkg');
-    runCLI(
-      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`,
-      {}
-    );
-
-    updateFile(
-      `libs/${myPkg}/src/index.ts`,
-      `
-      console.log(process.env['NX_SOME_SECRET']);
-      console.log(process.env['NX_SOME_TOKEN']);
-      console.log(process.env['NX_PUBLIC_TEST']);
-      `
-    );
-
-    runCLI(`build ${myPkg} --platform=browser`, {
-      env: {
-        NX_SOME_SECRET: 'secret',
-        NX_SOME_TOKEN: 'secret',
-        NX_PUBLIC_TEST: 'foobar',
-      },
-    });
-
-    const output = runCommand(`node dist/libs/${myPkg}/index.cjs`, {
-      failOnError: true,
-    });
-    expect(output).not.toMatch(/secret/);
-    expect(output).toMatch(/foobar/);
-  });
 });
