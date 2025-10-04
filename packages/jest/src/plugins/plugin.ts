@@ -1,12 +1,9 @@
 import {
-  CreateNodes,
-  CreateNodesContext,
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
@@ -68,7 +65,7 @@ function writeTargetsToCache(
 
 const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
 
-export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
+export const createNodes: CreateNodesV2<JestPluginOptions> = [
   jestConfigGlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -151,55 +148,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
   },
 ];
 
-/**
- * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
- * This function will change to the v2 function in Nx 20.
- */
-export const createNodes: CreateNodes<JestPluginOptions> = [
-  jestConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-
-    const projectRoot = dirname(configFilePath);
-
-    const isInPackageManagerWorkspaces = buildPackageJsonWorkspacesMatcher(
-      context.workspaceRoot
-    );
-
-    if (
-      !checkIfConfigFileShouldBeProject(
-        configFilePath,
-        projectRoot,
-        isInPackageManagerWorkspaces,
-        context
-      )
-    ) {
-      return {};
-    }
-
-    options = normalizeOptions(options);
-
-    const { targets, metadata } = await buildJestTargets(
-      configFilePath,
-      projectRoot,
-      options,
-      context,
-      {}
-    );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets,
-          metadata,
-        },
-      },
-    };
-  },
-];
+export const createNodesV2 = createNodes;
 
 function buildPackageJsonWorkspacesMatcher(
   workspaceRoot: string
@@ -219,7 +168,7 @@ function checkIfConfigFileShouldBeProject(
   configFilePath: string,
   projectRoot: string,
   isInPackageManagerWorkspaces: (path: string) => boolean,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
@@ -258,7 +207,7 @@ async function buildJestTargets(
   configFilePath: string,
   projectRoot: string,
   options: JestPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   presetCache: Record<string, unknown>
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
   const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
@@ -694,7 +643,7 @@ function getOutputs(
   projectRoot: string,
   coverageDirectory: string | undefined,
   outputFile: string | undefined,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): string[] {
   function getOutput(path: string): string {
     const relativePath = relative(
@@ -769,7 +718,7 @@ async function getTestPaths(
   projectRoot: string,
   rawConfig: any,
   absConfigFilePath: string,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   presetCache: Record<string, unknown>
 ): Promise<{ specs: string[]; testMatch: string[] }> {
   const testMatch = await getJestOption<string[]>(

@@ -7,7 +7,7 @@ import { hashArray } from '../../hasher/file-hasher';
 import {
   CreateDependencies,
   CreateDependenciesContext,
-  CreateNodes,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
 } from '../../project-graph/plugins';
@@ -40,53 +40,53 @@ let parsedLockFile: ParsedLockFile = {};
 export const createNodesV2: CreateNodesV2 = [
   combineGlobPatterns(LOCKFILES),
   (files, _, context) => {
-    return createNodesFromFiles(createNodes[1], files, _, context);
+    return createNodesFromFiles(internalCreateNodes, files, _, context);
   },
 ];
 
-export const createNodes: CreateNodes = [
-  // Look for all lockfiles
-  combineGlobPatterns(LOCKFILES),
-  (lockFile, _, context) => {
-    const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
-    if (!pluginConfig.analyzeLockfile) {
-      return {};
-    }
+function internalCreateNodes(
+  lockFile: string,
+  _,
+  context: CreateNodesContextV2
+) {
+  const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
+  if (!pluginConfig.analyzeLockfile) {
+    return {};
+  }
 
-    const packageManager = detectPackageManager(workspaceRoot);
+  const packageManager = detectPackageManager(workspaceRoot);
 
-    // Only process the correct lockfile
-    if (lockFile !== getLockFileName(packageManager)) {
-      return {};
-    }
+  // Only process the correct lockfile
+  if (lockFile !== getLockFileName(packageManager)) {
+    return {};
+  }
 
-    const lockFilePath = join(workspaceRoot, lockFile);
-    const lockFileContents =
-      packageManager !== 'bun'
-        ? readFileSync(lockFilePath, 'utf-8')
-        : readBunLockFile(lockFilePath);
-    const lockFileHash = getLockFileHash(lockFileContents);
+  const lockFilePath = join(workspaceRoot, lockFile);
+  const lockFileContents =
+    packageManager !== 'bun'
+      ? readFileSync(lockFilePath, 'utf-8')
+      : readBunLockFile(lockFilePath);
+  const lockFileHash = getLockFileHash(lockFileContents);
 
-    if (!lockFileNeedsReprocessing(lockFileHash)) {
-      const nodes = readCachedParsedLockFile().externalNodes;
-      parsedLockFile.externalNodes = nodes;
-      return {
-        externalNodes: nodes,
-      };
-    }
-
-    const externalNodes = getLockFileNodes(
-      packageManager,
-      lockFileContents,
-      lockFileHash,
-      context
-    );
-    parsedLockFile.externalNodes = externalNodes;
+  if (!lockFileNeedsReprocessing(lockFileHash)) {
+    const nodes = readCachedParsedLockFile().externalNodes;
+    parsedLockFile.externalNodes = nodes;
     return {
-      externalNodes,
+      externalNodes: nodes,
     };
-  },
-];
+  }
+
+  const externalNodes = getLockFileNodes(
+    packageManager,
+    lockFileContents,
+    lockFileHash,
+    context
+  );
+  parsedLockFile.externalNodes = externalNodes;
+  return {
+    externalNodes,
+  };
+}
 
 export const createDependencies: CreateDependencies = (
   _,

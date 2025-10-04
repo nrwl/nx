@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 
 // Mock fs to provide stable test environment
@@ -53,11 +53,10 @@ jest.mock('../utils/executor-utils', () => ({
 
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   describe('root project', () => {
     beforeEach(async () => {
       context = {
-        configFiles: [],
         nxJsonConfiguration: {
           targetDefaults: {},
           namedInputs: {

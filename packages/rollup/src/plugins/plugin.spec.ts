@@ -1,4 +1,4 @@
-import { type CreateNodesContext } from '@nx/devkit';
+import { type CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
@@ -25,7 +25,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/rollup/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let cwd = process.cwd();
 
   describe.each(['js', 'ts'])('root project', (extname) => {
@@ -46,7 +46,6 @@ describe('@nx/rollup/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
       const rollupConfigOptions = {
         options: [
@@ -114,7 +113,6 @@ describe('@nx/rollup/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
       const rollupConfigOptions = {
         options: [

@@ -58,17 +58,12 @@ export class LoadedNxPlugin {
       this.exclude = pluginDefinition.exclude;
     }
 
-    if (plugin.createNodes && !plugin.createNodesV2) {
-      throw new Error(
-        `Plugin ${plugin.name} only provides \`createNodes\` which was removed in Nx 21, it should provide a \`createNodesV2\` implementation.`
-      );
-    }
-
-    if (plugin.createNodesV2) {
+    const createNodesV2Impl = plugin.createNodesV2 ?? plugin.createNodes;
+    if (createNodesV2Impl) {
       this.createNodes = [
-        plugin.createNodesV2[0],
+        createNodesV2Impl[0],
         async (configFiles, context) => {
-          const result = await plugin.createNodesV2[1](
+          const result = await createNodesV2Impl[1](
             configFiles,
             this.options,
             context
@@ -78,6 +73,10 @@ export class LoadedNxPlugin {
       ];
     }
 
+    /**
+     * Wraps the plugin-provided createNodes function to provide performance
+     * measurement and error handling.
+     */
     if (this.createNodes) {
       const inner = this.createNodes[1];
       this.createNodes[1] = async (...args) => {

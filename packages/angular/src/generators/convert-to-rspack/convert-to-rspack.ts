@@ -522,7 +522,6 @@ export async function convertToRspack(
         // which webpack tasks wouldn't have
         const namedInputs = getNamedInputs(project.root, {
           nxJsonConfiguration: nxJson,
-          configFiles: [],
           workspaceRoot,
         });
 

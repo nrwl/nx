@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { defineConfig } from 'cypress';
 
 import { createNodesV2 } from './plugin';
@@ -9,7 +9,7 @@ import { nxE2EPreset } from '../../plugins/cypress-preset';
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let cwd = process.cwd();
   let originalCacheProjectGraph: string | undefined;
@@ -37,7 +37,6 @@ describe('@nx/cypress/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     process.chdir(tempFs.tempDir);

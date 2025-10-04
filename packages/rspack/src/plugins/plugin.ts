@@ -1,6 +1,6 @@
 import {
   CreateDependencies,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -90,7 +90,7 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
 async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, RspackTargets>,
   isTsSolutionSetup: boolean
 ) {
@@ -156,7 +156,7 @@ async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
   options: RspackPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   isTsSolutionSetup: boolean
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
