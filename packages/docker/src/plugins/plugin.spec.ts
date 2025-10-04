@@ -1,11 +1,14 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2 } from './plugin';
+import * as gitUtils from 'nx/src/utils/git-utils';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
+
+jest.mock('nx/src/utils/git-utils');
 
 describe('@nx/docker', () => {
   let createNodesFunction = createNodesV2[1];
@@ -13,7 +16,17 @@ describe('@nx/docker', () => {
   let tempFs: TempFs;
   let cwd: string;
 
+  const mockGetLatestCommitSha =
+    gitUtils.getLatestCommitSha as jest.MockedFunction<
+      typeof gitUtils.getLatestCommitSha
+    >;
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+    mockGetLatestCommitSha.mockReturnValue(
+      'abc123456789def0123456789abcdef012345678'
+    );
+
     tempFs = new TempFs('test');
     cwd = process.cwd();
     process.chdir(tempFs.tempDir);
@@ -687,6 +700,29 @@ describe('@nx/docker', () => {
       expect(Object.keys(targets)).toContain('custom-build');
       expect(Object.keys(targets)).toContain('docker:run'); // default value
     });
+
+    it('should accept object for buildTarget', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'custom-build',
+            args: ['--platform', 'linux/amd64'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(Object.keys(targets)).toContain('custom-build');
+      expect(targets['custom-build'].options.args).toContain('--platform');
+      expect(targets['custom-build'].options.args).toContain('linux/amd64');
+    });
   });
 
   describe('dependency handling', () => {
@@ -707,6 +743,280 @@ describe('@nx/docker', () => {
 
       const targets = results[0][1].projects['proj'].targets;
       expect(targets['run'].dependsOn).toEqual(['build']);
+    });
+
+    it('should set run target to depend on custom build target name', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: { name: 'custom-build' },
+          runTarget: { name: 'custom-run' },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['custom-run'].dependsOn).toEqual(['custom-build']);
+    });
+  });
+
+  describe('pattern interpolation', () => {
+    it('should interpolate imageRef in args', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--tag', '{imageRef}:latest'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('proj:latest');
+    });
+
+    it('should interpolate projectName from project.json', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'my-project' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'project={projectName}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain('project=my-project');
+    });
+
+    it('should interpolate projectName from package.json', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/package.json': JSON.stringify({ name: '@org/my-package' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'package={projectName}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain(
+        'package=@org/my-package'
+      );
+    });
+
+    it('should prefer project.json name over package.json', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'project-name' }),
+        'proj/package.json': JSON.stringify({ name: 'package-name' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'name={projectName}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain('name=project-name');
+    });
+
+    it('should interpolate projectRoot', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--label', 'root={projectRoot}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['build'].options.args).toContain('--label');
+      expect(targets['build'].options.args).toContain('root=apps/api');
+    });
+
+    it('should interpolate multiple tokens in single arg', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'my-app' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--tag', '{projectName}:{imageRef}'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('my-app:proj');
+    });
+
+    it('should interpolate env variables', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            env: {
+              IMAGE_NAME: '{imageRef}',
+              PROJECT_NAME: '{projectName}',
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.env).toEqual({
+        IMAGE_NAME: 'proj',
+        PROJECT_NAME: 'proj',
+      });
+    });
+
+    it('should interpolate cwd', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            cwd: '{projectRoot}/dist',
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['build'].options.cwd).toBe('apps/api/dist');
+    });
+  });
+
+  describe('options merging', () => {
+    it('should merge custom args with default args', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--platform', 'linux/amd64', '--no-cache'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toContain('--tag proj');
+      expect(targets['build'].options.args).toContain('--platform');
+      expect(targets['build'].options.args).toContain('linux/amd64');
+      expect(targets['build'].options.args).toContain('--no-cache');
+    });
+
+    it('should apply env options to target', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            env: {
+              DOCKER_BUILDKIT: '1',
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.env).toEqual({
+        DOCKER_BUILDKIT: '1',
+      });
+    });
+
+    it('should apply envFile option to target', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            envFile: '.env.docker',
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.envFile).toBe('.env.docker');
     });
   });
 });
