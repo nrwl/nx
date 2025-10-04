@@ -442,6 +442,8 @@ describe('NxPlugin Plugin Generator', () => {
       expect(readJson(tree, 'my-plugin/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
+            "@nx/devkit": "0.0.1",
+            "nx": "0.0.1",
             "tslib": "^2.3.0",
           },
           "exports": {
