@@ -24,6 +24,7 @@ Nx Cloud Self-Healing CI is an **AI-powered system that automatically detects, a
 {% aside title="VCS Integration Support" type="note" %}
 Currently, your Nx Cloud workspace needs to have the [GitHub VCS integration enabled](/docs/guides/nx-cloud/source-control-integration) to use self-healing ci. We are working on supporting more VCS providers!
 {% /aside %}
+
 To enable Self-Healing CI in your workspace, you'll need to connect to Nx Cloud and configure your CI pipeline.
 
 If you haven't already connected to Nx Cloud, run the following command:
@@ -32,16 +33,14 @@ If you haven't already connected to Nx Cloud, run the following command:
 npx nx@latest connect
 ```
 
-Next, check the Nx Cloud workspace settings in the Nx Cloud web application to ensure that "Self-Healing CI" is enabled (it should be enabled by default).
+Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/settings) in the Nx Cloud web application to ensure that "Self-Healing CI" is enabled (it should be enabled by default).
 
 ### Configure your CI pipeline
 
-**Using [Nx Agents](/docs/features/ci-features/distribute-task-execution):** There's nothing to be done. You're already good to go.
+To enable Self-Healing CI, add the following lines to your CI configuration:
 
-**Not using Nx Agents:** Add the `fix-ci` step to your pipeline. Important: this step must run at the end with `if: always()` to ensure it executes even when previous steps fail:
-
-```yaml {% meta="{11,12}" %}
-// .github/workflows/ci.yml"
+```yaml {% meta="{10,14,15}" %}
+# .github/workflows/ci.yml
 name: CI
 
 jobs:
@@ -49,11 +48,61 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       ...
+      - name: Start CI Run
+      - run: npx nx start-ci-run --no-distribution
+      ...
       - run: npx nx affected -t lint test build
 
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
         if: always()
 ```
+
+If you're already using [Nx Agents](/docs/features/ci-features/distribute-task-execution), then you can omit the `--no-distribution` flag and use your existing Nx Agents configuration.
+
+### Enable Auto-fixing
+
+By default, Self-Healing CI proposes a fix for you to review and only applies it automatically to your PR after you confirm it. However, for some tasks, it makes sense to have them be auto-fixed without waiting for manual approval. Auto-fixes are only applied if the verification phase passes.
+
+Below is an example of enabling auto-fixing for the Nx `format` command and `lint` tasks using the [`--auto-apply-fixes`](/docs/reference/nx-cloud-cli#--auto-apply-fixes) flag:
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      ...
+      - name: Start CI Run
+        run: npx nx start-ci-run --auto-apply-fixes="*format*,*lint*" --no-distribution
+      ...
+```
+
+Tasks are passed to the `--auto-apply-fixes` as `<project>:<task-name>:<configuration>`. Commands like `nx format` which you configure with `nx-cloud record --` are passed as `nx-cloud record -- <params>`.
+
+### Specify Which Tasks to Fix
+
+By using the [`--fix-tasks`](/docs/reference/nx-cloud-cli#--fix-tasks) flag you can fine-tune which tasks should be considered by the Nx Cloud self-healing CI. Below is an example of running self-healing on all tasks except `deploy` and `test` tasks.
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      ...
+      - name: Start CI Run
+        run: npx nx start-ci-run --fix-tasks="!*deploy,!*test" --no-distribution
+
+      ...
+```
+
+Similarly, if you only want to self-heal linting tasks you'd use `--fix-tasks="*lint*"`.
+
+Tasks are passed to the `--fix-tasks` as `<project>:<task-name>:<configuration>`. Commands like `nx format` which you configure with `nx-cloud record --` are passed as `nx-cloud record -- <params>`.
 
 ## How Self-Healing CI works
 
@@ -90,18 +139,46 @@ Clicking the notification will open a dedicated view showing the failed task log
 
 ### 4. Verification
 
-While you're being notified, Nx Cloud automatically **runs a verification phase** in the background. The purpose is to rerun the failed task with the new fix to make sure it actually solves the issue. This step can be skipped if you see the proposed fix and already know that it is the correct one. However, it is a useful additional step to verify the correctness of the change.
+While you're being notified, Nx Cloud automatically **runs a verification phase** in the background.
+
+![Verification phase run by Nx Cloud to make sure the proposed fix passes CI checks](../../../../assets/features/self-healing-nx-cloud-verified.avif)
+
+The purpose is to rerun the failed task with the proposed fix to make sure it actually solves the issue. This step can be skipped if you see the proposed fix and already know that it is valid. However, it is a useful additional step to verify the correctness of the change.
 
 ### 5. Review & Apply
 
-You can review the fix and decide whether to apply or reject it:
+You can review the fix and decide whether to apply or reject it. If you apply the fix, **Nx Cloud automatically pushes a commit to your original PR**.
 
-- **From Nx Console:** Review the git diff directly in your editor
-- **From GitHub:** Click "View Fix" to be redirected to the Nx Cloud web application, showing the git diff of the fix that is about to be applied
+{% tabs syncKey="apply-self-healing-fix" %}
+{% tabitem label="Nx Console" %}
+
+Open the Nx Console view or click the PR fix notification.
+
+![Apply the fix directly from within Nx Console](../../../../assets/features/self-healing-apply-nx-console.avif)
+
+{% /tabitem %}
+
+{% tabitem label="GitHub Comments" %}
+
+Review the Git diff directly in the commend and click "Apply fix" or "Reject fix" to take immediate action. If you want to take a closer look, you can click "View interactive diff" and you'll be redirected to the Nx Cloud app which has a more sophisticated diff viewer.
+
+![Self-healing CI fix showing up in GitHub comments](../../../../assets/features/self-healing-fix-gh-comment.avif)
+
+{% /tabitem %}
+
+{% tabitem label="Nx Cloud Application" %}
 
 ![Self-healing CI fix showing up in GitHub comments](../../../../assets/features/self-healing-fix-nx-cloud.avif)
 
-If you apply the fix, **Nx Cloud automatically pushes a commit to your original PR**.
+{% /tabitem %}
+
+{% /tabs %}
+
+#### Apply Fixes Locally
+
+If you want to tweak a fix before committing it, you can **apply it locally** rather than having it pushed directly to your PR. To do this, use the corresponding buttons on the GitHub comment, Nx Console view, or Nx Cloud app to get the command to run locally:
+
+![Screenshot of the dialog in the Nx Cloud app showing the nx-cloud apply-locally command](../../../../assets/features/self-healing-apply-locally.avif)
 
 ## Learn more
 

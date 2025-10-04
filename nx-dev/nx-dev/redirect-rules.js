@@ -1175,7 +1175,10 @@ const blogPosts = {
 
 const featurePagesUpdate = {
   '/ci/troubleshooting/explain-with-ai': '/ci/features/explain-with-ai',
-  '/ci/features/ai-features': '/ci/concepts/ai-features',
+  '/ci/concepts/ai-features': '/docs/features/ci-features/self-healing-ci',
+  '/ci/concepts/nx-cloud-ai': '/docs/features/ci-features/self-healing-ci',
+  '/concepts/ci-concepts/ai-features':
+    '/docs/features/ci-features/self-healing-ci',
 };
 
 const enterpriseNxSection = {
