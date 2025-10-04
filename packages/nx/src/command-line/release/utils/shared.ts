@@ -1,6 +1,5 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
-import { extname } from 'path';
 import { ProjectGraph } from '../../../config/project-graph';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
