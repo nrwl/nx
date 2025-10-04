@@ -424,6 +424,17 @@
             "tags": []
           },
           {
+            "id": "monorepo-ci-buildkite",
+            "name": "Setting up Buildkite",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/monorepo-ci-buildkite",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/monorepo-ci-buildkite",
+            "tags": []
+          },
+          {
             "id": "monorepo-ci-circle-ci",
             "name": "Setting up CircleCI",
             "description": "",
@@ -921,6 +932,17 @@
         "tags": []
       },
       {
+        "id": "monorepo-ci-buildkite",
+        "name": "Setting up Buildkite",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/monorepo-ci-buildkite",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/monorepo-ci-buildkite",
+        "tags": []
+      },
+      {
         "id": "monorepo-ci-circle-ci",
         "name": "Setting up CircleCI",
         "description": "",
@@ -989,6 +1011,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/set-up/monorepo-ci-azure",
+    "tags": []
+  },
+  "/ci/recipes/set-up/monorepo-ci-buildkite": {
+    "id": "monorepo-ci-buildkite",
+    "name": "Setting up Buildkite",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/monorepo-ci-buildkite",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/monorepo-ci-buildkite",
     "tags": []
   },
   "/ci/recipes/set-up/monorepo-ci-circle-ci": {
