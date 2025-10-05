@@ -1,7 +1,3 @@
-import { ModuleFederationStaticServerSchema } from './schema';
-import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
-import { basename, extname, join } from 'path';
 import {
   logger,
   parseTargetString,
@@ -9,26 +5,29 @@ import {
   Target,
   workspaceRoot,
 } from '@nx/devkit';
-import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
-import {
-  getModuleFederationConfig,
-  getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
-import {
-  parseStaticRemotesConfig,
-  StaticRemotesConfig,
-} from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
-import { buildStaticRemotes } from '../../utils/build-static.remotes';
-import { fork } from 'child_process';
-import type { WebpackExecutorOptions } from '@nx/webpack';
-import * as process from 'node:process';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import type { Express } from 'express';
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
+import {
+  getModuleFederationConfig,
+  getRemotes,
+  parseStaticRemotesConfig,
+  StaticRemotesConfig,
+} from '@nx/module-federation/src/utils';
+import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import type { WebpackExecutorOptions } from '@nx/webpack';
+import { fork } from 'child_process';
+import type { Express } from 'express';
+import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
+import * as process from 'node:process';
+import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { basename, extname, join } from 'path';
+import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
+import { ModuleFederationStaticServerSchema } from './schema';
 
 function getBuildAndServeOptionsFromServeTarget(
   serveTarget: string,
@@ -49,7 +48,7 @@ function getBuildAndServeOptionsFromServeTarget(
 
   let pathToManifestFile = join(
     context.root,
-    context.projectGraph.nodes[context.projectName].data.sourceRoot,
+    getProjectSourceRoot(context.projectGraph.nodes[context.projectName].data),
     'assets/module-federation.manifest.json'
   );
   if (serveOptions.pathToManifestFile) {
@@ -114,7 +113,7 @@ async function buildHost(
 
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
-        logger.info(`NX Built host`);
+        logger.info(`NX Built Consumer (host)`);
         res();
       }
     });
@@ -123,7 +122,7 @@ async function buildHost(
       staticProcess.stdout.removeAllListeners('data');
       staticProcess.stderr.removeAllListeners('data');
       if (code !== 0) {
-        rej(`Host failed to build. See above for details.`);
+        rej(`Consumer (host) failed to build. See above for details.`);
       } else {
         res();
       }
@@ -215,8 +214,8 @@ export function startProxies(
     process.on('SIGTERM', () => proxyServer.close());
     process.on('exit', () => proxyServer.close());
   }
-  logger.info(`NX Static remotes proxies started successfully`);
-  logger.info(`NX Starting static host proxy...`);
+  logger.info(`NX Static Producers (remotes) proxies started successfully`);
+  logger.info(`NX Starting static Consumer (host) proxy...`);
   const expressProxy: Express = express();
   expressProxy.use(
     createProxyMiddleware({
@@ -240,7 +239,7 @@ export function startProxies(
     .listen(hostServeOptions.port);
   process.on('SIGTERM', () => proxyServer.close());
   process.on('exit', () => proxyServer.close());
-  logger.info('NX Static host proxy started successfully');
+  logger.info('NX Static Consumer (host) proxy started successfully');
 }
 
 export default async function* moduleFederationStaticServer(
@@ -364,9 +363,10 @@ export default async function* moduleFederationStaticServer(
         }
 
         try {
-          const portsToWaitFor = staticFileServerIter
-            ? [options.serveOptions.staticRemotesPort, ...remotes.remotePorts]
-            : [...remotes.remotePorts];
+          const portsToWaitFor =
+            staticFileServerIter && options.serveOptions.staticRemotesPort
+              ? [options.serveOptions.staticRemotesPort, ...remotes.remotePorts]
+              : [...remotes.remotePorts];
           await Promise.all(
             portsToWaitFor.map((port) =>
               waitForPortOpen(port, {

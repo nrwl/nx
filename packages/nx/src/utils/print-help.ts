@@ -173,9 +173,7 @@ function generateExecutorOverviewOutput({
       {
         text:
           `${pluginName}:${name}` +
-          (pluginName.startsWith('@nrwl/')
-            ? chalk.dim(` (v${nxVersion})`)
-            : ''),
+          (pluginName.startsWith('@nx/') ? chalk.dim(` (v${nxVersion})`) : ''),
         padding: [1, 0, 0, 0],
       },
     ]
@@ -335,18 +333,12 @@ function generateLinkOutput({
   type: 'generators' | 'executors';
 }): string {
   const nxPackagePrefix = '@nx/';
-  const nrwlPackagePrefix = '@nrwl/';
-  if (
-    !pluginName.startsWith(nxPackagePrefix) &&
-    !pluginName.startsWith(nrwlPackagePrefix)
-  ) {
+  if (!pluginName.startsWith(nxPackagePrefix)) {
     return '';
   }
 
   const link = `https://nx.dev/nx-api/${pluginName.substring(
-    pluginName.startsWith(nxPackagePrefix)
-      ? nxPackagePrefix.length
-      : nrwlPackagePrefix.length
+    nxPackagePrefix.length
   )}/${type}/${name}`;
 
   return `\n\n${chalk.dim(

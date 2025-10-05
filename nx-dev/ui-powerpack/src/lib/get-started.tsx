@@ -1,6 +1,6 @@
-import { SectionHeading, TextLink } from '@nx/nx-dev/ui-common';
+import { SectionHeading, TextLink } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
-import { TerminalOutput } from '@nx/nx-dev/ui-fence';
+import { TerminalOutput } from '@nx/nx-dev-ui-fence';
 import { PowerpackPricing } from './powerpack-pricing';
 
 export function GetStarted(): ReactElement {
@@ -9,11 +9,7 @@ export function GetStarted(): ReactElement {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h2" variant="title">
-            Premium features, <br /> carefully crafted DX
-          </SectionHeading>
-          <SectionHeading as="p" variant="subtitle" className="text mt-6">
-            Expand your capabilities with Nx Powerpack, <br /> a suite of
-            advanced tools designed for enterprises.
+            Get started in minutes
           </SectionHeading>
         </div>
 
@@ -121,7 +117,7 @@ export function GetStarted(): ReactElement {
                 </p>
                 <div className="mt-4 text-left">
                   <TerminalOutput
-                    command="nx activate-powerpack {YOUR_LICENSE_KEY}"
+                    command="nx activate-key {YOUR_ACTIVATION_KEY}"
                     path="~/my-workspace"
                     title=""
                     content=""
@@ -143,21 +139,22 @@ export function GetStarted(): ReactElement {
                 <p className="mt-2">
                   Install Powerpack plugins such as{' '}
                   <TextLink
-                    href="/features/powerpack/custom-caching"
-                    title="Self-hosted cache storage"
-                  >
-                    Self-hosted cache storage
-                  </TextLink>
-                  ,{' '}
-                  <TextLink
-                    href="/features/powerpack/conformance"
+                    href={
+                      process.env.NEXT_PUBLIC_ASTRO_URL
+                        ? '/docs/enterprise/powerpack/conformance'
+                        : '/nx-enterprise/powerpack/conformance'
+                    }
                     title="Workspace conformance"
                   >
                     workspace conformance
                   </TextLink>
                   , and{' '}
                   <TextLink
-                    href="/features/powerpack/owners"
+                    href={
+                      process.env.NEXT_PUBLIC_ASTRO_URL
+                        ? '/docs/enterprise/powerpack/owners'
+                        : '/nx-enterprise/powerpack/owners'
+                    }
                     title="Codeowners for monorepos"
                   >
                     Codeowners for monorepos

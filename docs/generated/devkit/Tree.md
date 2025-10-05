@@ -6,19 +6,19 @@ Virtual file system tree.
 
 ### Properties
 
-- [root](../../devkit/documents/Tree#root): string
+- [root](/reference/core-api/devkit/documents/Tree#root): string
 
 ### Methods
 
-- [changePermissions](../../devkit/documents/Tree#changepermissions)
-- [children](../../devkit/documents/Tree#children)
-- [delete](../../devkit/documents/Tree#delete)
-- [exists](../../devkit/documents/Tree#exists)
-- [isFile](../../devkit/documents/Tree#isfile)
-- [listChanges](../../devkit/documents/Tree#listchanges)
-- [read](../../devkit/documents/Tree#read)
-- [rename](../../devkit/documents/Tree#rename)
-- [write](../../devkit/documents/Tree#write)
+- [changePermissions](/reference/core-api/devkit/documents/Tree#changepermissions)
+- [children](/reference/core-api/devkit/documents/Tree#children)
+- [delete](/reference/core-api/devkit/documents/Tree#delete)
+- [exists](/reference/core-api/devkit/documents/Tree#exists)
+- [isFile](/reference/core-api/devkit/documents/Tree#isfile)
+- [listChanges](/reference/core-api/devkit/documents/Tree#listchanges)
+- [read](/reference/core-api/devkit/documents/Tree#read)
+- [rename](/reference/core-api/devkit/documents/Tree#rename)
+- [write](/reference/core-api/devkit/documents/Tree#write)
 
 ## Properties
 
@@ -123,19 +123,19 @@ Check if this is a file or not.
 
 ### listChanges
 
-▸ **listChanges**(): [`FileChange`](../../devkit/documents/FileChange)[]
+▸ **listChanges**(): [`FileChange`](/reference/core-api/devkit/documents/FileChange)[]
 
 Returns the list of currently recorded changes.
 
 #### Returns
 
-[`FileChange`](../../devkit/documents/FileChange)[]
+[`FileChange`](/reference/core-api/devkit/documents/FileChange)[]
 
 ---
 
 ### read
 
-▸ **read**(`filePath`): `Buffer`
+▸ **read**(`filePath`): `Buffer`\<`ArrayBufferLike`\>
 
 Read the contents of a file.
 
@@ -147,7 +147,7 @@ Read the contents of a file.
 
 #### Returns
 
-`Buffer`
+`Buffer`\<`ArrayBufferLike`\>
 
 ▸ **read**(`filePath`, `encoding`): `string`
 
@@ -193,11 +193,11 @@ Update the contents of a file or create a new file.
 
 #### Parameters
 
-| Name       | Type                 |
-| :--------- | :------------------- |
-| `filePath` | `string`             |
-| `content`  | `string` \| `Buffer` |
-| `options?` | `TreeWriteOptions`   |
+| Name       | Type                                      |
+| :--------- | :---------------------------------------- |
+| `filePath` | `string`                                  |
+| `content`  | `string` \| `Buffer`\<`ArrayBufferLike`\> |
+| `options?` | `TreeWriteOptions`                        |
 
 #### Returns
 

@@ -1,3 +1,4 @@
+import type { ConfigArray } from 'typescript-eslint';
 import reactBase from './src/flat-configs/react-base';
 import reactJsx from './src/flat-configs/react-jsx';
 import reactTmp from './src/flat-configs/react-tmp';
@@ -9,7 +10,7 @@ const plugin = {
     'react-base': reactBase,
     'react-typescript': reactTypescript,
     'react-jsx': reactJsx,
-  },
+  } as Record<string, ConfigArray>,
   rules: {},
 };
 

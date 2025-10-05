@@ -1,9 +1,14 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
+import {
+  ProjectGraph,
+  readJson,
+  readNxJson,
+  readProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import remote from './remote';
+import host from '../host/host';
 import { getRootTsConfigPathInTree } from '@nx/js';
 
 jest.mock('@nx/devkit', () => {
@@ -86,8 +91,7 @@ jest.mock('@nx/devkit', () => {
   };
 });
 
-// TODO(colum): turn these on when rspack is moved into the main repo
-xdescribe('remote generator', () => {
+describe('remote generator', () => {
   // TODO(@jaysoo): Turn this back to adding the plugin
   let originalEnv: string;
 
@@ -101,13 +105,44 @@ xdescribe('remote generator', () => {
   });
 
   describe('bundler=rspack', () => {
+    it('should set up continuous tasks when host is provided', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await host(tree, {
+        directory: 'test/host',
+        name: 'host',
+        skipFormat: true,
+        bundler: 'rspack',
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        unitTestRunner: 'jest',
+        style: 'css',
+      });
+
+      await remote(tree, {
+        directory: 'test/remote',
+        name: 'remote',
+        devServerPort: 4201,
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'jest',
+        typescriptConfiguration: false,
+        bundler: 'rspack',
+        host: 'host',
+      });
+
+      const remoteProject = readProjectConfiguration(tree, 'remote');
+      expect(remoteProject.targets.serve.dependsOn).toEqual(['host:serve']);
+    });
+
     it('should create the remote with the correct config files', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -139,7 +174,7 @@ xdescribe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -172,7 +207,7 @@ xdescribe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
@@ -199,7 +234,7 @@ xdescribe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -216,7 +251,7 @@ xdescribe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -234,7 +269,7 @@ xdescribe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -243,7 +278,9 @@ xdescribe('remote generator', () => {
       });
 
       const mainFile = tree.read('test/server.ts', 'utf-8');
-      expect(mainFile).toContain(`join(process.cwd(), 'dist/test/browser')`);
+      expect(mainFile).toContain(
+        `join(process.cwd(), '../dist/test', 'browser')`
+      );
       expect(mainFile).toContain('nx.server.ready');
     });
 
@@ -254,7 +291,7 @@ xdescribe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -263,14 +300,10 @@ xdescribe('remote generator', () => {
         bundler: 'rspack',
       });
 
-      expect(tree.exists('test/rspack.server.config.js')).toBeTruthy();
       expect(
         tree.exists('test/module-federation.server.config.js')
       ).toBeTruthy();
 
-      expect(
-        tree.read('test/rspack.server.config.js', 'utf-8')
-      ).toMatchSnapshot();
       expect(
         tree.read('test/module-federation.server.config.js', 'utf-8')
       ).toMatchSnapshot();
@@ -283,7 +316,7 @@ xdescribe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
@@ -292,14 +325,10 @@ xdescribe('remote generator', () => {
         bundler: 'rspack',
       });
 
-      expect(tree.exists('test/rspack.server.config.ts')).toBeTruthy();
       expect(
         tree.exists('test/module-federation.server.config.ts')
       ).toBeTruthy();
 
-      expect(
-        tree.read('test/rspack.server.config.ts', 'utf-8')
-      ).toMatchSnapshot();
       expect(
         tree.read('test/module-federation.server.config.ts', 'utf-8')
       ).toMatchSnapshot();
@@ -314,7 +343,7 @@ xdescribe('remote generator', () => {
           devServerPort: 4209,
           dynamic: true,
           e2eTestRunner: 'cypress',
-          linter: Linter.EsLint,
+          linter: 'eslint',
           skipFormat: false,
           style: 'css',
           unitTestRunner: 'jest',
@@ -322,7 +351,48 @@ xdescribe('remote generator', () => {
           typescriptConfiguration: true,
           bundler: 'rspack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${name}.`);
+    });
+
+    it('should throw an error when an invalid remote name is used', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await expect(
+        remote(tree, {
+          directory: 'test/my-app',
+          devServerPort: 4209,
+          e2eTestRunner: 'cypress',
+          linter: 'eslint',
+          skipFormat: false,
+          style: 'css',
+          unitTestRunner: 'jest',
+          ssr: true,
+          typescriptConfiguration: true,
+          bundler: 'rspack',
+        })
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: Invalid remote name provided: my-app. The name can only contain letters, digits, underscores, and dollar signs.]`
+      );
+    });
+
+    it('should handle app names in ts proj ref workspaces', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await expect(
+        remote(tree, {
+          directory: 'test/myapp',
+          devServerPort: 4209,
+          e2eTestRunner: 'cypress',
+          linter: 'eslint',
+          skipFormat: false,
+          style: 'css',
+          unitTestRunner: 'jest',
+          ssr: true,
+          typescriptConfiguration: true,
+          bundler: 'rspack',
+        })
+        // Verify that no error occurs
+        // Resolves.not.toThrow() will cause spawnSync error
+        // As the Generator Callback will try to run
+      ).resolves.toMatchInlineSnapshot(`[Function]`);
     });
   });
 });

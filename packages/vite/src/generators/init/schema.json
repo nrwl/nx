@@ -31,6 +31,20 @@
       "x-priority": "internal",
       "description": "Update `package.json` scripts with inferred targets",
       "default": false
+    },
+    "useViteV5": {
+      "type": "boolean",
+      "description": "Use Vite v5",
+      "default": false,
+      "x-priority": "internal",
+      "hidden": true
+    },
+    "useViteV6": {
+      "type": "boolean",
+      "description": "Use Vite v6",
+      "default": false,
+      "x-priority": "internal",
+      "hidden": true
     }
   }
 }

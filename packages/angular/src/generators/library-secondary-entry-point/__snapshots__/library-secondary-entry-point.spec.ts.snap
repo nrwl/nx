@@ -6,7 +6,7 @@ exports[`librarySecondaryEntryPoint generator --skipModule should not generate a
 `;
 
 exports[`librarySecondaryEntryPoint generator should format files 1`] = `
-"export * from './lib/testing.module';
+"export * from './lib/testing-module';
 "
 `;
 
@@ -22,6 +22,6 @@ export class TestingModule {}
 `;
 
 exports[`librarySecondaryEntryPoint generator should generate files for the secondary entry point 1`] = `
-"export * from './lib/testing.module';
+"export * from './lib/testing-module';
 "
 `;

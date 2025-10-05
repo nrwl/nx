@@ -101,6 +101,16 @@ export class TasksSchedule {
       : null;
   }
 
+  public getIncompleteTasks(): Task[] {
+    const incompleteTasks: Task[] = [];
+    for (const taskId in this.taskGraph.tasks) {
+      if (!this.completedTasks.has(taskId)) {
+        incompleteTasks.push(this.taskGraph.tasks[taskId]);
+      }
+    }
+    return incompleteTasks;
+  }
+
   private async scheduleTasks() {
     if (this.options.batch || process.env.NX_BATCH_MODE === 'true') {
       await this.scheduleBatches();
@@ -212,12 +222,15 @@ export class TasksSchedule {
       ({
         tasks: {},
         dependencies: {},
+        continuousDependencies: {},
         roots: [],
       } as TaskGraph));
 
     batch.tasks[task.id] = task;
     batch.dependencies[task.id] =
       this.notScheduledTaskGraph.dependencies[task.id];
+    batch.continuousDependencies[task.id] =
+      this.notScheduledTaskGraph.continuousDependencies[task.id];
     if (isRoot) {
       batch.roots.push(task.id);
     }
@@ -251,9 +264,13 @@ export class TasksSchedule {
     const hasDependenciesCompleted = this.taskGraph.dependencies[taskId].every(
       (id) => this.completedTasks.has(id)
     );
+    const hasContinuousDependenciesStarted =
+      this.taskGraph.continuousDependencies[taskId].every((id) =>
+        this.runningTasks.has(id)
+      );
 
     // if dependencies have not completed, cannot schedule
-    if (!hasDependenciesCompleted) {
+    if (!hasDependenciesCompleted || !hasContinuousDependenciesStarted) {
       return false;
     }
 
@@ -274,5 +291,9 @@ export class TasksSchedule {
       // if all running tasks support parallelism, can only schedule task with parallelism
       return this.taskGraph.tasks[taskId].parallelism === true;
     }
+  }
+
+  public getEstimatedTaskTimings(): Record<string, number> {
+    return this.estimatedTaskTimings;
   }
 }

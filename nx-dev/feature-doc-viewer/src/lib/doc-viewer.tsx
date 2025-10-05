@@ -2,17 +2,17 @@ import {
   categorizeRelatedDocuments,
   ProcessedDocument,
   RelatedDocument,
-} from '@nx/nx-dev/models-document';
-import { Breadcrumbs, Footer, GitHubStarWidget } from '@nx/nx-dev/ui-common';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+} from '@nx/nx-dev-models-document';
+import { Breadcrumbs, Footer, GitHubStarWidget } from '@nx/nx-dev-ui-common';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { useRef, useState } from 'react';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { useRef, useState, useEffect } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
 import { RelatedDocumentsSection } from './related-documents-section';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { FeedbackDialog } from '@nx/nx-dev/feature-feedback';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { FeedbackDialog } from '@nx/nx-dev-feature-feedback';
 
 export function DocViewer({
   document,
@@ -24,13 +24,21 @@ export function DocViewer({
   widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
+  const [currentPath, setCurrentPath] = useState<string>(router.asPath);
+  const [basePath, setBasePath] = useState<string>(router.basePath);
+
+  useEffect(() => {
+    setCurrentPath(router.asPath);
+    setBasePath(router.basePath);
+  }, [router.asPath, router.basePath]);
+
   const hideTableOfContent =
-    router.asPath.includes('/getting-started/intro') ||
-    router.asPath.includes('/ci/intro/ci-with-nx') ||
-    router.asPath.includes('/extending-nx/intro/getting-started') ||
-    router.asPath.includes('/nx-api/devkit') ||
-    router.asPath.includes('/reference/glossary') ||
-    router.asPath.includes('/ci/reference/release-notes');
+    currentPath.endsWith('/getting-started') ||
+    currentPath.includes('/ci/intro/ci-with-nx') ||
+    currentPath.includes('/extending-nx/intro/getting-started') ||
+    currentPath.includes('/nx-api/devkit') ||
+    currentPath.includes('/reference/glossary') ||
+    currentPath.includes('/ci/reference/release-notes');
   const ref = useRef<HTMLDivElement | null>(null);
 
   const { metadata, node, treeNode } = renderMarkdown(
@@ -72,103 +80,123 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.'
+          'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.'
         }
+        noindex={!!process.env.NEXT_PUBLIC_ASTRO_URL}
+        nofollow={!!process.env.NEXT_PUBLIC_ASTRO_URL}
         openGraph={{
-          url: 'https://nx.dev' + router.asPath,
+          url: 'https://nx.dev' + currentPath,
           title: vm.title,
           description:
             vm.description ??
-            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
+            'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
             {
-              url: `https://nx.dev/images/open-graph/${router.asPath
-                .replace('/', '')
-                .replace(/\//gi, '-')}.${
+              url: `https://nx.dev/images/open-graph/${currentPath
+                .split('#')[0]
+                .split('?')[0]
+                .replace(/^\//, '')
+                .replace(/\//g, '-')}.${
                 vm.mediaImage ? getExtension(vm.mediaImage) : 'jpg'
               }`,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
           siteName: 'Nx',
           type: 'website',
         }}
+        additionalMetaTags={
+          metadata.keywords
+            ? [
+                {
+                  name: 'keywords',
+                  content: metadata.keywords,
+                },
+              ]
+            : []
+        }
       />
 
       <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
         <div id="content-wrapper" className="w-full flex-auto flex-col">
           <div className="mb-6 pt-8">
-            <Breadcrumbs path={router.asPath} />
+            <Breadcrumbs document={document} />
           </div>
           <div className="min-w-0 flex-auto pb-24 lg:pb-16">
             {/*MAIN CONTENT*/}
-            <div className="relative">
-              <div
-                ref={ref}
-                data-document="main"
-                className={cx(
-                  'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
-                  { 'xl:max-w-2xl': !hideTableOfContent }
-                )}
-              >
-                {vm.content}
-              </div>
-              {!hideTableOfContent && (
+            <div className="justify-between xl:flex">
+              <div className="relative">
                 <div
+                  ref={ref}
+                  data-document="main"
                   className={cx(
-                    'fixed right-[max(2rem,calc(50%-55rem))] top-48 z-20 hidden w-60 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
+                    'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
+                    { 'xl:max-w-2xl': !hideTableOfContent }
                   )}
                 >
-                  <TableOfContents
-                    elementRef={ref}
-                    path={router.basePath}
-                    headings={vm.tableOfContent}
-                    document={document}
+                  {vm.content}
+                </div>
+              </div>
+              {!hideTableOfContent && (
+                <div>
+                  <div
+                    className={cx(
+                      'sticky top-2 z-20 ml-[max(2rem,calc(50%-8rem))] hidden w-60 space-y-6 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
+                    )}
                   >
-                    <>
-                      {widgetData.githubStarsCount > 0 && (
+                    {widgetData.githubStarsCount > 0 && (
+                      <div className="px-6">
                         <GitHubStarWidget
                           starsCount={widgetData.githubStarsCount}
                         />
-                      )}
-                      <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
-                        <button
-                          type="button"
-                          aria-label="Give feedback on this page"
-                          title="Give feedback of this page"
-                          className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
-                          onClick={() => setShowFeedback(true)}
-                        >
-                          Feedback
-                        </button>
                       </div>
-                      <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
-                        {document.filePath ? (
-                          <a
-                            aria-hidden="true"
-                            href={[
-                              'https://github.com/nrwl/nx/blob/master',
-                              document.filePath
-                                .replace(
-                                  'nx-dev/nx-dev/public/documentation',
-                                  'docs'
-                                )
-                                .replace('public/documentation', 'docs'),
-                            ].join('/')}
-                            target="_blank"
-                            rel="noreferrer"
-                            title="Edit this page on GitHub"
+                    )}
+                    <TableOfContents
+                      elementRef={ref}
+                      path={basePath}
+                      headings={vm.tableOfContent}
+                      document={document}
+                    >
+                      <>
+                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                          <button
+                            type="button"
+                            aria-label="Give feedback on this page"
+                            title="Give feedback of this page"
                             className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
+                            onClick={() => setShowFeedback(true)}
                           >
-                            Edit this page
-                          </a>
-                        ) : null}
-                      </div>
-                    </>
-                  </TableOfContents>
+                            Feedback
+                          </button>
+                        </div>
+                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                          {document.filePath ? (
+                            <a
+                              aria-hidden="true"
+                              href={[
+                                'https://github.com/nrwl/nx/blob/master',
+                                document.filePath
+                                  .replace(
+                                    'nx-dev/nx-dev/public/documentation',
+                                    'docs'
+                                  )
+                                  .replace('public/documentation', 'docs'),
+                              ].join('/')}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Edit this page on GitHub"
+                              className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
+                            >
+                              Edit this page
+                            </a>
+                          ) : null}
+                        </div>
+                      </>
+                    </TableOfContents>
+                  </div>
                 </div>
               )}
             </div>

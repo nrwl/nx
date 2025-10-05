@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import tseslint, { type ConfigArray } from 'typescript-eslint';
 import { packageExists } from '../utils/config-utils';
 
 const isPrettierAvailable =
@@ -22,10 +22,11 @@ const isPrettierAvailable =
  * breaking changes - we should also look to replace all the @typescript-eslint
  * related plugins and rules below.
  */
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : []),
+const config: ConfigArray = tseslint.config(
+  {
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
+  },
   {
     languageOptions: {
       parser: tseslint.parser,
@@ -39,7 +40,7 @@ export default tseslint.config(
     plugins: { '@typescript-eslint': tseslint.plugin },
   },
   {
-    files: ['**/*.js', '**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     rules: {
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -78,5 +79,11 @@ export default tseslint.config(
        */
       '@typescript-eslint/no-require-imports': 'off',
     },
-  }
+  },
+  /**
+   * We include it last so it overrides the conflicting rules from the configuration blocks above.
+   */
+  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );
+
+export default config;

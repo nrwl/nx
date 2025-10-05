@@ -11,26 +11,51 @@ import { resolve } from 'path';
 
 const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
 
-const documents: any[] = [
-  ...mapJson
-    .find((x) => x.id === 'nx-documentation')
-    ?.['itemList'].map((item) => {
-      item.sidebarId = '';
-      return item;
-    }),
-  ...mapJson
-    .find((x) => x.id === 'extending-nx')
-    ?.['itemList'].map((item) => {
-      item.sidebarId = 'extending-nx';
-      return item;
-    }),
-  ...mapJson
-    .find((x) => x.id === 'ci')
-    ?.['itemList'].map((item) => {
-      item.sidebarId = 'ci';
-      return item;
-    }),
-].filter(Boolean);
+// Helper function to recursively process items including technologies
+function processItemRecursively(
+  item: any,
+  parentIds: string[] = [],
+  data: any[]
+) {
+  const idPath = [...parentIds, item.id].filter(Boolean);
+  const filename = idPath.join('-');
+
+  data.push({
+    title: item.name,
+    content: item.description || (parentIds.length > 0 ? parentIds[0] : ''),
+    mediaImage: item.mediaImage,
+    filename: filename,
+  });
+
+  if (Array.isArray(item.itemList)) {
+    item.itemList.forEach((subItem) => {
+      processItemRecursively(subItem, idPath, data);
+    });
+  }
+}
+
+const documents: any[] = [];
+
+const nxDocSection = mapJson.find((x) => x.id === 'nx-documentation');
+if (nxDocSection) {
+  nxDocSection.itemList.forEach((item) => {
+    processItemRecursively(item, [], documents);
+  });
+}
+
+const extendingSection = mapJson.find((x) => x.id === 'extending-nx');
+if (extendingSection) {
+  extendingSection.itemList.forEach((item) => {
+    processItemRecursively(item, ['extending-nx'], documents);
+  });
+}
+
+const ciSection = mapJson.find((x) => x.id === 'ci');
+if (ciSection) {
+  ciSection.itemList.forEach((item) => {
+    processItemRecursively(item, ['ci'], documents);
+  });
+}
 
 const packages: PackageMetadata[] = [
   ...readJSONSync(
@@ -55,34 +80,9 @@ const data: {
   content: string;
   mediaImage?: string;
   filename: string;
-}[] = [];
-documents.forEach((category) => {
-  data.push({
-    title: category.name,
-    content: category.description,
-    filename: [category.sidebarId, category.id].filter(Boolean).join('-'),
-  });
-  category.itemList.forEach((item) => {
-    data.push({
-      title: item.name,
-      content: item.description || category.name,
-      mediaImage: item.mediaImage,
-      filename: [category.sidebarId, category.id, item.id]
-        .filter(Boolean)
-        .join('-'),
-    });
-    item.itemList?.forEach((subItem) => {
-      data.push({
-        title: subItem.name,
-        content: subItem.description || category.name,
-        mediaImage: subItem.mediaImage,
-        filename: [category.sidebarId, category.id, item.id, subItem.id]
-          .filter(Boolean)
-          .join('-'),
-      });
-    });
-  });
-});
+}[] = documents;
+
+// Add package data
 packages.map((pkg) => {
   data.push({
     title: pkg.packageName,
@@ -213,6 +213,7 @@ console.log(
   'Generated images will be on this path:\n',
   resolve(targetFolder, '\n\n')
 );
+
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
     item.mediaImage

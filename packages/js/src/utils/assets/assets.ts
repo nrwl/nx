@@ -1,4 +1,4 @@
-import * as fastGlob from 'fast-glob';
+import { globSync } from 'tinyglobby';
 import { basename, join } from 'path';
 
 export type FileInputOutput = {
@@ -9,6 +9,7 @@ export type AssetGlob = FileInputOutput & {
   glob: string;
   ignore?: string[];
   dot?: boolean;
+  includeIgnoredFiles?: boolean;
 };
 
 export function assetGlobsToFiles(
@@ -24,10 +25,11 @@ export function assetGlobsToFiles(
     ignore: string[] = [],
     dot: boolean = false
   ) => {
-    return fastGlob.sync(pattern, {
+    return globSync(pattern, {
       cwd: input,
       onlyFiles: true,
       dot,
+      expandDirectories: false,
       ignore,
     });
   };

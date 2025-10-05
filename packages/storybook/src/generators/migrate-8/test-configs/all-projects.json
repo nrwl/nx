@@ -33,10 +33,6 @@
           }
         }
       },
-      "export": {
-        "executor": "@nx/next:export",
-        "options": { "buildTarget": "nextapp:build:production" }
-      },
       "test": {
         "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
@@ -107,10 +103,6 @@
             "dev": false
           }
         }
-      },
-      "export": {
-        "executor": "@nx/next:export",
-        "options": { "buildTarget": "nextapp-ts:build:production" }
       },
       "test": {
         "executor": "@nx/jest:jest",

@@ -1,11 +1,9 @@
 import type { Tree } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
-
-import { Linter } from '@nx/eslint';
 import addLintingGenerator from '../../add-linting/add-linting';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return;
   }
   await addLintingGenerator(host, {
@@ -16,5 +14,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipPackageJson: options.skipPackageJson,
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 }

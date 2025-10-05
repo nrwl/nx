@@ -1,3 +1,8 @@
+---
+title: Disable Graph Links Created from Analyzing Source Files
+description: Learn how to configure Nx to only use dependencies defined in package.json instead of detecting dependencies from source code analysis.
+---
+
 # Disable Graph Links Created from Analyzing Source Files
 
 If you want to disable detecting dependencies from source code and want to only use the dependencies as defined in `package.json` (the same way yarn does), you can add the following configuration to your `nx.json` file:

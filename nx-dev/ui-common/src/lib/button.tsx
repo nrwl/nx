@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import {
   AnchorHTMLAttributes,
   ForwardedRef,
@@ -16,6 +16,12 @@ interface ButtonProps {
   rounded?: 'full' | 'default';
   children: ReactNode | ReactNode[];
 }
+
+export type ButtonLinkProps = ButtonProps & {
+  className?: string;
+  href: string;
+  title: string;
+} & AnchorHTMLAttributes<HTMLAnchorElement>;
 
 const variantStyles: Record<AllowedVariants, string> = {
   primary:
@@ -36,7 +42,7 @@ const sizes: Record<AllowedSizes, string> = {
  */
 function getLayoutClassName(className = ''): string {
   return cx(
-    'group relative inline-flex opacity-100 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed transition',
+    'group relative inline-flex opacity-100 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed transition no-underline',
     className
   );
 }
@@ -99,11 +105,7 @@ export const ButtonLink = forwardRef(function (
     variant = 'primary',
     title = '',
     ...props
-  }: ButtonProps & {
-    className?: string;
-    href: string;
-    title: string;
-  } & AnchorHTMLAttributes<HTMLAnchorElement>,
+  }: ButtonLinkProps,
   ref: ForwardedRef<HTMLAnchorElement>
 ): JSX.Element {
   return (

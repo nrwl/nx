@@ -8,6 +8,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { findCycles } from './task-graph-utils';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -15,6 +16,7 @@ export class ProcessTasks {
   private readonly seen = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
+  readonly continuousDependencies: { [k: string]: string[] } = {};
   private readonly allTargetNames: string[];
 
   constructor(
@@ -47,7 +49,7 @@ export class ProcessTasks {
             target,
             configuration
           );
-          const id = this.getId(projectName, target, resolvedConfiguration);
+          const id = createTaskId(projectName, target, resolvedConfiguration);
           const task = this.createTask(
             id,
             project,
@@ -57,6 +59,7 @@ export class ProcessTasks {
           );
           this.tasks[task.id] = task;
           this.dependencies[task.id] = [];
+          this.continuousDependencies[task.id] = [];
         }
       }
     }
@@ -74,6 +77,7 @@ export class ProcessTasks {
         if (!initialTasks[t]) {
           delete this.tasks[t];
           delete this.dependencies[t];
+          delete this.continuousDependencies[t];
         }
       }
       for (let d of Object.keys(this.dependencies)) {
@@ -81,9 +85,14 @@ export class ProcessTasks {
           (dd) => !!initialTasks[dd]
         );
       }
+      for (let d of Object.keys(this.continuousDependencies)) {
+        this.continuousDependencies[d] = this.continuousDependencies[d].filter(
+          (dd) => !!initialTasks[dd]
+        );
+      }
     }
 
-    this.filterDummyTasks();
+    filterDummyTasks(this.dependencies);
 
     for (const taskId of Object.keys(this.dependencies)) {
       if (this.dependencies[taskId].length > 0) {
@@ -95,8 +104,22 @@ export class ProcessTasks {
       }
     }
 
-    return Object.keys(this.dependencies).filter(
-      (d) => this.dependencies[d].length === 0
+    filterDummyTasks(this.continuousDependencies);
+
+    for (const taskId of Object.keys(this.continuousDependencies)) {
+      if (this.continuousDependencies[taskId].length > 0) {
+        this.continuousDependencies[taskId] = [
+          ...new Set(
+            this.continuousDependencies[taskId].filter((d) => d !== taskId)
+          ).values(),
+        ];
+      }
+    }
+
+    return Object.keys(this.tasks).filter(
+      (d) =>
+        this.dependencies[d].length === 0 &&
+        this.continuousDependencies[d].length === 0
     );
   }
 
@@ -105,7 +128,7 @@ export class ProcessTasks {
     projectUsedToDeriveDependencies: string,
     configuration: string,
     overrides: Object
-  ) {
+  ): void {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
       return;
@@ -119,10 +142,12 @@ export class ProcessTasks {
       this.allTargetNames
     );
     for (const dependencyConfig of dependencyConfigs) {
-      const taskOverrides =
-        dependencyConfig.params === 'forward'
-          ? overrides
-          : { __overrides_unparsed__: [] };
+      const taskOverrides = createTaskOverrides(
+        dependencyConfig,
+        overrides,
+        task,
+        this.projectGraph
+      );
       if (dependencyConfig.projects) {
         this.processTasksForMultipleProjects(
           dependencyConfig,
@@ -198,14 +223,11 @@ export class ProcessTasks {
         dependencyConfig.target,
         configuration
       );
-      const selfTaskId = this.getId(
+      const selfTaskId = createTaskId(
         selfProject.name,
         dependencyConfig.target,
         resolvedConfiguration
       );
-      if (task.id !== selfTaskId) {
-        this.dependencies[task.id].push(selfTaskId);
-      }
       if (!this.tasks[selfTaskId]) {
         const newTask = this.createTask(
           selfTaskId,
@@ -216,12 +238,20 @@ export class ProcessTasks {
         );
         this.tasks[selfTaskId] = newTask;
         this.dependencies[selfTaskId] = [];
+        this.continuousDependencies[selfTaskId] = [];
         this.processTask(
           newTask,
           newTask.target.project,
           configuration,
           overrides
         );
+      }
+      if (task.id !== selfTaskId) {
+        if (this.tasks[selfTaskId].continuous) {
+          this.continuousDependencies[task.id].push(selfTaskId);
+        } else {
+          this.dependencies[task.id].push(selfTaskId);
+        }
       }
     }
   }
@@ -233,7 +263,7 @@ export class ProcessTasks {
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
-  ) {
+  ): void {
     if (
       !this.projectGraph.dependencies.hasOwnProperty(
         projectUsedToDeriveDependencies
@@ -258,14 +288,23 @@ export class ProcessTasks {
           dependencyConfig.target,
           configuration
         );
-        const depTargetId = this.getId(
+        const depTargetId = createTaskId(
           depProject.name,
           dependencyConfig.target,
           resolvedConfiguration
         );
 
+        const depTargetConfiguration =
+          this.projectGraph.nodes[depProject.name].data.targets[
+            dependencyConfig.target
+          ];
+
         if (task.id !== depTargetId) {
-          this.dependencies[task.id].push(depTargetId);
+          if (depTargetConfiguration.continuous) {
+            this.continuousDependencies[task.id].push(depTargetId);
+          } else {
+            this.dependencies[task.id].push(depTargetId);
+          }
         }
         if (!this.tasks[depTargetId]) {
           const newTask = this.createTask(
@@ -277,6 +316,7 @@ export class ProcessTasks {
           );
           this.tasks[depTargetId] = newTask;
           this.dependencies[depTargetId] = [];
+          this.continuousDependencies[depTargetId] = [];
 
           this.processTask(
             newTask,
@@ -286,13 +326,19 @@ export class ProcessTasks {
           );
         }
       } else {
-        const dummyId = this.getId(
+        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target
+        const dummyId = createTaskId(
           depProject.name,
-          DUMMY_TASK_TARGET,
+          task.target.project +
+            task.target.target +
+            '__' +
+            dependencyConfig.target +
+            DUMMY_TASK_TARGET,
           undefined
         );
         this.dependencies[task.id].push(dummyId);
-        this.dependencies[dummyId] = [];
+        this.dependencies[dummyId] ??= [];
+        this.continuousDependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
@@ -349,6 +395,7 @@ export class ProcessTasks {
       ),
       cache: project.data.targets[target].cache,
       parallelism: project.data.targets[target].parallelism ?? true,
+      continuous: project.data.targets[target].continuous ?? false,
     };
   }
 
@@ -363,43 +410,6 @@ export class ProcessTasks {
     return projectHasTargetAndConfiguration(project, target, configuration)
       ? configuration
       : defaultConfiguration;
-  }
-
-  getId(
-    project: string,
-    target: string,
-    configuration: string | undefined
-  ): string {
-    let id = `${project}:${target}`;
-    if (configuration) {
-      id += `:${configuration}`;
-    }
-    return id;
-  }
-
-  private filterDummyTasks() {
-    for (const [key, deps] of Object.entries(this.dependencies)) {
-      const normalizedDeps = [];
-      for (const dep of deps) {
-        if (dep.endsWith(DUMMY_TASK_TARGET)) {
-          normalizedDeps.push(
-            ...this.dependencies[dep].filter(
-              (d) => !d.endsWith(DUMMY_TASK_TARGET)
-            )
-          );
-        } else {
-          normalizedDeps.push(dep);
-        }
-      }
-
-      this.dependencies[key] = normalizedDeps;
-    }
-
-    for (const key of Object.keys(this.dependencies)) {
-      if (key.endsWith(DUMMY_TASK_TARGET)) {
-        delete this.dependencies[key];
-      }
-    }
   }
 }
 
@@ -425,6 +435,7 @@ export function createTaskGraph(
     roots,
     tasks: p.tasks,
     dependencies: p.dependencies,
+    continuousDependencies: p.continuousDependencies,
   };
 }
 
@@ -457,4 +468,103 @@ function interpolateOverrides<T = any>(
         : value;
   });
   return interpolatedArgs;
+}
+
+/**
+ * This function is used to filter out the dummy tasks from the dependencies
+ * It will manipulate the dependencies object in place
+ */
+export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
+  const cycles = findCycles({ dependencies });
+  for (const [key, deps] of Object.entries(dependencies)) {
+    if (!key.endsWith(DUMMY_TASK_TARGET)) {
+      const normalizedDeps = [];
+      for (const dep of deps) {
+        normalizedDeps.push(
+          ...getNonDummyDeps(dep, dependencies, cycles, new Set([key]))
+        );
+      }
+
+      dependencies[key] = normalizedDeps;
+    }
+  }
+
+  for (const key of Object.keys(dependencies)) {
+    if (key.endsWith(DUMMY_TASK_TARGET)) {
+      delete dependencies[key];
+    }
+  }
+}
+
+/**
+ * this function is used to get the non dummy dependencies of a task recursively
+ */
+export function getNonDummyDeps(
+  currentTask: string,
+  dependencies: { [k: string]: string[] },
+  cycles?: Set<string>,
+  seen: Set<string> = new Set()
+): string[] {
+  if (seen.has(currentTask)) {
+    return [];
+  }
+  seen.add(currentTask);
+  if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
+    if (cycles?.has(currentTask)) {
+      return [];
+    }
+    // if not a cycle, recursively get the non dummy dependencies
+    return (
+      dependencies[currentTask]?.flatMap((dep) =>
+        getNonDummyDeps(dep, dependencies, cycles, seen)
+      ) ?? []
+    );
+  } else {
+    return [currentTask];
+  }
+}
+
+function createTaskOverrides(
+  dependencyConfig: TargetDependencyConfig,
+  cliOverrides: any,
+  sourceTask: Task,
+  projectGraph: ProjectGraph
+): any {
+  const optionsToForward: any = {};
+
+  if (dependencyConfig.options === 'forward') {
+    const sourceTargetConfig =
+      projectGraph.nodes[sourceTask.target.project].data.targets?.[
+        sourceTask.target.target
+      ];
+    if (sourceTargetConfig?.options) {
+      Object.assign(optionsToForward, sourceTargetConfig.options);
+    }
+
+    if (
+      sourceTask.target.configuration &&
+      sourceTargetConfig?.configurations?.[sourceTask.target.configuration]
+    ) {
+      Object.assign(
+        optionsToForward,
+        sourceTargetConfig.configurations[sourceTask.target.configuration]
+      );
+    }
+  }
+
+  return dependencyConfig.params === 'forward'
+    ? { ...optionsToForward, ...cliOverrides }
+    : { ...optionsToForward, __overrides_unparsed__: [] };
+}
+
+function createTaskId(
+  project: string,
+  target: string,
+  configuration: string | undefined
+): string {
+  let id = `${project}:${target}`;
+  if (configuration) {
+    id += `:${configuration}`;
+  }
+  return id;
 }

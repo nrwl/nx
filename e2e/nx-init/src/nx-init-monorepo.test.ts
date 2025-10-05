@@ -6,7 +6,7 @@ import {
   runCLI,
   runCommand,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('nx init (Monorepo - legacy)', () => {
   beforeAll(() => {

@@ -44,11 +44,6 @@
       "default": false,
       "x-priority": "internal"
     },
-    "simpleName": {
-      "description": "Don't include the directory in the name of the module or standalone component entry of the library.",
-      "type": "boolean",
-      "default": false
-    },
     "addModuleSpec": {
       "description": "Add a module spec file.",
       "type": "boolean",
@@ -88,8 +83,9 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
+      "x-prompt": "Which unit test runner would you like to use?",
       "default": "jest"
     },
     "importPath": {
@@ -106,12 +102,6 @@
       "type": "string",
       "enum": ["eslint", "none"],
       "default": "eslint"
-    },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "compilationMode": {
       "description": "Specifies the compilation mode to use. If not specified, it will default to `partial` for publishable libraries and to `full` for buildable libraries. The `full` value can not be used for publishable libraries.",

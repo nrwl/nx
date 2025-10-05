@@ -1,0 +1,15 @@
+{
+  "name": "switch-data-persistence-operators-imports-to-ngrx-router-store",
+  "cli": "nx",
+  "version": "16.2.0-beta.0",
+  "requires": { "@ngrx/store": ">=16.0.0" },
+  "description": "Switch the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
+  "factory": "./src/migrations/update-16-2-0/switch-data-persistence-operators-imports-to-ngrx-router-store",
+  "implementation": "/packages/angular/src/migrations/update-16-2-0/switch-data-persistence-operators-imports-to-ngrx-router-store.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

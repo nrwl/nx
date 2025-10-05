@@ -6,12 +6,12 @@ description: This guide explains how Storybook is configured on your Nx workspac
 # Configuring Storybook on Nx
 
 {% callout type="info" title="Best practices" %}
-Read our [Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide!
+Read our [Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/recipes/best-practices) guide!
 {% /callout %}
 
 Nx does not generate a root Storybook directory and shared root Storybook configurations. Instead, it only generates a Storybook configuration for each project in your workspace. You may still manually create a root Storybook configuration file, if it is needed for your use case.
 
-You can read all about creating and using a root Storybook configuration in our guide [How to configure Webpack and Vite for Storybook](/recipes/storybook/custom-builder-configs).
+You can read all about creating and using a root Storybook configuration in our guide [How to configure Webpack and Vite for Storybook](/technologies/test-tools/storybook/recipes/custom-builder-configs).
 
 This change means that each of your projects that has Storybook configured has only one, project-level, project-specific `.storybook/main.js|ts` file that it relies on, without importing settings from external files. This simplifies the configuration process, makes it easier for the user to understand the configuration that each project is using, and also makes it easier to maintain, relying on automatic migration scripts, for example.
 
@@ -28,6 +28,6 @@ If you need to create a root Storybook configuration file, you can do so by crea
 
 ## Read our guides for Configuring Storybook
 
-You can read all our guides for configuring Storybook in our [Storybook documents page](/nx-api/storybook/documents).
+You can read all our guides for configuring Storybook in our [Storybook documents page](/technologies/test-tools/storybook/recipes).
 
-Please also make sure to read our [Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide, where you can find some best practices for using Storybook in a Nx workspace.
+Please also make sure to read our [Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/recipes/best-practices) guide, where you can find some best practices for using Storybook in a Nx workspace.

@@ -1,11 +1,14 @@
 import { Metadata } from 'next';
 import { podcastApi } from '../../lib/podcast.api';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
-import { Hero, PodcastList } from '@nx/nx-dev/ui-podcast';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
+import { Hero, PodcastList } from '@nx/nx-dev-ui-podcast';
 
 export const metadata: Metadata = {
   title: 'Nx Podcast - Updates from the Nx & Nx Cloud team',
   description: 'Latest podcasts from the Nx & Nx Cloud core team',
+  alternates: {
+    canonical: 'https://nx.dev/podcast',
+  },
   openGraph: {
     url: 'https://nx.dev/podcast',
     title: 'Nx Podcast - Updates from the Nx & Nx Cloud team',
@@ -16,11 +19,11 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],
-    siteName: 'NxDev',
+    siteName: 'Nx',
     type: 'website',
   },
 };

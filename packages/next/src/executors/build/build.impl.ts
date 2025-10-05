@@ -94,18 +94,25 @@ export default async function buildExecutor(
 
   if (options.generateLockfile) {
     const packageManager = detectPackageManager(context.root);
-    const lockFile = createLockFile(
-      builtPackageJson,
-      context.projectGraph,
-      packageManager
-    );
-    writeFileSync(
-      `${options.outputPath}/${getLockFileName(packageManager)}`,
-      lockFile,
-      {
-        encoding: 'utf-8',
-      }
-    );
+
+    if (packageManager === 'bun') {
+      logger.warn(
+        'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
+      );
+    } else {
+      const lockFile = createLockFile(
+        builtPackageJson,
+        context.projectGraph,
+        packageManager
+      );
+      writeFileSync(
+        `${options.outputPath}/${getLockFileName(packageManager)}`,
+        lockFile,
+        {
+          encoding: 'utf-8',
+        }
+      );
+    }
   }
 
   // If output path is different from source path, then copy over the config and public files.

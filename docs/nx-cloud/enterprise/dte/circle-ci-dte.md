@@ -1,8 +1,8 @@
-# Custom Distributed Task Execution on Circle CI
+# Manual Distributed Task Execution on Circle CI
 
-Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
+Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
-## Run Custom Agents on Circle CI
+## Run Agents on Circle CI
 
 Run agents directly on Circle CI with the workflow below:
 
@@ -14,8 +14,6 @@ jobs:
   main:
     docker:
       - image: cimg/node:lts-browsers
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
     steps:
       - checkout
       - run: npm ci
@@ -59,3 +57,19 @@ The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
 {% callout type="warning" title="Two Types of Parallelization" %}
 The `ordinal: [1, 2, 3]` line and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
 {% /callout %}
+
+## Rerunning jobs with DTE
+
+Rerunning only failed jobs results in agent jobs not running, which causes the CI pipeline to hang and eventually timeout. This is a common pitfall when using a CI providers "rerun failed jobs", or equivalent, feature since agent jobs will always complete successfully.
+
+To enforce rerunning all jobs, you can set up your CI pipeline to exit early with a helpful error.
+For example:
+
+> You reran only failed jobs, but CI requires rerunning all jobs.
+> Rerun all jobs in the pipeline to prevent this error.
+
+At a high level:
+
+1. Create a job that always succeeds and uploads an artifact on the pipeline with the run attempt number of the pipeline.
+2. The main and agent jobs can read the artifact file when starting and assert they are on the same re-try attempt.
+3. If the reattempt number does not match, then error with a message stating to rerun all jobs. Otherwise, the pipelines are on the same rerun and can proceed as normally.

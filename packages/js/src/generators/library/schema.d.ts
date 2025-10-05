@@ -1,7 +1,4 @@
-import type {
-  ProjectNameAndRootFormat,
-  ProjectNameAndRootOptions,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { ProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 // nx-ignore-next-line
 const { Linter, LinterType } = require('@nx/eslint'); // use require to import to avoid circular dependency
 import type { ProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';
@@ -12,7 +9,6 @@ export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
 export interface LibraryGeneratorSchema {
   directory: string;
   name?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   skipFormat?: boolean;
   tags?: string;
   skipTsConfig?: boolean;
@@ -34,9 +30,9 @@ export interface LibraryGeneratorSchema {
   skipTypeCheck?: boolean;
   minimal?: boolean;
   rootProject?: boolean;
-  simpleName?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
+  useTscExecutor?: boolean;
 }
 
 export interface NormalizedLibraryGeneratorOptions
@@ -49,5 +45,5 @@ export interface NormalizedLibraryGeneratorOptions
   importPath?: string;
   hasPlugin: boolean;
   isUsingTsSolutionConfig: boolean;
-  projectPackageManagerWorkspaceState: ProjectPackageManagerWorkspaceState;
+  shouldUseSwcJest: boolean;
 }

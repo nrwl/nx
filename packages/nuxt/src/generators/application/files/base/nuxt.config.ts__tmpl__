@@ -13,15 +13,15 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the `./.nuxt/tsconfig.json`, therefore it needs to be relative to that directory
+      extends: '../<%= relativePathToRootTsConfig %>', // Nuxt copies this string as-is to the `./.nuxt/tsconfig.json`, therefore it needs to be relative to that directory
     },
   },
   imports: {
     autoImport: true,
   },
-  <% if (style !== 'none') { %>
+  <%_ if (style !== 'none') { _%>
   css: ['~/assets/css/styles.<%= style %>'],
-  <% } %>
+  <%_ } _%>
   vite: {
     plugins: [
       nxViteTsPaths()

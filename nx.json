@@ -1,6 +1,5 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
-  "enableDbCache": true,
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -17,13 +16,16 @@
     "sharedGlobals": [
       "{workspaceRoot}/babel.config.json",
       "{workspaceRoot}/.nx/workflows/agents.yaml",
-      "{workspaceRoot}/.circleci/config.yml"
+      "{workspaceRoot}/.github/workflows/ci.yml"
     ],
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
       {
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
+      },
+      {
+        "runtime": "rustc --version"
       },
       {
         "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"]
@@ -67,27 +69,39 @@
       }
     },
     "version": {
-      "generatorOptions": {
-        "packageRoot": "build/packages/{projectName}",
-        "currentVersionResolver": "registry",
-        "skipLockFileUpdate": true,
-        "updateDependents": "never"
-      },
       "git": {
         "commit": false,
         "stageChanges": false,
         "tag": false
+      },
+      "currentVersionResolver": "registry",
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
       }
     }
   },
   "targetDefaults": {
+    "cleanup-tsconfig": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
+      }
+    },
     "nx-release-publish": {
       "options": {
-        "packageRoot": "build/packages/{projectName}"
+        "packageRoot": "dist/packages/{projectName}"
       }
     },
     "build": {
-      "dependsOn": ["build-base", "build-native"],
+      "dependsOn": [
+        "^build",
+        "typecheck",
+        "legacy-post-build",
+        "build-base",
+        "build-native"
+      ],
       "inputs": ["production", "^production"],
       "cache": true
     },
@@ -98,13 +112,6 @@
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "executor": "@nx/js:tsc",
-      "options": {
-        "outputPath": "build/{projectRoot}",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "main": "{projectRoot}/index.ts"
-      },
-      "outputs": ["{options.outputPath}"],
       "cache": true
     },
     "test-native": {
@@ -121,14 +128,7 @@
       }
     },
     "lint": {
-      "dependsOn": [
-        "build-native",
-        "^build-native",
-        "@nx/nx-source:lint-pnpm-lock"
-      ]
-    },
-    "lint-pnpm-lock": {
-      "cache": true
+      "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
       "cache": true,
@@ -136,7 +136,11 @@
     },
     "e2e-local": {
       "cache": true,
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["e2eInputs", "^production"],
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
@@ -144,20 +148,27 @@
     "e2e-macos-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--**/*": {
+    "e2e-ci--**/**": {
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false,
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false,
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -180,10 +191,51 @@
     },
     "copy-docs": {
       "cache": true
+    },
+    "legacy-post-build": {
+      "dependsOn": ["build-base"],
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
     }
   },
   "plugins": [
     "@monodon/rust",
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": [
+        "packages/angular-rspack-compiler/**",
+        "packages/angular-rspack/**"
+      ],
+      "options": {
+        "testTargetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["astro-docs/**"],
+      "options": {
+        "testTargetName": "vite:test"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
+      "options": {
+        "typecheck": true,
+        "build": {
+          "targetName": "build-base"
+        }
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["e2e/**/*"],
+      "options": {
+        "typecheck": true,
+        "build": false
+      }
+    },
     {
       "plugin": "@nx/playwright/plugin",
       "options": {
@@ -241,17 +293,151 @@
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static"
       }
+    },
+    {
+      "plugin": "@nx/gradle",
+      "exclude": [
+        "packages/react-native/src/generators/application/files/**/*"
+      ],
+      "options": {
+        "testTargetName": "test-kt"
+      }
+    },
+    "@nx/enterprise-cloud",
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "serveStorybookTargetName": "serve:storybook",
+        "buildStorybookTargetName": "build:storybook",
+        "testStorybookTargetName": "test-storybook",
+        "staticStorybookTargetName": "static:storybook"
+      }
+    },
+    {
+      "plugin": "@nx/rspack/plugin",
+      "include": ["examples/angular-rspack/**"],
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "cacheDirectory": "/tmp/nx-cache",
-  "bust": 8,
+  "bust": 1,
   "defaultBase": "master",
-  "generators": {
-    "@nx/react": {
-      "library": {}
-    }
+  "sync": {
+    "applyChanges": true
+  },
+  "conformance": {
+    "rules": [
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
+        "projects": ["docs"],
+        "options": {
+          "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
+        }
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
+        "projects": ["docs"],
+        "options": {
+          "mdGlobPattern": "blog/**/!(sitemap).md"
+        }
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
+        "projects": [
+          "!.",
+          "!create-nx-*",
+          "!cypress",
+          "!detox",
+          "!devkit",
+          "!esbuild",
+          "!eslint-plugin",
+          "!eslint",
+          "!expo",
+          "!express",
+          "!jest",
+          "!js",
+          "!module-federation",
+          "!nest",
+          "!next",
+          "!node",
+          "!nuxt",
+          "!packages/nx/**",
+          "!plugin",
+          "!react-native",
+          "!react",
+          "!rollup",
+          "!rsbuild",
+          "!rspack",
+          "!storybook",
+          "!vue",
+          "!web",
+          "!webpack",
+          "!workspace"
+        ]
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
+        "options": {
+          "versionRange": ">= 19.8",
+          "groups": [
+            ["angular-eslint"],
+            [
+              "@angular-eslint/eslint-plugin",
+              "@angular-eslint/eslint-plugin-template",
+              "@angular-eslint/template-parser",
+              "@angular-eslint/utils",
+              "@angular-eslint/schematics",
+              "@angular-eslint/test-utils",
+              "@angular-eslint/builder",
+              "@angular-eslint/bundled-angular-compiler"
+            ],
+            [
+              "typescript-eslint",
+              "@typescript-eslint/eslint-plugin",
+              "@typescript-eslint/parser",
+              "@typescript-eslint/utils",
+              "@typescript-eslint/rule-tester",
+              "@typescript-eslint/scope-manager",
+              "@typescript-eslint/typescript-estree"
+            ],
+            [
+              "@storybook/addon-onboarding",
+              "@storybook/addon-themes",
+              "@storybook/angular",
+              "@storybook/builder-webpack5",
+              "@storybook/core-webpack",
+              "@storybook/html",
+              "@storybook/html-vite",
+              "@storybook/nextjs",
+              "@storybook/preact",
+              "@storybook/preact-vite",
+              "@storybook/react",
+              "@storybook/react-vite",
+              "@storybook/react-webpack5",
+              "@storybook/server",
+              "@storybook/server-webpack5",
+              "@storybook/svelte",
+              "@storybook/svelte-vite",
+              "@storybook/sveltekit",
+              "@storybook/vue3",
+              "@storybook/vue3-vite",
+              "@storybook/web-components",
+              "@storybook/web-components-vite"
+            ]
+          ]
+        }
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+      }
+    ]
   }
 }

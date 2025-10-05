@@ -1,0 +1,12 @@
+import { <% if (useBootstrapContext) { %>BootstrapContext, <% } %>bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { config } from './app/app.config.server';
+
+<%_ if (useBootstrapContext) { _%>
+const bootstrap = (context: BootstrapContext) =>
+  bootstrapApplication(AppComponent, config, context);
+<%_ } else { _%>
+const bootstrap = () => bootstrapApplication(AppComponent, config);
+<%_ } _%>
+
+export default bootstrap;

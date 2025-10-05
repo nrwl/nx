@@ -12,14 +12,13 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "The path at which to create the component file, relative to the workspace root. By default, it is set to the root of the project.",
+        "description": "The file path to the component. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where to create the component?"
+        "x-prompt": "What is the component file path?"
       },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "x-prompt": "What name would you like to use for the component?"
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "prefix": {
         "type": "string",
@@ -96,14 +95,23 @@
       },
       "type": {
         "type": "string",
-        "description": "Adds a developer-defined type to the filename, in the format `name.type.ts`.",
-        "default": "component"
+        "description": "Append a custom type to the component's filename. It defaults to 'component' for Angular versions below v20. For Angular v20 and above, no type is appended unless specified."
       },
       "export": {
         "type": "boolean",
         "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`) if the module it belongs to is also exported or if the component is standalone.",
         "default": false,
         "x-priority": "important"
+      },
+      "exportDefault": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use default export for the component instead of a named export."
+      },
+      "ngHtml": {
+        "type": "boolean",
+        "default": false,
+        "description": "Generate component template files with an '.ng.html' file extension instead of '.html'."
       },
       "skipFormat": {
         "description": "Skip formatting files.",
@@ -113,7 +121,7 @@
       }
     },
     "required": ["path"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `my-component` with inline styles and inline template:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `my-component` with OnPush Change Detection Strategy:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --changeDetection=OnPush\n```\n\n{% /tab %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nGenerate a component named `Card` at `apps/my-app/src/lib/card/card.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card.ts\n```\n\n{% /tab %}\n\n{% tab label=\"Without Providing the File Extension\" %}\n\nGenerate a component named `Card` at `apps/my-app/src/lib/card/card.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card\n```\n\n{% /tab %}\n\n{% tab label=\"With Different Symbol Name\" %}\n\nGenerate a component named `Custom` at `apps/my-app/src/lib/card/card.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --name=custom\n```\n\n{% /tab %}\n\n{% tab label=\"With a Component Type\" %}\n\nGenerate a component named `CardComponent` at `apps/my-app/src/lib/card/card.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --type=component\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `Card` with inline styles and inline template:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `Card` with `OnPush` Change Detection Strategy:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --changeDetection=OnPush\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["c"],

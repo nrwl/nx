@@ -14,7 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
@@ -39,10 +39,10 @@ describe('@nx/react-native (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/react-native:application ${appName} --directory=apps/${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --directory=apps/${appName} --bundler=webpack --e2eTestRunner=cypress --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     runCLI(
-      `generate @nx/react-native:library ${libName} --directory=libs/${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+      `generate @nx/react-native:library ${libName} --directory=libs/${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive --unitTestRunner=jest --linter=eslint`
     );
   });
   afterAll(() => {
@@ -52,6 +52,25 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should build for web', async () => {
     expect(() => runCLI(`build ${appName}`)).not.toThrow();
+  });
+
+  it('should have dependencies synced after React Native app creation', () => {
+    // Check that the app's package.json exists
+    checkFilesExist(`apps/${appName}/package.json`);
+
+    // Read the app's package.json
+    const appPackageJson = readJson(`apps/${appName}/package.json`);
+
+    // Verify that the app package.json has dependencies section
+    expect(appPackageJson.dependencies).toBeDefined();
+
+    // Verify that essential React Native dependencies are automatically synced
+    expect(appPackageJson.dependencies).toEqual(
+      expect.objectContaining({
+        react: '*',
+        'react-native': '*',
+      })
+    );
   });
 
   it('should test and lint', async () => {
@@ -172,7 +191,7 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName}/.storybook/main.ts`,
@@ -265,7 +284,7 @@ describe('@nx/react-native (legacy)', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/react-native:application ${appName} --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -274,7 +293,9 @@ describe('@nx/react-native (legacy)', () => {
     // check tests pass
     expect(() => runCLI(`test ${appName}`)).not.toThrow();
 
-    runCLI(`generate @nx/react-native:library ${libName} --buildable`);
+    runCLI(
+      `generate @nx/react-native:library ${libName} --buildable --unitTestRunner=jest --linter=eslint`
+    );
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -286,7 +307,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     expect(() => runCLI(`build ${appName2}`)).not.toThrow();
     if (runE2ETests()) {
@@ -294,7 +315,7 @@ describe('@nx/react-native (legacy)', () => {
     }
 
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName2} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName2}/.storybook/main.ts`,

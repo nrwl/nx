@@ -2,19 +2,21 @@ import {
   generateFiles,
   getPackageManagerVersion,
   names,
-  NxJsonConfiguration,
-  PackageManager,
-  Tree,
+  type NxJsonConfiguration,
+  type PackageManager,
+  type Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { join } from 'path';
-import { Preset } from '../utils/presets';
-import { deduceDefaultBase } from '../../utilities/default-base';
-import { NormalizedSchema } from './new';
 import { connectToNxCloud } from 'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
+import { join } from 'path';
+import { gte } from 'semver';
+import { deduceDefaultBase } from '../../utilities/default-base';
+import { nxVersion } from '../../utils/versions';
+import { Preset } from '../utils/presets';
+import type { NormalizedSchema } from './new';
+import { setupAiAgentsGenerator } from 'nx/src/ai/set-up-ai-agents/set-up-ai-agents';
 
 type PresetInfo = {
   generateAppCmd?: string;
@@ -75,18 +77,6 @@ const presetToPluginMap: { [key in Preset]: PresetInfo } = {
     generateLibCmd: '@nx/react',
     learnMoreLink:
       'https://nx.dev/nx-api/next?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
-  },
-  [Preset.RemixMonorepo]: {
-    generateAppCmd: '@nx/remix',
-    generateLibCmd: '@nx/react',
-    learnMoreLink:
-      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
-  },
-  [Preset.RemixStandalone]: {
-    generateAppCmd: '@nx/remix',
-    generateLibCmd: '@nx/react',
-    learnMoreLink:
-      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
   },
   [Preset.ReactNative]: {
     generateAppCmd: '@nx/react-native',
@@ -195,9 +185,23 @@ export async function generateWorkspaceFiles(
 
   await createReadme(tree, options, token);
 
+  let aiAgentsCallback: () => unknown | undefined = undefined;
+  if (options.aiAgents && options.aiAgents.length > 0) {
+    aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+      directory: options.directory,
+      writeNxCloudRules: options.nxCloud !== 'skip',
+      packageVersion: 'latest',
+      agents: [...options.aiAgents],
+    });
+  }
+
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
-    createNpmrc(tree, options);
+    if (gte(packageManagerVersion, '10.6.0')) {
+      addPnpmSettings(tree, options);
+    } else {
+      createNpmrc(tree, options);
+    }
   } else if (options.packageManager === 'yarn') {
     if (+packageMajor >= 2) {
       createYarnrcYml(tree, options);
@@ -209,7 +213,7 @@ export async function generateWorkspaceFiles(
   addNpmScripts(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
-  return token;
+  return { token, aiAgentsCallback };
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -271,12 +275,11 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
-    options.preset === Preset.RemixStandalone ||
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : (options.preset === Preset.TS &&
-          process.env.NX_ADD_PLUGINS !== 'false' &&
-          process.env.NX_ADD_TS_PLUGIN !== 'false') ||
+          options.workspaces &&
+          process.env.NX_ADD_PLUGINS !== 'false') ||
         options.preset === Preset.NPM
       ? './files-package-based-repo'
       : './files-integrated-repo';
@@ -294,7 +297,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
 async function createReadme(
   tree: Tree,
-  { name, appName, directory, preset, nxCloud }: NormalizedSchema,
+  { name, appName, directory, preset, nxCloud, workspaces }: NormalizedSchema,
   nxCloudToken?: string
 ) {
   const formattedNames = names(name);
@@ -306,7 +309,7 @@ async function createReadme(
   };
 
   const nxCloudOnboardingUrl = nxCloudToken
-    ? await createNxCloudOnboardingURL('readme', nxCloudToken)
+    ? await createNxCloudOnboardingURL('readme', nxCloudToken, undefined, false)
     : null;
 
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
@@ -314,8 +317,7 @@ async function createReadme(
     isJsStandalone: preset === Preset.TsStandalone,
     isTsPreset: preset === Preset.TS,
     isUsingNewTsSolutionSetup:
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false',
+      process.env.NX_ADD_PLUGINS !== 'false' && workspaces,
     isEmptyRepo: !appName,
     appName,
     generateAppCmd: presetInfo.generateAppCmd,
@@ -333,6 +335,15 @@ async function createReadme(
 }
 
 // ensure that pnpm install add all the missing peer deps
+
+function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
+  tree.write(
+    join(options.directory, 'pnpm-workspace.yaml'),
+    `autoInstallPeers: true
+strictPeerDependencies: false
+`
+  );
+}
 
 function createNpmrc(tree: Tree, options: NormalizedSchema) {
   tree.write(
@@ -416,18 +427,37 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NPM ||
     (options.preset === Preset.TS &&
       process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false')
+      options.workspaces) ||
+    ((options.preset === Preset.Expo ||
+      options.preset === Preset.NextJs ||
+      options.preset === Preset.ReactMonorepo ||
+      options.preset === Preset.ReactNative ||
+      options.preset === Preset.VueMonorepo ||
+      options.preset === Preset.Nuxt ||
+      options.preset === Preset.NodeMonorepo ||
+      options.preset === Preset.Express) &&
+      options.workspaces)
   ) {
+    const workspaces = options.workspaceGlobs ?? ['packages/*'];
     if (options.packageManager === 'pnpm') {
-      tree.write(
-        join(options.directory, 'pnpm-workspace.yaml'),
-        `packages:
-  - 'packages/*'
-`
-      );
+      const pnpmWorkspacePath = join(options.directory, 'pnpm-workspace.yaml');
+
+      let content = `packages:
+  ${workspaces.map((workspace) => `- "${workspace}"`).join('\n  ')}
+`;
+
+      if (tree.exists(pnpmWorkspacePath)) {
+        // already added to set the peer deps settings for pnpm 10.6.0+
+        const existingContent = tree.read(pnpmWorkspacePath, 'utf-8');
+        if (existingContent.trim().length) {
+          content = `${content}\n${existingContent}`;
+        }
+      }
+
+      tree.write(pnpmWorkspacePath, content);
     } else {
       updateJson(tree, join(options.directory, 'package.json'), (json) => {
-        json.workspaces = ['packages/*'];
+        json.workspaces = workspaces;
         return json;
       });
     }

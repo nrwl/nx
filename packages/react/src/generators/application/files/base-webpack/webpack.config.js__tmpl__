@@ -1,14 +1,15 @@
-<% if (webpackPluginOptions) { %>
+<%_ if (webpackPluginOptions) { _%>
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
   output: {
-    path: join(__dirname, '<%= offsetFromRoot %><%= webpackPluginOptions.outputPath %>'),
+    path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
+    clean: true,
   },
   devServer: {
-    port: 4200,
+    port: <%= port %>,
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,
@@ -34,7 +35,7 @@ module.exports = {
     }),
   ],
 };
-<% } else { %>
+<%_ } else { _%>
 const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
 
@@ -49,7 +50,8 @@ module.exports = composePlugins(
   (config) => {
     // Update the webpack config as needed here.
     // e.g. `config.plugins.push(new MyPlugin())`
+    config.output.clean = true;
     return config;
   }
 );
-<% } %>
+<%_ } _%>

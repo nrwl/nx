@@ -213,7 +213,10 @@ function applyDefaults(
   options: WebpackConfigDevServerOptions,
   buildOptions: any
 ) {
-  if (options.port === undefined) {
+  if (!options) {
+    options = {};
+  }
+  if (options?.port === undefined) {
     options.port = 4200;
   }
 

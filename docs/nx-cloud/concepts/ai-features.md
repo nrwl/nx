@@ -3,7 +3,6 @@
 Nx Cloud AI offers a suite of features designed to **enhance your development workflow with AI-driven capabilities**. These tools assist in troubleshooting, optimizing resource allocation, and improving your overall development process.
 
 - **[Explain with AI](/ci/features/explain-with-ai)** - This feature uses AI to provide detailed explanations about failed tasks.
-- **Automatic Resource Allocation** (Coming Soon) - This upcoming feature will use custom AI/ML models to dynamically allocate resources based on your project’s specific needs. It optimizes performance by efficiently assigning Nx Agents to achieve target durations for main and PR branches.
 
 ## Enable Nx Cloud AI Features
 
@@ -17,7 +16,7 @@ Ensure that you **accept the AI terms** to start using the AI features.
 
 {% callout type="info" title="AI Features Availability" %}
 
-AI features are available only for the [Nx Cloud Pro plan](/pricing). If you are on the Hobby plan, you can start a free trial to test AI features in your workspace.
+AI features are available only for the [Nx Cloud Team plan](/pricing).
 
 {% /callout %}
 

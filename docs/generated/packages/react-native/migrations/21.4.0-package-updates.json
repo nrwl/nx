@@ -1,0 +1,66 @@
+{
+  "name": "21.4.0-package-updates",
+  "version": "21.4.0-beta.0",
+  "packages": {
+    "react-native": { "version": "~0.79.3", "alwaysAddToPackageJson": false },
+    "@react-native-community/cli": {
+      "version": "~18.0.0",
+      "alwaysAddToPackageJson": true
+    },
+    "@react-native-community/cli-platform-android": {
+      "version": "~18.0.0",
+      "alwaysAddToPackageJson": true
+    },
+    "@react-native-community/cli-platform-ios": {
+      "version": "~18.0.0",
+      "alwaysAddToPackageJson": true
+    },
+    "@react-native/babel-preset": {
+      "version": "~0.79.3",
+      "alwaysAddToPackageJson": false
+    },
+    "@react-native/metro-config": {
+      "version": "~0.79.3",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-web": {
+      "version": "~0.20.0",
+      "alwaysAddToPackageJson": false
+    },
+    "react": { "version": "19.0.0", "alwaysAddToPackageJson": false },
+    "react-dom": { "version": "19.0.0", "alwaysAddToPackageJson": false },
+    "react-test-renderer": {
+      "version": "~19.0.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@types/react": { "version": "~19.0.10", "alwaysAddToPackageJson": false },
+    "@types/react-dom": {
+      "version": "~19.0.6",
+      "alwaysAddToPackageJson": false
+    },
+    "@testing-library/react-native": {
+      "version": "~13.2.0",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-svg-transformer": {
+      "version": "~1.5.1",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-svg": {
+      "version": "~15.11.2",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-svg-web": {
+      "version": "~1.0.9",
+      "alwaysAddToPackageJson": false
+    },
+    "@babel/runtime": { "version": "~7.27.6", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/react-native",
+  "schema": null,
+  "type": "migration"
+}

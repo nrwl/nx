@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -58,6 +58,8 @@
               "@nx/playwright",
               "@nx/jest",
               "@nx/rollup",
+              "@nx/rsbuild",
+              "@nx/rspack",
               "@nx/storybook",
               "@nx/vite",
               "@nx/webpack",
@@ -82,10 +84,8 @@
               "sass",
               "sass-loader",
               "style-loader",
-              "stylus-loader",
               "swc-loader",
               "tsconfig-paths-webpack-plugin",
-              "url-loader",
               "webpack",
               "webpack-merge",
               // used via the CT react plugin installed via vite plugin
@@ -96,5 +96,5 @@
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

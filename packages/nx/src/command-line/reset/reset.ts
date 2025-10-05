@@ -1,12 +1,16 @@
 import { rmSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { daemonClient } from '../../daemon/client/client';
 import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
 import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
 import { ResetCommandOptions } from './command-object';
-
 import { getCloudClient } from '../../nx-cloud/utilities/client';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { readNxJson } from '../../config/configuration';
+import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
@@ -22,6 +26,9 @@ export async function resetHandler(args: ResetCommandOptions) {
     args.onlyCache === undefined &&
     args.onlyWorkspaceData === undefined;
 
+  const nxJson = readNxJson();
+  const cloudEnabled = isNxCloudUsed(nxJson);
+
   const startupMessage = all
     ? 'Resetting the Nx cache and stopping the daemon.'
     : 'Resetting:';
@@ -35,6 +42,9 @@ export async function resetHandler(args: ResetCommandOptions) {
     }
     if (args.onlyWorkspaceData) {
       bodyLines.push('- Workspace data directory');
+    }
+    if (args.onlyCloud && cloudEnabled) {
+      bodyLines.push('- Nx Cloud Client');
     }
   }
   output.note({ title: startupMessage, bodyLines });
@@ -68,9 +78,10 @@ export async function resetHandler(args: ResetCommandOptions) {
       );
     }
   }
-  if (all || args.onlyCloud) {
+  if ((cloudEnabled && all) || args.onlyCloud) {
     try {
       await resetCloudClient();
+      await removeInstalledNxCloudClient();
     } catch (e) {
       errors.push('Failed to reset the Nx Cloud client.', e.toString());
     }
@@ -100,6 +111,17 @@ async function resetCloudClient() {
   try {
     (await getCloudClient(getCloudOptions())).invoke('cleanup');
   } catch {}
+}
+
+function removeInstalledNxCloudClient() {
+  return incrementalBackoff(
+    INCREMENTAL_BACKOFF_FIRST_DELAY,
+    INCREMENTAL_BACKOFF_MAX_DURATION,
+    () => {
+      const cloudClientDir = getCloudClientLocation();
+      rmSync(join(cloudClientDir, 'cloud'), { recursive: true, force: true });
+    }
+  );
 }
 
 function cleanupCacheEntries() {

@@ -9,6 +9,14 @@ import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
+import {
+  getModuleFederationConfig,
+  getRemotes,
+  parseStaticRemotesConfig,
+  StaticRemotesConfig,
+} from '@nx/module-federation/src/utils';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { fork } from 'child_process';
@@ -16,15 +24,6 @@ import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { basename, extname, join } from 'path';
-import {
-  getModuleFederationConfig,
-  getRemotes,
-} from '../../utils/module-federation';
-import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
-import {
-  parseStaticRemotesConfig,
-  StaticRemotesConfig,
-} from '../../utils/module-federation/parse-static-remotes-config';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import type { RspackExecutorSchema } from '../rspack/schema';
 import { ModuleFederationStaticServerSchema } from './schema';
@@ -48,7 +47,7 @@ function getBuildAndServeOptionsFromServeTarget(
 
   let pathToManifestFile = join(
     context.root,
-    context.projectGraph.nodes[context.projectName].data.sourceRoot,
+    getProjectSourceRoot(context.projectGraph.nodes[context.projectName].data),
     'assets/module-federation.manifest.json'
   );
   if (serveOptions.pathToManifestFile) {
@@ -368,9 +367,10 @@ export default async function* moduleFederationStaticServer(
         }
 
         try {
-          const portsToWaitFor = staticFileServerIter
-            ? [options.serveOptions.staticRemotesPort, ...remotes.remotePorts]
-            : [...remotes.remotePorts];
+          const portsToWaitFor =
+            staticFileServerIter && options.serveOptions.staticRemotesPort
+              ? [options.serveOptions.staticRemotesPort, ...remotes.remotePorts]
+              : [...remotes.remotePorts];
           await Promise.all(
             portsToWaitFor.map((port) =>
               waitForPortOpen(port, {

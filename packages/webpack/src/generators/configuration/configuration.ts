@@ -17,7 +17,6 @@ import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function configurationGenerator(
   tree: Tree,
@@ -30,8 +29,6 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'webpack', 'configuration');
-
   const tasks: GeneratorCallback[] = [];
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -136,6 +133,7 @@ const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 module.exports = composePlugins(withNx(), withWeb(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
+  config.output.clean = true;
   return config;
 });
 `
@@ -172,6 +170,7 @@ const { composePlugins, withNx } = require('@nx/webpack');
 module.exports = composePlugins(withNx(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
+  config.output.clean = true;
   return config;
 });
 `

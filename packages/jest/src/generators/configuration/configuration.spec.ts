@@ -8,6 +8,7 @@ import {
   updateProjectConfiguration,
   writeJson,
   updateJson,
+  readNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestConfigObject } from '../../utils/config/functions';
@@ -55,7 +56,9 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     expect(tree.read('libs/lib1/src/test-setup.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import 'jest-preset-angular/setup-jest';
+      "import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+
+      setupZoneTestEnv();
       "
     `);
     expect(tree.exists('libs/lib1/jest.config.ts')).toBeTruthy();
@@ -335,7 +338,10 @@ describe('jestProject', () => {
         compiler: 'swc',
         supportTsx: true,
       } as JestProjectSchema);
+
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
+      // assert the TS solution setup doesn't leak into the old/integrated setup
+      expect(tree.exists('libs/lib1/.spec.swcrc')).toBeFalsy();
     });
   });
 
@@ -453,6 +459,235 @@ describe('jestProject', () => {
           preset: '../../jest.preset.cjs',
           coverageDirectory: '../../coverage/libs/lib1',
         };
+        "
+      `);
+    });
+  });
+
+  describe('vscode recommended extensions', () => {
+    it('should add the "firsttris.vscode-jest-runner" extension to the vscode recommended extensions', async () => {
+      tree.write('.vscode/extensions.json', '{}');
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(tree.read('.vscode/extensions.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "recommendations": ["esbenp.prettier-vscode", "firsttris.vscode-jest-runner"]
+        }
+        "
+      `);
+    });
+
+    it('should not duplicate the "firsttris.vscode-jest-runner" extension in the vscode recommended extensions', async () => {
+      writeJson(tree, '.vscode/extensions.json', {
+        recommendations: ['firsttris.vscode-jest-runner'],
+      });
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(
+        readJson(tree, '.vscode/extensions.json').recommendations.filter(
+          (ext: string) => ext === 'firsttris.vscode-jest-runner'
+        ).length
+      ).toBe(1);
+    });
+
+    it('should not add the "firsttris.vscode-jest-runner" if the jest preset already exists', async () => {
+      tree.write('.vscode/extensions.json', '{}');
+      tree.write('jest.preset.js', 'export default {}');
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(tree.read('.vscode/extensions.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "recommendations": ["esbenp.prettier-vscode"]
+        }
+        "
+      `);
+    });
+
+    it('should not create the .vscode/extensions.json file if it does not exist', async () => {
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(tree.exists('.vscode/extensions.json')).toBeFalsy();
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: { composite: true },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+
+      addProjectConfiguration(tree, 'pkg1', {
+        root: 'packages/pkg1',
+        sourceRoot: 'packages/pkg1/src',
+        targets: {
+          lint: {
+            executor: '@nx/eslint:lint',
+            options: {},
+          },
+        },
+      });
+      writeJson(tree, 'packages/pkg1/tsconfig.json', {
+        files: [],
+        include: [],
+        references: [],
+      });
+    });
+
+    it('should generate files', async () => {
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+      });
+
+      expect(tree.exists('packages/pkg1/tsconfig.spec.json')).toBeTruthy();
+      expect(tree.exists('packages/pkg1/jest.config.ts')).toBeTruthy();
+      expect(tree.read('packages/pkg1/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'pkg1',
+          preset: '../../jest.preset.js',
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
+      expect(tree.exists('packages/pkg1/.spec.swcrc')).toBeFalsy();
+    });
+
+    it(`should setup a task pipeline for the test target to depend on the deps' build target`, async () => {
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+      });
+
+      const nxJson = readNxJson(tree);
+      expect(nxJson.targetDefaults.test.dependsOn).toStrictEqual(['^build']);
+    });
+
+    it('should generate files with swc compiler', async () => {
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+        compiler: 'swc',
+      });
+
+      expect(tree.exists('packages/pkg1/tsconfig.spec.json')).toBeTruthy();
+      expect(tree.exists('packages/pkg1/jest.config.ts')).toBeTruthy();
+      expect(tree.read('packages/pkg1/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: 'pkg1',
+          preset: '../../jest.preset.js',
+          transform: {
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
+      expect(tree.exists('packages/pkg1/.spec.swcrc')).toBeTruthy();
+      expect(tree.read('packages/pkg1/.spec.swcrc', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "jsc": {
+            "target": "es2017",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true,
+              "dynamicImport": true
+            },
+            "transform": {
+              "decoratorMetadata": true,
+              "legacyDecorator": true
+            },
+            "keepClassNames": true,
+            "externalHelpers": true,
+            "loose": true
+          },
+          "module": {
+            "type": "es6"
+          },
+          "sourceMaps": true,
+          "exclude": []
+        }
+        "
+      `);
+    });
+
+    it('should generate the correct options for swc when "supportTsx: true"', async () => {
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+        compiler: 'swc',
+        supportTsx: true,
+      });
+
+      expect(tree.read('packages/pkg1/.spec.swcrc', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "jsc": {
+            "target": "es2017",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true,
+              "dynamicImport": true,
+              "tsx": true
+            },
+            "transform": {
+              "decoratorMetadata": true,
+              "legacyDecorator": true,
+              "react": {
+                "runtime": "automatic"
+              }
+            },
+            "keepClassNames": true,
+            "externalHelpers": true,
+            "loose": true
+          },
+          "module": {
+            "type": "es6"
+          },
+          "sourceMaps": true,
+          "exclude": []
+        }
         "
       `);
     });

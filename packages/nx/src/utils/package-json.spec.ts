@@ -48,7 +48,12 @@ describe('readTargetsFromPackageJson', () => {
         },
       },
     };
-    const result1 = readTargetsFromPackageJson(packageJson, nxJson1);
+    const result1 = readTargetsFromPackageJson(
+      packageJson,
+      nxJson1,
+      workspaceRoot,
+      '/root'
+    );
     expect(result1['nx-release-publish']).toMatchInlineSnapshot(`
       {
         "dependsOn": [
@@ -69,7 +74,12 @@ describe('readTargetsFromPackageJson', () => {
         },
       },
     };
-    const result2 = readTargetsFromPackageJson(packageJson, nxJson2);
+    const result2 = readTargetsFromPackageJson(
+      packageJson,
+      nxJson2,
+      workspaceRoot,
+      '/root'
+    );
     expect(result2['nx-release-publish']).toMatchInlineSnapshot(`
       {
         "dependsOn": [
@@ -83,7 +93,12 @@ describe('readTargetsFromPackageJson', () => {
   });
 
   it('should read targets from project.json and package.json', () => {
-    const result = readTargetsFromPackageJson(packageJson, {});
+    const result = readTargetsFromPackageJson(
+      packageJson,
+      {},
+      workspaceRoot,
+      '/root'
+    );
     expect(result).toMatchInlineSnapshot(`
       {
         "build": {
@@ -123,7 +138,9 @@ describe('readTargetsFromPackageJson', () => {
           },
         },
       },
-      {}
+      {},
+      workspaceRoot,
+      '/root'
     );
     expect(result).toEqual({
       build: { ...packageJsonBuildTarget, outputs: ['custom'] },
@@ -148,9 +165,10 @@ describe('readTargetsFromPackageJson', () => {
           includedScripts: ['test'],
         },
       },
-      {}
+      {},
+      workspaceRoot,
+      '/root'
     );
-
     expect(result).toMatchInlineSnapshot(`
       {
         "nx-release-publish": {
@@ -190,7 +208,9 @@ describe('readTargetsFromPackageJson', () => {
           },
         },
       },
-      {}
+      {},
+      workspaceRoot,
+      '/root'
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -228,7 +248,9 @@ describe('readTargetsFromPackageJson', () => {
           },
         },
       },
-      {}
+      {},
+      workspaceRoot,
+      '/root'
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -261,7 +283,9 @@ describe('readTargetsFromPackageJson', () => {
           },
         },
       },
-      {}
+      {},
+      workspaceRoot,
+      '/root'
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -289,7 +313,9 @@ describe('readTargetsFromPackageJson', () => {
           },
         },
       },
-      {}
+      {},
+      workspaceRoot,
+      '/root'
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -356,7 +382,9 @@ describe('readTargetsFromPackageJson', () => {
           includedScripts: [],
         },
       },
-      {}
+      {},
+      workspaceRoot,
+      '/root'
     );
     expect(result.test).toMatchInlineSnapshot(`
       {
@@ -382,6 +410,7 @@ const exclusions = new Set([
   // exports doesn't contain 'package.json', and main is an empty line.
   // This means the function fails.
   '@types/js-yaml',
+  '@webcontainer/api',
 ]);
 
 describe('readModulePackageJson', () => {

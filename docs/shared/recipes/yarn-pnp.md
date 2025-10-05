@@ -1,3 +1,8 @@
+---
+title: Using Yarn Plug'n'Play with Nx
+description: Learn how to configure and use Yarn Plug'n'Play (PnP) in your Nx workspace to improve installation speed, reduce disk usage, and enforce dependency constraints.
+---
+
 # Using Yarn Plug'n'Play
 
 Plug'n'Play (PnP) is an innovative installation strategy for Node that tries to solve the challenges of using `node_modules` for storing installed packages:
@@ -54,13 +59,7 @@ Once the config is changed you need to run the install again:
  yarn install
 ```
 
-Running install generates a `.pnp.cjs` file that contains a mapping of external packages and strips all the packages from the `node_modules`. The contents of your `node_modules` should now look like this:
-
-```text
-node_modules/
-└── .cache
-    └──  nx
-```
+Running install generates a `.pnp.cjs` file that contains a mapping of external packages and strips all the packages from the `node_modules`.
 
 ## Dealing with Inaccessible Dependencies
 

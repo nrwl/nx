@@ -1,4 +1,4 @@
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
   DependencyType,
   joinPathFragments,
@@ -6,6 +6,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -23,7 +24,10 @@ import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -33,8 +37,8 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 describe('Cypress Component Testing Configuration', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
   // TODO(@leosvelperez): Turn this to adding the plugin
 
   beforeEach(() => {
@@ -417,6 +421,14 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should exclude Cypress-related files from tsconfig.editor.json for applications', async () => {
+    // the tsconfig.editor.json is only generated for versions lower than v20
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@angular/core': '~19.2.0',
+      };
+      return json;
+    });
     await generateTestApplication(tree, {
       directory: 'fancy-app',
       bundler: 'webpack',
@@ -732,14 +744,11 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     expect(
-      tree.read(
-        'secondary/src/lib/button/fancy-button.component.cy.ts',
-        'utf-8'
-      )
+      tree.read('secondary/src/lib/button/fancy-button.cy.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
       tree.read(
-        'secondary/src/lib/button/standalone-fancy-button.component.cy.ts',
+        'secondary/src/lib/button/standalone-fancy-button.cy.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -753,15 +762,15 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await setup(tree, { project: 'cool-lib', name: 'abc', standalone: false });
     tree.write(
-      'cool-lib/src/lib/abc-one/abc-one.component.cy.ts',
+      'cool-lib/src/lib/abc-one/abc-one.cy.ts',
       `const msg = 'should not overwrite abc-one';`
     );
     tree.write(
-      'cool-lib/src/lib/abc-two/abc-two.component.cy.ts',
+      'cool-lib/src/lib/abc-two/abc-two.cy.ts',
       `const msg = 'should not overwrite abc-two';`
     );
     tree.write(
-      'cool-lib/src/lib/abc-three/abc-three.component.cy.ts',
+      'cool-lib/src/lib/abc-three/abc-three.cy.ts',
       `const msg = 'should not overwrite abc-three';`
     );
     projectGraph = {
@@ -914,11 +923,7 @@ async function setup(
     });
 
     if (options.withInputs) {
-      const cmpPath = joinPathFragments(
-        options.basePath,
-        name,
-        `${name}.component.ts`
-      );
+      const cmpPath = joinPathFragments(options.basePath, name, `${name}.ts`);
       const oldContent = tree.read(cmpPath, 'utf-8');
 
       const newContent = oldContent.replace(
@@ -950,20 +955,18 @@ function getCmpsFromTree(
     `${options.name}-three`,
   ].map((n) => {
     expect(
-      tree.exists(joinPathFragments(options.basePath, n, `${n}.component.ts`))
+      tree.exists(joinPathFragments(options.basePath, n, `${n}.ts`))
     ).toBeTruthy();
     expect(
-      tree.exists(
-        joinPathFragments(options.basePath, n, `${n}.component.cy.ts`)
-      )
+      tree.exists(joinPathFragments(options.basePath, n, `${n}.cy.ts`))
     ).toBeTruthy();
     return {
       cmp: tree.read(
-        joinPathFragments(options.basePath, n, `${n}.component.ts`),
+        joinPathFragments(options.basePath, n, `${n}.ts`),
         'utf-8'
       ),
       cy: tree.read(
-        joinPathFragments(options.basePath, n, `${n}.component.cy.ts`),
+        joinPathFragments(options.basePath, n, `${n}.cy.ts`),
         'utf-8'
       ),
     };

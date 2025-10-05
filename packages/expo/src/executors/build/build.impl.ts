@@ -1,6 +1,7 @@
 import {
   detectPackageManager,
   ExecutorContext,
+  isWorkspacesEnabled,
   names,
   PackageManager,
   readJsonFile,
@@ -59,7 +60,10 @@ function runCliBuild(
       ['build', ...createBuildOptions(options)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
-        env: process.env,
+        env: {
+          ...(options.local ? { YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' } : {}),
+          ...process.env,
+        },
       }
     );
 
@@ -114,16 +118,13 @@ function copyPackageJsonAndLock(
   packageManager: PackageManager,
   workspaceRoot: string,
   projectRoot: string
-) {
+): () => void {
   const packageJson = pathResolve(workspaceRoot, 'package.json');
   const rootPackageJson = readJsonFile<PackageJson>(packageJson);
   // do not copy package.json and lock file if workspaces are enabled
-  if (
-    (packageManager === 'pnpm' &&
-      existsSync(pathResolve(workspaceRoot, 'pnpm-workspace.yaml'))) ||
-    rootPackageJson.workspaces
-  ) {
-    return;
+  if (isWorkspacesEnabled(packageManager, workspaceRoot)) {
+    // no resource taken, no resource cleaned up
+    return () => {};
   }
 
   const packageJsonProject = pathResolve(projectRoot, 'package.json');
@@ -143,6 +144,17 @@ function copyPackageJsonAndLock(
   projectPackageJson.dependencies = rootPackageJsonDependencies;
   projectPackageJson.devDependencies = rootPackageJsonDevDependencies;
 
+  const projectOverrides = projectPackageJson.overrides;
+  const projectResolutions = projectPackageJson.resolutions;
+
+  if (rootPackageJson.overrides) {
+    projectPackageJson.overrides = rootPackageJson.overrides;
+  }
+  // if overrides exists, give precedence to it over resolutions
+  if (!rootPackageJson.overrides && rootPackageJson.resolutions) {
+    projectPackageJson.resolutions = rootPackageJson.resolutions;
+  }
+
   // Copy dependencies from root package.json to project package.json
   writeJsonFile(packageJsonProject, projectPackageJson);
 
@@ -153,6 +165,18 @@ function copyPackageJsonAndLock(
     // Reset project package.json to original state
     projectPackageJson.dependencies = projectPackageJsonDependencies;
     projectPackageJson.devDependencies = projectPackageJsonDevDependencies;
+
+    if (projectOverrides) {
+      projectPackageJson.overrides = projectOverrides;
+    } else {
+      delete projectPackageJson.overrides;
+    }
+    if (projectResolutions) {
+      projectPackageJson.resolutions = projectResolutions;
+    } else {
+      delete projectPackageJson.resolutions;
+    }
+
     writeFileSync(
       packageJsonProject,
       JSON.stringify(projectPackageJson, null, 2)

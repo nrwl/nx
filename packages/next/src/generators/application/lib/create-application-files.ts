@@ -16,6 +16,7 @@ import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const offsetFromRoot = _offsetFromRoot(options.appProjectRoot);
@@ -30,20 +31,22 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     '.next/types/**/*.ts'
   );
 
-  // scope tsconfig to the project directory so that it doesn't include other projects/libs
-  const rootPath = options.rootProject
-    ? options.src
-      ? 'src/'
-      : options.appDir
-      ? 'app/'
-      : 'pages/'
-    : '';
+  const rootPath =
+    options.rootProject || isUsingTsSolutionSetup(host)
+      ? options.src
+        ? 'src/'
+        : options.appDir
+        ? 'app/'
+        : 'pages/'
+      : '';
+
   const templateVariables = {
-    ...names(options.name),
+    ...names(options.projectSimpleName),
     ...options,
     dot: '.',
     tmpl: '',
     offsetFromRoot,
+    appDirType: options.appDir ? 'app' : 'pages',
     layoutTypeSrcPath,
     rootPath,
     layoutTypeDistPath,
@@ -54,8 +57,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     appContent: createAppJsx(options.projectName),
     styleContent: createStyleRules(),
     pageStyleContent: `.page {}`,
-
     stylesExt: options.style === 'less' ? options.style : 'css',
+    isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
   };
 
   const generatedAppFilePath = options.src
@@ -129,7 +132,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       delete json.compilerOptions.paths;
 
       updatedJson = {
-        ...updateJson,
+        ...updatedJson,
         compilerOptions: {
           ...updatedJson.compilerOptions,
           ...appJSON.compilerOptions,

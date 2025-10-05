@@ -1,4 +1,4 @@
-import { joinPathFragments, type ExecutorContext } from '@nx/devkit';
+import { joinPathFragments, output, type ExecutorContext } from '@nx/devkit';
 import type { ESLint } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
@@ -141,8 +141,21 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
         success: false,
       };
     }
-    // If some unexpected error, rethrow
-    throw err;
+
+    // log unexpected errors
+    const lines = (err.message ? err.message : err.toString()).split('\n');
+    const bodyLines: string[] = lines.slice(1);
+    if (err.stack) {
+      bodyLines.push(...err.stack.split('\n'));
+    }
+    output.error({
+      title: lines[0],
+      bodyLines,
+    });
+
+    return {
+      success: false,
+    };
   }
 
   if (lintResults.length === 0 && errorOnUnmatchedPattern) {

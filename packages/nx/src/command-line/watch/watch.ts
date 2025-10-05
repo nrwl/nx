@@ -9,6 +9,7 @@ export interface WatchArguments {
   includeGlobalWorkspaceFiles?: boolean;
   verbose?: boolean;
   command?: string;
+  initialRun?: boolean;
 
   projectNameEnvName?: string;
   fileChangesEnvName?: string;
@@ -132,7 +133,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
               [this.projectNameEnv]: env[this.projectNameEnv],
               [this.fileChangesEnv]: env[this.fileChangesEnv],
             },
-            windowsHide: true,
+            windowsHide: false,
           });
           commandExec.on('close', () => {
             resolve();
@@ -189,6 +190,18 @@ export async function watch(args: WatchArguments) {
     args.projectNameEnvName,
     args.fileChangesEnvName
   );
+
+  // Run the command initially if requested
+  if (args.initialRun) {
+    args.verbose && output.logSingleLine('running command initially...');
+
+    const initialProjects = args.all
+      ? [] // When using --all, we don't need to pass specific projects
+      : args.projects || [];
+
+    // Execute the initial run
+    await batchQueue.enqueue(initialProjects, []);
+  }
 
   await daemonClient.registerFileWatcher(
     {

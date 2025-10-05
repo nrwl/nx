@@ -6,7 +6,7 @@ description: Learn how to set up individual Storybook instances for each scope w
 # Publishing Storybook: One Storybook instance per scope
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
+[Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/recipes/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
 
 Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/concepts/decisions/project-dependency-rules) documentation page.
 
@@ -32,8 +32,8 @@ happynrwl/
 |   |   |   |   ├── src/
 |   |   |   |   |   ├──lib
 |   |   |   |   |   |   ├──my-header
-|   |   |   |   |   |   |   ├── my-header.component.ts
-|   |   |   |   |   |   |   ├── my-header.component.stories.ts
+|   |   |   |   |   |   |   ├── my-header.ts
+|   |   |   |   |   |   |   ├── my-header.stories.ts
 |   |   |   |   |   |   |   └── etc...
 |   |   |   |   |   |   └── etc...
 |   |   |   |   |   └── etc...
@@ -85,10 +85,6 @@ Let's assume in this case that all our libraries are using Angular.
 ### Generate the libraries
 
 Let's generate three Angular libraries, one for each scope, and let's call them `storybook-host-client`, `storybook-host-admin`, and `storybook-host-shared`. We can do this by running the following commands:
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The commands below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```shell
 nx g @nx/angular:lib libs/storybook-host-client

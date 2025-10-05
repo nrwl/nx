@@ -6,8 +6,8 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/handle-errors';
+import { output } from '../../utils/output';
 import { PlanCheckOptions, PlanOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -69,7 +69,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         title: 'Version plans are not enabled',
         bodyLines: [
           'Please ensure at least one release group has version plans enabled in your Nx release configuration if you want to use this command.',
-          // TODO: Add docs link here once it is available
+          '',
+          'Learn more about version plans here: https://nx.dev/recipes/nx-release/file-based-versioning-version-plans',
         ],
       });
       return 1;

@@ -5,10 +5,12 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
+import { normalizeOptions } from '../rspack/lib/normalize-options';
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import { DevServerExecutorSchema } from './schema';
 
@@ -30,14 +32,28 @@ export default async function* runExecutor(
 
   const buildOptions = readTargetOptions(buildTarget, context);
 
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildOptions.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = options.buildTarget;
+
+  const metadata = context.projectsConfigurations.projects[context.projectName];
+  const sourceRoot = getProjectSourceRoot(metadata);
+  const normalizedBuildOptions = normalizeOptions(
+    buildOptions,
+    context.root,
+    metadata.root,
+    sourceRoot
+  );
   let devServerConfig: DevServer = getDevServerOptions(
     context.root,
     options,
-    buildOptions
+    normalizedBuildOptions
   );
-
   const compiler = await createCompiler(
-    { ...buildOptions, devServer: devServerConfig, mode: options.mode },
+    {
+      ...normalizedBuildOptions,
+      devServer: devServerConfig,
+      mode: options.mode,
+    },
     context
   );
 
@@ -49,10 +65,9 @@ export default async function* runExecutor(
   devServerConfig = {
     ...devServerConfig,
     ...firstCompiler.options.devServer,
-    port: devServerConfig.port,
   };
 
-  const baseUrl = `http://localhost:${options.port ?? 4200}`;
+  const baseUrl = `http://localhost:${devServerConfig.port ?? 4200}`;
 
   return yield* createAsyncIterable(({ next }) => {
     const server = new RspackDevServer(

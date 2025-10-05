@@ -25,7 +25,10 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
-import { waitForDaemonToExitAndCleanupProcessJson } from '../cache';
+import {
+  getDaemonProcessIdSync,
+  waitForDaemonToExitAndCleanupProcessJson,
+} from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
@@ -34,7 +37,10 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
-import { HandleGlobMessage } from '../message-types/glob';
+import {
+  HandleGlobMessage,
+  HandleMultiGlobMessage,
+} from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
   HandleNxWorkspaceFilesMessage,
@@ -47,7 +53,12 @@ import {
   GET_FILES_IN_DIRECTORY,
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
-import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
+import {
+  HASH_GLOB,
+  HASH_MULTI_GLOB,
+  HandleHashGlobMessage,
+  HandleHashMultiGlobMessage,
+} from '../message-types/hash-glob';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -77,10 +88,24 @@ import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import {
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
+} from '../../project-graph/plugins/public-api';
+import {
+  HandlePostTasksExecutionMessage,
+  HandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
+  NX_VERBOSE_LOGGING: 'true',
+  NX_PERF_LOGGING: 'true',
+  NX_NATIVE_LOGGING: 'nx=debug',
 };
 
 export type UnregisterCallback = () => void;
@@ -194,6 +219,14 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
+    let spinner: DelayedSpinner;
+    // If the graph takes a while to load, we want to show a spinner.
+    spinner = new DelayedSpinner(
+      'Calculating the project graph on the Nx Daemon'
+    ).scheduleMessageUpdate(
+      'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
+      { ciDelay: 60_000, delay: 30_000 }
+    );
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
@@ -208,6 +241,8 @@ export class DaemonClient {
       } else {
         throw e;
       }
+    } finally {
+      spinner?.cleanup();
     }
   }
 
@@ -318,6 +353,15 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  multiGlob(globs: string[], exclude?: string[]): Promise<string[][]> {
+    const message: HandleMultiGlobMessage = {
+      type: 'MULTI_GLOB',
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   getWorkspaceContextFileData(): Promise<FileData[]> {
     const message: HandleContextFileDataMessage = {
       type: GET_CONTEXT_FILE_DATA,
@@ -352,6 +396,14 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  hashMultiGlob(globGroups: string[][]): Promise<string[]> {
+    const message: HandleHashMultiGlobMessage = {
+      type: HASH_MULTI_GLOB,
+      globGroups: globGroups,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   getFlakyTasks(hashes: string[]): Promise<string[]> {
     const message: HandleGetFlakyTasks = {
       type: GET_FLAKY_TASKS,
@@ -377,7 +429,7 @@ export class DaemonClient {
       type: RECORD_TASK_RUNS,
       taskRuns,
     };
-    return this.sendMessageToDaemon(message);
+    return this.sendToDaemonViaQueue(message);
   }
 
   getSyncGeneratorChanges(
@@ -420,6 +472,26 @@ export class DaemonClient {
       createdFiles,
       updatedFiles,
       deletedFiles,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPreTasksExecution(
+    context: PreTasksExecutionContext
+  ): Promise<NodeJS.ProcessEnv[]> {
+    const message: HandlePreTasksExecutionMessage = {
+      type: PRE_TASKS_EXECUTION,
+      context,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPostTasksExecution(
+    context: PostTasksExecutionContext
+  ): Promise<void> {
+    const message: HandlePostTasksExecutionMessage = {
+      type: POST_TASKS_EXECUTION,
+      context,
     };
     return this.sendToDaemonViaQueue(message);
   }
@@ -538,6 +610,31 @@ export class DaemonClient {
     });
   }
 
+  private retryMessageAfterNewDaemonStarts() {
+    const [msg, res, rej] = [
+      this.currentMessage,
+      this.currentResolve,
+      this.currentReject,
+    ];
+    // If we get to this point the daemon is about to close, and we don't
+    // want to halt on our daemon terminated unexpectedly condition,
+    // so we decrement the promise queue to make it look empty.
+    this.queue.decrementQueueCounter();
+    if (msg) {
+      setTimeout(() => {
+        // We wait a bit to allow the server to finish shutting down before
+        // retrying the message, which will start a new daemon. Part of
+        // the process of starting up the daemon clears this.currentMessage etc
+        // so we need to store them before waiting.
+        this.sendToDaemonViaQueue(msg).then(res, rej);
+      }, 50);
+    } else {
+      throw new Error(
+        'Daemon client attempted to retry a message without a current message'
+      );
+    }
+  }
+
   private handleMessage(serializedResult: string) {
     try {
       performance.mark('json-parse-start');
@@ -549,7 +646,15 @@ export class DaemonClient {
         'json-parse-end'
       );
       if (parsedResult.error) {
-        this.currentReject(parsedResult.error);
+        if (
+          'message' in parsedResult.error &&
+          (parsedResult.error.message === 'NX_VERSION_CHANGED' ||
+            parsedResult.error.message === 'LOCK_FILES_CHANGED')
+        ) {
+          this.retryMessageAfterNewDaemonStarts();
+        } else {
+          this.currentReject(parsedResult.error);
+        }
       } else {
         performance.measure(
           'total for sendMessageToDaemon()',
@@ -579,6 +684,12 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
+    if (global.NX_PLUGIN_WORKER) {
+      throw new Error(
+        'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
+      );
+    }
+
     mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
     if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
@@ -594,7 +705,7 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: true,
+        windowsHide: false,
         shell: false,
         env: {
           ...process.env,
@@ -630,14 +741,18 @@ export class DaemonClient {
 
   async stop(): Promise<void> {
     try {
-      await this.sendMessageToDaemon({ type: FORCE_SHUTDOWN });
-      await waitForDaemonToExitAndCleanupProcessJson();
+      const pid = getDaemonProcessIdSync();
+      if (pid) {
+        process.kill(pid, 'SIGTERM');
+      }
     } catch (err) {
-      output.error({
-        title:
-          err?.message ||
-          'Something unexpected went wrong when stopping the daemon server',
-      });
+      if ((err as any).code !== 'ESRCH') {
+        output.error({
+          title:
+            err?.message ||
+            'Something unexpected went wrong when stopping the daemon server',
+        });
+      }
     }
 
     removeSocketDir();

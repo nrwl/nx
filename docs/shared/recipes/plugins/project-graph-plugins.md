@@ -1,14 +1,9 @@
+---
+title: Extending the Project Graph
+description: Learn how to create project graph plugins for Nx to add custom nodes and dependencies, enabling support for additional languages and technologies.
+---
+
 # Extending the Project Graph of Nx
-
-{% callout type="info" title="Looking for `processProjectGraph`?" %}
-
-Prior to Nx 16.7, a plugin could use `processProjectGraph`, `projectFilePatterns`, and `registerProjectTargets` to modify the project graph. This interface is still supported, but it is deprecated. We recommend using the new interface described below. For documentation on the v1 plugin api, see [here](/deprecated/v1-nx-plugin-api)
-
-{% /callout %}
-
-{% callout type="caution" title="Experimental" %}
-This API is experimental and might change.
-{% /callout %}
 
 The Project Graph is the representation of the source code in your repo. Projects can have files associated with them. Projects can have dependencies on each other.
 
@@ -16,8 +11,12 @@ One of the best features of Nx the ability to construct the project graph automa
 
 Project graph plugins are able to add new nodes or dependencies to the project graph. This allows you to extend the project graph with new projects and dependencies. The API is defined by two exported members, which are described below:
 
-- [createNodes](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
+- [createNodesV2](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
 - [createDependencies](#adding-new-dependencies-to-the-project-graph): This function allows a plugin to tell Nx about dependencies between projects.
+
+{% callout type="warning" title="Disable the Nx Daemon during development" %}
+When developing project graph plugins, disable the [Nx Daemon](/concepts/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
+{% /callout %}
 
 ## Adding Plugins to Workspace
 
@@ -34,7 +33,7 @@ You can register a plugin by adding it to the plugins array in `nx.json`:
 
 ## Adding New Nodes to the Project Graph
 
-You can add nodes to the project graph with [`createNodes`](/nx-api/devkit/documents/CreateNodes). This is the API that Nx uses under the hood to identify Nx projects coming from a `project.json` file or a `package.json` that's listed in a package manager's workspaces section.
+You can add nodes to the project graph with [`createNodesV2`](/reference/core-api/devkit/documents/CreateNodesV2). This is the API that Nx uses under the hood to identify Nx projects coming from a `project.json` file or a `package.json` that's listed in a package manager's workspaces section.
 
 ### Identifying Projects
 
@@ -55,20 +54,45 @@ Note: This is a shallow merge, so if you have a target with the same name in bot
 
 A simplified version of Nx's built-in `project.json` plugin is shown below, which adds a new project to the project graph for each `project.json` file it finds. This should be exported from the entry point of your plugin, which is listed in `nx.json`
 
-```typescript {% fileName="/my-plugin/index.ts" %}
-export const createNodes: CreateNodes = [
-  '**/project.json',
-  (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
-    const projectConfiguration = readJsonFile(projectConfigurationFile);
-    const root = dirname(projectConfigurationFile);
+```typescript {% fileName="/my-plugin/src/index.ts" %}
+import {
+  CreateNodesContextV2,
+  createNodesFromFiles,
+  CreateNodesV2,
+  readJsonFile,
+} from '@nx/devkit';
+import { dirname } from 'path';
 
-    return {
-      projects: {
-        [root]: projectConfiguration,
-      },
-    };
+export interface MyPluginOptions {}
+
+export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
+  '**/project.json',
+  async (configFiles, options, context) => {
+    return await createNodesFromFiles(
+      (configFile, options, context) =>
+        createNodesInternal(configFile, options, context),
+      configFiles,
+      options,
+      context
+    );
   },
 ];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: MyPluginOptions | undefined,
+  context: CreateNodesContextV2
+) {
+  const projectConfiguration = readJsonFile(configFilePath);
+  const root = dirname(configFilePath);
+
+  // Project configuration to be merged into the rest of the Nx configuration
+  return {
+    projects: {
+      [root]: projectConfiguration,
+    },
+  };
+}
 ```
 
 {% callout type="warning" title="Dynamic target configurations can't be migrated" %}
@@ -80,43 +104,70 @@ If you create targets for a project within a plugin's code, the Nx migration gen
 
 {% /callout %}
 
-#### Example (extending projects / adding targets)
+#### Example (extending projects / adding inferred targets)
 
 When writing a plugin to add support for some tooling, it may need to add a target to an existing project. For example, our @nx/jest plugin adds a target to the project for running Jest tests. This is done by checking for the presence of a jest configuration file, and if it is present, adding a target to the project.
 
 Most of Nx's first party plugins are written to add a target to a given project based on the configuration files present for that project. The below example shows how a plugin could add a target to a project based on the presence of a `tsconfig.json` file.
 
-```typescript {% fileName="/my-plugin/index.ts" %}
-export const createNodes: CreateNodes = [
+```typescript {% fileName="/my-plugin/src/index.ts" %}
+import {
+  CreateNodesContextV2,
+  createNodesFromFiles,
+  CreateNodesV2,
+  readJsonFile,
+} from '@nx/devkit';
+import { existsSync } from 'fs';
+import { dirname, join } from 'path';
+
+export interface MyPluginOptions {}
+
+export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
   '**/tsconfig.json',
-  (fileName: string, opts, context: CreateNodesContext) => {
-    const root = dirname(fileName);
+  async (configFiles, options, context) => {
+    return await createNodesFromFiles(
+      (configFile, options, context) =>
+        createNodesInternal(configFile, options, context),
+      configFiles,
+      options,
+      context
+    );
+  },
+];
 
-    const isProject =
-      existsSync(join(root, 'project.json')) ||
-      existsSync(join(root, 'package.json'));
-    if (!isProject) {
-      return {};
-    }
+async function createNodesInternal(
+  configFilePath: string,
+  options: MyPluginOptions | undefined,
+  context: CreateNodesContextV2
+) {
+  const projectConfiguration = readJsonFile(configFilePath);
+  const projectRoot = dirname(configFilePath);
 
-    return {
-      projects: {
-        [root]: {
-          targets: {
-            build: {
-              command: `tsc -p ${fileName}`,
-            },
+  const isProject =
+    existsSync(join(projectRoot, 'project.json')) ||
+    existsSync(join(projectRoot, 'package.json'));
+
+  if (!isProject) {
+    return {};
+  }
+
+  return {
+    projects: {
+      [projectRoot]: {
+        targets: {
+          build: {
+            command: `tsc -p ${configFilePath}`,
           },
         },
       },
-    };
-  },
-];
+    },
+  };
+}
 ```
 
 By checking for the presence of a `project.json` or `package.json` file, the plugin can be more confident that the project it is modifying is an existing Nx project.
 
-When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, abd then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that run before them if a merge is not possible.
+When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, and then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that ran before them if a merge is not possible.
 
 Nx considers two identified projects to be the same if and only if they have the same root. If two projects are identified with the same name, but different roots, there will be an error.
 
@@ -145,7 +196,7 @@ External nodes are identified by a unique name, and if plugins identify an exter
 
 It's more common for plugins to create new dependencies. First-party code contained in the workspace is added to the project graph automatically. Whether your project contains TypeScript or say Java, both projects will be created in the same way. However, Nx does not know how to analyze Java sources, and that's what plugins can do.
 
-The shape of the [`createDependencies`](/nx-api/devkit/documents/CreateDependencies) function follows:
+The shape of the [`createDependencies`](/reference/core-api/devkit/documents/CreateDependencies) function follows:
 
 ```typescript
 export type CreateDependencies<T> = (
@@ -265,7 +316,7 @@ Breaking down this example, we can see that it follows this flow:
 
 ## Accepting Plugin Options
 
-When looking at `createNodes`, and `createDependencies` you may notice a parameter called `options`. This is the first parameter for `createDependencies` or the second parameter for `createDependencies`.
+When looking at `createNodesV2`, and `createDependencies` you may notice a parameter called `options`. This is the first parameter for `createDependencies` or the second parameter for `createDependencies`.
 
 By default, its typed as unknown. This is because it belongs to the plugin author. The `CreateNodes`, `CreateDependencies`, and `NxPluginV2` types all accept a generic parameter that allows you to specify the type of the options.
 
@@ -289,20 +340,29 @@ As an example, the below `nx.json` file specifies a plugin called `my-plugin` an
 `my-plugin` could then consume these options to add a tag to each project it detected:
 
 ```typescript
+import { createNodesFromFiles } from '@nx/devkit';
+import { dirname } from 'path';
+
 type MyPluginOptions = { tagName: string };
 
-export const createNodes: CreateNodes<MyPluginOptions> = [
-  '**/project.json',
-  (fileName, opts, ctx) => {
-    const root = dirname(fileName);
+export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
+  '**/tsconfig.json',
+  async (configFiles, options, context) => {
+    return await createNodesFromFiles(
+      (configFile, options, context) =>
+        const root = dirname(configFile);
 
-    return {
-      projects: {
-        [root]: {
-          tags: opts.tagName ? [opts.tagName] : [],
-        },
-      },
-    };
+        return {
+          projects: {
+            [root]: {
+              tags: options.tagName ? [options.tagName] : [],
+            },
+          },
+        };
+      configFiles,
+      options,
+      context
+    );
   },
 ];
 ```
@@ -312,8 +372,6 @@ This functionality is available in Nx 17 or higher.
 ## Visualizing the Project Graph
 
 You can then visualize the project graph as described [here](/features/explore-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
-
-It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing.
 
 <!-- TODO (@AgentEnder): update the nx-go-project-graph-plugin to v2 API and re-add this section -->
 <!-- ## Example Project Graph Plugin

@@ -1,10 +1,10 @@
 import { createProjectGraphAsync, formatFiles, Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
-  migrateProjectExecutorsToPluginV1,
+  migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePosTargetTransformer } from './lib/serve-post-target-tranformer';
 
@@ -17,11 +17,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
 
-  const migratedProjects = await migrateProjectExecutorsToPluginV1(
+  const migratedProjects = await migrateProjectExecutorsToPlugin(
     tree,
     projectGraph,
     '@nx/next/plugin',
-    createNodes,
+    createNodesV2,
     {
       buildTargetName: 'build',
       devTargetName: 'dev',

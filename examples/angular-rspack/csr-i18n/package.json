@@ -1,0 +1,34 @@
+{
+  "name": "examples-angular-rspack-csr-i18n",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "@nx/angular-rspack": "workspace:*"
+  },
+  "devDependencies": {
+    "@rspack/core": "1.5.0",
+    "@rspack/cli": "1.5.0"
+  },
+  "nx": {
+    "i18n": {
+      "sourceLocale": "en-GB",
+      "locales": {
+        "fr": {
+          "translation": "examples/angular-rspack/csr-i18n/src/locale/messages.fr.xlf"
+        },
+        "es": {
+          "translation": "examples/angular-rspack/csr-i18n/src/locale/messages.es.xlf",
+          "subPath": "es-ES"
+        }
+      }
+    },
+    "targets": {
+      "build": {
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
+}

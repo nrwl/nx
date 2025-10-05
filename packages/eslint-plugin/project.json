@@ -4,10 +4,14 @@
   "sourceRoot": "packages/eslint-plugin",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/eslint-plugin/README.md"],
+      "command": "node ./scripts/copy-readme.js eslint-plugin"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "main": "packages/eslint-plugin/src/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/eslint-plugin",
@@ -42,13 +46,6 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/eslint-plugin"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js eslint-plugin"
       }
     }
   }

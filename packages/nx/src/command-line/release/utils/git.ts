@@ -2,9 +2,12 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
+import { relative } from 'node:path';
+import { minimatch } from 'minimatch';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
+import { isPrerelease } from './shared';
 
 export interface GitCommitAuthor {
   name: string;
@@ -23,6 +26,11 @@ export interface Reference {
   value: string;
 }
 
+export interface GitTagAndVersion {
+  tag: string;
+  extractedVersion: string;
+}
+
 export interface GitCommit extends RawGitCommit {
   description: string;
   type: string;
@@ -34,6 +42,13 @@ export interface GitCommit extends RawGitCommit {
   revertedHashes: string[];
 }
 
+export interface GetLatestGitTagForPatternOptions {
+  checkAllBranchesWhen?: boolean | string[];
+  preid?: string;
+  releaseTagPatternRequireSemver: boolean;
+  releaseTagPatternStrictPreid: boolean;
+}
+
 function escapeRegExp(string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 }
@@ -42,17 +57,111 @@ function escapeRegExp(string) {
 const SEMVER_REGEX =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/g;
 
+/**
+ * Extract the tag and version from a tag string
+ *
+ * @param tag - The tag string to extract the tag and version from
+ * @param tagRegexp - The regex to use to extract the tag and version from the tag string
+ *
+ * @returns The tag and version
+ */
+export function extractTagAndVersion(
+  tag: string,
+  tagRegexp: string,
+  options: GetLatestGitTagForPatternOptions
+): GitTagAndVersion {
+  const { releaseTagPatternRequireSemver } = options;
+
+  const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
+  let version = releaseTagPatternRequireSemver
+    ? rest.filter((r) => {
+        return r.match(SEMVER_REGEX);
+      })[0]
+    : rest[0];
+
+  return {
+    tag: latestMatchingTag,
+    extractedVersion: version ?? null,
+  };
+}
+
+/**
+ * Get the latest git tag for the configured release tag pattern.
+ *
+ * This function will:
+ * - Get all tags from the git repo, sorted by version
+ * - Filter the tags into a list with SEMVER-compliant tags, matching the release tag pattern
+ * - If a preid is provided, prioritise tags for that preid, then semver tags without a preid
+ * - If no preid is provided, search only for stable semver tags (i.e. no pre-release or build metadata)
+ *
+ * @param releaseTagPattern - The pattern to filter the tags list by
+ * @param additionalInterpolationData - Additional data used when interpolating the release tag pattern
+ * @param options - The options to use when getting the latest git tag for the pattern
+ *
+ * @returns The tag and version
+ */
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
-  additionalInterpolationData = {}
-): Promise<{ tag: string; extractedVersion: string } | null> {
+  additionalInterpolationData = {},
+  options: GetLatestGitTagForPatternOptions
+): Promise<GitTagAndVersion | null> {
+  const {
+    checkAllBranchesWhen,
+    releaseTagPatternRequireSemver,
+    releaseTagPatternStrictPreid,
+    preid,
+  } = options;
+
+  /**
+   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+   * falling back to all branches if no match is found on the current branch.
+   *
+   * - If checkAllBranchesWhen is true it will cause us to ALWAYS check all branches for the latest match.
+   * - If checkAllBranchesWhen is explicitly set to false it will cause us to ONLY check the current branch for the latest match.
+   * - If checkAllBranchesWhen is an array of strings it will cause us to check all branches WHEN the current branch is one of the strings in the array.
+   */
+  let alwaysCheckAllBranches = false;
+  if (typeof checkAllBranchesWhen !== 'undefined') {
+    if (typeof checkAllBranchesWhen === 'boolean') {
+      alwaysCheckAllBranches = checkAllBranchesWhen;
+    } else if (Array.isArray(checkAllBranchesWhen)) {
+      /**
+       * Get the current git branch and determine whether to check all branches based on the checkAllBranchesWhen parameter
+       */
+      const currentBranch = await execCommand('git', [
+        'rev-parse',
+        '--abbrev-ref',
+        'HEAD',
+      ]).then((r) => r.trim());
+      // Check exact match first
+      alwaysCheckAllBranches = checkAllBranchesWhen.includes(currentBranch);
+      // Check if any glob pattern matches next
+      if (!alwaysCheckAllBranches) {
+        alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
+          const r = minimatch.makeRe(pattern, { dot: true });
+          if (!r) {
+            return false;
+          }
+          return r.test(currentBranch);
+        });
+      }
+    }
+  }
+
+  const defaultGitArgs = [
+    // Apply git config to take version suffixes into account when sorting, e.g. 1.0.0 is newer than 1.0.0-beta.1
+    '-c',
+    'versionsort.suffix=-',
+    'tag',
+    '--sort',
+    '-v:refname',
+  ];
+
   try {
     let tags: string[];
     tags = await execCommand('git', [
-      'tag',
-      '--sort',
-      '-v:refname',
-      '--merged',
+      ...defaultGitArgs,
+      ...(alwaysCheckAllBranches ? [] : ['--merged']),
     ]).then((r) =>
       r
         .trim()
@@ -60,15 +169,21 @@ export async function getLatestGitTagForPattern(
         .map((t) => t.trim())
         .filter(Boolean)
     );
-    if (!tags.length) {
+
+    if (
+      // Do not run this fallback if the user explicitly set checkAllBranchesWhen to false
+      checkAllBranchesWhen !== false &&
+      !tags.length &&
+      // There is no point in running this fallback if we already checked against all branches
+      !alwaysCheckAllBranches
+    ) {
       // try again, but include all tags on the repo instead of just --merged ones
-      tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
-        (r) =>
-          r
-            .trim()
-            .split('\n')
-            .map((t) => t.trim())
-            .filter(Boolean)
+      tags = await execCommand('git', defaultGitArgs).then((r) =>
+        r
+          .trim()
+          .split('\n')
+          .map((t) => t.trim())
+          .filter(Boolean)
       );
     }
 
@@ -86,26 +201,59 @@ export async function getLatestGitTagForPattern(
       .replace('%v%', '(.+)')
       .replace('%p%', '(.+)')}`;
 
-    const matchingSemverTags = tags.filter(
-      (tag) =>
-        // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
-        !!tag.match(tagRegexp) &&
-        tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
-    );
+    const matchingTags = tags.filter((tag) => {
+      if (releaseTagPatternRequireSemver) {
+        // Match against Semver Regex when using semverVersioning to ensure only valid semver tags are matched
+        return (
+          !!tag.match(tagRegexp) &&
+          tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
+        );
+      } else {
+        return !!tag.match(tagRegexp);
+      }
+    });
 
-    if (!matchingSemverTags.length) {
+    if (!matchingTags.length) {
       return null;
     }
 
-    const [latestMatchingTag, ...rest] = matchingSemverTags[0].match(tagRegexp);
-    const version = rest.filter((r) => {
-      return r.match(SEMVER_REGEX);
-    })[0];
+    if (!releaseTagPatternStrictPreid) {
+      // If not using strict preid, we can just return the first matching tag
+      return extractTagAndVersion(matchingTags[0], tagRegexp, options);
+    }
 
-    return {
-      tag: latestMatchingTag,
-      extractedVersion: version,
-    };
+    if (preid && preid.length > 0) {
+      // When a preid is provided, first try to find a tag for it
+      const preidReleaseTags = matchingTags.filter((tag) => {
+        const match = tag.match(tagRegexp);
+        if (!match) return false;
+
+        const version = match.find((part) => part.match(SEMVER_REGEX));
+        return version && version.includes(`-${preid}.`);
+      });
+
+      if (preidReleaseTags.length > 0) {
+        return extractTagAndVersion(preidReleaseTags[0], tagRegexp, options);
+      }
+    }
+
+    // Then try to find the latest stable release tag
+    const stableReleaseTags = matchingTags.filter((tag) => {
+      const matches = tag.match(tagRegexp);
+
+      if (!matches) return false;
+
+      const [, version] = matches;
+      return version && !isPrerelease(version);
+    });
+
+    // If there are stable release tags, use the latest one
+    if (stableReleaseTags.length > 0) {
+      return extractTagAndVersion(stableReleaseTags[0], tagRegexp, options);
+    }
+
+    // Otherwise return null
+    return null;
   } catch {
     return null;
   }
@@ -122,25 +270,33 @@ export async function getGitDiff(
     range = `${from}..${to}`;
   }
 
-  // Use a unique enough separator that we can be relatively certain will not occur within the commit message itself
-  const separator = '§§§';
-
+  // Use unique enough separators that we can be relatively certain will not occur within the commit message itself
+  const commitMetadataSeparator = '§§§';
+  const commitsSeparator = '|@-------@|';
   // https://git-scm.com/docs/pretty-formats
-  const r = await execCommand('git', [
+  const args = [
     '--no-pager',
     'log',
     range,
-    `--pretty="----%n%s${separator}%h${separator}%an${separator}%ae%n%b"`,
+    `--pretty="${commitsSeparator}%n%s${commitMetadataSeparator}%h${commitMetadataSeparator}%an${commitMetadataSeparator}%ae%n%b"`,
     '--name-status',
-  ]);
+  ];
+  // Support cases where the nx workspace root is located at a nested path within the git repo
+  const relativePath = await getGitRootRelativePath();
+  if (relativePath) {
+    args.push(`--relative=${relativePath}`);
+  }
+
+  const r = await execCommand('git', args);
 
   return r
-    .split('----\n')
+    .split(`${commitsSeparator}\n`)
     .splice(1)
     .map((line) => {
       const [firstLine, ..._body] = line.split('\n');
-      const [message, shortHash, authorName, authorEmail] =
-        firstLine.split(separator);
+      const [message, shortHash, authorName, authorEmail] = firstLine.split(
+        commitMetadataSeparator
+      );
       const r: RawGitCommit = {
         message,
         shortHash,
@@ -356,10 +512,12 @@ export async function gitPush({
   gitRemote,
   dryRun,
   verbose,
+  additionalArgs,
 }: {
   gitRemote?: string;
   dryRun?: boolean;
   verbose?: boolean;
+  additionalArgs?: string | string[];
 }) {
   const commandArgs = [
     'push',
@@ -370,6 +528,13 @@ export async function gitPush({
     // Set custom git remote if provided
     ...(gitRemote ? [gitRemote] : []),
   ];
+  if (additionalArgs) {
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
+  }
 
   if (verbose) {
     console.log(
@@ -403,7 +568,12 @@ export function parseConventionalCommitsMessage(message: string): {
 } | null {
   const match = message.match(ConventionalCommitRegex);
   if (!match) {
-    return null;
+    return {
+      type: '__INVALID__',
+      scope: '',
+      description: message,
+      breaking: false,
+    };
   }
 
   return {
@@ -414,20 +584,38 @@ export function parseConventionalCommitsMessage(message: string): {
   };
 }
 
-function extractReferencesFromCommitMessage(
-  message: string,
-  shortHash: string
-): Reference[] {
+export function extractReferencesFromCommit(commit: RawGitCommit): Reference[] {
   const references: Reference[] = [];
-  for (const m of message.matchAll(PullRequestRE)) {
+
+  // Extract GitHub style PR references from commit message
+  for (const m of commit.message.matchAll(PullRequestRE)) {
     references.push({ type: 'pull-request', value: m[1] });
   }
-  for (const m of message.matchAll(IssueRE)) {
+
+  // Extract GitLab style merge request references from commit body
+  for (const m of commit.body.matchAll(GitLabMergeRequestRE)) {
+    if (m[1]) {
+      references.push({ type: 'pull-request', value: m[1] });
+    }
+  }
+
+  // Extract issue references from commit message
+  for (const m of commit.message.matchAll(IssueRE)) {
     if (!references.some((i) => i.value === m[1])) {
       references.push({ type: 'issue', value: m[1] });
     }
   }
-  references.push({ value: shortHash, type: 'hash' });
+
+  // Extract issue references from commit body
+  for (const m of commit.body.matchAll(IssueRE)) {
+    if (!references.some((i) => i.value === m[1])) {
+      references.push({ type: 'issue', value: m[1] });
+    }
+  }
+
+  // Add commit hash reference
+  references.push({ value: commit.shortHash, type: 'hash' });
+
   return references;
 }
 
@@ -448,37 +636,25 @@ function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
 const ConventionalCommitRegex =
   /(?<type>[a-z]+)(\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)/i;
 const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
+// GitHub style PR references
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
+// GitLab style merge request references
+const GitLabMergeRequestRE = /See merge request (?:[a-z0-9/-]+)?(![\d]+)/gim;
 const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
-export function parseGitCommit(
-  commit: RawGitCommit,
-  isVersionPlanCommit = false
-): GitCommit | null {
-  // For version plans, we do not require conventional commits and therefore cannot extract data based on that format
-  if (isVersionPlanCommit) {
-    return {
-      ...commit,
-      description: commit.message,
-      type: '',
-      scope: '',
-      references: extractReferencesFromCommitMessage(
-        commit.message,
-        commit.shortHash
-      ),
-      // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
-      // TODO(v20): Make the current GitCommit interface more clearly tied to conventional commits
-      isBreaking: false,
-      authors: getAllAuthorsForCommit(commit),
-      // Not applicable to version plans
-      affectedFiles: [],
-      // Not applicable, a version plan cannot have been added in a commit that also reverts another commit
-      revertedHashes: [],
-    };
-  }
+export function parseVersionPlanCommit(commit: RawGitCommit): {
+  references: Reference[];
+  authors: GitCommitAuthor[];
+} {
+  return {
+    references: extractReferencesFromCommit(commit),
+    authors: getAllAuthorsForCommit(commit),
+  };
+}
 
+export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const parsedMessage = parseConventionalCommitsMessage(commit.message);
   if (!parsedMessage) {
     return null;
@@ -489,13 +665,10 @@ export function parseGitCommit(
     parsedMessage.breaking || commit.body.includes('BREAKING CHANGE:');
   let description = parsedMessage.description;
 
-  // Extract references from message
-  const references = extractReferencesFromCommitMessage(
-    description,
-    commit.shortHash
-  );
+  // Extract issue and PR references from the commit
+  const references = extractReferencesFromCommit(commit);
 
-  // Remove references and normalize
+  // Remove GitHub style references from description (NOTE: GitLab style references only seem to appear in the body, so we don't need to remove them here)
   description = description.replace(PullRequestRE, '').trim();
 
   let type = parsedMessage.type;
@@ -557,4 +730,22 @@ export async function getFirstGitCommit() {
   } catch (e) {
     throw new Error(`Unable to find first commit in git history`);
   }
+}
+
+async function getGitRoot() {
+  try {
+    return (await execCommand('git', ['rev-parse', '--show-toplevel'])).trim();
+  } catch (e) {
+    throw new Error('Unable to find git root');
+  }
+}
+
+let gitRootRelativePath: string;
+
+async function getGitRootRelativePath() {
+  if (!gitRootRelativePath) {
+    const gitRoot = await getGitRoot();
+    gitRootRelativePath = relative(gitRoot, workspaceRoot);
+  }
+  return gitRootRelativePath;
 }

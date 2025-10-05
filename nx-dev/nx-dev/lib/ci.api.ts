@@ -1,7 +1,7 @@
 import {
   DocumentsApi,
   TagsApi,
-} from '@nx/nx-dev/data-access-documents/node-only';
+} from '@nx/nx-dev-data-access-documents/node-only';
 
 // Imports JSON directly, so they can be bundled into the app and functions.
 // Also provides some test safety.

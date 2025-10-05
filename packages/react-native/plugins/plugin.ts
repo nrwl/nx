@@ -1,7 +1,9 @@
 import {
-  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesResult,
+  CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
   NxJsonConfiguration,
@@ -16,6 +18,7 @@ import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { hashObject } from 'nx/src/devkit-internals';
 
 export interface ReactNativePluginOptions {
   startTargetName?: string;
@@ -29,69 +32,127 @@ export interface ReactNativePluginOptions {
   upgradeTargetName?: string;
 }
 
-const cachePath = join(workspaceDataDirectory, 'react-native.hash');
-const targetsCache = readTargetsCache();
-function readTargetsCache(): Record<
+function readTargetsCache(
+  cachePath: string
+): Record<
   string,
   Record<string, TargetConfiguration<ReactNativePluginOptions>>
 > {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
+function writeTargetsToCache(
+  cachePath: string,
+  targetsCache: Record<
+    string,
+    Record<string, TargetConfiguration<ReactNativePluginOptions>>
+  >
+) {
+  const oldCache = readTargetsCache(cachePath);
   writeJsonFile(cachePath, {
     ...oldCache,
-    ...targetsCache,
+    targetsCache,
   });
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
-  return [];
-};
-
-export const createNodes: CreateNodes<ReactNativePluginOptions> = [
-  '**/app.{json,config.js}',
-  async (configFilePath, options, context) => {
-    options = normalizeOptions(options);
-    const projectRoot = dirname(configFilePath);
-
-    // Do not create a project if package.json or project.json or metro.config.js isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') ||
-      !siblingFiles.includes('metro.config.js')
-    ) {
-      return {};
-    }
-    const appConfig = await getAppConfig(configFilePath, context);
-    if (appConfig.expo) {
-      return {};
-    }
-
-    const hash = await calculateHashForCreateNodes(
-      projectRoot,
-      options,
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+export const createNodesV2: CreateNodesV2<ReactNativePluginOptions> = [
+  '**/app.{json,config.js,config.ts}',
+  async (configFiles, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `react-native-${optionsHash}.hash`
     );
+    const targetsCache = readTargetsCache(cachePath);
 
-    targetsCache[hash] ??= buildReactNativeTargets(
-      projectRoot,
-      options,
-      context
-    );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          targets: targetsCache[hash],
-        },
-      },
-    };
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFiles,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
   },
 ];
+
+export const createNodes: CreateNodes<ReactNativePluginOptions> = [
+  '**/app.{json,config.js,config.ts}',
+  async (configFilePath, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `react-native-${optionsHash}.hash`
+    );
+
+    const targetsCache = readTargetsCache(cachePath);
+    const result = await createNodesInternal(
+      configFilePath,
+      options,
+      context,
+      targetsCache
+    );
+
+    writeTargetsToCache(cachePath, targetsCache);
+
+    return result;
+  },
+];
+
+async function createNodesInternal(
+  configFile: string,
+  options: ReactNativePluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<
+    string,
+    Record<string, TargetConfiguration<ReactNativePluginOptions>>
+  >
+): Promise<CreateNodesResult> {
+  options = normalizeOptions(options);
+  const projectRoot = dirname(configFile);
+
+  // Do not create a project if package.json or project.json or metro.config.js isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') ||
+    !siblingFiles.includes('metro.config.js')
+  ) {
+    return {};
+  }
+
+  // Check if it's an Expo project
+  const packageJson = readJsonFile(
+    join(context.workspaceRoot, projectRoot, 'package.json')
+  );
+  const appConfig = await getAppConfig(configFile, context);
+  if (
+    appConfig.expo ||
+    packageJson.dependencies?.['expo'] ||
+    packageJson.devDependencies?.['expo']
+  ) {
+    return {};
+  }
+
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+
+  targetsCache[hash] ??= buildReactNativeTargets(projectRoot, options, context);
+
+  return {
+    projects: {
+      [projectRoot]: {
+        targets: targetsCache[hash],
+      },
+    },
+  };
+}
 
 function buildReactNativeTargets(
   projectRoot: string,
@@ -103,6 +164,7 @@ function buildReactNativeTargets(
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
       command: `react-native start`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.podInstallTargetName]: {
@@ -112,10 +174,12 @@ function buildReactNativeTargets(
     },
     [options.runIosTargetName]: {
       command: `react-native run-ios`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
       command: `react-native run-android`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.buildIosTargetName]: {

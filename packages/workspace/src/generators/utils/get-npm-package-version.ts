@@ -10,7 +10,7 @@ export function getNpmPackageVersion(
       {
         stdio: ['pipe', 'pipe', 'ignore'],
 
-        windowsHide: true,
+        windowsHide: false,
       }
     );
 

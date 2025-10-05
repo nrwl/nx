@@ -1,0 +1,83 @@
+<%_ if (classComponent) { _%>
+import { Component } from 'react';
+<%_ } _%>
+<%_ if (routing) { _%>
+import { Route, Link } from 'react-router-dom';
+<%_ } _%>
+
+<%_ if (hasStyles) {
+   if (styledModule && styledModule !== 'styled-jsx' && styledModule !== 'tailwind') {
+    var wrapper = 'Styled' + className;
+    var extras = '';
+  _%>
+import styled from '<%= styledModule %>';
+  <%_ } else {
+    var wrapper = 'div';
+    var extras = globalCss || styledModule === 'styled-jsx' ? '' : " className={styles['container']}";
+  _%>
+<%- style !== 'styled-jsx' && style!== 'tailwind' ? globalCss ? `import './${fileName}.${style}';` : `import styles from './${fileName}.module.${style}';`: '' %>
+  <%_ }
+} else {
+    var wrapper = 'div';
+    var extras = '';
+} _%>
+
+<%_ if (styledModule && styledModule !== 'styled-jsx' && styledModule !== 'tailwind') { _%>
+const Styled<%= className %> = styled.div`
+  color: pink;
+`;
+<%_ } _%>
+<%_ if(!isNextPage) { _%>
+  <%_ if (classComponent) { _%>
+export class <%= className %> extends Component<% if (isTs) { %><{}><% } %> {
+  <% if (isTs) { %>override<% } %> render() {
+    return (
+      <<%= wrapper %><%- extras %>>
+        <%= styledModule === 'styled-jsx' ? `<style jsx>{\`div { color: pink; }\`}</style>` : `` %>
+        <p>Welcome to <%= className %>!</p>
+        <%_ if (routing) { _%>
+          <ul>
+            <li><Link to="/"><%= name %> root</Link></li>
+          </ul>
+          <Route path="/" element={<div>This is the <%= name %> root route.</div>} />
+        <%_ } _%>
+      </<%= wrapper %>>
+    );
+  }
+}
+  <%_ } else { _%>
+export function <%= className %>() {
+  return (
+    <<%= wrapper %><%- extras %>>
+      <%_ if (styledModule === 'styled-jsx') { _%><style jsx>{`div { color: pink; }`}</style><%_ } _%>
+      <h1>Welcome to <%= className %>!</h1>
+      <%_ if (routing) { _%>
+        <ul>
+          <li><Link to="/"><%= name %> root</Link></li>
+        </ul>
+        <Route path="/" element={<div>This is the <%= name %> root route.</div>} />
+      <%_ } _%>
+    </<%= wrapper %>>
+  );
+}
+  <%_ } _%>
+
+export default <%= className %>;
+<%_ } else { _%>
+export default function <%= className %>() {
+  return (
+    <<%= wrapper %><%- extras %>>
+      <%_ if (styledModule === 'styled-jsx') { _%><style jsx>{`div { color: pink; }`}</style><%_ } _%>
+      <h1>Welcome to <%= className %>!</h1>
+      <% if (routing) { %>
+        <ul>
+          <li><Link to="/"><%= name %> root</Link></li>
+        </ul>
+        <Route path="/" element={<div>This is the <%= name %> root route.</div>} />
+      <% } %>
+    </<%= wrapper %>>
+  );
+};
+<% } %>
+
+<% if (inSourceTests === true) { %> <%- inSourceVitestTests %> <% } %>

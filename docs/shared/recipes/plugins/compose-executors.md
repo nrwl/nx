@@ -1,3 +1,8 @@
+---
+title: Compose Executors
+description: Learn how to compose and chain Nx executors together, including how to invoke other targets and executors from within your custom executors.
+---
+
 # Compose executors
 
 An executor is just a function, so you can import and invoke it directly, as follows:
@@ -69,7 +74,7 @@ The `runExecutor` utility will find the target in the configuration, find the ex
 | readTargetOptions        | Reads and combines options for a given target                  |
 | runExecutor              | Constructs options and invokes an executor                     |
 
-See more helper functions in the [Devkit API Docs](/nx-api/devkit/documents/nx_devkit#functions)
+See more helper functions in the [Devkit API Docs](/reference/core-api/devkit/documents/nx_devkit#functions)
 
 ## Using RxJS observables
 

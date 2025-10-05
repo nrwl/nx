@@ -12,7 +12,13 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
-import { NxCache, CachedResult as NativeCacheResult } from '../native';
+import {
+  NxCache,
+  CachedResult as NativeCacheResult,
+  IS_WASM,
+  getDefaultMaxCacheSize,
+  HttpRemoteCache,
+} from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
@@ -20,6 +26,7 @@ import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
 import { isCI } from '../utils/is-ci';
 import { output } from '../utils/output';
+import { logger } from '../utils/logger';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -29,32 +36,60 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
-  return (
-    process.env.NX_DISABLE_DB !== 'true' &&
-    nxJson.useLegacyCache !== true &&
-    process.env.NX_DB_CACHE !== 'false'
-  );
+// This function is called once during tasks runner initialization. It checks if the db cache is enabled and logs a warning if it is not.
+export function dbCacheEnabled() {
+  // ...but if on wasm and the the db cache isnt supported we shouldn't warn
+  if (IS_WASM) {
+    return false;
+  }
+  // Below this point we are using the db cache.
+  if (
+    // The NX_REJECT_UNKNOWN_LOCAL_CACHE env var is not supported with the db cache.
+    // If the user has tried to use it, we can point them to powerpack as it
+    // provides a similar featureset.
+    process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === '0' ||
+    process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === 'false'
+  ) {
+    logger.warn(
+      'NX_REJECT_UNKNOWN_LOCAL_CACHE=0 is not supported with the new database cache. Read more at https://nx.dev/deprecated/legacy-cache#nxrejectunknownlocalcache.'
+    );
+  }
+  return true;
 }
 
 // Do not change the order of these arguments as this function is used by nx cloud
 export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
   const nxJson = readNxJson();
-  return dbCacheEnabled(nxJson)
+  return dbCacheEnabled()
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
+        skipRemoteCache: options.skipRemoteCache,
       })
     : new Cache(options);
 }
 
 export class DbCache {
-  private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+  private nxJson = readNxJson();
+  private cache = new NxCache(
+    workspaceRoot,
+    cacheDir,
+    getDbConnection(),
+    undefined,
+    resolveMaxCacheSize(this.nxJson)
+  );
 
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
-  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
+  private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
+  constructor(
+    private readonly options: {
+      nxCloudRemoteCache: RemoteCache;
+      skipRemoteCache?: boolean;
+    }
+  ) {}
 
   async init() {
     // This should be cheap because we've already loaded
@@ -70,6 +105,7 @@ export class DbCache {
     if (res) {
       return {
         ...res,
+        terminalOutput: res.terminalOutput ?? '',
         remote: false,
       };
     }
@@ -82,10 +118,11 @@ export class DbCache {
       );
 
       if (res) {
-        this.applyRemoteCacheResults(task.hash, res);
+        this.applyRemoteCacheResults(task.hash, res, task.outputs);
 
         return {
           ...res,
+          terminalOutput: res.terminalOutput ?? '',
           remote: true,
         };
       } else {
@@ -96,8 +133,16 @@ export class DbCache {
     }
   }
 
-  private applyRemoteCacheResults(hash: string, res: NativeCacheResult) {
-    return this.cache.applyRemoteCacheResults(hash, res);
+  getUsedCacheSpace() {
+    return this.cache.getCacheSize();
+  }
+
+  private applyRemoteCacheResults(
+    hash: string,
+    res: NativeCacheResult,
+    outputs: string[]
+  ) {
+    return this.cache.applyRemoteCacheResults(hash, res, outputs);
   }
 
   async put(
@@ -144,6 +189,16 @@ export class DbCache {
   }
 
   private async _getRemoteCache(): Promise<RemoteCacheV2 | null> {
+    if (this.options.skipRemoteCache) {
+      output.warn({
+        title: 'Remote Cache Disabled',
+        bodyLines: [
+          'Nx will continue running, but nothing will be written or read from the remote cache.',
+        ],
+      });
+      return null;
+    }
+
     const nxJson = readNxJson();
     if (isNxCloudUsed(nxJson)) {
       const options = getCloudOptions();
@@ -156,22 +211,54 @@ export class DbCache {
       }
     } else {
       return (
-        (await this.getPowerpackS3Cache()) ??
-        (await this.getPowerpackSharedCache()) ??
+        (await this.getS3Cache()) ??
+        (await this.getSharedCache()) ??
+        (await this.getGcsCache()) ??
+        (await this.getAzureCache()) ??
+        this.getHttpCache() ??
         null
       );
     }
   }
 
-  private getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
-    return this.getPowerpackCache('@nx/powerpack-s3-cache');
+  private async getS3Cache(): Promise<RemoteCacheV2 | null> {
+    const cache = await this.resolveRemoteCache('@nx/s3-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-s3-cache');
   }
 
-  private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
-    return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+  private async getSharedCache(): Promise<RemoteCacheV2 | null> {
+    const cache = await this.resolveRemoteCache('@nx/shared-fs-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-shared-fs-cache');
   }
 
-  private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
+  private async getGcsCache(): Promise<RemoteCacheV2 | null> {
+    const cache = await this.resolveRemoteCache('@nx/gcs-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-gcs-cache');
+  }
+
+  private async getAzureCache(): Promise<RemoteCacheV2 | null> {
+    const cache = await this.resolveRemoteCache('@nx/azure-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-azure-cache');
+  }
+
+  private getHttpCache(): RemoteCacheV2 | null {
+    if (process.env.NX_SELF_HOSTED_REMOTE_CACHE_SERVER) {
+      if (IS_WASM) {
+        logger.warn(
+          'The HTTP remote cache is not yet supported in the wasm build of Nx.'
+        );
+        return null;
+      }
+      return new HttpRemoteCache();
+    }
+    return null;
+  }
+
+  private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {
     let getRemoteCache = null;
     try {
       getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
@@ -219,7 +306,16 @@ export class Cache {
 
   private _currentMachineId: string = null;
 
-  constructor(private readonly options: DefaultTasksRunnerOptions) {}
+  constructor(private readonly options: DefaultTasksRunnerOptions) {
+    if (this.options.skipRemoteCache) {
+      output.warn({
+        title: 'Remote Cache Disabled',
+        bodyLines: [
+          'Nx will continue running, but nothing will be written or read from the remote cache.',
+        ],
+      });
+    }
+  }
 
   removeOldCacheRecords() {
     /**
@@ -234,7 +330,7 @@ export class Cache {
           stdio: 'ignore',
           detached: true,
           shell: false,
-          windowsHide: true,
+          windowsHide: false,
         });
         p.unref();
       } catch (e) {
@@ -264,7 +360,7 @@ export class Cache {
     if (res) {
       await this.assertLocalCacheValidity(task);
       return { ...res, remote: false };
-    } else if (this.options.remoteCache) {
+    } else if (this.options.remoteCache && !this.options.skipRemoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
       await this.options.remoteCache.retrieve(task.hash, this.cachePath);
@@ -319,7 +415,7 @@ export class Cache {
       await writeFile(join(td, 'source'), await this.currentMachineId());
       await writeFile(tdCommit, 'true');
 
-      if (this.options.remoteCache) {
+      if (this.options.remoteCache && !this.options.skipRemoteCache) {
         await this.options.remoteCache.store(task.hash, this.cachePath);
       }
 
@@ -479,19 +575,97 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
   let attempts = 0;
   // Generate a random number between 2 and 4 to raise to the power of attempts
   const baseExponent = Math.random() * 2 + 2;
+  const baseTimeout = 15;
   const _try = async () => {
     try {
       attempts++;
       return await fn();
     } catch (e) {
-      // Max time is 5 * 4^3 = 20480ms
+      // Max time is 15 * (4 + 4² + 4³ + 4⁴ + 4⁵) = 20460ms
       if (attempts === 6) {
         // After enough attempts, throw the error
         throw e;
       }
-      await new Promise((res) => setTimeout(res, baseExponent ** attempts));
+      await new Promise((res) =>
+        setTimeout(res, baseTimeout * baseExponent ** attempts)
+      );
       return await _try();
     }
   };
   return _try();
+}
+
+/**
+ * Resolves the max cache size from environment variable or nx.json configuration
+ * and converts it to a number of bytes.
+ *
+ * @param nxJson The nx.json configuration object
+ * @returns The resolved max cache size in bytes
+ */
+export function resolveMaxCacheSize(nxJson: NxJsonConfiguration): number {
+  const rawMaxCacheSize = process.env.NX_MAX_CACHE_SIZE ?? nxJson.maxCacheSize;
+  return rawMaxCacheSize !== undefined
+    ? parseMaxCacheSize(rawMaxCacheSize)
+    : getDefaultMaxCacheSize(cacheDir);
+}
+
+/**
+ * Converts a string representation of a max cache size to a number.
+ *
+ * e.g. '1GB' -> 1024 * 1024 * 1024
+ *      '1MB' -> 1024 * 1024
+ *      '1KB' -> 1024
+ *
+ * @param maxCacheSize Max cache size as specified in nx.json
+ */
+export function parseMaxCacheSize(
+  maxCacheSize: string | number
+): number | undefined {
+  if (maxCacheSize === null || maxCacheSize === undefined) {
+    return undefined;
+  }
+  let regexResult = maxCacheSize
+    // Covers folks who accidentally specify as a number rather than a string
+    .toString()
+    // Match a number followed by an optional unit (KB, MB, GB), with optional whitespace between the number and unit
+    .match(/^(?<size>[\d|.]+)\s?((?<unit>[KMG]?B)?)$/);
+  if (!regexResult) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize}. Must be a number followed by an optional unit (KB, MB, GB)`
+    );
+  }
+  let sizeString = regexResult.groups.size;
+  let unit = regexResult.groups.unit;
+  if ([...sizeString].filter((c) => c === '.').length > 1) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize} (multiple decimal points in size)`
+    );
+  }
+  let size = parseFloat(sizeString);
+  if (isNaN(size)) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize} (${sizeString} is not a number)`
+    );
+  }
+  switch (unit) {
+    case 'KB':
+      return size * 1024;
+    case 'MB':
+      return size * 1024 * 1024;
+    case 'GB':
+      return size * 1024 * 1024 * 1024;
+    default:
+      return size;
+  }
+}
+
+export function formatCacheSize(maxCacheSize: number, decimals = 2): string {
+  const exponents = ['B', 'KB', 'MB', 'GB'];
+  let exponent = 0;
+  let size = maxCacheSize;
+  while (size >= 1024 && exponent < exponents.length - 1) {
+    size /= 1024;
+    exponent++;
+  }
+  return `${size.toFixed(decimals)} ${exponents[exponent]}`;
 }

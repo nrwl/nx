@@ -8,6 +8,7 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
   linter?: Linter | LinterType;
+  formatter?: 'none' | 'prettier';
   tags?: string;
   frontendProject?: string;
   swcJest?: boolean;
@@ -21,8 +22,11 @@ export interface Schema {
   port?: number;
   rootProject?: boolean;
   docker?: boolean;
+  skipDockerPlugin?: boolean;
   isNest?: boolean;
   addPlugin?: boolean;
+  useTsSolution?: boolean;
+  useProjectJson?: boolean;
 }
 
 export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';

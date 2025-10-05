@@ -5,12 +5,12 @@ import {
   readJson,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';
-import { FileChangeRecorder } from '../../utils/file-change-recorder';
-import { ngrxVersion } from '../../utils/versions';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
-import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
+import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';
+import { versions } from '../../generators/utils/version-utils';
+import { FileChangeRecorder } from '../../utils/file-change-recorder';
+import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
@@ -25,7 +25,6 @@ const newImportPath = '@ngrx/router-store/data-persistence';
 
 export default async function (tree: Tree): Promise<void> {
   const projects = await getProjectsFilteredByDependencies(
-    tree,
     angularPluginTargetNames
   );
 
@@ -38,7 +37,7 @@ export default async function (tree: Tree): Promise<void> {
   const cachedFileMap = readFileMapCache().fileMap.projectFileMap;
 
   const filesWithNxAngularImports: FileData[] = [];
-  for (const { graphNode } of projects) {
+  for (const graphNode of projects) {
     const files = filterFilesWithNxAngularDep(
       cachedFileMap[graphNode.name] || []
     );
@@ -169,7 +168,11 @@ function addNgrxRouterStoreIfNotInstalled(tree: Tree): void {
     return;
   }
 
-  addDependenciesToPackageJson(tree, { '@ngrx/router-store': ngrxVersion }, {});
+  addDependenciesToPackageJson(
+    tree,
+    { '@ngrx/router-store': versions(tree).ngrxVersion },
+    {}
+  );
 }
 
 function filterFilesWithNxAngularDep(files: FileData[]): FileData[] {

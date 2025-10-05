@@ -82,7 +82,7 @@ Create a dedicated commit for each successfully completed migration. You can cus
 | Option                       | Type    | Description                                                                                                                           |
 | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `--commitPrefix`             | string  | Commit prefix to apply to the commit for each migration, when --create-commits is enabled. (Default: `chore: [nx migration] `)        |
-| `--createCommits`            | boolean | Automatically create a git commit after each migration runs. (Default: `false`)                                                       |
+| `--createCommits`, `--C`     | boolean | Automatically create a git commit after each migration runs. (Default: `false`)                                                       |
 | `--excludeAppliedMigrations` | boolean | Exclude migrations that should have been applied on previous updates. To be used with --from. (Default: `false`)                      |
 | `--from`                     | string  | Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@16.0.0,@nx/js@16.0.0"). |
 | `--help`                     | boolean | Show help.                                                                                                                            |

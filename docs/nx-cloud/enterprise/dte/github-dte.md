@@ -1,6 +1,6 @@
-# Custom Distributed Task Execution on Github Actions
+# Manual Distributed Task Execution on Github Actions
 
-Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
+Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
 ## Run Custom Agents on GitHub
 
@@ -23,7 +23,6 @@ permissions:
 
 env:
   NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables DTE
-  NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
   NX_BRANCH: ${{ github.event.number || github.ref_name }}
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # this is needed if our pipeline publishes to npm
@@ -41,6 +40,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          filter: tree:0
 
       - uses: actions/checkout@v4
         name: Checkout [Default Branch]
@@ -48,6 +48,7 @@ jobs:
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          filter: tree:0
 
       # Set node/npm/yarn versions using volta
       - uses: volta-cli/action@v4
@@ -69,32 +70,11 @@ jobs:
       - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
         run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
 
-      - name: Run commands in parallel
-        run: |
-          # initialize an array to store process IDs (PIDs)
-          pids=()
+      - name: Check the formatting
+        run: npx nx-cloud record -- nx format:check
 
-          # function to run commands and store the PID
-          function run_command() {
-            local command=$1
-            $command &  # run the command in the background
-            pids+=($!)  # store the PID of the background process
-          }
-
-          # list of commands to be run on main has env flag NX_CLOUD_DISTRIBUTED_EXECUTION set to false
-          run_command "NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- nx format:check"
-
-          # list of commands to be run on agents
-          run_command "npx nx affected -t lint,test,build,e2e-ci --parallel=3"
-
-          # wait for all background processes to finish
-          for pid in ${pids[*]}; do
-            if ! wait $pid; then
-              exit 1  # exit with an error status if any process fails
-            fi
-          done
-
-          exit 0 # exits with success status if a all processes complete successfully
+      - name: Lint, test, build, and run e2e
+        run: npx nx affected -t lint,test,build,e2e-ci --configuration=ci
 
   agents:
     name: Agent ${{ matrix.agent }}
@@ -128,3 +108,19 @@ jobs:
 ```
 
 There are comments throughout the workflow to help you understand what is happening in each section.
+
+## Rerunning jobs with DTE
+
+Rerunning only failed jobs results in agent jobs not running, which causes the CI pipeline to hang and eventually timeout. This is a common pitfall when using a CI providers "rerun failed jobs", or equivalent, feature since agent jobs will always complete successfully.
+
+To enforce rerunning all jobs, you can set up your CI pipeline to exit early with a helpful error.
+For example:
+
+> You reran only failed jobs, but CI requires rerunning all jobs.
+> Rerun all jobs in the pipeline to prevent this error.
+
+At a high level:
+
+1. Create a job that always succeeds and uploads an artifact on the pipeline with the run attempt number of the pipeline.
+2. The main and agent jobs can read the artifact file when starting and assert they are on the same re-try attempt.
+3. If the reattempt number does not match, then error with a message stating to rerun all jobs. Otherwise, the pipelines are on the same rerun and can proceed as normally.

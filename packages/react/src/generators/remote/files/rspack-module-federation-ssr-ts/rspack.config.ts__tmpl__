@@ -1,0 +1,69 @@
+import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
+import { NxModuleFederationPlugin, NxModuleFederationSSRDevServerPlugin } from '@nx/module-federation/rspack.js';
+import { join } from 'path';
+
+import browserMfConfig from './module-federation.config';
+import serverMfConfig from './module-federation.server.config';
+
+const browserRspackConfig = {
+  name: 'browser',
+  output: {
+    path: join(__dirname, '<%= rspackPluginOptions.outputPath %>', 'browser'),
+    publicPath: 'auto'
+  },
+  devServer: {
+    port: <%= devServerPort %>,
+    headers: {
+      "Access-Control-Allow-Origin": "*"
+    },
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+    devMiddleware: {
+      writeToDisk: (file: string) => !file.includes('.hot-update.'),
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: '<%= rspackPluginOptions.tsConfig %>',
+      main: '<%= rspackPluginOptions.main %>',
+      index: '<%= rspackPluginOptions.index %>',
+      baseHref: '<%= rspackPluginOptions.baseHref %>',
+      assets: <%- JSON.stringify(rspackPluginOptions.assets) %>,
+      styles: <%- JSON.stringify(rspackPluginOptions.styles) %>,
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config: browserMfConfig }, { dts: false }),
+  ],
+};
+
+const serverRspackConfig = {
+  name: 'server',
+    target: 'async-node',
+    output: {
+      path: join(__dirname, '<%= rspackPluginOptions.outputPath %>', 'server'),
+      filename: 'server.js'
+    },
+    plugins: [
+      new NxAppRspackPlugin({
+        outputPath: join(__dirname, '<%= rspackPluginOptions.outputPath %>', 'server'),
+        outputFileName: 'server.js',
+        tsConfig: '<%= rspackPluginOptions.tsConfig %>',
+        main: '<%= rspackPluginOptions.mainServer %>',
+        baseHref: '<%= rspackPluginOptions.baseHref %>',
+      }),
+      new NxModuleFederationPlugin({ config: serverMfConfig, isServer: true }, { dts: false }),
+      new NxModuleFederationSSRDevServerPlugin({ config: serverMfConfig }),
+    ],
+};
+
+export default [browserRspackConfig, serverRspackConfig];

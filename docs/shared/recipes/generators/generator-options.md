@@ -1,3 +1,8 @@
+---
+title: Customizing Generator Options
+description: Learn how to define and customize options for Nx generators, including TypeScript schemas, static options, and dynamic prompts for user input.
+---
+
 # Customizing generator options
 
 ## Adding a TypeScript schema

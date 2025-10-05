@@ -1,12 +1,14 @@
 import { output, ProjectConfiguration, readJson, type Tree } from '@nx/devkit';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
-const startLocalRegistryScript = (localRegistryTarget: string) => `
-/**
+const startLocalRegistryScript = (localRegistryTarget: string) => `/**
  * This script starts a local registry for e2e testing purposes.
  * It is meant to be called in jest's globalSetup.
  */
+
+/// <reference path="registry.d.ts" />
+
 import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
-import { execFileSync } from 'child_process';
 import { releasePublish, releaseVersion } from 'nx/release';
 
 export default async () => {
@@ -27,7 +29,7 @@ export default async () => {
     gitCommit: false,
     gitTag: false,
     firstRelease: true,
-    generatorOptionsOverrides: {
+    versionActionsOptionsOverrides: {
       skipLockFileUpdate: true
     }
   });
@@ -38,11 +40,12 @@ export default async () => {
 };
 `;
 
-const stopLocalRegistryScript = `
-/**
+const stopLocalRegistryScript = `/**
  * This script stops the local registry for e2e testing purposes.
  * It is meant to be called in jest's globalTeardown.
  */
+
+/// <reference path="registry.d.ts" />
 
 export default () => {
   if (global.stopLocalRegistry) {
@@ -51,16 +54,27 @@ export default () => {
 };
 `;
 
+const registryDeclarationText = `declare function stopLocalRegistry(): void;
+`;
+
 export function addLocalRegistryScripts(tree: Tree) {
   const startLocalRegistryPath = 'tools/scripts/start-local-registry.ts';
   const stopLocalRegistryPath = 'tools/scripts/stop-local-registry.ts';
+  const registryDeclarationPath = 'tools/scripts/registry.d.ts';
 
-  const projectConfiguration: ProjectConfiguration = readJson(
-    tree,
-    'project.json'
-  );
+  let projectName: string;
+  try {
+    ({ name: projectName } = readJson<ProjectConfiguration>(
+      tree,
+      'project.json'
+    ));
+  } catch {
+    // if project.json doesn't exist, try package.json
+    const { name, nx } = readJson<PackageJson>(tree, 'package.json');
+    projectName = nx?.name ?? name;
+  }
 
-  const localRegistryTarget = `${projectConfiguration.name}:local-registry`;
+  const localRegistryTarget = `${projectName}:local-registry`;
   if (!tree.exists(startLocalRegistryPath)) {
     tree.write(
       startLocalRegistryPath,
@@ -79,6 +93,9 @@ export function addLocalRegistryScripts(tree: Tree) {
   }
   if (!tree.exists(stopLocalRegistryPath)) {
     tree.write(stopLocalRegistryPath, stopLocalRegistryScript);
+  }
+  if (!tree.exists(registryDeclarationPath)) {
+    tree.write(registryDeclarationPath, registryDeclarationText);
   }
 
   return { startLocalRegistryPath, stopLocalRegistryPath };

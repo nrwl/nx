@@ -1,26 +1,31 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode, TargetConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { twMerge } from 'tailwind-merge';
+import { Tooltip } from '@nx/graph-ui-common';
 import { TagList } from '../tag-list/tag-list';
 import { OwnersList } from '../owners-list/owners-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
+import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
+  projectId?: string;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   variant?: 'default' | 'compact';
   connectedToCloud?: boolean;
   disabledTaskSyncGenerators?: string[];
-  onViewInProjectGraph?: (data: { projectName: string }) => void;
+  onViewInProjectGraph?: (data: {
+    projectName: string;
+    projectId?: string;
+  }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
@@ -38,6 +43,7 @@ const typeToProjectType = {
 
 export const ProjectDetails = ({
   project,
+  projectId,
   sourceMap,
   variant,
   onViewInProjectGraph,
@@ -56,7 +62,9 @@ export const ProjectDetails = ({
       [
         ...(projectData.metadata?.technologies ?? []),
         ...Object.values(projectData.targets ?? {})
-          .map((target) => target?.metadata?.technologies)
+          .map(
+            (target: TargetConfiguration<any>) => target?.metadata?.technologies
+          )
           .flat(),
       ].filter(Boolean)
     ),
@@ -94,7 +102,7 @@ export const ProjectDetails = ({
           {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
             <ViewInProjectGraphButton
               onClick={() =>
-                onViewInProjectGraph({ projectName: project.name })
+                onViewInProjectGraph({ projectName: project.name, projectId })
               }
             />
           )}

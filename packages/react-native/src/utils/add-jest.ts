@@ -1,5 +1,5 @@
-import { Tree, offsetFromRoot } from '@nx/devkit';
-import { configurationGenerator } from '@nx/jest';
+import { Tree, ensurePackage, offsetFromRoot } from '@nx/devkit';
+import { nxVersion } from './versions';
 
 export async function addJest(
   host: Tree,
@@ -8,11 +8,17 @@ export async function addJest(
   appProjectRoot: string,
   js: boolean,
   skipPackageJson: boolean,
-  addPlugin: boolean
+  addPlugin: boolean,
+  runtimeTsconfigFileName: string
 ) {
   if (unitTestRunner !== 'jest') {
     return () => {};
   }
+
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
+    '@nx/jest',
+    nxVersion
+  );
 
   const jestTask = await configurationGenerator(host, {
     js,
@@ -24,6 +30,7 @@ export async function addJest(
     skipPackageJson,
     skipFormat: true,
     addPlugin,
+    runtimeTsconfigFileName,
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property

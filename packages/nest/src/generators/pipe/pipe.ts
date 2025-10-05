@@ -28,7 +28,9 @@ async function normalizePipeOptions(
   tree: Tree,
   options: PipeGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'pipe',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

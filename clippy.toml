@@ -1,0 +1,4 @@
+disallowed-types = [
+    # We need to ensure adjustments for light and dark themes are applied appropriately
+    { path = "ratatui::style::Color", reason = "Use our utils from crate::native::tui::colors instead to ensure appropriate light/dark theme support" },
+]

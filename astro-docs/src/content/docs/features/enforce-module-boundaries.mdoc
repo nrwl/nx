@@ -1,0 +1,286 @@
+---
+title: 'Enforce Module Boundaries'
+description: 'Learn how to use Nx module boundaries to maintain a clean architecture by controlling dependencies between projects using tags and dependency constraints.'
+sidebar:
+  order: 8
+filter: 'type:Features'
+---
+
+If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, chaos will ensue, and the workspace will become unmanageable.
+
+To help with that, Nx provides powerful mechanisms to enforce architectural boundaries and ensure projects can only depend on each other according to your organization's rules. You can declaratively define constraints using project tags and enforce them automatically.
+
+{% youtube
+src="https://www.youtube.com/embed/q0en5vlOsWY"
+title="Applying Module Boundaries"
+/%}
+
+## How to Enforce Boundaries
+
+Nx offers two complementary approaches to enforce module boundaries:
+
+**ESLint Integration** - For JavaScript/TypeScript projects, enforce boundaries on code imports using the `@nx/enforce-module-boundaries` ESLint rule. This checks TypeScript imports and `package.json` dependencies during linting.
+
+**Language-Agnostic Conformance** - For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/powerpack/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`. Requires [Nx Powerpack or Enterprise](https://nx.dev/enterprise).
+
+Both approaches use the same tag-based constraint system described below.
+
+## Tags
+
+Nx comes with a generic mechanism for expressing constraints on project dependencies: tags.
+
+First, use your project configuration (in `project.json` or `package.json`) to annotate your projects with `tags`. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
+
+{% tabs syncKey="project-config-file" %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// client/package.json
+{
+  // ... more project configuration here
+  "nx": {
+    "tags": ["scope:client"]
+  }
+}
+```
+
+```jsonc
+// admin/package.json
+{
+  // ... more project configuration here
+  "nx": {
+    "tags": ["scope:admin"]
+  }
+}
+```
+
+```jsonc
+// utils/package.json
+{
+  // ... more project configuration here
+  "nx": {
+    "tags": ["scope:shared"]
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// client/project.json
+{
+  // ... more project configuration here
+  "tags": ["scope:client"]
+}
+```
+
+```jsonc
+// admin/project.json
+{
+  // ... more project configuration here
+  "tags": ["scope:admin"]
+}
+```
+
+```jsonc
+// utils/project.json
+{
+  // ... more project configuration here
+  "tags": ["scope:shared"]
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Configure Boundary Rules
+
+Once you have tagged your projects, configure the dependency constraints based on your chosen approach:
+
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="ESLint" %}
+
+For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries` ESLint rule:
+
+```shell {% frame="none" %}
+nx add @nx/eslint-plugin @nx/devkit
+```
+
+And configure the rule in your ESLint configuration:
+
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// eslint.config.mjs
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          /* options */
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
+
+```jsonc
+// .eslintrc.json
+{
+  // ... more ESLint config here
+
+  // @nx/enforce-module-boundaries should already exist within an "overrides" block using `"files": ["*.ts", "*.tsx", "*.js", "*.jsx",]`
+  "@nx/enforce-module-boundaries": [
+    "error",
+    {
+      "allow": [],
+      // update depConstraints based on your tags
+      "depConstraints": [
+        {
+          "sourceTag": "scope:shared",
+          "onlyDependOnLibsWithTags": ["scope:shared"]
+        },
+        {
+          "sourceTag": "scope:admin",
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+        },
+        {
+          "sourceTag": "scope:client",
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+        }
+      ]
+    }
+  ]
+
+  // ... more ESLint config here
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+If you violate the constraints, you will get an error when linting:
+
+```plaintext
+A project tagged with "scope:admin" can only depend on projects
+tagged with "scoped:shared" or "scope:admin".
+```
+
+Read more about [ESLint rule options](/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries).
+
+{% /tabitem %}
+{% tabitem label="Conformance" %}
+
+For any project type or to enforce boundaries on the complete dependency graph, use the Conformance plugin:
+
+```shell {% frame="none" %}
+nx add @nx/conformance
+```
+
+Configure rules in your `nx.json`:
+
+```jsonc
+// nx.json
+{
+  "conformance": {
+    "rules": [
+      {
+        "rule": "@nx/conformance/enforce-project-boundaries",
+        "options": {
+          "depConstraints": [
+            {
+              "sourceTag": "scope:shared",
+              "onlyDependOnProjectsWithTags": ["scope:shared"]
+            },
+            {
+              "sourceTag": "scope:admin",
+              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:admin"]
+            },
+            {
+              "sourceTag": "scope:client",
+              "onlyDependOnProjectsWithTags": ["scope:shared", "scope:client"]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+Run conformance checks in CI:
+
+```yaml
+- name: Enforce all conformance rules
+  run: npx nx conformance:check
+```
+
+Learn more about [Conformance rules](/docs/enterprise/powerpack/conformance).
+
+{% /tabitem %}
+{% /tabs %}
+
+With these constraints in place, `scope:client` projects can only depend on projects with `scope:client` or `scope:shared`. And `scope:admin` projects can only depend on projects with `scope:admin` or `scope:shared`. So `scope:client` and `scope:admin` cannot depend on each other.
+
+Projects without any tags cannot depend on any other projects. The exception to this rule is by explicitly allowing all tags (see below).
+
+### Tag formats
+
+- `*`: allow all tags
+
+Example: projects with any tags (including untagged) can depend on any other project.
+
+```jsonc
+{
+  "sourceTag": "*",
+  "onlyDependOnLibsWithTags": ["*"]
+}
+```
+
+- `string`: allow exact tags
+
+Example: projects tagged with `scope:client` can only depend on projects tagged with `scope:util`.
+
+```jsonc
+{
+  "sourceTag": "scope:client",
+  "onlyDependOnLibsWithTags": ["scope:util"]
+}
+```
+
+- `regex`: allow tags matching the regular expression
+
+Example: projects tagged with `scope:client` can depend on projects with a tag matching the regular expression `/^scope.*/`. In this case, the `scope:util`, `scope:client`, etc. are all allowed tags for dependencies.
+
+```json
+{
+  "sourceTag": "scope:client",
+  "onlyDependOnLibsWithTags": ["/^scope.*/"]
+}
+```
+
+- `glob`: allow tags matching the glob
+
+Example: projects with a tag starting with `scope:` can depend on projects with a tag that starts with `scope:*`. In this case `scope:a`, `scope:b`, etc are all allowed tags for dependencies.
+
+```json
+{
+  "sourceTag": "scope:*",
+  "onlyDependOnLibsWithTags": ["scope:*"]
+}
+```
+
+Globbing supports only the basic use of `*`. For more complex scenarios use the `regex` above.

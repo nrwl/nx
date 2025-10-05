@@ -1,14 +1,33 @@
+'use client';
 import {
   ChampionCard,
   ChampionPerks,
   Footer,
   Header,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { ConnectWithUs } from '@nx/nx-dev/ui-community';
+} from '@nx/nx-dev-ui-common';
+import { ConnectWithUs } from '@nx/nx-dev-ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { champions1, champions2, champions3 } from '../lib/champions';
+import dynamic from 'next/dynamic';
+import { champions } from '../lib/champions';
+
+export function ChampionsList(): JSX.Element {
+  return (
+    <>
+      {[...champions]
+        .sort(() => 0.5 - Math.random())
+        .map((data, index) => (
+          <ChampionCard key={data.name} data={data} />
+        ))}
+    </>
+  );
+}
+
+const DynamicChampionsList = dynamic(() => Promise.resolve(ChampionsList), {
+  ssr: false,
+  loading: () => <div></div>,
+});
 
 export default function Community(): JSX.Element {
   const router = useRouter();
@@ -28,11 +47,11 @@ export default function Community(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
@@ -68,24 +87,8 @@ export default function Community(): JSX.Element {
                     gather feedback from the community to help improve Nx.
                   </p>
                 </div>
-                <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
-                  <div className="space-y-6">
-                    {champions1.map((data, index) => (
-                      <ChampionCard key={data.name} data={data} />
-                    ))}
-                  </div>
-                  <div className="space-y-6">
-                    {champions2.map((data) => (
-                      <ChampionCard key={data.name} data={data} />
-                    ))}
-                  </div>
-                </div>
               </div>
-              <div className="mt-6 flex h-full w-full flex-col items-stretch gap-6 md:mt-0">
-                {champions3.map((data) => (
-                  <ChampionCard key={data.name} data={data} />
-                ))}
-              </div>
+              <DynamicChampionsList />
             </div>
           </article>
           <ChampionPerks />

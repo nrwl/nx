@@ -50,13 +50,7 @@ module.exports = (config) => {
 
 {% tab label="Providing HTTP request middleware function" %}
 
-{% callout type="warning" title="Overrides" }
-
-Available for workspaces using Angular version 17.0.0 or greater and with `build` targets using an esbuild-based executor.
-
-{% /callout %}
-
-The executor accepts an `esbuildMidleware` option that allows you to provide HTTP require middleware functions that will be used by the Vite development server.
+The executor accepts an `esbuildMiddleware` option that allows you to provide HTTP require middleware functions that will be used by the Vite development server.
 
 ```json {% fileName="apps/my-app/project.json" highlightLines=[8] %}
 {
@@ -66,7 +60,7 @@ The executor accepts an `esbuildMidleware` option that allows you to provide HTT
       "executor": "@nx/angular:dev-server",
       "options": {
         ...
-        "esbuildMidleware": ["apps/my-app/hello-world.middleware.ts"]
+        "esbuildMiddleware": ["apps/my-app/hello-world.middleware.ts"]
       }
     }
     ...
@@ -93,3 +87,4 @@ export default helloWorldMiddleware;
 ```
 
 {% /tab %}
+{% /tabs %}

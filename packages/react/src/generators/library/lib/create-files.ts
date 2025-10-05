@@ -1,16 +1,17 @@
-import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
   joinPathFragments,
   names,
   offsetFromRoot,
   toJS,
+  Tree,
   writeJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { NormalizedSchema } from '../schema';
 import { createTsConfig } from '../../../utils/create-ts-config';
+import { join } from 'path';
 
 export function createFiles(host: Tree, options: NormalizedSchema) {
   const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
@@ -27,7 +28,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, '../files/common'),
+    join(__dirname, '../files/common'),
     options.projectRoot,
     substitutions
   );
@@ -35,7 +36,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
   if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
     generateFiles(
       host,
-      joinPathFragments(__dirname, '../files/vite'),
+      join(__dirname, '../files/vite'),
       options.projectRoot,
       substitutions
     );
@@ -68,8 +69,30 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     });
   }
 
-  if (!options.publishable && !options.buildable) {
-    host.delete(`${options.projectRoot}/package.json`);
+  if (
+    (options.publishable || options.buildable) &&
+    !options.isUsingTsSolutionConfig &&
+    options.useProjectJson
+  ) {
+    if (options.bundler === 'vite') {
+      writeJson(host, `${options.projectRoot}/package.json`, {
+        name: options.importPath,
+        version: '0.0.1',
+        main: './index.js',
+        types: './index.d.ts',
+        exports: {
+          '.': {
+            import: './index.mjs',
+            require: './index.js',
+          },
+        },
+      });
+    } else {
+      writeJson(host, `${options.projectRoot}/package.json`, {
+        name: options.importPath,
+        version: '0.0.1',
+      });
+    }
   }
 
   if (options.js) {

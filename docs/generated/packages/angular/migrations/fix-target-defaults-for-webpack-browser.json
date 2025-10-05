@@ -1,0 +1,14 @@
+{
+  "name": "fix-target-defaults-for-webpack-browser",
+  "cli": "nx",
+  "version": "18.1.1-beta.0",
+  "description": "Ensure targetDefaults inputs for task hashing when '@nx/angular:webpack-browser' is used are correct for Module Federation.",
+  "factory": "./src/migrations/update-18-1-1/fix-target-defaults-inputs",
+  "implementation": "/packages/angular/src/migrations/update-18-1-1/fix-target-defaults-inputs.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

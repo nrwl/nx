@@ -1,17 +1,18 @@
 import {
-  updateJson,
   cleanupProject,
-  newProject,
-  runCLI,
-  tmpProjPath,
-  runCommand,
   createFile,
-  uniq,
+  detectPackageManager,
+  exists,
   getPackageManagerCommand,
+  newProject,
   readJson,
+  runCLI,
+  runCommand,
+  tmpProjPath,
+  uniq,
   updateFile,
-  renameFile,
-} from '@nx/e2e/utils';
+  updateJson,
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('packaging libs', () => {
@@ -178,16 +179,6 @@ describe('packaging libs', () => {
       `libs/${swcEsmLib}/src/index.ts`,
       `export * from './lib/${swcEsmLib}.js';`
     );
-    // We also need to update the eslint config file extensions to be explicitly commonjs
-    // TODO: re-evaluate this once we support ESM eslint configs
-    renameFile(
-      `libs/${tscEsmLib}/eslint.config.js`,
-      `libs/${tscEsmLib}/eslint.config.cjs`
-    );
-    renameFile(
-      `libs/${swcEsmLib}/eslint.config.js`,
-      `libs/${swcEsmLib}/eslint.config.cjs`
-    );
 
     // Add additional entry points for `exports` field
     updateJson(join('libs', tscLib, 'project.json'), (json) => {
@@ -214,19 +205,26 @@ describe('packaging libs', () => {
 
     expect(readJson(`dist/libs/${tscLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });
 
     expect(readJson(`dist/libs/${swcLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });
 
-    const pmc = getPackageManagerCommand();
+    const pm = detectPackageManager();
+    const pmc = getPackageManagerCommand({ packageManager: pm });
     let output: string;
 
     // Make sure CJS output is correct
@@ -260,6 +258,19 @@ describe('packaging libs', () => {
         console.log(faz);
       `
     );
+
+    if (pm === 'pnpm' && exists('pnpm-lock.yaml')) {
+      // if the workspace file exists, the packages must be included so the
+      // install command considers them
+      updateFile(
+        'pnpm-lock.yaml',
+        (content) => `${content}
+packages:
+  - 'libs/*'
+  - 'test-cjs'`
+      );
+    }
+
     runCommand(pmc.install, {
       cwd: join(tmpProjPath(), 'test-cjs'),
     });

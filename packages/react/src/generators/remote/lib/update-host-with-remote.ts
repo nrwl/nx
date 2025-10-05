@@ -6,11 +6,12 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
   addRemoteRoute,
   addRemoteToConfig,
 } from '../../../module-federation/ast-utils';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -37,7 +38,10 @@ export function updateHostWithRemote(
     );
   }
 
-  const appComponentPath = findAppComponentPath(host, hostConfig.sourceRoot);
+  const appComponentPath = findAppComponentPath(
+    host,
+    getProjectSourceRoot(hostConfig, host)
+  );
 
   if (host.exists(moduleFederationConfigPath)) {
     // find the host project path
@@ -56,7 +60,7 @@ export function updateHostWithRemote(
   } else {
     // TODO(jack): Point to the nx.dev guide when ready.
     logger.warn(
-      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host"?`
+      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host" or "@nx/react:consumer"?`
     );
   }
 
@@ -78,7 +82,7 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host"?`
+      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host" or "@nx/react:consumer"?`
     );
   }
 }

@@ -3,8 +3,8 @@ import {
   ButtonLink,
   SectionDescription,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { NxConsoleIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { NxConsoleIcon } from '@nx/nx-dev-ui-icons';
 
 export function NxConsoleBrand() {
   return (

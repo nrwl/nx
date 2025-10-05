@@ -40,7 +40,20 @@ export function exportComponentInEntryPoint(
   }
 
   if (!schema.standalone) {
-    const modulePath = findModuleFromOptions(tree, schema, root);
+    let modulePath: string;
+    try {
+      modulePath = findModuleFromOptions(tree, schema, root);
+    } catch (e) {
+      modulePath = findModuleFromOptions(
+        tree,
+        {
+          ...schema,
+          moduleExt: '-module.ts',
+          routingModuleExt: '-routing-module.ts',
+        },
+        root
+      );
+    }
     if (!shouldExportInEntryPoint(tree, entryPointPath, modulePath)) {
       return;
     }

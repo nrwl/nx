@@ -1,9 +1,12 @@
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export function CustomLink(props: any) {
   const target =
-    props.target || (props.href.startsWith('http') ? '_blank' : undefined);
+    props.target ||
+    (props.href.startsWith('http') || props.href.indexOf('.pdf') > -1
+      ? '_blank'
+      : undefined);
 
   return (
     <Link

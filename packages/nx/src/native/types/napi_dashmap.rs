@@ -1,6 +1,6 @@
 use dashmap::DashMap;
 use napi::bindgen_prelude::{Object, ToNapiValue};
-use napi::{sys, Env};
+use napi::{Env, sys};
 use std::collections::hash_map::RandomState;
 use std::ops::{Deref, DerefMut};
 

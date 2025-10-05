@@ -5,7 +5,7 @@ import {
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { projectHasTarget } from '../../utils/project-graph-utils';
-import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
   ProjectGraph,
@@ -58,7 +58,7 @@ export async function runMany(
         watch: true,
         open: true,
         view: 'tasks',
-        all: nxArgs.all,
+        all: nxArgs.all && (!nxArgs.projects || nxArgs.projects.length === 0),
         targets: nxArgs.targets,
         projects: projectNames,
         file,

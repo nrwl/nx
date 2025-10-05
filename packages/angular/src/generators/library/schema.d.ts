@@ -6,13 +6,11 @@ export interface Schema {
   name?: string;
   addTailwind?: boolean;
   skipFormat?: boolean;
-  simpleName?: boolean;
   addModuleSpec?: boolean;
   sourceDir?: string;
   buildable?: boolean;
   publishable?: boolean;
   importPath?: string;
-  standaloneConfig?: boolean;
   spec?: boolean;
   flat?: boolean;
   commonModule?: boolean;
@@ -39,4 +37,5 @@ export interface Schema {
   selector?: string;
   skipSelector?: boolean;
   addPlugin?: boolean;
+  skipTsConfig?: boolean;
 }

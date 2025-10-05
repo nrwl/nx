@@ -1,113 +1,83 @@
 {
   "generators": {
-    "update-17-0-0-remove-deprecated-build-options": {
-      "cli": "nx",
-      "version": "17.0.2",
-      "description": "Remove deprecated build options",
-      "implementation": "./src/migrations/update-17-0-0/remove-deprecated-build-options"
+    "migrate-development-custom-condition": {
+      "version": "21.5.0-beta.2",
+      "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
+      "factory": "./src/migrations/update-21-5-0/migrate-development-custom-condition"
+    },
+    "remove-external-options-from-js-executors": {
+      "version": "22.0.0-beta.0",
+      "description": "Remove the deprecated `external` and `externalBuildTargets` options from the `@nx/js:swc` and `@nx/js:tsc` executors.",
+      "factory": "./src/migrations/update-22-0-0/remove-external-options-from-js-executors"
     }
   },
   "packageJsonUpdates": {
-    "17.0.0": {
-      "version": "17.0.0-rc.2",
-      "packages": {
-        "esbuild": {
-          "version": "^0.19.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.1.0": {
-      "version": "17.1.0-beta.4",
-      "x-prompt": "Do you want to update to TypeScript v5.2?",
+    "20.2.0": {
+      "version": "20.2.0-beta.5",
+      "x-prompt": "Do you want to update to TypeScript v5.6?",
       "requires": {
-        "typescript": ">=5.1.0 <5.2.0"
+        "typescript": ">=5.5.0 <5.6.0"
       },
       "packages": {
         "typescript": {
-          "version": "~5.2.2"
-        }
-      }
-    },
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "^18.16.9",
+          "version": "~5.6.2",
           "alwaysAddToPackageJson": false
         }
       }
     },
-    "17.3.0-beta.10": {
-      "version": "17.3.0-beta.10",
-      "x-prompt": "Do you want to update to TypeScript v5.3?",
+    "20.4.0": {
+      "version": "20.4.0-beta.1",
+      "x-prompt": "Do you want to update to TypeScript v5.7?",
       "requires": {
-        "typescript": ">=5.2.0 <5.3.0"
+        "typescript": ">=5.6.0 <5.7.0"
       },
       "packages": {
         "typescript": {
-          "version": "~5.3.2",
+          "version": "~5.7.2",
           "alwaysAddToPackageJson": false
         }
       }
     },
-    "18.0.4": {
-      "version": "18.0.4-beta.0",
+    "20.5.0": {
+      "version": "20.5.0-beta.3",
       "packages": {
-        "@swc-node/register": {
-          "version": "~1.8.0",
+        "verdaccio": {
+          "version": "^6.0.5",
           "alwaysAddToPackageJson": false
         }
       }
     },
-    "18.2.0": {
-      "version": "18.2.0-beta.0",
-      "x-prompt": "Do you want to update to TypeScript v5.4?",
-      "requires": {
-        "typescript": ">=5.3.0 <5.4.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~5.4.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.0.0": {
-      "version": "19.0.0-beta.0",
+    "20.7.1-beta.0": {
+      "version": "20.7.1-beta.0",
       "packages": {
         "@swc/cli": {
-          "version": "~0.3.12",
+          "version": "~0.6.0",
           "alwaysAddToPackageJson": false
         }
       }
     },
-    "19.2.0": {
-      "version": "19.2.0-beta.0",
-      "packages": {
-        "@swc/core": {
-          "version": "~1.5.7",
-          "alwaysAddToPackageJson": false
-        },
-        "@swc/helpers": {
-          "version": "~0.5.11",
-          "alwaysAddToPackageJson": false
-        },
-        "@swc-node/register": {
-          "version": "~1.9.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.5.1": {
-      "version": "19.5.0-beta.1",
-      "x-prompt": "Do you want to update to TypeScript v5.5?",
+    "21.2.0": {
+      "version": "21.2.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.8?",
       "requires": {
-        "typescript": ">=5.4.0 <5.5.0"
+        "typescript": ">=5.7.0 <5.8.0"
       },
       "packages": {
         "typescript": {
-          "version": "~5.5.2",
+          "version": "~5.8.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.5.0": {
+      "version": "21.5.0-beta.2",
+      "x-prompt": "Do you want to update to TypeScript v5.9?",
+      "requires": {
+        "typescript": ">=5.8.0 <5.9.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.9.2",
           "alwaysAddToPackageJson": false
         }
       }

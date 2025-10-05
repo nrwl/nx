@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -17,7 +16,7 @@ import { chmodAndroidGradlewFilesTask } from '../../utils/chmod-android-gradle-f
 import { runPodInstall } from '../../utils/pod-install-task';
 import { webConfigurationGenerator } from '../web-configuration/web-configuration';
 
-import { normalizeOptions } from './lib/normalize-options';
+import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import initGenerator from '../init/init';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
@@ -26,6 +25,12 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
+import {
+  addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -33,6 +38,7 @@ export async function reactNativeApplicationGenerator(
 ): Promise<GeneratorCallback> {
   return await reactNativeApplicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -41,25 +47,37 @@ export async function reactNativeApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react-native', 'application');
-
-  const options = await normalizeOptions(host, schema);
-
   const tasks: GeneratorCallback[] = [];
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    host,
+    schema.addPlugin,
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
+    addTsPlugin,
+    formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host));
+    tasks.push(ensureDependencies(host, options.unitTestRunner));
   }
 
   await createApplicationFiles(host, options);
   addProject(host, options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   const lintTask = await addLinting(host, {
     ...options,
@@ -77,13 +95,14 @@ export async function reactNativeApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin
+    options.addPlugin,
+    'tsconfig.app.json'
   );
   tasks.push(jestTask);
 
   const webTask = await webConfigurationGenerator(host, {
     ...options,
-    project: options.name,
+    project: options.projectName,
     skipFormat: true,
   });
   tasks.push(webTask);
@@ -95,37 +114,26 @@ export async function reactNativeApplicationGeneratorInternal(
     joinPathFragments(host.root, options.androidProjectRoot)
   );
   tasks.push(chmodTaskGradlewTask);
+  tasks.push(addSyncDepsTask(host, options));
+  tasks.push(addPodInstallTask(host, options));
 
-  const podInstallTask = runPodInstall(
-    joinPathFragments(host.root, options.iosProjectRoot)
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      noUnusedLocals: false,
+      lib: ['dom'],
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
   );
-  if (options.install) {
-    const projectPackageJsonPath = joinPathFragments(
-      options.appProjectRoot,
-      'package.json'
-    );
 
-    const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
-    const projectPackageJson = readJson<PackageJson>(
-      host,
-      projectPackageJsonPath
-    );
-
-    await syncDeps(
-      options.name,
-      projectPackageJson,
-      projectPackageJsonPath,
-      workspacePackageJson
-    );
-    tasks.push(podInstallTask);
-  } else {
-    output.log({
-      title: 'Skip `pod install`',
-      bodyLines: [
-        `run 'nx run ${options.name}:pod-install' to install native modules before running iOS app`,
-      ],
-    });
-  }
+  sortPackageJsonFields(host, options.appProjectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);
@@ -136,6 +144,48 @@ export async function reactNativeApplicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
+}
+
+function addSyncDepsTask(
+  host: Tree,
+  options: NormalizedSchema
+): GeneratorCallback {
+  const projectPackageJsonPath = joinPathFragments(
+    options.appProjectRoot,
+    'package.json'
+  );
+  return async () => {
+    const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
+    const projectPackageJson = readJson<PackageJson>(
+      host,
+      projectPackageJsonPath
+    );
+    await syncDeps(
+      options.projectName,
+      projectPackageJson,
+      projectPackageJsonPath,
+      workspacePackageJson
+    );
+  };
+}
+
+function addPodInstallTask(
+  host: Tree,
+  options: NormalizedSchema
+): GeneratorCallback {
+  const podInstallTask = runPodInstall(
+    joinPathFragments(host.root, options.iosProjectRoot)
+  );
+  if (options.install) {
+    return podInstallTask;
+  }
+  output.log({
+    title: 'Skip `pod install`',
+    bodyLines: [
+      `run 'nx run ${options.name}:pod-install' to install native modules before running iOS app`,
+    ],
+  });
+  return () => {};
 }
 
 export default reactNativeApplicationGenerator;

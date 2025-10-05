@@ -1,0 +1,48 @@
+<h1 i18n>Hello World!</h1>
+<h2 i18n="@@myCustomTitle">Custom Title!</h2>
+Today's date is {{ today | date }} I have {{ 136.12 | currency }}
+<button type="button" (click)="toggleDisplay()">Toggle</button>
+<div i18n [attr.aria-label]="toggleAriaLabel()">{{ toggle() }}</div>
+<div>
+  Not translated, but
+  <ng-container i18n>this should be Translated</ng-container>
+</div>
+<div>
+  Let's handle plurals
+  <span i18n
+    >Updated {minutes(), plural, =0 {just now} =1 {one minute ago} other
+    {{{ minutes() }} minutes ago}}</span
+  >
+</div>
+<div>
+  Let's handle selections
+  <span i18n
+    >The author is {gender(), select, male {male} female {female} other
+    {other}}</span
+  >
+</div>
+<img
+  src="angular-rspack-logo-small.avif"
+  i18n-title
+  title="Angular Rspack Logo"
+  alt="Angular Rspack Logo"
+/>
+
+<div>
+  Set Time:
+  <div>
+    <button type="button" (click)="setTime(0)">0</button>
+    <button type="button" (click)="setTime(1)">1</button>
+    <button type="button" (click)="setTime(10)">10</button>
+  </div>
+</div>
+
+<div>
+  Set Gender:
+  <div>
+    <button type="button" (click)="setGender('male')">Male</button>
+    <button type="button" (click)="setGender('female')">Female</button>
+    <button type="button" (click)="setGender('other')">Other</button>
+  </div>
+</div>
+this is updated live

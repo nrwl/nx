@@ -1,0 +1,53 @@
+<%_ if (rspackPluginOptions) { _%>
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
+  },
+  devServer: {
+    port: <%= port %>,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: '<%= rspackPluginOptions.tsConfig %>',
+      main: '<%= rspackPluginOptions.main %>',
+      index: '<%= rspackPluginOptions.index %>',
+      baseHref: '<%= rspackPluginOptions.baseHref %>',
+      assets: <%- JSON.stringify(rspackPluginOptions.assets) %>,
+      styles: <%- JSON.stringify(rspackPluginOptions.styles) %>,
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
+<%_ } else { _%>
+const { composePlugins, withNx, withReact } = require('@nx/rspack');
+
+// Nx plugins for rspack.
+module.exports = composePlugins(
+  withNx(),
+  withReact({
+    // Uncomment this line if you don't want to use SVGR
+    // See: https://react-svgr.com/
+    // svgr: false
+  }),
+  (config) => {
+    // Update the rspack config as needed here.
+    // e.g. `config.plugins.push(new MyPlugin())`
+    return config;
+  }
+);
+<%_ } _%>

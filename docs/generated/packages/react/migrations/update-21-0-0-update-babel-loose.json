@@ -1,0 +1,14 @@
+{
+  "name": "update-21-0-0-update-babel-loose",
+  "cli": "nx",
+  "version": "21.0.0-beta.11",
+  "description": "Replaces `classProperties.loose` option with `loose`.",
+  "factory": "./src/migrations/update-21-0-0/update-babel-loose",
+  "implementation": "/packages/react/src/migrations/update-21-0-0/update-babel-loose.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Replace `classProperties.loose` option in `.babelrc`\n\nThe `classProperties.loose` option is replaced by `loose` in `.babelrc` files.\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\".babelrc\" %}\n{\n  \"presets\": [\n    [\n      \"@nx/react/babel\",\n      {\n        \"runtime\": \"automatic\",\n        \"classProperties\": {\n          \"loose\": true\n        },\n        \"useBuiltIns\": \"usage\"\n      }\n    ]\n  ],\n  \"plugins\": []\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% highlightLines=[7] fileName=\".babelrc\" %}\n{\n  \"presets\": [\n    [\n      \"@nx/react/babel\",\n      {\n        \"runtime\": \"automatic\",\n        \"loose\": true,\n        \"useBuiltIns\": \"usage\"\n      }\n    ]\n  ],\n  \"plugins\": []\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

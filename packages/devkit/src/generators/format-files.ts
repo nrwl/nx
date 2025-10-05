@@ -1,20 +1,40 @@
+import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
+import {
+  isUsingPrettierInTree,
+  sortObjectByKeys,
+} from 'nx/src/devkit-internals';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-
-import { readJson, Tree, updateJson } from 'nx/src/devkit-exports';
-import { sortObjectByKeys } from 'nx/src/devkit-internals';
 
 /**
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
+ * @param options - options for the formatFiles function
  */
-export async function formatFiles(tree: Tree): Promise<void> {
+export async function formatFiles(
+  tree: Tree,
+  options: {
+    sortRootTsconfigPaths?: boolean;
+  } = {}
+): Promise<void> {
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
+    /**
+     * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
+     * before proceeding to format with it.
+     */
+    if (!isUsingPrettierInTree(tree)) {
+      return;
+    }
   } catch {}
 
-  sortTsConfig(tree);
+  options.sortRootTsconfigPaths ??=
+    process.env.NX_FORMAT_SORT_TSCONFIG_PATHS === 'true';
+
+  if (options.sortRootTsconfigPaths) {
+    sortTsConfig(tree);
+  }
 
   if (!prettier) return;
 
@@ -68,13 +88,18 @@ function sortTsConfig(tree: Tree) {
     if (!tsConfigPath) {
       return;
     }
-    updateJson(tree, tsConfigPath, (tsconfig) => ({
+    const tsconfig = readJson(tree, tsConfigPath);
+    if (!tsconfig.compilerOptions?.paths) {
+      // no paths to sort
+      return;
+    }
+    writeJson(tree, tsConfigPath, {
       ...tsconfig,
       compilerOptions: {
         ...tsconfig.compilerOptions,
         paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
       },
-    }));
+    });
   } catch (e) {
     // catch noop
   }

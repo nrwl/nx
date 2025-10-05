@@ -4,7 +4,6 @@ import {
   NxAppWebpackPluginOptions,
 } from './nx-app-webpack-plugin-options';
 import { normalizeOptions } from './lib/normalize-options';
-import { deleteOutputDir } from '../../utils/fs';
 import { applyBaseConfig } from './lib/apply-base-config';
 import { applyWebConfig } from './lib/apply-web-config';
 
@@ -48,10 +47,6 @@ export class NxAppWebpackPlugin {
       applyWebConfig(this.options, compiler.options, {
         useNormalizedEntry: true,
       });
-    }
-
-    if (this.options.deleteOutputPath) {
-      deleteOutputDir(this.options.root, this.options.outputPath);
     }
   }
 }

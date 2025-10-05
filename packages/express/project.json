@@ -4,9 +4,14 @@
   "sourceRoot": "packages/express",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/express/README.md"],
+      "command": "node ./scripts/copy-readme.js express"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/express",
@@ -41,13 +46,6 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/express"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js express"
       }
     }
   },

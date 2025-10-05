@@ -1,7 +1,8 @@
-import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
 import { logger, ProjectConfiguration } from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 export type DevRemoteDefinition =
   | string
@@ -196,7 +197,7 @@ export function getDynamicMfManifestFile(
     join(workspaceRoot, project.root, 'public/module-federation.manifest.json'),
     join(
       workspaceRoot,
-      project.sourceRoot,
+      getProjectSourceRoot(project),
       'assets/module-federation.manifest.json'
     ),
   ].find((path) => existsSync(path));

@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -100,14 +100,16 @@
               "webpack",
               // require.resovle is used for these
               "@babel/plugin-proposal-decorators",
+              "tailwindcss",
               "file-loader",
-              "url-loader",
-              "@svgr/webpack"
+              "@svgr/webpack",
+              // since `with-nx.ts` is included in the prod build, we need to use `require('@nx/next')` instead of proper relative imports
+              "@nx/next"
             ]
           }
         ]
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

@@ -1,13 +1,29 @@
-import { exec, execSync } from 'child_process';
-import { copyFileSync, existsSync, writeFileSync } from 'fs';
+import { exec, execFile, execSync } from 'child_process';
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import {
+  Pair,
+  ParsedNode,
+  parseDocument,
+  stringify as YAMLStringify,
+  YAMLMap,
+  YAMLSeq,
+  Scalar,
+} from 'yaml';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
-import { gte, lt } from 'semver';
+import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
+
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { readFileIfExisting, readJsonFile, writeJsonFile } from './fileutils';
+import {
+  readFileIfExisting,
+  readJsonFile,
+  readYamlFile,
+  writeJsonFile,
+} from './fileutils';
+import { getNxInstallationPath } from './installation-directory';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
@@ -29,6 +45,14 @@ export interface PackageManagerCommands {
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
+  publish: (
+    packageRoot: string,
+    registry: string,
+    registryConfigKey: string,
+    tag: string
+  ) => string;
+  // yarn berry doesn't support ignoring scripts via flag
+  ignoreScriptsFlag?: string;
 }
 
 /**
@@ -38,7 +62,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return (
     nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb'))
+    (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
       ? 'yarn'
@@ -58,11 +82,22 @@ export function isWorkspacesEnabled(
   root: string = workspaceRoot
 ): boolean {
   if (packageManager === 'pnpm') {
-    return existsSync(join(root, 'pnpm-workspace.yaml'));
+    if (!existsSync(join(root, 'pnpm-workspace.yaml'))) {
+      return false;
+    }
+
+    try {
+      const content = readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      const { packages } = load(content) ?? {};
+      return packages !== undefined;
+    } catch {
+      return false;
+    }
   }
 
   // yarn and npm both use the same 'workspaces' property in package.json
-  const packageJson: PackageJson = readPackageJson();
+  const packageJson: PackageJson = readPackageJson(root);
   return !!packageJson?.workspaces;
 }
 
@@ -95,6 +130,7 @@ export function getPackageManagerCommand(
         useBerry = true;
       }
 
+      // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
         install: 'yarn',
@@ -108,24 +144,36 @@ export function getPackageManagerCommand(
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
         rm: 'yarn remove',
         exec: 'yarn',
-        dlx: useBerry ? 'yarn dlx' : 'yarn',
+        dlx: useBerry ? 'yarn dlx' : 'npx',
         run: (script: string, args?: string) =>
           `yarn ${script}${args ? ` ${args}` : ''}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: useBerry ? undefined : `--ignore-scripts`,
       };
     },
     pnpm: () => {
-      let modernPnpm: boolean, includeDoubleDashBeforeArgs: boolean;
+      let modernPnpm: boolean,
+        includeDoubleDashBeforeArgs: boolean,
+        allowRegistryConfigKey: boolean;
       try {
         const pnpmVersion = getPackageManagerVersion('pnpm', root);
         modernPnpm = gte(pnpmVersion, '6.13.0');
         includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
+        // Support for --@scope:registry was added in pnpm v10.5.0 and backported to v9.15.7.
+        // Versions >=10.0.0 and <10.5.0 do NOT support this CLI option.
+        allowRegistryConfigKey = satisfies(
+          pnpmVersion,
+          '>=9.15.7 <10.0.0 || >=10.5.0'
+        );
       } catch {
         modernPnpm = true;
         includeDoubleDashBeforeArgs = true;
+        allowRegistryConfigKey = false;
       }
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
@@ -148,6 +196,11 @@ export function getPackageManagerCommand(
           }`,
         list: 'pnpm ls --depth 100',
         getRegistryUrl: 'pnpm config get registry',
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `pnpm publish "${packageRoot}" --json --"${
+            allowRegistryConfigKey ? registryConfigKey : 'registry'
+          }=${registry}" --tag=${tag} --no-git-checks`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     npm: () => {
@@ -167,10 +220,13 @@ export function getPackageManagerCommand(
           `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
         getRegistryUrl: 'npm config get registry',
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     bun: () => {
-      // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
+      // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
@@ -182,6 +238,10 @@ export function getPackageManagerCommand(
         dlx: 'bunx',
         run: (script: string, args: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
+        // Unlike npm, bun publish does not support a custom registryConfigKey option
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
+        ignoreScriptsFlag: '--ignore-scripts',
       };
     },
   };
@@ -198,34 +258,52 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
-  let version;
-  try {
-    version = execSync(`${packageManager} --version`, {
-      cwd,
-      encoding: 'utf-8',
-      windowsHide: true,
-    }).trim();
-  } catch {
-    if (existsSync(join(cwd, 'package.json'))) {
-      const packageVersion = readJsonFile<PackageJson>(
-        join(cwd, 'package.json')
-      )?.packageManager;
-      if (packageVersion) {
-        const [packageManagerFromPackageJson, versionFromPackageJson] =
-          packageVersion.split('@');
-        if (
-          packageManagerFromPackageJson === packageManager &&
-          versionFromPackageJson
-        ) {
-          version = versionFromPackageJson;
-        }
-      }
-    }
+  let version: string;
+  if (existsSync(join(cwd, 'package.json'))) {
+    const packageManagerEntry = readJsonFile<PackageJson>(
+      join(cwd, 'package.json')
+    )?.packageManager;
+    version = parseVersionFromPackageManagerField(
+      packageManager,
+      packageManagerEntry
+    );
+  }
+  if (!version) {
+    try {
+      version = execSync(`${packageManager} --version`, {
+        cwd,
+        encoding: 'utf-8',
+        windowsHide: true,
+      }).trim();
+    } catch {}
   }
   if (!version) {
     throw new Error(`Cannot determine the version of ${packageManager}.`);
   }
   return version;
+}
+
+export function parseVersionFromPackageManagerField(
+  requestedPackageManager: string,
+  packageManagerFieldValue: string | undefined
+): null | string {
+  if (!packageManagerFieldValue) return null;
+  const [packageManagerFromPackageJson, versionFromPackageJson] =
+    packageManagerFieldValue.split('@');
+  if (
+    versionFromPackageJson &&
+    // If it's a URL, it's not a valid range by default, unless users set `COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1`.
+    // In the unsafe case, there's no way to reliably pare out the version since it could be anything, e.g. http://mydomain.com/bin/yarn.js.
+    // See: https://github.com/nodejs/corepack/blob/2b43f26/sources/corepackUtils.ts#L110-L112
+    !URL.canParse(versionFromPackageJson) &&
+    packageManagerFromPackageJson === requestedPackageManager &&
+    versionFromPackageJson
+  ) {
+    // The range could have a validation hash attached, like "3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa".
+    // We just want to parse out the "<major>.<minor>.<patch>". Semver treats "+" as a build, which is not included in the resulting version.
+    return parse(versionFromPackageJson)?.version ?? null;
+  }
+  return null;
 }
 
 /**
@@ -237,6 +315,10 @@ export function findFileInPackageJsonDirectory(
   directory: string = process.cwd()
 ): string | null {
   while (!existsSync(join(directory, 'package.json'))) {
+    if (directory === workspaceRoot) {
+      // we reached the workspace root and we didn't find a package.json file
+      return null;
+    }
     directory = dirname(directory);
   }
   const path = join(directory, file);
@@ -341,13 +423,23 @@ export function copyPackageManagerConfigurationFiles(
  * For cases where you'd want to install packages that require an `.npmrc` set up,
  * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
  * temp directory.
+ *
+ * @param skipCopy - If true, skips copying package manager configuration files to the temporary directory.
+ *                   This is useful when creating a workspace from scratch (e.g., in create-nx-workspace)
+ *                   where no existing configuration files are available to copy.
  */
-export function createTempNpmDirectory() {
+export function createTempNpmDirectory(skipCopy = false) {
   const dir = dirSync().name;
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
-  copyPackageManagerConfigurationFiles(workspaceRoot, dir);
+  if (!skipCopy) {
+    const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
+    copyPackageManagerConfigurationFiles(
+      isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
+      dir
+    );
+  }
 
   const cleanup = async () => {
     try {
@@ -477,4 +569,113 @@ export async function packageRegistryPack(
 
   const tarballPath = stdout.trim();
   return { tarballPath };
+}
+
+/**
+ * Gets the workspaces defined in the package manager configuration.
+ * @returns workspaces defined in the package manager configuration, empty array if none are defined
+ */
+export function getPackageWorkspaces(
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
+): string[] {
+  let workspaces: string[];
+
+  if (
+    packageManager === 'npm' ||
+    packageManager === 'yarn' ||
+    packageManager === 'bun'
+  ) {
+    const packageJson = readPackageJson(root);
+    workspaces = packageJson.workspaces;
+  } else if (packageManager === 'pnpm') {
+    const pnpmWorkspacePath = join(root, 'pnpm-workspace.yaml');
+    if (existsSync(pnpmWorkspacePath)) {
+      const { packages } =
+        readYamlFile<{ packages: string[] }>(pnpmWorkspacePath) ?? {};
+      workspaces = packages;
+    }
+  }
+
+  return workspaces ?? [];
+}
+
+/**
+ * Adds a package to the workspaces defined in the package manager configuration.
+ * If the package is already included in the workspaces, it will not be added again.
+ * @param packageManager The package manager to use. If not provided, it will be detected based on the lock file.
+ * @param workspaces The workspaces to add the package to. Defaults to the workspaces defined in the package manager configuration.
+ * @param root The directory the commands will be ran inside of. Defaults to the current workspace's root.
+ * @param packagePath The path of the package to add to the workspaces
+ */
+export function addPackagePathToWorkspaces(
+  packagePath: string,
+  packageManager: PackageManager = detectPackageManager(),
+  workspaces: string[] = getPackageWorkspaces(packageManager),
+  root: string = workspaceRoot
+): void {
+  if (
+    packageManager === 'npm' ||
+    packageManager === 'yarn' ||
+    packageManager === 'bun'
+  ) {
+    workspaces.push(packagePath);
+    const packageJson = readPackageJson(root);
+    const updatedPackageJson = {
+      ...packageJson,
+      workspaces,
+    };
+    const packageJsonPath = join(root, 'package.json');
+    writeJsonFile(packageJsonPath, updatedPackageJson);
+  } else if (packageManager === 'pnpm') {
+    const pnpmWorkspacePath = join(root, 'pnpm-workspace.yaml');
+    if (existsSync(pnpmWorkspacePath)) {
+      const pnpmWorkspaceDocument = parseDocument(
+        readFileIfExisting(pnpmWorkspacePath)
+      );
+      const pnpmWorkspaceContents: ParsedNode | null =
+        pnpmWorkspaceDocument.contents;
+      if (!pnpmWorkspaceContents) {
+        writeFileSync(
+          pnpmWorkspacePath,
+          YAMLStringify({
+            packages: [packagePath],
+          })
+        );
+      } else if (pnpmWorkspaceContents instanceof YAMLMap) {
+        const packages: Pair | undefined = pnpmWorkspaceContents.items.find(
+          (item: Pair) => {
+            return item.key instanceof Scalar
+              ? item.key?.value === 'packages'
+              : item.key === 'packages';
+          }
+        );
+        if (packages) {
+          if (packages.value instanceof YAMLSeq === false) {
+            packages.value = new YAMLSeq();
+          }
+          (packages.value as YAMLSeq).items ??= [];
+          (packages.value as YAMLSeq).items.push(packagePath);
+        } else {
+          // if the 'packages' key doesn't exist, create it
+          const packagesSeq = new YAMLSeq();
+          packagesSeq.items ??= [];
+          packagesSeq.items.push(packagePath);
+
+          pnpmWorkspaceDocument.add(
+            pnpmWorkspaceDocument.createPair('packages', packagesSeq)
+          );
+        }
+        writeFileSync(pnpmWorkspacePath, YAMLStringify(pnpmWorkspaceContents));
+      }
+    } else {
+      // If the file doesn't exist, create it
+      writeFileSync(
+        pnpmWorkspacePath,
+        YAMLStringify({
+          packages: [packagePath],
+        })
+      );
+    }
+  }
 }

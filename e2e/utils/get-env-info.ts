@@ -1,7 +1,8 @@
 import { readJsonFile, workspaceRoot } from '@nx/devkit';
-import { execSync } from 'child_process';
 import { existsSync } from 'fs-extra';
+import { execSync } from 'node:child_process';
 import { join } from 'path';
+import { gte } from 'semver';
 import { dirSync } from 'tmp';
 
 import * as isCI from 'is-ci';
@@ -15,7 +16,7 @@ export function getPublishedVersion(): string {
   process.env.PUBLISHED_VERSION =
     process.env.PUBLISHED_VERSION ||
     // read version of built nx package
-    readJsonFile(join(workspaceRoot, `./build/packages/nx/package.json`))
+    readJsonFile(join(workspaceRoot, `./dist/packages/nx/package.json`))
       .version ||
     // fallback to latest if built nx package is missing
     'latest';
@@ -23,7 +24,7 @@ export function getPublishedVersion(): string {
 }
 
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'bun.lockb'))
+  return existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
@@ -99,6 +100,17 @@ export function getYarnMajorVersion(path: string): string | undefined {
   }
 }
 
+export function getPnpmVersion(): string | undefined {
+  try {
+    const pnpmVersion = execSync(`pnpm -v`, {
+      encoding: 'utf-8',
+    }).trim();
+    return pnpmVersion;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getLatestLernaVersion(): string {
   const lernaVersion = execSync(`npm view lerna version`, {
     encoding: 'utf-8',
@@ -110,63 +122,50 @@ export const packageManagerLockFile = {
   npm: 'package-lock.json',
   yarn: 'yarn.lock',
   pnpm: 'pnpm-lock.yaml',
-  bun: 'bun.lockb',
+  bun: (() => {
+    try {
+      // In version 1.2.0, bun switched to a text based lockfile format by default
+      return gte(execSync('bun --version').toString().trim(), '1.2.0')
+        ? 'bun.lock'
+        : 'bun.lockb';
+    } catch {
+      return 'bun.lockb';
+    }
+  })(),
 };
 
-export function ensureCypressInstallation() {
-  let cypressVerified = true;
-  try {
-    const r = execSync('npx cypress verify', {
-      stdio: isVerbose() ? 'inherit' : 'pipe',
-      encoding: 'utf-8',
-      cwd: tmpProjPath(),
-    });
-    if (r.indexOf('Verified Cypress!') === -1) {
-      cypressVerified = false;
-    }
-  } catch {
-    cypressVerified = false;
-  } finally {
-    if (!cypressVerified) {
-      e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
-      execSync('npx cypress install', {
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-        encoding: 'utf-8',
-        cwd: tmpProjPath(),
-      });
-    }
-  }
-}
-
-export function ensurePlaywrightBrowsersInstallation() {
-  const playwrightInstallArgs =
-    process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
-  execSync(`npx playwright install ${playwrightInstallArgs}`, {
-    stdio: isVerbose() ? 'inherit' : 'pipe',
-    encoding: 'utf-8',
-    cwd: tmpProjPath(),
-  });
-  e2eConsoleLogger(
-    `Playwright browsers ${execSync('npx playwright --version')
-      .toString()
-      .trim()} installed.`
-  );
-}
+// Re-export browser installation utilities from ensure-browser-installation.ts
+export {
+  ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
+} from './ensure-browser-installation';
 
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
-    Object.entries(process.env).filter(([key, value]) => {
+    Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
       }
 
-      const allowedKeys = ['NX_ADD_PLUGINS', 'NX_ISOLATE_PLUGINS'];
+      const allowedKeys = [
+        'NX_ADD_PLUGINS',
+        'NX_ISOLATE_PLUGINS',
+        'NX_VERBOSE_LOGGING',
+        'NX_NATIVE_LOGGING',
+      ];
 
       if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
         return false;
       }
 
       if (key === 'JEST_WORKER_ID') {
+        return false;
+      }
+
+      // Remove NODE_PATH to prevent module resolution conflicts with original workspace.
+      // NODE_PATH is inherited from Jest (which runs from the original workspace) and contains
+      // pnpm paths that cause require.resolve() to find workspace packages instead of e2e test versions.
+      if (key === 'NODE_PATH') {
         return false;
       }
 

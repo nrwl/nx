@@ -1,3 +1,8 @@
+---
+title: Project Dependency Rules
+description: Learn how to organize your Nx workspace with library types like feature, UI, data-access, and utility libraries, and enforce dependency rules between them.
+---
+
 # Project Dependency Rules
 
 There are many types of libraries in a workspace. You can identify the type of a library through a naming convention and/or by using the project tagging system. With explicitly defined types, you can also use Nx to enforce project dependency rules based on the types of each project. This article explains one possible way to organize your repository projects by type. Every repository is different and yours may need a different set of types.
@@ -6,11 +11,11 @@ In order to maintain a certain sense of order, we recommend having a small numbe
 
 **Feature libraries:**
 
-Developers should consider feature libraries as libraries that implement smart UI (with access to data sources) for specific business use cases or pages in an application.
+Developers should consider feature libraries as libraries that implement container components (with access to data sources) for specific business use cases or pages in an application.
 
 **UI libraries:**
 
-A UI library contains only presentational components (also called "dumb" components).
+A UI library contains only presentational components.
 
 **Data-access libraries:**
 
@@ -26,7 +31,7 @@ A utility library contains low-level utilities used by many libraries and applic
 
 **What is it?**
 
-A feature library contains a set of files that configure a business use case or a page in an application. Most of the components in such a library are smart components that interact with data sources. This type of library also contains most of the UI logic, form validation code, etc. Feature libraries are almost always app-specific and are often lazy-loaded.
+A feature library contains a set of files that configure a business use case or a page in an application. Most of the components in such a library are container components that interact with data sources. This type of library also contains most of the UI logic, form validation code, etc. Feature libraries are almost always app-specific and are often lazy-loaded.
 
 **Naming Convention**
 

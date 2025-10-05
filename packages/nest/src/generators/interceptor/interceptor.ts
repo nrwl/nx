@@ -28,7 +28,9 @@ async function normalizeInterceptorOptions(
   tree: Tree,
   options: InterceptorGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'interceptor',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

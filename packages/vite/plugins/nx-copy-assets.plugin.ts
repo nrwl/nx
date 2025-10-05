@@ -1,6 +1,6 @@
 import { join, relative } from 'node:path';
 import type { Plugin, ResolvedConfig } from 'vite';
-import { joinPathFragments, workspaceRoot } from '@nx/devkit';
+import { isDaemonEnabled, joinPathFragments, workspaceRoot } from '@nx/devkit';
 import { AssetGlob } from '@nx/js/src/utils/assets/assets';
 import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
 
@@ -8,6 +8,8 @@ export function nxCopyAssetsPlugin(_assets: (string | AssetGlob)[]): Plugin {
   let config: ResolvedConfig;
   let handler: CopyAssetsHandler;
   let dispose: () => void;
+
+  if (global.NX_GRAPH_CREATION) return;
 
   return {
     name: 'nx-copy-assets-plugin',
@@ -29,10 +31,12 @@ export function nxCopyAssetsPlugin(_assets: (string | AssetGlob)[]): Plugin {
       handler = new CopyAssetsHandler({
         rootDir: workspaceRoot,
         projectDir: config.root,
-        outputDir: join(config.root, config.build.outDir),
+        outputDir: config.build.outDir.startsWith(config.root)
+          ? config.build.outDir
+          : join(config.root, config.build.outDir),
         assets,
       });
-      if (this.meta.watchMode) {
+      if (this.meta.watchMode && isDaemonEnabled()) {
         dispose = await handler.watchAndProcessOnAssetChange();
       }
     },

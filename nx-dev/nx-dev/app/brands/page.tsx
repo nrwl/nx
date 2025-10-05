@@ -1,15 +1,21 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   Hero,
   LernaBrand,
   NxBrand,
   NxCloudBrand,
   NxConsoleBrand,
-} from '@nx/nx-dev/ui-brands';
+} from '@nx/nx-dev-ui-brands';
 import type { Metadata } from 'next';
+
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Brands & Guidelines',
+  alternates: {
+    canonical: 'https://nx.dev/brands',
+  },
   description:
     'We’ve created the following guidelines for 3rd party use of our logos, content, and trademarks.',
   openGraph: {
@@ -22,11 +28,11 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],
-    siteName: 'NxDev',
+    siteName: 'Nx',
     type: 'website',
   },
 };

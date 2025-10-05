@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": ["dom", "dom.iterable", "es2021", "esnext"],
+    "outDir": "../../dist/nx-dev/nx-dev",
+    "tsBuildInfoFile": "../../dist/nx-dev/nx-dev/tsconfig.tsbuildinfo",
     "jsx": "preserve",
     "allowJs": true,
     "esModuleInterop": true,
@@ -12,7 +14,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
+    "composite": true,
     "strictNullChecks": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "noEmitOnError": false,
     "plugins": [
       {
         "name": "next"
@@ -26,11 +34,154 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "../../dist/nx-dev/nx-dev/.next/types/**/*.ts"
+    "../../dist/nx-dev/nx-dev/.next/types/**/*.ts",
+    "public/documentation/**/*.json",
+    "dist/nx-dev/nx-dev/.next/types/**/*.ts"
   ],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../ui-cloud"
+    },
+    {
+      "path": "../ui-ai-landing-page"
+    },
+    {
+      "path": "../ui-blog"
+    },
+    {
+      "path": "../ui-fence"
+    },
+    {
+      "path": "../ui-sponsor-card"
+    },
+    {
+      "path": "../ui-member-card"
+    },
+    {
+      "path": "../ui-references"
+    },
+    {
+      "path": "../ui-partners"
+    },
+    {
+      "path": "../ui-home"
+    },
+    {
+      "path": "../ui-customers"
+    },
+    {
+      "path": "../ui-contact"
+    },
+    {
+      "path": "../feature-search"
+    },
+    {
+      "path": "../models-menu"
+    },
+    {
+      "path": "../ui-animations"
+    },
+    {
+      "path": "../ui-conference"
+    },
+    {
+      "path": "../ui-enterprise"
+    },
+    {
+      "path": "../ui-company"
+    },
+    {
+      "path": "../ui-community"
+    },
+    {
+      "path": "../feature-ai"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../feature-feedback"
+    },
+    {
+      "path": "../ui-scrollable-content"
+    },
+    {
+      "path": "../feature-package-schema-viewer"
+    },
+    {
+      "path": "../feature-doc-viewer"
+    },
+    {
+      "path": "../models-document"
+    },
+    {
+      "path": "../ui-markdoc"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "../data-access-courses"
+    },
+    {
+      "path": "../data-access-documents"
+    },
+    {
+      "path": "../models-package"
+    },
+    {
+      "path": "../data-access-packages"
+    },
+    {
+      "path": "../data-access-menu"
+    },
+    {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../util-ai"
+    },
+    {
+      "path": "../ui-webinar"
+    },
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../ui-remote-cache"
+    },
+    {
+      "path": "../ui-react"
+    },
+    {
+      "path": "../ui-pricing"
+    },
+    {
+      "path": "../ui-powerpack"
+    },
+    {
+      "path": "../ui-podcast"
+    },
+    {
+      "path": "../ui-gradle"
+    },
+    {
+      "path": "../ui-video-courses"
+    },
+    {
+      "path": "../ui-courses"
+    },
+    {
+      "path": "../data-access-careers"
+    },
+    {
+      "path": "../ui-careers"
+    },
+    {
+      "path": "../ui-brands"
+    },
+    {
+      "path": "../feature-analytics"
     }
   ],
   "exclude": [
@@ -39,6 +190,10 @@
     "**/*.spec.tsx",
     "**/*.test.tsx",
     "jest.config.ts",
-    "node_modules"
+    "node_modules",
+    "../../node_modules",
+    "**/node_modules",
+    "../../packages/*/node_modules/**",
+    "node_modules/.pnpm/**"
   ]
 }

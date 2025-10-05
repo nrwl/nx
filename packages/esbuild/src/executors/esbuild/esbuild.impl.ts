@@ -18,7 +18,10 @@ import {
 import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
-import { EsBuildExecutorOptions } from './schema';
+import {
+  EsBuildExecutorOptions,
+  NormalizedEsBuildExecutorOptions,
+} from './schema';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
@@ -89,10 +92,12 @@ export async function* esbuildExecutor(
 
     const cpjOptions: CopyPackageJsonOptions = {
       ...options,
+      format: options.format,
       // TODO(jack): make types generate with esbuild
       skipTypings: true,
       generateLockfile: true,
-      outputFileExtensionForCjs: getOutExtension('cjs', options),
+      outputFileExtensionForCjs: getOutExtension('cjs', options, context),
+      outputFileExtensionForEsm: getOutExtension('esm', options, context),
       excludeLibsInPackageJson: !options.thirdParty,
       // TODO(jack): Remove the need to pass updateBuildableProjectDepsInPackageJson option when overrideDependencies or extraDependencies are passed.
       // Add this back to fix a regression.
@@ -130,7 +135,10 @@ export async function* esbuildExecutor(
                       name: 'nx-watch-plugin',
                       setup(build: esbuild.PluginBuild) {
                         build.onEnd(async (result: esbuild.BuildResult) => {
-                          if (!options.skipTypeCheck) {
+                          if (
+                            !options.skipTypeCheck ||
+                            options.isTsSolutionSetup
+                          ) {
                             const { errors } = await runTypeCheck(
                               options,
                               context
@@ -163,21 +171,28 @@ export async function* esbuildExecutor(
             });
 
             await ctx.watch();
-            return () => ctx.dispose();
+            return async () => ctx.dispose();
           })
         );
 
         registerCleanupCallback(() => {
-          assetsResult?.stop();
-          packageJsonResult?.stop();
-          disposeFns.forEach((fn) => fn());
+          if (typeof assetsResult?.stop === 'function') assetsResult.stop();
+
+          if (typeof packageJsonResult?.stop === 'function') {
+            packageJsonResult.stop();
+          }
+
+          disposeFns.forEach(async (fn) => {
+            await fn();
+          });
+
           done(); // return from async iterable
         });
       }
     );
   } else {
     // Run type-checks first and bail if they don't pass.
-    if (!options.skipTypeCheck) {
+    if (!options.skipTypeCheck || options.isTsSolutionSetup) {
       const { errors } = await runTypeCheck(options, context);
       if (errors.length > 0) {
         yield { success: false };
@@ -213,7 +228,7 @@ export async function* esbuildExecutor(
 }
 
 function getTypeCheckOptions(
-  options: EsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   const { watch, tsConfig, outputPath } = options;
@@ -239,11 +254,15 @@ function getTypeCheckOptions(
     typeCheckOptions.cacheDir = cacheDir;
   }
 
+  if (options.isTsSolutionSetup && options.skipTypeCheck) {
+    typeCheckOptions.ignoreDiagnostics = true;
+  }
+
   return typeCheckOptions;
 }
 
 async function runTypeCheck(
-  options: EsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   const { errors, warnings } = await _runTypeCheck(

@@ -19,6 +19,10 @@ main jobs (e.g., when running CI on both Linux and Windows or when running the s
 of Node.js or Java). In this case you can set the `NX_CI_EXECUTION_ENV` env variable on main jobs and agents. The main
 job where the `NX_CI_EXECUTION_ENV` is set to, say, `macos`, will connect to the agents with the same env name.
 
+### NX_AGENT_LAUNCH_TEMPLATE
+
+This variable should only used when running agents with Manual DTE. Use this env variable to attach a launch template type to your agents. This enables you leverage [assignment rules](/ci/reference/assignment-rules) to distribute tasks to agents based on their launch template. Assignment rules allow you to decide which agents can execute which tasks and also configure the parallelism you want for each task for each agent.
+
 ### NX_CLOUD_ACCESS_TOKEN
 
 You can also configure the access token by setting the `NX_CLOUD_ACCESS_TOKEN` environment

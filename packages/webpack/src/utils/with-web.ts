@@ -18,7 +18,11 @@ export interface WithWebOptions {
   index?: string;
   postcssConfig?: string;
   scripts?: Array<ExtraEntryPointClass | string>;
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;
   ssr?: boolean;

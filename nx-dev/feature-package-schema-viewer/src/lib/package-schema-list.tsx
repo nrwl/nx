@@ -1,22 +1,28 @@
 import {
+  MigrationMetadata,
   PackageMetadata,
   ProcessedPackageMetadata,
-} from '@nx/nx-dev/models-package';
-import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+} from '@nx/nx-dev-models-package';
+import { Breadcrumbs, Footer } from '@nx/nx-dev-ui-common';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import React, { ReactNode } from 'react';
 import { Heading1, Heading2 } from './ui/headings';
 import { DocumentList, SchemaList } from './ui/package-reference';
 import { TopSchemaLayout } from './ui/top.layout';
+import { major, minor } from 'semver';
+import { MigrationViewer } from './migration-viewer';
+import { VersionLabelListItem } from './package-schema-sub-list';
 
 export function PackageSchemaList({
   overview,
   pkg,
+  migrations,
 }: {
   overview: string;
   pkg: ProcessedPackageMetadata;
+  migrations?: MigrationMetadata[];
 }): JSX.Element {
   const router = useRouter();
 
@@ -33,6 +39,7 @@ export function PackageSchemaList({
         .filter((d) => d.id !== 'overview'),
       executors: Object.keys(pkg.executors).map((k) => pkg.executors[k]),
       generators: Object.keys(pkg.generators).map((k) => pkg.generators[k]),
+      migrations: Object.keys(pkg.migrations).map((k) => pkg.migrations[k]),
     },
     githubUrl: pkg.githubRoot + pkg.root,
     seo: {
@@ -48,6 +55,17 @@ export function PackageSchemaList({
     }).node,
   };
 
+  const filesAndLabels: (string | MigrationMetadata)[] = [];
+  let currentVersion = '';
+  ((migrations as any) || []).forEach((file: MigrationMetadata) => {
+    const minorVersion = `${major(file.version)}.${minor(file.version)}.x`;
+    if (currentVersion !== minorVersion) {
+      currentVersion = minorVersion;
+      filesAndLabels.push(minorVersion);
+    }
+    filesAndLabels.push(file);
+  });
+
   return (
     <>
       <NextSeo
@@ -61,7 +79,7 @@ export function PackageSchemaList({
               url: vm.seo.imageUrl,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -86,20 +104,44 @@ export function PackageSchemaList({
             <Heading2 title="Package reference" />
 
             <p className="mb-16">
-              Here is a list of all the executors and generators available from
-              this package.
+              Here is a list of all the executors, generators and migrations
+              available from this package.
             </p>
 
-            <Heading2 title={'Guides'} />
-            <DocumentList documents={vm.package.documents} />
+            {vm.package.documents?.length ? (
+              <>
+                <Heading2 title={'Guides'} />
+                <DocumentList documents={vm.package.documents} />
+                <div className="h-12">{/* SPACER */}</div>
+              </>
+            ) : null}
 
-            <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Executors'} />
             <SchemaList files={vm.package.executors} type={'executor'} />
 
             <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Generators'} />
             <SchemaList files={vm.package.generators} type={'generator'} />
+
+            <div className="h-12">{/* SPACER */}</div>
+            <Heading2 title={'Migrations'} />
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+              {!!filesAndLabels.length
+                ? filesAndLabels.map((schema) =>
+                    typeof schema === 'string' ? (
+                      <VersionLabelListItem
+                        key={schema}
+                        label={schema}
+                      ></VersionLabelListItem>
+                    ) : (
+                      <MigrationViewer
+                        key={schema.name}
+                        schema={schema}
+                      ></MigrationViewer>
+                    )
+                  )
+                : undefined}
+            </ul>
           </div>
         </div>
       </div>

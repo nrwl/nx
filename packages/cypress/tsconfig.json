@@ -7,10 +7,22 @@
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../nx"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../js"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

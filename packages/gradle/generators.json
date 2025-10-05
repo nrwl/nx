@@ -5,7 +5,8 @@
     "init": {
       "factory": "./src/generators/init/init#initGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initializes a Gradle project in the current workspace"
+      "description": "Initializes a Gradle project in the current workspace",
+      "hidden": true
     },
     "ci-workflow": {
       "factory": "./src/generators/ci-workflow/generator",

@@ -2,6 +2,7 @@
   "name": "ssr-dev-server",
   "implementation": "/packages/rspack/src/executors/ssr-dev-server/ssr-dev-server.impl.ts",
   "schema": {
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "title": "Rspack SSR Dev Server",
     "description": "Serve a SSR application using rspack.",

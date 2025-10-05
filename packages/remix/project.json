@@ -5,22 +5,13 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js remix",
-      "outputs": ["{workspaceRoot}/build/packages/remix"]
+      "outputs": ["{workspaceRoot}/dist/packages/remix/README.md"],
+      "command": "node ./scripts/copy-readme.js remix"
     },
-    "build-base": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "outputPath": "build/packages/remix",
-        "tsConfig": "packages/remix/tsconfig.lib.json",
-        "packageJson": "packages/remix/package.json",
-        "main": "packages/remix/index.ts",
-        "generateExportsField": true,
-        "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json",
-          "{projectRoot}/generators.ts"
-        ],
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           "packages/remix/*.md",
           {

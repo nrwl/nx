@@ -4,9 +4,15 @@
   "sourceRoot": "packages/detox/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/detox/README.md"],
+      "command": "node ./scripts/copy-readme.js detox",
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/detox",
@@ -40,13 +46,6 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/detox"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js detox"
       }
     }
   }

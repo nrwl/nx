@@ -55,6 +55,17 @@ export function withGitOptions<T = unknown>(argv: yargs.Argv<T>) {
       default: false,
       alias: 'g',
     })
+    .option('skipGitHubPush', {
+      describe: chalk.dim`Skip pushing to GitHub via gh CLI.`,
+      type: 'boolean',
+      default: false,
+    })
+    .option('verbose', {
+      describe: chalk.dim`Enable verbose logging.`,
+      type: 'boolean',
+      default: false,
+      alias: 'v',
+    })
     .option('commit.name', {
       describe: chalk.dim`Name of the committer.`,
       type: 'string',

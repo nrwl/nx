@@ -1,0 +1,19 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                         "
+" NX    Running Test Tasks"
+"                         "
+"  ⠋    task1             "
+"                         "
+"> ·    task2             "
+"  ·    task3             "
+"                         "
+"                         "
+"                         "
+"                         "
+"                         "
+"                         "
+"                         "
+"         quit: q  help: ?"

@@ -6,11 +6,18 @@ Graph of Tasks to be executed
 
 ### Properties
 
-- [dependencies](../../devkit/documents/TaskGraph#dependencies): Record<string, string[]>
-- [roots](../../devkit/documents/TaskGraph#roots): string[]
-- [tasks](../../devkit/documents/TaskGraph#tasks): Record<string, Task>
+- [continuousDependencies](/reference/core-api/devkit/documents/TaskGraph#continuousdependencies): Record<string, string[]>
+- [dependencies](/reference/core-api/devkit/documents/TaskGraph#dependencies): Record<string, string[]>
+- [roots](/reference/core-api/devkit/documents/TaskGraph#roots): string[]
+- [tasks](/reference/core-api/devkit/documents/TaskGraph#tasks): Record<string, Task>
 
 ## Properties
+
+### continuousDependencies
+
+• **continuousDependencies**: `Record`\<`string`, `string`[]\>
+
+---
 
 ### dependencies
 
@@ -30,6 +37,6 @@ IDs of Tasks which do not have any dependencies and are thus ready to execute im
 
 ### tasks
 
-• **tasks**: `Record`\<`string`, [`Task`](../../devkit/documents/Task)\>
+• **tasks**: `Record`\<`string`, [`Task`](/reference/core-api/devkit/documents/Task)\>
 
 Map of Task IDs to Tasks

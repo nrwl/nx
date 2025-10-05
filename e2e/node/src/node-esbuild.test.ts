@@ -9,7 +9,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Node Applications + esbuild', () => {
   beforeAll(() =>
@@ -24,7 +24,7 @@ describe('Node Applications + esbuild', () => {
     const app = uniq('nodeapp');
 
     runCLI(
-      `generate @nx/node:app apps/${app} --bundler=esbuild --no-interactive`
+      `generate @nx/node:app apps/${app} --bundler=esbuild --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     checkFilesDoNotExist(`apps/${app}/webpack.config.js`);

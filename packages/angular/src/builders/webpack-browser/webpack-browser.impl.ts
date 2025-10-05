@@ -13,12 +13,32 @@ import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
 import type { BrowserBuilderSchema } from './schema';
+// This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
+const Module = require('module');
+
+const originalResolveFilename = Module._resolveFilename;
+const patchedWebpackPath = require.resolve('webpack', {
+  paths: [require.resolve('@angular-devkit/build-angular')],
+});
+
+// Override the resolve function
+Module._resolveFilename = function (request, parent, isMain, options) {
+  // Intercept webpack specifically
+  if (request === 'webpack') {
+    // Force webpack to resolve from your specific path
+    return patchedWebpackPath;
+  }
+
+  // For all other modules, use the original resolver
+  return originalResolveFilename.call(this, request, parent, isMain, options);
+};
 
 function shouldSkipInitialTargetRun(
   projectGraph: ProjectGraph,
@@ -51,12 +71,13 @@ export function executeWebpackBrowserBuilder(
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
   options.buildLibsFromSource ??= true;
+  options.watchDependencies ??= true;
 
   const {
     buildLibsFromSource,
     customWebpackConfig,
     indexHtmlTransformer,
-    indexFileTransformer,
+    watchDependencies,
     ...delegateBuilderOptions
   } = options;
 
@@ -72,11 +93,9 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
-  const normalizedIndexHtmlTransformer =
-    indexHtmlTransformer ?? indexFileTransformer;
   const pathToIndexFileTransformer =
-    normalizedIndexHtmlTransformer &&
-    joinPathFragments(context.workspaceRoot, normalizedIndexHtmlTransformer);
+    indexHtmlTransformer &&
+    joinPathFragments(context.workspaceRoot, indexHtmlTransformer);
   if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
     throw new Error(
       `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`
@@ -99,6 +118,7 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeBrowserBuilder }) =>
       executeBrowserBuilder(delegateBuilderOptions, context as any, {
@@ -124,7 +144,7 @@ export function executeWebpackBrowserBuilder(
                   `nx run-many --target=${
                     context.target.target
                   } --projects=${workspaceDependencies.join(',')}`,
-                  skipInitialRun
+                  { skipInitialRun, skipWatchingDeps: !watchDependencies }
                 )
               );
             }

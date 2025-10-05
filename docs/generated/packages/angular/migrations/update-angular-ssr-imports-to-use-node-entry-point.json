@@ -1,0 +1,15 @@
+{
+  "name": "update-angular-ssr-imports-to-use-node-entry-point",
+  "cli": "nx",
+  "version": "20.2.0-beta.5",
+  "requires": { "@angular/core": ">=19.0.0" },
+  "description": "Update '@angular/ssr' import paths to use the new '/node' entry point when 'CommonEngine' is detected.",
+  "factory": "./src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point",
+  "implementation": "/packages/angular/src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Update Angular SSR Imports to Use Node Entry Point\n\nUpdate '@angular/ssr' import paths to use the new '/node' entry point when 'CommonEngine' is detected.\n\n#### Sample Code Changes\n\nUpdate import paths for SSR CommonEngine properties to use `@angular/ssr/node`.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"apps/app1/server.ts\" %}\nimport { CommonEngine } from '@angular/ssr';\nimport type {\n  CommonEngineOptions,\n  CommonEngineRenderOptions,\n} from '@angular/ssr';\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"apps/app1/server.ts\" %}\nimport { CommonEngine } from '@angular/ssr/node';\nimport type {\n  CommonEngineOptions,\n  CommonEngineRenderOptions,\n} from '@angular/ssr/node';\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

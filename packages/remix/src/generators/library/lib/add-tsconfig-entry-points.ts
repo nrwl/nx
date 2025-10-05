@@ -5,14 +5,16 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { RemixLibraryOptions } from './normalize-options';
 
 export function addTsconfigEntryPoints(
   tree: Tree,
   options: RemixLibraryOptions
 ) {
-  const { sourceRoot } = readProjectConfiguration(tree, options.projectName);
-  const serverFilePath = joinPathFragments(sourceRoot, 'server.ts');
+  const project = readProjectConfiguration(tree, options.projectName);
+  const projectSourceRoot = getProjectSourceRoot(project, tree);
+  const serverFilePath = joinPathFragments(projectSourceRoot, 'server.ts');
 
   tree.write(
     serverFilePath,

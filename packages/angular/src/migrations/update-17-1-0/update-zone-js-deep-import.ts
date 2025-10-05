@@ -2,7 +2,7 @@ import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 export default async function (tree: Tree) {
-  const angularProjects = await getProjectsFilteredByDependencies(tree, [
+  const angularProjects = await getProjectsFilteredByDependencies([
     'npm:@angular/core',
   ]);
 
@@ -13,8 +13,8 @@ export default async function (tree: Tree) {
   const zoneJsImportRegex = /(['"`])zone\.js\/dist\/zone(['"`])/g;
   const zoneJsTestingImportRegex =
     /(['"`])zone\.js\/dist\/zone-testing(['"`])/g;
-  for (const { project } of angularProjects) {
-    visitNotIgnoredFiles(tree, project.root, (file) => {
+  for (const graphNode of angularProjects) {
+    visitNotIgnoredFiles(tree, graphNode.data.root, (file) => {
       // we are only interested in .ts files
       if (!file.endsWith('.ts')) {
         return;

@@ -6,8 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
-import type * as eslint from 'eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -31,7 +30,7 @@ export async function addLintingGenerator(
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
   const lintTask = await lintProjectGenerator(tree, {
-    linter: Linter.EsLint,
+    linter: 'eslint',
     project: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
@@ -40,7 +39,7 @@ export async function addLintingGenerator(
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,
-    addPlugin: false,
+    addPlugin: options.addPlugin ?? false,
     addExplicitTargets: true,
     skipPackageJson: options.skipPackageJson,
   });
@@ -89,22 +88,6 @@ export async function addLintingGenerator(
         files: ['*.html'],
         rules: {},
       });
-
-      if (isBuildableLibraryProject(tree, options.projectName)) {
-        addOverrideToLintConfig(tree, '', {
-          files: ['*.json'],
-          parser: 'jsonc-eslint-parser',
-          rules: {
-            '@nx/dependency-checks': [
-              'error',
-              {
-                // With flat configs, we don't want to include imports in the eslint js/cjs/mjs files to be checked
-                ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
-              },
-            ],
-          },
-        });
-      }
     } else {
       replaceOverridesInLintConfig(tree, options.projectRoot, [
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),

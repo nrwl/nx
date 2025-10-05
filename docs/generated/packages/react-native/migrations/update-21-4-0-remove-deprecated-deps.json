@@ -1,0 +1,14 @@
+{
+  "name": "update-21-4-0-remove-deprecated-deps",
+  "version": "21.4.0-beta.0",
+  "cli": "nx",
+  "description": "Remove deprecated dependencies from package.json",
+  "factory": "./src/migrations/update-21-4-0/remove-deprecated-deps",
+  "implementation": "/packages/react-native/src/migrations/update-21-4-0/remove-deprecated-deps.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

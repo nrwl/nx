@@ -95,8 +95,6 @@ function generatePresetsMarkdown(): string {
     [Preset.NuxtStandalone]: 'A single Nuxt application',
     [Preset.NextJs]: 'A Next monorepo',
     [Preset.NextJsStandalone]: 'A single Next application',
-    [Preset.RemixMonorepo]: 'A Remix monorepo',
-    [Preset.RemixStandalone]: 'A single Remix application',
     [Preset.ReactNative]: 'A monorepo with a React Native application',
     [Preset.Expo]: 'A monorepo with an Expo application',
     [Preset.Nest]: 'A monorepo with a Nest application',

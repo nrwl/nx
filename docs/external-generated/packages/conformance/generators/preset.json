@@ -1,0 +1,19 @@
+{
+  "name": "preset",
+  "factory": "./src/generators/preset/preset",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "id": "NxPowerpackConformancePreset",
+    "title": "Nx workspace preset which includes a working conformance rule",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "Nx workspace preset which includes a working conformance rule",
+  "implementation": "/libs/nx-packages/conformance/src/generators/preset/preset.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/libs/nx-packages/conformance/src/generators/preset/schema.json",
+  "type": "generator"
+}

@@ -1,4 +1,4 @@
-Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which is a mandatory property. This tells us where to look for files to lint.
+Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which tells us where to look for files to lint. If not specified, it defaults to `['{projectRoot}']`.
 
 `project.json`:
 
@@ -96,12 +96,12 @@ We can also set this via project configuration as a default option.
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
-    "eslintConfig": "eslint.config.js"
+    "eslintConfig": "eslint.config.cjs"
   }
 }
 ```
 
-**Note:** In contrast to other configuration formats, the `Flat Config` requires that all configuration files are converted to `eslint.config.js`. Built-in migrations and generators support only `.eslintrc.json` at the moment.
+**Note:** In contrast to other configuration formats, the `Flat Config` requires that all configuration files are converted to `eslint.config.cjs`. Built-in migrations and generators support only `.eslintrc.json` at the moment.
 
 {% /tab %}
 {% /tabs %}

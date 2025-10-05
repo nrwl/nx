@@ -3,7 +3,16 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/nx-dev-e2e/src",
   "projectType": "application",
-  "targets": {},
+  "targets": {
+    "pw-e2e": {
+      "command": "echo 'pw-e2e disabled'",
+      "cache": true
+    },
+    "e2e-ci": {
+      "command": "echo 'e2e-ci disabled'",
+      "cache": true
+    }
+  },
   "tags": ["scope:nx-dev", "type:e2e"],
   "implicitDependencies": ["nx-dev"]
 }

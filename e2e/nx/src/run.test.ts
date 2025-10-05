@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -44,6 +44,39 @@ describe('Nx Running Tests', () => {
           };
           return c;
         });
+      });
+
+      it('should support running with simple names (i.e. matching on full segments)', () => {
+        const foo = uniq('foo');
+        const bar = uniq('bar');
+        const nested = uniq('nested');
+        runCLI(`generate @nx/js:lib libs/${foo}`);
+        runCLI(`generate @nx/js:lib libs/${bar}`);
+        runCLI(`generate @nx/js:lib libs/nested/${nested}`);
+        updateJson(`libs/${foo}/project.json`, (c) => {
+          c.name = `@acme/${foo}`;
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+        updateJson(`libs/${bar}/project.json`, (c) => {
+          c.name = `@acme/${bar}`;
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+        updateJson(`libs/nested/${nested}/project.json`, (c) => {
+          c.name = `@acme/nested/${bar}`; // The last segment is a duplicate
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+
+        // Full segments should match
+        expect(() => runCLI(`echo ${foo}`)).not.toThrow();
+
+        // Multiple matches should fail
+        expect(() => runCLI(`echo ${bar}`)).toThrow();
+
+        // Partial segments should not match (Note: project foo has numbers in the end that aren't matched fully)
+        expect(() => runCLI(`echo foo`)).toThrow();
       });
 
       it.each([
@@ -122,7 +155,7 @@ describe('Nx Running Tests', () => {
       expect(success).toContain('0');
       expect(success).toContain('1');
 
-      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
+      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrow();
     });
 
     it('should run npm scripts', async () => {
@@ -420,6 +453,33 @@ describe('Nx Running Tests', () => {
       );
     }, 10000);
 
+    it('should default to "run" target when only project is specified and it has a run target', () => {
+      const myapp = uniq('app');
+      runCLI(`generate @nx/web:app apps/${myapp}`);
+
+      // Add a "run" target to the project
+      updateJson(`apps/${myapp}/project.json`, (c) => {
+        c.targets['run'] = {
+          command: 'echo Running the app',
+        };
+        return c;
+      });
+
+      // Running with just the project name should default to the "run" target
+      const output = runCLI(`run ${myapp}`);
+      expect(output).toContain('Running the app');
+      expect(output).toContain(`nx run ${myapp}:run`);
+    });
+
+    it('should still require target when project does not have a run target', () => {
+      const myapp = uniq('app');
+      runCLI(`generate @nx/web:app apps/${myapp}`);
+
+      // Project has no "run" target, so it should fail
+      const result = runCLI(`run ${myapp}`, { silenceError: true });
+      expect(result).toContain('Both project and target have to be specified');
+    });
+
     describe('target defaults + executor specifications', () => {
       it('should be able to run targets with unspecified executor given an appropriate targetDefaults entry', () => {
         const target = uniq('target');
@@ -589,7 +649,7 @@ describe('Nx Running Tests', () => {
         `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared --directory=libs/${libC}`
       );
       runCLI(
-        `generate @nx/node:lib ${libD} --defaults --tags=api --directory=libs/${libD}`
+        `generate @nx/node:lib ${libD} --defaults --tags=api --directory=libs/${libD} --buildable=false`
       );
 
       // libA depends on libC
@@ -695,8 +755,12 @@ describe('Nx Running Tests', () => {
     it('should run multiple targets', () => {
       const myapp1 = uniq('myapp');
       const myapp2 = uniq('myapp');
-      runCLI(`generate @nx/web:app ${myapp1} --directory=apps/${myapp1}`);
-      runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
+      runCLI(
+        `generate @nx/web:app ${myapp1} --directory=apps/${myapp1} --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/web:app ${myapp2} --directory=apps/${myapp2} --unitTestRunner=vitest`
+      );
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).

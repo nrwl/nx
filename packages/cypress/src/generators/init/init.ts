@@ -11,7 +11,6 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { addPlugin as _addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../plugins/plugin';
 import { cypressVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
@@ -106,8 +105,6 @@ export async function cypressInitGeneratorInternal(
   tree: Tree,
   options: Schema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'cypress', 'init');
-
   updateProductionFileset(tree);
 
   const nxJson = readNxJson(tree);

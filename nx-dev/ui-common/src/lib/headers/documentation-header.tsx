@@ -1,28 +1,35 @@
 'use client';
-import { Fragment, type JSX } from 'react';
+import {
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useState,
+  useEffect,
+} from 'react';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from '../button';
-import { Popover, Transition } from '@headlessui/react';
-import { TwoColumnsMenu } from './two-columns-menu';
 import {
-  featuresItems,
-  resourceMenuItems,
-  solutionsMenuItems,
-} from './menu-items';
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
-import { AnnouncementBanner } from '../announcement-banner';
 import { DiscordIcon } from '../discord-icon';
-import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { VersionPicker } from '../version-picker';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
-function Menu({ tabs }: { tabs: any[] }): JSX.Element {
+function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
     <div className="hidden sm:block">
       <nav
@@ -57,28 +64,45 @@ export function DocumentationHeader({
 }: {
   isNavOpen: boolean;
   toggleNav: (value: boolean) => void;
-}): JSX.Element {
+}): ReactElement {
   const router = useRouter();
-  let routerPath = router.asPath;
-  const isCI: boolean = routerPath.startsWith('/ci');
-  const isAPI: boolean = routerPath.startsWith('/nx-api');
-  const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
-  const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
-  const isChangelog: boolean = routerPath.startsWith('/changelog');
-  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
+
+  const isCI: boolean = isClient && currentPath.startsWith('/ci');
+  const isExtendingNx: boolean =
+    isClient && currentPath.startsWith('/extending-nx');
+  const isPlugins: boolean =
+    isClient && currentPath.startsWith('/plugin-registry');
+  const isChangelog: boolean = isClient && currentPath.startsWith('/changelog');
+  const isAiChat: boolean = isClient && currentPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isCI &&
-    !isAPI &&
-    !isExtendingNx &&
-    !isPlugins &&
-    !isChangelog &&
-    !isAiChat;
+    !isCI && !isExtendingNx && !isPlugins && !isChangelog && !isAiChat;
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    if (isClient) {
+      router.push('/brands');
+    }
+  };
+
+  // Use the new docs URL when Astro docs are enabled
+  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
+    ? '/docs/getting-started/intro'
+    : '/getting-started/intro';
 
   const sections = [
-    { name: 'Nx', href: '/getting-started/intro', current: isNx },
+    { name: 'Nx', href: docsUrl, current: isNx },
     {
       name: 'CI',
-      href: '/ci/intro/ci-with-nx',
+      href: process.env.NEXT_PUBLIC_ASTRO_URL
+        ? '/docs/features/ci-features'
+        : '/ci/features',
       current: isCI,
     },
     {
@@ -88,13 +112,10 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: '/plugin-registry',
+      href: process.env.NEXT_PUBLIC_ASTRO_URL
+        ? '/docs/plugin-registry'
+        : '/plugin-registry',
       current: isPlugins,
-    },
-    {
-      name: 'API',
-      href: '/nx-api',
-      current: isAPI,
     },
     {
       name: 'Changelog',
@@ -133,6 +154,23 @@ export function DocumentationHeader({
       ),
     },
     {
+      name: 'Bluesky',
+      label: 'Latest news on Bluesky',
+      href: 'https://bsky.app/profile/nx.dev?utm_source=nx.dev',
+      icon: (props: any) => (
+        <svg
+          fill="currentColor"
+          role="img"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {/*<title>Bluesky</title>*/}
+          <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z" />
+        </svg>
+      ),
+    },
+    {
       name: 'Youtube',
       label: 'Youtube channel',
       href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
@@ -146,6 +184,23 @@ export function DocumentationHeader({
         >
           {/*<title>YouTube</title>*/}
           <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14c-1.88-.5-9.38-.5-9.38-.5s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.87.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.54 15.57V8.43L15.82 12l-6.28 3.57z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'LinkedIn',
+      label: 'Nx on LinkedIn',
+      href: 'https://www.linkedin.com/company/nxdevtools',
+      icon: (props: any) => (
+        <svg
+          fill="currentColor"
+          role="img"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {/*<title>LinkedIn</title>*/}
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
         </svg>
       ),
     },
@@ -170,10 +225,7 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="hidden w-full md:block">
-        <AnnouncementBanner />
-      </div>
-      <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
+      <div className="mx-auto flex w-full items-center gap-4 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
           <button
@@ -193,138 +245,56 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-auto">
-            <AlgoliaSearch />
-          </div>
+          {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+            <div className="mx-4 w-auto flex-grow">
+              <AlgoliaSearch />
+            </div>
+          )}
         </div>
         {/*LOGO*/}
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <Link
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
-            href="/getting-started/intro"
+            href={docsUrl}
             className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
             prefetch={false}
+            onClick={() =>
+              sendCustomEvent(
+                'documentation-click',
+                'header-navigation',
+                'documentation-header'
+              )
+            }
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
             </span>
           </Link>
+          <VersionPicker />
         </div>
         {/*SEARCH*/}
-        <div className="hidden w-full max-w-[14rem] lg:inline">
-          <AlgoliaSearch />
-        </div>
+        {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
+          <div className="hidden w-full max-w-[14rem] lg:inline">
+            <AlgoliaSearch />
+          </div>
+        )}
         {/*NAVIGATION*/}
-        <div className="hidden flex-shrink-0 xl:flex">
+        <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
+            className="hidden items-center justify-center space-x-2 text-sm lg:flex"
           >
             <h2 className="sr-only">Main navigation</h2>
-            {/*FEATURES*/}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button
-                    className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    >
-                      Features
-                    </span>
-                    <ChevronDownIcon
-                      aria-hidden="true"
-                      className={cx(
-                        open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                          : '',
-                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    />
-                  </Popover.Button>
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute z-30 mt-3 w-max max-w-3xl xl:max-w-3xl">
-                      <TwoColumnsMenu items={featuresItems} />
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
-            {/*SOLUTIONS*/}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button
-                    className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    >
-                      Solutions
-                    </span>
-                    <ChevronDownIcon
-                      className={cx(
-                        open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                          : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                      aria-hidden="true"
-                    />
-                  </Popover.Button>
-
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute z-30 mt-3 w-max max-w-2xl">
-                      <SectionsMenu sections={solutionsMenuItems} />
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
-            <Link
-              href="/getting-started/intro"
-              title="Documentation"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Docs
-            </Link>
             <Link
               href="/blog"
               title="Blog"
@@ -333,19 +303,11 @@ export function DocumentationHeader({
             >
               Blog
             </Link>
-            <Link
-              href="/pricing"
-              title="Nx Cloud"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              CI Pricing
-            </Link>
             {/*RESOURCES*/}
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Popover.Button
+                  <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
                       'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
@@ -363,7 +325,7 @@ export function DocumentationHeader({
                       )}
                       aria-hidden="true"
                     />
-                  </Popover.Button>
+                  </PopoverButton>
 
                   <Transition
                     as={Fragment}
@@ -374,37 +336,76 @@ export function DocumentationHeader({
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                    <PopoverPanel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
                       <SectionsMenu sections={resourceMenuItems} />
-                    </Popover.Panel>
+                    </PopoverPanel>
                   </Transition>
                 </>
               )}
             </Popover>
+            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <Link
+              href="/ai"
+              title="AI"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              AI
+            </Link>
+            <Link
+              href="/nx-cloud"
+              title="Nx Cloud"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Nx Cloud
+            </Link>
+            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <Link
+              href="/enterprise"
+              title="Nx Enterprise"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Enterprise
+            </Link>
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-4 lg:flex"
+            className="items-justified hidden justify-center space-x-2 lg:flex"
           >
-            <Link
-              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              title="Contact Us"
-              href="/contact"
-              prefetch={false}
-            >
-              Contact
-            </Link>
             <ButtonLink
-              href="https://nx.app/?utm_source=nx.dev&utm_medium=header-menu"
-              title="Go to app"
+              href="/contact"
+              title="Contact"
               variant="secondary"
               size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'contact-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
             >
-              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
-              <span>Go to app</span>
+              Contact
+            </ButtonLink>
+            <ButtonLink
+              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
+              title="Try Nx Cloud for free"
+              variant="primary"
+              size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'login-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
+            >
+              Try Nx Cloud for free
             </ButtonLink>
           </nav>
         </div>

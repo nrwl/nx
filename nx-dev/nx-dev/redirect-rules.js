@@ -1,4 +1,9 @@
 /**
+ * Import docs to Astro redirects (added 2025-08-21 for DOC-107)
+ */
+const docsToAstroRedirects = require('./redirect-rules-docs-to-astro.js');
+
+/**
  * Executors & Generators old url schemes to package schema viewer url schemes (added 2022-03-16)
  */
 const schemaUrls = {
@@ -66,8 +71,6 @@ const schemaUrls = {
     '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
-  '/react/component-cypress-spec':
-    '/packages/react/generators/component-cypress-spec',
   '/react/component-story': '/packages/react/generators/component-story',
   '/react/library': '/packages/react/generators/library',
   '/react/redux': '/packages/react/generators/redux',
@@ -261,7 +264,7 @@ const diataxis = {
   '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
-  '/guides/turbo-and-nx': '/concepts/more-concepts/turbo-and-nx',
+  '/guides/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/guides/why-monorepos': '/concepts/more-concepts/why-monorepos',
   '/guides/adding-assets-react': '/recipes/other/adding-assets-react',
   '/guides/environment-variables': '/reference/environment-variables',
@@ -334,7 +337,7 @@ const cliUrls = {
   '/cli/migrate': '/nx/migrate',
   '/cli/report': '/nx/report',
   '/cli/list': '/nx/list',
-  '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
+  '/cli/connect-to-nx-cloud': '/ci/features',
   '/cli/reset': '/nx/reset',
 };
 /**
@@ -385,6 +388,9 @@ const recipesUrls = {
   '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
   '/recipes/nx-console/console-add-dependency-command':
     '/getting-started/editor-setup',
+  // This one was folded into a more holistic recipe around managing version reference updates
+  '/recipes/nx-release/publish-custom-dist-directory':
+    '/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-not-update-references-in-my-source-packagejson-files',
 };
 
 /**
@@ -412,7 +418,7 @@ const nxCloudUrls = {
   '/recipes/ci/monorepo-ci-bitbucket-pipelines':
     '/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines',
   '/recipes/ci/ci-deployment': '/ci/recipes/other/ci-deployment',
-  '/nx-cloud/intro/what-is-nx-cloud': '/ci/intro/ci-with-nx',
+  '/nx-cloud/intro/what-is-nx-cloud': '/ci/getting-started/intro',
   '/nx-cloud/set-up': '/ci/recipes/set-up',
   '/nx-cloud/set-up/record-commands': '/ci/recipes/other/record-commands',
   '/nx-cloud/set-up/github': '/ci/recipes/source-control-integration/github',
@@ -429,45 +435,60 @@ const nxCloudUrls = {
   '/core-features/distribute-task-execution':
     '/ci/features/distribute-task-execution',
   '/concepts/affected': '/ci/features/affected',
-  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/on-premise',
+  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/single-tenant',
   '/nx-cloud/private-cloud/get-started':
-    '/ci/recipes/enterprise/on-premise/on-premise',
-  '/ci/features/on-premise': '/ci/recipes/enterprise/on-premise/on-premise',
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/on-premise':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/features/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
-  '/nx-cloud/private-cloud/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/nx-cloud/private-cloud/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
-  '/ci/recipes/on-premise': '/ci/recipes/enterprise/on-premise',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
-  '/ci/recipes/on-premise/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
-  '/ci/recipes/on-premise/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
-  '/ci/recipes/on-premise/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-single-admin':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/ami-setup':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/advanced-config':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-github': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-github':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-gitlab': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-gitlab':
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/ci/recipes/on-premise/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-saml':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/custom-github-app':
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
@@ -481,13 +502,17 @@ const nxCloudUrls = {
   '/nx-cloud/features/nx-cloud-workflows':
     '/ci/features/distribute-task-execution',
   '/ci/features/nx-agents': '/ci/features/distribute-task-execution',
-  '/ci': '/ci/intro/ci-with-nx',
+  '/ci': '/ci/getting-started/intro',
   '/concepts/more-concepts/illustrated-dte':
     '/ci/concepts/parallelization-distribution',
   '/core-features/:path*': '/features/:path*',
-  '/ci/recipes/set-up/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
-  '/ci/intro/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
+  '/ci/recipes/set-up/connect-to-cloud': '/ci/recipes/set-up',
+  '/ci/intro/connect-to-cloud': '/ci/recipes/set-up',
   '/pricing/special-offer': 'https://forms.gle/FBzvsspz1o63fDAz6',
+  '/powerpack/special-offer': 'https://forms.gle/mWjQo6Vrv5Kt6WYh9',
+  '/ci/intro/why-nx-cloud': '/ci/getting-started/intro',
+  '/ci/intro/ci-with-nx': '/ci/recipes/set-up',
+  '/ci/intro/connect-to-nx-cloud': '/ci/recipes/set-up',
 };
 
 /**
@@ -498,6 +523,8 @@ const tutorialBaseUrls = {
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
     '/getting-started/tutorials',
+  '/tutorial': '/getting-started/tutorials',
+  '/tutorial/:path*': '/getting-started/tutorials',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -594,29 +621,29 @@ const standaloneTutorialRedirects = {
   '/react-tutorial/5-summary':
     '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/1-code-generation':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/2-project-graph':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/3-task-running':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/4-task-pipelines':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/5-summary':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/angular-standalone-tutorial':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/1-code-generation':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/2-project-graph':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/3-task-running':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/4-task-pipelines':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/5-summary':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
 };
 
 const packagesIndexes = {
@@ -637,7 +664,6 @@ const packagesIndexes = {
   '/nest': '/packages/nest',
   '/next': '/packages/next',
   '/node': '/packages/node',
-  '/react': '/packages/react',
   '/react-native': '/packages/react',
   '/rollup': '/packages/rollup',
   '/storybook': '/packages/storybook',
@@ -755,17 +781,17 @@ const conceptUrls = {
   '/concepts/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/integrated-repo-tutorial':
     '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/react-standalone-tutorial':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/angular-standalone-tutorial':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/concepts/more-concepts/micro-frontend-architecture':
     '/concepts/module-federation/micro-frontend-architecture',
   '/concepts/more-concepts/faster-builds-with-module-federation':
@@ -776,17 +802,26 @@ const conceptUrls = {
     '/nx-api/angular/documents/nx-devkit-angular-devkit',
   '/concepts/more-concepts/incremental-builds':
     '/concepts/more-concepts/buildable-and-publishable-libraries',
+  '/concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
 };
 
 const nested5minuteTutorialUrls = {
   '/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
+  '/getting-started/tutorials/npm-workspaces-tutorial':
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/tutorials/react-standalone-tutorial':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/getting-started/tutorials/react-standalone-tutorial':
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/tutorials/angular-standalone-tutorial':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/getting-started/tutorials/angular-standalone-tutorial':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/getting-started/tutorials/vue-standalone-tutorial':
+    '/getting-started/tutorials',
   '/tutorials/node-server-tutorial': '/getting-started/tutorials',
   '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/1-code-generation':
@@ -846,12 +881,10 @@ const referenceUrls = {
 };
 
 const missingAndCatchAllRedirects = {
-  // missing
-  '/docs': '/getting-started/intro',
   // catch all
   '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
   '/(l|latest|p|previous)/:path*': '/:path*',
-  '/(a|angular|r|react|n|node)/:path*': '/:path*',
+  '/(a|angular|n|node)/:path*': '/:path*',
   // Storybook
   '/(l|latest)/(r|react)/storybook/overview': '/storybook/overview-react',
   '/(l|latest)/(a|angular)/storybook/overview': '/storybook/overview-angular',
@@ -860,6 +893,17 @@ const missingAndCatchAllRedirects = {
   // Nx Console
   '/nx-console': '/using-nx/console',
   '/packages/:path*': '/nx-api/:path*',
+};
+
+if (process.env['NEXT_PUBLIC_ASTRO_URL']) {
+  missingAndCatchAllRedirects['/docs'] = '/docs/getting-started/intro';
+} else {
+  // For new docs, we rewrite all docs URLs to astro site, so we can skip this redirect
+  missingAndCatchAllRedirects['/docs'] = '/getting-started/intro';
+}
+
+const marketing = {
+  '/conf': 'https://monorepo.world',
 };
 
 const movePluginFeaturesToCore = {
@@ -977,7 +1021,8 @@ const latestRecipesRefactoring = {
   // nx concepts
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',
-
+  '/nx-api/js/documents/typescript-project-references':
+    '/concepts/typescript-project-linking',
   '/reference/commands': '/reference/nx-commands',
 };
 
@@ -999,13 +1044,6 @@ const coreFeatureAndConceptsRefactoring = {
     '/getting-started/installation#selfmanaged-nx-installation',
   '/recipes/running-tasks/customizing-inputs':
     '/recipes/running-tasks/configure-inputs',
-};
-
-/*
- * For AI Chat to make sure old URLs are not broken (added 2023-09-14)
- */
-const aiChat = {
-  '/ai': '/ai-chat',
 };
 
 // rename nx/linter to eslint
@@ -1081,6 +1119,7 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
   '/deprecated/storybook/upgrade-storybook-v6-react':
     '/recipes/storybook/overview-react', // 80 views
+  '/deprecated/custom-task-runners': '/deprecated/legacy-cache',
 };
 
 const decisionsSection = {
@@ -1096,7 +1135,7 @@ const decisionsSection = {
     '/concepts/decisions/project-dependency-rules',
   '/concepts/more-concepts/grouping-libraries':
     '/concepts/decisions/folder-structure',
-  '/concepts/more-concepts/turbo-and-nx': '/concepts/turbo-and-nx',
+  '/concepts/more-concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/concepts/more-concepts/nx-daemon': '/concepts/nx-daemon',
   '/concepts/more-concepts/buildable-and-publishable-libraries':
     '/concepts/buildable-and-publishable-libraries',
@@ -1139,6 +1178,333 @@ const featurePagesUpdate = {
   '/ci/features/ai-features': '/ci/concepts/ai-features',
 };
 
+const enterpriseNxSection = {
+  '/features/powerpack': '/nx-enterprise/powerpack',
+  '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
+  '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
+  '/features/powerpack/custom-caching':
+    '/recipes/running-tasks/self-hosted-caching',
+  '/recipes/installation/activate-powerpack':
+    '/nx-enterprise/activate-powerpack',
+};
+
+const manualDTEUpdate = {
+  '/ci/recipes/enterprise/dte': '/ci/recipes/dte',
+  '/ci/recipes/enterprise/dte/github-dte': '/ci/recipes/dte/github-dte',
+  '/ci/recipes/enterprise/dte/circle-ci-dte': '/ci/recipes/dte/circle-ci-dte',
+  '/ci/recipes/enterprise/dte/azure-dte': '/ci/recipes/dte/azure-dte',
+  '/ci/recipes/enterprise/dte/bitbucket-dte': '/ci/recipes/dte/bitbucket-dte',
+  '/ci/recipes/enterprise/dte/gitlab-dte': '/ci/recipes/dte/gitlab-dte',
+  '/ci/recipes/enterprise/dte/jenkins-dte': '/ci/recipes/dte/jenkins-dte',
+  '/showcase/benchmarks/dte': '/showcase/benchmarks/nx-agents',
+};
+
+const powerpackRedirects = {
+  '/nx-enterprise/powerpack/custom-caching':
+    '/recipes/running-tasks/self-hosted-caching',
+  '/nx-enterprise/powerpack/free-licenses-and-trials':
+    '/nx-enterprise/powerpack/licenses-and-trials',
+
+  // Redirects for renamed powerpack packages
+  '/nx-api/powerpack-owners': '/nx-api/owners',
+  '/nx-api/powerpack-owners/documents/overview':
+    '/nx-api/owners/documents/overview',
+
+  '/nx-api/powerpack-conformance': '/nx-api/conformance',
+  '/nx-api/powerpack-conformance/documents/overview':
+    '/nx-api/conformance/documents/overview',
+  '/nx-api/powerpack-conformance/documents/create-conformance-rule':
+    '/nx-api/conformance/documents/create-conformance-rule',
+
+  '/nx-api/powerpack-azure-cache': '/nx-api/azure-cache',
+  '/nx-api/powerpack-azure-cache/documents/overview':
+    '/nx-api/azure-cache/documents/overview',
+
+  '/nx-api/powerpack-gcs-cache': '/nx-api/gcs-cache',
+  '/nx-api/powerpack-gcs-cache/documents/overview':
+    '/nx-api/gcs-cache/documents/overview',
+
+  '/nx-api/powerpack-s3-cache': '/nx-api/s3-cache',
+  '/nx-api/powerpack-s3-cache/documents/overview':
+    '/nx-api/s3-cache/documents/overview',
+
+  '/nx-api/powerpack-shared-fs-cache': '/nx-api/shared-fs-cache',
+  '/nx-api/powerpack-shared-fs-cache/documents/overview':
+    '/nx-api/shared-fs-cache/documents/overview',
+};
+
+const tmpTerminalUiRedirects = {
+  // This will be a dedicated landing page in a follow up, redirect to the recipe for now
+  '/terminal-ui': '/recipes/running-tasks/terminal-ui',
+};
+
+const nxApiRedirects = {
+  // Old index page lists official plugins, so redirect to plugin registry
+  '/nx-api': '/plugin-registry',
+  // Reference
+  '/nx-api/azure-cache/documents/overview':
+    '/reference/core-api/azure-cache/overview',
+  '/nx-api/owners/documents/overview': '/reference/core-api/owners/overview',
+  '/nx-api/gcs-cache/documents/overview':
+    '/reference/core-api/gcs-cache/overview',
+  '/nx-api/s3-cache/documents/overview':
+    '/reference/core-api/s3-cache/overview',
+  '/nx-api/shared-fs-cache/documents/overview':
+    '/reference/core-api/shared-fs-cache/overview',
+  '/nx-api/devkit/:slug*': '/reference/core-api/devkit/:slug*',
+  '/nx-api/nx/:slug*': '/reference/core-api/nx/:slug*',
+  '/nx-api/workspace/:slug*': '/reference/core-api/workspace/:slug*',
+  '/nx-api/plugin/documents/:slug*': '/reference/core-api/plugin',
+  '/nx-api/plugin/:slug*': '/reference/core-api/plugin/:slug*',
+  '/nx-api/web/documents/:slug*': '/reference/core-api/web',
+  '/nx-api/web/:slug*': '/reference/core-api/web/:slug*',
+  '/nx-api/azure-cache/:slug*': '/reference/core-api/azure-cache/:slug*',
+  '/nx-api/conformance/:slug*': '/reference/core-api/conformance/:slug*',
+  '/nx-api/owners/:slug*': '/reference/core-api/owners/:slug*',
+  '/nx-api/gcs-cache/:slug*': '/reference/core-api/gcs-cache/:slug*',
+  '/nx-api/s3-cache/:slug*': '/reference/core-api/s3-cache/:slug*',
+  '/nx-api/shared-fs-cache/:slug*':
+    '/reference/core-api/shared-fs-cache/:slug*',
+  // These don't exist and never provided any actual content so let's just redirect to core api
+  '/nx-api/create-nx-plugin/:slug*': '/reference/core-api',
+  '/nx-api/create-nx-workspace/migrations/:slug*': '/reference/core-api',
+  '/nx-api/create-nx-workspace/generators/:slug*': '/reference/core-api',
+  '/nx-api/create-nx-workspace/executors/:slug*': '/reference/core-api',
+  '/nx-api/create-nx-workspace/documents': '/reference/core-api',
+  '/nx-api/create-nx-workspace/:slug*':
+    '/reference/core-api/create-nx-workspace/:slug*',
+  // Angular Rspack and Rsbuild -- these never had executors, generators, or migrations
+  // We'll just redirect them to the API index, and make sure create-server and create-config exist
+  '/nx-api/angular-rspack/documents/create-config':
+    '/technologies/angular/angular-rspack/api/create-config',
+  '/nx-api/angular-rspack/documents/create-server':
+    '/technologies/angular/angular-rspack/api/create-server',
+  '/nx-api/angular-rsbuild/documents/create-config':
+    '/technologies/angular/angular-rsbuild/api/create-config',
+  '/nx-api/angular-rsbuild/documents/create-server':
+    '/technologies/angular/angular-rsbuild/api/create-server',
+  '/nx-api/angular-rspack/documents':
+    '/technologies/angular/angular-rspack/introduction',
+  '/nx-api/angular-rsbuild/documents':
+    '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack/executors':
+    '/technologies/angular/angular-rspack/api',
+  '/nx-api/angular-rsbuild/executors':
+    '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack': '/technologies/angular/angular-rspack/introduction',
+  '/nx-api/angular-rsbuild': '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack/migrations':
+    '/technologies/angular/angular-rspack/api',
+  '/nx-api/angular-rsbuild/migrations':
+    '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack/generators':
+    '/technologies/angular/angular-rspack/api',
+  '/nx-api/angular-rsbuild/generators':
+    '/technologies/angular/angular-rsbuild/api',
+  // Technologies
+  '/nx-api/angular/documents/overview': '/technologies/angular/introduction',
+  '/nx-api/react/documents/overview': '/technologies/react/introduction',
+  '/nx-api/react-native/documents/overview':
+    '/technologies/react/react-native/introduction',
+  '/nx-api/vue/documents': '/technologies/vue/introduction',
+  '/nx-api/vue/documents/overview': '/technologies/vue/introduction',
+  '/nx-api/next/documents/overview': '/technologies/react/next/introduction',
+  '/nx-api/remix/documents/overview': '/technologies/react/remix/introduction',
+  '/nx-api/nuxt/documents/overview': '/technologies/vue/nuxt/introduction',
+  '/nx-api/expo/documents/overview': '/technologies/react/expo/introduction',
+  '/nx-api/nest/documents': '/technologies/node/nest/introduction',
+  '/nx-api/nest/documents/overview': '/technologies/node/nest/introduction',
+  '/nx-api/express/documents': '/technologies/node/express/introduction',
+  '/nx-api/express/documents/overview':
+    '/technologies/node/express/introduction',
+  '/nx-api/node/documents/overview': '/technologies/node/introduction',
+  '/nx-api/webpack/documents/overview':
+    '/technologies/build-tools/webpack/introduction',
+  '/nx-api/vite/documents/overview':
+    '/technologies/build-tools/vite/introduction',
+  '/nx-api/rollup/documents/overview':
+    '/technologies/build-tools/rollup/introduction',
+  '/nx-api/esbuild/documents/overview':
+    '/technologies/build-tools/esbuild/introduction',
+  '/nx-api/rspack/documents/overview':
+    '/technologies/build-tools/rspack/introduction',
+  '/nx-api/rsbuild/documents/overview':
+    '/technologies/build-tools/rsbuild/introduction',
+  '/nx-api/cypress/documents/overview':
+    '/technologies/test-tools/cypress/introduction',
+  '/nx-api/jest/documents/overview':
+    '/technologies/test-tools/jest/introduction',
+  '/nx-api/playwright/documents/overview':
+    '/technologies/test-tools/playwright/introduction',
+  '/nx-api/storybook/documents/overview':
+    '/technologies/test-tools/storybook/introduction',
+  '/nx-api/detox/documents/overview':
+    '/technologies/test-tools/detox/introduction',
+  '/nx-api/js/documents/overview': '/technologies/typescript/introduction',
+  '/nx-api/gradle/documents': '/technologies/java/introduction',
+  '/nx-api/gradle/documents/overview': '/technologies/java/introduction',
+  '/nx-api/eslint/documents/overview': '/technologies/eslint/introduction',
+  '/nx-api/eslint-plugin/documents/overview':
+    '/technologies/eslint/eslint-plugin/api',
+  '/nx-api/module-federation/documents/overview':
+    '/technologies/module-federation/introduction',
+  // Wildcard rules (must come after specific rules)
+  '/nx-api/angular/documents/:slug*': '/technologies/angular/recipes/:slug*',
+  '/nx-api/angular/:slug*': '/technologies/angular/api/:slug*',
+  '/nx-api/react/documents/:slug*': '/technologies/react/recipes/:slug*',
+  '/nx-api/react/:slug*': '/technologies/react/api/:slug*',
+  '/nx-api/react-native/documents/:slug*':
+    '/technologies/react/react-native/recipes/:slug*',
+  '/nx-api/react-native/:slug*': '/technologies/react/react-native/api/:slug*',
+  '/nx-api/vue/documents/:slug*': '/technologies/vue/recipes/:slug*',
+  '/nx-api/vue/:slug*': '/technologies/vue/api/:slug*',
+  '/nx-api/next/documents/:slug*': '/technologies/react/next/recipes/:slug*',
+  '/nx-api/next/:slug*': '/technologies/react/next/api/:slug*',
+  '/nx-api/remix/documents/:slug*': '/technologies/react/remix/recipes/:slug*',
+  '/nx-api/remix/:slug*': '/technologies/react/remix/api/:slug*',
+  '/nx-api/nuxt/documents/:slug*': '/technologies/vue/nuxt/recipes/:slug*',
+  '/nx-api/nuxt/:slug*': '/technologies/vue/nuxt/api/:slug*',
+  '/nx-api/expo/documents/:slug*': '/technologies/react/expo/recipes/:slug*',
+  '/nx-api/expo/:slug*': '/technologies/react/expo/api/:slug*',
+  '/nx-api/nest/documents/:slug*': '/technologies/nest/recipes/:slug*',
+  '/nx-api/nest/:slug*': '/technologies/node/nest/api/:slug*',
+  '/nx-api/express/documents/:slug*':
+    '/technologies/node/express/recipes/:slug*',
+  '/nx-api/express/:slug*': '/technologies/node/express/api/:slug*',
+  '/nx-api/node/documents/:slug*': '/technologies/node/recipes/:slug*',
+  '/nx-api/node/:slug*': '/technologies/node/api/:slug*',
+  '/nx-api/webpack/documents/:slug*':
+    '/technologies/build-tools/webpack/recipes/:slug*',
+  '/nx-api/webpack/:slug*': '/technologies/build-tools/webpack/api/:slug*',
+  '/nx-api/vite/documents/:slug*':
+    '/technologies/build-tools/vite/recipes/:slug*',
+  '/nx-api/vite/:slug*': '/technologies/build-tools/vite/api/:slug*',
+  '/nx-api/rollup/documents/:slug*':
+    '/technologies/build-tools/rollup/recipes/:slug*',
+  '/nx-api/rollup/:slug*': '/technologies/build-tools/rollup/api/:slug*',
+  '/nx-api/esbuild/documents/:slug*':
+    '/technologies/build-tools/esbuild/recipes/:slug*',
+  '/nx-api/esbuild/:slug*': '/technologies/build-tools/esbuild/api/:slug*',
+  '/nx-api/rspack/documents/:slug*':
+    '/technologies/build-tools/rspack/recipes/:slug*',
+  '/nx-api/rspack/:slug*': '/technologies/build-tools/rspack/api/:slug*',
+  '/nx-api/rsbuild/documents/:slug*':
+    '/technologies/build-tools/rsbuild/recipes/:slug*',
+  '/nx-api/rsbuild/:slug*': '/technologies/build-tools/rsbuild/api/:slug*',
+  '/nx-api/cypress/documents/:slug*':
+    '/technologies/test-tools/cypress/recipes/:slug*',
+  '/nx-api/cypress/:slug*': '/technologies/test-tools/cypress/api/:slug*',
+  '/nx-api/jest/documents/:slug*':
+    '/technologies/test-tools/jest/recipes/:slug*',
+  '/nx-api/jest/:slug*': '/technologies/test-tools/jest/api/:slug*',
+  '/nx-api/playwright/documents/:slug*':
+    '/technologies/test-tools/playwright/recipes/:slug*',
+  '/nx-api/playwright/:slug*': '/technologies/test-tools/playwright/api/:slug*',
+  '/nx-api/storybook/documents/:slug*':
+    '/technologies/test-tools/storybook/recipes/:slug*',
+  '/nx-api/storybook/:slug*': '/technologies/test-tools/storybook/api/:slug*',
+  '/nx-api/detox/documents/:slug*':
+    '/technologies/test-tools/detox/recipes/:slug*',
+  '/nx-api/detox/:slug*': '/technologies/test-tools/detox/api/:slug*',
+  '/nx-api/js/documents/:slug*': '/technologies/typescript/recipes/:slug*',
+  '/nx-api/js/:slug*': '/technologies/typescript/api/:slug*',
+  '/nx-api/gradle/documents/:slug*': '/technologies/java/recipes/:slug*',
+  '/nx-api/gradle/:slug*': '/technologies/java/api/:slug*',
+  '/nx-api/eslint/documents/:slug*': '/technologies/eslint/recipes/:slug*',
+  '/nx-api/eslint/:slug*': '/technologies/eslint/api/:slug*',
+  '/nx-api/eslint-plugin/documents/:slug*':
+    '/technologies/eslint/eslint-plugin/recipes/:slug*',
+  '/nx-api/eslint-plugin/:slug*':
+    '/technologies/eslint/eslint-plugin/api/:slug*',
+  '/nx-api/module-federation/documents/:slug*':
+    '/technologies/module-federation/recipes/:slug*',
+  '/nx-api/module-federation/:slug*':
+    '/technologies/module-federation/api/:slug*',
+};
+
+// We got rid of `/recipes` URLs, so we need to redirect them to new /technologies or /reference URLs.
+const nxRecipesRedirects = {
+  // Recipes index pages
+  '/recipes/module-federation': '/technologies/module-federation/recipes',
+  '/recipes/react': '/technologies/react/recipes',
+  '/recipes/angular': '/technologies/angular/recipes',
+  '/recipes/node': '/technologies/node/recipes',
+  '/recipes/storybook': '/technologies/test-tools/storybook/recipes',
+  '/recipes/cypress': '/technologies/test-tools/cypress/recipes',
+  '/recipes/next': '/technologies/react/next/recipes',
+  '/recipes/nuxt': '/technologies/vue/nuxt/recipes',
+  '/recipes/vite': '/technologies/build-tools/vite/recipes',
+  '/recipes/webpack': '/technologies/build-tools/webpack/recipes',
+  // Recipes sub-pages
+  '/recipes/module-federation/:slug*':
+    '/technologies/module-federation/recipes/:slug*',
+  '/recipes/react/:slug*': '/technologies/react/recipes/:slug*',
+  '/recipes/node/:slug*': '/technologies/node/recipes/:slug*',
+  '/recipes/storybook/:slug*':
+    '/technologies/test-tools/storybook/recipes/:slug*',
+  '/recipes/cypress/:slug*': '/technologies/test-tools/cypress/recipes/:slug*',
+  '/recipes/next/:slug*': '/technologies/react/next/recipes/:slug*',
+  '/recipes/nuxt/:slug*': '/technologies/vue/nuxt/recipes/:slug*',
+  '/recipes/vite/:slug*': '/technologies/build-tools/vite/recipes/:slug*',
+  '/recipes/webpack/:slug*': '/technologies/build-tools/webpack/recipes/:slug*',
+  // Angular - has some special cases for angular-rspack
+  '/recipes/angular/rspack': '/technologies/angular/angular-rspack/recipes',
+  '/recipes/angular/rspack/introduction':
+    '/technologies/angular/angular-rspack/introduction',
+  '/recipes/angular/rspack/:slug*':
+    '/technologies/angular/angular-rspack/recipes/:slug*',
+  '/recipes/angular/migration': '/technologies/angular/migration',
+  '/recipes/angular/migration/angular': '/technologies/angular',
+  '/recipes/angular/migration/angular-multiple':
+    '/technologies/angular/migration/angular-multiple',
+  '/recipes/angular/:slug*': '/technologies/angular/recipes/:slug*',
+  // Tips-n-tricks - keeping individual because destinations vary greatly
+  '/recipes/tips-n-tricks/eslint': '/technologies/eslint',
+  '/recipes/tips-n-tricks/flat-config':
+    '/technologies/eslint/recipes/flat-config',
+  '/recipes/tips-n-tricks/switch-to-workspaces-project-references':
+    '/technologies/typescript/recipes/switch-to-workspaces-project-references',
+  '/recipes/tips-n-tricks/enable-tsc-batch-mode':
+    '/technologies/typescript/recipes/enable-tsc-batch-mode',
+  '/recipes/tips-n-tricks/define-secondary-entrypoints':
+    '/technologies/typescript/recipes/define-secondary-entrypoints',
+  '/recipes/tips-n-tricks/compile-multiple-formats':
+    '/technologies/typescript/recipes/compile-multiple-formats',
+  '/recipes/tips-n-tricks/js-and-ts':
+    '/technologies/typescript/recipes/js-and-ts',
+};
+
+const nxModuleFederationConceptsRedirects = {
+  '/concepts/module-federation/:slug*':
+    '/technologies/module-federation/concepts/:slug*',
+};
+const contentDedupeRedirects = {
+  '/technologies/react/recipes/react-native':
+    '/technologies/react/react-native/introduction',
+  '/technologies/react/recipes/remix': '/technologies/react/remix/introduction',
+};
+
+const gettingStartedRedirects = {
+  '/getting-started/why-nx': '/getting-started/intro',
+};
+
+// Pricing page: 07/08/25
+const pricingRedirects = {
+  '/pricing': '/nx-cloud#plans',
+};
+
+// Removed CI tutorials: 07/21/25
+const ciTutorialRedirects = {
+  '/ci/intro/tutorials/circle': '/ci/recipes/set-up/monorepo-ci-circle-ci',
+  '/ci/intro/tutorials/github-actions':
+    '/ci/recipes/set-up/monorepo-ci-github-actions',
+};
+
+const dockerReleaseRedirect = {
+  '/recipes/nx-release/get-started-with-nx-release':
+    '/recipes/nx-release/release-npm-packages',
+};
+
 /**
  * Public export API
  */
@@ -1164,11 +1530,27 @@ module.exports = {
   pluginsToExtendNx,
   latestRecipesRefactoring,
   coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
-  aiChat,
   eslintRename,
   removedDeprecatedUrls,
   troubleshootingOutOfRecipes,
   blogPosts,
   decisionsSection,
   featurePagesUpdate,
+  marketing,
+  enterpriseNxSection,
+  manualDTEUpdate,
+  powerpackRedirects,
+  tmpTerminalUiRedirects,
+  nxApiRedirects,
+  nxRecipesRedirects,
+  nxModuleFederationConceptsRedirects,
+  gettingStartedRedirects,
+  pricingRedirects,
+  ciTutorialRedirects,
+  dockerReleaseRedirect,
+  contentDedupeRedirects,
+  // Only enable these redirects if the new docs are enabled
+  docsToAstroRedirects: process.env['NEXT_PUBLIC_ASTRO_URL']
+    ? docsToAstroRedirects
+    : {},
 };

@@ -6,15 +6,23 @@ Ideally as a developer you don't even notice flaky tasks any more as they're aut
 
 ## Enable Flaky Task Detection
 
-Flaky Task Detection is enabled by default if your workspace is connected to Nx Cloud and leverages [Nx Agents](/ci/features/distribute-task-execution).
+Flaky Task Detection is enabled by default if the following conditions are met:
 
-To connect your workspace to Nx Cloud run:
+**Step 1: Your workspace is connected to Nx Cloud**
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
+
+**Step 2: Nx Agents are enabled** in your CI configuration
+
+```yaml
+- run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+```
+
+See [the Nx Agents](/ci/features/distribute-task-execution) documentation for more details.
 
 ## How Nx Identifies Flaky Tasks
 

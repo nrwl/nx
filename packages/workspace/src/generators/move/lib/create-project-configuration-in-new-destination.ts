@@ -3,8 +3,10 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   Tree,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
+import { getProjectSourceRoot } from '../../utils/project-config';
 
 export function createProjectConfigurationInNewDestination(
   tree: Tree,
@@ -74,13 +76,19 @@ export function createProjectConfigurationInNewDestination(
 
   // Original sourceRoot is typically 'src' or 'app', but it could be any folder.
   // Make sure it is updated to be under the new destination.
-  if (isRootProject && projectConfig.sourceRoot) {
+  const sourceRoot = getProjectSourceRoot(projectConfig, tree);
+  if (isRootProject && sourceRoot) {
     newProject.sourceRoot = joinPathFragments(
       schema.relativeToRootDestination,
-      projectConfig.sourceRoot
+      sourceRoot
     );
   }
 
-  // Create a new project with the root replaced
-  addProjectConfiguration(tree, schema.newProjectName, newProject);
+  if (schema.isNxConfiguredInPackageJson) {
+    // Update the existing project configuration in the package.json
+    updateProjectConfiguration(tree, schema.newProjectName, newProject);
+  } else {
+    // Create a new project with the root replaced
+    addProjectConfiguration(tree, schema.newProjectName, newProject);
+  }
 }

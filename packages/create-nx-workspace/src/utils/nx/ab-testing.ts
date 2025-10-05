@@ -30,7 +30,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'skip', name: '\nDo it later' },
       ],
       footer:
-        '\nRemote caching, task distribution and test splitting are provided by Nx Cloud. Read more at https://nx.dev/ci',
+        '\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: https://nx.dev/nx-cloud',
       fallback: { value: 'skip', key: 'setupNxCloud' },
     },
   ],
@@ -139,7 +139,7 @@ function shouldRecordStats(): boolean {
   try {
     const stdout = execSync(pmc.getRegistryUrl, {
       encoding: 'utf-8',
-      windowsHide: true,
+      windowsHide: false,
     });
     const url = new URL(stdout.trim());
 

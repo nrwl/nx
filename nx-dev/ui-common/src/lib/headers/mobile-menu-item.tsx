@@ -1,4 +1,4 @@
-import { ElementType } from 'react';
+import type { ElementType, ReactElement } from 'react';
 import type { MenuItem } from './menu-items';
 import cx from 'classnames';
 import Link from 'next/link';
@@ -12,21 +12,21 @@ export function MobileMenuItem({
   as?: ElementType;
   className?: string;
   item: MenuItem;
-}): JSX.Element {
+}): ReactElement {
   const hasExternalLink =
     item.href.startsWith('http') || item.href.startsWith('//');
   const Tag = as;
   return (
     <Tag
       className={cx(
-        'relative flex flex-1 items-center gap-2 rounded-lg py-3',
+        'items-top relative flex flex-1 gap-2 rounded-lg py-3',
         item.isHighlight ? 'bg-slate-50 px-2 dark:bg-slate-800/80' : '',
         className
       )}
       {...rest}
     >
       {item.icon ? (
-        <item.icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+        <item.icon aria-hidden="true" className="mt-1.5 size-4 shrink-0" />
       ) : null}
       <div className="grow">
         <Link

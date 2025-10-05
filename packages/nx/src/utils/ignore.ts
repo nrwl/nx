@@ -1,47 +1,7 @@
-import { readFileSync } from 'node:fs';
-import ignore from 'ignore';
+import ignore = require('ignore');
 import { readFileIfExisting } from './fileutils';
-import { joinPathFragments } from './path';
 import { workspaceRoot } from './workspace-root';
-
-/**
- * An array of glob patterns that should always be ignored.
- */
-export const ALWAYS_IGNORE = getAlwaysIgnore();
-
-export function getIgnoredGlobs(
-  root: string = workspaceRoot,
-  prependRoot: boolean = true
-) {
-  const files = ['.gitignore', '.nxignore'];
-  if (prependRoot) {
-    return [
-      ...getAlwaysIgnore(root),
-      ...files.flatMap((f) =>
-        getIgnoredGlobsFromFile(joinPathFragments(root, f), root)
-      ),
-    ];
-  } else {
-    return [
-      ...getAlwaysIgnore(),
-      ...files.flatMap((f) =>
-        getIgnoredGlobsFromFile(joinPathFragments(root, f))
-      ),
-    ];
-  }
-}
-
-export function getAlwaysIgnore(root?: string) {
-  const paths = [
-    'node_modules',
-    '**/node_modules',
-    '.git',
-    '.nx',
-    '.vscode',
-    '.yarn/cache',
-  ];
-  return root ? paths.map((x) => joinPathFragments(root, x)) : paths;
-}
+import { Tree } from '../generators/tree';
 
 export function getIgnoreObject(
   root: string = workspaceRoot
@@ -52,27 +12,17 @@ export function getIgnoreObject(
   return ig;
 }
 
-function getIgnoredGlobsFromFile(file: string, root?: string): string[] {
-  try {
-    const results = [];
-    const contents = readFileSync(file, 'utf-8');
-    const lines = contents.split('\n');
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) {
-        continue;
-      } else if (trimmed.startsWith('/')) {
-        if (root) {
-          results.push(joinPathFragments(root, trimmed));
-        } else {
-          results.push(joinPathFragments('.', trimmed));
-        }
-      } else {
-        results.push(trimmed);
-      }
-    }
-    return results;
-  } catch (e) {
-    return [];
+export function getIgnoreObjectForTree(tree: Tree) {
+  let ig: ReturnType<typeof ignore>;
+  if (tree.exists('.gitignore')) {
+    ig = ignore();
+    ig.add('.git');
+    ig.add(tree.read('.gitignore', 'utf-8'));
   }
+  if (tree.exists('.nxignore')) {
+    ig ??= ignore();
+    ig.add(tree.read('.nxignore', 'utf-8'));
+  }
+
+  return ig;
 }

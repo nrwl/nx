@@ -3,8 +3,8 @@ import {
   ButtonLink,
   SectionDescription,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { NxIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { NxIcon } from '@nx/nx-dev-ui-icons';
 
 export function NxBrand() {
   return (
@@ -16,7 +16,7 @@ export function NxBrand() {
               Nx
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-4">
-              Smart monorepos · Fast CI
+              Smart Repos · Fast Builds
             </SectionHeading>
             <SectionDescription as="p" className="mt-2">
               The Nx trademark includes the Nx name & logo, and any word,

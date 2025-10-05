@@ -1,6 +1,6 @@
 # Function: reverse
 
-▸ **reverse**(`graph`): [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+▸ **reverse**(`graph`): [`ProjectGraph`](/reference/core-api/devkit/documents/ProjectGraph)
 
 Returns a new project graph where all the edges are reversed.
 
@@ -9,10 +9,10 @@ B will depend on A.
 
 #### Parameters
 
-| Name    | Type                                                  |
-| :------ | :---------------------------------------------------- |
-| `graph` | [`ProjectGraph`](../../devkit/documents/ProjectGraph) |
+| Name    | Type                                                                |
+| :------ | :------------------------------------------------------------------ |
+| `graph` | [`ProjectGraph`](/reference/core-api/devkit/documents/ProjectGraph) |
 
 #### Returns
 
-[`ProjectGraph`](../../devkit/documents/ProjectGraph)
+[`ProjectGraph`](/reference/core-api/devkit/documents/ProjectGraph)

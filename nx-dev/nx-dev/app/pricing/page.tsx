@@ -1,21 +1,28 @@
 import type { Metadata } from 'next';
 import {
-  StandardPlans,
-  ComparablePlans,
-  Oss,
   Faq,
-} from '@nx/nx-dev/ui-pricing';
+  Oss,
+  CreditPricing,
+  PlansDisplay,
+  TrialCallout,
+} from '@nx/nx-dev-ui-pricing';
 import {
+  CallToAction,
+  DefaultLayout,
   Testimonials,
   TrustedBy,
-  DefaultLayout,
-  CallToAction,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
+
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
   description:
     "Distribute everything, don't waste time waiting on CI. Use Nx Cloud's distributed task execution and caching features to release faster. Save time and money.",
+  alternates: {
+    canonical: 'https://nx.dev/pricing',
+  },
   openGraph: {
     url: 'https://nx.dev/pricing',
     title: 'Nx Cloud - Available Plans',
@@ -26,33 +33,36 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],
-    siteName: 'NxDev',
+    siteName: 'Nx',
     type: 'website',
   },
 };
 
-export default function PricingPage() {
+export default async function PricingPage() {
   return (
     <DefaultLayout>
-      <StandardPlans />
+      <PlansDisplay />
       <div className="mt-18 lg:mt-32">
         <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <ComparablePlans />
+        <TrialCallout pageId="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <Testimonials />
+        <CreditPricing />
+      </div>
+      <div className="mt-32 lg:mt-56">
+        <Faq />
       </div>
       <div className="mt-32 lg:mt-56">
         <Oss />
       </div>
       <div className="mt-32 lg:mt-56">
-        <Faq />
+        <Testimonials />
       </div>
       <div className="mt-32 lg:mt-56">
         <CallToAction

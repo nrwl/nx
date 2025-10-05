@@ -6,6 +6,7 @@
     "version": 2,
     "title": "Verdaccio Local Registry",
     "description": "Start a local registry with Verdaccio.",
+    "continuous": true,
     "cli": "nx",
     "type": "object",
     "properties": {
@@ -25,7 +26,8 @@
       },
       "listenAddress": {
         "type": "string",
-        "description": "Listen address that Verdaccio should listen to"
+        "description": "Listen address that Verdaccio should listen to",
+        "default": "localhost"
       },
       "config": {
         "type": "string",

@@ -8,43 +8,45 @@ const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: typeof import('typescript');
 
-export function readTsConfig(tsConfigPath: string) {
+export function readTsConfig(
+  tsConfigPath: string,
+  sys?: ts.System
+): ts.ParsedCommandLine {
   if (!tsModule) {
     tsModule = require('typescript');
   }
-  const readResult = tsModule.readConfigFile(
-    tsConfigPath,
-    tsModule.sys.readFile
-  );
+
+  sys ??= tsModule.sys;
+
+  const readResult = tsModule.readConfigFile(tsConfigPath, sys.readFile);
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
-    tsModule.sys,
+    sys,
     dirname(tsConfigPath)
   );
 }
 
-function readTsConfigOptions(tsConfigPath: string) {
+export function readTsConfigWithoutFiles(
+  tsConfigPath: string
+): ts.ParsedCommandLine {
   if (!tsModule) {
     tsModule = require('typescript');
   }
 
-  const readResult = tsModule.readConfigFile(
-    tsConfigPath,
-    tsModule.sys.readFile
-  );
-
-  // we don't need to scan the files, we only care about options
-  const host: Partial<ts.ParseConfigHost> = {
+  // We only care about options, so we don't need to scan source files, and thus
+  // `readDirectory` is stubbed for performance.
+  const sys = {
+    ...tsModule.sys,
     readDirectory: () => [],
-    readFile: () => '',
-    fileExists: tsModule.sys.fileExists,
   };
 
-  return tsModule.parseJsonConfigFileContent(
-    readResult.config,
-    host as ts.ParseConfigHost,
-    dirname(tsConfigPath)
-  ).options;
+  return readTsConfig(tsConfigPath, sys);
+}
+
+export function readTsConfigOptions(tsConfigPath: string): ts.CompilerOptions {
+  const { options } = readTsConfigWithoutFiles(tsConfigPath);
+
+  return options;
 }
 
 let compilerHost: {

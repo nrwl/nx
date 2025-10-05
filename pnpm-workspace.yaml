@@ -1,0 +1,10 @@
+packages:
+  - 'packages/*'
+  - 'e2e/*'
+  - 'graph/*'
+  - 'nx-dev/*'
+  - 'tools/*'
+  - 'typedoc-theme'
+  - 'astro-docs'
+  - 'examples/*/*'
+  - 'packages/nx/native-packages/*'

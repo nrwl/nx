@@ -5,6 +5,8 @@ auth:
   htpasswd:
     file: ./htpasswd
 
+max_body_size: 20mb
+
 # a list of other known repositories we can talk to
 uplinks:
   npmjs:

@@ -14,6 +14,7 @@ export function addFiles(
     {
       ...options,
       ...nameVariants,
+      moduleTypeSeparator: options.moduleTypeSeparator,
       tmpl: '',
     }
   );
@@ -22,7 +23,7 @@ export function addFiles(
     tree.delete(
       joinPathFragments(
         options.entryPointDestination,
-        `src/lib/${nameVariants.fileName}.module.ts`
+        `src/lib/${nameVariants.fileName}${options.moduleTypeSeparator}module.ts`
       )
     );
   }

@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('Tailwind support', () => {
@@ -132,11 +132,12 @@ describe('Tailwind support', () => {
       buttonBgColor: string = defaultButtonBgColor
     ) => {
       updateFile(
-        `${lib}/src/lib/foo.component.ts`,
+        `${lib}/src/lib/foo.ts`,
         `import { Component } from '@angular/core';
   
         @Component({
           selector: '${project}-foo',
+          standalone: false,
           template: '<button class="custom-btn text-white ${buttonBgColor}">Click me!</button>',
           styles: [\`
             .custom-btn {
@@ -144,20 +145,20 @@ describe('Tailwind support', () => {
             }
           \`]
         })
-        export class FooComponent {}
+        export class Foo {}
       `
       );
 
       updateFile(
-        `${lib}/src/lib/${lib}.module.ts`,
+        `${lib}/src/lib/${lib}-module.ts`,
         `import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
-        import { FooComponent } from './foo.component';
+        import { Foo } from './foo';
   
         @NgModule({
           imports: [CommonModule],
-          declarations: [FooComponent],
-          exports: [FooComponent],
+          declarations: [Foo],
+          exports: [Foo],
         })
         export class LibModule {}
       `
@@ -165,18 +166,21 @@ describe('Tailwind support', () => {
 
       updateFile(
         `${lib}/src/index.ts`,
-        `export * from './lib/foo.component';
-        export * from './lib/${lib}.module';
+        `export * from './lib/foo';
+        export * from './lib/${lib}-module';
         `
       );
     };
 
     const assertLibComponentStyles = (
       lib: string,
-      libSpacing: (typeof spacing)['root']
+      libSpacing: (typeof spacing)['root'],
+      isPublishable: boolean = true
     ) => {
       const builtComponentContent = readFile(
-        `dist/${lib}/esm2022/lib/foo.component.mjs`
+        isPublishable
+          ? `dist/${lib}/fesm2022/${project}-${lib}.mjs`
+          : `dist/${lib}/esm2022/lib/foo.js`
       );
       let expectedStylesRegex = new RegExp(
         `styles: \\[\\"\\.custom\\-btn(\\[_ngcontent\\-%COMP%\\])?{margin:${libSpacing.md};padding:${libSpacing.sm}}(\\\\n)?\\"\\]`
@@ -202,7 +206,8 @@ describe('Tailwind support', () => {
 
       assertLibComponentStyles(
         buildLibWithTailwind.name,
-        spacing.projectVariant1
+        spacing.projectVariant1,
+        false
       );
     });
 
@@ -222,7 +227,11 @@ describe('Tailwind support', () => {
 
       runCLI(`build ${buildLibSetupTailwind}`);
 
-      assertLibComponentStyles(buildLibSetupTailwind, spacing.projectVariant2);
+      assertLibComponentStyles(
+        buildLibSetupTailwind,
+        spacing.projectVariant2,
+        false
+      );
     });
 
     it('should correctly build a buildable library with a tailwind.config.js file in the project root or workspace root', () => {
@@ -240,7 +249,8 @@ describe('Tailwind support', () => {
 
       assertLibComponentStyles(
         buildLibNoProjectConfig,
-        spacing.projectVariant3
+        spacing.projectVariant3,
+        false
       );
 
       // remove tailwind.config.js file from the project root to test the one in the workspace root
@@ -248,7 +258,7 @@ describe('Tailwind support', () => {
 
       runCLI(`build ${buildLibNoProjectConfig}`);
 
-      assertLibComponentStyles(buildLibNoProjectConfig, spacing.root);
+      assertLibComponentStyles(buildLibNoProjectConfig, spacing.root, false);
     });
 
     it('should generate a publishable library with tailwind and build correctly', () => {
@@ -346,30 +356,30 @@ describe('Tailwind support', () => {
         spacing.projectVariant1
       );
       updateFile(
-        `${appName}/src/app/app.module.ts`,
+        `${appName}/src/app/app-module.ts`,
         `import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { LibModule as LibModule1 } from '@${project}/${buildLibWithTailwind.name}';
         import { LibModule as LibModule2 } from '@${project}/${pubLibWithTailwind.name}';
 
-        import { AppComponent } from './app.component';
+        import { App } from './app';
 
         @NgModule({
-          declarations: [AppComponent],
-          imports: [BrowserModule, LibModule1, LibModule2],
+          declarations: [],
+          imports: [BrowserModule, App, LibModule1, LibModule2],
           providers: [],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppModule {}
         `
       );
       updateFile(
-        `${appName}/src/app/app.component.html`,
+        `${appName}/src/app/app.html`,
         `<button class="custom-btn text-white">Click me!</button>`
       );
 
       updateFile(
-        `${appName}/src/app/app.component.css`,
+        `${appName}/src/app/app.css`,
         `.custom-btn {
           @apply m-md p-sm;
         }`

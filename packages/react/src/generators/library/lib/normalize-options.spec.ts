@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { normalizeOptions } from './normalize-options';
 
@@ -14,7 +13,7 @@ describe('normalizeOptions', () => {
     const options = await normalizeOptions(tree, {
       directory: 'test',
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'jest',
     });
 
@@ -30,7 +29,7 @@ describe('normalizeOptions', () => {
     let options = await normalizeOptions(tree, {
       directory: 'test',
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       bundler: 'rollup',
     });
 
@@ -42,7 +41,7 @@ describe('normalizeOptions', () => {
     options = await normalizeOptions(tree, {
       directory: 'test',
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       bundler: 'vite',
     });
 
@@ -56,7 +55,7 @@ describe('normalizeOptions', () => {
     const options = await normalizeOptions(tree, {
       directory: 'test',
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       bundler: 'vite',
       unitTestRunner: 'vitest',
     });
@@ -73,7 +72,7 @@ describe('normalizeOptions', () => {
     const options = await normalizeOptions(tree, {
       directory: 'test',
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       bundler: 'vite',
       unitTestRunner: 'jest',
     });
@@ -90,7 +89,7 @@ describe('normalizeOptions', () => {
     const options = await normalizeOptions(tree, {
       directory: 'test',
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       buildable: true,
       unitTestRunner: 'jest',
     });
@@ -106,7 +105,7 @@ describe('normalizeOptions', () => {
     const options = await normalizeOptions(tree, {
       directory: 'test',
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       buildable: true,
       bundler: 'none',
       unitTestRunner: 'jest',

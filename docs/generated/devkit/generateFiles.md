@@ -26,13 +26,13 @@ doesn't get confused about incorrect TypeScript files.
 
 #### Parameters
 
-| Name            | Type                                  | Description                                   |
-| :-------------- | :------------------------------------ | :-------------------------------------------- |
-| `tree`          | [`Tree`](../../devkit/documents/Tree) | the file system tree                          |
-| `srcFolder`     | `string`                              | the source folder of files (absolute path)    |
-| `target`        | `string`                              | the target folder (relative to the tree root) |
-| `substitutions` | `Object`                              | an object of key-value pairs                  |
-| `options?`      | `GenerateFilesOptions`                | See GenerateFilesOptions                      |
+| Name            | Type                                                | Description                                   |
+| :-------------- | :-------------------------------------------------- | :-------------------------------------------- |
+| `tree`          | [`Tree`](/reference/core-api/devkit/documents/Tree) | the file system tree                          |
+| `srcFolder`     | `string`                                            | the source folder of files (absolute path)    |
+| `target`        | `string`                                            | the target folder (relative to the tree root) |
+| `substitutions` | `Object`                                            | an object of key-value pairs                  |
+| `options?`      | `GenerateFilesOptions`                              | See GenerateFilesOptions                      |
 
 #### Returns
 

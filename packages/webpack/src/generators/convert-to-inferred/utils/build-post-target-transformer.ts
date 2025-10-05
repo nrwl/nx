@@ -140,13 +140,6 @@ function extractPluginOptions(
         });
       }
       delete options.memoryLimit;
-    } else if (key === 'isolatedConfig') {
-      context.logger.addLog({
-        executorName: '@nx/webpack:webpack',
-        log: `The 'isolatedConfig' option is deprecated and not supported by the NxAppWebpackPlugin. It was removed from your project configuration.`,
-        project: context.projectName,
-      });
-      delete options.isolatedConfig;
     } else if (key === 'standardWebpackConfigFunction') {
       delete options.standardWebpackConfigFunction;
     } else {

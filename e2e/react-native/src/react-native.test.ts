@@ -9,20 +9,64 @@ import {
   fileExists,
   checkFilesExist,
   runE2ETests,
-} from 'e2e/utils';
+  updateFile,
+  readJson,
+} from '@nx/e2e-utils';
 
 describe('@nx/react-native', () => {
+  let proj: string;
   let appName: string;
+  let libName: string;
+  let componentName: string;
 
   beforeAll(() => {
-    newProject();
+    proj = newProject({ packages: ['@nx/react-native'] });
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --install=false --no-interactive`
+      `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`
     );
+    libName = uniq('lib');
+    runCLI(
+      `generate @nx/react-native:lib ${libName} --buildable --no-interactive --unitTestRunner=jest --linter=eslint`
+    );
+    componentName = uniq('Component');
+    runCLI(
+      `generate @nx/react-native:component ${libName}/src/lib/${componentName}/${componentName} --export --no-interactive`
+    );
+    updateFile(`${appName}/src/app/App.tsx`, (content) => {
+      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '${proj}/${libName}';\n${content}`;
+      return updated;
+    });
   });
 
   afterAll(() => cleanupProject());
+
+  it('should test and lint', async () => {
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`lint ${appName}`)).not.toThrow();
+
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
+    expect(() => runCLI(`lint ${libName}`)).not.toThrow();
+  });
+
+  it('should have dependencies synced after React Native app creation', () => {
+    // Check that the app's package.json exists
+    checkFilesExist(`${appName}/package.json`);
+
+    // Read the app's package.json
+    const appPackageJson = readJson(`${appName}/package.json`);
+
+    // Verify that the app package.json has dependencies section
+    expect(appPackageJson.dependencies).toBeDefined();
+
+    // Verify that React Native specific dependencies are synced
+    expect(appPackageJson.dependencies).toEqual(
+      expect.objectContaining({
+        react: '*',
+        'react-native': '*',
+      })
+    );
+  });
 
   it('should bundle the app', async () => {
     expect(() =>
@@ -34,11 +78,11 @@ describe('@nx/react-native', () => {
   }, 200_000);
 
   it('should start the app', async () => {
-    let process: ChildProcess;
-    const port = 8081;
+    let childProcess: ChildProcess;
+    const port = 8082;
 
     try {
-      process = await runCommandUntil(
+      childProcess = await runCommandUntil(
         `start ${appName} --no-interactive --port=${port}`,
         (output) => {
           return (
@@ -53,17 +97,21 @@ describe('@nx/react-native', () => {
     }
 
     // port and process cleanup
-    if (process && process.pid) {
-      await killProcessAndPorts(process.pid, port);
+    try {
+      if (childProcess && childProcess.pid) {
+        await killProcessAndPorts(childProcess.pid, port);
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
     }
   });
 
   it('should serve', async () => {
-    let process: ChildProcess;
+    let childProcess: ChildProcess;
     const port = 8081;
 
     try {
-      process = await runCommandUntil(
+      childProcess = await runCommandUntil(
         `serve ${appName} --port=${port}`,
         (output) => {
           return output.includes(`http://localhost:${port}`);
@@ -75,8 +123,8 @@ describe('@nx/react-native', () => {
 
     // port and process cleanup
     try {
-      if (process && process.pid) {
-        await killProcessAndPorts(process.pid, port);
+      if (childProcess && childProcess.pid) {
+        await killProcessAndPorts(childProcess.pid, port);
       }
     } catch (err) {
       expect(err).toBeFalsy();
@@ -93,9 +141,7 @@ describe('@nx/react-native', () => {
 
       // port and process cleanup
       try {
-        if (process && process.pid) {
-          await killProcessAndPorts(process.pid, 4200);
-        }
+        await killProcessAndPorts(undefined, 4200);
       } catch (err) {
         expect(err).toBeFalsy();
       }
@@ -110,32 +156,58 @@ describe('@nx/react-native', () => {
       `${appName}/.storybook/main.ts`,
       `${appName}/src/app/App.stories.tsx`
     );
+
+    runCLI(`build-storybook ${appName}`);
+    checkFilesExist(`${appName}/storybook-static/index.html`);
+  });
+
+  it('should build publishable library', async () => {
+    expect(() => {
+      runCLI(`build ${libName}`);
+      checkFilesExist(
+        `dist/${libName}/index.esm.js`,
+        `dist/${libName}/src/index.d.ts`
+      );
+    }).not.toThrow();
+  });
+
+  it('should create storybook with library', async () => {
+    runCLI(
+      `generate @nx/react:storybook-configuration ${libName} --generateStories --no-interactive`
+    );
+    checkFilesExist(
+      `${libName}/.storybook/main.ts`,
+      `${libName}/src/lib/${componentName}/${componentName}.stories.tsx`
+    );
+
+    runCLI(`build-storybook ${libName}`);
+    checkFilesExist(`${libName}/storybook-static/index.html`);
   });
 
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+      `generate @nx/react:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     expect(() => runCLI(`build ${appName2}`)).not.toThrow();
     if (runE2ETests()) {
       expect(() => runCLI(`e2e ${appName2}-e2e`)).not.toThrow();
       // port and process cleanup
       try {
-        if (process && process.pid) {
-          await killProcessAndPorts(process.pid, 4200);
-        }
+        await killProcessAndPorts(undefined, 4200);
       } catch (err) {
         expect(err).toBeFalsy();
       }
     }
 
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName2} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName2}/.storybook/main.ts`,
       `apps/${appName2}/src/app/App.stories.tsx`
     );
+    runCLI(`build-storybook ${appName2}`);
+    checkFilesExist(`apps/${appName2}/storybook-static/index.html`);
   });
 });

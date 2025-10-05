@@ -8,7 +8,11 @@ export async function interfaceGenerator(
   tree: Tree,
   rawOptions: InterfaceGeneratorOptions
 ): Promise<any> {
-  const options = await normalizeOptions(tree, rawOptions);
+  const options = await normalizeOptions(tree, rawOptions, {
+    allowedFileExtensions: ['ts'],
+    skipLanguageOption: true,
+    suffix: 'interface',
+  });
 
   return runNestSchematic(tree, 'interface', options);
 }

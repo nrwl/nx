@@ -9,7 +9,7 @@ import presetGenerator from '../preset/preset.impl';
 import routeGenerator from '../route/route.impl';
 import styleGenerator from './style.impl';
 
-describe('route', () => {
+describe('style', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -63,21 +63,10 @@ describe('route', () => {
   it('should place styles correctly when app dir is changed', async () => {
     await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
 
-    tree.write(
-      'apps/demo/remix.config.js',
-      `
-    /**
-     * @type {import('@remix-run/dev').AppConfig}
-     */
-    module.exports = {
-      ignoredRouteFiles: ["**/.*"],
-      appDirectory: "my-custom-dir",
-    };`
-    );
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
-        appDirectory: 'my-custom-dir',
+        appDirectory: 'apps/demo/my-custom-dir',
       })
     );
 
@@ -138,29 +127,6 @@ describe('route', () => {
 
     expect(content).toMatch(
       "import stylesUrl from '~/styles/example/$withParam.css';"
-    );
-  });
-
-  it('--nameAndDirectoryFormat=as-provided', async () => {
-    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
-    await routeGenerator(tree, {
-      path: 'apps/demo/app/routes/example/$withParam.tsx',
-      style: 'none',
-      loader: false,
-      action: false,
-      meta: false,
-      skipChecks: false,
-    });
-    await styleGenerator(tree, {
-      path: 'apps/demo/app/routes/example/$withParam.tsx',
-    });
-    const content = tree.read(
-      'apps/demo/app/routes/example/$withParam.tsx',
-      'utf-8'
-    );
-
-    expect(content).toMatch(
-      "import stylesUrl from '../../styles/example/$withParam.css';"
     );
   });
 });

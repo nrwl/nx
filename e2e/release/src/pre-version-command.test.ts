@@ -4,7 +4,7 @@ import {
   runCLI,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -61,9 +61,9 @@ describe('nx release pre-version command', () => {
       silenceError: true,
     });
 
-    // command should fail because @nx/js:library configures the packageRoot to be dist/{project-name}, which doesn't exist yet
+    // command should fail because @nx/js:library configures the manifestRootsToUpdate to be ['dist/{project-name}'], which doesn't exist yet
     expect(result1).toContain(
-      `NX   The project "${pkg1}" does not have a package.json available at dist/${pkg1}/package.json.`
+      `NX   The project "${pkg1}" does not have a package.json file available in ./dist/${pkg1}`
     );
 
     updateJson(`nx.json`, (json) => {

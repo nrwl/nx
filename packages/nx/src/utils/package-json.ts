@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -10,9 +10,15 @@ import { mergeTargetConfigurations } from '../project-graph/utils/project-config
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
 import {
-  PackageManagerCommands,
+  createTempNpmDirectory,
+  detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
+  PackageManager,
+  PackageManagerCommands,
 } from './package-manager';
+import { dirSync } from 'tmp';
+import { execSync } from 'child_process';
 
 export interface NxProjectPackageJsonConfiguration
   extends Partial<ProjectConfiguration> {
@@ -42,12 +48,21 @@ export interface PackageJson {
   type?: 'module' | 'commonjs';
   main?: string;
   types?: string;
+  // interchangeable with `types`: https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#including-declarations-in-your-npm-package
+  typings?: string;
   module?: string;
   exports?:
     | string
     | Record<
         string,
-        string | { types?: string; require?: string; import?: string }
+        | string
+        | {
+            types?: string;
+            require?: string;
+            import?: string;
+            development?: string;
+            default?: string;
+          }
       >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -145,15 +160,24 @@ export function buildTargetFromScript(
 let packageManagerCommand: PackageManagerCommands | undefined;
 
 export function getMetadataFromPackageJson(
-  packageJson: PackageJson
+  packageJson: PackageJson,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectMetadata {
-  const { scripts, nx, description } = packageJson ?? {};
+  const { scripts, nx, description, name, exports, main, version } =
+    packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   return {
     targetGroups: {
       ...(includedScripts.length ? { 'NPM Scripts': includedScripts } : {}),
     },
     description,
+    js: {
+      packageName: name,
+      packageVersion: version,
+      packageExports: exports,
+      packageMain: main,
+      isInPackageManagerWorkspaces,
+    },
   };
 }
 
@@ -170,13 +194,15 @@ export function getTagsFromPackageJson(packageJson: PackageJson): string[] {
 
 export function readTargetsFromPackageJson(
   packageJson: PackageJson,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  projectRoot: string,
+  workspaceRoot: string
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  packageManagerCommand ??= getPackageManagerCommand();
   for (const script of includedScripts) {
+    packageManagerCommand ??= getPackageManagerCommand();
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
@@ -194,7 +220,11 @@ export function readTargetsFromPackageJson(
    * Any targetDefaults for the nx-release-publish target set by the user should
    * be merged with the implicit target.
    */
-  if (!isPrivate && !res['nx-release-publish']) {
+  if (
+    !isPrivate &&
+    !res['nx-release-publish'] &&
+    hasNxJsPlugin(projectRoot, workspaceRoot)
+  ) {
     const nxReleasePublishTargetDefaults =
       nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
     res['nx-release-publish'] = {
@@ -212,6 +242,18 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
+}
+
+function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
+  try {
+    // nx-ignore-next-line
+    require.resolve('@nx/js/package.json', {
+      paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -294,4 +336,73 @@ export function readModulePackageJson(
     packageJson,
     path: packageJsonPath,
   };
+}
+
+export function installPackageToTmp(
+  pkg: string,
+  requiredVersion: string
+): {
+  tempDir: string;
+  cleanup: () => void;
+} {
+  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
+    dir: dirSync().name,
+    cleanup: () => {},
+  };
+
+  console.log(`Fetching ${pkg}...`);
+  const packageManager = detectPackageManager();
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  generatePackageManagerFiles(tempDir, packageManager);
+  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
+  if (preInstallCommand) {
+    // ensure package.json and repo in tmp folder is set to a proper package manager state
+    execSync(preInstallCommand, {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+      windowsHide: false,
+    });
+  }
+  const pmCommands = getPackageManagerCommand(packageManager);
+  let addCommand = pmCommands.addDev;
+  if (packageManager === 'pnpm') {
+    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
+  }
+
+  execSync(
+    `${addCommand} ${pkg}@${requiredVersion} ${
+      pmCommands.ignoreScriptsFlag ?? ''
+    }`,
+    {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+      windowsHide: false,
+    }
+  );
+
+  return {
+    tempDir,
+    cleanup,
+  };
+}
+
+/**
+ * Generates necessary files needed for the package manager to work
+ * and for the node_modules to be accessible.
+ */
+function generatePackageManagerFiles(
+  root: string,
+  packageManager: PackageManager = detectPackageManager()
+) {
+  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
+  switch (packageManager) {
+    case 'yarn':
+      if (+pmMajor >= 2) {
+        writeFileSync(
+          join(root, '.yarnrc.yml'),
+          'nodeLinker: node-modules\nenableScripts: false'
+        );
+      }
+      break;
+  }
 }

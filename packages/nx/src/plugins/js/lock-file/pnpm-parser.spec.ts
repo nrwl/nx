@@ -13,7 +13,7 @@ import {
 } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
-jest.mock('fs', () => {
+jest.mock('node:fs', () => {
   const memFs = require('memfs').fs;
   return {
     ...memFs,
@@ -1581,6 +1581,71 @@ describe('pnpm LockFile utility', () => {
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
       expect(result).toEqual(prunedLockFile);
+    });
+  });
+
+  describe('pnpm semver range specifier', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/.modules.yaml': require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pnpm-semver-range-specifier/.modules.yaml'
+        )).default,
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should correctly prune the lock file', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-semver-range-specifier/pnpm-lock.yaml'
+      )).default;
+      const expectedPrunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-semver-range-specifier/pruned-pnpm-lock.yaml'
+      )).default;
+
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-semver-range-specifier/app/package.json'
+      ));
+
+      let graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: { version: '4.17.21', packageName: 'lodash' },
+          },
+          'npm:semver@5.7.2': {
+            type: 'npm',
+            name: 'npm:semver@5.7.2',
+            data: { version: '5.7.2', packageName: 'semver' },
+          },
+          'npm:semver@6.3.1': {
+            type: 'npm',
+            name: 'npm:semver@6.3.1',
+            data: { version: '6.3.1', packageName: 'semver' },
+          },
+          'npm:semver@7.7.2': {
+            type: 'npm',
+            name: 'npm:semver@7.7.2',
+            data: { version: '7.7.2', packageName: 'semver' },
+          },
+          'npm:tmp': {
+            type: 'npm',
+            name: 'npm:tmp',
+            data: { version: '0.2.3', packageName: 'tmp' },
+          },
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+
+      expect(result).toEqual(expectedPrunedLockFile);
     });
   });
 });

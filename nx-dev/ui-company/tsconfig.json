@@ -10,6 +10,9 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-common"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

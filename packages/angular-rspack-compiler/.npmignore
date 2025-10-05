@@ -1,0 +1,14 @@
+!dist
+dist/tsconfig.lib.tsbuildinfo
+.eslintrc.json
+project.json
+tsconfig.json
+tsconfig.lib.json
+tsconfig.spec.json
+vitest*.config.*ts
+src/**/*.ts
+mocks
+**/*.tgz
+vitest.config.mts
+test-utils
+README.md__tpl__

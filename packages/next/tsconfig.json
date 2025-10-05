@@ -7,10 +7,37 @@
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../webpack"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../web"
+    },
+    {
+      "path": "../react"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "../playwright"
+    },
+    {
+      "path": "../cypress"
+    },
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

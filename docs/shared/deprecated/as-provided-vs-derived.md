@@ -1,3 +1,8 @@
+---
+title: 'As Provided vs. Derived Generator Path Options'
+description: 'Learn about the transition from derived to as-provided path options in Nx generators, improving transparency and predictability in code generation.'
+---
+
 # As Provided vs. Derived Generator Path Options
 
 Nx is moving toward a more transparent and predictable way of determining where code will be generated when you run a generator. The new behavior is to take generator options _as provided_ and place the generated code in the exact folder that you specify. Nx will only use the new behavior in Nx version 20. The directory can be specified with a `--directory` flag or use a fully specified path (i.e. `libs/shared/my-lib/src/my-component`). The `--directory` flag will be calculated relative to where you run the command.
@@ -79,7 +84,7 @@ This makes app or lib generators behave in the following way:
 - `nx g app my-app --directory=nested` creates a new application named `nested-my-app` in the `/demos/nested/my-app` folder
 - `nx g lib my-lib --directory=shared/ui` creates a new library named `shared-ui-my-lib` in the `/packages/shared/ui/my-lib` folder
 
-If you accidentally generate a project in the wrong folder, use the [move generator](/nx-api/workspace/generators/move) to move it to the correct location.
+If you accidentally generate a project in the wrong folder, use the [move generator](/reference/core-api/workspace/generators/move) to move it to the correct location.
 
 ## Code Generators
 

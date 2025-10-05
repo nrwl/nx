@@ -1,0 +1,41 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../ui-markdoc"
+    },
+    {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "../ui-blog"
+    },
+    {
+      "path": "../data-access-documents"
+    },
+    {
+      "path": "../data-access-courses"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

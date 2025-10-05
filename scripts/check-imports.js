@@ -15,7 +15,7 @@ function allFilesInDir(dirName) {
             name: child,
             content: fs.readFileSync(child).toString(),
           });
-        } else if (s.isDirectory()) {
+        } else if (s.isDirectory() && c !== 'node_modules') {
           res = [...res, ...allFilesInDir(child)];
         }
       } catch (e) {}
@@ -46,9 +46,11 @@ function check() {
     // which is @angular/core/testing. and the tests check for this
     'packages/cypress/src/migrations/update-15-1-0/cypress-11.spec.ts',
     'packages/cypress/src/migrations/update-15-1-0/cypress-11.ts',
-    // this migration looks for projects depending on @angular/core, it doesn't require it
+    // these migrations looks for projects depending on @angular/core, it doesn't require it
     'packages/cypress/src/migrations/update-16-4-0/warn-incompatible-angular-cypress.spec.ts',
     'packages/cypress/src/migrations/update-16-4-0/warn-incompatible-angular-cypress.ts',
+    'packages/cypress/src/migrations/update-20-8-0/update-component-testing-mount-imports.spec.ts',
+    'packages/cypress/src/migrations/update-20-8-0/update-component-testing-mount-imports.ts',
   ];
 
   const files = [

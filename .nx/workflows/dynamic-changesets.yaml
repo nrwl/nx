@@ -1,4 +1,71 @@
 distribute-on:
-  small-changeset: 8 linux-medium
-  medium-changeset: 10 linux-medium
-  large-changeset: 12 linux-medium
+  default: auto linux-large, 1 linux-extra-large
+assignment-rules:
+  # e2e-release tests must run sequentially due to shared git state and publishing operations
+  - projects:
+      - e2e-release
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-large
+        parallelism: 1
+
+  - projects:
+      - e2e-gradle
+    targets:
+      - e2e-ci**
+    run-on:
+        - agent: linux-large
+          parallelism: 1
+        - agent: linux-extra-large
+          parallelism: 1
+  
+  - projects:
+      - e2e-react
+    targets:
+      - e2e-ci**react-package**
+    run-on:
+        - agent: linux-large
+          parallelism: 1
+        - agent: linux-extra-large
+          parallelism: 1
+
+  # All other e2e tests can run in parallel
+  - targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-large
+        parallelism: 2
+      - agent: linux-extra-large
+        parallelism: 3
+
+  # These projects should not need to be isolated.
+  - projects:
+      - nx-dev
+    targets:
+      - build*
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+  - projects:
+      - angular
+      - react
+    targets:
+      - test
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+
+  - targets:
+      - lint
+    run-on:
+      - agent: linux-large
+        parallelism: 6
+
+  - targets:
+      - '*'
+    run-on:
+      - agent: linux-large
+        parallelism: 3
+      - agent: linux-extra-large
+        parallelism: 3

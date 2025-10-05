@@ -94,7 +94,7 @@ describe('generateFiles', () => {
         },
         { overwriteStrategy: OverwriteStrategy.ThrowIfExisting }
       );
-    }).toThrowError(
+    }).toThrow(
       'Generated file already exists, not allowed by overwrite strategy in generator (directory/file-in-directory.txt)'
     );
   });

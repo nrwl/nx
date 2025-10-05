@@ -1,7 +1,8 @@
 import { workspaceRoot } from '@nx/devkit';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { defineConfig } from '@playwright/test';
 import { lstatSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { defineConfig } from '@playwright/test';
 
 export interface NxPlaywrightOptions {
   /**
@@ -9,6 +10,13 @@ export interface NxPlaywrightOptions {
    * @default './src'
    **/
   testDir?: string;
+
+  /**
+   * Whether to generate blob reports. Useful when running atomized tasks in CI
+   * and you want to merge the reports.
+   * @default `!!process.env['CI']`
+   */
+  generateBlobReports?: boolean;
 }
 
 /**
@@ -43,20 +51,33 @@ export function nxE2EPreset(
   const projectPath = relative(workspaceRoot, normalizedPath);
   const offset = relative(normalizedPath, workspaceRoot);
 
-  const testResultOuputDir = join(
-    offset,
-    'dist',
-    '.playwright',
-    projectPath,
-    'test-output'
-  );
-  const reporterOutputDir = join(
-    offset,
-    'dist',
-    '.playwright',
-    projectPath,
-    'playwright-report'
-  );
+  const isTsSolutionSetup = isUsingTsSolutionSetup();
+
+  const testResultOuputDir = isTsSolutionSetup
+    ? 'test-output/playwright/output'
+    : join(offset, 'dist', '.playwright', projectPath, 'test-output');
+
+  const reporters = [];
+  reporters.push([
+    'html',
+    {
+      outputFolder: isTsSolutionSetup
+        ? 'test-output/playwright/report'
+        : join(offset, 'dist', '.playwright', projectPath, 'playwright-report'),
+    },
+  ]);
+  const shouldGenerateBlobReports =
+    options?.generateBlobReports ?? !!process.env['CI'];
+  if (shouldGenerateBlobReports) {
+    reporters.push([
+      'blob',
+      {
+        outputDir: isTsSolutionSetup
+          ? 'test-output/playwright/blob-report'
+          : join(offset, 'dist', '.playwright', projectPath, 'blob-report'),
+      },
+    ]);
+  }
 
   return defineConfig({
     testDir: options?.testDir ?? './src',
@@ -70,13 +91,6 @@ export function nxE2EPreset(
     /* Opt out of parallel tests on CI. */
     workers: process.env.CI ? 1 : undefined,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-    reporter: [
-      [
-        'html',
-        {
-          outputFolder: reporterOutputDir,
-        },
-      ],
-    ],
+    reporter: [...reporters],
   });
 }

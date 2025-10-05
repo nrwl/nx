@@ -1,3 +1,8 @@
+---
+title: Reduce Repetitive Configuration
+description: Learn how to use Nx's targetDefaults, namedInputs, and other features to minimize duplicate configuration across projects in your workspace.
+---
+
 # Reduce Repetitive Configuration
 
 Nx can help you dramatically reduce the lines of configuration code that you need to maintain.

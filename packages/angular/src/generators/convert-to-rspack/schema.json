@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "GeneratorNxApp",
+  "title": "Creates an Angular application.",
+  "description": "Creates an Angular application.",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "project": {
+      "type": "string",
+      "aliases": ["name", "projectName"],
+      "description": "Project for which to convert to rspack.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipInstall": {
+      "description": "Skip installing dependencies.",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

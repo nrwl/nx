@@ -1,0 +1,101 @@
+{
+  "name": "@nx/angular-rspack-compiler",
+  "private": false,
+  "version": "0.0.1",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Compilation utilities for Angular with Rspack and Rsbuild.",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/angular-rspack-compiler"
+  },
+  "keywords": [
+    "angular",
+    "rspack",
+    "rsbuild",
+    "compiler"
+  ],
+  "scripts": {
+    "postinstall": "node ./patch/patch-angular-build.js"
+  },
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@angular/build": ">=19.0.0 <21.0.0",
+    "sass-embedded": "^1.79.3",
+    "semver": "^7.6.3",
+    "ts-morph": "^24.0.0",
+    "tslib": "^2.3.0",
+    "typescript": "~5.9.2"
+  },
+  "devDependencies": {
+    "jsonc-eslint-parser": "^2.4.0",
+    "vitest": "^3.0.5",
+    "memfs": "^4.17.0"
+  },
+  "peerDependencies": {
+    "@angular/compiler-cli": ">=19.0.0 <21.0.0",
+    "@rsbuild/core": ">=1.0.5 <2.0.0"
+  },
+  "nx": {
+    "sourceRoot": "packages/angular-rspack-compiler/src",
+    "projectType": "library",
+    "name": "angular-rspack-compiler",
+    "release": {
+      "version": {
+        "preserveLocalDependencyProtocols": true,
+        "manifestRootsToUpdate": [
+          "packages/{projectName}"
+        ]
+      }
+    },
+    "targets": {
+      "build": {
+        "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/README.md__tpl__ packages/angular-rspack-compiler/README.md",
+        "outputs": [
+          "{projectRoot}/README.md"
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          "^build-native"
+        ],
+        "inputs": [
+          "default",
+          "^production",
+          "{projectRoot}/vitest.config.mts"
+        ],
+        "options": {
+          "args": [
+            "--passWithNoTests"
+          ]
+        }
+      },
+      "nx-release-publish": {
+        "executor": "@nx/js:release-publish",
+        "options": {
+          "packageRoot": "packages/angular-rspack-compiler"
+        },
+        "dependsOn": [
+          "^nx-release-publish"
+        ]
+      }
+    }
+  }
+}

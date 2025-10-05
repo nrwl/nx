@@ -38,7 +38,14 @@ export function typeDefinitions(options: { projectRoot: string }) {
           /\.[cm]?[jt]sx?$/,
           ''
         );
-        const dtsFileName = file.fileName.replace(/\.[cm]?js$/, '.d.ts');
+
+        // Replace various JavaScript file extensions (e.g., .js, .cjs, .mjs, .cjs.js, .mjs.js) with .d.ts for generating type definition file names.
+        // This regex matches the pattern used in packages/rollup/src/plugins/package-json/update-package-json.ts
+        const dtsFileName = file.fileName.replace(
+          /(\.cjs|\.mjs|\.esm\.js|\.cjs\.js|\.mjs\.js|\.js)$/,
+          '.d.ts'
+        );
+
         const relativeSourceDtsName = JSON.stringify('./' + entrySourceDtsName);
         const dtsFileSource = hasDefaultExport
           ? stripIndents`

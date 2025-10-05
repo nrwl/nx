@@ -63,7 +63,7 @@ function writeFile() {
   // if no generated projects are found, generate one for nx and try this again
   if (generatedGraphs.length === 0) {
     execSync('nx run graph-client:generate-graph --directory ./ --name nx', {
-      windowsHide: true,
+      windowsHide: false,
     });
     writeFile();
     return;

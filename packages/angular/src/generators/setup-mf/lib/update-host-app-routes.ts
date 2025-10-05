@@ -5,14 +5,18 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
-import type { Schema } from '../schema';
+import type { NormalizedOptions } from '../schema';
 
-export function updateHostAppRoutes(tree: Tree, options: Schema) {
+export function updateHostAppRoutes(tree: Tree, options: NormalizedOptions) {
   const { sourceRoot } = readProjectConfiguration(tree, options.appName);
+  const { appComponentInfo, nxWelcomeComponentInfo } = options;
 
   tree.write(
-    joinPathFragments(sourceRoot, 'app/app.component.html'),
+    joinPathFragments(
+      sourceRoot,
+      'app',
+      `${appComponentInfo.extensionlessFileName}.html`
+    ),
     `<ul class="remote-menu">
 <li><a routerLink="/">Home</a></li>
 </ul>
@@ -24,15 +28,17 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
     sourceRoot,
     'app/app.routes.ts'
   );
-
-  let hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
-
-  if (!hostRootRoutingFile) {
+  if (!tree.exists(pathToHostRootRoutingFile)) {
     pathToHostRootRoutingFile = joinPathFragments(
       sourceRoot,
       'app/app-routing.module.ts'
     );
-    hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  }
+  if (!tree.exists(pathToHostRootRoutingFile)) {
+    pathToHostRootRoutingFile = joinPathFragments(
+      sourceRoot,
+      'app/app-routing-module.ts'
+    );
   }
 
   addRoute(
@@ -40,17 +46,18 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
     pathToHostRootRoutingFile,
     `{
       path: '',
-      component: NxWelcomeComponent
+      component: ${nxWelcomeComponentInfo.symbolName}
     }`
   );
 
   tree.write(
     pathToHostRootRoutingFile,
-    `import { NxWelcomeComponent } from './nx-welcome.component';
+    `import { ${nxWelcomeComponentInfo.symbolName} } from './${
+      nxWelcomeComponentInfo.extensionlessFileName
+    }';
 ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
   );
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   generateFiles(
     tree,
     joinPathFragments(__dirname, '../files/host-files'),
@@ -58,7 +65,10 @@ ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
     {
       appName: options.appName,
       standalone: options.standalone,
-      useRouterTestingModule: angularMajorVersion < 18,
+      appFileName: appComponentInfo.extensionlessFileName,
+      appSymbolName: appComponentInfo.symbolName,
+      nxWelcomeFileName: nxWelcomeComponentInfo.extensionlessFileName,
+      nxWelcomeSymbolName: nxWelcomeComponentInfo.symbolName,
       tmpl: '',
     }
   );

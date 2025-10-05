@@ -45,6 +45,8 @@ export const allowedProjectExtensions = [
   'release',
   'includedScripts',
   'metadata',
+  'owners',
+  'nxCloudImplicitDependencies',
 ] as const;
 
 // If we pass props on the workspace that angular doesn't know about,
@@ -54,6 +56,7 @@ export const allowedProjectExtensions = [
 // There are some props in here (root) that angular already knows about,
 // but it doesn't hurt to have them in here as well to help static analysis.
 export const allowedWorkspaceExtensions = [
+  '$schema',
   'implicitDependencies',
   'affected',
   'defaultBase',
@@ -81,6 +84,9 @@ export const allowedWorkspaceExtensions = [
   'neverConnectToCloud',
   'sync',
   'useLegacyCache',
+  'maxCacheSize',
+  'tui',
+  'owners',
 ] as const;
 
 if (!patched) {
@@ -107,6 +113,10 @@ if (!patched) {
   try {
     require('@angular-devkit/build-angular/src/utils/version').assertCompatibleAngularVersion =
       () => {};
+  } catch (e) {}
+
+  try {
+    require('@angular/build/private').assertCompatibleAngularVersion = () => {};
   } catch (e) {}
 
   patched = true;

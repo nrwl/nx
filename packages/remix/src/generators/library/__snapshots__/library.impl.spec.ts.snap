@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 1`] = `
 "export default {
@@ -28,7 +28,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
@@ -38,14 +38,18 @@ export default defineConfig({
   // },
   test: {
     setupFiles: ['./src/test-setup.ts'],
+    name: 'test',
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
-    coverage: { reportsDirectory: '../coverage/test', provider: 'v8' },
+    coverage: {
+      reportsDirectory: '../coverage/test',
+      provider: 'v8' as const,
+    },
   },
-});
+}));
 "
 `;
 

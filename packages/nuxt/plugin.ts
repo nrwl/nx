@@ -1,1 +1,5 @@
-export { createNodes, NuxtPluginOptions } from './src/plugins/plugin';
+export {
+  createNodes,
+  createNodesV2,
+  NuxtPluginOptions,
+} from './src/plugins/plugin';

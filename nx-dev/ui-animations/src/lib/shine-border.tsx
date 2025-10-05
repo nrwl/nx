@@ -1,5 +1,5 @@
 'use client';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { CSSProperties, ReactNode } from 'react';
 
 type TColorProp = `#${string}` | `#${string}`[];

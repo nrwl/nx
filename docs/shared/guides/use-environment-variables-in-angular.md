@@ -1,3 +1,8 @@
+---
+title: Using Environment Variables in Angular Applications
+description: Learn how to configure and use environment variables in Angular applications with Nx, including setup for ESBuild and TypeScript type definitions.
+---
+
 # Using environment variables in Angular applications
 
 ## For Angular applications using ESBuild
@@ -40,11 +45,11 @@ declare const MY_API_URL: string;
 
 The above would allow you to use the `MY_API_URL` variable in your application code as in the following example:
 
-```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+```ts {% fileName="apps/my-app/src/app/api-http-client.ts" highlightLines=[6] %}
 import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
-export class ApiService {
+export class ApiHttpClient {
   constructor() {
     console.log('API URL:', MY_API_URL);
   }
@@ -87,11 +92,11 @@ You could also add the Node.js types to your `tsconfig.json` file, but this woul
 
 And then use the variable in your application code:
 
-```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+```ts {% fileName="apps/my-app/src/app/api-http-client.ts" highlightLines=[6] %}
 import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
-export class ApiService {
+export class ApiHttpClient {
   constructor() {
     console.log('API URL:', process.env.MY_API_URL);
   }
@@ -164,11 +169,11 @@ Alternatively, you can also [set environment variables when running a terminal c
 
 Finally, you can use the environment variables in your application code:
 
-```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+```ts {% fileName="apps/my-app/src/app/api-http-client.ts" highlightLines=[6] %}
 import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
-export class ApiService {
+export class ApiHttpClient {
   constructor() {
     console.log('API URL:', process.env.MY_ORG_API_URL);
   }
@@ -280,11 +285,11 @@ Alternatively, you can also [set environment variables when running a terminal c
 
 Finally, we can use environment variables in our code:
 
-```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+```ts {% fileName="apps/my-app/src/app/api-http-client.ts" highlightLines=[6] %}
 import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
-export class ApiService {
+export class ApiHttpClient {
   constructor() {
     console.log('API URL:', process.env.MY_ORG_API_URL);
   }

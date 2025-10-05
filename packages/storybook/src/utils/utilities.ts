@@ -1,9 +1,4 @@
-import {
-  TargetConfiguration,
-  Tree,
-  readNxJson,
-  updateNxJson,
-} from '@nx/devkit';
+import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
@@ -43,7 +38,7 @@ type Constants = typeof Constants;
 export function storybookMajorVersion(): number | undefined {
   try {
     const storybookPackageVersion = require(join(
-      '@storybook/core-server',
+      'storybook',
       'package.json'
     )).version;
     return major(storybookPackageVersion);
@@ -55,7 +50,7 @@ export function storybookMajorVersion(): number | undefined {
 export function getInstalledStorybookVersion(): string | undefined {
   try {
     const storybookPackageVersion = require(join(
-      '@storybook/core-server',
+      'storybook',
       'package.json'
     )).version;
     return storybookPackageVersion;
@@ -254,10 +249,10 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
 
 export function pleaseUpgrade(): string {
   return `
-    Storybook 6 and lower are no longer maintained, and not supported in Nx. 
-    Please upgrade to Storybook 7.
+    Storybook 7 and lower are no longer maintained, and not supported in Nx. 
+    Please upgrade to Storybook 8.
 
     Here is a guide on how to upgrade:
-    https://nx.dev/nx-api/storybook/generators/migrate-7
+    https://nx.dev/nx-api/storybook/generators/migrate-8
     `;
 }

@@ -1,0 +1,105 @@
+{
+  "packageJsonUpdates": {
+    "20.4.0": {
+      "version": "20.4.0-beta.0",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.8.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.8.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.8.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.6.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.5.0": {
+      "version": "20.5.0-beta.5",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.9.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.9.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.9.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.6.26",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.2.0": {
+      "version": "21.2.0-beta.6",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.15.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.15.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.15.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.3.0": {
+      "version": "21.3.0-beta.8",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.17.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.17.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.4.0": {
+      "version": "21.4.0-beta.8",
+      "packages": {
+        "http-proxy-middleware": {
+          "version": "^3.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.18.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/enhanced": {
+          "version": "^0.18.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.18.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.11",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

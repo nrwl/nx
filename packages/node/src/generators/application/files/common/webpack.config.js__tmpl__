@@ -1,10 +1,14 @@
-<% if (webpackPluginOptions) { %>
+<%_ if (webpackPluginOptions) { _%>
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
   output: {
-    path: join(__dirname, '<%= offset %><%= webpackPluginOptions.outputPath %>'),
+    path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
+    clean: true,
+    ...(process.env.NODE_ENV !== 'production' && {
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+    }),
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -16,10 +20,11 @@ module.exports = {
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: true,
+      sourceMaps: true,
     })
   ],
 };
-<% } else { %>
+<%_ } else { _%>
 const { composePlugins, withNx} = require('@nx/webpack');
 
 // Nx plugins for webpack.
@@ -28,9 +33,17 @@ module.exports = composePlugins(
     target: 'node',
   }),
   (config) => {
+    config.output = {
+      ...config.output,
+      ...(process.env.NODE_ENV !== 'production' && {
+      clean: true,
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+      }),
+    };
+    config.devtool = 'source-map';
     // Update the webpack config as needed here.
     // e.g. `config.plugins.push(new MyPlugin())`
     return config;
   }
 );
-<% } %>
+<%_ } _%>

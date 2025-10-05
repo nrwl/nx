@@ -14,6 +14,7 @@ export async function handleGetSyncGeneratorChanges(
           generatorName: change.generatorName,
           changes: change.changes.map((c) => ({ ...c, content: null })),
           outOfSyncMessage: change.outOfSyncMessage,
+          outOfSyncDetails: change.outOfSyncDetails,
         }
   );
 

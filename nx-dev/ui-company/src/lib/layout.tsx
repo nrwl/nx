@@ -1,4 +1,4 @@
-import { Header, Footer } from '@nx/nx-dev/ui-common';
+import { Header, Footer } from '@nx/nx-dev-ui-common';
 
 export function Layout({
   children,
@@ -21,7 +21,9 @@ export function Layout({
             }}
           />
         </div>
-        <main className="py-24 sm:py-32">{children}</main>
+        <main className="py-24 sm:py-32" data-document="main">
+          {children}
+        </main>
       </div>
       <Footer />
     </div>

@@ -1,7 +1,19 @@
-import { ExecutorContext } from '@nx/devkit';
-import { RspackExecutorSchema } from '../executors/rspack/schema';
+export interface ExtraEntryPointClass {
+  bundleName?: string;
+  inject?: boolean;
+  input: string;
+  lazy?: boolean;
+}
 
-export interface SharedConfigContext {
-  options: RspackExecutorSchema;
-  context: ExecutorContext;
+export type ExtraEntryPoint = ExtraEntryPointClass | string;
+
+export type NormalizedEntryPoint = Required<ExtraEntryPointClass>;
+
+export interface EmittedFile {
+  id?: string;
+  name?: string;
+  file: string;
+  extension: string;
+  initial: boolean;
+  asset?: boolean;
 }

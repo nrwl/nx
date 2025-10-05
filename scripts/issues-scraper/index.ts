@@ -1,11 +1,10 @@
 import { ensureDirSync, readJsonSync, writeJsonSync } from 'fs-extra';
 import { dirname, join } from 'path';
 import { ReportData, ScopeData, TrendData } from './model';
-import { getScopeLabels, scrapeIssues } from './scrape-issues';
+import { scrapeIssues } from './scrape-issues';
 import { formatGhReport, getSlackMessageJson } from './format-slack-message';
 import { setOutput } from '@actions/core';
 import isCI from 'is-ci';
-import { readdirSync } from 'fs';
 
 const CACHE_FILE = join(__dirname, 'cached', 'data.json');
 
@@ -15,12 +14,7 @@ async function main() {
     oldData.collectedDate ? new Date(oldData.collectedDate) : undefined
   );
   const trendData = getTrendData(currentData, oldData);
-  const formatted = formatGhReport(
-    currentData,
-    trendData,
-    oldData,
-    getUnlabeledIssuesUrl(await getScopeLabels())
-  );
+  const formatted = formatGhReport(currentData, trendData, oldData);
   setOutput('SLACK_MESSAGE', getSlackMessageJson(formatted));
   console.log(formatted.replace(/\<(.*)\|(.*)\>/g, '[$1]($0)'));
   saveCacheData(currentData);
@@ -47,7 +41,7 @@ function getTrendData(newData: ReportData, oldData: ReportData): TrendData {
     scopes: scopeTrends as Record<string, ScopeData>,
     totalBugCount: newData.totalBugCount - oldData.totalBugCount,
     totalIssueCount: newData.totalIssueCount - oldData.totalIssueCount,
-    totalClosed: newData.totalClosed - oldData.totalClosed ?? 0,
+    totalClosed: newData.totalClosed - oldData.totalClosed,
     untriagedIssueCount:
       newData.untriagedIssueCount - oldData.untriagedIssueCount,
   };
@@ -62,10 +56,8 @@ function saveCacheData(report: ReportData) {
 
 function getOldData(): ReportData {
   try {
-    console.log('DIR CONTENTS:', readdirSync(dirname(CACHE_FILE)));
     return readJsonSync(CACHE_FILE);
   } catch (e) {
-    console.log(e);
     return {
       scopes: {},
       totalBugCount: 0,
@@ -74,11 +66,4 @@ function getOldData(): ReportData {
       totalClosed: 0,
     };
   }
-}
-
-function getUnlabeledIssuesUrl(scopeLabels: string[]) {
-  const labelFilters = scopeLabels.map((s) => `-label:"${s}"`);
-  return `https://github.com/nrwl/nx/issues/?q=is%3Aopen+is%3Aissue+sort%3Aupdated-desc+${encodeURIComponent(
-    labelFilters.join(' ')
-  )}`;
 }

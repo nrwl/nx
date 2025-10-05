@@ -1,0 +1,21 @@
+{
+  "name": "<%= projectName %>",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "@react-router/node": "<%= reactRouterVersion %>",
+    "@react-router/serve": "<%= reactRouterVersion %>",
+    "isbot": "<%= reactRouterIsBotVersion %>",
+    "react": "<%= reactVersion %>",
+    "react-dom": "<%= reactVersion %>",
+    "react-router": "<%= reactRouterVersion %>"
+  },
+  "devDependencies": {
+    "@react-router/dev": "<%= reactRouterVersion %>",
+    "@types/node": "<%= typesNodeVersion %>",
+    "@types/react": "<%= reactVersion %>",
+    "@types/react-dom": "<%= reactVersion %>"
+  },
+  "sideEffects": false,
+}

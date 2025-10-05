@@ -103,22 +103,22 @@ nx show projects
 
 ## Options
 
-| Option          | Type                | Description                                                                                                                             |
-| --------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `--affected`    | boolean             | Show only affected projects.                                                                                                            |
-| `--base`        | string              | Base of the current branch (usually main).                                                                                              |
-| `--exclude`     | string              | Exclude certain projects from being processed.                                                                                          |
-| `--files`       | string              | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces. |
-| `--head`        | string              | Latest commit of the current branch (usually HEAD).                                                                                     |
-| `--help`        | boolean             | Show help.                                                                                                                              |
-| `--projects`    | string              | Show only projects that match a given pattern.                                                                                          |
-| `--sep`         | string              | Outputs projects with the specified seperator.                                                                                          |
-| `--type`        | `app`, `lib`, `e2e` | Select only projects of the given type.                                                                                                 |
-| `--uncommitted` | boolean             | Uncommitted changes.                                                                                                                    |
-| `--untracked`   | boolean             | Untracked changes.                                                                                                                      |
-| `--verbose`     | boolean             | Prints additional information about the commands (e.g., stack traces).                                                                  |
-| `--version`     | boolean             | Show version number.                                                                                                                    |
-| `--withTarget`  | string              | Show only projects that have a specific target.                                                                                         |
+| Option                | Type                | Description                                                                                                                             |
+| --------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `--affected`          | boolean             | Show only affected projects.                                                                                                            |
+| `--base`              | string              | Base of the current branch (usually main).                                                                                              |
+| `--exclude`           | string              | Exclude certain projects from being processed.                                                                                          |
+| `--files`             | string              | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces. |
+| `--head`              | string              | Latest commit of the current branch (usually HEAD).                                                                                     |
+| `--help`              | boolean             | Show help.                                                                                                                              |
+| `--projects`, `--p`   | string              | Show only projects that match a given pattern.                                                                                          |
+| `--sep`               | string              | Outputs projects with the specified seperator.                                                                                          |
+| `--type`              | `app`, `lib`, `e2e` | Select only projects of the given type.                                                                                                 |
+| `--uncommitted`       | boolean             | Uncommitted changes.                                                                                                                    |
+| `--untracked`         | boolean             | Untracked changes.                                                                                                                      |
+| `--verbose`           | boolean             | Prints additional information about the commands (e.g., stack traces).                                                                  |
+| `--version`           | boolean             | Show version number.                                                                                                                    |
+| `--withTarget`, `--t` | string              | Show only projects that have a specific target.                                                                                         |
 
 ### project
 
@@ -130,11 +130,11 @@ nx show project <projectName>
 
 ## Options
 
-| Option          | Type    | Description                                                            |
-| --------------- | ------- | ---------------------------------------------------------------------- |
-| `--help`        | boolean | Show help.                                                             |
-| `--open`        | boolean | Set to false to prevent the browser from opening when using --web.     |
-| `--projectName` | string  | Which project should be viewed?.                                       |
-| `--verbose`     | boolean | Prints additional information about the commands (e.g., stack traces). |
-| `--version`     | boolean | Show version number.                                                   |
-| `--web`         | boolean | Show project details in the browser. (default when interactive).       |
+| Option                 | Type    | Description                                                            |
+| ---------------------- | ------- | ---------------------------------------------------------------------- |
+| `--help`               | boolean | Show help.                                                             |
+| `--open`               | boolean | Set to false to prevent the browser from opening when using --web.     |
+| `--projectName`, `--p` | string  | Which project should be viewed?.                                       |
+| `--verbose`            | boolean | Prints additional information about the commands (e.g., stack traces). |
+| `--version`            | boolean | Show version number.                                                   |
+| `--web`                | boolean | Show project details in the browser. (default when interactive).       |

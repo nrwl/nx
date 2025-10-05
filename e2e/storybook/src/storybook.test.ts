@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
 
@@ -89,7 +89,7 @@ describe('Storybook generators and executors for monorepos', () => {
       writeFileSync(
         tmpProjPath(`${reactStorybookApp}/src/app/test-button.stories.tsx`),
         `
-              import type { Meta } from '@storybook/react';
+              import type { Meta } from '@storybook/react-webpack5';
               import { TestButton } from './test-button';
       
               const Story: Meta<typeof TestButton> = {

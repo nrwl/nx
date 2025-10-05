@@ -6,59 +6,71 @@ import {
 } from 'child_process';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
-import { getPackageManagerCommand } from './package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  PackageManagerCommands,
+} from './package-manager';
 import { workspaceRoot, workspaceRootInner } from './workspace-root';
 import { ChildProcess } from '../native';
 
-export function runNxSync(
-  cmd: string,
-  options?: ExecSyncOptions & { cwd?: string }
-) {
-  let baseCmd: string;
+export function getRunNxBaseCommand(
+  packageManagerCommand?: PackageManagerCommands,
+  cwd: string = process.cwd()
+): string {
   if (existsSync(join(workspaceRoot, 'package.json'))) {
-    baseCmd = `${getPackageManagerCommand().exec} nx`;
+    if (!packageManagerCommand) {
+      const pm = detectPackageManager();
+      packageManagerCommand = getPackageManagerCommand(pm);
+    }
+    return `${packageManagerCommand.exec} nx`;
   } else {
-    options ??= {};
-    options.cwd ??= process.cwd();
-    options.windowsHide ??= true;
-    const offsetFromRoot = relative(
-      options.cwd,
-      workspaceRootInner(options.cwd, null)
-    );
+    const offsetFromRoot = relative(cwd, workspaceRootInner(cwd, null));
     if (process.platform === 'win32') {
-      baseCmd = '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
+      return '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
     } else {
-      baseCmd = './' + join(`${offsetFromRoot}`, 'nx');
+      return './' + join(`${offsetFromRoot}`, 'nx');
     }
   }
-  execSync(`${baseCmd} ${cmd}`, options);
+}
+
+export function runNxSync(
+  cmd: string,
+  options?: ExecSyncOptions & {
+    cwd?: string;
+    packageManagerCommand?: PackageManagerCommands;
+  }
+) {
+  let { packageManagerCommand, ...execSyncOptions } = options ?? {};
+
+  execSyncOptions.cwd ??= process.cwd();
+  execSyncOptions.windowsHide ??= true;
+
+  const baseCmd = getRunNxBaseCommand(
+    packageManagerCommand,
+    execSyncOptions.cwd
+  );
+  execSync(`${baseCmd} ${cmd}`, execSyncOptions);
 }
 
 export async function runNxAsync(
   cmd: string,
-  options?: ExecOptions & { cwd?: string; silent?: boolean }
+  options?: ExecOptions & {
+    cwd?: string;
+    silent?: boolean;
+    packageManagerCommand?: PackageManagerCommands;
+  }
 ): Promise<void> {
-  let baseCmd: string;
-  if (existsSync(join(workspaceRoot, 'package.json'))) {
-    baseCmd = `${getPackageManagerCommand().exec} nx`;
-  } else {
-    options ??= {};
-    options.cwd ??= process.cwd();
-    options.windowsHide ??= true;
-    const offsetFromRoot = relative(
-      options.cwd,
-      workspaceRootInner(options.cwd, null)
-    );
-    if (process.platform === 'win32') {
-      baseCmd = '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
-    } else {
-      baseCmd = './' + join(`${offsetFromRoot}`, 'nx');
-    }
-  }
-  const silent = options?.silent ?? true;
-  if (options?.silent) {
-    delete options.silent;
-  }
+  options ??= {};
+  options.cwd ??= process.cwd();
+  options.windowsHide ??= true;
+  let { silent, packageManagerCommand, ...execSyncOptions } = options;
+  silent ??= true;
+
+  const baseCmd = getRunNxBaseCommand(
+    packageManagerCommand,
+    execSyncOptions.cwd
+  );
   return new Promise<void>((resolve, reject) => {
     const child = exec(
       `${baseCmd} ${cmd}`,

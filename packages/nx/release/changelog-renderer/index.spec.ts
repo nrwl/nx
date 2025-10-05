@@ -1,5 +1,6 @@
 import type { ChangelogChange } from '../../src/command-line/release/changelog';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
+import { GithubRemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/github';
 import DefaultChangelogRenderer from './index';
 
 jest.mock('../../src/project-graph/file-map-utils', () => ({
@@ -26,6 +27,15 @@ jest.mock('../../src/project-graph/file-map-utils', () => ({
 }));
 
 describe('ChangelogRenderer', () => {
+  const remoteReleaseClient = new GithubRemoteReleaseClient(
+    {
+      hostname: 'example.com',
+      slug: 'example/example',
+      apiBaseUrl: 'https://api.example.com',
+    },
+    false,
+    null
+  );
   const changes: ChangelogChange[] = [
     {
       shortHash: '4130f65',
@@ -144,6 +154,7 @@ describe('ChangelogRenderer', () => {
       it('should generate markdown for all projects by organizing commits by type, then grouped by scope within the type (sorted alphabetically), then chronologically within the scope group', async () => {
         const renderer = new DefaultChangelogRenderer({
           changes,
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           project: null,
           isVersionPlans: false,
@@ -168,7 +179,7 @@ describe('ChangelogRenderer', () => {
                   - all packages fixed
                   - **pkg-a:** squashing bugs
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -177,6 +188,7 @@ describe('ChangelogRenderer', () => {
       it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
         const renderer = new DefaultChangelogRenderer({
           changes,
+          remoteReleaseClient,
           // Major version, should use single # for generated heading
           changelogEntryVersion: 'v1.0.0',
           project: null,
@@ -209,6 +221,7 @@ describe('ChangelogRenderer', () => {
       it('should generate markdown for the given project by organizing commits by type, then chronologically', async () => {
         const otherOpts = {
           changes,
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           entryWhenNoChanges: false as const,
           isVersionPlans: false,
@@ -235,7 +248,7 @@ describe('ChangelogRenderer', () => {
                   - all packages fixed
                   - **pkg-a:** squashing bugs
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -279,7 +292,7 @@ describe('ChangelogRenderer', () => {
 
                   - all packages fixed
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -401,6 +414,7 @@ describe('ChangelogRenderer', () => {
 
         const otherOpts = {
           changes,
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           entryWhenNoChanges: false as const,
           isVersionPlans: false,
@@ -427,7 +441,7 @@ describe('ChangelogRenderer', () => {
                   - all packages fixed
                   - **pkg-a:** squashing bugs
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - Author 1
                   - Author 3
@@ -451,7 +465,7 @@ describe('ChangelogRenderer', () => {
 
                   - all packages fixed
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - Author 1
                   - Author 2
@@ -464,6 +478,7 @@ describe('ChangelogRenderer', () => {
       it('should respect the entryWhenNoChanges option for the workspace changelog', async () => {
         const otherOpts = {
           changes: [],
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           project: null, // workspace changelog
           isVersionPlans: false,
@@ -495,6 +510,7 @@ describe('ChangelogRenderer', () => {
       it('should respect the entryWhenNoChanges option for project changelogs', async () => {
         const otherOpts = {
           changes: [],
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           project: 'pkg-a',
           isVersionPlans: false,
@@ -558,6 +574,7 @@ describe('ChangelogRenderer', () => {
 
         const markdown = await new DefaultChangelogRenderer({
           changes: changesWithOnlyRevert,
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           project: null,
           isVersionPlans: false,
@@ -575,7 +592,7 @@ describe('ChangelogRenderer', () => {
 
                   - **release:** Revert "fix(release): do not update dependents when they already use "*" (#20607)"
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -640,6 +657,7 @@ describe('ChangelogRenderer', () => {
 
         const markdown = await new DefaultChangelogRenderer({
           changes: changesWithRevertAndOriginal,
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           project: null,
           isVersionPlans: false,
@@ -678,6 +696,7 @@ describe('ChangelogRenderer', () => {
 
         const markdown = await new DefaultChangelogRenderer({
           changes: [breakingChangeWithExplanation],
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           project: null,
           isVersionPlans: false,
@@ -699,7 +718,7 @@ describe('ChangelogRenderer', () => {
 
                   - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -731,6 +750,7 @@ describe('ChangelogRenderer', () => {
 
         const markdown = await new DefaultChangelogRenderer({
           changes: [breakingChangeWithExplanation],
+          remoteReleaseClient,
           changelogEntryVersion: 'v1.1.0',
           project: null,
           isVersionPlans: false,
@@ -752,7 +772,7 @@ describe('ChangelogRenderer', () => {
 
                   - **WebSocketSubject:** \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead.
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -764,6 +784,7 @@ describe('ChangelogRenderer', () => {
         expect(
           await new DefaultChangelogRenderer({
             changes,
+            remoteReleaseClient,
             changelogEntryVersion: 'v1.1.0',
             entryWhenNoChanges: false as const,
             changelogRenderOptions: {
@@ -795,7 +816,7 @@ describe('ChangelogRenderer', () => {
 
                   - Updated pkg-b to 2.0.0
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -805,6 +826,7 @@ describe('ChangelogRenderer', () => {
         expect(
           await new DefaultChangelogRenderer({
             changes: [],
+            remoteReleaseClient,
             changelogEntryVersion: 'v3.1.0',
             entryWhenNoChanges:
               'should not be printed because we have dependency bumps',
@@ -842,6 +864,7 @@ describe('ChangelogRenderer', () => {
 
       const renderer = new CustomChangelogRenderer({
         changes,
+        remoteReleaseClient,
         changelogEntryVersion: 'v1.1.0',
         project: null,
         isVersionPlans: false,
@@ -867,7 +890,7 @@ describe('ChangelogRenderer', () => {
         - all packages fixed
         - **pkg-a:** squashing bugs
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry"
       `);

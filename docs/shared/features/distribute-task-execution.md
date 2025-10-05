@@ -1,3 +1,9 @@
+---
+title: 'Distribute Task Execution (Nx Agents)'
+description: 'Learn how to use Nx Agents to distribute task execution across multiple machines, optimizing CI pipeline speed and efficiency through intelligent task allocation.'
+keywords: [distributed tasks]
+---
+
 # Distribute Task Execution (Nx Agents)
 
 {% youtube
@@ -23,10 +29,10 @@ Nx Agents offer several key advantages:
 To enable task distribution with Nx Agents, make sure your Nx workspace is connected to Nx Cloud. If you haven't connected your workspace to Nx Cloud yet, run the following command:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-Check out the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for more details.
+Check out the [connect to Nx Cloud recipe](/ci/recipes/set-up) for more details.
 
 Then, adjust your CI pipeline configuration to **enable task distribution**. If you don't have a CI config yet, you can generate a new one using the following command:
 
@@ -36,7 +42,7 @@ npx nx g ci-workflow
 
 The key line in your CI config is the `start-ci-run` command:
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[13] %}
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[14] %}
 name: CI
 ...
 
@@ -48,6 +54,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 

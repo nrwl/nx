@@ -1,3 +1,8 @@
+---
+title: Nx Console Run Command
+description: Learn how to use the Nx Console Run Command to execute project targets and customize command options directly from your editor's Command Palette.
+---
+
 # Nx Console Run Command
 
 You can construct the executor command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `Nx: Run`. After choosing a project, select a target and any of the listed options to modify the executor command options. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.

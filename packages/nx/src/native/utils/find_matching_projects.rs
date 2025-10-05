@@ -1,4 +1,4 @@
-use crate::native::glob::{build_glob_set, NxGlobSet};
+use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use hashbrown::HashSet;
 use std::collections::HashMap;

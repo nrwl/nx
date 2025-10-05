@@ -76,4 +76,43 @@ To allow your Angular application to take advantage of incremental building, cha
 ```
 
 {% /tab %}
+
+{% tab label="Using a custom index.html transformer" %}
+
+The executor supports providing a custom function to transform the `index.html` file after it has been generated. This allows you to modify the HTML content before it is written to disk.
+
+To use a custom index.html transformer, create a file with a function that exports the transformer:
+
+```javascript {% fileName="apps/appName/index-html-transformer.js" %}
+module.exports = (target, indexHtml) => {
+  // Add a custom meta tag
+  const customMeta = `<meta name="custom-meta" content="Custom value">`;
+  return indexHtml.replace('</head>', `${customMeta}\n</head>`);
+};
+```
+
+The transformer function receives two parameters:
+
+- `target`: The Angular build target configuration object containing properties like `project`, `target`, and `configuration`
+- `indexHtml`: The generated HTML content as a string
+
+Then update your `project.json` to use the transformer:
+
+```json {% fileName="project.json" highlightLines=[5,8] %}
+{
+    ...
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:webpack-browser",
+            "options": {
+                ...
+                "indexHtmlTransformer": "apps/appName/index-html-transformer.js"
+            }
+        },
+        ...
+    }
+}
+```
+
+{% /tab %}
 {% /tabs %}

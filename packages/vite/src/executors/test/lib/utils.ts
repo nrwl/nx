@@ -67,15 +67,22 @@ export async function getOptions(
     options: { watch, ...normalizedExtraArgs },
   } = parseCLI(['vitest', ...getOptionsAsArgv(options)]);
 
+  const { reportsDirectory, coverage, ...restNormalizedArgs } =
+    normalizedExtraArgs as Record<string, any>;
+
   const settings = {
     // Explicitly set watch mode to false if not provided otherwise vitest
     // will enable watch mode by default for non CI environments
     watch: watch ?? false,
-    ...normalizedExtraArgs,
+    ...restNormalizedArgs,
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
     root: resolved.config.root ?? root,
     config: viteConfigPath,
+    coverage: {
+      ...(coverage ?? {}),
+      ...(reportsDirectory && { reportsDirectory }),
+    },
   };
 
   return mergeConfig(resolved?.config?.['test'] ?? {}, settings);

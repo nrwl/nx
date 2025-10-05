@@ -10,6 +10,7 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { NormalizedSchema } from '../schema';
 import { createTsConfig } from '../../../utils/create-ts-config';
+import { join } from 'path';
 
 export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
   const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
@@ -26,13 +27,29 @@ export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, '../files'),
+    join(__dirname, '../files'),
     options.projectRoot,
     substitutions
   );
 
-  if (!options.publishable && options.bundler === 'none') {
-    host.delete(`${options.projectRoot}/package.json`);
+  if (
+    !options.isUsingTsSolutionConfig &&
+    options.useProjectJson &&
+    (options.publishable || options.bundler !== 'none')
+  ) {
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: options.importPath ?? options.projectName,
+      version: '0.0.1',
+      main: './index.js',
+      types: './index.d.ts',
+      exports: {
+        '.': {
+          types: './index.d.ts',
+          import: './index.mjs',
+          require: './index.js',
+        },
+      },
+    });
   }
 
   if (options.unitTestRunner !== 'vitest') {

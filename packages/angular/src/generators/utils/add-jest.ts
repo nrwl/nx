@@ -4,13 +4,15 @@ import {
   joinPathFragments,
   type Tree,
 } from '@nx/devkit';
-import { jestPresetAngularVersion, nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
+import { versions } from './version-utils';
 
 export type AddJestOptions = {
   name: string;
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
+  addPlugin?: boolean;
 };
 
 export async function addJest(
@@ -20,10 +22,18 @@ export async function addJest(
   if (!options.skipPackageJson) {
     process.env.npm_config_legacy_peer_deps ??= 'true';
 
+    const pkgVersions = versions(tree);
     addDependenciesToPackageJson(
       tree,
-      {},
-      { 'jest-preset-angular': jestPresetAngularVersion },
+      {
+        // TODO(leo): jest-preset-angular still needs this until https://github.com/thymikee/jest-preset-angular/pull/3079 is merged
+        '@angular/platform-browser-dynamic': pkgVersions.angularVersion,
+      },
+      {
+        // force jest v29.7.0, Angular doesn't support Jest v30 yet: https://github.com/angular/angular-cli/pull/30761
+        jest: '^29.7.0',
+        'jest-preset-angular': pkgVersions.jestPresetAngularVersion,
+      },
       undefined,
       true
     );
@@ -40,8 +50,8 @@ export async function addJest(
     skipSerializers: false,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addPlugin: false,
-    addExplicitTargets: true,
+    addPlugin: options.addPlugin ?? false,
+    addExplicitTargets: !options.addPlugin,
   });
 
   const setupFile = joinPathFragments(
@@ -53,14 +63,13 @@ export async function addJest(
     const contents = tree.read(setupFile, 'utf-8');
     tree.write(
       setupFile,
-      `// @ts-expect-error https://thymikee.github.io/jest-preset-angular/docs/getting-started/test-environment
-globalThis.ngJest = {
-testEnvironmentOptions: {
+      contents.replace(
+        'setupZoneTestEnv();',
+        `setupZoneTestEnv({
   errorOnUnknownElements: true,
-  errorOnUnknownProperties: true,
-},
-};
-${contents}`
+  errorOnUnknownProperties: true
+});`
+      )
     );
   }
 }

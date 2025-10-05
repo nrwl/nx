@@ -1,3 +1,8 @@
+---
+title: Federate a Module
+description: Learn how to share code between applications at runtime using Module Federation in Nx, including creating and configuring modules to be federated in React and Angular applications.
+---
+
 # Federate a Module
 
 Module Federation is a concept that allows developers to share code between applications at run-time. It is a way of doing micro-frontends, but it can also be used to share code between applications that are not micro-frontends.
@@ -6,11 +11,11 @@ In the context of Module Federation, a _module_ can be thought as any piece of c
 
 In order to share a module, it must be _federated_. This means that the module must be configured to be shared, and the application that wants to use it must be configured to use it.
 
-**Nx** includes first class support for Module Federation for React and Angular applications. This means that you can federate modules in your workspace with a few simple commands.
+**Nx** includes first-class support for Module Federation for React and Angular applications. This means that you can federate modules in your workspace with a few simple commands.
 
 {% callout type="info" title="Assumption" %}
 With this recipe we assume that you have already created a workspace with at least one React or Angular Module Federation host application.
-If you haven't, you can follow the [Create a Host Recipe](/recipes/module-federation/create-a-host).
+If you haven't, you can follow the [Create a Host Recipe](/technologies/module-federation/recipes/create-a-host).
 {% /callout %}
 
 ## Step 1: Create the module
@@ -21,7 +26,7 @@ Since we are using Nx, we will create a library for this module.
 **Create a library**
 
 ```shell
-nx generate @nx/js:library hello --unitTestRunner=jest --projectNameAndRootFormat=as-provided
+nx generate @nx/js:library hello --unitTestRunner=jest
 ```
 
 Update the `hello.ts` file with the following code:
@@ -71,7 +76,7 @@ This command will:
 {%tab label="Typescript Config File"%}
 
 ```typescript {% fileName="greeting/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'greeting',
@@ -118,7 +123,7 @@ Update the host application to use the federated module.
 {%tab label="Typescript Config File"%}
 
 ```ts {% fileName="host/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'host',

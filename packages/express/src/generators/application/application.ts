@@ -9,9 +9,9 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { tslibVersion } from '@nx/node/src/utils/versions';
 import { join } from 'path';
@@ -70,13 +70,12 @@ server.on('error', console.error);
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(tree, 'express', 'application');
-
   const options = await normalizeOptions(tree, schema);
 
   const tasks: GeneratorCallback[] = [];
@@ -85,6 +84,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const applicationTask = await nodeApplicationGenerator(tree, {
     ...options,
     bundler: 'webpack',
+    framework: 'express',
     skipFormat: true,
   });
   tasks.push(applicationTask);
@@ -108,7 +108,7 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
     await determineProjectNameAndRootOptions(host, {
       name: options.name,
@@ -121,10 +121,14 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPlugin;
 
+  const useProjectJson =
+    options.useProjectJson ?? !isUsingTsSolutionSetup(host);
+
   return {
     ...options,
     appProjectName,
     appProjectRoot,
+    useProjectJson,
   };
 }
 

@@ -16,9 +16,10 @@ describe('exportScam', () => {
     expect(() =>
       exportScam(tree, {
         directory: 'apps/app1/src/app/example',
-        filePath: 'apps/app1/src/example/example.component.ts',
+        filePath: 'apps/app1/src/example/example-component.ts',
         name: 'example',
         projectName: 'app1',
+        modulePath: 'apps/app1/src/example/example-module.ts',
         inlineScam: true,
         export: true,
       })
@@ -38,9 +39,10 @@ describe('exportScam', () => {
     // ACT
     exportScam(tree, {
       directory: 'libs/lib1/src/lib/example',
-      filePath: 'libs/lib1/src/lib/example/example.component.ts',
+      filePath: 'libs/lib1/src/lib/example/example-component.ts',
       name: 'example',
       projectName: 'lib1',
+      modulePath: 'libs/lib1/src/lib/example/example-module.ts',
       inlineScam: true,
       export: true,
     });
@@ -48,7 +50,7 @@ describe('exportScam', () => {
     // ASSERT
     const entryPointSource = tree.read(`libs/lib1/src/index.ts`, 'utf-8');
     expect(entryPointSource).toMatchInlineSnapshot(
-      `"export * from './lib/example/example.component';"`
+      `"export * from './lib/example/example-component';"`
     );
   });
 
@@ -65,9 +67,10 @@ describe('exportScam', () => {
     // ACT
     exportScam(tree, {
       directory: 'libs/lib1/src/lib/example',
-      filePath: 'libs/lib1/src/lib/example/example.component.ts',
+      filePath: 'libs/lib1/src/lib/example/example-component.ts',
       name: 'example',
       projectName: 'lib1',
+      modulePath: 'libs/lib1/src/lib/example/example-module.ts',
       inlineScam: false,
       export: true,
     });
@@ -75,8 +78,8 @@ describe('exportScam', () => {
     // ASSERT
     const entryPointSource = tree.read(`libs/lib1/src/index.ts`, 'utf-8');
     expect(entryPointSource).toMatchInlineSnapshot(`
-      "export * from './lib/example/example.component';
-      export * from './lib/example/example.module';"
+      "export * from './lib/example/example-component';
+      export * from './lib/example/example-module';"
     `);
   });
 
@@ -97,9 +100,10 @@ describe('exportScam', () => {
     // ACT
     exportScam(tree, {
       directory: 'libs/lib1/feature/src/lib/example',
-      filePath: 'libs/lib1/feature/src/lib/example/example.component.ts',
+      filePath: 'libs/lib1/feature/src/lib/example/example-component.ts',
       name: 'example',
       projectName: 'lib1',
+      modulePath: 'libs/lib1/feature/src/lib/example/example-module.ts',
       inlineScam: true,
       export: true,
     });
@@ -110,7 +114,7 @@ describe('exportScam', () => {
       'utf-8'
     );
     expect(entryPointSource).toMatchInlineSnapshot(
-      `"export * from './lib/example/example.component';"`
+      `"export * from './lib/example/example-component';"`
     );
   });
 });

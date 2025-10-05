@@ -1,5 +1,5 @@
 import { type CreateNodesContext } from '@nx/devkit';
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 // Jest 29 does not support dynamic import() unless --experimental-vm-modules is set.
@@ -10,12 +10,25 @@ jest.mock('rollup/loadConfigFile', () => {
   };
 });
 
+// Mock getPackageManagerCommand to ensure consistent test environment
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  getPackageManagerCommand: jest.fn(() => ({
+    exec: 'npx',
+  })),
+}));
+
+// Mock isUsingTsSolutionSetup to ensure consistent test environment
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 describe('@nx/rollup/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let cwd = process.cwd();
 
-  describe('root project', () => {
+  describe.each(['js', 'ts'])('root project', (extname) => {
     const tempFs = new TempFs('test');
 
     beforeEach(() => {
@@ -51,7 +64,7 @@ describe('@nx/rollup/plugin', () => {
       // is that the hash is different after updating the
       // config file. The actual config read is mocked below.
       tempFs.createFileSync(
-        'rollup.config.js',
+        `rollup.config.c${extname}`,
         JSON.stringify(rollupConfigOptions)
       );
       tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
@@ -77,7 +90,7 @@ describe('@nx/rollup/plugin', () => {
     it('should create nodes', async () => {
       // ACT
       const nodes = await createNodesFunction(
-        'rollup.config.js',
+        [`rollup.config.c${extname}`],
         {
           buildTargetName: 'build',
         },
@@ -89,7 +102,7 @@ describe('@nx/rollup/plugin', () => {
     });
   });
 
-  describe('non-root project', () => {
+  describe.each(['js', 'ts'])('non-root project', (extname) => {
     const tempFs = new TempFs('test');
 
     beforeEach(() => {
@@ -121,11 +134,12 @@ describe('@nx/rollup/plugin', () => {
           },
         ],
       };
+
       // This isn't JS, but all that really matters here
       // is that the hash is different after updating the
       // config file. The actual config read is mocked below.
       tempFs.createFileSync(
-        'mylib/rollup.config.js',
+        `mylib/rollup.config.c${extname}`,
         JSON.stringify(rollupConfigOptions)
       );
       tempFs.createFileSync(
@@ -154,7 +168,7 @@ describe('@nx/rollup/plugin', () => {
     it('should create nodes', async () => {
       // ACT
       const nodes = await createNodesFunction(
-        'mylib/rollup.config.js',
+        [`mylib/rollup.config.c${extname}`],
         {
           buildTargetName: 'build',
         },

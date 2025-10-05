@@ -13,12 +13,19 @@ import * as parseLinks from 'parse-markdown-links';
 function readFileContents(path: string): string {
   return readFileSync(path, 'utf-8');
 }
+
 function isLinkInternal(linkPath: string): boolean {
-  return linkPath.startsWith('/') || linkPath.startsWith('https://nx.dev');
+  return (
+    linkPath.startsWith('/') ||
+    linkPath.startsWith('https://nx.dev') ||
+    linkPath.startsWith('https://nx-dev')
+  );
 }
+
 function isNotAsset(linkPath: string): boolean {
   return !linkPath.startsWith('/assets');
 }
+
 function isNotImage(linkPath: string): boolean {
   return (
     !linkPath.endsWith('.png') &&
@@ -30,9 +37,15 @@ function isNotImage(linkPath: string): boolean {
     !linkPath.endsWith('.avif')
   );
 }
+
 function removeAnchors(linkPath: string): string {
   return linkPath.split('#')[0];
 }
+
+function removeQueryParams(linkPath: string): string {
+  return linkPath.split('?')[0];
+}
+
 function extractAllLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/*/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
@@ -43,14 +56,15 @@ function extractAllLinks(basePath: string): Record<string, string[]> {
       .concat(cardLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
-      .filter(isNotImage);
-    // .map(removeAnchors);
+      .filter(isNotImage)
+      .map(removeQueryParams);
     if (links.length) {
       acc[path.replace(basePath, '')] = links;
     }
     return acc;
   }, {});
 }
+
 function extractImageLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
@@ -63,22 +77,33 @@ function extractImageLinks(basePath: string): Record<string, string[]> {
     return acc;
   }, {});
 }
+
 function readSiteMapIndex(directoryPath: string, filename: string): string[] {
   const parser = new XMLParser();
   const sitemapIndex: {
     sitemapindex: {
-      sitemap: {
+      sitemap: Array<{
         loc: string;
-      };
+      }>;
     };
   } = parser.parse(readFileContents(join(directoryPath, filename)));
+
+  const internalSitemap = sitemapIndex.sitemapindex.sitemap.find(
+    // astro sitemap adds a new item into the sitemap entries with <domain>/docs/sitemap-index.xml.
+    // we already validate the sitemap links insite astro. no need to do it in nextjs
+    (s) => !s.loc.endsWith('/docs/sitemap-index.xml')
+  );
+  if (!internalSitemap) {
+    console.warn(join(directoryPath, filename), sitemapIndex);
+    throw new Error('Unable to find sitemap location for nx.dev');
+  }
+
+  console.log('Using sitemap with url: ', internalSitemap.loc);
   return [
-    join(
-      directoryPath,
-      sitemapIndex.sitemapindex.sitemap.loc.replace('https://nx.dev', '')
-    ),
+    join(directoryPath, internalSitemap.loc.replace('https://nx.dev', '')),
   ];
 }
+
 function readSiteMapLinks(filePath: string): string[] {
   const parser = new XMLParser();
   const sitemap: {
@@ -100,6 +125,7 @@ const sitemapUrls = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
+
 function headerToAnchor(line: string): string {
   return line
     .replace(/[#]+ /, '')
@@ -143,11 +169,13 @@ const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
   (manifestFileName) => readApiJson(manifestFileName)
 );
 const ignoreAnchorUrls = [
-  '/nx-api',
+  '/reference/core-api',
+  '/technologies',
   '/nx-cloud',
   '/blog',
   '/pricing',
   '/ci/reference',
+  '/changelog',
   '/conf',
 ];
 
@@ -155,7 +183,10 @@ const errors: Array<{ file: string; link: string }> = [];
 const localLinkErrors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
-    if (link.startsWith('https://nx.dev')) {
+    if (
+      link.startsWith('https://nx.dev') ||
+      link.startsWith('https://nx-dev')
+    ) {
       localLinkErrors.push({ file, link });
     } else if (
       link.includes('#') &&

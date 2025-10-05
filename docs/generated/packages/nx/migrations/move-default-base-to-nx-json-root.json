@@ -1,0 +1,12 @@
+{
+  "name": "move-default-base-to-nx-json-root",
+  "version": "18.1.0-beta.3",
+  "description": "Moves affected.defaultBase to defaultBase in `nx.json`",
+  "implementation": "/packages/nx/src/migrations/update-17-2-0/move-default-base.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

@@ -1,8 +1,8 @@
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as yargs from 'yargs';
-import { ensureDirSync, statSync } from 'fs-extra';
+import { ensureDirSync } from 'fs-extra';
 
 async function generateGraph(directory: string, name: string) {
   if (!existsSync(directory)) {
@@ -13,7 +13,7 @@ async function generateGraph(directory: string, name: string) {
   try {
     execSync(
       'npx nx graph --file ./node_modules/.cache/nx-graph-gen/graph.html',
-      { cwd: directory, stdio: 'ignore', windowsHide: true }
+      { cwd: directory, stdio: 'ignore', windowsHide: false }
     );
   } catch {
     console.error(`Could not run graph command in directory ${directory}`);

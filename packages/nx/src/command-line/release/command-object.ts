@@ -1,6 +1,4 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
-import { readNxJson } from '../../config/nx-json';
-import { readParallelFromArgsAndEnv } from '../../utils/command-line-utils';
 import { logger } from '../../utils/logger';
 import {
   OutputStyle,
@@ -11,6 +9,7 @@ import {
   withOverrides,
   withRunManyOptions,
   withVerbose,
+  readParallelFromArgsAndEnv,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
 
@@ -26,7 +25,7 @@ export interface NxReleaseArgs extends BaseNxReleaseArgs {
   dryRun?: boolean;
 }
 
-interface GitCommitAndTagOptions {
+interface GitOptions {
   stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
@@ -34,20 +33,29 @@ interface GitCommitAndTagOptions {
   gitTag?: boolean;
   gitTagMessage?: string;
   gitTagArgs?: string | string[];
+  gitPush?: boolean;
+  gitPushArgs?: string | string[];
+  gitRemote?: string;
 }
 
+export type DockerVersionSchemeArgs = {
+  dockerVersionScheme?: string;
+  dockerVersion?: string;
+};
+
 export type VersionOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
-  FirstReleaseArgs & {
+  FirstReleaseArgs &
+  DockerVersionSchemeArgs & {
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
-    generatorOptionsOverrides?: Record<string, unknown>;
+    versionActionsOptionsOverrides?: Record<string, unknown>;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
     // version and/or versionData must be set
@@ -56,8 +64,7 @@ export type ChangelogOptions = NxReleaseArgs &
     to?: string;
     from?: string;
     interactive?: string;
-    gitRemote?: string;
-    createRelease?: false | 'github';
+    createRelease?: false | 'github' | 'gitlab';
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -66,6 +73,8 @@ export type PublishOptions = NxReleaseArgs &
     tag?: string;
     access?: string;
     otp?: number;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    versionData?: VersionData;
   };
 
 export type PlanOptions = NxReleaseArgs & {
@@ -83,9 +92,11 @@ export type PlanCheckOptions = BaseNxReleaseArgs & {
 };
 
 export type ReleaseOptions = NxReleaseArgs &
-  FirstReleaseArgs & {
+  FirstReleaseArgs &
+  DockerVersionSchemeArgs & {
     specifier?: string;
     yes?: boolean;
+    preid?: VersionOptions['preid'];
     skipPublish?: boolean;
   };
 
@@ -151,13 +162,13 @@ export const yargsReleaseCommand: CommandModule<
           return val;
         },
       })
-      .check((argv) => {
+      .check(async (argv) => {
         if (argv.groups && argv.projects) {
           throw new Error(
             'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
-        const nxJson = readNxJson();
+        const nxJson = (await import('../../config/nx-json')).readNxJson();
         if (argv.groups?.length) {
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
@@ -180,31 +191,41 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
   describe:
     'Create a version and release for the workspace, generate a changelog, and optionally publish the packages.',
   builder: (yargs) =>
-    withFirstReleaseOptions(yargs)
-      .positional('specifier', {
-        type: 'string',
-        describe:
-          'Exact version or semver keyword to apply to the selected release group.',
-      })
-      .option('yes', {
-        type: 'boolean',
-        alias: 'y',
-        description:
-          'Automatically answer yes to the confirmation prompt for publishing.',
-      })
-      .option('skip-publish', {
-        type: 'boolean',
-        description:
-          'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
-      })
-      .check((argv) => {
-        if (argv.yes !== undefined && argv.skipPublish !== undefined) {
-          throw new Error(
-            'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
-          );
-        }
-        return true;
-      }),
+    withFirstReleaseOptions(
+      withDockerVersionSchemeOptions(
+        yargs
+          .positional('specifier', {
+            type: 'string',
+            describe:
+              'Exact version or semver keyword to apply to the selected release group.',
+          })
+          .option('preid', {
+            type: 'string',
+            describe:
+              'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+            default: '',
+          })
+          .option('yes', {
+            type: 'boolean',
+            alias: 'y',
+            description:
+              'Automatically answer yes to the confirmation prompt for publishing.',
+          })
+          .option('skip-publish', {
+            type: 'boolean',
+            description:
+              'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
+          })
+          .check((argv) => {
+            if (argv.yes !== undefined && argv.skipPublish !== undefined) {
+              throw new Error(
+                'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
+              );
+            }
+            return true;
+          })
+      )
+    ),
   handler: async (args) => {
     const release = await import('./release');
     const result = await release.releaseCLIHandler(args);
@@ -223,24 +244,26 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
     'Create a version and release for one or more applications and libraries.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
-        yargs
-          .positional('specifier', {
-            type: 'string',
-            describe:
-              'Exact version or semver keyword to apply to the selected release group.',
-          })
-          .option('preid', {
-            type: 'string',
-            describe:
-              'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
-            default: '',
-          })
-          .option('stage-changes', {
-            type: 'boolean',
-            describe:
-              'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-          })
+      withGitOptions(
+        withDockerVersionSchemeOptions(
+          yargs
+            .positional('specifier', {
+              type: 'string',
+              describe:
+                'Exact version or semver keyword to apply to the selected release group.',
+            })
+            .option('preid', {
+              type: 'string',
+              describe:
+                'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+              default: '',
+            })
+            .option('stage-changes', {
+              type: 'boolean',
+              describe:
+                'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
+            })
+        )
       )
     ),
   handler: async (args) => {
@@ -261,7 +284,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
     'Generate a changelog for one or more projects, and optionally push to Github.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
+      withGitOptions(
         yargs
           // Disable default meaning of yargs version for this command
           .version(false)
@@ -287,12 +310,6 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             description:
               'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level.',
             choices: ['all', 'workspace', 'projects'],
-          })
-          .option('git-remote', {
-            type: 'string',
-            description:
-              'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing).',
-            default: 'origin',
           })
           .check((argv) => {
             if (!argv.version) {
@@ -416,9 +433,7 @@ function coerceParallelOption(args: any) {
   };
 }
 
-function withGitCommitAndGitTagOptions<T>(
-  yargs: Argv<T>
-): Argv<T & GitCommitAndTagOptions> {
+function withGitOptions<T>(yargs: Argv<T>): Argv<T & GitOptions> {
   return yargs
     .option('git-commit', {
       describe:
@@ -454,6 +469,22 @@ function withGitCommitAndGitTagOptions<T>(
       describe:
         'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
       type: 'boolean',
+    })
+    .option('git-push', {
+      describe:
+        'Whether or not to automatically push the changes made by this command to the remote git repository.',
+      type: 'boolean',
+    })
+    .option('git-push-args', {
+      describe:
+        'Additional arguments to pass to the `git push` command invoked behind the scenes.',
+      type: 'string',
+    })
+    .option('git-remote', {
+      type: 'string',
+      description:
+        'Alternate git remote to push commits and tags to (can be useful for testing).',
+      default: 'origin',
     });
 }
 
@@ -465,4 +496,31 @@ function withFirstReleaseOptions<T>(
     description:
       'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
   });
+}
+
+function withDockerVersionSchemeOptions<T>(
+  yargs: Argv<T>
+): Argv<T & DockerVersionSchemeArgs> {
+  return yargs
+    .option('dockerVersionScheme', {
+      type: 'string',
+      describe:
+        'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
+    })
+    .option('dockerVersion', {
+      type: 'string',
+      describe:
+        'Exact docker version to use, bypassing the version scheme logic. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
+    })
+    .check((argv) => {
+      if (
+        argv.dockerVersionScheme !== undefined &&
+        argv.dockerVersion !== undefined
+      ) {
+        throw new Error(
+          'The --dockerVersionScheme and --dockerVersion options are mutually exclusive, please use one or the other.'
+        );
+      }
+      return true;
+    });
 }

@@ -27,6 +27,8 @@ export const appConfig: ApplicationConfig = {
       setRouterInitialNavigation(tree, {
         project: 'app1',
         standalone: true,
+        isUsingApplicationBuilder: true,
+        buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
       expect(tree.read('apps/app1/src/app.config.ts', 'utf-8'))
@@ -64,6 +66,8 @@ export const appConfig: ApplicationConfig = {
       setRouterInitialNavigation(tree, {
         project: 'app1',
         standalone: true,
+        isUsingApplicationBuilder: true,
+        buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
       expect(tree.read('apps/app1/src/app.config.ts', 'utf-8'))
@@ -110,6 +114,8 @@ export class AppModule {}
       setRouterInitialNavigation(tree, {
         project: 'app1',
         standalone: false,
+        isUsingApplicationBuilder: true,
+        buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
       expect(tree.read('apps/app1/src/app.module.ts', 'utf-8'))

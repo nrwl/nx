@@ -145,6 +145,7 @@ describe('getUpdatedPackageJsonContent', () => {
           projectRoot: 'proj',
           format: ['esm'],
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       );
 
@@ -156,7 +157,12 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
+          '.': {
+            '@my-org/source': './src/index.ts',
+            default: './src/index.js',
+            import: './src/index.js',
+            types: './src/index.d.ts',
+          },
           './package.json': './package.json',
         },
       });
@@ -175,6 +181,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       );
 
@@ -185,7 +192,11 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         type: 'commonjs',
         exports: {
-          '.': './src/index.cjs',
+          '.': {
+            '@my-org/source': './src/index.ts',
+            default: './src/index.cjs',
+            types: './src/index.d.ts',
+          },
           './package.json': './package.json',
         },
       });
@@ -211,6 +222,7 @@ describe('getUpdatedPackageJsonContent', () => {
             projectRoot: 'proj',
             format: ['cjs'],
             generateExportsField: true,
+            developmentConditionName: '@my-org/source',
           }
         )
       ).toEqual({
@@ -220,13 +232,29 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
-          './foo': './src/foo.js',
-          './bar': './src/bar.js',
+          '.': {
+            '@my-org/source': './src/index.ts',
+            default: './src/index.js',
+            types: './src/index.d.ts',
+          },
+          './foo': {
+            '@my-org/source': './src/foo.ts',
+            default: './src/foo.js',
+          },
+          './bar': {
+            '@my-org/source': './src/bar.ts',
+            default: './src/bar.js',
+          },
           './package.json': './package.json',
           './migrations.json': './migrations.json',
-          './feature': './feature/index.js',
-          './feature/index': './feature/index.js',
+          './feature': {
+            '@my-org/source': './feature/index.ts',
+            default: './feature/index.js',
+          },
+          './feature/index': {
+            '@my-org/source': './feature/index.ts',
+            default: './feature/index.js',
+          },
         },
       });
 
@@ -248,6 +276,7 @@ describe('getUpdatedPackageJsonContent', () => {
             projectRoot: 'proj',
             format: ['esm'],
             generateExportsField: true,
+            developmentConditionName: '@my-org/source',
           }
         )
       ).toEqual({
@@ -258,12 +287,33 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
-          './foo': './src/foo.js',
-          './bar': './src/bar.js',
+          '.': {
+            '@my-org/source': './src/index.ts',
+            default: './src/index.js',
+            import: './src/index.js',
+            types: './src/index.d.ts',
+          },
+          './foo': {
+            '@my-org/source': './src/foo.ts',
+            import: './src/foo.js',
+            default: './src/foo.js',
+          },
+          './bar': {
+            '@my-org/source': './src/bar.ts',
+            import: './src/bar.js',
+            default: './src/bar.js',
+          },
           './package.json': './package.json',
-          './feature': './feature/index.js',
-          './feature/index': './feature/index.js',
+          './feature': {
+            '@my-org/source': './feature/index.ts',
+            import: './feature/index.js',
+            default: './feature/index.js',
+          },
+          './feature/index': {
+            '@my-org/source': './feature/index.ts',
+            import: './feature/index.js',
+            default: './feature/index.js',
+          },
         },
       });
 
@@ -286,6 +336,7 @@ describe('getUpdatedPackageJsonContent', () => {
             format: ['cjs', 'esm'],
             outputFileExtensionForCjs: '.cjs',
             generateExportsField: true,
+            developmentConditionName: '@my-org/source',
           }
         )
       ).toEqual({
@@ -296,22 +347,28 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            '@my-org/source': './src/index.ts',
             import: './src/index.js',
             default: './src/index.cjs',
+            types: './src/index.d.ts',
           },
           './foo': {
+            '@my-org/source': './src/foo.ts',
             import: './src/foo.js',
             default: './src/foo.cjs',
           },
           './bar': {
+            '@my-org/source': './src/bar.ts',
             import: './src/bar.js',
             default: './src/bar.cjs',
           },
           './feature': {
+            '@my-org/source': './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
           './feature/index': {
+            '@my-org/source': './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
@@ -339,6 +396,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['esm', 'cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       )
     ).toEqual({
@@ -349,8 +407,10 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
       exports: {
         '.': {
+          '@my-org/source': './src/index.ts',
           import: './src/index.js',
           default: './src/index.cjs',
+          types: './src/index.d.ts',
         },
         './package.json': './package.json',
         './custom': './custom.js',
@@ -374,6 +434,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       )
     ).toEqual({
@@ -383,7 +444,45 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
       type: 'module',
       exports: {
-        '.': './src/index.cjs',
+        '.': {
+          '@my-org/source': './src/index.ts',
+          default: './src/index.cjs',
+          types: './src/index.d.ts',
+        },
+        './package.json': './package.json',
+      },
+    });
+  });
+
+  it('should handle outputFileName correctly', () => {
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['cjs'],
+          generateExportsField: true,
+          outputFileName: 'src/index.js',
+          developmentConditionName: '@my-org/source',
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      type: 'commonjs',
+      exports: {
+        '.': {
+          '@my-org/source': './src/index.ts',
+          default: './src/index.js',
+          types: './src/index.d.ts',
+        },
         './package.json': './package.json',
       },
     });

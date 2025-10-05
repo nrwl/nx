@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
-import { yargsActivatePowerpackCommand } from './activate-powerpack/command-object';
+import { yargsRegisterCommand } from './register/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -12,7 +12,7 @@ import {
 import {
   yargsConnectCommand,
   yargsViewLogsCommand,
-} from './connect/command-object';
+} from './nx-cloud/connect/command-object';
 import { yargsDaemonCommand } from './daemon/command-object';
 import { yargsGraphCommand } from './graph/command-object';
 import { yargsExecCommand } from './exec/command-object';
@@ -38,14 +38,19 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
-import { yargsLoginCommand } from './login/command-object';
-import { yargsLogoutCommand } from './logout/command-object';
+import { yargsConfigureAiAgentsCommand } from './configure-ai-agents/command-object';
+import { yargsLoginCommand } from './nx-cloud/login/command-object';
+import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
+import { yargsRecordCommand } from './nx-cloud/record/command-object';
+import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
+import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
 } from './deprecated/command-objects';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { output } from '../utils/output';
+import { yargsMcpCommand } from './mcp/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -59,14 +64,15 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  * parse it. The CLI will consume it and call the `.argv` to bootstrapped
  * the CLI. These command declarations needs to be in a different file
  * from the `.argv` call, so the object and it's relative scripts can
- * le executed correctly.
+ * be executed correctly.
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(chalk.bold('Smart Monorepos · Fast CI'))
+  .usage(chalk.bold('Smart Repos · Fast Builds'))
   .demandCommand(1, '')
-  .command(yargsActivatePowerpackCommand)
+  .command(yargsRegisterCommand)
   .command(yargsAddCommand)
+  .command(yargsConfigureAiAgentsCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
   .command(yargsAffectedE2ECommand)
@@ -101,6 +107,10 @@ export const commandsObject = yargs
   .command(yargsNxInfixCommand)
   .command(yargsLoginCommand)
   .command(yargsLogoutCommand)
+  .command(yargsRecordCommand)
+  .command(yargsStartCiRunCommand)
+  .command(yargsFixCiCommand)
+  .command(yargsMcpCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')
@@ -121,9 +131,9 @@ function createMissingConformanceCommand(
       output.error({
         title: `${command} is not available`,
         bodyLines: [
-          `In order to use the \`nx ${command}\` command you must have an active Powerpack license and the \`@nx/powerpack-conformance\` plugin installed.`,
+          `In order to use the \`nx ${command}\` command you must have an active Nx key and the \`@nx/conformance\` plugin installed.`,
           '',
-          'To learn more, visit https://nx.dev/features/powerpack/conformance',
+          'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
         ],
       });
       process.exit(1);
@@ -133,7 +143,13 @@ function createMissingConformanceCommand(
 
 function resolveConformanceCommandObject() {
   try {
-    const { yargsConformanceCommand } = require('@nx/powerpack-conformance');
+    const { yargsConformanceCommand } = (() => {
+      try {
+        return require('@nx/powerpack-conformance');
+      } catch {
+        return require('@nx/conformance');
+      }
+    })();
     return yargsConformanceCommand;
   } catch {
     return createMissingConformanceCommand('conformance');
@@ -142,9 +158,13 @@ function resolveConformanceCommandObject() {
 
 function resolveConformanceCheckCommandObject() {
   try {
-    const {
-      yargsConformanceCheckCommand,
-    } = require('@nx/powerpack-conformance');
+    const { yargsConformanceCheckCommand } = (() => {
+      try {
+        return require('@nx/powerpack-conformance');
+      } catch {
+        return require('@nx/conformance');
+      }
+    })();
     return yargsConformanceCheckCommand;
   } catch {
     return createMissingConformanceCommand('conformance:check');

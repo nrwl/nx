@@ -1,6 +1,6 @@
 # Type alias: PromiseExecutor\<T\>
 
-Ƭ **PromiseExecutor**\<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/ExecutorContext)) => `Promise`\<\{ `success`: `boolean` }\>
+Ƭ **PromiseExecutor**\<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](/reference/core-api/devkit/documents/ExecutorContext)) => `Promise`\<\{ `success`: `boolean` }\>
 
 An executor implementation that returns a promise
 
@@ -16,10 +16,10 @@ An executor implementation that returns a promise
 
 ##### Parameters
 
-| Name      | Type                                                        |
-| :-------- | :---------------------------------------------------------- |
-| `options` | `T`                                                         |
-| `context` | [`ExecutorContext`](../../devkit/documents/ExecutorContext) |
+| Name      | Type                                                                      |
+| :-------- | :------------------------------------------------------------------------ |
+| `options` | `T`                                                                       |
+| `context` | [`ExecutorContext`](/reference/core-api/devkit/documents/ExecutorContext) |
 
 ##### Returns
 

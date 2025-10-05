@@ -1,11 +1,19 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
@@ -43,60 +51,30 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
-              "nx",
-              "eslint",
-              "vite",
-              "rxjs",
-              "semver",
-              // These are installed by ensurePackage so missing in package.json
+              "@angular-devkit/architect",
+              "@angular-devkit/schematics",
               "@nx/cypress",
-              "@nx/playwright",
               "@nx/jest",
-              "@nx/rollup",
+              "@nx/playwright",
               "@nx/storybook",
               "@nx/vite",
-              "@nx/webpack",
-              "prettier",
-              "typescript",
-              // These are installed by generators
-              "@angular-devkit/core",
-              "@angular-devkit/architect",
-              "@angular-devkit/build-angular",
-              "@angular-devkit/schematics",
-              "@angular/compiler",
-              "@angular/compiler-cli",
-              "@angular/core",
-              "@angular/router",
-              "@ngrx/effects",
-              "@ngrx/router-store",
-              "@ngrx/store",
-              "@storybook/angular",
-              "@module-federation/node",
-              "@nguniversal/builders",
-              // installed dynamically by the library generator
-              "ng-packagr",
-              // ng-packagr deps, some are handled if not installed
-              "injection-js",
+              "@schematics/angular",
               "browserslist",
-              "cacache",
-              "less",
-              "node-sass",
-              "node-sass-tilde-importer",
-              "ora",
-              "convert-source-map",
-              "postcss",
-              "autoprefixer",
-              "postcss-url",
-              "sass",
-              "stylus",
-              "tailwindcss",
-              // used in the CT angular plugin where Cy is already installed to use it.
               "cypress",
-              // we have only one type import, so it's not a runtime dependency
-              "esbuild"
+              "eslint",
+              "injection-js",
+              "nx",
+              "piscina",
+              "typescript"
             ]
           }
         ]
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "@angular-eslint/prefer-standalone": "off"
       }
     }
   ]

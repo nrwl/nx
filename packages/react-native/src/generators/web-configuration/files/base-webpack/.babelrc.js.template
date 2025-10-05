@@ -3,7 +3,7 @@ module.exports = function (api) {
 
   if (
     process.env.NX_TASK_TARGET_TARGET === 'build' ||
-    process.env.NX_TASK_TARGET_TARGET.includes('storybook')
+    process.env.NX_TASK_TARGET_TARGET?.includes('storybook')
   ) {
     return {
       presets: [

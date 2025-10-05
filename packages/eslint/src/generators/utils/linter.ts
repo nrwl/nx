@@ -1,5 +1,5 @@
-/*
- * @deprecated Use LinterType instead
+/**
+ * @deprecated Use LinterType instead. It will be removed in Nx v22.
  */
 export enum Linter {
   EsLint = 'eslint',

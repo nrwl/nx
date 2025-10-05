@@ -1,0 +1,13 @@
+import { NgModule } from '@angular/core';
+import { ServerModule } from '@angular/platform-server';<% if(serverRouting) { %>
+import { <%= provideServerRoutingFn %> } from '@angular/ssr';<% } %>
+import { AppComponent } from './app.component';
+import { AppModule } from './app.module';<% if(serverRouting) { %>
+import { serverRoutes } from './app.routes.server';<% } %>
+
+@NgModule({
+  imports: [AppModule, ServerModule],<% if(serverRouting) { %>
+  providers: [<%= provideServerRoutingFn %>(serverRoutes)],<% } %>
+  bootstrap: [AppComponent],
+})
+export class <%= rootModuleClassName %> {}

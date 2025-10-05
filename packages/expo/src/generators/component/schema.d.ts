@@ -4,10 +4,13 @@
 export interface Schema {
   path: string;
   name?: string;
-  skipFormat: boolean; // default is false
-  skipTests: boolean; // default is false
-  export: boolean; // default is false
-  classComponent: boolean; // default is false
-  js: boolean; // default is false
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
+  skipFormat?: boolean;
+  skipTests?: boolean;
+  export?: boolean;
+  classComponent?: boolean;
+
+  /**
+   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
+   */
+  js?: boolean;
 }

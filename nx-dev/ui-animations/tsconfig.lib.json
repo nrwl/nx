@@ -1,9 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["node"],
-    "lib": ["dom"]
+    "outDir": "../../dist/out-tsc/nx-dev/ui-animations",
+    "types": [],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "composite": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "jsx": "react-jsx"
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",
@@ -20,5 +26,10 @@
     "**/*.spec.jsx",
     "**/*.test.jsx"
   ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+  "references": [
+    {
+      "path": "../ui-primitives/tsconfig.lib.json"
+    }
+  ]
 }

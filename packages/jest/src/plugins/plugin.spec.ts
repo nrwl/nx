@@ -8,7 +8,7 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-describe('@nx/jest/plugin', () => {
+describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
@@ -54,6 +54,7 @@ describe('@nx/jest/plugin', () => {
       ['proj/jest.config.js'],
       {
         targetName: 'test',
+        disableJestRuntime,
       },
       context
     );
@@ -96,6 +97,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -124,6 +128,7 @@ describe('@nx/jest/plugin', () => {
       {
         targetName: 'test',
         ciTargetName: 'test-ci',
+        disableJestRuntime,
       },
       context
     );
@@ -137,7 +142,7 @@ describe('@nx/jest/plugin', () => {
               "proj": {
                 "metadata": {
                   "targetGroups": {
-                    "E2E (CI)": [
+                    "TEST (CI)": [
                       "test-ci",
                       "test-ci--src/unit.spec.ts",
                     ],
@@ -173,6 +178,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -240,6 +248,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -263,7 +274,7 @@ describe('@nx/jest/plugin', () => {
 
     const results = await createNodesFunction(
       ['proj/jest.config.js'],
-      { targetName: 'test' },
+      { targetName: 'test', disableJestRuntime },
       context
     );
 
@@ -306,6 +317,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -340,13 +354,520 @@ describe('@nx/jest/plugin', () => {
 
       const results = await createNodesFunction(
         ['proj/jest.config.js'],
-        { targetName: 'test' },
+        { targetName: 'test', disableJestRuntime },
         context
       );
 
-      expect(results).toMatchSnapshot();
+      const snapshot = `
+      [
+        [
+          "proj/jest.config.js",
+          {
+            "projects": {
+              "proj": {
+                "metadata": undefined,
+                "root": "proj",
+                "targets": {
+                  "test": {
+                    "cache": true,
+                    "command": "jest",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "jest",
+                          "some-package",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Run Jest Tests",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "jest",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                      },
+                    },
+                    "outputs": [
+                      "{workspaceRoot}/coverage",
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `;
+      expect(results).toMatchInlineSnapshot(snapshot);
     }
   );
+
+  describe('ciGroupName', () => {
+    it('should name atomized tasks group using provided group name', async () => {
+      mockJestConfig(
+        {
+          coverageDirectory: '../coverage',
+          testMatch: ['**/*.spec.ts'],
+          testPathIgnorePatterns: ['ignore.spec.ts'],
+        },
+        context
+      );
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        {
+          ciTargetName: 'test-ci',
+          ciGroupName: 'MY ATOMIZED TEST TASKS (CI)',
+          disableJestRuntime,
+        },
+        context
+      );
+
+      expect(results).toMatchInlineSnapshot(`
+        [
+          [
+            "proj/jest.config.js",
+            {
+              "projects": {
+                "proj": {
+                  "metadata": {
+                    "targetGroups": {
+                      "MY ATOMIZED TEST TASKS (CI)": [
+                        "test-ci",
+                        "test-ci--src/unit.spec.ts",
+                      ],
+                    },
+                  },
+                  "root": "proj",
+                  "targets": {
+                    "test": {
+                      "cache": true,
+                      "command": "jest",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "proj",
+                        "env": {
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                        },
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                    "test-ci": {
+                      "cache": true,
+                      "dependsOn": [
+                        "test-ci--src/unit.spec.ts",
+                      ],
+                      "executor": "nx:noop",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests in CI",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "nonAtomizedTarget": "test",
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                    "test-ci--src/unit.spec.ts": {
+                      "cache": true,
+                      "command": "jest src/unit.spec.ts",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests in src/unit.spec.ts",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "proj",
+                        "env": {
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                        },
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ]
+      `);
+    });
+
+    it('should deduct atomized tasks group name (from ci target name) when not explicitly provided', async () => {
+      mockJestConfig(
+        {
+          coverageDirectory: '../coverage',
+          testMatch: ['**/*.spec.ts'],
+          testPathIgnorePatterns: ['ignore.spec.ts'],
+        },
+        context
+      );
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        {
+          ciTargetName: 'test-ci',
+          disableJestRuntime,
+        },
+        context
+      );
+
+      expect(results).toMatchInlineSnapshot(`
+        [
+          [
+            "proj/jest.config.js",
+            {
+              "projects": {
+                "proj": {
+                  "metadata": {
+                    "targetGroups": {
+                      "TEST (CI)": [
+                        "test-ci",
+                        "test-ci--src/unit.spec.ts",
+                      ],
+                    },
+                  },
+                  "root": "proj",
+                  "targets": {
+                    "test": {
+                      "cache": true,
+                      "command": "jest",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "proj",
+                        "env": {
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                        },
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                    "test-ci": {
+                      "cache": true,
+                      "dependsOn": [
+                        "test-ci--src/unit.spec.ts",
+                      ],
+                      "executor": "nx:noop",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests in CI",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "nonAtomizedTarget": "test",
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                    "test-ci--src/unit.spec.ts": {
+                      "cache": true,
+                      "command": "jest src/unit.spec.ts",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests in src/unit.spec.ts",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "proj",
+                        "env": {
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                        },
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ]
+      `);
+    });
+
+    it('should default to "${ciTargetName.toUpperCase()} (CI)" when group name cannot be automatically deducted from ci target name', async () => {
+      mockJestConfig(
+        {
+          coverageDirectory: '../coverage',
+          testMatch: ['**/*.spec.ts'],
+          testPathIgnorePatterns: ['ignore.spec.ts'],
+        },
+        context
+      );
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        {
+          ciTargetName: 'testci', // missing "-ci" suffix or similar construct, so group name cannot reliably be deducted from ci target name
+          disableJestRuntime,
+        },
+        context
+      );
+
+      expect(results).toMatchInlineSnapshot(`
+        [
+          [
+            "proj/jest.config.js",
+            {
+              "projects": {
+                "proj": {
+                  "metadata": {
+                    "targetGroups": {
+                      "TESTCI (CI)": [
+                        "testci",
+                        "testci--src/unit.spec.ts",
+                      ],
+                    },
+                  },
+                  "root": "proj",
+                  "targets": {
+                    "test": {
+                      "cache": true,
+                      "command": "jest",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "proj",
+                        "env": {
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                        },
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                    "testci": {
+                      "cache": true,
+                      "dependsOn": [
+                        "testci--src/unit.spec.ts",
+                      ],
+                      "executor": "nx:noop",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests in CI",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "nonAtomizedTarget": "test",
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                    "testci--src/unit.spec.ts": {
+                      "cache": true,
+                      "command": "jest src/unit.spec.ts",
+                      "inputs": [
+                        "default",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "jest",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Jest Tests in src/unit.spec.ts",
+                        "help": {
+                          "command": "npx jest --help",
+                          "example": {
+                            "options": {
+                              "coverage": true,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "jest",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "proj",
+                        "env": {
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                        },
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/coverage",
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ]
+      `);
+    });
+  });
 });
 
 function mockJestConfig(config: any, context: CreateNodesContext) {

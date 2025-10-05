@@ -1,0 +1,57 @@
+{
+  "name": "@nx/docker",
+  "description": "The Nx Plugin for Docker to aid in containerizing projects.",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/docker"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "keywords": [
+    "Monorepo",
+    "Docker",
+    "Containers"
+  ],
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./release/version-utils": {
+      "types": "./src/release/version-utils.d.ts",
+      "default": "./src/release/version-utils.js"
+    },
+    "./generators": {
+      "types": "./generators.d.ts",
+      "default": "./generators.js"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "executors": "./executors.json",
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "enquirer": "~2.3.6",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
+  }
+}

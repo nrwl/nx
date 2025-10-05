@@ -6,9 +6,8 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { createNodes } from '../../plugins/plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -17,8 +16,6 @@ export function webpackInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(tree, 'webpack', 'init');
-
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -26,11 +23,11 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       await createProjectGraphAsync(),
       '@nx/webpack/plugin',
-      createNodes,
+      createNodesV2,
       {
         buildTargetName: [
           'build',
@@ -52,6 +49,23 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
           'preview:webpack',
           'webpack-preview',
           'preview-webpack',
+        ],
+        buildDepsTargetName: [
+          'build-deps',
+          'webpack:build-deps',
+          'webpack-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'webpack:watch-deps',
+          'webpack-watch-deps',
+        ],
+        serveStaticTargetName: [
+          'serve-static',
+          'webpack:serve-static',
+          'serve-static:webpack',
+          'webpack-serve-static',
+          'serve-static-webpack',
         ],
       },
       schema.updatePackageScripts

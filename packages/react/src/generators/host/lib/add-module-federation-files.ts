@@ -3,32 +3,59 @@ import {
   generateFiles,
   joinPathFragments,
   names,
+  offsetFromRoot,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { maybeJs } from '../../../utils/maybe-js';
+import {
+  createNxRspackPluginOptions,
+  getDefaultTemplateVariables,
+} from '../../application/lib/create-application-files';
 import { NormalizedSchema } from '../schema';
+import { join } from 'path';
 
 export function addModuleFederationFiles(
   host: Tree,
   options: NormalizedSchema,
   defaultRemoteManifest: { name: string; port: number }[]
 ) {
-  const templateVariables = {
-    ...names(options.projectName),
-    ...options,
-    static: !options?.dynamic,
-    tmpl: '',
-    remotes: defaultRemoteManifest.map(({ name, port }) => {
-      return {
-        ...names(name),
-        port,
-      };
-    }),
-  };
+  const templateVariables =
+    options.bundler === 'rspack'
+      ? {
+          ...getDefaultTemplateVariables(host, options as any),
+          rspackPluginOptions: {
+            ...createNxRspackPluginOptions(
+              options as any,
+              offsetFromRoot(options.appProjectRoot),
+              false
+            ),
+            mainServer: `./server.ts`,
+          },
+          static: !options?.dynamic,
+          remotes: defaultRemoteManifest.map(({ name, port }) => {
+            return {
+              ...names(name),
+              port,
+            };
+          }),
+        }
+      : {
+          ...names(options.projectName),
+          ...options,
+          static: !options?.dynamic,
+          tmpl: '',
+          remotes: defaultRemoteManifest.map(({ name, port }) => {
+            return {
+              ...names(name),
+              port,
+            };
+          }),
+        };
 
   const projectConfig = readProjectConfiguration(host, options.projectName);
   const pathToMFManifest = joinPathFragments(
-    projectConfig.sourceRoot,
+    getProjectSourceRoot(projectConfig, host),
     'assets/module-federation.manifest.json'
   );
 
@@ -54,7 +81,7 @@ export function addModuleFederationFiles(
 
   generateFiles(
     host,
-    joinPathFragments(
+    join(
       __dirname,
       `../files/${
         options.js
@@ -78,7 +105,7 @@ export function addModuleFederationFiles(
   // New entry file is created here.
   generateFiles(
     host,
-    joinPathFragments(__dirname, `../files/${pathToModuleFederationFiles}`),
+    join(__dirname, `../files/${pathToModuleFederationFiles}`),
     options.appProjectRoot,
     templateVariables
   );
@@ -117,7 +144,10 @@ export function addModuleFederationFiles(
         pathToMFManifest,
         `{
         ${defaultRemoteManifest
-          .map(({ name, port }) => `"${name}": "http://localhost:${port}"`)
+          .map(
+            ({ name, port }) =>
+              `"${name}": "http://localhost:${port}/mf-manifest.json"`
+          )
           .join(',\n')}
           }`
       );

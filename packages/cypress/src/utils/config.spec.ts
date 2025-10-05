@@ -2,7 +2,9 @@ import {
   addDefaultCTConfig,
   addDefaultE2EConfig,
   addMountDefinition,
+  resolveCypressConfigObject,
 } from './config';
+
 describe('Cypress Config parser', () => {
   it('should add CT config to existing e2e config', async () => {
     const actual = await addDefaultCTConfig(
@@ -42,13 +44,16 @@ export default defineConfig({
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-          
-          import { defineConfig } from 'cypress';
+      import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
       export default defineConfig({
         component: nxComponentTestingPreset(__filename),
-        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress"}) } 
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            "cypressDir": "cypress"
+          })
+        } 
       });
       "
     `);
@@ -134,13 +139,16 @@ export default defineConfig({
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-          
-          import { defineConfig } from 'cypress';
+      import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
       export default defineConfig({
-        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress"}),
-      baseUrl: 'https://example.com' }
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            "cypressDir": "cypress"
+          }),
+          baseUrl: 'https://example.com'
+        }
       });
       "
     `);
@@ -166,12 +174,20 @@ export default defineConfig({
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-          
-          import { defineConfig } from 'cypress';
+      import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
       export default defineConfig({
-        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress","webServerCommands":{"default":"my-app:serve","production":"my-app:serve:production"},"ciWebServerCommand":"my-app:serve-static"}) }
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            "cypressDir": "cypress",
+            "webServerCommands": {
+              "default": "my-app:serve",
+              "production": "my-app:serve:production"
+            },
+            "ciWebServerCommand": "my-app:serve-static"
+          })
+        }
       });
       "
     `);
@@ -244,6 +260,136 @@ Cypress.Commands.add('mount', customMount);
       }
       Cypress.Commands.add('mount', customMount);
       "
+    `);
+  });
+});
+
+describe('resolveCypressConfigObject', () => {
+  it('should handle "export default defineConfig()"', async () => {
+    const config = resolveCypressConfigObject(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "export default {}"', async () => {
+    const config = resolveCypressConfigObject(
+      `export default {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+  `
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "export default <variable>" when <variable> is defined in the file and is an object literal', async () => {
+    const config = resolveCypressConfigObject(
+      `const config = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+
+export default config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = defineConfig()"', async () => {
+    const config = resolveCypressConfigObject(
+      `const { defineConfig } = require('cypress');
+
+module.exports = defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = {}"', async () => {
+    const config = resolveCypressConfigObject(
+      `module.exports = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = <variable>" when <variable> is defined in the file and is an object literal', async () => {
+    const config = resolveCypressConfigObject(
+      `const config = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+
+module.exports = config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
     `);
   });
 });

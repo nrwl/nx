@@ -1,38 +1,39 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
-import { TalkToOurSalesTeam } from '@nx/nx-dev/ui-contact';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
+import { TalkToOurTeam } from '@nx/nx-dev-ui-contact';
+import { type ReactElement } from 'react';
 
-export function ContactSales(): JSX.Element {
+export function ContactSales(): ReactElement {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
-        title="Talk to our Sales team"
-        description="We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization."
+        title="Contact Nx Sales – Discover the Best Solution for Your Team"
+        description="Get in touch with Nx experts to learn how we can optimize your development workflow. Whether you're scaling up or seeking enhanced CI performance, our team is here to help."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Talk to our Sales team',
+          title: 'Contact Nx Sales – Discover the Best Solution for Your Team',
           description:
-            'We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization.',
+            "Get in touch with Nx experts to learn how we can optimize your development workflow. Whether you're scaling up or seeking enhanced CI performance, our team is here to help.",
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
       <Header />
       <main id="main" role="main" className="py-24 lg:py-32">
         <div>
-          <TalkToOurSalesTeam />
+          <TalkToOurTeam />
         </div>
       </main>
       <Footer />

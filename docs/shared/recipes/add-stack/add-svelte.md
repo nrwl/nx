@@ -1,3 +1,8 @@
+---
+title: Add a Svelte Project
+description: Learn how to integrate Svelte with Nx, including setting up applications, configuring build systems, and leveraging Nx features with manual configuration.
+---
+
 # Add a Svelte Project
 
 The code for this example is available on GitHub:
@@ -264,10 +269,6 @@ Navigate to `http://localhost:4200` and you should see your application.
 
 Instead of having our Counter directly defined in `App.svelte` file, let's create a library that we can import into our application.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 ```shell
 nx generate @nx/js:library libs/counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter
 ```
@@ -329,6 +330,6 @@ To serve the application at `http://localhost:4200`.
 
 A larger example including libraries, test and more is available at [Nx Svelte Example](https://github.com/nrwl/nx-recipes/tree/main/svelte) on GitHub.
 
-- [Nx Vite Plugin](/nx-api/vite)
+- [Nx Vite Plugin](/technologies/build-tools/vite/introduction)
 - [Vite](https://vitejs.dev/)
 - [Svelte](https://svelte.dev/)

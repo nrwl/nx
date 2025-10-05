@@ -5,6 +5,7 @@ authors: ['Juri Strumpflohner']
 tags: [nx-cloud, release]
 cover_image: /blog/images/2024-08/nx-cloud-table-log-output-thumb.jpg
 youtubeUrl: https://youtu.be/aacrw0H0m4Q
+description: Nx Cloud introduces a structured table view for CI logs, enhancing monorepo task tracking and visibility.
 ---
 
 Whenever we talk about Nx Cloud, speed is often a major focus—and for good reason. However, Nx Cloud isn't just about speed. Similar to Nx itself, it's about making work within monorepos more pleasant and efficient. A key part of that is continuously **optimizing developer ergonomics**.
@@ -32,14 +33,14 @@ If you prefer the previous log view in your CI, you can opt-out of the new table
 If you're not on Nx Cloud yet, you can **connect your Nx workspace** by running:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 This command will guide you through the setup. We recently introduced a [new Hobby plan](/pricing), which lets you experiment with all the Nx Cloud features for free. This is a great way to see if it's a good fit for your team.
 
 ## Learn More
 
-- [Nx on CI](/ci)
+- [Nx on CI](/ci/recipes/set-up)
 - [Task Distribution with Nx Agents](/ci/features/distribute-task-execution)
 - [Automated e2e Test Splitting](/ci/features/split-e2e-tasks)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)

@@ -8,10 +8,11 @@ import {
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 
 export default async function (tree: Tree) {
-  if (!hasModuleFederationProject(tree)) {
+  const bundler = hasModuleFederationProject(tree);
+  if (!bundler) {
     return;
   }
-  addMfEnvToTargetDefaultInputs(tree);
+  addMfEnvToTargetDefaultInputs(tree, bundler);
 
   await formatFiles(tree);
 }
@@ -22,15 +23,18 @@ function hasModuleFederationProject(tree: Tree) {
     const targets = project.targets || {};
     for (const [_, target] of Object.entries(targets)) {
       if (
-        target.executor === '@nx/webpack:webpack' &&
-        (tree.exists(
+        tree.exists(
           joinPathFragments(project.root, 'module-federation.config.ts')
         ) ||
-          tree.exists(
-            joinPathFragments(project.root, 'module-federation.config.js')
-          ))
+        tree.exists(
+          joinPathFragments(project.root, 'module-federation.config.js')
+        )
       ) {
-        return true;
+        if (target.executor === '@nx/webpack:webpack') {
+          return 'webpack';
+        } else if (target.executor === '@nx/rspack:rspack') {
+          return 'rspack';
+        }
       }
     }
   }

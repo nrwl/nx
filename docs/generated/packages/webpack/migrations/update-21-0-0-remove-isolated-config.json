@@ -1,0 +1,13 @@
+{
+  "name": "update-21-0-0-remove-isolated-config",
+  "cli": "nx",
+  "version": "21.0.0-beta.11",
+  "description": "Remove isolatedConfig option for @nx/webpack:webpack",
+  "implementation": "/packages/webpack/src/migrations/update-21-0-0/remove-isolated-config.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/webpack",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Remove `isolatedConfig` option\n\nThe `isolatedConfig` option is no longer supported by the `@nx/webpack:webpack` executor. Previously, setting `isolatedConfig: false` allowed you to use the executor's built-in Webpack configuration.\n\nIf this option is set in `project.json`, then it will be removed in favor of an explicit `webpackConfig` file. The Webpack configuration file matches the previous built-in configuration of the `@nx/webpack:webpack` executor.\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"project.json\" %}\n{\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/webpack:webpack\",\n      \"options\": {\n        \"isolatedConfig\": false\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% highlightLines=[6] fileName=\"project.json\" %}\n{\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/webpack:webpack\",\n      \"options\": {\n        \"webpackConfig\": \"apps/myapp/webpack.config.js\"\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

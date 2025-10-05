@@ -44,10 +44,10 @@ export async function installAndUpdatePackageJson(
 
   await installAsync(
     packages,
-    createInstallOptions({
+    {
       fix: options.fix,
       check: options.check,
-    }),
+    },
     createInstallOptions({ force: options.force })
   );
 
@@ -84,7 +84,7 @@ function createInstallOptions(options: ExpoInstallOptions) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);
       }
-    } else {
+    } else if (v !== undefined) {
       acc.push(`--${names(k).fileName}`, v);
     }
 

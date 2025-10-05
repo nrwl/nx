@@ -1,6 +1,6 @@
 //@ts-check
 const { mkdirSync, copySync } = require('fs-extra');
-const glob = require('fast-glob');
+const glob = require('tinyglobby');
 const { join, basename } = require('path');
 
 const p = process.argv[2];
@@ -15,7 +15,7 @@ try {
   });
 } catch {}
 for (const f of from) {
-  const matchingFiles = glob.sync(f, {
+  const matchingFiles = glob.globSync(f, {
     cwd: process.cwd(),
     onlyDirectories: true,
   });

@@ -12,7 +12,7 @@ import {
   updateFile,
   updateJson,
   promisifiedTreeKill,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { join } from 'path';
 
@@ -30,7 +30,7 @@ describe('Node Applications + webpack', () => {
 
     // This fails with Crystal enabled because `--optimization` is not a correct flag to pass to `webpack`.
     runCLI(
-      `generate @nx/node:app apps/${app} --bundler=webpack --no-interactive`,
+      `generate @nx/node:app apps/${app} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest`,
       {
         env: { NX_ADD_PLUGINS: 'false' },
       }

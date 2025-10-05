@@ -1,3 +1,8 @@
+---
+title: Troubleshoot Nx Console Issues
+description: Learn how to resolve common issues with Nx Console, including Node.js version conflicts with nvm and WSL configuration in JetBrains IDEs.
+---
+
 # Troubleshoot Nx Console Issues
 
 Often, issues with Nx Console are the result of underlying issues with Nx. Make sure to read the [Nx installation troubleshooting docs](/troubleshooting/troubleshoot-nx-install-issues) for more help.

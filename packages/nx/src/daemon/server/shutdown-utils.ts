@@ -4,11 +4,12 @@ import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
-import { cleanupPlugins } from './plugins';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
+import { removeDbConnections } from '../../utils/db-connection';
+import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -71,6 +72,8 @@ export async function handleServerProcessTermination({
     deleteDaemonJsonProcessCache();
     cleanupPlugins();
 
+    removeDbConnections();
+
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {
     process.exit(0);
@@ -110,10 +113,10 @@ export async function respondWithErrorAndExit(
   description: string,
   error: Error
 ) {
-  const normalizedError =
-    error instanceof DaemonProjectGraphError
-      ? ProjectGraphError.fromDaemonProjectGraphError(error)
-      : error;
+  const isProjectGraphError = error instanceof DaemonProjectGraphError;
+  const normalizedError = isProjectGraphError
+    ? ProjectGraphError.fromDaemonProjectGraphError(error)
+    : error;
 
   // print some extra stuff in the error message
   serverLogger.requestLog(
@@ -125,4 +128,9 @@ export async function respondWithErrorAndExit(
 
   // Respond with the original error
   await respondToClient(socket, serializeResult(error, null, null), null);
+
+  // Project Graph errors are okay. Restarting the daemon won't help with this.
+  if (!isProjectGraphError) {
+    process.exit(1);
+  }
 }

@@ -27,7 +27,7 @@ import { SectionHeading } from './typography';
 export function ChampionPerks(): JSX.Element {
   return (
     <article
-      id="nx-is-fast"
+      id="making-of-champion"
       className="relative bg-slate-50 py-28 dark:bg-slate-800/40"
     >
       <div className="mx-auto max-w-7xl px-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8">

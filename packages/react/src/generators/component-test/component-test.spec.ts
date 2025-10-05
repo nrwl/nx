@@ -1,13 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/versions';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 import { componentTestGenerator } from './component-test';
 
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions');
 describe(componentTestGenerator.name, () => {
   let tree: Tree;
   let mockedAssertMinimumCypressVersion: jest.Mock<
@@ -19,7 +18,7 @@ describe(componentTestGenerator.name, () => {
   it('should create component test for tsx files', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -39,7 +38,7 @@ describe(componentTestGenerator.name, () => {
   it('should create component test for js files', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -60,7 +59,7 @@ describe(componentTestGenerator.name, () => {
   it('should not overwrite exising component test', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -82,7 +81,7 @@ describe(componentTestGenerator.name, () => {
   it('should not throw if path is invalid', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -102,7 +101,7 @@ describe(componentTestGenerator.name, () => {
   it('should handle being provided the full path to the component', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -123,7 +122,7 @@ describe(componentTestGenerator.name, () => {
     it('should handle props', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -163,7 +162,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
     it('should handle no props', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -195,7 +194,7 @@ export function AnotherCmp() {
     it('should handle default export', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -238,7 +237,7 @@ export function AnotherCmp2() {
     it('should handle named exports', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -283,7 +282,7 @@ export function AnotherCmp2() {
     it('should handle props', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -322,7 +321,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
     it('should handle props with inline type', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -357,7 +356,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
     it('should handle destructured props with no type', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -393,7 +392,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
       // this is the default behavior of the library component generator
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -414,7 +413,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
     it('should handle default export', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
@@ -452,7 +451,7 @@ export default function AnotherCmp(props: AnotherCmpProps) {
     it('should handle named exports', async () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
-        linter: Linter.EsLint,
+        linter: 'eslint',
         directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,

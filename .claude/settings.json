@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.typescriptlang.org)",
+      "Bash(git log:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(npx prettier:*)",
+      "Bash(nx prepush:*)",
+      "Bash(pnpm commit:*)",
+      "Bash(rg:*)",
+      "mcp__nx__nx_docs",
+      "mcp__nx__nx_workspace",
+      "mcp__nx__nx_project_details",
+      "Bash(nx show projects:*)",
+      "Bash(nx run-many:*)",
+      "Bash(nx run:*)",
+      "Bash(nx affected:*)",
+      "Bash(nx lint:*)",
+      "Bash(nx test:*)",
+      "Bash(nx build:*)",
+      "Bash(nx documentation:*)"
+    ],
+    "deny": []
+  },
+  "enableAllProjectMcpServers": true,
+  "env": {
+    "BASH_MAX_TIMEOUT_MS": "1800000"
+  }
+}

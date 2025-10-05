@@ -18,7 +18,7 @@ export async function addVite(
       ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(tree, {
       uiFramework: 'none',
-      project: options.name,
+      project: options.projectName,
       newProject: true,
       includeLib: true,
       inSourceTests: options.inSourceTests,
@@ -32,7 +32,7 @@ export async function addVite(
     createOrEditViteConfig(
       tree,
       {
-        project: options.name,
+        project: options.projectName,
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
@@ -53,7 +53,7 @@ export async function addVite(
     >('@nx/vite', nxVersion);
     const vitestTask = await vitestGenerator(tree, {
       uiFramework: 'none',
-      project: options.name,
+      project: options.projectName,
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
@@ -66,7 +66,7 @@ export async function addVite(
     createOrEditViteConfig(
       tree,
       {
-        project: options.name,
+        project: options.projectName,
         includeLib: true,
         includeVitest: true,
         inSourceTests: options.inSourceTests,

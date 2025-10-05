@@ -1,26 +1,26 @@
 <script setup lang="ts">
-<% if (routing) { %>
+<%_ if (routing) { _%>
 import { RouterLink, RouterView } from 'vue-router';
-<% } else { %>
+<%_ } else { _%>
 import NxWelcome from './NxWelcome.vue';
-<% } %>
+<%_ } _%>
 </script>
 
 <template>
-  <% if (routing) { %>
-    <header>
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </header>
+  <%_ if (routing) { _%>
+  <header>
+    <nav>
+      <RouterLink to="/">Home</RouterLink>
+      <RouterLink to="/about">About</RouterLink>
+    </nav>
+  </header>
     <RouterView />
-  <% } else { %>
-    <NxWelcome title="<%= title %>" />
-  <% } %>
+  <%_ } else { _%>
+  <NxWelcome title="<%= title %>" />
+  <%_ } _%>
 </template>
 
-<% if (routing && style !== 'none') { %>
+<%_ if (routing && style !== 'none') { _%>
 <style scoped lang="<%= style %>">
 header {
   line-height: 1.5;
@@ -51,4 +51,4 @@ nav > a {
   }
 }
 </style>
-<% } %>
+<%_ } _%>

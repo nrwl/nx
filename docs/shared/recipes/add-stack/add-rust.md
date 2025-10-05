@@ -1,3 +1,8 @@
+---
+title: Add a New Rust Project
+description: Learn how to integrate Rust with Nx using the @monodon/rust plugin, including creating applications, libraries, and leveraging Nx features.
+---
+
 # Add a New Rust Project
 
 The code for this example is available on GitHub:
@@ -59,10 +64,6 @@ Using the preset provided by `@monodon/rust` will:
 
 Let's generate a new application using `@monodon/rust`.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 ```shell
 nx g @monodon/rust:binary myapp --directory=apps/myapp
 ```
@@ -70,10 +71,6 @@ nx g @monodon/rust:binary myapp --directory=apps/myapp
 ## Create a library
 
 Let's generate a new library using `@monodon/rust`.
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```shell
 nx g @monodon/rust:library cats --directory=libs/cats

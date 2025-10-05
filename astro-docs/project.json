@@ -1,0 +1,90 @@
+{
+  "name": "astro-docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
+  "targets": {
+    "serve": {
+      "continuous": true,
+      "dependsOn": [
+        {
+          "projects": ["devkit", "create-nx-workspace"],
+          "target": "build"
+        }
+      ],
+      "command": "astro dev",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "build": {
+      "dependsOn": [
+        {
+          "projects": ["devkit", "create-nx-workspace"],
+          "target": "build"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/.astro",
+        "{projectRoot}/.netlify"
+      ],
+      "command": "astro build",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "preview": {
+      "dependsOn": ["build"],
+      "command": "astro preview",
+      "continuous": true,
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "astro": {
+      "command": "astro",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "test": {
+      "executor": "nx:noop",
+      "dependsOn": ["vite:test", "validate-links", "format"]
+    },
+    "pw-e2e": {
+      "dependsOn": ["serve"],
+      "parallelism": true
+    },
+    "e2e-ci--**/*": {
+      "dependsOn": ["preview"],
+      "parallelism": true
+    },
+    "show-report": {
+      "command": "playwright show-report dist/astro-docs/playwright-report"
+    },
+    "validate-links": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/astro.config.mjs",
+        "{projectRoot}/sidebar.mts",
+        "{projectRoot}/markdoc.config.mjs",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/package.json"
+      ],
+      "command": "tsx validate-links.ts",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "format": {
+      "cache": true,
+      "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
+      "command": "prettier **/*.mdoc --check"
+    },
+    "format:write": {
+      "command": "prettier **/*.mdoc --write"
+    }
+  }
+}

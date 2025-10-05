@@ -1,10 +1,10 @@
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
 use crate::native::watch::types::{
-    transform_event_to_watch_events, EventType, WatchEvent, WatchEventInternal,
+    EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
 use crate::native::watch::watch_filterer;
 use napi::bindgen_prelude::*;

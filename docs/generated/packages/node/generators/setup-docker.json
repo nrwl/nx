@@ -19,7 +19,7 @@
       "targetName": {
         "description": "The name of the target to create",
         "type": "string",
-        "default": "docker-build"
+        "default": "docker:build"
       },
       "buildTargetName": {
         "description": "The name of the build target",
@@ -29,6 +29,11 @@
       "outputPath": {
         "description": "The output path for the node application",
         "type": "string"
+      },
+      "skipDockerPlugin": {
+        "type": "boolean",
+        "description": "Skip the @nx/docker plugin and use the legacy docker build target instead.",
+        "default": false
       }
     },
     "presets": []

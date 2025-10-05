@@ -1,10 +1,10 @@
 import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments, logger } from '@nx/devkit';
-import type { Schema } from '../schema';
+import type { NormalizedOptions } from '../schema';
 
 export function generateWebpackConfig(
   tree: Tree,
-  options: Schema,
+  options: NormalizedOptions,
   appRoot: string,
   remotesWithPorts: { remoteName: string; port: number }[]
 ) {
@@ -38,6 +38,7 @@ export function generateWebpackConfig(
       remotes: remotesWithPorts ?? [],
       projectRoot: appRoot,
       standalone: options.standalone,
+      entryModuleFileName: options.entryModuleFileName,
     }
   );
 

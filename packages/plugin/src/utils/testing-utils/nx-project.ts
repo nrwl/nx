@@ -21,7 +21,7 @@ function runNxNewCommand(args?: string, silent?: boolean) {
     {
       cwd: localTmpDir,
       ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-      windowsHide: true,
+      windowsHide: false,
     }
   );
 }
@@ -56,7 +56,7 @@ export function runPackageManagerInstall(silent: boolean = true) {
   const install = execSync(pmc.install, {
     cwd,
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-    windowsHide: true,
+    windowsHide: false,
   });
   return install ? install.toString() : '';
 }

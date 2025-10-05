@@ -1,0 +1,211 @@
+---
+// recreated from https://github.com/withastro/starlight/blob/main/packages/starlight/components/TableOfContents.astro
+import TableOfContentsList from './TableOfContentsList.astro';
+
+const { toc } = Astro.locals.starlightRoute;
+---
+
+{
+  toc && (
+    <custom-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
+      <nav aria-labelledby="starlight__on-this-page">
+        <h2 id="starlight__on-this-page">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
+        <div class="toc-container">
+          <TableOfContentsList toc={toc.items} />
+        </div>
+      </nav>
+    </custom-toc>
+  )
+}
+
+<script>
+  // Define the constant locally since it's not exported from @astrojs/starlight
+  const PAGE_TITLE_ID = 'starlight__overview';
+
+  class CustomTOC extends HTMLElement {
+    private _current = this.querySelector<HTMLAnchorElement>('a[aria-current="true"]');
+    private minH = parseInt(this.dataset.minH || '2', 10);
+    private maxH = parseInt(this.dataset.maxH || '3', 10);
+    private tocContainer: HTMLElement | null = null;
+
+    protected set current(link: HTMLAnchorElement) {
+      if (link === this._current) return;
+      if (this._current) this._current.removeAttribute('aria-current');
+      link.setAttribute('aria-current', 'true');
+      this._current = link;
+      
+      // Auto-scroll the active item into view within the TOC container
+      this.scrollActiveIntoView(link);
+    }
+
+    private onIdle = (cb: IdleRequestCallback) =>
+      (window.requestIdleCallback || ((cb) => setTimeout(cb, 1)))(cb);
+
+    constructor() {
+      super();
+      this.tocContainer = this.querySelector('.toc-container');
+      this.onIdle(() => this.init());
+    }
+
+    private scrollActiveIntoView(link: HTMLAnchorElement): void {
+      if (!this.tocContainer) return;
+      
+      // Check if user prefers reduced motion
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      // Get the position of the link relative to the TOC container
+      const containerRect = this.tocContainer.getBoundingClientRect();
+      const linkRect = link.getBoundingClientRect();
+      
+      // Calculate if the link is outside the visible area
+      const isAboveView = linkRect.top < containerRect.top;
+      const isBelowView = linkRect.bottom > containerRect.bottom;
+      
+      if (isAboveView || isBelowView) {
+        // Scroll the link into view with some padding
+        const offsetTop = link.offsetTop - this.tocContainer.offsetTop;
+        const scrollPosition = offsetTop - this.tocContainer.clientHeight / 2 + link.clientHeight / 2;
+        
+        this.tocContainer.scrollTo({
+          top: Math.max(0, scrollPosition),
+          behavior: prefersReducedMotion ? 'auto' : 'smooth'
+        });
+      }
+    }
+
+    private init = (): void => {
+      const links = Array.from(this.querySelectorAll('a'))
+
+      const getElementHeading = (el: Element): HTMLHeadingElement | null => {
+        if (!el) return null;
+        const isHeading = (el: Element): el is HTMLHeadingElement => {
+          if (el instanceof HTMLHeadingElement) {
+            if (el.id === PAGE_TITLE_ID) return true;
+            const level = el.tagName[1];
+            if (level) {
+              const int = parseInt(level, 10);
+              if (int >= this.minH && int <= this.maxH) return true;
+            }
+          }
+          return false;
+        };
+        return isHeading(el) ? el : getElementHeading(el.parentElement!);
+      };
+
+      const setCurrent: IntersectionObserverCallback = (entries) => {
+        for (const { isIntersecting, target } of entries) {
+          if (!isIntersecting) continue;
+          const heading = getElementHeading(target);
+          if (!heading) continue;
+          const link = links.find((link) => link.hash === '#' + encodeURIComponent(heading.id));
+          if (link) {
+            this.current = link;
+            break;
+          }
+        }
+      };
+
+      const toObserve = document.querySelectorAll('main [id], main [id] ~ *, main .content > *');
+      let observer: IntersectionObserver | undefined;
+
+      const observe = () => {
+        if (observer) observer.disconnect();
+        observer = new IntersectionObserver(setCurrent, { rootMargin: this.getRootMargin() });
+        toObserve.forEach((h) => observer!.observe(h));
+      };
+
+      observe();
+      let timeout: NodeJS.Timeout;
+      // Re-observe on resize to adjust for layout changes
+      window.addEventListener('resize', () => {
+        if(observer) {
+          observer.disconnect();
+          observer = undefined;
+        }
+        clearTimeout(timeout);
+        timeout = setTimeout(() => this.onIdle(observe), 200)
+
+      });
+    };
+
+    private getRootMargin(): `-${number}px 0% ${number}px` {
+      const navBarHeight = document.querySelector('header')?.getBoundingClientRect().height || 0;
+      const mobileTocHeight = this.querySelector('summary')?.getBoundingClientRect().height || 0;
+      // Account for footer by reducing bottom margin
+      const footerHeight = document.querySelector('footer')?.getBoundingClientRect().height || 0;
+      const top = navBarHeight + mobileTocHeight + 32;
+      const bottom = top + 53;
+      const height = document.documentElement.clientHeight;
+      // Adjust for footer
+      return `-${top}px 0% ${bottom - height + footerHeight}px`;
+    }
+  }
+
+  customElements.define('custom-toc', CustomTOC);
+</script>
+
+<style>
+  @layer starlight.core {
+    custom-toc {
+      display: block;
+    }
+    
+    custom-toc nav {
+      display: block;
+    }
+    
+    custom-toc h2 {
+      color: var(--sl-color-text);
+      font-size: var(--sl-text-sm);
+      font-weight: 600;
+      line-height: var(--sl-line-height-headings);
+      margin: 0 0 0.5rem 0;
+      padding: 0;
+    }
+    
+    /* Container with proper scrolling */
+    .toc-container {
+      /* Calculate height based on viewport minus nav and footer with padding */
+      max-height: calc(100vh - var(--sl-nav-height) - 25rem);
+      /* 
+      * prevent ToC from going to 0 height.
+      * if this overlaps the footer it's not a huge issue for such small viewport
+      * */
+      min-height: 300px; 
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 1rem;
+    }
+    
+    /* Only enable smooth scrolling if user doesn't prefer reduced motion */
+    @media (prefers-reduced-motion: no-preference) {
+      .toc-container {
+        scroll-behavior: smooth;
+      }
+    }
+    
+    /* Scrollbar styling */
+    .toc-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .toc-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .toc-container::-webkit-scrollbar-thumb {
+      background: var(--sl-color-gray-5);
+      border-radius: 2px;
+    }
+    
+    .toc-container:hover::-webkit-scrollbar-thumb {
+      background: var(--sl-color-gray-4);
+    }
+    
+    /* Firefox scrollbar */
+    .toc-container {
+      scrollbar-width: thin;
+      scrollbar-color: var(--sl-color-gray-5) transparent;
+    }
+  }
+</style>

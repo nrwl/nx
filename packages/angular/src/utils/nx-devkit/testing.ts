@@ -32,7 +32,7 @@ export function createApp(
   // save for getAppDir() lookup by external *.spec.ts tests
   appConfig = {
     appName,
-    appModule: `${appName}/src/app/app.module.ts`,
+    appModule: `${appName}/src/app/app-module.ts`,
   };
 
   tree.write(
@@ -40,22 +40,22 @@ export function createApp(
     `import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 ${routing ? "import { RouterModule } from '@angular/router'" : ''};
-import { AppComponent } from './app.component';
+import { App } from './app';
 @NgModule({
   imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent]
+  declarations: [App],
+  bootstrap: [App]
 })
 export class AppModule {}
 `
   );
   tree.write(
     `${appName}/src/main.ts`,
-    `import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+    `import { platformBrowser } from '@angular/platform-browser';
 
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app-module';
 
-platformBrowserDynamic()
+platformBrowser()
   .bootstrapModule(AppModule)
   .catch(err => console.log(err));
   `
@@ -94,7 +94,7 @@ export function createLib(tree: Tree, libName: string) {
 
   libConfig = {
     name,
-    module: `${propertyName}/src/lib/${fileName}.module.ts`,
+    module: `${propertyName}/src/lib/${fileName}-module.ts`,
     barrel: `${propertyName}/src/index.ts`,
   };
 
@@ -113,7 +113,7 @@ export class ${className}Module { }
   );
   tree.write(
     libConfig.barrel,
-    `export * from './lib/${fileName}.module';
+    `export * from './lib/${fileName}-module';
 `
   );
 }

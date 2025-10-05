@@ -1,18 +1,17 @@
 {
-  "compilerOptions": {
-    "target": "es2022"<% if (disableModernClassFieldsBehavior) { %>,
-    "useDefineForClassFields": false<% } %><% if (isUsingApplicationBuilder) { %>,
-    "esModuleInterop": true<% } %>
+  "extends": "<%= rootTsConfig %>",
+  "compilerOptions": {},
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false
   },
   "files": [],
   "include": [],
-  "references": [
+  "references": [<% if (angularMajorVersion < 20) { %>
     {
       "path": "./tsconfig.editor.json"
-    },
+    },<% } %>
     {
       "path": "./tsconfig.app.json"
     }
-  ],
-  "extends": "<%= rootTsConfig %>"
+  ]
 }

@@ -4,6 +4,7 @@ import {
   stripIndents,
   Tree,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function updateApplicationStyles(
@@ -46,12 +47,13 @@ function findStylesEntryPoint(
   options: NormalizedGeneratorOptions,
   project: ProjectConfiguration
 ): string | undefined {
+  const sourceRoot = getProjectSourceRoot(project, tree);
   // first check for common names
   const possibleStylesEntryPoints = [
-    joinPathFragments(project.sourceRoot ?? project.root, 'styles.css'),
-    joinPathFragments(project.sourceRoot ?? project.root, 'styles.scss'),
-    joinPathFragments(project.sourceRoot ?? project.root, 'styles.sass'),
-    joinPathFragments(project.sourceRoot ?? project.root, 'styles.less'),
+    joinPathFragments(sourceRoot, 'styles.css'),
+    joinPathFragments(sourceRoot, 'styles.scss'),
+    joinPathFragments(sourceRoot, 'styles.sass'),
+    joinPathFragments(sourceRoot, 'styles.less'),
   ];
 
   let stylesEntryPoint = possibleStylesEntryPoints.find((s) => tree.exists(s));
@@ -61,7 +63,7 @@ function findStylesEntryPoint(
 
   // then check for the specified styles in the build configuration if it exists
   const styles: Array<string | { input: string; inject: boolean }> =
-    project.targets?.[options.buildTarget].options?.styles;
+    project.targets?.[options.buildTarget]?.options?.styles;
 
   if (!styles) {
     return undefined;

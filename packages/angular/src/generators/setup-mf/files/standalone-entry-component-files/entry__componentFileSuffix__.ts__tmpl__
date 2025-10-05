@@ -1,0 +1,12 @@
+import { Component } from '@angular/core';
+import { <%= nxWelcomeSymbolName %> } from './<%= nxWelcomeFileName %>';
+
+@Component({<% if (setStandaloneTrue) { %>
+  standalone: true,<% } %>
+  imports: [<%= nxWelcomeSymbolName %>],<% if (prefix) { %>
+  selector: '<%= prefix %>-<%= appName %>-entry',
+  template: `<<%= prefix %>-nx-welcome></<%= prefix %>-nx-welcome>`<% } else { %>
+  selector: '<%= appName %>-entry',
+  template: `<nx-welcome></nx-welcome>`<% } %>
+})
+export class RemoteEntry<%= componentType %> {}

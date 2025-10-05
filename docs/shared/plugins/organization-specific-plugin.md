@@ -1,3 +1,8 @@
+---
+title: Enforce Organizational Best Practices with a Local Plugin
+description: Learn how to create a custom Nx plugin that encodes your organization's best practices into code generators for consistent project creation.
+---
+
 # Enforce Organizational Best Practices with a Local Plugin
 
 Every repository has a unique set of conventions and best practices that developers need to learn in order to write code that integrates well with the rest of the code base. It is important to document those best practices, but developers don't always read the documentation and even if they have read the documentation, they don't consistently follow the documentation every time they perform a task. Nx allows you to encode these best practices in code generators that have been tailored to your specific repository.
@@ -48,7 +53,7 @@ export async function libraryGenerator(
 ) {
   const callbackAfterFilesUpdated = await reactLibraryGenerator(tree, {
     ...options,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -213,7 +218,7 @@ export async function libraryGenerator(
     ...options,
     tags: `scope:${options.scope}`,
     directory: options.directory || `${options.scope}/${options.name}`,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -259,7 +264,7 @@ export async function libraryGenerator(
       ...options,
       tags: `scope:${options.scope}`,
       directory,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: 'vitest',
     })
@@ -290,12 +295,12 @@ function updateViteConfiguration(tree, directory) {
 export default libraryGenerator;
 ```
 
-We updated the generator to use some new helper functions from the Nx devkit. Here are a few functions you may find useful. See the [full API reference](/nx-api/devkit/documents/nx_devkit) for all the options.
+We updated the generator to use some new helper functions from the Nx devkit. Here are a few functions you may find useful. See the [full API reference](/reference/core-api/devkit/documents/nx_devkit) for all the options.
 
-- [`runTasksInSerial`](/nx-api/devkit/documents/runTasksInSerial) - Allows you to collect many callbacks and return them all at the end of the generator.
-- [`formatFiles`](/nx-api/devkit/documents/formatFiles) - Run Prettier on the repository
-- [`readProjectConfiguration`](/nx-api/devkit/documents/readProjectConfiguration) - Get the calculated project configuration for a single project
-- [`updateNxJson`](/nx-api/devkit/documents/updateNxJson) - Update the `nx.json` file
+- [`runTasksInSerial`](/reference/core-api/devkit/documents/runTasksInSerial) - Allows you to collect many callbacks and return them all at the end of the generator.
+- [`formatFiles`](/reference/core-api/devkit/documents/formatFiles) - Run Prettier on the repository
+- [`readProjectConfiguration`](/reference/core-api/devkit/documents/readProjectConfiguration) - Get the calculated project configuration for a single project
+- [`updateNxJson`](/reference/core-api/devkit/documents/updateNxJson) - Update the `nx.json` file
 
 Now let's check to make sure that the `clearMocks` property is set correctly by the generator. First, we'll commit our changes so far. Then, we'll run the generator without the `--dry-run` flag so we can inspect the file contents.
 

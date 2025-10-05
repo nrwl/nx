@@ -64,7 +64,7 @@ export function buildExplicitTypeScriptDependencies(
   }
 
   for (const [project, fileData] of Object.entries(
-    ctx.fileMap.projectFileMap
+    ctx.filesToProcess.projectFileMap
   )) {
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {

@@ -7,14 +7,14 @@ export function createTsConfig(
     projectRoot: string;
     rootProject?: boolean;
     unitTestRunner?: string;
+    isUsingTsSolutionConfig: boolean;
   },
   relativePathToRootTsConfig: string
 ) {
   createAppTsConfig(host, options);
   const json = {
-    compilerOptions: {},
     files: [],
-    include: ['.nuxt/nuxt.d.ts'],
+    include: options.isUsingTsSolutionConfig ? undefined : ['.nuxt/nuxt.d.ts'],
     references: [
       {
         path: './tsconfig.app.json',
@@ -37,7 +37,7 @@ export function createTsConfig(
     };
     json.exclude = ['node_modules', 'tmp'];
   } else {
-    json.extends = relativePathToRootTsConfig;
+    json.extends = './.nuxt/tsconfig.json';
   }
 
   writeJson(host, `${options.projectRoot}/tsconfig.json`, json);

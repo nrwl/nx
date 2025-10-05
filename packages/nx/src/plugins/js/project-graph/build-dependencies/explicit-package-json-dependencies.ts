@@ -1,17 +1,13 @@
-import { dirname, join } from 'node:path';
 import { DependencyType } from '../../../../config/project-graph';
-import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../../../../config/workspace-json-project-json';
+import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
-import { CreateDependenciesContext } from '../../../../project-graph/plugins';
+import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
-  RawProjectGraphDependency,
+  type RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
 import { parseJson } from '../../../../utils/json';
-import { PackageJson } from '../../../../utils/package-json';
+import type { PackageJson } from '../../../../utils/package-json';
 import { joinPathFragments } from '../../../../utils/path';
 import { TargetProjectLocator } from './target-project-locator';
 
@@ -20,37 +16,14 @@ export function buildExplicitPackageJsonDependencies(
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
-  let packageNameMap = undefined;
   const nodes = Object.values(ctx.projects);
   Object.keys(ctx.filesToProcess.projectFileMap).forEach((source) => {
     Object.values(ctx.filesToProcess.projectFileMap[source]).forEach((f) => {
       if (isPackageJsonAtProjectRoot(nodes, f.file)) {
-        // we only create the package name map once and only if a package.json file changes
-        packageNameMap = packageNameMap || createPackageNameMap(ctx.projects);
-        processPackageJson(
-          source,
-          f.file,
-          ctx,
-          targetProjectLocator,
-          res,
-          packageNameMap
-        );
+        processPackageJson(source, f.file, ctx, targetProjectLocator, res);
       }
     });
   });
-  return res;
-}
-
-function createPackageNameMap(projects: ProjectsConfigurations['projects']) {
-  const res = {};
-  for (let projectName of Object.keys(projects)) {
-    try {
-      const packageJson = parseJson(
-        defaultFileRead(join(projects[projectName].root, 'package.json'))
-      );
-      res[packageJson.name ?? projectName] = projectName;
-    } catch (e) {}
-  }
   return res;
 }
 
@@ -69,22 +42,27 @@ function isPackageJsonAtProjectRoot(
 
 function processPackageJson(
   sourceProject: string,
-  fileName: string,
+  packageJsonPath: string,
   ctx: CreateDependenciesContext,
   targetProjectLocator: TargetProjectLocator,
-  collectedDeps: RawProjectGraphDependency[],
-  packageNameMap: { [packageName: string]: string }
+  collectedDeps: RawProjectGraphDependency[]
 ) {
   try {
-    const deps = readDeps(parseJson(defaultFileRead(fileName)));
+    const deps = readDeps(parseJson(defaultFileRead(packageJsonPath)));
 
-    for (const d of Object.keys(deps)) {
-      // package.json refers to another project in the monorepo
-      if (packageNameMap[d]) {
+    for (const [packageName, packageVersion] of Object.entries(deps)) {
+      const localProject =
+        targetProjectLocator.findDependencyInWorkspaceProjects(
+          packageJsonPath,
+          packageName,
+          packageVersion
+        );
+      if (localProject) {
+        // package.json refers to another project in the monorepo
         const dependency: RawProjectGraphDependency = {
           source: sourceProject,
-          target: packageNameMap[d],
-          sourceFile: fileName,
+          target: localProject,
+          sourceFile: packageJsonPath,
           type: DependencyType.static,
         };
         validateDependency(dependency, ctx);
@@ -93,8 +71,8 @@ function processPackageJson(
       }
 
       const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
-        d,
-        fileName
+        packageName,
+        packageJsonPath
       );
       if (!externalNodeName) {
         continue;
@@ -103,7 +81,7 @@ function processPackageJson(
       const dependency: RawProjectGraphDependency = {
         source: sourceProject,
         target: externalNodeName,
-        sourceFile: fileName,
+        sourceFile: packageJsonPath,
         type: DependencyType.static,
       };
       validateDependency(dependency, ctx);

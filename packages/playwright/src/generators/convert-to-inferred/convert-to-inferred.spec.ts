@@ -137,7 +137,7 @@ function createTestProject(
     webServer: {
       command: 'npx nx serve myapp',
       url: 'http://localhost:4200',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       cwd: workspaceRoot,
     },
     projects: [

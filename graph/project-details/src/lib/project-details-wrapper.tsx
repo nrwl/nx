@@ -5,20 +5,23 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
+import { Spinner, ErrorToast } from '@nx/graph-ui-common';
 import {
-  ErrorToast,
-  ExpandedTargetsContext,
-  getExternalApiService,
   useEnvironmentConfig,
+  getExternalApiService,
   useRouteConstructor,
-} from '@nx/graph/shared';
-import { Spinner } from '@nx/graph/ui-components';
-
-import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
+} from '@nx/graph-shared';
+import {
+  ProjectDetails,
+  ExpandedTargetsContext,
+} from '@nx/graph-internal-ui-project-details';
 import { useCallback, useContext, useEffect } from 'react';
+import { GraphStateSerializer } from '@nx/graph';
+import { ProjectElement } from '@nx/graph/projects';
 
 interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
+  projectId?: string;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   connectedToCloud?: boolean;
@@ -27,6 +30,7 @@ interface ProjectDetailsProps {
 
 export function ProjectDetailsWrapper({
   project,
+  projectId,
   sourceMap,
   errors,
   connectedToCloud,
@@ -43,22 +47,32 @@ export function ProjectDetailsWrapper({
 
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
+      const serializedState = GraphStateSerializer.serialize({
+        c: {},
+        s: {
+          type: 'focused',
+          nodeId:
+            projectId || ProjectElement.makeId('project', data.projectName),
+        },
+      });
+
       if (environment === 'nx-console') {
-        externalApiService.postEvent({
+        return externalApiService.postEvent({
           type: 'open-project-graph',
           payload: {
             projectName: data.projectName,
+            serializedProjectGraphState: serializedState,
           },
         });
-      } else {
-        navigate(
-          routeConstructor(
-            `/projects/${encodeURIComponent(data.projectName)}`,
-            true,
-            ['expanded'] // omit expanded targets from search params
-          )
-        );
       }
+
+      navigate(
+        routeConstructor(`/projects`, (searchParams) => {
+          searchParams.set('graph', serializedState);
+          searchParams.delete('expanded');
+          return searchParams;
+        })
+      );
     },
     [externalApiService, routeConstructor, navigate, environment]
   );
@@ -77,8 +91,10 @@ export function ProjectDetailsWrapper({
         navigate(
           routeConstructor(
             {
-              pathname: `/tasks/${encodeURIComponent(data.targetName)}`,
-              search: `?projects=${encodeURIComponent(data.projectName)}`,
+              pathname: `/tasks`,
+              search: `?targets=${encodeURIComponent(
+                data.targetName
+              )}&projects=${encodeURIComponent(data.projectName)}`,
             },
             true,
             ['expanded'] // omit expanded targets from search params
@@ -166,7 +182,8 @@ export function ProjectDetailsWrapper({
   return (
     <>
       <ProjectDetails
-        project={project}
+        project={project as any}
+        projectId={projectId}
         sourceMap={sourceMap}
         onViewInProjectGraph={handleViewInProjectGraph}
         onViewInTaskGraph={handleViewInTaskGraph}

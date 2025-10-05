@@ -1,10 +1,13 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   logger,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
 import {
+  ajvVersion,
+  analogVitestAngular,
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
@@ -14,7 +17,7 @@ import {
 } from './versions';
 
 export type EnsureDependenciesOptions = {
-  uiFramework: 'react' | 'none';
+  uiFramework: 'angular' | 'react' | 'none';
   compiler?: 'babel' | 'swc';
   includeLib?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
@@ -38,6 +41,11 @@ export function ensureDependencies(
     );
   }
 
+  if (schema.uiFramework === 'angular') {
+    devDependencies['@analogjs/vitest-angular'] = analogVitestAngular;
+    devDependencies['@analogjs/vite-plugin-angular'] = analogVitestAngular;
+  }
+
   if (schema.uiFramework === 'react') {
     if (schema.compiler === 'swc') {
       devDependencies['@vitejs/plugin-react-swc'] = vitePluginReactSwcVersion;
@@ -48,6 +56,9 @@ export function ensureDependencies(
 
   if (schema.includeLib) {
     devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
+    if (detectPackageManager() !== 'pnpm') {
+      devDependencies['ajv'] = ajvVersion;
+    }
   }
 
   return addDependenciesToPackageJson(host, {}, devDependencies);

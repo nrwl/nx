@@ -1,5 +1,5 @@
 const { join, basename } = require('path');
-const { copyFileSync, existsSync, mkdirSync } = require('fs');
+const { copyFileSync, existsSync, mkdirSync, renameSync } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
@@ -62,23 +62,42 @@ const originalLoad = Module._load;
 // Will only be called once because the require cache takes over afterwards.
 Module._load = function (request, parent, isMain) {
   const modulePath = request;
-  if (
+  // Check if we should use the native file cache (enabled by default)
+  const useNativeFileCache = process.env.NX_SKIP_NATIVE_FILE_CACHE !== 'true';
+  // Check if this is an Nx native module (either from npm or local file)
+  const isNxNativeModule =
     nxPackages.has(modulePath) ||
-    localNodeFiles.some((f) => modulePath.endsWith(f))
-  ) {
+    localNodeFiles.some((file) => modulePath.endsWith(file));
+
+  // Only use the file cache for Nx native modules when caching is enabled
+  if (useNativeFileCache && isNxNativeModule) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
 
     // we copy the file to a workspace-scoped tmp directory and prefix with nxVersion to avoid stale files being loaded
     const nativeFileCacheLocation = getNativeFileCacheLocation();
+    // This is a path to copy to, not the one that gets loaded
+    const tmpTmpFile = join(
+      nativeFileCacheLocation,
+      nxVersion + '-' + Math.random() + fileName
+    );
+    // This is the path that will get loaded
     const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
+
+    // If the file to be loaded already exists, just load it
     if (existsSync(tmpFile)) {
       return originalLoad.apply(this, [tmpFile, parent, isMain]);
     }
     if (!existsSync(nativeFileCacheLocation)) {
       mkdirSync(nativeFileCacheLocation, { recursive: true });
     }
-    copyFileSync(nativeLocation, tmpFile);
+    // First copy to a unique location for each process
+    copyFileSync(nativeLocation, tmpTmpFile);
+
+    // Then rename to the final location
+    renameSync(tmpTmpFile, tmpFile);
+
+    // Load from the final location
     return originalLoad.apply(this, [tmpFile, parent, isMain]);
   } else {
     // call the original _load function for everything else

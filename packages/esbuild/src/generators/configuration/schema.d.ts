@@ -1,3 +1,5 @@
+import type { SupportedFormat } from '@nx/js';
+
 export interface EsBuildProjectSchema {
   project: string;
   main?: string;
@@ -10,4 +12,5 @@ export interface EsBuildProjectSchema {
   esbuildConfig?: string;
   platform?: 'node' | 'browser' | 'neutral';
   buildTarget?: string;
+  format?: SupportedFormat[];
 }

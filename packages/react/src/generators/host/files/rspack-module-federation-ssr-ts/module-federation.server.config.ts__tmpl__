@@ -1,13 +1,22 @@
-import { ModuleFederationConfig } from '@nx/rspack/module-federation';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
-    name: '<%= projectName %>',
-    remotes: [
-      <% if (static) { 
-         remotes.forEach(function(r) { %> "<%= r.fileName %>", <% }); 
-       }
-    %>
+  name: '<%= projectName %>',
+  remotes: [
+    <%_ if (static) { 
+      remotes.forEach(function(r) { _%>
+    "<%= r.fileName %>", 
+      <%_ }); } _%>
   ],
+  shared: (libraryName, libraryConfig) => {
+    return {
+      ...libraryConfig,
+      eager: true
+    }
+  },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;

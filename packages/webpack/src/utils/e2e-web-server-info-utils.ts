@@ -31,7 +31,7 @@ export async function getWebpackE2EWebServerInfo(
       defaultServeTargetName: 'serve',
       defaultServeStaticTargetName: 'serve-static',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
-      defaultE2ECiBaseUrl: 'http://localhost:4200',
+      defaultE2ECiBaseUrl: `http://localhost:${e2ePort}`,
       defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded

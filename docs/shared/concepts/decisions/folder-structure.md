@@ -1,3 +1,8 @@
+---
+title: Folder Structure
+description: Learn about organizing your Nx monorepo with effective folder structures, and how to easily move or remove projects as your organization evolves.
+---
+
 # Folder Structure
 
 Nx can work with any folder structure you choose, but it is good to have a plan in place for the folder structure of your monorepo.
@@ -6,7 +11,7 @@ Projects are often grouped by _scope_. A project's scope is either the applicati
 
 ## Move Generator
 
-Don't be too anxious about choosing the exact right folder structure from the beginning. Projects can be moved or renamed using the [`@nx/workspace:move` generator](/nx-api/workspace/generators/move).
+Don't be too anxious about choosing the exact right folder structure from the beginning. Projects can be moved or renamed using the [`@nx/workspace:move` generator](/reference/core-api/workspace/generators/move).
 
 For instance, if a project under the `booking` folder is now being shared by multiple apps, you can move it to the shared folder like this:
 
@@ -16,7 +21,7 @@ nx g move --project booking-some-project shared/some-project
 
 ## Remove Generator
 
-Similarly, if you no longer need a project, you can remove it with the [`@nx/workspace:remove` generator](/nx-api/workspace/generators/remove).
+Similarly, if you no longer need a project, you can remove it with the [`@nx/workspace:remove` generator](/reference/core-api/workspace/generators/remove).
 
 ```shell
 nx g remove booking-some-project
@@ -51,7 +56,7 @@ libs/
 
 One of the main advantages of using a monorepo is that there is more visibility into code that can be reused across many different applications. Shared projects are a great way to save developers time and effort by reusing a solution to a common problem.
 
-Let’s consider our reference monorepo. The `shared-data-access` project contains the code needed to communicate with the back-end (for example, the URL prefix). We know that this would be the same for all libs; therefore, we should place this in the shared lib and properly document it so that all projects can use it instead of writing their own versions.
+Let's consider our reference monorepo. The `shared-data-access` project contains the code needed to communicate with the back-end (for example, the URL prefix). We know that this would be the same for all libs; therefore, we should place this in the shared lib and properly document it so that all projects can use it instead of writing their own versions.
 
 ```text
   libs/

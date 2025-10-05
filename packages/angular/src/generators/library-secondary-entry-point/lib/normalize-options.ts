@@ -3,9 +3,10 @@ import {
   joinPathFragments,
   names,
   readJson,
-  Tree,
+  type Tree,
 } from '@nx/devkit';
-import { GeneratorOptions, NormalizedGeneratorOptions } from '../schema';
+import { getModuleTypeSeparator } from '../../utils/artifact-types';
+import type { GeneratorOptions, NormalizedGeneratorOptions } from '../schema';
 
 export function normalizeOptions(
   tree: Tree,
@@ -42,6 +43,7 @@ export function normalizeOptions(
     joinPathFragments(libraryProject.root, 'package.json')
   );
   const secondaryEntryPoint = `${mainEntryPoint}/${options.name}`;
+  const moduleTypeSeparator = getModuleTypeSeparator(tree);
 
   return {
     ...options,
@@ -51,5 +53,6 @@ export function normalizeOptions(
     libraryProject,
     secondaryEntryPoint,
     skipModule: options.skipModule ?? false,
+    moduleTypeSeparator,
   };
 }

@@ -18,6 +18,9 @@ export type BlogPostDataEntry = {
   podcastAppleUrl?: string;
   podcastIHeartUrl?: string;
   published?: boolean;
+  ogImage?: string;
+  ogImageType?: string;
+  metrics?: Array<{ value: string; label: string }>;
 };
 
 export type BlogAuthor = {

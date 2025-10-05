@@ -1,3 +1,8 @@
+---
+title: Integrate a New Tool with a Tooling Plugin
+description: Learn how to create a custom Nx plugin that integrates a tool or framework into an Nx repository, using Astro as an example.
+---
+
 # Integrate a New Tool into an Nx Repository with a Tooling Plugin
 
 Nx Plugins can be used to easily integrate a tool or framework into an Nx repository. If there is no plugin available for your favorite tool or framework, you can write your own.

@@ -4,9 +4,10 @@
     "target": "es2018",
     "lib": ["es2018", "dom"],
     "module": "commonjs",
-    "outDir": "../dist/out-tsc",
+    "outDir": "../dist/typedoc-theme",
     "declaration": true,
-    "types": []
+    "types": [],
+    "composite": true
   },
   "include": ["**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]

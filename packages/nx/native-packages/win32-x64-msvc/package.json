@@ -17,9 +17,6 @@
   "files": [
     "nx.win32-x64-msvc.node"
   ],
-  "engines": {
-    "node": ">= 10"
-  },
   "publishConfig": {
     "access": "public"
   }

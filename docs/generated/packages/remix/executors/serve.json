@@ -3,6 +3,7 @@
   "implementation": "/packages/remix/src/executors/serve/serve.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "pipe",
     "cli": "nx",
     "title": "Remix Serve",

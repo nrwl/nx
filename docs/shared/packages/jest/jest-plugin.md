@@ -3,6 +3,8 @@ title: Overview of the Nx Jest Plugin
 description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest. This page also explains how to configure Jest on your Nx workspace.
 ---
 
+# @nx/jest
+
 [Jest](https://jestjs.io/) is an open source test runner created by Facebook. It has a lot of great features:
 
 - Immersive watch mode for providing near instant feedback when developing tests.
@@ -19,26 +21,11 @@ Make sure to install the `@nx/jest` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/jest` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/jest
 ```
 
 This will install the correct version of `@nx/jest`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/jest` package with your package manager.
-
-```shell
-npm add -D @nx/jest
-```
-
-{% /tab %}
-{% /tabs %}
 
 #### Configuring @nx/jest/plugin for both E2E and Unit Tests
 
@@ -60,12 +47,15 @@ within the same workspace. In this case, you can configure the `@nx/jest/plugin`
       "include": ["e2e/**/*"],
       "options": {
         "targetName": "e2e-local",
-        "ciTargetName": "e2e-ci"
+        "ciTargetName": "e2e-ci",
+        "disableJestRuntime": false
       }
     }
   ]
 }
 ```
+
+If you experience slowness from `@nx/jest/plugin`, then set `disableJestRuntime` to `true` to skip creating the Jest runtime. By disabling the Jest runtime, Nx will use its own utilities to find `inputs`, `outputs`, and test files for [Atomized targets](/ci/features/split-e2e-tasks). This can reduce computation time by as much as 80%.
 
 ### Splitting E2E Tests
 
@@ -82,6 +72,27 @@ target with that name which can be used in CI to run the tests for each file in 
       "options": {
         "targetName": "e2e-local",
         "ciTargetName": "e2e-ci"
+      }
+    }
+  ]
+}
+```
+
+### Customizing atomized unit/e2e tasks group name
+
+By default, the atomized tasks group name is derived from the `ciTargetName`. For example, atomized tasks for the `e2e-ci` target will be grouped under the name "E2E (CI)" when displayed in Nx Cloud or `nx show project <project> --web` UI.
+You can customize that name by explicitly providing the optional `ciGroupName` plugin option as such:
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-ci",
+        "ciGroupname": "My E2E tests (CI)"
       }
     }
   ]
@@ -262,7 +273,7 @@ The Nx task options can be configured via the [project config file](/reference/p
 
 If you're using [inferred tasks](/concepts/inferred-tasks), or running Jest directly with the `nx:run-commands` executor, you can [provide the Jest args](/recipes/running-tasks/pass-args-to-commands) for the command you're running.
 
-If you're using the `@nx/jest:jest` executor, you can provide [the options the executor accepts](/nx-api/jest/executors/jest#options).
+If you're using the `@nx/jest:jest` executor, you can provide [the options the executor accepts](/technologies/test-tools/jest/api/executors/jest#options).
 
 ### Code Coverage
 
@@ -292,6 +303,9 @@ export default async function () {
 
 If you're using `@swc/jest` and a global setup/teardown file, you have to set the `noInterop: false` and use dynamic imports within the setup function:
 
+{% tabs %}
+{% tab label="Using the config from .swcrc" %}
+
 ```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
 /* eslint-disable */
 import { readFileSync } from 'fs';
@@ -319,6 +333,34 @@ export default {
   // other settings
 };
 ```
+
+{% /tab %}
+
+{% tab label="Using the config from .spec.swcrc" %}
+
+```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
+/* eslint-disable */
+import { readFileSync } from 'fs';
+
+// Reading the SWC compilation config for the spec files
+const swcJestConfig = JSON.parse(
+  readFileSync(`${__dirname}/.spec.swcrc`, 'utf-8')
+);
+
+// Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+swcJestConfig.swcrc = false;
+
+export default {
+  globalSetup: '<rootDir>/src/global-setup-swc.ts',
+  transform: {
+    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+  },
+  // other settings
+};
+```
+
+{% /tab %}
+{% /tabs %}
 
 ```typescript {% fileName="global-setup-swc.ts" %}
 import { registerTsProject } from '@nx/js/src/internal';

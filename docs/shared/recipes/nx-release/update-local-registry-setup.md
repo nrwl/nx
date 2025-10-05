@@ -1,3 +1,8 @@
+---
+title: Update Your Local Registry Setup to use Nx Release
+description: Learn how to update your existing local registry setup to use Nx Release for publishing packages during end-to-end testing, replacing older publish target approaches.
+---
+
 # Update Your Local Registry Setup to use Nx Release
 
 Nx will create a `tools/start-local-registry.ts` script for starting a local registry and publishing packages to it in preparation for running end to end tests. If you have an existing `tools/start-local-registry.ts` script from a previous version of Nx, you should update it to use Nx Release to publish packages to the local registry. This will ensure that newly generated libraries are published appropriately when running end to end tests.
@@ -67,7 +72,7 @@ export default async () => {
     gitCommit: false,
     gitTag: false,
     firstRelease: true,
-    generatorOptionsOverrides: {
+    versionActionsOptionsOverrides: {
       skipLockFileUpdate: true,
     },
   });

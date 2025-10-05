@@ -1,5 +1,12 @@
 'use client';
-import { Listbox, Transition } from '@headlessui/react';
+import {
+  Label,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from '@headlessui/react';
 import {
   ComputerDesktopIcon,
   MoonIcon,
@@ -48,8 +55,8 @@ export function ThemeSwitcher(): JSX.Element {
     <div className="inline-block">
       <div className="group relative flex h-full w-full items-center px-1">
         <Listbox value={theme} onChange={setTheme}>
-          <Listbox.Label className="sr-only">Theme</Listbox.Label>
-          <Listbox.Button
+          <Label className="sr-only">Theme</Label>
+          <ListboxButton
             type="button"
             className={cx(
               'inline-flex p-2 text-sm font-medium opacity-60 transition-opacity group-hover:opacity-100',
@@ -57,7 +64,7 @@ export function ThemeSwitcher(): JSX.Element {
             )}
           >
             {themeMap[theme].icon}
-          </Listbox.Button>
+          </ListboxButton>
 
           <Transition
             as={Fragment}
@@ -68,17 +75,17 @@ export function ThemeSwitcher(): JSX.Element {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Listbox.Options className="absolute -right-10 top-full z-50 mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
+            <ListboxOptions className="absolute -right-10 top-full z-50 mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
               {availableThemes.map((t) => (
-                <Listbox.Option key={t.value} value={t.value} as={Fragment}>
-                  {({ active, selected }) => (
+                <ListboxOption key={t.value} value={t.value} as={Fragment}>
+                  {({ focus, selected }) => (
                     <li
                       className={cx(
                         'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm',
                         {
-                          'bg-slate-100 dark:bg-slate-800/60': active,
-                          'text-blue-500 dark:text-sky-500': active || selected,
-                          'text-slate-700 dark:text-slate-400': !active,
+                          'bg-slate-100 dark:bg-slate-800/60': focus,
+                          'text-blue-500 dark:text-sky-500': focus || selected,
+                          'text-slate-700 dark:text-slate-400': !focus,
                         }
                       )}
                     >
@@ -86,9 +93,9 @@ export function ThemeSwitcher(): JSX.Element {
                       {t.label}
                     </li>
                   )}
-                </Listbox.Option>
+                </ListboxOption>
               ))}
-            </Listbox.Options>
+            </ListboxOptions>
           </Transition>
         </Listbox>
       </div>

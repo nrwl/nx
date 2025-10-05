@@ -4,7 +4,7 @@ import {
   readJson,
   type Tree,
 } from '@nx/devkit';
-import { gte } from 'semver';
+import { coerce, gte } from 'semver';
 import {
   getInstalledStorybookVersion,
   storybookMajorVersion,
@@ -25,50 +25,63 @@ export function ensureDependencies(
   tree: Tree,
   options: EnsureDependenciesOptions
 ) {
-  let storybook7VersionToInstall = storybookVersion;
+  let storybookVersionToInstall = storybookVersion;
+  const installedStorybookMajorVersion = storybookMajorVersion();
   if (
-    storybookMajorVersion() >= 7 &&
+    installedStorybookMajorVersion >= 7 &&
     getInstalledStorybookVersion() &&
     gte(getInstalledStorybookVersion(), '7.0.0')
   ) {
-    storybook7VersionToInstall = getInstalledStorybookVersion();
+    storybookVersionToInstall = getInstalledStorybookVersion();
   }
 
   const dependencies: Record<string, string> = {};
-  const devDependencies: Record<string, string> = {
-    '@storybook/core-server': storybook7VersionToInstall,
-    '@storybook/addon-essentials': storybook7VersionToInstall,
-  };
+  const devDependencies: Record<string, string> =
+    installedStorybookMajorVersion < 9
+      ? {
+          '@storybook/core-server': storybookVersionToInstall,
+          '@storybook/addon-essentials': storybookVersionToInstall,
+        }
+      : {};
 
   const packageJson = readJson(tree, 'package.json');
   packageJson.dependencies ??= {};
   packageJson.devDependencies ??= {};
 
-  // Needed for Storybook 7
-  // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
-  if (
-    !packageJson.dependencies['react'] &&
-    !packageJson.devDependencies['react']
-  ) {
-    dependencies['react'] = reactVersion;
-  }
-  if (
-    !packageJson.dependencies['react-dom'] &&
-    !packageJson.devDependencies['react-dom']
-  ) {
-    dependencies['react-dom'] = reactVersion;
+  if (!gte(coerce(storybookVersionToInstall), '8.0.0')) {
+    // Needed for Storybook 7
+    // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
+    if (
+      !packageJson.dependencies['react'] &&
+      !packageJson.devDependencies['react']
+    ) {
+      dependencies['react'] = reactVersion;
+    }
+    if (
+      !packageJson.dependencies['react-dom'] &&
+      !packageJson.devDependencies['react-dom']
+    ) {
+      dependencies['react-dom'] = reactVersion;
+    }
   }
 
   if (options.uiFramework) {
-    devDependencies[options.uiFramework] = storybook7VersionToInstall;
+    devDependencies[options.uiFramework] = storybookVersionToInstall;
     const isPnpm = detectPackageManager(tree.root) === 'pnpm';
     if (isPnpm) {
       // If it's pnpm, it needs the framework without the builder
       // as a dependency too (eg. @storybook/react)
-      const matchResult = options.uiFramework?.match(/^@storybook\/(\w+)/);
-      const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
-      if (uiFrameworkWithoutBuilder) {
-        devDependencies[uiFrameworkWithoutBuilder] = storybook7VersionToInstall;
+      const matchResult = options.uiFramework?.match(
+        /^@storybook\/([\w-]+?)(?:-(?:vite|webpack5|webpack))?$/
+      );
+      const uiFrameworkWithoutBuilder = matchResult
+        ? `@storybook/${matchResult[1]}`
+        : null;
+      if (
+        uiFrameworkWithoutBuilder &&
+        uiFrameworkWithoutBuilder !== options.uiFramework
+      ) {
+        devDependencies[uiFrameworkWithoutBuilder] = storybookVersionToInstall;
       }
     }
 
@@ -77,7 +90,7 @@ export function ensureDependencies(
         !packageJson.dependencies['@storybook/vue3'] &&
         !packageJson.devDependencies['@storybook/vue3']
       ) {
-        devDependencies['@storybook/vue3'] = storybook7VersionToInstall;
+        devDependencies['@storybook/vue3'] = storybookVersionToInstall;
       }
     }
 
@@ -90,10 +103,7 @@ export function ensureDependencies(
       }
     }
 
-    if (
-      options.uiFramework === '@storybook/web-components-vite' ||
-      options.uiFramework === '@storybook/web-components-webpack5'
-    ) {
+    if (options.uiFramework === '@storybook/web-components-vite') {
       devDependencies['lit'] = litVersion;
     }
 

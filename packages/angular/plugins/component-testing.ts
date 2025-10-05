@@ -20,10 +20,11 @@ import {
   readTargetOptions,
   stripIndents,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
-import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/schema';
 import { gte } from 'semver';
+import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/schema';
 
 /**
  * Angular nx preset for Cypress Component Testing
@@ -195,7 +196,14 @@ function normalizeBuildTargetOptions(
     },
     buildContext
   );
-  const buildOptions = withSchemaDefaults(options);
+  const project =
+    buildContext.projectsConfigurations.projects[buildContext.projectName];
+  const sourceRoot = getProjectSourceRoot(project);
+  const buildOptions = withSchemaDefaults(
+    options,
+    sourceRoot,
+    buildContext.root
+  );
 
   // cypress creates a tsconfig if one isn't preset
   // that contains all the support required for angular and component tests
@@ -282,21 +290,9 @@ function normalizeBuildTargetOptions(
     buildOptions.stylePreprocessorOptions = { includePaths: [] };
   }
 
-  const config =
-    buildContext.projectGraph.nodes[buildContext.projectName]?.data;
-
-  if (!config.sourceRoot) {
-    logger.warn(stripIndents`Unable to find the 'sourceRoot' in the project configuration.
-Will set 'sourceRoot' to '${config.root}/src'
-Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.projectName} in the project.json file will ensure the correct value is used.`);
-    config.sourceRoot = joinPathFragments(config.root, 'src');
-  }
-
   return {
-    root: offset ? joinPathFragments(offset, config.root) : config.root,
-    sourceRoot: offset
-      ? joinPathFragments(offset, config.sourceRoot)
-      : config.sourceRoot,
+    root: offset ? joinPathFragments(offset, project.root) : project.root,
+    sourceRoot: offset ? joinPathFragments(offset, sourceRoot) : sourceRoot,
     buildOptions: {
       ...buildOptions,
       // this property is only valid for cy v12.9.0+
@@ -305,9 +301,16 @@ Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.project
   };
 }
 
-function withSchemaDefaults(options: any): BrowserBuilderSchema {
+function withSchemaDefaults(
+  options: any,
+  sourceRoot: string,
+  workspaceRoot: string
+): BrowserBuilderSchema {
   if (!options.main && !options.browser) {
-    throw new Error('Missing executor options "main" and "browser"');
+    options.browser = joinPathFragments(sourceRoot, 'main.ts');
+    if (!existsSync(join(workspaceRoot, options.browser))) {
+      throw new Error('Missing executor options "main" and "browser"');
+    }
   }
   if (!options.index) {
     throw new Error('Missing executor options "index"');

@@ -25,8 +25,8 @@ export interface Schema {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   minimal?: boolean;
-  simpleName?: boolean;
   addPlugin?: boolean;
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -36,7 +36,9 @@ export interface NormalizedSchema extends Schema {
   projectRoot: string;
   routePath: string;
   parsedTags: string[];
+  importPath: string;
   appMain?: string;
   appSourceRoot?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
+  isUsingTsSolutionConfig?: boolean;
 }

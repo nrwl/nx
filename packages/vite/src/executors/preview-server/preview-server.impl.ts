@@ -22,8 +22,7 @@ export async function* vitePreviewServerExecutor(
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, preview, loadConfigFromFile } =
-    await loadViteDynamicImport();
+  const { mergeConfig, preview, resolveConfig } = await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const target = parseTargetString(options.buildTarget, context);
@@ -61,12 +60,17 @@ export async function* vitePreviewServerExecutor(
     configuration,
     otherOptionsFromBuild
   );
-  const resolved = await loadConfigFromFile(
+  const defaultMode =
+    otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production';
+
+  const resolved = await resolveConfig(
     {
-      mode: otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production',
-      command: 'build',
+      configFile: viteConfigPath,
+      mode: defaultMode,
     },
-    viteConfigPath
+    'build',
+    defaultMode,
+    process.env.NODE_ENV ?? defaultMode
   );
 
   const outDir =
@@ -75,7 +79,7 @@ export async function* vitePreviewServerExecutor(
       offsetFromRoot(projectRoot),
       buildTargetOptions.outputPath
     ) ??
-    resolved?.config?.build?.outDir;
+    resolved?.build?.outDir;
 
   if (!outDir) {
     throw new Error(
@@ -108,7 +112,7 @@ export async function* vitePreviewServerExecutor(
     {
       // This should not be needed as it's going to be set in vite.config.ts
       // but leaving it here in case someone did not migrate correctly
-      root: resolved.config.root ?? root,
+      root: resolved.root ?? root,
       configFile: viteConfigPath,
     },
     {

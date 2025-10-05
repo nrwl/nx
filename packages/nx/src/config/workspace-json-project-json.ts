@@ -1,5 +1,7 @@
+import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
+  NxReleaseDockerConfiguration,
   NxReleaseVersionConfiguration,
 } from './nx-json';
 
@@ -107,9 +109,18 @@ export interface ProjectConfiguration {
    */
   release?: {
     version?: Pick<
+      // Expose a subset of version config options at the project level
       NxReleaseVersionConfiguration,
-      'generator' | 'generatorOptions'
+      | 'versionActions'
+      | 'versionActionsOptions'
+      | 'manifestRootsToUpdate'
+      | 'currentVersionResolver'
+      | 'currentVersionResolverMetadata'
+      | 'fallbackCurrentVersionResolver'
+      | 'versionPrefix'
+      | 'preserveLocalDependencyProtocols'
     >;
+    docker?: NxReleaseDockerConfiguration | true;
   };
 
   /**
@@ -119,6 +130,8 @@ export interface ProjectConfiguration {
 }
 
 export interface ProjectMetadata {
+  [k: string]: any;
+
   description?: string;
   technologies?: string[];
   targetGroups?: Record<string, string[]>;
@@ -135,6 +148,13 @@ export interface ProjectMetadata {
         };
       }[];
     };
+  };
+  js?: {
+    packageName: string;
+    packageVersion?: string;
+    packageExports?: PackageJson['exports'];
+    packageMain?: string;
+    isInPackageManagerWorkspaces?: boolean;
   };
 }
 
@@ -173,9 +193,14 @@ export interface TargetDependencyConfig {
   target: string;
 
   /**
-   * Configuration for params handling.
+   * Whether to forward CLI params to the dependency target.
    */
   params?: 'ignore' | 'forward';
+
+  /**
+   * Whether to forward task options to the dependency target.
+   */
+  options?: 'ignore' | 'forward';
 }
 
 export type InputDefinition =
@@ -250,6 +275,11 @@ export interface TargetConfiguration<T = any> {
    * Default is true
    */
   parallelism?: boolean;
+
+  /**
+   * Whether this target runs continuously
+   */
+  continuous?: boolean;
 
   /**
    * List of generators to run before the target to ensure the workspace

@@ -18,6 +18,7 @@ function createMockTask(id: string, parallelism: boolean = true): Task {
     outputs: [],
     overrides: {},
     parallelism,
+    continuous: false,
   };
 }
 
@@ -62,6 +63,11 @@ describe('TasksSchedule', () => {
         },
         dependencies: {
           'app1:build': ['lib1:build'],
+          'app2:build': [],
+          'lib1:build': [],
+        },
+        continuousDependencies: {
+          'app1:build': [],
           'app2:build': [],
           'lib1:build': [],
         },
@@ -268,6 +274,13 @@ describe('TasksSchedule', () => {
           'lib1:test': lib1Test,
         },
         dependencies: {
+          'app1:test': [],
+          'app2:test': [],
+          'app3:test': [],
+          'app4:test': [],
+          'lib1:test': [],
+        },
+        continuousDependencies: {
           'app1:test': [],
           'app2:test': [],
           'app3:test': [],
@@ -552,6 +565,11 @@ describe('TasksSchedule', () => {
             'app2:build': [],
             'lib1:build': [],
           },
+          continuousDependencies: {
+            'app1:build': [],
+            'app2:build': [],
+            'lib1:build': [],
+          },
           roots: ['lib1:build', 'app2:build'],
         };
         jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
@@ -715,6 +733,11 @@ describe('TasksSchedule', () => {
             'lib1:test': lib1Test,
           },
           dependencies: {
+            'app1:test': [],
+            'app2:test': [],
+            'lib1:test': [],
+          },
+          continuousDependencies: {
             'app1:test': [],
             'app2:test': [],
             'lib1:test': [],

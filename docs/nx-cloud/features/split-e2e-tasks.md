@@ -1,28 +1,32 @@
-# Automatically Split E2E Tasks by File (Atomizer)
+---
+keywords: [split tasks, atomizer]
+---
+
+# Automatically Split Slow Tasks by File (Atomizer)
 
 {% youtube
 src="https://youtu.be/0YxcxIR7QU0"
 title="10x Faster e2e Tests!"
 width="100%" /%}
 
-End-to-end (e2e) tests are often large, monolithic tasks that can take a considerable amount of time to execute. As a result, teams often push them to a nightly or even weekly build rather than running them for each PR. This approach is suboptimal as it increases the risk of merging problematic PRs.
+Certain tasks like end-to-end (e2e) tests, integration tests, or large unit test suites can be large, monolithic tasks that take a considerable amount of time to execute. As a result, teams often push them to a nightly or even weekly build rather than running them for each PR. This approach is suboptimal as it increases the risk of merging problematic PRs.
 
-Manually splitting large e2e test projects can be complex and require ongoing maintenance. Nx's Atomizer solves this by **automatically generating runnable targets for e2e tests for each spec file**. Instead of one large e2e task, you get multiple smaller e2e tasks that can be run individually. This allows for:
+Manually splitting these slow tasks can be complex and require ongoing maintenance. Nx's Atomizer solves this by **automatically generating runnable targets for each test file**. For example, a task that takes 10 minutes can be split and distributed as five 2-minute tasks per agent. This allows for:
 
 - parallelization across multiple machines with [Nx Agents](/ci/features/distribute-task-execution)
 - faster [flakiness detection & retries](/ci/features/flaky-tasks) by isolating and re-running only the failed tests
 
-## Enable Automated e2e Task Splitting
+## Enable Automated Task Splitting
 
 ### Step 1: Connect to Nx Cloud
 
-To use **automated e2e task splitting**, you need to connect your workspace to Nx Cloud (if you haven't already).
+To use **automated task splitting**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
+See the [connect to Nx Cloud recipe](/ci/recipes/set-up) for all the details.
 
 ### Step 2: Add the Appropriate Plugin
 
@@ -50,6 +54,13 @@ nx add @nx/jest
 ```
 
 {% /tab %}
+{% tab label="Gradle" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/gradle
+```
+
+{% /tab %}
 {% /tabs %}
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
@@ -64,17 +75,18 @@ If you upgraded Nx from an older version, ensure that [inferred tasks](/concepts
 }
 ```
 
-## Update an Existing e2e Project to use Automated Task Splitting
+## Update an Existing Project to use Automated Task Splitting
 
-If you are already using the `@nx/cypress`, `@nx/playwright`, or `@nx/jest` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
+If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
-- [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
-- [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
-- [Configure Jest Task Splitting](/nx-api/jest#splitting-e2e-tests)
+- [Configure Cypress Task Splitting](/technologies/test-tools/cypress/introduction#nxcypress-configuration)
+- [Configure Playwright Task Splitting](/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
+- [Configure Jest Task Splitting](/technologies/test-tools/jest/introduction#splitting-e2e-tests)
+- [Configure Gradle Testing Task Splitting](/technologies/java/introduction#test-distribution)
 
 ## Verify Automated Task Splitting Works
 
-Run the following command to open the project detail view for the e2e project:
+Run the following command to open the project detail view for your test project:
 
 {% tabs %}
 {% tab label="CLI" %}
@@ -191,12 +203,14 @@ nx show project my-project-e2e
             {
               "target": "e2e-ci--src/e2e/app.cy.ts",
               "projects": "self",
-              "params": "forward"
+              "params": "forward",
+              "options": "forward"
             },
             {
               "target": "e2e-ci--src/e2e/login.cy.ts",
               "projects": "self",
-              "params": "forward"
+              "params": "forward",
+              "options": "forward"
             }
           ],
           "options": {},
@@ -399,19 +413,19 @@ nx show project my-project-e2e
 {% /tab %}
 {% /tabs %}
 
-If you configured Nx Atomizer properly, you'll see that there are tasks named `e2e`, `e2e-ci` and a task for each e2e test file.
+If you configured Nx Atomizer properly, you'll see that there are tasks named `e2e`, `e2e-ci` (or similar for other test types) and a task for each test file.
 
-During local development, you’ll want to continue using `e2e` as it is more efficient on a single machine.
+During local development, you'll want to continue using the base task (e.g., `e2e`, `test`) as it is more efficient on a single machine.
 
 ```shell
 nx e2e my-project-e2e
 ```
 
-The `e2e-ci` task truly shines when configured and run on CI.
+The `-ci` variant task truly shines when configured and run on CI.
 
 ## Configure Automated Task Splitting on CI
 
-Update your CI pipeline to run `e2e-ci`, which will automatically run all the inferred tasks for the individual e2e test files. Here's an example of a GitHub Actions workflow:
+Update your CI pipeline to run the `-ci` variant task (e.g., `e2e-ci`, `test-ci`), which will automatically run all the inferred tasks for the individual test files. Here's an example of a GitHub Actions workflow:
 
 ```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[15,25] %}
 name: CI
@@ -423,6 +437,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         with:

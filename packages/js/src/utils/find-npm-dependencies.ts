@@ -29,6 +29,7 @@ export function findNpmDependencies(
     includeTransitiveDependencies?: boolean;
     ignoredFiles?: string[];
     useLocalPathsForWorkspaceDependencies?: boolean;
+    runtimeHelpers?: string[];
   } = {}
 ): Record<string, string> {
   let seen: null | Set<string> = null;
@@ -61,6 +62,7 @@ export function findNpmDependencies(
       currentProject,
       projectGraph,
       buildTarget,
+      options.runtimeHelpers,
       collectedDeps
     );
 
@@ -194,8 +196,23 @@ function collectHelperDependencies(
   sourceProject: ProjectGraphProjectNode,
   projectGraph: ProjectGraph,
   buildTarget: string,
+  runtimeHelpers: string[] | undefined,
   npmDeps: Record<string, string>
 ): void {
+  if (runtimeHelpers?.length > 0) {
+    for (const helper of runtimeHelpers) {
+      if (
+        !npmDeps[helper] &&
+        projectGraph.externalNodes[`npm:${helper}`]?.type === 'npm'
+      ) {
+        npmDeps[helper] =
+          projectGraph.externalNodes[`npm:${helper}`].data.version;
+      }
+    }
+
+    return;
+  }
+
   const target = sourceProject.data.targets[buildTarget];
   if (!target) return;
 

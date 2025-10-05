@@ -1,0 +1,10 @@
+import { Component } from '@angular/core';
+
+@Component({<% if (prefix) { %>
+  selector: '<%= prefix %>-<%= appName %>-entry',<% if (setStandaloneFalse) { %>
+  standalone: false,<% } %>
+  template: `<<%= prefix %>-nx-welcome></<%= prefix %>-nx-welcome>`<% } else { %>
+  selector: '<%= appName %>-entry',
+  template: `<nx-welcome></nx-welcome>`<% } %>
+})
+export class RemoteEntry<%= componentType %> {}

@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {
     "no-restricted-imports": [
       "error",
@@ -9,7 +9,7 @@
       "@angular-devkit/schematics"
     ]
   },
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -36,7 +36,6 @@
               "typescript",
               // Installed to workspace by plugins
               "@typescript-eslint/parser",
-              "eslint-config-prettier",
               "@angular-eslint/eslint-plugin",
               "angular-eslint",
               "typescript-eslint",

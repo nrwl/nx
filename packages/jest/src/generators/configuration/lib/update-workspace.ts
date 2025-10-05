@@ -1,11 +1,10 @@
-import { NormalizedJestProjectSchema } from '../schema';
 import {
-  readProjectConfiguration,
-  Tree,
-  updateProjectConfiguration,
   joinPathFragments,
-  normalizePath,
+  readProjectConfiguration,
+  type Tree,
+  updateProjectConfiguration,
 } from '@nx/devkit';
+import type { NormalizedJestProjectSchema } from '../schema';
 
 export function updateWorkspace(
   tree: Tree,
@@ -19,17 +18,27 @@ export function updateWorkspace(
   projectConfig.targets[options.targetName] = {
     executor: '@nx/jest:jest',
     outputs: [
-      options.rootProject
-        ? joinPathFragments('{workspaceRoot}', 'coverage', '{projectName}')
-        : joinPathFragments('{workspaceRoot}', 'coverage', '{projectRoot}'),
+      options.isTsSolutionSetup
+        ? '{projectRoot}/test-output/jest/coverage'
+        : joinPathFragments(
+            '{workspaceRoot}',
+            'coverage',
+            options.rootProject ? '{projectName}' : '{projectRoot}'
+          ),
     ],
     options: {
       jestConfig: joinPathFragments(
-        normalizePath(projectConfig.root),
+        projectConfig.root,
         `jest.config.${options.js ? 'js' : 'ts'}`
       ),
     },
   };
+
+  if (options.setupFile === 'angular') {
+    // We set the tsConfig in the target options so Angular migrations can discover it
+    projectConfig.targets[options.targetName].options.tsConfig =
+      joinPathFragments(projectConfig.root, 'tsconfig.spec.json');
+  }
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 }

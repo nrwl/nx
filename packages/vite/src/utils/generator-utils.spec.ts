@@ -2,7 +2,9 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -144,10 +146,10 @@ describe('generator utils', () => {
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../node_modules/.vite/myproj',
-          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [ nxViteTsPaths() ],
@@ -168,7 +170,7 @@ describe('generator utils', () => {
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es' as const]
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -179,18 +181,19 @@ describe('generator utils', () => {
             'import.meta.vitest': undefined
           },
           test: {
+            name: 'myproj',
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: '../coverage/myproj',
-              provider: 'v8',
+              provider: 'v8' as const,
             }
           },
-        });
+        }));
         "
       `);
     });
@@ -215,11 +218,10 @@ describe('generator utils', () => {
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
-
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../node_modules/.vite/myproj',
           server:{
@@ -243,7 +245,99 @@ describe('generator utils', () => {
               transformMixedEsModules: true,
             },
           },
-        });
+        }));
+        "
+      `);
+    });
+
+    it('should generate correct config when using ts solution setup', () => {
+      updateJson(tree, '/package.json', (json) => {
+        json.workspaces = ['apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+          customConditions: ['@proj/source'],
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+      addProjectConfiguration(tree, 'myproj', {
+        name: 'myproj',
+        root: 'apps/myproj',
+      });
+
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'myproj',
+          inSourceTests: true,
+          includeVitest: true,
+          includeLib: true,
+        },
+        false
+      );
+
+      expect(tree.read('apps/myproj/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import dts from 'vite-plugin-dts';
+        import * as path from 'path';
+
+        export default defineConfig(() => ({
+          root: __dirname,
+          cacheDir: '../../node_modules/.vite/apps/myproj',
+          plugins: [dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          // Configuration for building your library.
+          // See: https://vitejs.dev/guide/build.html#library-mode
+          build: {
+            outDir: './dist',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'myproj',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es' as const]
+            },
+            rollupOptions: {
+              // External packages that should not be bundled into your library.
+              external: []
+            },
+          },
+          define: {
+            'import.meta.vitest': undefined
+          },
+          test: {
+            name: 'myproj',
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: './test-output/vitest/coverage',
+              provider: 'v8' as const,
+            }
+          },
+        }));
         "
       `);
     });

@@ -22,7 +22,7 @@ import {
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
-import { basename, join, parse } from 'path';
+import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
@@ -47,6 +47,8 @@ export interface UpdatePackageJsonOption {
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   generateLockfile?: boolean;
+  packageJsonPath?: string;
+  developmentConditionName?: string | null;
 }
 
 export function updatePackageJson(
@@ -233,21 +235,18 @@ export function getExports(
     | 'projectRoot'
     | 'outputFileName'
     | 'additionalEntryPoints'
+    | 'outputPath'
+    | 'packageJsonPath'
   > & {
     fileExt: string;
   }
 ): Exports {
+  const outputDir = getOutputDir(options);
   const mainFile = options.outputFileName
-    ? options.outputFileName.replace(/\.[tj]s$/, '')
+    ? basename(options.outputFileName).replace(/\.[tj]s$/, '')
     : basename(options.main).replace(/\.[tj]s$/, '');
-  const relativeMainFileDir = options.outputFileName
-    ? './'
-    : getRelativeDirectoryToProjectRoot(
-        options.main,
-        options.rootDir ?? options.projectRoot
-      );
   const exports: Exports = {
-    '.': relativeMainFileDir + mainFile + options.fileExt,
+    '.': outputDir + mainFile + options.fileExt,
   };
 
   if (options.additionalEntryPoints) {
@@ -287,6 +286,41 @@ export function getUpdatedPackageJsonContent(
     packageJson.exports ??=
       typeof packageJson.exports === 'string' ? {} : { ...packageJson.exports };
     packageJson.exports['./package.json'] ??= './package.json';
+
+    if (options.developmentConditionName && (hasCjsFormat || hasEsmFormat)) {
+      packageJson.exports['.'] ??= {};
+      const developmentExports = getDevelopmentExports(options);
+      for (const [exportEntry, filePath] of Object.entries(
+        developmentExports
+      )) {
+        if (!packageJson.exports[exportEntry]) {
+          packageJson.exports[exportEntry] ??= {};
+          packageJson.exports[exportEntry][options.developmentConditionName] ??=
+            filePath;
+        } else if (typeof packageJson.exports[exportEntry] === 'object') {
+          packageJson.exports[exportEntry][options.developmentConditionName] ??=
+            filePath;
+        }
+      }
+    }
+  }
+
+  if (!options.skipTypings) {
+    const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
+    const outputDir = getOutputDir(options);
+    const typingsFile = `${outputDir}${mainFile}.d.ts`;
+    packageJson.types ??= typingsFile;
+
+    if (options.generateExportsField) {
+      if (!packageJson.exports['.']) {
+        packageJson.exports['.'] = { types: typingsFile };
+      } else if (
+        typeof packageJson.exports['.'] === 'object' &&
+        !packageJson.exports['.'].types
+      ) {
+        packageJson.exports['.'].types = typingsFile;
+      }
+    }
   }
 
   if (hasEsmFormat) {
@@ -304,9 +338,16 @@ export function getUpdatedPackageJsonContent(
 
     if (options.generateExportsField) {
       for (const [exportEntry, filePath] of Object.entries(esmExports)) {
-        packageJson.exports[exportEntry] ??= hasCjsFormat
-          ? { import: filePath }
-          : filePath;
+        if (!packageJson.exports[exportEntry]) {
+          packageJson.exports[exportEntry] ??= hasCjsFormat
+            ? { import: filePath }
+            : filePath;
+        } else if (typeof packageJson.exports[exportEntry] === 'object') {
+          packageJson.exports[exportEntry].import ??= filePath;
+          if (!hasCjsFormat) {
+            packageJson.exports[exportEntry].default ??= filePath;
+          }
+        }
       }
     }
   }
@@ -327,24 +368,80 @@ export function getUpdatedPackageJsonContent(
 
     if (options.generateExportsField) {
       for (const [exportEntry, filePath] of Object.entries(cjsExports)) {
-        if (hasEsmFormat) {
-          packageJson.exports[exportEntry]['default'] ??= filePath;
-        } else {
-          packageJson.exports[exportEntry] ??= filePath;
+        if (!packageJson.exports[exportEntry]) {
+          packageJson.exports[exportEntry] ??= hasEsmFormat
+            ? { default: filePath }
+            : filePath;
+        } else if (typeof packageJson.exports[exportEntry] === 'object') {
+          packageJson.exports[exportEntry].default ??= filePath;
         }
       }
     }
   }
 
-  if (!options.skipTypings) {
-    const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
-    const relativeMainFileDir = getRelativeDirectoryToProjectRoot(
-      options.main,
-      options.projectRoot
-    );
-    const typingsFile = `${relativeMainFileDir}${mainFile}.d.ts`;
-    packageJson.types ??= typingsFile;
+  return packageJson;
+}
+
+function getDevelopmentExports(
+  options: Pick<
+    UpdatePackageJsonOption,
+    'additionalEntryPoints' | 'main' | 'projectRoot'
+  >
+) {
+  const mainRelativeDir = getRelativeDirectoryToProjectRoot(
+    options.main,
+    options.projectRoot
+  );
+  const exports: Exports = {
+    '.': mainRelativeDir + basename(options.main),
+  };
+
+  if (options.additionalEntryPoints?.length) {
+    const jsRegex = /\.[jt]sx?$/;
+
+    for (const file of options.additionalEntryPoints) {
+      const { ext: fileExt, name: fileName, base: baseName } = parse(file);
+      if (!jsRegex.test(fileExt)) {
+        continue;
+      }
+
+      const relativeDir = getRelativeDirectoryToProjectRoot(
+        file,
+        options.projectRoot
+      );
+      const sourceFilePath = relativeDir + baseName;
+      const entryRelativeDir = relativeDir.replace(/^\.\/src\//, './');
+      const entryFilePath = entryRelativeDir + fileName;
+      if (fileName === 'index') {
+        const barrelEntry = entryRelativeDir.replace(/\/$/, '');
+        exports[barrelEntry] = sourceFilePath;
+      }
+      exports[entryFilePath] = sourceFilePath;
+    }
   }
 
-  return packageJson;
+  return exports;
+}
+
+export function getOutputDir(
+  options: Pick<
+    UpdatePackageJsonOption,
+    | 'main'
+    | 'rootDir'
+    | 'projectRoot'
+    | 'outputFileName'
+    | 'outputPath'
+    | 'packageJsonPath'
+  >
+): string {
+  const packageJsonDir = options.packageJsonPath
+    ? dirname(options.packageJsonPath)
+    : options.outputPath;
+  const relativeOutputPath = relative(packageJsonDir, options.outputPath);
+  const relativeMainDir = options.outputFileName
+    ? dirname(options.outputFileName)
+    : relative(options.rootDir ?? options.projectRoot, dirname(options.main));
+  const outputDir = joinPathFragments(relativeOutputPath, relativeMainDir);
+
+  return outputDir === '.' ? `./` : `./${outputDir}/`;
 }

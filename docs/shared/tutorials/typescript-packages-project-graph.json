@@ -1,0 +1,56 @@
+{
+  "hash": "b403577d293fcd1162049fb6cd70752277d68eecc34268aa57452ce597b7352e",
+  "projects": [
+    {
+      "name": "@acme/animals",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@acme/utils",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@acme/zoo",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "@acme/animals": [
+      {
+        "source": "@acme/animals",
+        "target": "@acme/utils",
+        "type": "static"
+      }
+    ],
+    "@acme/utils": [],
+    "@acme/zoo": [
+      {
+        "source": "@acme/zoo",
+        "target": "@acme/animals",
+        "type": "static"
+      },
+      {
+        "source": "@acme/zoo",
+        "target": "@acme/utils",
+        "type": "static"
+      }
+    ]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "packages"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}

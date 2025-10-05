@@ -7,10 +7,40 @@
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../rollup"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../module-federation"
+    },
+    {
+      "path": "../vite"
+    },
+    {
+      "path": "../web"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "../playwright"
+    },
+    {
+      "path": "../cypress"
+    },
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

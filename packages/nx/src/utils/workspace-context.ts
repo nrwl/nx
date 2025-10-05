@@ -24,9 +24,10 @@ export function setupWorkspaceContext(workspaceRoot: string) {
 
 export async function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
-  projectRootMap: Record<string, string>
+  projectRootMap: Record<string, string>,
+  useDaemonProcess: boolean = true
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
+  if (!useDaemonProcess || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.getWorkspaceFiles(projectRootMap);
   }
@@ -54,12 +55,24 @@ export async function globWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
+  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.glob(globs, exclude);
   } else {
     return daemonClient.glob(globs, exclude);
   }
+}
+
+export async function multiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.multiGlob(globs, exclude);
+  }
+  return daemonClient.multiGlob(globs, exclude);
 }
 
 export async function hashWithWorkspaceContext(
@@ -72,6 +85,17 @@ export async function hashWithWorkspaceContext(
     return workspaceContext.hashFilesMatchingGlob(globs, exclude);
   }
   return daemonClient.hashGlob(globs, exclude);
+}
+
+export async function hashMultiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globGroups: string[][]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.hashFilesMatchingGlobs(globGroups);
+  }
+  return daemonClient.hashMultiGlob(globGroups);
 }
 
 export async function updateContextWithChangedFiles(

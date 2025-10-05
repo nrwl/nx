@@ -65,7 +65,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Set <base href> for the resulting index.html.
    */
-  baseHref?: string;
+  baseHref?: string | false;
   /**
    * Build the libraries from source. Default is `true`.
    */
@@ -80,10 +80,6 @@ export interface NxAppWebpackPluginOptions {
    * Set `crossorigin` attribute on the `script` and `link` tags.
    */
   crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
-  /**
-   * Delete the output path before building.
-   */
-  deleteOutputPath?: boolean;
   /**
    * The deploy path for the application. e.g. `/my-app/`
    */
@@ -182,7 +178,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Generate source maps.
    */
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string;
   /**
    * When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a Node environment.
    */
@@ -194,7 +190,11 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Options for the style preprocessor. e.g. `{ "includePaths": [] }` for SASS.
    */
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
   /**
    * External stylesheets that will be included with the application.
    */
@@ -211,6 +211,10 @@ export interface NxAppWebpackPluginOptions {
    * List of TypeScript Compiler Transformers Plugins.
    */
   transformers?: TransformerEntry[];
+  /**
+   * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
+   */
+  useTsconfigPaths?: boolean;
   /**
    * Generate a separate vendor chunk for 3rd party packages.
    */
@@ -231,6 +235,10 @@ export interface NxAppWebpackPluginOptions {
    * Whether to rebase absolute path for assets in postcss cli resources.
    */
   rebaseRootRelative?: boolean;
+  /**
+   * Watch buildable dependencies and rebuild when they change.
+   */
+  watchDependencies?: boolean;
 }
 
 export interface NormalizedNxAppWebpackPluginOptions

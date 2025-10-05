@@ -1,12 +1,17 @@
+---
+title: Advanced Angular Micro Frontends with Dynamic Module Federation
+description: Learn how to implement Dynamic Module Federation in Angular applications to achieve "Build once, deploy everywhere" with Nx, enabling runtime determination of remote application locations.
+---
+
 # Advanced Angular Micro Frontends with Dynamic Module Federation
 
-Dynamic Module Federation is a technique that allows an application to determine the location of its remote applications at runtime. It helps to achieve the use case of **“Build once, deploy everywhere”**.
+Dynamic Module Federation is a technique that allows an application to determine the location of its remote applications at runtime. It helps to achieve the use case of **"Build once, deploy everywhere"**.
 
-“Build once, deploy everywhere” is the concept of being able to create a single build artifact of your application and deploy it to multiple environments such as staging and production.
+"Build once, deploy everywhere" is the concept of being able to create a single build artifact of your application and deploy it to multiple environments such as staging and production.
 
 The difficulty in achieving this with a Micro Frontend Architecture using Static Module Federation is that our Remote applications will have a different location (or URL) in each environment. Previously, to account for this, we would have had to specify the deployed location of the Remote applications and rebuild the application for the target environment.
 
-This guide will walk through how the concept of “Build once, deploy everywhere” can be easily achieved in a Micro Frontend Architecture that uses Dynamic Module Federation.
+This guide will walk through how the concept of "Build once, deploy everywhere" can be easily achieved in a Micro Frontend Architecture that uses Dynamic Module Federation.
 
 ## Aim
 
@@ -16,7 +21,7 @@ The aim of this guide is three-fold. We want to be able to:
 - Transform an existing Static Module Federation setup to use Dynamic Federation
 - Generate a new Micro Frontend application that uses Dynamic Federation
 
-## What we’ll build
+## What we'll build
 
 To achieve the aims, we will do the following:
 
@@ -148,7 +153,7 @@ The key differences reside within the configuration of the Module Federation Plu
 We can see the following in the **Login** micro frontend configuration:
 
 ```ts {% fileName="apps/login/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'login',
@@ -168,7 +173,7 @@ Taking a look at each property of the configuration in turn:
 This config is then used in the `webpack.config.ts` file:
 
 ```ts {% fileName="apps/login/webpack.config.ts" %}
-import { withModuleFederation } from '@nx/angular/module-federation';
+import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 export default withModuleFederation(config, { dts: false });
@@ -177,7 +182,7 @@ export default withModuleFederation(config, { dts: false });
 We can see the following in the **Dashboard** micro frontend configuration:
 
 ```ts {% fileName="apps/dashboard/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'dashboard',
@@ -211,17 +216,17 @@ This will scaffold a new library for us to use.
 We need an Angular Service that we will use to hold state:
 
 ```shell
-nx g @nx/angular:service libs/shared/data-access-user/src/lib/user
+nx g @nx/angular:service user --project=data-access-user
 ```
 
-This will create the `libs/shared/data-access-user/src/lib/user.service.ts` file. Change its contents to match:
+This will create the `libs/shared/data-access-user/src/lib/user-auth.ts` file. Change its contents to match:
 
-```ts {% fileName="libs/shared/data-access-user/src/lib/user.service.ts" %}
+```ts {% fileName="libs/shared/data-access-user/src/lib/user-auth.ts" %}
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class UserService {
+export class UserAuth {
   private isUserLoggedIn = new BehaviorSubject(false);
   isUserLoggedIn$ = this.isUserLoggedIn.asObservable();
 
@@ -246,9 +251,9 @@ export * from './lib/user.service';
 
 ### Login Application
 
-Let's set up our `entry.component.ts` file in the **Login** application so that it renders a login form. We'll import `FormsModule` and inject our `UserService` to allow us to sign the user in:
+Let's set up our `entry.ts` file in the **Login** application so that it renders a login form. We'll import `FormsModule` and inject our `UserService` to allow us to sign the user in:
 
-```ts {% fileName="apps/login/src/app/remote-entry/entry.component.ts" %}
+```ts {% fileName="apps/login/src/app/remote-entry/entry.ts" %}
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -296,7 +301,7 @@ import { inject } from '@angular/core';
     `,
   ],
 })
-export class RemoteEntryComponent {
+export class RemoteEntry {
   private userService = inject(UserService);
   username = '';
   password = '';
@@ -334,11 +339,11 @@ For this to work, the state within `UserService` must be shared across both appl
 This helps to enforce a single version policy and reduces the risk of [Micro Frontend Anarchy](https://www.thoughtworks.com/radar/techniques/micro-frontend-anarchy).
 {% /callout %}
 
-Start by deleting the `app.component.html`, `app.component.css`, and `nx-welcome.component.ts` files from the **Dashboard** application. They will not be needed for this tutorial.
+Start by deleting the `app.html`, `app.css`, and `nx-welcome.ts` files from the **Dashboard** application. They will not be needed for this tutorial.
 
-Next, let's add our logic to the `app.component.ts` file. Change it to match the following:
+Next, let's add our logic to the `app.ts` file. Change it to match the following:
 
-```ts {% fileName="apps/dashboard/src/app/app.component.ts" %}
+```ts {% fileName="apps/dashboard/src/app/app.ts" %}
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
@@ -357,7 +362,7 @@ import { distinctUntilChanged } from 'rxjs/operators';
     <ng-template #signIn><router-outlet></router-outlet></ng-template>
   `,
 })
-export class AppComponent implements OnInit {
+export class App implements OnInit {
   private router = inject(Router);
   private userService = inject(UserService);
   isLoggedIn$ = this.userService.isUserLoggedIn$;
@@ -383,7 +388,7 @@ Finally, make sure the application routes are correctly set up:
 
 ```ts {% fileName="apps/dashboard/src/app/app.routes.ts" %}
 import { Route } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 
 export const appRoutes: Route[] = [
   {
@@ -392,7 +397,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: '',
-    component: AppComponent,
+    component: App,
   },
 ];
 ```
@@ -435,9 +440,9 @@ There are 3 steps involved with this:
 
 Perhaps one of the easiest methods of fetching the Remote Definitions at runtime is to store them in a JSON file that can be present in each environment. The Host application then only has to make a GET request to the JSON file.
 
-We’ll start by creating this file. Add a `module-federation.manifest.json` file to the `src/public/` folder in our **Dashboard** application with the following content:
+We'll start by creating this file. Add a `module-federation.manifest.json` file to the `public/` folder in our **Dashboard** application with the following content:
 
-```json {% fileName="apps/dashboard/src/public/module-federation.manifest.json" %}
+```json {% fileName="apps/dashboard/public/module-federation.manifest.json" %}
 {
   "login": "http://localhost:4201"
 }
@@ -454,7 +459,7 @@ fetch('/module-federation.manifest.json')
   .then(() => import('./bootstrap').catch((err) => console.error(err)));
 ```
 
-You’ll notice that we fetch the JSON file and provide its contents to the `setRemoteDefinitions` function we invoke next. This tells webpack where each of our remote applications has been deployed to!
+You'll notice that we fetch the JSON file and provide its contents to the `setRemoteDefinitions` function we invoke next. This tells webpack where each of our remote applications has been deployed to!
 
 ### Change how Remotes are loaded
 
@@ -463,7 +468,7 @@ At the moment, webpack is statically building our application, telling it at bui
 Open the `module-federation.config.ts` file at the root of our `apps/dashboard/` folder and set the `remotes` property to be an empty array. It should look like this:
 
 ```ts {% fileName="apps/dashboard/module-federation.config.ts" highlightLines=[5] %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'dashboard',
@@ -478,7 +483,7 @@ Next, we need to change how our application attempts to load the Remote when it 
 ```ts {% fileName="apps/dashboard/src/app/app.routes.ts" highlightLines=[2, "8-9"] %}
 import { Route } from '@angular/router';
 import { loadRemoteModule } from '@nx/angular/mf';
-import { AppComponent } from './app.component';
+import { App } from './app';
 
 export const appRoutes: Route[] = [
   {
@@ -488,7 +493,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: '',
-    component: AppComponent,
+    component: App,
   },
 ];
 ```
@@ -497,7 +502,7 @@ The `loadRemoteModule` helper method simply hides some logic that will check if 
 
 ### Summary
 
-That’s all the changes required to replace Static Module Federation with Dynamic Module Federation.
+That's all the changes required to replace Static Module Federation with Dynamic Module Federation.
 
 Running:
 
@@ -507,7 +512,7 @@ nx serve dashboard --devRemotes=login
 
 Should result in the same behaviour as before, except that our **Dashboard** application is waiting until runtime to find out the deployed location of our **Login** application.
 
-In the next section, we will see how Nx’s generators can be used to automate a lot of this process for us!
+In the next section, we will see how Nx's generators can be used to automate a lot of this process for us!
 
 ---
 
@@ -515,7 +520,7 @@ In the next section, we will see how Nx’s generators can be used to automate a
 
 Nx provides generators that aim to streamline the process of setting up a Dynamic Micro Frontend architecture.
 
-To showcase this, let’s create a new Host application that will use our previous **Login** application as well as a new **Todo** Remote application.
+To showcase this, let's create a new Host application that will use our previous **Login** application as well as a new **Todo** Remote application.
 
 ### Generate the Employee Host application
 
@@ -537,13 +542,13 @@ You should take a look at the files generated and see how the **Login** Remote a
 
 ### Generate the Todo Remote application
 
-We’re going to demonstrate how when specifying a dynamic Host when adding a new Remote application, the Remote application will be added to the Host’s Micro Frontend Manifest file correctly.
+We're going to demonstrate how when specifying a dynamic Host when adding a new Remote application, the Remote application will be added to the Host's Micro Frontend Manifest file correctly.
 
 ```shell
 nx g @nx/angular:remote apps/todo --host=employee
 ```
 
-You’ll note that this will generate the same output as the **Login** Remote application in the previous guide. There’s one difference. Because the Host application is using Dynamic Federation, the new Remote will be added to the Host’s `module-federation.manifest.json`.
+You'll note that this will generate the same output as the **Login** Remote application in the previous guide. There's one difference. Because the Host application is using Dynamic Federation, the new Remote will be added to the Host's `module-federation.manifest.json`.
 
 ### Summary
 

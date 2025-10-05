@@ -7,6 +7,12 @@
   "files": [],
   "references": [
     {
+      "path": "../utils"
+    },
+    {
+      "path": "../../packages/nx"
+    },
+    {
       "path": "./tsconfig.spec.json"
     }
   ]

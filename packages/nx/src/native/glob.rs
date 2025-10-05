@@ -1,3 +1,4 @@
+pub mod glob_files;
 mod glob_group;
 mod glob_parser;
 pub mod glob_transform;
@@ -59,6 +60,7 @@ impl NxGlobSetBuilder {
     }
 }
 
+#[derive(Debug)]
 pub struct NxGlobSet {
     included_globs: GlobSet,
     excluded_globs: GlobSet,

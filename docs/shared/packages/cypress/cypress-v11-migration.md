@@ -1,3 +1,8 @@
+---
+title: Migrating to Cypress V11
+description: A guide to migrating your Nx projects from Cypress v8/v9 to v11, including configuration changes, file renaming, and handling potential edge cases.
+---
+
 # Migrating to Cypress V11
 
 Cypress v10 introduce new features, like component testing, along with some breaking changes. Nx can help you migrate from v8 or v9 of Cypress to v10 and then to v11.

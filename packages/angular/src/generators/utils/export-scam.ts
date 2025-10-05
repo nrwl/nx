@@ -14,6 +14,7 @@ export type GenerationOptions = {
   filePath: string;
   name: string;
   projectName: string;
+  modulePath: string;
   export?: boolean;
   inlineScam?: boolean;
 };
@@ -63,13 +64,9 @@ export function exportScam(tree: Tree, options: GenerationOptions): void {
     export * from '${relativePathFromEntryPoint}';`;
 
   if (!options.inlineScam) {
-    const moduleFilePath = joinPathFragments(
-      options.directory,
-      `${names(options.name).fileName}.module.ts`
-    );
     const relativePathFromModule = getRelativeImportToFile(
       entryPointPath,
-      moduleFilePath
+      options.modulePath
     );
     updatedEntryPointContent = stripIndents`${updatedEntryPointContent}
         export * from '${relativePathFromModule}';`;

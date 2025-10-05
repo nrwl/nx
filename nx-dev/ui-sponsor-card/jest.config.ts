@@ -9,4 +9,12 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   preset: '../../jest.preset.js',
   testEnvironment: 'jsdom',
+  moduleNameMapper: {
+    // Override for nx-dev packages - point to packages directory
+    '^@nx/devkit$': '<rootDir>/../../packages/devkit/index.ts',
+    '^@nx/devkit/testing$': '<rootDir>/../../packages/devkit/testing.ts',
+    '^@nx/devkit/internal-testing-utils$':
+      '<rootDir>/../../packages/devkit/internal-testing-utils.ts',
+    '^@nx/devkit/src/(.*)$': '<rootDir>/../../packages/devkit/src/$1',
+  },
 };

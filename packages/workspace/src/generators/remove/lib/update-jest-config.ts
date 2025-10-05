@@ -26,10 +26,7 @@ function isUsingUtilityFunction(host: Tree) {
 
   const rootConfig = host.read(rootConfigPath, 'utf-8');
 
-  return (
-    rootConfig.includes('getJestProjects()') ||
-    rootConfig.includes('getJestProjectsAsync()')
-  );
+  return rootConfig.includes('getJestProjectsAsync()');
 }
 
 /**

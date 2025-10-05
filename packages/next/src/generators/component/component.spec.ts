@@ -3,7 +3,6 @@ import { componentGenerator } from './component';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree } from '@nx/devkit';
 import { libraryGenerator } from '@nx/react';
-import { Linter } from '@nx/eslint';
 
 describe('component', () => {
   let tree: Tree;
@@ -18,7 +17,7 @@ describe('component', () => {
     });
     await libraryGenerator(tree, {
       directory: libName,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       skipFormat: true,
       skipTsConfig: false,
@@ -30,6 +29,19 @@ describe('component', () => {
     await componentGenerator(tree, {
       name: 'hello',
       path: `${appName}/components/hello/hello`,
+      style: 'css',
+    });
+
+    expect(tree.exists('my-app/components/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-app/components/hello/hello.spec.tsx')).toBeTruthy();
+    expect(
+      tree.exists('my-app/components/hello/hello.module.css')
+    ).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await componentGenerator(tree, {
+      path: `${appName}/components/hello/hello.tsx`,
       style: 'css',
     });
 

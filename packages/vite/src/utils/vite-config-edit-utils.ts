@@ -99,9 +99,35 @@ function handleBuildOrTestNode(
           configContentObject
         )) {
           // NOTE: Watch for formatting.
-          updatedPropsString += `    '${propName}': ${JSON.stringify(
-            propValue
-          )},\n`;
+          if (propName === 'coverage') {
+            let propString = `    '${propName}': {\n`;
+            for (const [pName, pValue] of Object.entries(propValue)) {
+              if (pName === 'provider') {
+                propString += `    '${pName}': ${pValue} as const,\n`;
+              } else {
+                propString += `    '${pName}': '${pValue}',\n`;
+              }
+            }
+            propString += `}`;
+            updatedPropsString += `${propString}\n`;
+          } else if (propName === 'lib') {
+            let propString = `    '${propName}': {\n`;
+            for (const [pName, pValue] of Object.entries(propValue)) {
+              if (pName === 'formats') {
+                propString += `      '${pName}': [${pValue
+                  .map((format: string) => `'${format}' as const`)
+                  .join(', ')}],\n`;
+              } else {
+                propString += `      '${pName}': ${JSON.stringify(pValue)},\n`;
+              }
+            }
+            propString += `    },`;
+            updatedPropsString += `${propString}\n`;
+          } else {
+            updatedPropsString += `    '${propName}': ${JSON.stringify(
+              propValue
+            )},\n`;
+          }
         }
         return `${name}: {
 ${updatedPropsString}  }`;

@@ -1,7 +1,6 @@
 import { readJson, Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
-import { Linter } from '../../utils/lint';
 import {
   angularCliVersion,
   nxVersion,
@@ -20,7 +19,7 @@ const defaultOptions: Omit<
 > = {
   preset: Preset.Apps,
   skipInstall: false,
-  linter: Linter.EsLint,
+  linter: 'eslint',
   defaultBase: 'main',
 };
 
@@ -109,7 +108,6 @@ describe('new', () => {
       const { devDependencies } = readJson(tree, 'my-workspace/package.json');
       expect(devDependencies).toStrictEqual({
         '@nx/react': nxVersion,
-        '@nx/cypress': nxVersion,
         '@nx/vite': nxVersion,
         '@nx/workspace': nxVersion,
         nx: nxVersion,

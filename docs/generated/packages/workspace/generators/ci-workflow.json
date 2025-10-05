@@ -38,6 +38,12 @@
         "default": "CI",
         "x-prompt": "How should we name your workflow?",
         "pattern": "^[a-zA-Z].*$"
+      },
+      "useRunMany": {
+        "type": "boolean",
+        "description": "Use 'nx run-many' instead of 'nx affected' in the generated CI workflow.",
+        "default": false,
+        "hidden": true
       }
     },
     "required": ["ci", "name"],

@@ -1,3 +1,8 @@
+---
+title: 'Workspace Generators'
+description: 'Learn how to migrate from workspace generators to local generators in Nx plugins for better code generation management.'
+---
+
 # Workspace Generators
 
 In Nx 13.10, we introduced the ability to run generators from Nx plugins in the workspace they were created in.

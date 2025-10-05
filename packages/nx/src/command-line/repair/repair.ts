@@ -14,7 +14,6 @@ export async function repair(
         if (!skip) {
           agg.push({
             package: 'nx',
-            cli: 'nx',
             name,
             description: migration.description,
             version: migration.version,
@@ -26,7 +25,7 @@ export async function repair(
     );
 
     const migrations = [...nxMigrations, ...extraMigrations];
-    const migrationsThatMadeNoChanges = await executeMigrations(
+    const { migrationsWithNoChanges, nextSteps } = await executeMigrations(
       process.cwd(),
       migrations,
       args.verbose,
@@ -34,13 +33,19 @@ export async function repair(
       ''
     );
 
-    if (migrationsThatMadeNoChanges.length < migrations.length) {
+    if (migrationsWithNoChanges.length < migrations.length) {
       output.success({
         title: `Successfully repaired your configuration. This workspace is up to date!`,
       });
     } else {
       output.success({
         title: `No changes were necessary. This workspace is up to date!`,
+      });
+    }
+    if (nextSteps.length) {
+      output.log({
+        title: 'Some repairs have additional information, see below.',
+        bodyLines: nextSteps.map((line) => `  - ${line}`),
       });
     }
   });

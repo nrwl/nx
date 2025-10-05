@@ -282,7 +282,8 @@ export function findProjectsNpmDependencies(
     seen,
     ignoredDependencies,
     dependencyInputs,
-    selfInputs
+    selfInputs,
+    false
   );
 
   return npmDeps;
@@ -296,7 +297,8 @@ function findAllNpmDeps(
   seen: Set<string>,
   ignoredDependencies: string[],
   dependencyPatterns: string[],
-  rootPatterns?: string[]
+  rootPatterns?: string[],
+  isTransitiveDependency = false
 ): void {
   if (seen.has(projectNode.name)) return;
 
@@ -305,7 +307,9 @@ function findAllNpmDeps(
   const projectFiles = filterUsingGlobPatterns(
     projectNode.data.root,
     projectFileMap[projectNode.name] || [],
-    rootPatterns ?? dependencyPatterns
+    isTransitiveDependency
+      ? ['{projectRoot}/**/*']
+      : rootPatterns ?? dependencyPatterns
   );
 
   const projectDependencies = new Set<string>();
@@ -347,7 +351,9 @@ function findAllNpmDeps(
           npmDeps,
           seen,
           ignoredDependencies,
-          dependencyPatterns
+          dependencyPatterns,
+          undefined,
+          true
         );
       }
     }

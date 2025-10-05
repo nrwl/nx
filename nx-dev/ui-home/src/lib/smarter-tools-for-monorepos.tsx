@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
-import { FitText } from '@nx/nx-dev/ui-animations';
+import { FitText } from '@nx/nx-dev-ui-animations';
 import {
   ButtonLink,
   SectionHeading,
   Strong,
   TextLink,
-} from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { motion } from 'framer-motion';
 import {
   AngularIcon,
@@ -42,7 +42,7 @@ import {
   ViteIcon,
   VueIcon,
   WebpackIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export function SmarterToolsForMonorepos(): JSX.Element {
   return (
@@ -135,7 +135,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/npm-workspaces-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-2 sm:p-4"
@@ -385,20 +385,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                     >
                       <span className="absolute inset-0" />
                       <RustIcon
-                        aria-hidden="true"
-                        className="h-full w-full shrink-0"
-                      />
-                    </Link>
-                  </Card>
-                  <Card>
-                    <Link
-                      href="/getting-started/tutorials/vue-standalone-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
-                      prefetch={false}
-                      title="Nx with Vue"
-                      className="h-full w-full p-2 sm:p-4"
-                    >
-                      <span className="absolute inset-0" />
-                      <VueIcon
                         aria-hidden="true"
                         className="h-full w-full shrink-0"
                       />
@@ -675,7 +661,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/npm-workspaces-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-2 sm:p-4"
@@ -864,20 +850,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                 >
                   <span className="absolute inset-0" />
                   <RustIcon
-                    aria-hidden="true"
-                    className="h-full w-full shrink-0"
-                  />
-                </Link>
-              </Card>
-              <Card>
-                <Link
-                  href="/getting-started/tutorials/vue-standalone-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
-                  prefetch={false}
-                  title="Nx with Vue"
-                  className="h-full w-full p-2 sm:p-4"
-                >
-                  <span className="absolute inset-0" />
-                  <VueIcon
                     aria-hidden="true"
                     className="h-full w-full shrink-0"
                   />

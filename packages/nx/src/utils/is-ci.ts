@@ -1,6 +1,9 @@
 export function isCI() {
+  if (process.env.CI === 'false') {
+    return false;
+  }
   return (
-    (process.env.CI && process.env.CI !== 'false') ||
+    process.env.CI ||
     process.env.TF_BUILD === 'true' ||
     process.env.GITHUB_ACTIONS === 'true' ||
     process.env.BUILDKITE === 'true' ||
@@ -13,7 +16,10 @@ export function isCI() {
     !!process.env.GITLAB_CI ||
     !!process.env.HEROKU_TEST_RUN_ID ||
     !!process.env.BUILD_ID ||
+    !!process.env.BUILD_NUMBER ||
     !!process.env.BUILD_BUILDID ||
-    !!process.env.TEAMCITY_VERSION
+    !!process.env.TEAMCITY_VERSION ||
+    !!process.env.JENKINS_URL ||
+    !!process.env.HUDSON_URL
   );
 }

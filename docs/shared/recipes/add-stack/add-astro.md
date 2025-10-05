@@ -1,3 +1,8 @@
+---
+title: Add an Astro Project
+description: Learn how to integrate Astro with Nx, including setting up caching, running tasks, and using other Nx plugins alongside your Astro application.
+---
+
 # Add an Astro Project
 
 The code for this example is available on GitHub:
@@ -58,7 +63,7 @@ Because Nx [understands package.json scripts](/reference/project-configuration#p
 nx build
 ```
 
-If you plan on using your package manager to run the tasks, then you'll want to use [`nx exec`](/nx-api/nx/documents/exec) to wrap the command
+If you plan on using your package manager to run the tasks, then you'll want to use [`nx exec`](/reference/core-api/nx/documents/exec) to wrap the command
 
 i.e.
 
@@ -76,7 +81,7 @@ If you plan to only run tasks with the Nx CLI, then you can omit `nx exec`. The 
 
 ## Using Other Plugins
 
-With Nx plugins, you can create projects to help break out functionality of the project. For example, using the [`@nx/js:library`](/nx-api/js/generators/library#@nx/js:library) to contain our reusable `.astro` components.
+With Nx plugins, you can create projects to help break out functionality of the project. For example, using the [`@nx/js:library`](/technologies/typescript/api/generators/library#@nx/js:library) to contain our reusable `.astro` components.
 
 Install `@nx/js` plugin.
 
@@ -87,10 +92,6 @@ nx add @nx/js@<nx-version>
 ```
 
 Then generate a project
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```{% command="nx g @nx/js:lib libs/ui --minimal" path="~/astro-app" %}
 NX  Generating @nx/js:library

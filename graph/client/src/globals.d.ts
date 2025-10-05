@@ -33,6 +33,9 @@ export declare global {
       data: any
     ) => Interpreter<ProjectDetailsState, any, ProjectDetailsEvents>;
     renderError?: (data: any) => void;
+    renderMigrate?: (
+      data: any
+    ) => Interpreter<MigrateState, any, MigrateEvents>;
   }
 }
 declare module 'cytoscape' {

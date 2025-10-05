@@ -8,7 +8,7 @@ import {
   runCLI,
   runCommand,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('nx init (NPM repo - legacy)', () => {
   const pmc = getPackageManagerCommand({
@@ -42,7 +42,7 @@ describe('nx init (NPM repo - legacy)', () => {
         pmc.runUninstalledPackage
       } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`
     );
-    expect(output).toContain('Run it again to replay the cached computation.');
+    expect(output).toContain('Learn more about what to do next');
 
     expect(runCLI('echo')).toContain('123');
     renameFile('nx.json', 'nx.json.old');

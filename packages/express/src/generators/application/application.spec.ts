@@ -1,4 +1,10 @@
-import { readJson, Tree } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -132,6 +138,373 @@ describe('app', () => {
         'src/**/*.spec.js',
         'src/**/*.test.js',
       ]);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace();
+      updateJson(appTree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(appTree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(appTree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        useProjectJson: false,
+      } as Schema);
+
+      expect(readJson(appTree, 'tsconfig.json').references)
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBeUndefined();
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+          "dependencies",
+        ]
+      `);
+      expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "express": "^4.21.2",
+          },
+          "name": "@proj/myapp",
+          "nx": {
+            "targets": {
+              "build": {
+                "configurations": {
+                  "development": {
+                    "outputHashing": "none",
+                  },
+                  "production": {},
+                },
+                "defaultConfiguration": "production",
+                "executor": "@nx/webpack:webpack",
+                "options": {
+                  "assets": [
+                    "myapp/src/assets",
+                  ],
+                  "compiler": "tsc",
+                  "main": "myapp/src/main.ts",
+                  "outputPath": "myapp/dist",
+                  "target": "node",
+                  "tsConfig": "myapp/tsconfig.app.json",
+                  "webpackConfig": "myapp/webpack.config.js",
+                },
+                "outputs": [
+                  "{options.outputPath}",
+                ],
+              },
+              "copy-workspace-modules": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:copy-workspace-modules",
+                "options": {
+                  "buildTarget": "build",
+                },
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
+                ],
+              },
+              "lint": {
+                "executor": "@nx/eslint:lint",
+              },
+              "prune": {
+                "dependsOn": [
+                  "prune-lockfile",
+                  "copy-workspace-modules",
+                ],
+                "executor": "nx:noop",
+              },
+              "prune-lockfile": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:prune-lockfile",
+                "options": {
+                  "buildTarget": "build",
+                },
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
+                ],
+              },
+              "serve": {
+                "configurations": {
+                  "development": {
+                    "buildTarget": "@proj/myapp:build:development",
+                  },
+                  "production": {
+                    "buildTarget": "@proj/myapp:build:production",
+                  },
+                },
+                "continuous": true,
+                "defaultConfiguration": "development",
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:node",
+                "options": {
+                  "buildTarget": "@proj/myapp:build",
+                  "runBuildTargetDependencies": false,
+                },
+              },
+              "test": {
+                "executor": "@nx/jest:jest",
+                "options": {
+                  "jestConfig": "myapp/jest.config.ts",
+                  "passWithNoTests": true,
+                },
+                "outputs": [
+                  "{projectRoot}/test-output/jest/coverage",
+                ],
+              },
+            },
+          },
+          "private": true,
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(appTree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'myapp/tsconfig.app.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "dist",
+            "rootDir": "src",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+            "types": [
+              "node",
+              "express",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'myapp/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        name: 'myapp',
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+          "dependencies",
+        ]
+      `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        useProjectJson: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(appTree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "tags": [],
+          "targets": {
+            "build": {
+              "configurations": {
+                "development": {
+                  "outputHashing": "none",
+                },
+                "production": {},
+              },
+              "defaultConfiguration": "production",
+              "executor": "@nx/webpack:webpack",
+              "options": {
+                "assets": [
+                  "myapp/src/assets",
+                ],
+                "compiler": "tsc",
+                "main": "myapp/src/main.ts",
+                "outputPath": "myapp/dist",
+                "target": "node",
+                "tsConfig": "myapp/tsconfig.app.json",
+                "webpackConfig": "myapp/webpack.config.js",
+              },
+              "outputs": [
+                "{options.outputPath}",
+              ],
+            },
+            "copy-workspace-modules": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+              "outputs": [
+                "{workspaceRoot}/myapp/dist/workspace_modules",
+              ],
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+            },
+            "prune": {
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
+              },
+              "outputs": [
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
+              ],
+            },
+            "serve": {
+              "configurations": {
+                "development": {
+                  "buildTarget": "@proj/myapp:build:development",
+                },
+                "production": {
+                  "buildTarget": "@proj/myapp:build:production",
+                },
+              },
+              "continuous": true,
+              "defaultConfiguration": "development",
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:node",
+              "options": {
+                "buildTarget": "@proj/myapp:build",
+                "runBuildTargetDependencies": false,
+              },
+            },
+            "test": {
+              "executor": "@nx/jest:jest",
+              "options": {
+                "jestConfig": "myapp/jest.config.ts",
+                "passWithNoTests": true,
+              },
+              "outputs": [
+                "{projectRoot}/test-output/jest/coverage",
+              ],
+            },
+          },
+        }
+      `);
+      expect(readJson(appTree, 'myapp/package.json').nx).toBeUndefined();
     });
   });
 });

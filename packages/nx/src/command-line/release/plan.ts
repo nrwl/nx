@@ -12,8 +12,8 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/handle-errors';
+import { output } from '../../utils/output';
 import { PlanOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -77,7 +77,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     // If no release groups have version plans enabled, it doesn't make sense to use the plan command only to set yourself up for an error at release time
-    if (!releaseGroups.some((group) => group.versionPlans === true)) {
+    if (!releaseGroups.some((group) => !!group.versionPlans)) {
       if (releaseGroups.length === 1) {
         output.warn({
           title: `Version plans are not enabled in your release configuration`,
@@ -319,10 +319,12 @@ async function promptForVersion(message: string): Promise<string> {
       },
     ]);
     return reply.version;
-  } catch (e) {
+  } catch {
     output.log({
       title: 'Cancelled version plan creation.',
     });
+    // Ensure the cursor is always restored before exiting
+    process.stdout.write('\u001b[?25h');
     process.exit(0);
   }
 }

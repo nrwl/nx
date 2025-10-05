@@ -1,21 +1,23 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
-import {
-  babelJestVersion,
-  jestTypesVersion,
-  jestVersion,
-  nxVersion,
-  swcJestVersion,
-  tsJestVersion,
-  tslibVersion,
-  tsNodeVersion,
-  typesNodeVersion,
-} from '../../../utils/versions';
+import { versions } from '../../../utils/versions';
 import type { NormalizedJestProjectSchema } from '../schema';
 
 export function ensureDependencies(
   tree: Tree,
   options: Partial<NormalizedJestProjectSchema>
 ) {
+  const {
+    babelJestVersion,
+    jestTypesVersion,
+    jestVersion,
+    nxVersion,
+    swcJestVersion,
+    tsJestVersion,
+    tslibVersion,
+    tsNodeVersion,
+    typesNodeVersion,
+  } = versions(tree);
+
   const dependencies: Record<string, string> = {
     tslib: tslibVersion,
   };
@@ -24,6 +26,8 @@ export function ensureDependencies(
     // jest will throw an error if it's not installed
     // even if not using it in overriding transformers
     'ts-jest': tsJestVersion,
+    // peer dependency of ts-jest
+    'jest-util': jestVersion,
   };
 
   if (options.testEnvironment !== 'none') {
@@ -44,5 +48,11 @@ export function ensureDependencies(
     devDeps['@swc/jest'] = swcJestVersion;
   }
 
-  return addDependenciesToPackageJson(tree, dependencies, devDeps);
+  return addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDeps,
+    undefined,
+    options.keepExistingVersions
+  );
 }

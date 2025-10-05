@@ -27,51 +27,6 @@
 ```
 
 {% /tab %}
-{% tab label="Inline libraries" %}
-
-`@nx/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.
-
-```json {% fileName="libs/ts-lib/project.json" %}
-{
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "external": "all"
-    }
-  }
-}
-```
-
-```shell
-npx nx build ts-lib --external=all
-```
-
-`@nx/js:tsc` can also inline buildable libraries by setting `external: 'none'`
-
-```json {% fileName="libs/ts-lib/project.json" %}
-{
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "external": "none"
-    }
-  }
-}
-```
-
-```shell
-npx nx build ts-lib --external=none
-```
-
-{% /tab %}
 {% tab label="Batch mode execution" %}
 
 {% callout type="check" title="Available since Nx 16.6.0" %}
@@ -85,7 +40,7 @@ Executing tasks in batch mode is an experimental feature.
 {% /callout %}
 
 {% callout type="info" title="Requirements" %}
-Building a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects to be buildable and built using the `@nx/js:tsc` executor.
+Building a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects (excluding implicit dependencies) to be buildable and built using the `@nx/js:tsc` executor.
 {% /callout %}
 
 To run your builds using the batch implementation, pass in `--batch` flag:

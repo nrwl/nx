@@ -1,3 +1,8 @@
+---
+title: JavaScript and TypeScript
+description: Learn how to use Nx with both JavaScript and TypeScript, including how to generate JS files, mix languages in your workspace, and build TypeScript packages with advanced features.
+---
+
 # JavaScript and TypeScript
 
 Nx is a general-purpose build system and a general-purpose CLI. It works with JavaScript, TypeScript, Java, C#, Go, etc.. The core plugins Nx comes with do work best with JavaScript or TypeScript.
@@ -15,4 +20,4 @@ Regardless whether you use JavaScript or TypeScript, you will have a `tsconfig.b
 
 ## Interested in building and distributing TypeScript packages?
 
-You might want to check out the `@nx/js` package which comes with advanced TypeScript support, including [SWC](https://swc.rs/) and more. Find out more in the [plugin documentation](/nx-api/js).
+You might want to check out the `@nx/js` package which comes with advanced TypeScript support, including [SWC](https://swc.rs/) and more. Find out more in the [plugin documentation](/technologies/typescript/introduction).

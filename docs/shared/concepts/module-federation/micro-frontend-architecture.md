@@ -1,10 +1,15 @@
+---
+title: Micro Frontend Architecture
+description: Explore how Nx supports Micro Frontend architecture with Module Federation, enabling independent deployment while managing associated challenges.
+---
+
 # Micro Frontend Architecture
 
-Nx provides out-of-the-box [Module Federation](/concepts/module-federation/faster-builds-with-module-federation) support to both
+Nx provides out-of-the-box [Module Federation](/technologies/module-federation/concepts/faster-builds-with-module-federation) support to both
 React and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent
 deployability_.
 
-If you have not read the [Module Federation guide](/concepts/module-federation/faster-builds-with-module-federation)
+If you have not read the [Module Federation guide](/technologies/module-federation/concepts/faster-builds-with-module-federation)
 yet, we recommend that you read it
 before continuing with this MFE guide.
 
@@ -19,7 +24,7 @@ of MFEs and decide whether it makes sense for your own teams.
   logic that breaks compatibility with remotes.
 
 If you are looking at optimizing builds and do not need independent deployments, we recommend reading our guide on
-[Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation).
+[Faster Builds with Module Federation](/technologies/module-federation/concepts/faster-builds-with-module-federation).
 
 If you need to use MFEs, keep reading, and we'll examine the architecture and strategies to deal with shared libraries
 and
@@ -33,7 +38,7 @@ With MFE architecture, a large application is split into:
 2. **Remote** applications, which handle a single domain or feature.
 
 In a normal Module Federation setup,
-we [recommend setting up implicit dependencies](/concepts/module-federation/faster-builds-with-module-federation#architectural-overview)
+we [recommend setting up implicit dependencies](/technologies/module-federation/concepts/faster-builds-with-module-federation#architectural-overview)
 from the host application to remote applications. However, in an MFE architecture you _do not_ want these dependencies
 to exist between host and remotes.
 
@@ -69,9 +74,8 @@ nx g @nx/angular:remote apps/about --host=shell
 {% /tabs %}
 
 That is! You can now run `nx serve shell` to develop on the `shell` application, while keeping all remotes static. To
-develop on one or more remote applications, pass the `--devRemotes` option.
-
-e.g. `nx serve shell --devRemotes=cart,shop`.
+develop on one or more remote applications, you can run `nx serve shop` or `nx run-many -t serve -p shop,cart` to start
+both remotes. The remotes' `serve` target depends on the `shell:serve` target, and therefore shell will be started automatically.
 
 ## Deployment strategies
 
@@ -80,7 +84,7 @@ How applications are deployed depends on the teams and organizational requiremen
 1. À la carte deployments - Each application is deployed according to a release schedule, and can have different cadences.
 2. Affected deployments - When changes are merged, use Nx to test and deploy the affected applications automatically.
 
-Often times, teams mix both approach so deployments to staging (or other shared environments) are automatic. Then,
+Often times, teams mix both approaches so deployments to staging (or other shared environments) are automatic. Then,
 promotion from staging to production occurs on a set cadence (e.g. weekly releases). It is also recommended to agree on
 a process to handle changes to core libraries (i.e. ones that are shared between applications). Since the core changes
 affect all applications, it also blocks all other releases, thus should not occur too frequently.
@@ -92,7 +96,7 @@ in case of a bad deployment.
 ## Shared libraries
 
 Since deployments with MFEs are not atomic, there is a chance that shared libraries -- both external (npm) and workspace --
-between the host and remotes are mismatched. The default the Nx setup configures all libraries as singletons, which requires
+between the host and remotes are mismatched. The default Nx setup configures all libraries as singletons, which requires
 that all affected applications be deployed for any given changeset, and makes à la carte deployments riskier.
 
 There are mitigation strategies that can minimize mismatch errors. One such strategy is to share as little as possible
@@ -101,7 +105,7 @@ between applications.
 For example, you can create a base configuration file that only shares core libraries that _have_ to be shared.
 
 ```javascript {% fileName="module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
 const coreLibraries = new Set([
@@ -131,7 +135,7 @@ export default config;
 Then, in the `shell` and remote applications, you can extend from the base configuration.
 
 ```javascript {% fileName="apps/shell/module-federation.config.ts" %}
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 import baseConfig from '../../module-federation.config';
 
 export const config: ModuleFederationConfig = {
@@ -144,7 +148,7 @@ export default config;
 ```
 
 {% callout type="note" title="More details" %}
-You can return any configuration [object that webpack's Module Federation supports](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+You can return any configuration [object that webpack/rspack's Module Federation supports](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
 {% /callout %}
 
 There are downsides to not sharing a library (such as increasing network traffic due to duplication), so consider what

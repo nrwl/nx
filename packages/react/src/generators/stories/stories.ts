@@ -1,24 +1,24 @@
-import componentStoryGenerator from '../component-story/component-story';
+import {
+  formatFiles,
+  getProjects,
+  joinPathFragments,
+  ProjectConfiguration,
+  Tree,
+  visitNotIgnoredFiles,
+} from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import {
+  getProjectSourceRoot,
+  getProjectType,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { minimatch } from 'minimatch';
+import { basename, join } from 'path';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
-import {
-  addDependenciesToPackageJson,
-  ensurePackage,
-  formatFiles,
-  GeneratorCallback,
-  getProjects,
-  joinPathFragments,
-  ProjectConfiguration,
-  runTasksInSerial,
-  Tree,
-  visitNotIgnoredFiles,
-} from '@nx/devkit';
-import { basename, join } from 'path';
-import { minimatch } from 'minimatch';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { nxVersion } from '../../utils/versions';
+import { getUiFramework } from '../../utils/framework';
+import componentStoryGenerator from '../component-story/component-story';
 
 let tsModule: typeof import('typescript');
 
@@ -27,6 +27,7 @@ export interface StorybookStoriesSchema {
   interactionTests?: boolean;
   js?: boolean;
   ignorePaths?: string[];
+  uiFramework?: string;
   skipFormat?: boolean;
 }
 
@@ -35,7 +36,7 @@ export async function projectRootPath(
   config: ProjectConfiguration
 ): Promise<string> {
   let projectDir: string;
-  if (config.projectType === 'application') {
+  if (getProjectType(tree, config.root, config.projectType) === 'application') {
     const isNextJs = await isNextJsProject(tree, config);
     if (isNextJs) {
       // Next.js apps
@@ -47,8 +48,10 @@ export async function projectRootPath(
   } else if (config.projectType == 'library') {
     // libs/test-lib/src/lib
     projectDir = 'lib';
+  } else {
+    projectDir = '.';
   }
-  return joinPathFragments(config.sourceRoot, projectDir);
+  return joinPathFragments(getProjectSourceRoot(config, tree), projectDir);
 }
 
 export function containsComponentDeclaration(
@@ -79,16 +82,12 @@ export function containsComponentDeclaration(
 
 export async function createAllStories(
   tree: Tree,
-  projectName: string,
-  interactionTests: boolean,
-  js: boolean,
-  projects: Map<string, ProjectConfiguration>,
-  projectConfiguration: ProjectConfiguration,
-  ignorePaths?: string[]
+  schema: StorybookStoriesSchema,
+  projectConfiguration: ProjectConfiguration
 ) {
   const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
 
-  const { sourceRoot, root } = projectConfiguration;
+  const sourceRoot = getProjectSourceRoot(projectConfiguration, tree);
   let componentPaths: string[] = [];
 
   const projectPath = await projectRootPath(tree, projectConfiguration);
@@ -96,7 +95,7 @@ export async function createAllStories(
     // Ignore private files starting with "_".
     if (basename(path).startsWith('_')) return;
 
-    if (ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
+    if (schema.ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
 
     if (
       (path.endsWith('.tsx') && !path.endsWith('.spec.tsx')) ||
@@ -119,7 +118,10 @@ export async function createAllStories(
 
   await Promise.all(
     componentPaths.map(async (componentPath) => {
-      const relativeCmpDir = componentPath.replace(join(sourceRoot, '/'), '');
+      const relativeCmpDir = componentPath.replace(
+        `${sourceRoot.replace(/^\.\//, '')}/`,
+        ''
+      );
 
       if (!containsComponentDeclaration(tree, componentPath)) {
         return;
@@ -127,9 +129,10 @@ export async function createAllStories(
 
       await componentStoryGenerator(tree, {
         componentPath: relativeCmpDir,
-        project: projectName,
+        project: schema.project,
+        interactionTests: schema.interactionTests,
+        uiFramework: schema.uiFramework,
         skipFormat: true,
-        interactionTests,
       });
     })
   );
@@ -142,31 +145,12 @@ export async function storiesGenerator(
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
   schema.interactionTests = schema.interactionTests ?? true;
-  await createAllStories(
-    host,
-    schema.project,
-    schema.interactionTests,
-    schema.js,
-    projects,
-    projectConfiguration,
-    schema.ignorePaths
-  );
-
-  const tasks: GeneratorCallback[] = [];
-
-  if (schema.interactionTests) {
-    const { interactionTestsDependencies, addInteractionsInAddons } =
-      ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
-    tasks.push(
-      addDependenciesToPackageJson(host, {}, interactionTestsDependencies())
-    );
-    addInteractionsInAddons(host, projectConfiguration);
-  }
+  schema.uiFramework ??= getUiFramework(host, schema.project);
+  await createAllStories(host, schema, projectConfiguration);
 
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
-  return runTasksInSerial(...tasks);
 }
 
 async function isNextJsProject(tree: Tree, config: ProjectConfiguration) {

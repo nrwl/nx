@@ -20,7 +20,7 @@ export abstract class BuilderMigrator extends Migrator {
 
   constructor(
     tree: Tree,
-    public readonly builderName: string,
+    public readonly possibleBuilderNames: string[],
     public readonly rootFileType: WorkspaceRootFileType | undefined,
     project: ProjectMigrationInfo,
     projectConfig: ProjectConfiguration,
@@ -40,9 +40,9 @@ export abstract class BuilderMigrator extends Migrator {
     // expanding what's supported.
     if (this.targets.size > 1) {
       errors.push({
-        message: `There is more than one target using the builder "${
-          this.builderName
-        }": ${arrayToString([
+        message: `There is more than one target using the builder${
+          this.possibleBuilderNames.length > 1 ? 's' : ''
+        } ${arrayToString(this.possibleBuilderNames)}: ${arrayToString([
           ...this.targets.keys(),
         ])}. This is not currently supported by the automated migration. These targets will be skipped.`,
         hint: 'Make sure to manually migrate their configuration and any possible associated files.',
@@ -61,7 +61,7 @@ export abstract class BuilderMigrator extends Migrator {
     for (const [name, target] of Object.entries(
       this.projectConfig.targets ?? {}
     )) {
-      if (target.executor === this.builderName) {
+      if (this.possibleBuilderNames.includes(target.executor)) {
         this.targets.set(name, target);
       }
     }

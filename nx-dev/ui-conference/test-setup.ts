@@ -1,4 +1,4 @@
-export class MockPerformanceObserver implements PerformanceObserver {
+export class MockPerformanceObserver {
   disconnect() {
     //empty
   }

@@ -1,3 +1,8 @@
+---
+title: Nx ESLint Plugin
+description: An overview of the @nx/eslint-plugin package, which provides recommended ESLint configurations and Nx-specific rules for enforcing module boundaries and dependency checks.
+---
+
 The `@nx/eslint-plugin` package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as the following Nx-specific ESLint rules:
 
 - [enforce-module-boundaries](#enforce-module-boundaries-rule)
@@ -13,26 +18,11 @@ Make sure to install the `@nx/eslint-plugin` version that matches the version of
 
 In any Nx workspace, you can install `@nx/eslint-plugin` by running the following commands if the package is not already installed:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/eslint-plugin
 ```
 
 This will install the correct version of `@nx/eslint-plugin`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/eslint-plugin` package with your package manager.
-
-```shell
-npm add -D @nx/eslint-plugin
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Included plugins
 
@@ -65,8 +55,8 @@ You can also use `@nx/react` which includes all three `@nx/react-*` plugins
 
 ### Enforce Module Boundaries rule
 
-The `enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps prevent unplanned cross-dependencies. Read more about it on a [dedicated page](/nx-api/eslint-plugin/documents/enforce-module-boundaries).
+The `enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps prevent unplanned cross-dependencies. Read more about it on a [dedicated page](/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries).
 
 ### Dependency Checks rule
 
-The `@nx/dependency-checks` ESLint rule enables you to discover mismatches between dependencies specified in a project's `package.json` and the dependencies that your project actually depends on. Read more about it on a [dedicated page](/nx-api/eslint-plugin/documents/dependency-checks).
+The `@nx/dependency-checks` ESLint rule enables you to discover mismatches between dependencies specified in a project's `package.json` and the dependencies that your project actually depends on. Read more about it on a [dedicated page](/technologies/eslint/eslint-plugin/recipes/dependency-checks).

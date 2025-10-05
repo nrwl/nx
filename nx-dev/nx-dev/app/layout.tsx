@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import type { ReactNode } from 'react';
+import Script from 'next/script';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-
+// import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
 import '../styles/main.css';
+import { FrontendObservability } from '../lib/components/frontend-observability';
 
 // Metadata for the entire site
 export const metadata: Metadata = {
@@ -36,6 +39,23 @@ export const metadata: Metadata = {
       rel: 'mask-icon',
     },
   ],
+  alternates: {
+    types: {
+      'application/rss+xml': '/blog/rss.xml',
+      'application/atom+xml': '/blog/atom.xml',
+    },
+  },
+  // Add robots directive when NEXT_PUBLIC_NO_INDEX is set
+  ...(process.env.NEXT_PUBLIC_NO_INDEX === 'true' && {
+    robots: {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
+  }),
 };
 
 // Viewport settings for the entire site
@@ -48,20 +68,40 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   const gaMeasurementId = 'UA-88380372-10';
+  const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
+      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+        <Script
+          id="Cookiebot"
+          src="https://consent.cookiebot.com/uc.js"
+          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
+          data-blockingmode="auto"
+          type="text/javascript"
+          strategy="beforeInteractive"
+        />
+      ) : null}
       <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
       <head>
         <meta
           name="msapplication-TileColor"
           content="#DA532C"
           key="windows-tile-color"
+        />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Nx Blog RSS Feed"
+          href="/blog/rss.xml"
+        />
+        <link
+          rel="alternate"
+          type="application/atom+xml"
+          title="Nx Blog Atom Feed"
+          href="/blog/atom.xml"
         />
         <script
           type="text/javascript"
@@ -80,7 +120,12 @@ export default function RootLayout({
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
         {children}
-        <GlobalScripts gaMeasurementId={gaMeasurementId} />
+        {/* <LiveStreamNotifier /> */}
+        <FrontendObservability />
+        <GlobalScripts
+          gaMeasurementId={gaMeasurementId}
+          gtmMeasurementId={gtmMeasurementId}
+        />
       </body>
     </html>
   );

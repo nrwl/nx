@@ -1,3 +1,8 @@
+---
+title: Nx Console Telemetry
+description: Learn about the telemetry data collected by Nx Console extensions, what information is gathered, and how to disable telemetry collection in different editors.
+---
+
 ## Nx Console Telemetry
 
 To ensure that we focus on creating features that benefit your day-to-day workflow, we collect some data from the Nx Console extensions.

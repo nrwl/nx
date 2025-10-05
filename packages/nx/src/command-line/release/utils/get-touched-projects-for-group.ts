@@ -73,7 +73,7 @@ export function createGetTouchedProjectsForGroup(
     } else {
       // We only care about directly touched projects, not implicitly affected ones etc
       const touchedProjectsArr = await getTouchedProjects(
-        calculateFileChanges(changedFiles, fileData, nxArgs, undefined, ignore),
+        calculateFileChanges(changedFiles, nxArgs, undefined, ignore),
         projectGraph.nodes
       );
       touchedProjects = touchedProjectsArr.reduce(

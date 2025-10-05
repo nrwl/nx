@@ -5,58 +5,45 @@ import {
   installPackagesTask,
   joinPathFragments,
   readProjectConfiguration,
-  toJS,
+  stripIndents,
   type Tree,
 } from '@nx/devkit';
 
-import { upsertLinksFunction } from '../../utils/upsert-links-function';
-import { tailwindVersion } from '../../utils/versions';
-import { updateRemixConfig } from './lib';
+import {
+  autoprefixerVersion,
+  postcssVersion,
+  tailwindVersion,
+} from '../../utils/versions';
 import type { SetupTailwindSchema } from './schema';
+import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports';
 
 export default async function setupTailwind(
   tree: Tree,
   options: SetupTailwindSchema
 ) {
   const project = readProjectConfiguration(tree, options.project);
-  if (project.projectType !== 'application') {
-    throw new Error(
-      `Project "${options.project}" is not an application. Please ensure the project is an application.`
-    );
-  }
-
-  updateRemixConfig(tree, project.root);
 
   generateFiles(tree, joinPathFragments(__dirname, 'files'), project.root, {
     tpl: '',
   });
 
-  if (options.js) {
-    tree.rename(
-      joinPathFragments(project.root, 'app/root.js'),
-      joinPathFragments(project.root, 'app/root.tsx')
-    );
-  }
   const pathToRoot = joinPathFragments(project.root, 'app/root.tsx');
-  upsertLinksFunction(
+
+  insertStatementAfterImports(
     tree,
     pathToRoot,
-    'twStyles',
-    './tailwind.css',
-    `{ rel: "stylesheet", href: twStyles }`
+    stripIndents`import './tailwind.css';`
   );
 
   addDependenciesToPackageJson(
     tree,
     {
       tailwindcss: tailwindVersion,
+      postcss: postcssVersion,
+      autoprefixer: autoprefixerVersion,
     },
     {}
   );
-
-  if (options.js) {
-    toJS(tree);
-  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

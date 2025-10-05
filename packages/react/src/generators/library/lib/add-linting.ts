@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/generators/tree';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
@@ -11,6 +11,7 @@ import { NormalizedSchema } from '../schema';
 import { extraEslintDependencies } from '../../../utils/lint';
 import {
   addExtendsToLintConfig,
+  addIgnoresToLintConfig,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
@@ -18,7 +19,7 @@ import {
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === 'eslint') {
     const tasks: GeneratorCallback[] = [];
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
@@ -56,6 +57,11 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
           }
         );
         tasks.push(addExtendsTask);
+      }
+
+      // Add out-tsc ignore pattern when using TS solution setup
+      if (options.isUsingTsSolutionConfig) {
+        addIgnoresToLintConfig(host, options.projectRoot, ['**/out-tsc']);
       }
     }
 

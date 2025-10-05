@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
 
 let openai: OpenAI;
-let supabaseClient: SupabaseClient<any, 'public', any>;
+let supabaseClient: SupabaseClient;
 
 export function getOpenAI(openAiKey?: string): OpenAI {
   if (openai) return openai;
@@ -22,7 +22,7 @@ export function getOpenAI(openAiKey?: string): OpenAI {
 export function getSupabaseClient(
   supabaseUrl?: string,
   supabaseServiceKey?: string
-): SupabaseClient<any, 'public', any> {
+): SupabaseClient {
   if (supabaseClient) return supabaseClient;
   if (!supabaseUrl) {
     throw new CustomError(

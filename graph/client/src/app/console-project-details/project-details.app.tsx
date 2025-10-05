@@ -1,16 +1,16 @@
+import { ProjectDetails } from '@nx/graph-internal-ui-project-details';
+import { getExternalApiService } from '@nx/graph-shared';
+import { ErrorToastUI } from '@nx/graph-ui-common';
+import { ExpandedTargetsProvider } from '@nx/graph-internal-ui-project-details';
+import { useSelector } from '@xstate/react';
 import { useCallback } from 'react';
-import {
-  ErrorToastUI,
-  ExpandedTargetsProvider,
-  getExternalApiService,
-} from '@nx/graph/shared';
-import { useMachine, useSelector } from '@xstate/react';
-import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
+import { Interpreter } from 'xstate';
 import {
   ProjectDetailsEvents,
   ProjectDetailsState,
 } from './project-details.machine';
-import { Interpreter } from 'xstate';
+import { GraphStateSerializer } from '@nx/graph';
+import { ProjectElement } from '@nx/graph/projects';
 
 export function ProjectDetailsApp({
   service,
@@ -26,13 +26,25 @@ export function ProjectDetailsApp({
     service,
     (state) => state.context.connectedToCloud
   );
+  const disabledTaskSyncGenerators = useSelector(
+    service,
+    (state) => state.context.disabledTaskSyncGenerators
+  );
 
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
+      const serializedState = GraphStateSerializer.serialize({
+        c: {},
+        s: {
+          type: 'focused',
+          nodeId: ProjectElement.makeId('project', data.projectName),
+        },
+      });
       externalApiService.postEvent({
         type: 'open-project-graph',
         payload: {
           projectName: data.projectName,
+          serializedProjectGraphState: serializedState,
         },
       });
     },
@@ -75,7 +87,7 @@ export function ProjectDetailsApp({
       <>
         <ExpandedTargetsProvider>
           <ProjectDetails
-            project={project}
+            project={project as any}
             sourceMap={sourceMap}
             onViewInProjectGraph={handleViewInProjectGraph}
             onViewInTaskGraph={handleViewInTaskGraph}
@@ -83,6 +95,7 @@ export function ProjectDetailsApp({
             viewInProjectGraphPosition="bottom"
             connectedToCloud={connectedToCloud}
             onNxConnect={handleNxConnect}
+            disabledTaskSyncGenerators={disabledTaskSyncGenerators}
           />
         </ExpandedTargetsProvider>
         <ErrorToastUI errors={errors} />

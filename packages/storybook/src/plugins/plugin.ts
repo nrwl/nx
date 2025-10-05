@@ -2,8 +2,11 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
+  logger,
   parseJson,
   readJsonFile,
   TargetConfiguration,
@@ -16,7 +19,9 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import type { StorybookConfig } from '@storybook/types';
+import type { StorybookConfig } from 'storybook/internal/types';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { tsquery } from '@phenomnomnominal/tsquery';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
@@ -25,82 +30,127 @@ export interface StorybookPluginOptions {
   testStorybookTargetName?: string;
 }
 
-const cachePath = join(workspaceDataDirectory, 'storybook.hash');
-const targetsCache = readTargetsCache();
-
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
+function readTargetsCache(
+  cachePath: string
+): Record<string, Record<string, TargetConfiguration>> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
+function writeTargetsToCache(
+  cachePath: string,
+  results: Record<string, Record<string, TargetConfiguration>>
+) {
+  writeJsonFile(cachePath, results);
 }
 
+/**
+ * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
+ */
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
   return [];
 };
 
-export const createNodes: CreateNodes<StorybookPluginOptions> = [
-  '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}',
-  async (configFilePath, options, context) => {
-    let projectRoot = '';
-    if (configFilePath.includes('/.storybook')) {
-      projectRoot = dirname(configFilePath).replace('/.storybook', '');
-    } else {
-      projectRoot = dirname(configFilePath).replace('.storybook', '');
-    }
+const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 
-    if (projectRoot === '') {
-      projectRoot = '.';
-    }
-
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    options = normalizeOptions(options);
-    const hash = await calculateHashForCreateNodes(
-      projectRoot,
-      options,
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+export const createNodesV2: CreateNodesV2<StorybookPluginOptions> = [
+  storybookConfigGlob,
+  async (configFilePaths, options, context) => {
+    const normalizedOptions = normalizeOptions(options);
+    const optionsHash = hashObject(normalizedOptions);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `storybook-${optionsHash}.hash`
     );
+    const targetsCache = readTargetsCache(cachePath);
 
-    const projectName = buildProjectName(projectRoot, context.workspaceRoot);
-
-    targetsCache[hash] ??= await buildStorybookTargets(
-      configFilePath,
-      projectRoot,
-      options,
-      context,
-      projectName
-    );
-
-    const result = {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets: targetsCache[hash],
-        },
-      },
-    };
-
-    return result;
+    try {
+      return await createNodesFromFiles(
+        (configFile, _, context) =>
+          createNodesInternal(
+            configFile,
+            normalizedOptions,
+            context,
+            targetsCache
+          ),
+        configFilePaths,
+        normalizedOptions,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
   },
 ];
+
+export const createNodes: CreateNodes<StorybookPluginOptions> = [
+  storybookConfigGlob,
+  (configFilePath, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(
+      configFilePath,
+      normalizeOptions(options),
+      context,
+      {}
+    );
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: Required<StorybookPluginOptions>,
+  context: CreateNodesContext,
+  targetsCache: Record<string, Record<string, TargetConfiguration>>
+) {
+  let projectRoot = '';
+  if (configFilePath.includes('/.storybook')) {
+    projectRoot = dirname(configFilePath).replace('/.storybook', '');
+  } else {
+    projectRoot = dirname(configFilePath).replace('.storybook', '');
+  }
+
+  if (projectRoot === '') {
+    projectRoot = '.';
+  }
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+
+  const projectName = buildProjectName(projectRoot, context.workspaceRoot);
+
+  targetsCache[hash] ??= await buildStorybookTargets(
+    configFilePath,
+    projectRoot,
+    options,
+    context,
+    projectName
+  );
+
+  const result = {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets: targetsCache[hash],
+      },
+    },
+  };
+
+  return result;
+}
 
 async function buildStorybookTargets(
   configFilePath: string,
@@ -113,10 +163,11 @@ async function buildStorybookTargets(
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const storybookFramework = await getStorybookFramework(
-    configFilePath,
-    context
-  );
+  // First attempt to do a very fast lookup for the framework
+  // If that fails, the framework might be inherited, so do a very heavyweight lookup
+  const storybookFramework =
+    (await getStorybookFramework(configFilePath, context)) ||
+    (await getStorybookFullyResolvedFramework(configFilePath, context));
 
   const frameworkIsAngular = storybookFramework === '@storybook/angular';
 
@@ -190,7 +241,7 @@ function buildTarget(
             isStorybookTestRunnerInstalled()
               ? '@storybook/test-runner'
               : undefined,
-          ],
+          ].filter(Boolean),
         },
       ],
     };
@@ -210,7 +261,7 @@ function buildTarget(
             isStorybookTestRunnerInstalled()
               ? '@storybook/test-runner'
               : undefined,
-          ],
+          ].filter(Boolean),
         },
       ],
     };
@@ -227,6 +278,7 @@ function serveTarget(
 ) {
   if (frameworkIsAngular) {
     return {
+      continuous: true,
       executor: '@storybook/angular:start-storybook',
       options: {
         configDir: `${dirname(configFilePath)}`,
@@ -236,6 +288,7 @@ function serveTarget(
     };
   } else {
     return {
+      continuous: true,
       command: `storybook dev`,
       options: { cwd: projectRoot },
     };
@@ -248,12 +301,7 @@ function testTarget(projectRoot: string) {
     options: { cwd: projectRoot },
     inputs: [
       {
-        externalDependencies: [
-          'storybook',
-          isStorybookTestRunnerInstalled()
-            ? '@storybook/test-runner'
-            : undefined,
-        ],
+        externalDependencies: ['storybook', '@storybook/test-runner'],
       },
     ],
   };
@@ -266,6 +314,8 @@ function serveStaticTarget(
   projectRoot: string
 ) {
   const targetConfig: TargetConfiguration = {
+    dependsOn: [`${options.buildStorybookTargetName}`],
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStorybookTargetName}`,
@@ -277,6 +327,63 @@ function serveStaticTarget(
 }
 
 async function getStorybookFramework(
+  configFilePath: string,
+  context: CreateNodesContext
+): Promise<string | undefined> {
+  const resolvedPath = join(context.workspaceRoot, configFilePath);
+  const mainTsJs = readFileSync(resolvedPath, 'utf-8');
+  const importDeclarations = tsquery.query(
+    mainTsJs,
+    'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
+  )?.[0];
+
+  if (!importDeclarations) {
+    return parseFrameworkName(mainTsJs);
+  }
+
+  const storybookConfigImportPackage = tsquery.query(
+    importDeclarations,
+    'StringLiteral'
+  )?.[0];
+
+  if (storybookConfigImportPackage?.getText() === `'@storybook/core-common'`) {
+    return parseFrameworkName(mainTsJs);
+  }
+
+  return storybookConfigImportPackage?.getText();
+}
+
+function parseFrameworkName(mainTsJs: string) {
+  const frameworkPropertyAssignment = tsquery.query(
+    mainTsJs,
+    `PropertyAssignment:has(Identifier:has([text="framework"]))`
+  )?.[0];
+
+  if (!frameworkPropertyAssignment) {
+    return undefined;
+  }
+
+  const propertyAssignments = tsquery.query(
+    frameworkPropertyAssignment,
+    `PropertyAssignment:has(Identifier:has([text="name"]))`
+  );
+
+  const namePropertyAssignment = propertyAssignments?.find((expression) => {
+    return expression.getText().startsWith('name');
+  });
+
+  if (!namePropertyAssignment) {
+    const storybookConfigImportPackage = tsquery.query(
+      frameworkPropertyAssignment,
+      'StringLiteral'
+    )?.[0];
+    return storybookConfigImportPackage?.getText();
+  }
+
+  return tsquery.query(namePropertyAssignment, `StringLiteral`)?.[0]?.getText();
+}
+
+async function getStorybookFullyResolvedFramework(
   configFilePath: string,
   context: CreateNodesContext
 ): Promise<string> {
@@ -299,13 +406,16 @@ function getOutputs(): string[] {
 
 function normalizeOptions(
   options: StorybookPluginOptions
-): StorybookPluginOptions {
-  options ??= {};
-  options.buildStorybookTargetName ??= 'build-storybook';
-  options.serveStorybookTargetName ??= 'storybook';
-  options.testStorybookTargetName ??= 'test-storybook';
-  options.staticStorybookTargetName ??= 'static-storybook';
-  return options;
+): Required<StorybookPluginOptions> {
+  return {
+    buildStorybookTargetName:
+      options.buildStorybookTargetName ?? 'build-storybook',
+    serveStorybookTargetName: options.serveStorybookTargetName ?? 'storybook',
+    testStorybookTargetName:
+      options.testStorybookTargetName ?? 'test-storybook',
+    staticStorybookTargetName:
+      options.staticStorybookTargetName ?? 'static-storybook',
+  };
 }
 
 function buildProjectName(

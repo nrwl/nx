@@ -2,12 +2,14 @@ import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { basename, dirname } from 'node:path';
 
 export const GRADLE_BUILD_FILES = new Set(['build.gradle', 'build.gradle.kts']);
-export const GRALDEW_FILES = new Set(['gradlew', 'gradlew.bat']);
+export const GRADLEW_FILES = new Set(['gradlew', 'gradlew.bat']);
 export const GRADLE_TEST_FILES = [
   '**/src/test/java/**/*Test.java',
   '**/src/test/kotlin/**/*Test.kt',
   '**/src/test/java/**/*Tests.java',
   '**/src/test/kotlin/**/*Tests.kt',
+  '**/src/test/groovy/**/*Test.groovy',
+  '**/src/test/groovy/**/*Tests.groovy',
 ];
 
 export const gradleConfigGlob = combineGlobPatterns(
@@ -15,8 +17,10 @@ export const gradleConfigGlob = combineGlobPatterns(
 );
 
 export const gradleConfigAndTestGlob = combineGlobPatterns(
+  ...Array.from(GRADLE_BUILD_FILES),
+  ...Array.from(GRADLEW_FILES),
   ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
-  ...Array.from(GRALDEW_FILES).map((file) => `**/${file}`),
+  ...Array.from(GRADLEW_FILES).map((file) => `**/${file}`),
   ...GRADLE_TEST_FILES
 );
 
@@ -43,7 +47,7 @@ export function splitConfigFiles(files: readonly string[]): {
     if (GRADLE_BUILD_FILES.has(filename)) {
       buildFiles.push(file);
       projectRoots.add(fileDirectory);
-    } else if (GRALDEW_FILES.has(filename)) {
+    } else if (GRADLEW_FILES.has(filename)) {
       if (process.platform.startsWith('win')) {
         if (filename === 'gradlew.bat') {
           gradlewFiles.push(file);

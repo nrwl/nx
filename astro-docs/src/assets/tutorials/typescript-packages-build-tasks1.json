@@ -1,0 +1,106 @@
+{
+  "projects": [
+    {
+      "name": "@acme/zoo",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@acme/animals",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@acme/utils",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "@acme/zoo": [
+      {
+        "source": "@acme/zoo",
+        "target": "@acme/animals",
+        "type": "implicit"
+      },
+      {
+        "source": "@acme/zoo",
+        "target": "@acme/utils",
+        "type": "implicit"
+      }
+    ],
+    "@acme/animals": [
+      {
+        "source": "@acme/animals",
+        "target": "@acme/utils",
+        "type": "implicit"
+      }
+    ],
+    "@acme/utils": []
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "packages"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": [],
+  "nodes": {
+    "@acme/zoo:build": {
+      "id": "@acme/zoo:build",
+      "type": "target",
+      "label": "build",
+      "data": {
+        "projectName": "@acme/zoo",
+        "targetName": "build"
+      }
+    },
+    "@acme/animals:build": {
+      "id": "@acme/animals:build",
+      "type": "target",
+      "label": "build",
+      "data": {
+        "projectName": "@acme/animals",
+        "targetName": "build"
+      }
+    },
+    "@acme/utils:build": {
+      "id": "@acme/utils:build",
+      "type": "target",
+      "label": "build",
+      "data": {
+        "projectName": "@acme/utils",
+        "targetName": "build"
+      }
+    }
+  },
+  "edges": {
+    "@acme/zoo:build": [
+      {
+        "source": "@acme/zoo:build",
+        "target": "@acme/animals:build",
+        "type": "implicit"
+      },
+      {
+        "source": "@acme/zoo:build",
+        "target": "@acme/utils:build",
+        "type": "implicit"
+      }
+    ],
+    "@acme/animals:build": [
+      {
+        "source": "@acme/animals:build",
+        "target": "@acme/utils:build",
+        "type": "implicit"
+      }
+    ],
+    "@acme/utils:build": []
+  }
+}

@@ -1,19 +1,20 @@
 import {
   formatFiles,
   GeneratorCallback,
-  output,
-  readJson,
+  logger,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
-import {
-  getRootTsConfigFileName,
-  initGenerator as jsInitGenerator,
-} from '@nx/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { JestPluginOptions } from '../../plugins/plugin';
-import { getPresetExt } from '../../utils/config/config-file';
+import {
+  findRootJestPreset,
+  getPresetExt,
+} from '../../utils/config/config-file';
 import { jestInitGenerator } from '../init/init';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
@@ -73,7 +74,9 @@ function normalizeOptions(
   return {
     ...schemaDefaults,
     ...options,
+    keepExistingVersions: options.keepExistingVersions ?? true,
     rootProject: project.root === '.' || project.root === '',
+    isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
 }
 
@@ -86,6 +89,11 @@ export async function configurationGeneratorInternal(
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(tree, schema);
+
+  // we'll only add the vscode recommended extension if the jest preset does
+  // not exist, which most likely means this is a first run, in the cases it's
+  // not a first run, we'll skip adding it but it's not a critical thing to do
+  const shouldAddVsCodeRecommendations = findRootJestPreset(tree) === null;
 
   const tasks: GeneratorCallback[] = [];
 
@@ -101,7 +109,10 @@ export async function configurationGeneratorInternal(
   checkForTestTarget(tree, options);
   createFiles(tree, options, presetExt);
   updateTsConfig(tree, options);
-  updateVsCodeRecommendedExtensions(tree);
+
+  if (shouldAddVsCodeRecommendations) {
+    updateVsCodeRecommendedExtensions(tree);
+  }
 
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) => {
@@ -115,47 +126,46 @@ export async function configurationGeneratorInternal(
       );
     }
   });
+
   if (!hasPlugin || options.addExplicitTargets) {
     updateWorkspace(tree, options);
+  }
+
+  if (options.isTsSolutionSetup) {
+    ignoreTestOutput(tree);
+
+    // in the TS solution setup, the test target depends on the build outputs
+    // so we need to setup the task pipeline accordingly
+    const nxJson = readNxJson(tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[options.targetName] ??= {};
+    nxJson.targetDefaults[options.targetName].dependsOn ??= [];
+    nxJson.targetDefaults[options.targetName].dependsOn.push('^build');
+    nxJson.targetDefaults[options.targetName].dependsOn = Array.from(
+      new Set(nxJson.targetDefaults[options.targetName].dependsOn)
+    );
+    updateNxJson(tree, nxJson);
   }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  tasks.push(getUnsupportedModuleResolutionWarningTask(tree));
-
   return runTasksInSerial(...tasks);
 }
 
-/**
- * For Jest < 30, there is no way to load jest.config.ts file if the tsconfig.json/tsconfig.base.json sets moduleResolution to bundler or nodenext.
- * Jest uses ts-node in a way that is not compatible, so until this is fixed we need to log a warning.
- * See: https://github.com/jestjs/jest/blob/main/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L145-L153
- */
-function getUnsupportedModuleResolutionWarningTask(
-  tree: Tree
-): GeneratorCallback {
-  const tsConfigFileName = getRootTsConfigFileName(tree);
-  if (tsConfigFileName) {
-    const json = readJson(tree, tsConfigFileName);
-    if (
-      json.compilerOptions.moduleResolution !== 'node' &&
-      json.compilerOptions.moduleResolution !== 'node10'
-    ) {
-      return () => {
-        output.warn({
-          title: `Compiler option 'moduleResolution' in ${tsConfigFileName} must be 'node' or 'node10'`,
-          bodyLines: [
-            `Jest requires 'moduleResolution' to be set to 'node' or 'node10' to work properly. It would need to be changed in the "${tsConfigFileName}" file. It's not enough to override the compiler option in the project's tsconfig file.`,
-            `Alternatively, you can use the environment variable \`TS_NODE_COMPILER_OPTIONS='{"moduleResolution": "node10"}'\` to override Jest's usage of ts-node.`,
-          ],
-        });
-      };
-    }
+function ignoreTestOutput(tree: Tree): void {
+  if (!tree.exists('.gitignore')) {
+    logger.warn(`Couldn't find a root .gitignore file to update.`);
   }
 
-  return () => {};
+  let content = tree.read('.gitignore', 'utf-8');
+  if (/^test-output$/gm.test(content)) {
+    return;
+  }
+
+  content = `${content}\ntest-output\n`;
+  tree.write('.gitignore', content);
 }
 
 export default configurationGenerator;

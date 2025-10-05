@@ -1,3 +1,8 @@
+---
+title: Troubleshoot Nx Installations
+description: Learn how to resolve common Nx installation issues, including native module problems, platform compatibility, and Node.js architecture mismatches.
+---
+
 # Troubleshoot Nx Installations
 
 Here are some common scenarios we came across while trying to run Nx on CIs

@@ -19,7 +19,7 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 
 let tsModule: typeof import('typescript');
 
-export function getModuleDeclaredComponents(
+export function getModuleDeclarations(
   file: SourceFile,
   moduleFilePath: string,
   projectName: string
@@ -47,7 +47,9 @@ export function getModuleDeclaredComponents(
     return [];
   }
 
-  return getDeclaredComponentsInDeclarations(declarationsArray);
+  return getDeclaredComponentNodes(declarationsArray).map((node) =>
+    node.getText()
+  );
 }
 
 export function getModuleFilePaths(
@@ -91,14 +93,6 @@ function hasNgModule(tree: Tree, filePath: string): boolean {
   );
 
   return ngModule.length > 0;
-}
-
-function getDeclaredComponentsInDeclarations(
-  declarationsArray: Node
-): string[] {
-  return getDeclaredComponentNodes(declarationsArray)
-    .map((node) => node.getText())
-    .filter((name) => name.endsWith('Component'));
 }
 
 function getDeclaredComponentNodes(declarationsArray: Node): Node[] {

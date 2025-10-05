@@ -4,7 +4,11 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { createTaskGraph } from './create-task-graph';
+import {
+  createTaskGraph,
+  filterDummyTasks,
+  getNonDummyDeps,
+} from './create-task-graph';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
@@ -44,6 +48,7 @@ describe('createTaskGraph', () => {
                 executor: 'nx:run-commands',
               },
               serve: {
+                continuous: true,
                 executor: 'nx:run-commands',
               },
             },
@@ -86,6 +91,7 @@ describe('createTaskGraph', () => {
       roots: [],
       tasks: {},
       dependencies: {},
+      continuousDependencies: {},
     });
   });
 
@@ -113,9 +119,13 @@ describe('createTaskGraph', () => {
           overrides: { a: 123 },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
       },
     });
@@ -144,6 +154,7 @@ describe('createTaskGraph', () => {
           overrides: { a: 123 },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:test': {
           id: 'lib1:test',
@@ -155,9 +166,14 @@ describe('createTaskGraph', () => {
           overrides: { a: 123 },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+        'lib1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
         'lib1:test': [],
       },
@@ -295,6 +311,7 @@ describe('createTaskGraph', () => {
           overrides: {},
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -308,10 +325,15 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'lib1:compile:libDefault': ['lib2:compile'],
+        'lib2:compile': [],
+      },
+      continuousDependencies: {
+        'lib1:compile:libDefault': [],
         'lib2:compile': [],
       },
     });
@@ -339,6 +361,7 @@ describe('createTaskGraph', () => {
           overrides: {},
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile:libDefault': {
           id: 'lib1:compile:libDefault',
@@ -353,6 +376,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile:ci': {
           id: 'lib2:compile:ci',
@@ -367,11 +391,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile:ci': ['lib1:compile:libDefault'],
         'lib1:compile:libDefault': ['lib2:compile:ci'],
+        'lib2:compile:ci': [],
+      },
+      continuousDependencies: {
+        'app1:compile:ci': [],
+        'lib1:compile:libDefault': [],
         'lib2:compile:ci': [],
       },
     });
@@ -456,6 +486,10 @@ describe('createTaskGraph', () => {
         'app1:compile': ['lib3:compile'],
         'lib3:compile': [],
       },
+      continuousDependencies: {
+        'app1:compile': [],
+        'lib3:compile': [],
+      },
       roots: ['lib3:compile'],
       tasks: {
         'app1:compile': {
@@ -468,6 +502,7 @@ describe('createTaskGraph', () => {
             target: 'compile',
           },
           parallelism: true,
+          continuous: false,
         },
         'lib3:compile': {
           id: 'lib3:compile',
@@ -481,6 +516,7 @@ describe('createTaskGraph', () => {
             target: 'compile',
           },
           parallelism: true,
+          continuous: false,
         },
       },
     });
@@ -510,9 +546,13 @@ describe('createTaskGraph', () => {
           overrides: { a: '--value=app1-root' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
       },
     });
@@ -542,9 +582,13 @@ describe('createTaskGraph', () => {
           overrides: { a: '--base-href=/app1-root${deploymentId}' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
       },
     });
@@ -657,6 +701,7 @@ describe('createTaskGraph', () => {
           overrides: { myFlag: 'flag value' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -668,6 +713,7 @@ describe('createTaskGraph', () => {
           overrides: { myFlag: 'flag value' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -679,6 +725,7 @@ describe('createTaskGraph', () => {
           overrides: { myFlag: 'flag value' },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -690,6 +737,7 @@ describe('createTaskGraph', () => {
           overrides: { __overrides_unparsed__: [] },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
@@ -698,6 +746,242 @@ describe('createTaskGraph', () => {
         'lib1:compile': ['lib2:compile'],
         'lib2:compile': [],
       },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app1:precompile': [],
+        'lib1:compile': [],
+        'lib2:compile': [],
+      },
+    });
+  });
+
+  it('should forward options when configured', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  verbose: true,
+                  outputPath: 'dist/app1',
+                  optimization: false,
+                },
+                configurations: {
+                  production: {
+                    optimization: true,
+                    sourceMap: false,
+                  },
+                },
+                dependsOn: [
+                  {
+                    target: 'compile',
+                    options: 'forward',
+                  },
+                ],
+              },
+              compile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'production',
+      {}
+    );
+
+    expect(taskResult.tasks['app1:compile'].overrides).toEqual({
+      verbose: true,
+      outputPath: 'dist/app1',
+      optimization: true,
+      sourceMap: false,
+      __overrides_unparsed__: [],
+    });
+  });
+
+  it('should forward both options and params when configured', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  verbose: true,
+                  outputPath: 'dist/app1',
+                },
+                dependsOn: [
+                  {
+                    target: 'compile',
+                    options: 'forward',
+                    params: 'forward',
+                  },
+                ],
+              },
+              compile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'development',
+      {
+        cliFlag: 'cli-value',
+        verbose: false, // CLI should override configured option
+      }
+    );
+
+    expect(taskResult.tasks['app1:compile'].overrides).toEqual({
+      verbose: false, // CLI value wins
+      outputPath: 'dist/app1', // From configured options
+      cliFlag: 'cli-value', // From CLI
+    });
+  });
+
+  it('should ignore options when configured to ignore', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  verbose: true,
+                  outputPath: 'dist/app1',
+                },
+                dependsOn: [
+                  {
+                    target: 'compile',
+                    options: 'ignore',
+                    params: 'forward',
+                  },
+                ],
+              },
+              compile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'development',
+      {
+        cliFlag: 'cli-value',
+      }
+    );
+
+    expect(taskResult.tasks['app1:compile'].overrides).toEqual({
+      cliFlag: 'cli-value', // Only CLI params forwarded
+    });
+  });
+
+  it('should forward options to dependencies with configurations', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  baseOption: 'base-value',
+                },
+                configurations: {
+                  production: {
+                    prodOption: 'prod-value',
+                    baseOption: 'overridden-base',
+                  },
+                },
+                dependsOn: [
+                  {
+                    dependencies: true,
+                    target: 'build',
+                    options: 'forward',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'production',
+      {}
+    );
+
+    expect(taskResult.tasks['lib1:build'].overrides).toEqual({
+      baseOption: 'overridden-base', // Configuration value wins over options
+      prodOption: 'prod-value', // From production configuration
+      __overrides_unparsed__: [],
     });
   });
 
@@ -728,6 +1012,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -741,6 +1026,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile2': {
           id: 'app1:precompile2',
@@ -754,6 +1040,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -767,12 +1054,134 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['lib1:compile', 'app1:precompile', 'app1:precompile2'],
         'app1:precompile': [],
         'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app1:precompile': [],
+        'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+    });
+  });
+
+  it('should create graphs with continuous dependencies', () => {
+    projectGraph.nodes['app1'].data.targets['serve'].dependsOn = [
+      {
+        dependencies: true,
+        target: 'serve',
+      },
+      {
+        target: 'compile',
+      },
+    ];
+    projectGraph.nodes['app1'].data.targets['compile'].dependsOn = [
+      {
+        dependencies: true,
+        target: 'compile',
+      },
+    ];
+    projectGraph.nodes['lib1'].data.targets['serve'] = {
+      executor: 'nx:run-command',
+      continuous: true,
+      dependsOn: [
+        {
+          dependencies: true,
+          target: 'serve',
+        },
+        {
+          target: 'compile',
+        },
+      ],
+    };
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['serve'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    // precompile should also be in here
+    expect(taskGraph).toEqual({
+      roots: ['lib1:compile'],
+      tasks: {
+        'app1:serve': {
+          id: 'app1:serve',
+          target: {
+            project: 'app1',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+          continuous: true,
+        },
+        'app1:compile': {
+          id: 'app1:compile',
+          target: {
+            project: 'app1',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'lib1:serve': {
+          id: 'lib1:serve',
+          target: {
+            project: 'lib1',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+          continuous: true,
+        },
+        'lib1:compile': {
+          id: 'lib1:compile',
+          target: {
+            project: 'lib1',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+          continuous: false,
+        },
+      },
+      dependencies: {
+        'app1:serve': ['app1:compile'],
+        'app1:compile': ['lib1:compile'],
+        'lib1:serve': ['lib1:compile'],
+        'lib1:compile': [],
+      },
+      continuousDependencies: {
+        'app1:serve': ['lib1:serve'],
+        'app1:compile': [],
+        'lib1:serve': [],
         'lib1:compile': [],
       },
     });
@@ -805,6 +1214,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -818,6 +1228,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile2': {
           id: 'app1:precompile2',
@@ -831,6 +1242,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -844,10 +1256,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['lib1:compile', 'app1:precompile', 'app1:precompile2'],
+        'app1:precompile': [],
+        'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
         'app1:precompile': [],
         'app1:precompile2': [],
         'lib1:compile': [],
@@ -951,6 +1370,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -964,6 +1384,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -977,6 +1398,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
         'lib3:compile': {
           id: 'lib3:compile',
@@ -990,12 +1412,19 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib3-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['lib1:compile', 'lib2:compile'],
         'lib1:compile': ['lib3:compile'],
         'lib2:compile': ['lib3:compile'],
+        'lib3:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'lib1:compile': [],
+        'lib2:compile': [],
         'lib3:compile': [],
       },
     });
@@ -1114,6 +1543,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           parallelism: true,
+          continuous: false,
         },
         'app2:compile': {
           id: 'app2:compile',
@@ -1122,6 +1552,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { __overrides_unparsed__: [] },
           parallelism: true,
+          continuous: false,
         },
         'coreInfra:apply': {
           id: 'coreInfra:apply',
@@ -1130,6 +1561,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           parallelism: true,
+          continuous: false,
         },
         'app1:compile': {
           id: 'app1:compile',
@@ -1138,6 +1570,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { __overrides_unparsed__: [] },
           parallelism: true,
+          continuous: false,
         },
         'infra2:apply': {
           id: 'infra2:apply',
@@ -1146,6 +1579,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
@@ -1159,6 +1593,13 @@ describe('createTaskGraph', () => {
         'coreInfra:apply': [],
         'app1:compile': [],
         'infra2:apply': ['app2:compile', 'coreInfra:apply'],
+      },
+      continuousDependencies: {
+        'infra1:apply': [],
+        'app2:compile': [],
+        'coreInfra:apply': [],
+        'app1:compile': [],
+        'infra2:apply': [],
       },
     });
   });
@@ -1213,6 +1654,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:test': {
           id: 'app1:test',
@@ -1226,11 +1668,16 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['app1:test'],
         'app1:test': ['app1:compile'],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app1:test': [],
       },
     });
   });
@@ -1322,6 +1769,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1335,6 +1783,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib3:build': expect.objectContaining({
           id: 'lib3:build',
@@ -1348,6 +1797,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib3-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib4:build': expect.objectContaining({
           id: 'lib4:build',
@@ -1361,6 +1811,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib4-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
@@ -1368,6 +1819,12 @@ describe('createTaskGraph', () => {
         'lib2:build': ['lib3:build'],
         'lib3:build': ['lib4:build'],
         'lib4:build': ['lib1:build'],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+        'lib3:build': [],
+        'lib4:build': [],
       },
     });
   });
@@ -1454,6 +1911,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1467,6 +1925,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib4:build': expect.objectContaining({
           id: 'lib4:build',
@@ -1480,11 +1939,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib4-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
         'lib1:build': ['lib2:build'],
         'lib2:build': ['lib4:build'],
+        'lib4:build': [],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
         'lib4:build': [],
       },
     });
@@ -1547,9 +2012,13 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
+        'lib1:build': [],
+      },
+      continuousDependencies: {
         'lib1:build': [],
       },
     });
@@ -1624,7 +2093,7 @@ describe('createTaskGraph', () => {
       }
     );
     expect(taskGraph).toEqual({
-      roots: [],
+      roots: ['lib2:build'],
       tasks: {
         'lib1:build': expect.objectContaining({
           id: 'lib1:build',
@@ -1638,6 +2107,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1651,6 +2121,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib4:build': expect.objectContaining({
           id: 'lib4:build',
@@ -1664,12 +2135,18 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib4-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
         'lib1:build': ['lib2:build'],
-        'lib2:build': ['lib4:build'],
+        'lib2:build': [],
         'lib4:build': ['lib1:build'],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+        'lib4:build': [],
       },
     });
   });
@@ -1753,6 +2230,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1766,10 +2244,15 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
         'lib1:build': ['lib2:build'],
+        'lib2:build': [],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
         'lib2:build': [],
       },
     });
@@ -1848,6 +2331,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app3:compile': {
           id: 'app3:compile',
@@ -1861,16 +2345,21 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app3-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': [],
         'app3:compile': [],
       },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app3:compile': [],
+      },
     });
   });
 
-  it('should handle cycles between projects that do not create cycles between tasks and not contain the same task target (app1:build -> app2 <-> app3:build)``', () => {
+  it('should handle cycles between projects that do not create cycles between tasks and not contain the same task target (app1:build -> app2 <-> app3:build)', () => {
     projectGraph = {
       nodes: {
         app1: {
@@ -1940,6 +2429,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app3:compile': {
           id: 'app3:compile',
@@ -1953,13 +2443,240 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app3-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': [],
         'app3:compile': [],
       },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app3:compile': [],
+      },
     });
+  });
+
+  it('should not conflate dependencies of dummy tasks', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^dep2'],
+              },
+              lint: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^dep'],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'app',
+          data: {
+            root: 'lib1-root',
+            targets: {},
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'app',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              dep: {
+                executor: 'nx:run-commands',
+              },
+              dep2: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['lint', 'test'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['lib2:dep', 'lib2:dep2'],
+      tasks: {
+        'app1:lint': {
+          id: 'app1:lint',
+          target: {
+            project: 'app1',
+            target: 'lint',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'app1:test': {
+          id: 'app1:test',
+          target: {
+            project: 'app1',
+            target: 'test',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'lib2:dep': {
+          id: 'lib2:dep',
+          target: {
+            project: 'lib2',
+            target: 'dep',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'lib2:dep2': {
+          id: 'lib2:dep2',
+          target: {
+            project: 'lib2',
+            target: 'dep2',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+          continuous: false,
+        },
+      },
+      dependencies: {
+        'app1:lint': ['lib2:dep'],
+        'app1:test': ['lib2:dep2'],
+        'lib2:dep': [],
+        'lib2:dep2': [],
+      },
+      continuousDependencies: {
+        'app1:lint': [],
+        'app1:test': [],
+        'lib2:dep': [],
+        'lib2:dep2': [],
+      },
+    });
+  });
+
+  it('should create deterministic task graphs regardless of target order', () => {
+    // This test addresses an issue where dummy tasks (created when a dependency project
+    // doesn't have the required target) would have different dependency structures
+    // depending on the order targets were processed. Previously, these dummy tasks would
+    // improperly inherit different configurations based on which source task (test vs lint)
+    // created them first, leading to non-deterministic task graphs.
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^test', '^lint'],
+              },
+              lint: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^lint'],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              // No targets - will create dummy tasks
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^test', '^lint'],
+              },
+              lint: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^lint'],
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [],
+      },
+    };
+
+    // Create task graphs with different target orders
+    const taskGraph1 = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['test', 'lint'], // test first
+      undefined,
+      { __overrides_unparsed__: [] }
+    );
+
+    const taskGraph2 = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['lint', 'test'], // lint first
+      undefined,
+      { __overrides_unparsed__: [] }
+    );
+
+    taskGraph1.roots.sort();
+    taskGraph2.roots.sort();
+
+    // Both task graphs should be identical
+    expect(taskGraph1).toEqual(taskGraph2);
   });
 
   it('should exclude task dependencies', () => {
@@ -2030,9 +2747,13 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:compile': [],
+      },
+      continuousDependencies: {
         'app1:compile': [],
       },
     });
@@ -2064,6 +2785,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app2:compile': {
           id: 'app2:compile',
@@ -2077,10 +2799,15 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['app2:compile'],
+        'app2:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
         'app2:compile': [],
       },
     });
@@ -2488,6 +3215,333 @@ describe('createTaskGraph', () => {
       }
     `);
   });
+
+  it('should handle mulitple projects that are dependent on each other (app1->app2->app3->app4)', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app3: {
+          name: 'app3',
+          type: 'app',
+          data: {
+            root: 'app3-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app4: {
+          name: 'app4',
+          type: 'app',
+          data: {
+            root: 'app4-root',
+            targets: {
+              precompile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'app2', type: 'implicit' }],
+        app2: [{ source: 'app2', target: 'app3', type: 'implicit' }],
+        app3: [{ source: 'app3', target: 'app4', type: 'implicit' }],
+      },
+    };
+
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['compile'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app4:precompile'],
+      tasks: {
+        'app1:compile': {
+          id: 'app1:compile',
+          target: {
+            project: 'app1',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'app4:precompile': {
+          id: 'app4:precompile',
+          target: {
+            project: 'app4',
+            target: 'precompile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app4-root',
+          parallelism: true,
+          continuous: false,
+        },
+      },
+      dependencies: {
+        'app1:compile': ['app4:precompile'],
+        'app4:precompile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app4:precompile': [],
+      },
+    });
+
+    taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app2', 'app3'],
+      ['compile'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app4:precompile'],
+      tasks: {
+        'app2:compile': {
+          id: 'app2:compile',
+          target: {
+            project: 'app2',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app2-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'app3:compile': {
+          id: 'app3:compile',
+          target: {
+            project: 'app3',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app3-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'app4:precompile': {
+          id: 'app4:precompile',
+          target: {
+            project: 'app4',
+            target: 'precompile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app4-root',
+          parallelism: true,
+          continuous: false,
+        },
+      },
+      dependencies: {
+        'app2:compile': ['app4:precompile'],
+        'app3:compile': ['app4:precompile'],
+        'app4:precompile': [],
+      },
+      continuousDependencies: {
+        'app2:compile': [],
+        'app3:compile': [],
+        'app4:precompile': [],
+      },
+    });
+  });
+
+  it('should handle dependencies with 2 cycles (app1->app2<->app3->app4, app5->app6<->app7->app8)', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app3: {
+          name: 'app3',
+          type: 'app',
+          data: {
+            root: 'app3-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app4: {
+          name: 'app4',
+          type: 'app',
+          data: {
+            root: 'app4-root',
+            targets: {
+              precompile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        app5: {
+          name: 'app5',
+          type: 'app',
+          data: {
+            root: 'app5-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app6: {
+          name: 'app6',
+          type: 'app',
+          data: {
+            root: 'app6-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app7: {
+          name: 'app7',
+          type: 'app',
+          data: {
+            root: 'app7-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app8: {
+          name: 'app8',
+          type: 'app',
+          data: {
+            root: 'app8-root',
+            targets: {
+              precompile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'app2', type: 'implicit' }],
+        app2: [{ source: 'app2', target: 'app3', type: 'implicit' }],
+        app3: [
+          { source: 'app3', target: 'app4', type: 'implicit' },
+          { source: 'app3', target: 'app2', type: 'implicit' },
+        ],
+        app5: [{ source: 'app5', target: 'app6', type: 'implicit' }],
+        app6: [{ source: 'app6', target: 'app7', type: 'implicit' }],
+        app7: [
+          { source: 'app7', target: 'app8', type: 'implicit' },
+          { source: 'app7', target: 'app6', type: 'implicit' },
+        ],
+      },
+    };
+
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1', 'app2', 'app3', 'app5', 'app6', 'app7'],
+      ['compile'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph.dependencies).toEqual({
+      'app1:compile': [],
+      'app2:compile': [],
+      'app3:compile': ['app4:precompile'],
+      'app4:precompile': [],
+      'app5:compile': [],
+      'app6:compile': [],
+      'app7:compile': ['app8:precompile'],
+      'app8:precompile': [],
+    });
+  });
 });
 
 class GraphBuilder {
@@ -2530,3 +3584,182 @@ class GraphBuilder {
     };
   }
 }
+
+describe('filterDummyTasks', () => {
+  it('should filter out dummy tasks', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:__nx_dummy_task__'],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': ['app5:build'],
+      'app5:build': [],
+    });
+  });
+
+  it('should filter out dummy tasks with 1 cycle', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': [
+        'app4:__nx_dummy_task__',
+        'app2:__nx_dummy_task__',
+      ],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': [],
+      'app5:build': [],
+    });
+  });
+
+  it('should filter out dummy tasks with 2 cycles', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': [
+        'app4:__nx_dummy_task__',
+        'app2:__nx_dummy_task__',
+      ],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+      'app5:compile': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
+      'app7:__nx_dummy_task__': ['app8:precompile', 'app6:__nx_dummy_task__'],
+      'app8:precompile': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': [],
+      'app5:build': [],
+      'app5:compile': [],
+      'app8:precompile': [],
+    });
+  });
+
+  it('should filter out dummy tasks with a large list of dependencies without cycles', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
+      'app7:__nx_dummy_task__': ['app8:precompile'],
+      'app8:precompile': ['app9:__nx_dummy_task__', 'app10:build'],
+      'app9:__nx_dummy_task__': ['app10:__nx_dummy_task__'],
+      'app10:__nx_dummy_task__': ['app11:__nx_dummy_task__'],
+      'app10:build': ['app11:__nx_dummy_task__'],
+      'app11:__nx_dummy_task__': ['app12:__nx_dummy_task__'],
+      'app12:__nx_dummy_task__': ['app13:__nx_dummy_task__'],
+      'app13:__nx_dummy_task__': ['app14:__nx_dummy_task__'],
+      'app14:__nx_dummy_task__': ['app15:__nx_dummy_task__'],
+      'app15:__nx_dummy_task__': ['app16:__nx_dummy_task__'],
+      'app16:__nx_dummy_task__': ['app17:__nx_dummy_task__'],
+      'app17:__nx_dummy_task__': ['app18:__nx_dummy_task__'],
+      'app18:__nx_dummy_task__': ['app19:__nx_dummy_task__'],
+      'app19:__nx_dummy_task__': ['app20:__nx_dummy_task__'],
+      'app20:__nx_dummy_task__': ['app21:build'],
+      'app21:build': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': ['app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app8:precompile'],
+      'app8:precompile': ['app21:build', 'app10:build'],
+      'app10:build': ['app21:build'],
+      'app21:build': [],
+    });
+  });
+});
+
+describe('getNonDummyDeps', () => {
+  it('should return the non dummy dependencies', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:__nx_dummy_task__'],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+    };
+    expect(
+      getNonDummyDeps(
+        'app2:__nx_dummy_task__',
+        dependencies,
+        null,
+        new Set(['app1:compile'])
+      )
+    ).toEqual(['app5:build']);
+  });
+
+  it('should return the non dummy dependencies with a cycle even no cycle arg got passed in', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': [
+        'app3:__nx_dummy_task__',
+        'app8:precompile',
+        'app5:build',
+      ],
+      'app3:__nx_dummy_task__': ['app2:__nx_dummy_task__', 'app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__', 'app1:compile'],
+      'app7:__nx_dummy_task__': ['app8:precompile'],
+      'app8:precompile': [],
+    };
+    expect(getNonDummyDeps('app2:__nx_dummy_task__', dependencies)).toEqual([
+      'app4:precompile',
+      'app8:precompile',
+      'app5:build',
+    ]);
+    expect(getNonDummyDeps('app3:__nx_dummy_task__', dependencies)).toEqual([
+      'app8:precompile',
+      'app5:build',
+      'app4:precompile',
+    ]);
+    expect(getNonDummyDeps('app6:__nx_dummy_task__', dependencies)).toEqual([
+      'app8:precompile',
+      'app1:compile',
+    ]);
+  });
+
+  it('should handle a long list of dependencies without cycle', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
+      'app7:__nx_dummy_task__': ['app8:precompile'],
+      'app8:precompile': ['app9:__nx_dummy_task__', 'app10:build'],
+      'app9:__nx_dummy_task__': ['app10:__nx_dummy_task__'],
+      'app10:__nx_dummy_task__': ['app11:__nx_dummy_task__'],
+      'app10:build': ['app11:__nx_dummy_task__'],
+      'app11:__nx_dummy_task__': ['app12:__nx_dummy_task__'],
+      'app12:__nx_dummy_task__': ['app13:__nx_dummy_task__'],
+      'app13:__nx_dummy_task__': ['app14:__nx_dummy_task__'],
+      'app14:__nx_dummy_task__': ['app15:__nx_dummy_task__'],
+      'app15:__nx_dummy_task__': ['app16:__nx_dummy_task__'],
+      'app16:__nx_dummy_task__': ['app17:__nx_dummy_task__'],
+      'app17:__nx_dummy_task__': ['app18:__nx_dummy_task__'],
+      'app18:__nx_dummy_task__': ['app19:__nx_dummy_task__'],
+      'app19:__nx_dummy_task__': ['app20:__nx_dummy_task__'],
+      'app20:__nx_dummy_task__': ['app21:build'],
+      'app21:build': [],
+    };
+    expect(getNonDummyDeps('app2:__nx_dummy_task__', dependencies)).toEqual([
+      'app4:precompile',
+    ]);
+    expect(getNonDummyDeps('app9:__nx_dummy_task__', dependencies)).toEqual([
+      'app21:build',
+    ]);
+  });
+});

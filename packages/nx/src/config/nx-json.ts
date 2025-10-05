@@ -2,10 +2,11 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
+import type { validReleaseVersionPrefixes } from '../command-line/release/version';
 import { readJsonFile } from '../utils/fileutils';
-import { PackageManager } from '../utils/package-manager';
+import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
-import {
+import type {
   InputDefinition,
   TargetConfiguration,
   TargetDependencyConfig,
@@ -55,20 +56,157 @@ interface NxInstallationConfiguration {
   plugins?: Record<string, string>;
 }
 
-export interface NxReleaseVersionConfiguration {
-  generator?: string;
-  generatorOptions?: Record<string, unknown>;
+export type ManifestRootToUpdate =
+  | string
+  | { path: string; preserveLocalDependencyProtocols: boolean };
+
+export interface NxReleaseDockerConfiguration {
   /**
-   * Enabling support for parsing semver bumps via conventional commits and reading the current version from
-   * git tags is so common that we have a first class shorthand for it, which is false by default.
+   * A command to run after validation of nx release configuration, but before docker versioning begins.
+   * Useful for preparing docker build artifacts. If --dry-run is passed, the command is still executed,
+   * but with the NX_DRY_RUN environment variable set to 'true'.
+   */
+  preVersionCommand?: string;
+  /**
+   * Projects which should use a no-op VersionActions implementation rather than any potentially inferred by default or via Inference Plugins.
+   * Can be an array of project names (subset of projects in the release setup/release group) or a boolean (true means all projects).
+   * e.g.
+   * Consider a node application called `api` that does not require its `package.json` file to be versioned yet builds versioned docker images.
+   * To ensure that JS Versioning does not take place, the following would be set in the `docker` config in `nx.release`
+   * ```
+   *   "docker": {
+   *     "skipVersionActions": ["api"]
+   *   }
+   * ```
+   */
+  skipVersionActions?: string[] | boolean;
+  /**
+   * Record of named version patterns to choose between when versioning docker projects.
    *
-   * Setting this to true is the same as adding the following to version.generatorOptions:
-   * - currentVersionResolver: "git-tag"
-   * - specifierSource: "conventional-commits"
-   *
-   * If the user attempts to mix and match these options with the shorthand, we will provide a helpful error.
+   * e.g.
+   * ```
+   * "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+   * "hotfix": "{currentDate|YYMM.DD}-hotfix"
+   * ```
+   */
+  versionSchemes?: Record<string, string>;
+  /**
+   * Repository name for the image on the configured registry
+   */
+  repositoryName?: string;
+  /**
+   * Url of the Docker Image/Container Registry to push images to.
+   * Defaults to Docker Hub.
+   */
+  registryUrl?: string;
+}
+
+// NOTE: It's important to keep the nx-schema.json in sync with this interface. If you make changes here, make sure they are reflected in the schema.
+export interface NxReleaseVersionConfiguration {
+  /**
+   * Shorthand for enabling the current version of projects to be resolved from git tags,
+   * and the next version to be determined by analyzing commit messages according to the
+   * Conventional Commits specification.
    */
   conventionalCommits?: boolean;
+  /**
+   * A command to run after validation of nx release configuration, but before versioning begins.
+   * Useful for preparing build artifacts. If --dry-run is passed, the command is still executed,
+   * but with the NX_DRY_RUN environment variable set to 'true'.
+   */
+  preVersionCommand?: string;
+  /**
+   * The source to use for determining the specifier to use when versioning.
+   * 'prompt' is the default and will interactively prompt the user for an explicit/imperative specifier.
+   * 'conventional-commits' will attempt determine a specifier from commit messages conforming to the Conventional Commits specification.
+   * 'version-plans' will determine the specifier from the version plan files available on disk.
+   */
+  specifierSource?: 'prompt' | 'conventional-commits' | 'version-plans';
+  /**
+   * A list of directories containing manifest files (such as package.json) to apply updates to when versioning.
+   *
+   * By default, only the project root will be used, but you could customize this to only version a manifest in a
+   * dist directory, or even version multiple manifests in different directories, such as both source and dist.
+   *
+   * For more advanced scenarios, the preserveLocalDependencyProtocols can be overridden per manifest by providing
+   * and object instead of a string.
+   */
+  manifestRootsToUpdate?: ManifestRootToUpdate[];
+  /**
+   * The resolver to use for determining the current version of a project during versioning.
+   * This is needed for versioning approaches which involve relatively modifying a current version
+   * to arrive at a new version, such as semver bumps like 'patch', 'minor' etc.
+   *
+   * Using 'none' explicitly declares that the current version is not needed to compute the new version, and
+   * should only be used with appropriate version actions implementations that support it.
+   */
+  currentVersionResolver?: 'registry' | 'disk' | 'git-tag' | 'none';
+  /**
+   * Metadata to provide to the configured currentVersionResolver to help it in determining the current version.
+   * What to pass here is specific to each resolver.
+   */
+  currentVersionResolverMetadata?: Record<string, unknown>;
+  /**
+   * The fallback version resolver to use when the configured currentVersionResolver fails to resolve the current version.
+   */
+  fallbackCurrentVersionResolver?: 'disk';
+  /**
+   * Whether or not this is the first release of one of more projects.
+   * This removes certain validation checks that are not possible to enforce if the project has never been released before.
+   */
+  firstRelease?: boolean;
+  /**
+   * The prefix to use when versioning dependencies.
+   * This can be one of the following: auto, '', '~', '^', '=', where auto means the existing prefix will be preserved.
+   */
+  versionPrefix?: (typeof validReleaseVersionPrefixes)[number];
+  /**
+   * Whether to delete the processed version plans file after versioning is complete. This is false by default because the
+   * version plans are also needed for changelog generation.
+   */
+  deleteVersionPlans?: boolean;
+  /**
+   * When versioning independent projects, this controls whether to update their dependents (i.e. the things that depend on them).
+   * 'never' means no dependents will be updated (unless they happen to be versioned directly as well).
+   * 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned.
+   */
+  updateDependents?: 'auto' | 'never';
+  /**
+   * Whether to log projects that have not changed during versioning.
+   */
+  logUnchangedProjects?: boolean;
+  /**
+   * The path to the version actions implementation to use for releasing all projects by default.
+   * This can also be overridden on the release group and project levels.
+   */
+  versionActions?: string;
+  /**
+   * The specific options that are defined by each version actions implementation.
+   * They will be passed to the version actions implementation when running a release.
+   */
+  versionActionsOptions?: Record<string, unknown>;
+  /**
+   * Whether to preserve local dependency protocols (e.g. file references, or the `workspace:` protocol in package.json files)
+   * of local dependencies when updating them during versioning.
+   */
+  preserveLocalDependencyProtocols?: boolean;
+  // TODO(v22): change the default value of this to true
+  /**
+   * Whether to preserve matching dependency ranges when updating them during versioning.
+   * e.g.
+   *  The new version will be "1.2.0" and the current version range in dependents is already "^1.0.0"
+   *  Therefore, the manifest file is not updated.
+   *
+   * This is false by default.
+   */
+  preserveMatchingDependencyRanges?:
+    | boolean
+    | Array<
+        | 'dependencies'
+        | 'devDependencies'
+        | 'peerDependencies'
+        | 'optionalDependencies'
+      >;
 }
 
 export interface NxReleaseChangelogConfiguration {
@@ -82,11 +220,20 @@ export interface NxReleaseChangelogConfiguration {
   createRelease?:
     | false
     | 'github'
+    | 'gitlab'
     | {
         provider: 'github-enterprise-server';
         hostname: string;
         /**
          * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      }
+    | {
+        provider: 'gitlab';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v4`
          */
         apiBaseUrl?: string;
       };
@@ -149,9 +296,17 @@ export interface NxReleaseGitConfiguration {
    */
   tagMessage?: string;
   /**
-   * Additional arguments to pass to the `git tag` command invoked behind the scenes. . May be a string or array of strings.
+   * Additional arguments to pass to the `git tag` command invoked behind the scenes. May be a string or array of strings.
    */
   tagArgs?: string | string[];
+  /**
+   * Whether or not to automatically push the changes made by this command to the remote git repository.
+   */
+  push?: boolean;
+  /**
+   * Additional arguments to pass to the `git push` command invoked behind the scenes. May be a string or array of strings.
+   */
+  pushArgs?: string | string[];
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
@@ -199,6 +354,11 @@ export interface NxReleaseConfiguration {
    */
   projects?: string[] | string;
   /**
+   * Configure options to handle versioning docker projects. Docker projects will be identified via the presence of a Dockerfile.
+   * Set to `true` to enable with default settings, or provide a configuration object for custom settings.
+   */
+  docker?: NxReleaseDockerConfiguration | true;
+  /**
    * @note When no projects or groups are configured at all (the default), all projects in the workspace are treated as
    * if they were in a release group together with a fixed relationship.
    */
@@ -215,6 +375,21 @@ export interface NxReleaseConfiguration {
        * only be used in a maximum of one release group.
        */
       projects: string[] | string;
+      /**
+       * Configure options to handle versioning docker projects for this group.
+       * Set to `true` to enable with default settings, or provide a configuration object for custom settings.
+       */
+      docker?:
+        | (NxReleaseDockerConfiguration & {
+            /**
+             * A command to run after validation of nx release configuration, but before docker versioning begins.
+             * Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but
+             * with the NX_DRY_RUN environment variable set to 'true'.
+             * It will run in addition to the global `preVersionCommand`
+             */
+            groupPreVersionCommand?: string;
+          })
+        | true;
       /**
        * Optionally override version configuration for this group.
        *
@@ -245,6 +420,42 @@ export interface NxReleaseConfiguration {
        * Optionally override the git/release tag pattern to use for this group.
        */
       releaseTagPattern?: string;
+      /**
+       * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+       * falling back to all branches if no match is found on the current branch.
+       *
+       * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+       * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+       * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+       */
+      releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
+      /**
+       * By default, we will use semver when searching through the tags to find the latest matching tag.
+       *
+       * - Setting this to true will cause us to use semver to match the version
+       * - Setting this to false will cause us to not use semver to match the version allowing for non-semver versions
+       */
+      releaseTagPatternRequireSemver?: boolean;
+      /**
+       * When set to true and multiple tags match your configured "releaseTagPattern", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one
+       * given to the nx release invocation.
+       *
+       * For example, let's say your "releaseTagPattern" is "{projectName}@{version}" and you have the following tags for project "my-lib", which uses semver:
+       * - my-lib@1.2.4-beta.1
+       * - my-lib@1.2.4-alpha.1
+       * - my-lib@1.2.3
+       *
+       * If "releaseTagPatternStrictPreid" is set to true and you run:
+       * - `nx release --preid beta`, the git tag "my-lib@1.2.4-beta.1" will be resolved.
+       * - `nx release --preid alpha`, the git tag "my-lib@1.2.4-alpha.1" will be resolved.
+       * - `nx release` (no preid), the git tag "my-lib@1.2.3" will be resolved.
+       *
+       * If "releaseTagPatternStrictPreid" is set to false, the git tag "my-lib@1.2.4-beta.1" will always be resolved as the latest tag that matches the pattern,
+       * regardless of any preid which gets passed to nx release.
+       *
+       * NOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version.
+       */
+      releaseTagPatternStrictPreid?: boolean;
       /**
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
@@ -286,19 +497,11 @@ export interface NxReleaseConfiguration {
     automaticFromRef?: boolean;
   };
   /**
-   * If no version config is provided, we will assume that @nx/js:release-version
-   * is the desired generator implementation, allowing for terser config for the common case.
+   * If no version configuration is provided, we will assume that TypeScript/JavaScript experience is what is desired,
+   * allowing for terser release configuration for the common case.
    */
   version?: NxReleaseVersionConfiguration & {
-    /**
-     * Enable or override configuration for git operations as part of the version subcommand
-     */
     git?: NxReleaseGitConfiguration;
-    /**
-     * A command to run after validation of nx release configuration, but before versioning begins.
-     * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
-     * with the NX_DRY_RUN environment variable set to 'true'.
-     */
     preVersionCommand?: string;
   };
   /**
@@ -312,6 +515,42 @@ export interface NxReleaseConfiguration {
    * The default releaseTagPattern for independent releases at the project level is: "{projectName}@{version}"
    */
   releaseTagPattern?: string;
+  /**
+   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+   * falling back to all branches if no match is found on the current branch.
+   *
+   * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+   * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+   * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+   */
+  releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
+  /**
+   * By default, we will use semver when searching through the tags to find the latest matching tag.
+   *
+   * - Setting this to true will cause us to use semver to match the version
+   * - Setting this to false will cause us to not use semver to match the version allowing for non-semver versions
+   */
+  releaseTagPatternRequireSemver?: boolean;
+  /**
+   * When set to true and multiple tags match your configured "releaseTagPattern", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one
+   * given to the nx release invocation.
+   *
+   * For example, let's say your "releaseTagPattern" is "{projectName}@{version}" and you have the following tags for project "my-lib", which uses semver:
+   * - my-lib@1.2.4-beta.1
+   * - my-lib@1.2.4-alpha.1
+   * - my-lib@1.2.3
+   *
+   * If "releaseTagPatternStrictPreid" is set to true and you run:
+   * - `nx release --preid beta`, the git tag "my-lib@1.2.4-beta.1" will be resolved.
+   * - `nx release --preid alpha`, the git tag "my-lib@1.2.4-alpha.1" will be resolved.
+   * - `nx release` (no preid), the git tag "my-lib@1.2.3" will be resolved.
+   *
+   * If "releaseTagPatternStrictPreid" is set to false, the git tag "my-lib@1.2.4-beta.1" will always be resolved as the latest tag that matches the pattern,
+   * regardless of any preid which gets passed to nx release.
+   *
+   * NOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version.
+   */
+  releaseTagPatternStrictPreid?: boolean;
   /**
    * Enable and configure automatic git operations as part of the release
    */
@@ -357,6 +596,7 @@ export interface NxSyncConfiguration {
  * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface NxJsonConfiguration<T = '*' | string[]> {
+  $schema?: string;
   /**
    * Optional (additional) Nx.json configuration file which becomes a base for this one
    */
@@ -393,7 +633,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   * @deprecated Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
    * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {
@@ -507,7 +747,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
-   * Set this to false to disable connection to Nx Cloud
+   * Set this to true to disable connection to Nx Cloud
    */
   neverConnectToCloud?: boolean;
 
@@ -517,9 +757,27 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   sync?: NxSyncConfiguration;
 
   /**
-   * Use the legacy file system cache instead of the db cache
+   * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
    */
-  useLegacyCache?: boolean;
+  maxCacheSize?: string;
+
+  /**
+   * Settings for the Nx Terminal User Interface (TUI)
+   */
+  tui?: {
+    /**
+     * Whether to enable the TUI whenever possible (based on the current environment and terminal).
+     */
+    enabled?: boolean;
+    /**
+     * Whether to exit the TUI automatically after all tasks finish.
+     *
+     * - If set to `true`, the TUI will exit immediately.
+     * - If set to `false` the TUI will not automatically exit.
+     * - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.
+     */
+    autoExit?: boolean | number;
+  };
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

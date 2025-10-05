@@ -1,6 +1,6 @@
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
+import { CopyToClipboardButton, Tooltip } from '@nx/graph-ui-common';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
+import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 
 export function TargetExecutorTitle({
   commands,
@@ -31,10 +31,7 @@ export function TargetExecutorTitle({
       <span className="font-medium">
         Command
         <span className="mb-1 ml-2 hidden group-hover:inline">
-          <CopyToClipboardButton
-            text={`"command": "${command}"`}
-            tooltipText="Copy Command"
-          />
+          <CopyToClipboardButton text={command} tooltipText="Copy Command" />
         </span>
       </span>
     );

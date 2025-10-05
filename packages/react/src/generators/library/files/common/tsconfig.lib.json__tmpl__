@@ -4,7 +4,7 @@
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
     "types": [
       "node",
-      <% if (style === 'styled-jsx') { %>"@nx/react/typings/styled-jsx.d.ts",<% } %>
+      <%_ if (style === 'styled-jsx') { %>"@nx/react/typings/styled-jsx.d.ts",<% } _%>
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ]

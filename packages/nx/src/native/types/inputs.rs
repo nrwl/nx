@@ -1,5 +1,5 @@
-use napi::bindgen_prelude::Either7;
 use napi::Either;
+use napi::bindgen_prelude::Either7;
 
 #[napi(object)]
 pub struct InputsInput {

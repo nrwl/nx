@@ -3,12 +3,19 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-native": "*",
+    "@expo/metro-config": "*",
     "@testing-library/react-native": "*",
-    "metro-config": "*",
-    "react-native": "*",
     "expo": "*",
+    "expo-splash-screen": "*",
+    "expo-status-bar": "*",
+    "expo-system-ui": "*",
+    "jest-expo": "*",
+    "metro-config": "*",
+    "metro-resolver": "*",
+    "react": "*",
+    "react-native": "*",
     "react-native-svg": "*",
+    "react-native-svg-transformer": "*",
     "react-native-web": "*"
   },
   "scripts": {

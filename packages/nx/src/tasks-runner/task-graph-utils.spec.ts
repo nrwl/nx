@@ -1,21 +1,16 @@
 import '../internal-testing-utils/mock-fs';
 
-import { vol } from 'memfs';
-
-import { join } from 'path';
 import {
+  assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
+  findCycles,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
-import { tmpdir } from 'os';
-import { workspaceRoot } from '../utils/workspace-root';
-import { cacheDir } from '../utils/cache-directory';
-import { Task } from '../config/task-graph';
-import { ProjectGraph } from '../config/project-graph';
+import { TaskGraph } from '../config/task-graph';
 
 describe('task graph utils', () => {
-  describe('findCycles', () => {
+  describe('findCycle', () => {
     it('should return a cycle if it is there', () => {
       expect(
         findCycle({
@@ -27,8 +22,68 @@ describe('task graph utils', () => {
             e: ['q', 'a'],
             q: [],
           },
-        } as any)
+        })
       ).toEqual(['a', 'c', 'e', 'a']);
+
+      expect(
+        findCycle({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['a'],
+            d: [],
+            e: ['f'],
+            f: ['q'],
+            q: ['e'],
+          },
+        })
+      ).toEqual(['a', 'c', 'a']);
+    });
+
+    it('should return a continuous cycle is there', () => {
+      expect(
+        findCycle({
+          dependencies: {
+            a: [],
+            b: [],
+            c: [],
+            d: [],
+            e: [],
+            q: [],
+          },
+          continuousDependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
+            d: [],
+            e: ['q', 'a'],
+            q: [],
+          },
+        })
+      ).toEqual(['a', 'c', 'e', 'a']);
+
+      expect(
+        findCycle({
+          dependencies: {
+            a: ['b'],
+            b: [],
+            c: [],
+            d: [],
+            e: [],
+            f: [],
+            q: [],
+          },
+          continuousDependencies: {
+            a: [],
+            b: ['a'],
+            c: [],
+            d: [],
+            e: [],
+            f: [],
+            q: [],
+          },
+        })
+      ).toEqual(['a', 'b', 'a']);
     });
 
     it('should return null when no cycle', () => {
@@ -42,7 +97,66 @@ describe('task graph utils', () => {
             e: ['q'],
             q: [],
           },
-        } as any)
+        })
+      ).toEqual(null);
+    });
+  });
+
+  describe('findCycles', () => {
+    it('should return all cycles', () => {
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
+            d: [],
+            e: ['q', 'a'],
+            q: [],
+          },
+        })
+      ).toEqual(new Set(['a', 'c', 'e']));
+
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['a'],
+            d: [],
+            e: ['f'],
+            f: ['q'],
+            q: ['e'],
+          },
+        })
+      ).toEqual(new Set(['a', 'c', 'e', 'f', 'q']));
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['f'],
+            d: ['a'],
+            e: [],
+            f: ['q'],
+            q: ['c'],
+          },
+        })
+      ).toEqual(new Set(['a', 'b', 'd', 'c', 'f', 'q']));
+    });
+
+    it('should return null when no cycle', () => {
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
+            d: [],
+            e: ['q'],
+            q: [],
+          },
+        })
       ).toEqual(null);
     });
   });
@@ -58,7 +172,7 @@ describe('task graph utils', () => {
           d: [],
           e: ['a'],
         },
-      } as any;
+      };
       makeAcyclic(graph);
 
       expect(graph.dependencies).toEqual({
@@ -83,13 +197,12 @@ describe('task graph utils', () => {
       mockProcessExit = jest
         .spyOn(process, 'exit')
         .mockImplementation((code: number) => {
-          return undefined as any as never;
+          return undefined as never;
         });
     });
 
     afterEach(() => {
       process.env = env;
-      vol.reset();
       mockProcessExit.mockRestore();
     });
 
@@ -197,6 +310,75 @@ describe('task graph utils', () => {
       };
       validateNoAtomizedTasks(taskGraph as any, projectGraph as any);
       expect(mockProcessExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('assertTaskGraphDoesNotContainInvalidTargets', () => {
+    it('should throw if a task has parallelism set to false and has continuous dependencies', () => {
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            parallelism: false,
+            overrides: {},
+            outputs: [],
+          },
+          'b:watch': {
+            id: 'b:watch',
+            target: { project: 'b', target: 'watch' },
+            parallelism: false,
+            overrides: {},
+            outputs: [],
+          },
+        },
+        continuousDependencies: {
+          'a:build': ['b:watch'],
+          'b:watch': [],
+        },
+        roots: ['a:build'],
+        dependencies: {
+          'a:build': [],
+          'b:watch': [],
+        },
+      };
+      expect(() => {
+        assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
+      }).toThrowErrorMatchingInlineSnapshot(`
+        "The following tasks do not support parallelism but depend on continuous tasks:
+         - a:build -> b:watch"
+      `);
+    });
+
+    it('should throw if a task that is depended on and is continuous has parallelism set to false', () => {
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            outputs: [],
+            parallelism: true,
+          },
+          'b:watch': {
+            id: 'b:watch',
+            target: { project: 'b', target: 'watch' },
+            parallelism: false,
+            overrides: {},
+            outputs: [],
+          },
+        },
+        continuousDependencies: { 'a:build': ['b:watch'], 'b:watch': [] },
+        dependencies: { 'a:build': [], 'b:watch': [] },
+        roots: ['a:build'],
+      };
+      expect(() => {
+        assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
+      }).toThrowErrorMatchingInlineSnapshot(`
+        "The following continuous tasks do not support parallelism but are depended on:
+         - b:watch <- a:build
+        Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it."
+      `);
     });
   });
 });

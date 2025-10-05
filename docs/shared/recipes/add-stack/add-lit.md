@@ -1,3 +1,8 @@
+---
+title: Add a New Lit Project
+description: Learn how to integrate Lit with Nx, including setting up applications, configuring build systems, and leveraging Nx features with manual configuration.
+---
+
 # Add a New Lit Project
 
 The code for this example is available on GitHub:
@@ -60,10 +65,6 @@ bun add -D lit http-server
 {% /tabs %}
 
 ## Create an Application
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 We'll start with a node application and then tweak the settings to match what we need. Add a new node application to your workspace with the following command:
 
@@ -185,10 +186,6 @@ nx serve my-lit-app
 
 ## Create a Library
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 Let's create a library that our Lit application is going to consume. To create a new library, install the `@nx/js` package and run:
 
 ```shell
@@ -227,6 +224,6 @@ Now when you serve your application, you'll see the content from the library bei
 
 ## More Documentation
 
-- [@nx/esbuild](/nx-api/esbuild)
-- [@nx/js](/nx-api/js)
+- [@nx/esbuild](/technologies/build-tools/esbuild/introduction)
+- [@nx/js](/technologies/typescript/introduction)
 - [Lit](https://lit.dev/)

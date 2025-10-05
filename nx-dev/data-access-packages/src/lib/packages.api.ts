@@ -1,12 +1,12 @@
-import { TagsApi } from '@nx/nx-dev/data-access-documents/node-only';
-import { DocumentMetadata } from '@nx/nx-dev/models-document';
+import { TagsApi } from '@nx/nx-dev-data-access-documents/node-only';
+import { DocumentMetadata } from '@nx/nx-dev-models-document';
 import {
   FileMetadata,
   IntrinsicPackageMetadata,
   ProcessedPackageMetadata,
   SchemaMetadata,
-} from '@nx/nx-dev/models-package';
-import { readFileSync, lstatSync, readdirSync } from 'fs';
+} from '@nx/nx-dev-models-package';
+import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 interface StaticDocumentPaths {
@@ -39,6 +39,86 @@ export class PackagesApi {
     }
 
     this.manifest = structuredClone(this.options.manifest);
+    this.manifest['angular-rspack'] = this.getAngularRspackPackage();
+    this.manifest['angular-rsbuild'] = this.getAngularRsbuildPackage();
+  }
+
+  // TODO(colum): Remove this once we move angular rspack into main repo (when stable).
+  getAngularRspackPackage(): ProcessedPackageMetadata {
+    return {
+      path: '/nx-api/angular-rspack',
+      introPath: '/technologies/angular/angular-rspack/introduction',
+      name: 'angular-rspack',
+      packageName: 'angular-rspack',
+      description: 'Angular Rspack',
+      githubRoot: 'https://github.com/nrwl/angular-rspack/blob/master',
+      root: 'packages/angular-rspack',
+      source: 'packages/angular-rspack/src',
+      executors: {},
+      generators: {},
+      migrations: {},
+      documents: {
+        '/nx-api/angular-rspack/documents/create-config': {
+          id: 'create-config',
+          name: 'createConfig',
+          description: 'createConfig for @nx/angular-rspack',
+          path: '/nx-api/angular-rspack/documents/create-config',
+          file: 'shared/guides/angular-rspack/api/nx-angular-rspack/create-config.md',
+          isExternal: false,
+          itemList: [],
+          tags: [],
+        },
+        '/nx-api/angular-rspack/documents/create-server': {
+          id: 'create-server',
+          name: 'createServer',
+          description: 'createServer for @nx/angular-rspack',
+          path: '/nx-api/angular-rspack/documents/create-server',
+          file: 'shared/guides/angular-rspack/api/nx-angular-rspack/create-server.md',
+          isExternal: false,
+          itemList: [],
+          tags: [],
+        },
+      },
+    };
+  }
+
+  // TODO(colum): Remove this once we move angular rspack into main repo (when stable).
+  getAngularRsbuildPackage(): ProcessedPackageMetadata {
+    return {
+      path: '/nx-api/angular-rsbuild',
+      introPath: '/technologies/angular/angular-rsbuild/introduction',
+      name: 'angular-rsbuild',
+      packageName: 'angular-rsbuild',
+      description: 'Angular Rsbuild',
+      githubRoot: 'https://github.com/nrwl/angular-rspack/blob/master',
+      root: 'packages/angular-rsbuild',
+      source: 'packages/angular-rsbuild/src',
+      executors: {},
+      generators: {},
+      migrations: {},
+      documents: {
+        '/nx-api/angular-rsbuild/documents/create-config': {
+          id: 'create-config',
+          name: 'createConfig',
+          description: 'createConfig for @nx/angular-rsbuild',
+          path: '/nx-api/angular-rsbuild/documents/create-config',
+          file: 'shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config.md',
+          isExternal: false,
+          itemList: [],
+          tags: [],
+        },
+        '/nx-api/angular-rsbuild/documents/create-server': {
+          id: 'create-server',
+          name: 'createServer',
+          description: 'createServer for @nx/angular-rsbuild',
+          path: '/nx-api/angular-rspack/documents/create-server',
+          file: 'shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server.md',
+          isExternal: false,
+          itemList: [],
+          tags: [],
+        },
+      },
+    };
   }
 
   getFilePath(path: string): string {
@@ -53,6 +133,7 @@ export class PackagesApi {
     documents: StaticDocumentPaths[];
     executors: StaticDocumentPaths[];
     generators: StaticDocumentPaths[];
+    migrations: StaticDocumentPaths[];
   } {
     /**
      * TODO: Extract this into utils, can be used by DocumentsAPI as well.
@@ -74,16 +155,19 @@ export class PackagesApi {
     }
 
     const packages = Object.values(this.manifest);
+
     const experiment: {
       packages: StaticDocumentPaths[];
       documents: StaticDocumentPaths[];
       executors: StaticDocumentPaths[];
       generators: StaticDocumentPaths[];
+      migrations: StaticDocumentPaths[];
     } = {
       packages: [],
       documents: [],
       executors: [],
       generators: [],
+      migrations: [],
     };
 
     packages.forEach((p) => {
@@ -126,8 +210,11 @@ export class PackagesApi {
       Object.keys(p.generators).forEach((path) =>
         experiment.generators.push(generateSegments(path, this.options.prefix))
       );
-    });
 
+      Object.keys(p.migrations).forEach((path) =>
+        experiment.migrations.push(generateSegments(path, this.options.prefix))
+      );
+    });
     return experiment;
   }
 
@@ -151,12 +238,14 @@ export class PackagesApi {
   getPackageDocuments(name: string): Record<string, DocumentMetadata> {
     return this.manifest[name]['documents'];
   }
+
   getPackageFileMetadatas(
     name: string,
-    type: 'executors' | 'generators'
+    type: 'executors' | 'generators' | 'migrations'
   ): Record<string, FileMetadata> {
     return this.manifest[name][type];
   }
+
   getSchemaMetadata(fileMetadata: FileMetadata): SchemaMetadata {
     return JSON.parse(
       readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
@@ -170,6 +259,7 @@ export class PackagesApi {
       name: this.manifest[k].name,
       packageName: this.manifest[k].packageName,
       path: this.manifest[k].path,
+      introPath: this.manifest[k].introPath,
       root: this.manifest[k].root,
       source: this.manifest[k].source,
     }));

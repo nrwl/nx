@@ -1,6 +1,6 @@
 import { readFileSync, accessSync, constants } from 'fs';
 import { join, basename, parse, resolve } from 'path';
-import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
+import { extractFrontmatter } from '@nx/nx-dev-ui-markdoc';
 import { sortPosts } from './blog.util';
 import { BlogPostDataEntry } from './blog.model';
 import { readFile, readdir } from 'fs/promises';
@@ -55,26 +55,32 @@ export class BlogApi {
         title: frontmatter.title ?? null,
         description: frontmatter.description ?? null,
         authors: authors.filter((author) =>
-          frontmatter.authors.includes(author.name)
+          frontmatter.authors?.includes(author.name)
         ),
+        eventDate: this.dateFromFileName(file),
         date: this.calculateDate(file, frontmatter),
+        time: frontmatter.time,
+        status: frontmatter.status,
         cover_image: frontmatter.cover_image
           ? `/documentation${frontmatter.cover_image}` // Match the prefix used by markdown parser
           : null,
         tags: frontmatter.tags ?? [],
         reposts: frontmatter.reposts ?? [],
-        pinned: frontmatter.pinned ?? false,
+        // Do not default to 'false' so you can 'unpin' a blog post
+        pinned: frontmatter.pinned ?? null,
         ogImage: image,
         ogImageType: type,
         filePath,
         slug,
         youtubeUrl: frontmatter.youtubeUrl,
+        registrationUrl: frontmatter.registrationUrl,
         podcastYoutubeId: frontmatter.podcastYoutubeId,
         podcastSpotifyId: frontmatter.podcastSpotifyId,
         podcastIHeartUrl: frontmatter.podcastIHeartUrl,
         podcastAppleUrl: frontmatter.podcastAppleUrl,
         podcastAmazonUrl: frontmatter.podcastAmazonUrl,
         published: frontmatter.published ?? true,
+        metrics: frontmatter.metrics,
       };
       const isDevelopment = process.env.NODE_ENV === 'development';
       const shouldIncludePost = !frontmatter.draft || isDevelopment;
@@ -99,19 +105,26 @@ export class BlogApi {
     return frontmatter.slug || baseName;
   }
 
+  private dateFromFileName(filename: string): string {
+    const timeString = new Date().toISOString().split('T')[1];
+    const regexp = /^(\d\d\d\d-\d\d-\d\d).+$/;
+    const match = filename.match(regexp);
+    if (match) {
+      return new Date(match[1] + ' ' + timeString).toISOString();
+    } else {
+      throw new Error(`Could not parse date from filename: ${filename}`);
+    }
+  }
+
   private calculateDate(filename: string, frontmatter: any): string {
     const date: Date = new Date();
-    const timeString = date.toTimeString();
+    const timeString = date.toISOString().split('T')[1];
     if (frontmatter.date) {
-      return new Date(frontmatter.date + ' ' + timeString).toISOString();
+      return new Date(
+        frontmatter.date.toISOString().split('T')[0] + 'T' + timeString
+      ).toISOString();
     } else {
-      const regexp = /^(\d\d\d\d-\d\d-\d\d).+$/;
-      const match = filename.match(regexp);
-      if (match) {
-        return new Date(match[1] + ' ' + timeString).toISOString();
-      } else {
-        throw new Error(`Could not parse date from filename: ${filename}`);
-      }
+      return this.dateFromFileName(filename);
     }
   }
 

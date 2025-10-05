@@ -1,10 +1,14 @@
 'use client';
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { MoreBlogs } from './more-blogs';
 import { FeaturedBlogs } from './featured-blogs';
 import { useEffect, useMemo, useState } from 'react';
 import { Filters } from './filters';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { ALL_TOPICS } from './topics';
+import { sortFirstFivePosts } from './sort-featured-posts';
 import {
   ComputerDesktopIcon,
   BookOpenIcon,
@@ -14,72 +18,13 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   ListBulletIcon,
   VideoCameraIcon,
+  RssIcon,
+  AtSymbolIcon,
 } from '@heroicons/react/24/outline';
 
 export interface BlogContainerProps {
   blogPosts: BlogPostDataEntry[];
   tags: string[];
-}
-
-let ALL_TOPICS = [
-  {
-    label: 'All',
-    icon: ListBulletIcon,
-    value: 'All',
-    heading: 'All Blogs',
-  },
-  {
-    label: 'Stories',
-    icon: BookOpenIcon,
-    value: 'customer story',
-    heading: 'Customer Stories',
-  },
-  {
-    label: 'Webinars',
-    icon: ComputerDesktopIcon,
-    value: 'webinar',
-    heading: 'Webinars',
-  },
-  {
-    label: 'Podcasts',
-    icon: MicrophoneIcon,
-    value: 'podcast',
-    heading: 'Podcasts',
-  },
-  {
-    label: 'Releases',
-    icon: CubeIcon,
-    value: 'release',
-    heading: 'Release Blogs',
-  },
-  {
-    label: 'Talks',
-    icon: ChatBubbleOvalLeftEllipsisIcon,
-    value: 'talk',
-    heading: 'Talks',
-  },
-  {
-    label: 'Tutorials',
-    icon: AcademicCapIcon,
-    value: 'tutorial',
-    heading: 'Tutorials',
-  },
-  {
-    label: 'Livestreams',
-    icon: VideoCameraIcon,
-    value: 'livestream',
-    heading: 'Livestreams',
-  },
-];
-
-// first five blog posts contain potentially pinned plus the last published ones. They
-// should be sorted by date (not just all pinned first)
-export function sortFirstFivePosts(
-  posts: BlogPostDataEntry[]
-): BlogPostDataEntry[] {
-  return posts
-    .slice(0, 5)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
@@ -113,8 +58,15 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   );
 
   function updateBlogPosts() {
-    setFirstFiveBlogs(sortFirstFivePosts(filteredList));
-    setRemainingBlogs(filteredList.length > 5 ? filteredList.slice(5) : []);
+    const firstFive = sortFirstFivePosts(filteredList);
+    setFirstFiveBlogs(firstFive);
+
+    // Get the remaining blogs, sorted by date (unpinned posts after the first 5)
+    const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
+    const remaining = filteredList
+      .filter((post) => !firstFiveSlugs.has(post.slug))
+      .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+    setRemainingBlogs(remaining);
   }
 
   useEffect(() => updateBlogPosts(), [filteredList]);
@@ -122,27 +74,77 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   return (
     <main id="main" role="main" className="w-full py-8">
       <div className="mx-auto mb-8 w-full max-w-[1088px] px-8">
-        <div className="mb-12 mt-20 flex items-center justify-between">
-          <header>
-            <h1
-              id="blog-title"
-              className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
-            >
-              {selectedFilterHeading}
-            </h1>
-          </header>
-          <div className="flex items-center justify-end md:justify-start">
-            <Filters
-              blogs={blogPosts}
-              filters={filters}
-              initialSelectedFilter={initialSelectedFilter}
-              setFilteredList={setFilteredList}
-              setSelectedFilterHeading={setSelectedFilterHeading}
-            />
+        {process.env.NEXT_PUBLIC_ASTRO_URL ? (
+          <>
+            <header className="mb-8 mt-20">
+              <h1
+                id="blog-title"
+                className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
+              >
+                {selectedFilterHeading}
+              </h1>
+            </header>
+            <div className="mb-12 flex items-center justify-between">
+              <div className="flex items-center">
+                <Filters
+                  blogs={blogPosts}
+                  filters={filters}
+                  initialSelectedFilter={initialSelectedFilter}
+                  setFilteredList={setFilteredList}
+                  setSelectedFilterHeading={setSelectedFilterHeading}
+                />
+              </div>
+              <div className="flex w-48 items-center justify-end md:justify-start">
+                <AlgoliaSearch blogOnly={true} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mb-12 mt-20 flex items-center justify-between">
+            <header>
+              <h1
+                id="blog-title"
+                className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
+              >
+                {selectedFilterHeading}
+              </h1>
+            </header>
+            <div className="flex items-center justify-end md:justify-start">
+              <Filters
+                blogs={blogPosts}
+                filters={filters}
+                initialSelectedFilter={initialSelectedFilter}
+                setFilteredList={setFilteredList}
+                setSelectedFilterHeading={setSelectedFilterHeading}
+              />
+            </div>
           </div>
-        </div>
+        )}
         <FeaturedBlogs blogs={firstFiveBlogs} />
-        {!!remainingBlogs.length && <MoreBlogs blogs={remainingBlogs} />}
+        {!!remainingBlogs.length && (
+          <>
+            <div className="mx-auto mb-8 mt-20 flex items-center justify-between border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
+              <h2 className="font-semibold">More blogs</h2>
+              <div className="flex gap-2">
+                <Link
+                  href="/blog/rss.xml"
+                  aria-label="RSS feed"
+                  prefetch={false}
+                >
+                  <RssIcon className="h-5 w-5 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" />
+                </Link>
+                <Link
+                  href="/blog/atom.xml"
+                  aria-label="Atom feed"
+                  prefetch={false}
+                >
+                  <AtSymbolIcon className="h-5 w-5 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" />
+                </Link>
+              </div>
+            </div>
+            <MoreBlogs blogs={remainingBlogs} />
+          </>
+        )}
       </div>
     </main>
   );
@@ -154,9 +156,15 @@ function initializeFilters(
 ) {
   const filterBy = searchParams.get('filterBy');
 
+  const firstFive = sortFirstFivePosts(blogPosts);
+  const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
+  const remaining = blogPosts
+    .filter((post) => !firstFiveSlugs.has(post.slug))
+    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+
   const defaultState = {
-    initialFirstFive: sortFirstFivePosts(blogPosts),
-    initialRest: blogPosts.slice(5),
+    initialFirstFive: firstFive,
+    initialRest: remaining,
     initialSelectedFilterHeading: 'All Blogs',
     initialSelectedFilter: 'All',
   };
@@ -169,9 +177,17 @@ function initializeFilters(
 
   const initialFilter = ALL_TOPICS.find((filter) => filter.value === filterBy);
 
+  const filteredFirstFive = sortFirstFivePosts(result);
+  const filteredFirstFiveSlugs = new Set(
+    filteredFirstFive.map((post) => post.slug)
+  );
+  const filteredRemaining = result
+    .filter((post) => !filteredFirstFiveSlugs.has(post.slug))
+    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+
   return {
-    initialFirstFive: sortFirstFivePosts(result),
-    initialRest: result.length > 5 ? result.slice(5) : [],
+    initialFirstFive: filteredFirstFive,
+    initialRest: filteredRemaining,
     initialSelectedFilterHeading: initialFilter?.heading || 'All Blogs',
     initialSelectedFilter: initialFilter?.value || 'All',
   };

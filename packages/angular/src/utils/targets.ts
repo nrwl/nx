@@ -1,4 +1,12 @@
-import { TargetConfiguration } from '@nx/devkit';
+import type { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
+
+export function* allProjectTargets<T>(
+  project: ProjectConfiguration
+): Iterable<[name: string, target: TargetConfiguration<T>]> {
+  for (const [name, target] of Object.entries(project.targets ?? {})) {
+    yield [name, target];
+  }
+}
 
 export function* allTargetOptions<T>(
   target: TargetConfiguration<T>

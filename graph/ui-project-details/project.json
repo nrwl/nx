@@ -42,5 +42,6 @@
         }
       }
     }
-  }
+  },
+  "implicitDependencies": ["!devkit"]
 }

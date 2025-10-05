@@ -39,11 +39,22 @@ function withFormatOptions(yargs: Argv): Argv {
       type: 'string',
       coerce: parseCSV,
     })
+    .option('sort-root-tsconfig-paths', {
+      describe: `Ensure the workspace's tsconfig compilerOptions.paths are sorted. Warning: This will cause comments in the tsconfig to be lost. The default value is "false" unless NX_FORMAT_SORT_TSCONFIG_PATHS is set to "true".`,
+      type: 'boolean',
+    })
     .option('all', {
       describe: 'Format all projects.',
       type: 'boolean',
     })
     .conflicts({
       all: 'projects',
+    })
+    .middleware((args) => {
+      args.sortRootTsconfigPaths ??=
+        process.env.NX_FORMAT_SORT_TSCONFIG_PATHS === 'true';
+      // If NX_FORMAT_SORT_TSCONFIG_PATHS=false and --sort-root-tsconfig-paths is passed, we want to set it to true favoring the arg
+      process.env.NX_FORMAT_SORT_TSCONFIG_PATHS =
+        args.sortRootTsconfigPaths.toString();
     });
 }

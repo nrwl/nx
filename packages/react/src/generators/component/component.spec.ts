@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
   logger,
   readJson,
@@ -14,14 +14,17 @@ import { componentGenerator } from './component';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 
 describe('component', () => {
   let appTree: Tree;
   let projectName: string;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   beforeEach(async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
@@ -42,6 +45,26 @@ describe('component', () => {
       name: 'hello',
       style: 'css',
       path: `${projectName}/src/lib/hello/hello`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+    expect(
+      appTree.exists('my-lib/src/lib/hello/hello.module.css')
+    ).toBeTruthy();
+    expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
+      /import styles from '.\/hello.module.css'/
+    );
+    expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
+      /<div className={styles\['container']}>/
+    );
+  });
+
+  it('should handle path with file extension', async () => {
+    await componentGenerator(appTree, {
+      name: 'hello',
+      style: 'css',
+      path: `${projectName}/src/lib/hello/hello.tsx`,
     });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -162,7 +185,7 @@ describe('component', () => {
 
       const indexContent = appTree.read('my-lib/src/index.ts', 'utf-8');
 
-      expect(indexContent).not.toMatch(/lib\/hello/);
+      expect(indexContent).toMatch(/lib\/hello/);
     });
   });
 
@@ -197,6 +220,7 @@ describe('component', () => {
       expect(content).not.toContain('hello.scss');
       expect(content).not.toContain('hello.module.css');
       expect(content).not.toContain('hello.module.scss');
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -216,6 +240,7 @@ describe('component', () => {
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
       expect(content).toContain('styled-components');
       expect(content).toContain('<StyledHello>');
+      expect(content).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -246,6 +271,7 @@ describe('component', () => {
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
       expect(content).toContain('@emotion/styled');
       expect(content).toContain('<StyledHello>');
+      expect(content).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -277,6 +303,7 @@ describe('component', () => {
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
       expect(content).toContain('<style jsx>');
       expect(content).not.toContain("styles['container']");
+      expect(content).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -288,6 +315,24 @@ describe('component', () => {
 
       const packageJSON = readJson(appTree, 'package.json');
       expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
+    });
+  });
+
+  describe('--style tailwind', () => {
+    it('should not generate any style in component', async () => {
+      await componentGenerator(appTree, {
+        name: 'hello',
+        path: `${projectName}/src/lib/hello/hello`,
+        style: 'tailwind',
+      });
+
+      expect(
+        appTree.exists('my-lib/src/lib/hello/hello.styled-components')
+      ).toBeFalsy();
+      expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+
+      const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
+      expect(content).toMatchSnapshot();
     });
   });
 

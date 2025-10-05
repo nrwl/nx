@@ -1,3 +1,8 @@
+---
+title: Local Generators
+description: Learn how to create, run, and customize local generators in your Nx workspace to automate common development tasks and standardize workflows.
+---
+
 # Local Generators
 
 Local plugin generators provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, generators help you standardize these tasks in a consistent, and predictable manner.
@@ -116,4 +121,4 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 
 ## Generator Utilities
 
-The [`@nx/devkit` package](/nx-api/devkit/documents/nx_devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
+The [`@nx/devkit` package](/reference/core-api/devkit/documents/nx_devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).

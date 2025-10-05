@@ -7,7 +7,12 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
+import { hashArray } from '../../native';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommandForTasks } from '../../tasks-runner/run-command';
 import {
@@ -17,6 +22,7 @@ import {
 import { handleErrors } from '../../utils/handle-errors';
 import { output } from '../../utils/output';
 import { projectHasTarget } from '../../utils/project-graph-utils';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
 import {
@@ -91,6 +97,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const {
       error: filterError,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     } = filterReleaseGroups(
@@ -102,6 +109,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     if (filterError) {
       output.error(filterError);
       process.exit(1);
+    }
+    if (
+      filterLog &&
+      process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
+    ) {
+      output.note(filterLog);
     }
 
     /**
@@ -204,6 +217,15 @@ async function runPublishOnProjects(
     overrides.firstRelease = args.firstRelease;
   }
 
+  /**
+   * If using the `nx release` command, or possibly via the programmatic API, versionData will be passed through from the version subcommand.
+   * Provide it automatically to the publish executor options with a clear namespace to avoid userland conflicts.
+   * It will be filtered out of the final terminal output lifecycle to avoid cluttering the terminal.
+   */
+  if (args.versionData) {
+    overrides.nxReleaseVersionData = args.versionData;
+  }
+
   const requiredTargetName = 'nx-release-publish';
 
   if (args.graph) {
@@ -238,15 +260,27 @@ async function runPublishOnProjects(
       `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:\n${[
         ...projectsToRun.map((p) => `- ${p.name}`),
         '',
-        `This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically.`,
+        `This is usually caused by either`,
+        `- not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically`,
+        `- having "private": true set in your package.json, which prevents the target from being created`,
       ].join('\n')}\n`
     );
   }
+  const id = hashArray([...process.argv, Date.now().toString()]);
+  await runPreTasksExecution({
+    id,
+    workspaceRoot,
+    nxJsonConfiguration: nxJson,
+    argv: process.argv,
+  });
+  const startTime = Date.now();
 
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
+   * NOTE: Force TUI to be disabled for now.
    */
-  const commandResults = await runCommandForTasks(
+  process.env.NX_TUI = 'false';
+  const { taskResults } = await runCommandForTasks(
     projectsWithTarget,
     projectGraph,
     { nxJson },
@@ -262,13 +296,23 @@ async function runPublishOnProjects(
     {},
     extraOptions
   );
+  const endTime = Date.now();
 
   const publishProjectsResult: PublishProjectsResult = {};
-  for (const taskData of Object.values(commandResults)) {
+  for (const taskData of Object.values(taskResults)) {
     publishProjectsResult[taskData.task.target.project] = {
       code: taskData.code,
     };
   }
+  await runPostTasksExecution({
+    id,
+    taskResults,
+    workspaceRoot,
+    nxJsonConfiguration: nxJson,
+    argv: process.argv,
+    startTime,
+    endTime,
+  });
 
   return publishProjectsResult;
 }

@@ -1,0 +1,12 @@
+import { <% if (useBootstrapContext) { %>BootstrapContext, <% } %>bootstrapApplication } from '@angular/platform-browser';
+import { <%= appSymbolName %> } from './app/<%= appFileName %>';
+import { config } from './app/app.config.server';
+
+<%_ if (useBootstrapContext) { _%>
+const bootstrap = (context: BootstrapContext) =>
+  bootstrapApplication(<%= appSymbolName %>, config, context);
+<%_ } else { _%>
+const bootstrap = () => bootstrapApplication(<%= appSymbolName %>, config);
+<%_ } _%>
+
+export default bootstrap;

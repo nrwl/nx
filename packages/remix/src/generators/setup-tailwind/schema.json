@@ -17,13 +17,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What project would you like to add Tailwind to?",
-      "pattern": "^[a-zA-Z].*$"
-    },
-    "js": {
-      "type": "boolean",
-      "description": "Generate a JavaScript config file instead of a TypeScript config file",
-      "default": false
+      "x-prompt": "What project would you like to add Tailwind to?"
     },
     "skipFormat": {
       "type": "boolean",

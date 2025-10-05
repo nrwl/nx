@@ -4,14 +4,7 @@ import { applyReactConfig } from './nx-react-webpack-plugin/lib/apply-react-conf
 
 const processed = new Set();
 
-export interface SvgrOptions {
-  svgo?: boolean;
-  titleProp?: boolean;
-  ref?: boolean;
-}
-export interface WithReactOptions extends WithWebOptions {
-  svgr?: boolean | SvgrOptions;
-}
+export interface WithReactOptions extends WithWebOptions {}
 
 /**
  * @param {WithReactOptions} pluginOptions
@@ -29,7 +22,7 @@ export function withReact(pluginOptions: WithReactOptions = {}) {
     // Apply web config for CSS, JSX, index.html handling, etc.
     config = withWeb(pluginOptions)(config, context);
 
-    applyReactConfig(pluginOptions, config);
+    applyReactConfig({}, config);
 
     processed.add(config);
     return config;

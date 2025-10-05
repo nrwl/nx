@@ -15,11 +15,6 @@
       "type": "string",
       "description": "The path to route file relative to the project root."
     },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the error boundary in the path as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files after generation.",

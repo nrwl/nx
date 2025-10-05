@@ -1,11 +1,15 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getAvailablePort,
+  killPorts,
   newProject,
+  readFile,
   runCLI,
   runCLIAsync,
+  runE2ETests,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Vite', () => {
   beforeAll(() => {
@@ -22,7 +26,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteApp = uniq('viteapp');
 
     runCLI(
-      `generate @nx/react:app apps/${viteApp} --bundler=vite --compiler=babel --unitTestRunner=vitest --no-interactive`
+      `generate @nx/react:app apps/${viteApp} --bundler=vite --compiler=babel --unitTestRunner=vitest --no-interactive --linter=eslint`
     );
 
     const appTestResults = await runCLIAsync(`test ${viteApp}`);
@@ -43,7 +47,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteApp = uniq('viteapp');
 
     runCLI(
-      `generate @nx/react:app apps/${viteApp} --bundler=vite --compiler=swc --unitTestRunner=vitest --no-interactive`
+      `generate @nx/react:app apps/${viteApp} --bundler=vite --compiler=swc --unitTestRunner=vitest --no-interactive --linter=eslint`
     );
 
     const appTestResults = await runCLIAsync(`test ${viteApp}`);
@@ -60,12 +64,32 @@ describe('Build React applications and libraries with Vite', () => {
     checkFilesExist(`dist/apps/${viteApp}/index.html`);
   }, 300_000);
 
+  it('should generate app with custom port', async () => {
+    const viteApp = uniq('viteapp');
+    const customPort = await getAvailablePort();
+
+    runCLI(
+      `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint --e2eTestRunner=playwright`
+    );
+
+    const viteConfig = readFile(`apps/${viteApp}/vite.config.ts`);
+    expect(viteConfig).toContain(`port: ${customPort}`);
+
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${viteApp}-e2e`, {
+        verbose: true,
+      });
+      expect(e2eResults).toContain('Successfully ran target e2e for project');
+      expect(await killPorts()).toBeTruthy();
+    }
+  }, 300_000);
+
   it('should test and lint app with bundler=vite and inSourceTests', async () => {
     const viteApp = uniq('viteapp');
     const viteLib = uniq('vitelib');
 
     runCLI(
-      `generate @nx/react:app apps/${viteApp} --bundler=vite --unitTestRunner=vitest --inSourceTests --no-interactive`
+      `generate @nx/react:app apps/${viteApp} --bundler=vite --unitTestRunner=vitest --inSourceTests --no-interactive --linter=eslint`
     );
     expect(() => {
       checkFilesExist(`apps/${viteApp}/src/app/app.spec.tsx`);
@@ -85,7 +109,7 @@ describe('Build React applications and libraries with Vite', () => {
     checkFilesExist(`dist/apps/${viteApp}/index.html`);
 
     runCLI(
-      `generate @nx/react:lib libs/${viteLib} --bundler=vite --inSourceTests --unitTestRunner=vitest --no-interactive`
+      `generate @nx/react:lib libs/${viteLib} --bundler=vite --inSourceTests --unitTestRunner=vitest --no-interactive --linter=eslint`
     );
     expect(() => {
       checkFilesExist(`libs/${viteLib}/src/lib/${viteLib}.spec.tsx`);
@@ -116,7 +140,6 @@ describe('Build React applications and libraries with Vite', () => {
     await runCLIAsync(`build ${viteLib}`);
     checkFilesExist(
       `dist/libs/${viteLib}/index.d.ts`,
-      `dist/libs/${viteLib}/index.js`,
       `dist/libs/${viteLib}/index.mjs`
     );
   }, 300_000);
@@ -125,21 +148,20 @@ describe('Build React applications and libraries with Vite', () => {
     const viteLib = uniq('vitelib');
 
     runCLI(
-      `generate @nx/react:lib libs/${viteLib} --bundler=vite --no-interactive --unit-test-runner=none`
+      `generate @nx/react:lib libs/${viteLib} --bundler=vite --no-interactive --unit-test-runner=none --linter=eslint`
     );
 
     await runCLIAsync(`build ${viteLib}`);
 
     checkFilesExist(
       `dist/libs/${viteLib}/index.d.ts`,
-      `dist/libs/${viteLib}/index.js`,
       `dist/libs/${viteLib}/index.mjs`
     );
 
     // Convert non-buildable lib to buildable one
     const nonBuildableLib = uniq('nonbuildablelib');
     runCLI(
-      `generate @nx/react:lib libs/${nonBuildableLib} --no-interactive --unitTestRunner=jest`
+      `generate @nx/react:lib libs/${nonBuildableLib} --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     runCLI(
       `generate @nx/vite:configuration ${nonBuildableLib} --uiFramework=react --no-interactive`
@@ -147,7 +169,6 @@ describe('Build React applications and libraries with Vite', () => {
     await runCLIAsync(`build ${nonBuildableLib}`);
     checkFilesExist(
       `dist/libs/${nonBuildableLib}/index.d.ts`,
-      `dist/libs/${nonBuildableLib}/index.js`,
       `dist/libs/${nonBuildableLib}/index.mjs`,
       `dist/libs/${nonBuildableLib}/README.md`
     );
@@ -157,7 +178,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteApp = uniq('viteapp');
 
     runCLI(
-      `generate @nx/react:app apps/${viteApp} --bundler=vite --unitTestRunner=jest --no-interactive`
+      `generate @nx/react:app apps/${viteApp} --bundler=vite --unitTestRunner=jest --no-interactive --linter=eslint`
     );
 
     const appTestResults = await runCLIAsync(`test ${viteApp}`);

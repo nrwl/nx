@@ -1,11 +1,5 @@
-import {
-  Node,
-  parse,
-  RenderableTreeNode,
-  renderers,
-  Tokenizer,
-  transform,
-} from '@markdoc/markdoc';
+import { Node, RenderableTreeNode } from '@markdoc/markdoc';
+import markdoc from '@markdoc/markdoc';
 import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
 import { Heading } from './lib/nodes/heading.component';
@@ -43,22 +37,31 @@ import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
-import { Tweet, tweet } from '@nx/nx-dev/ui-common';
-import { YouTube, youtube } from '@nx/nx-dev/ui-common';
-import {
-  TerminalVideo,
-  terminalVideo,
-} from './lib/tags/terminal-video.component';
+import { Step, Steps } from './lib/tags/steps.component';
+import { step, steps } from './lib/tags/steps.schema';
+import { courseVideo } from './lib/tags/course-video.schema';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
+import {
+  CourseVideo,
+  YouTube,
+  Tweet,
+  youtube,
+  tweet,
+} from '@nx/nx-dev-ui-common';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
 import { fence } from './lib/nodes/fence.schema';
 import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
-import { td } from './lib/nodes/td.schema';
-// TODO fix this export
-export { GithubRepository } from './lib/tags/github-repository.component';
+import { TableOfContents } from './lib/tags/table-of-contents.component';
+import { tableOfContents } from './lib/tags/table-of-contents.schema';
+import { Testimonial, testimonial } from './lib/tags/testimonial.component';
+import { metrics } from './lib/tags/metrics.schema';
+import { Metrics } from './lib/tags/metrics.component';
+export { CallToAction };
+
+const { parse, renderers, Tokenizer, transform } = markdoc;
 
 export const getMarkdocCustomConfig = (
   documentFilePath: string,
@@ -70,7 +73,6 @@ export const getMarkdocCustomConfig = (
       heading: getHeadingSchema(headingClass),
       image: getImageSchema(documentFilePath),
       link,
-      td,
     },
     tags: {
       callout,
@@ -91,12 +93,17 @@ export const getMarkdocCustomConfig = (
       'short-embeds': shortEmbeds,
       'short-video': shortVideo,
       'side-by-side': sideBySide,
+      step,
+      steps,
       tab,
       tabs,
-      'terminal-video': terminalVideo,
+      testimonial,
+      toc: tableOfContents,
       tweet,
       youtube,
+      'course-video': courseVideo,
       'video-link': videoLink,
+      metrics,
       // 'svg-animation': svgAnimation,
     },
   },
@@ -121,13 +128,18 @@ export const getMarkdocCustomConfig = (
     ShortEmbeds,
     ShortVideo,
     SideBySide,
+    Step,
+    Steps,
     Tab,
     Tabs,
-    TerminalVideo,
+    TableOfContents,
+    Testimonial,
     Tweet,
     YouTube,
+    CourseVideo,
     VideoLink,
     VideoPlayer,
+    Metrics,
     // SvgAnimation,
   },
 });
@@ -177,3 +189,5 @@ export const renderMarkdown: (
     treeNode,
   };
 };
+
+export { Metrics, VideoLink, GithubRepository /*, CourseVideo*/ };

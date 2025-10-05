@@ -5,13 +5,13 @@ export interface ConfigurationGeneratorSchema {
   /**
    * this is relative to the projectRoot
    **/
-  directory: string;
-  js: boolean; // default is false
-  skipFormat: boolean;
-  skipPackageJson: boolean;
+  directory?: string;
+  js?: boolean; // default is false
+  skipFormat?: boolean;
+  skipPackageJson?: boolean;
   skipInstall?: boolean;
-  linter: Linter | LinterType;
-  setParserOptionsProject: boolean; // default is false
+  linter?: Linter | LinterType;
+  setParserOptionsProject?: boolean; // default is false
   /**
    * command to give playwright to run the web server
    * @example: "npx nx serve my-fe-app"
@@ -24,4 +24,11 @@ export interface ConfigurationGeneratorSchema {
   webServerAddress?: string;
   rootProject?: boolean;
   addPlugin?: boolean;
+}
+
+export interface NormalizedGeneratorOptions
+  extends ConfigurationGeneratorSchema {
+  addPlugin: boolean;
+  directory: string;
+  linter: Linter | LinterType;
 }

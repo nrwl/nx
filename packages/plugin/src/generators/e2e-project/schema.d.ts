@@ -9,5 +9,6 @@ export interface Schema {
   linter?: Linter | LinterType;
   skipFormat?: boolean;
   rootProject?: boolean;
+  useProjectJson?: boolean;
   addPlugin?: boolean;
 }

@@ -17,13 +17,13 @@ import {
 import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import type { StoriesGeneratorOptions } from './schema';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { nxVersion } from '../../utils/versions';
 
 export async function angularStoriesGenerator(
   tree: Tree,
   options: StoriesGeneratorOptions
-): Promise<GeneratorCallback> {
+) {
   const entryPoints = getProjectEntryPoints(tree, options.name);
   const componentsInfo: ComponentInfo[] = [];
   for (const entryPoint of entryPoints) {
@@ -37,13 +37,12 @@ export async function angularStoriesGenerator(
   const componentInfos = componentsInfo.filter(
     (f) =>
       !options.ignorePaths?.some((pattern) => {
-        const shouldIgnorePath = minimatch(
+        const shouldIgnorePath = picomatch(pattern)(
           joinPathFragments(
             f.moduleFolderPath,
             f.path,
             `${f.componentFileName}.ts`
-          ),
-          pattern
+          )
         );
         return shouldIgnorePath;
       })
@@ -63,24 +62,10 @@ export async function angularStoriesGenerator(
       skipFormat: true,
     });
   }
-  const tasks: GeneratorCallback[] = [];
-
-  if (options.interactionTests) {
-    const { interactionTestsDependencies, addInteractionsInAddons } =
-      ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
-
-    const projectConfiguration = readProjectConfiguration(tree, options.name);
-    addInteractionsInAddons(tree, projectConfiguration);
-
-    tasks.push(
-      addDependenciesToPackageJson(tree, {}, interactionTestsDependencies())
-    );
-  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
-  return runTasksInSerial(...tasks);
 }
 
 export default angularStoriesGenerator;

@@ -29,9 +29,18 @@ Check the "_CI Platform Considerations_" section below and if there are no addit
 
 #### Using a Personal Access Token
 
+Github supports two [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#about-personal-access-tokens) types: Classic and Fine-grained.
+
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
+{% tabs %}
+{% tab label="Classic" %}
 ![Minimum GitHub Personal Access Token Permissions](/nx-cloud/set-up/minimal-github-access-token.webp)
+{% /tab %}
+{% tab label="Fine-grained" %}
+![Minimum GitHub Fine-grained Personal Access Token Permissions](/nx-cloud/set-up/fine-grained-gh-pat-permissions.avif)
+{% /tab %}
+{% /tabs %}
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved. Check the "_CI Platform Considerations_" section below, and if there are no additional instructions for your platform of choice, setup is complete.
 
@@ -63,3 +72,10 @@ Make sure [GitHub checks are enabled](https://circleci.com/docs/2.0/enable-check
 Ensure this step from the plugin instructions is followed:
 
     Prerequisite: only GitHub App with proper permissions can publish checks, this guide helps you authenticate your Jenkins as a GitHub App.
+
+## Github Status Checks
+
+The Nx Cloud GitHub Integration updates your PR with commit statuses that reflect the real-time progress of your runs. These statuses are generated dynamically based on your running commands. Enforcing these dynamically-named checks within your branch protection rules is not recommended, as it can result in stuck checks displaying `Waiting for status to be reported`.
+
+From your repository, go to `Settings -> Branches -> Protect matching branches` and ensure that no Nx Cloud status checks are listed in the `Require status checks to pass before merging` list. Enforcing that status checks pass on your default branch is sufficient.
+![Ensure that any NxCloud status check is deselected from your branch protection rules](/nx-cloud/set-up/do-not-enforce-nx-cloud-status-checks.webp)

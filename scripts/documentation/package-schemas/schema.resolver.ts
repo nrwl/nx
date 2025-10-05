@@ -3,8 +3,8 @@ import { join } from 'path';
 import {
   getSchemaFromReference,
   Lookup,
-} from '@nx/nx-dev/data-access-packages';
-import { NxSchema } from '@nx/nx-dev/models-package';
+} from '@nx/nx-dev-data-access-packages';
+import { NxSchema } from '@nx/nx-dev-models-package';
 import { isArray, isObject } from './utils';
 
 function traverseAndReplaceReferences(
@@ -49,16 +49,16 @@ function traverseAndReplaceReferences(
   }
 }
 
-function getExamplesFileFromPath(
+export function getExamplesFileFromPath(
   rootPath: string,
-  examplesFilePath: string | null
+  examplesFilePath: string
 ): string {
   let result: string = '';
   const path: string = join(rootPath, examplesFilePath);
   try {
     result = readFileSync(path, 'utf-8');
   } catch (e) {
-    console.log('Could not resolve example for current schema: ', path, e);
+    console.log('Could not resolve example for current schema: ', path);
   }
   return result;
 }

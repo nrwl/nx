@@ -1,12 +1,15 @@
-import { names, Tree } from '@nx/devkit';
+import { names, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../../utils/test-runners';
-import { Schema } from '../schema';
-import { NormalizedSchema } from './normalized-schema';
+import {
+  getComponentType,
+  getModuleTypeSeparator,
+} from '../../utils/artifact-types';
+import type { Schema } from '../schema';
+import type { NormalizedSchema } from './normalized-schema';
 
 export async function normalizeOptions(
   host: Tree,
@@ -16,9 +19,8 @@ export async function normalizeOptions(
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     publishable: false,
-    simpleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
     // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
@@ -29,7 +31,7 @@ export async function normalizeOptions(
     ...schema,
   };
 
-  await ensureProjectName(host, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -42,20 +44,19 @@ export async function normalizeOptions(
     importPath: options.importPath,
   });
 
-  const fileName = options.simpleName
-    ? projectNames.projectSimpleName
-    : projectNames.projectFileName;
+  const fileName = projectNames.projectFileName;
 
   const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-  const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
+  const moduleTypeSeparator = getModuleTypeSeparator(host);
+  const modulePath = `${projectRoot}/src/lib/${fileName}${moduleTypeSeparator}module.ts`;
 
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
     prefix: options.prefix ?? 'lib',
     name: projectName,
@@ -67,9 +68,11 @@ export async function normalizeOptions(
     fileName,
     importPath,
     ngCliSchematicLibRoot,
+    skipTests: options.unitTestRunner === 'none' ? true : options.skipTests,
     standaloneComponentName: `${
       names(projectNames.projectSimpleName).className
     }Component`,
+    moduleTypeSeparator,
   };
 
   const {
@@ -86,6 +89,8 @@ export async function normalizeOptions(
     ...libraryOptions
   } = allNormalizedOptions;
 
+  const componentType = getComponentType(host);
+
   return {
     libraryOptions,
     componentOptions: {
@@ -101,6 +106,7 @@ export async function normalizeOptions(
       selector,
       skipSelector,
       flat,
+      type: componentType,
     },
   };
 }

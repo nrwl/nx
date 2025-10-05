@@ -1,3 +1,12 @@
+// AI
+export * from './lib/ai/claude';
+export * from './lib/ai/cursor';
+export * from './lib/ai/github-copilot';
+export * from './lib/ai/google-gemini';
+export * from './lib/ai/intellij-ai';
+export * from './lib/ai/model-context-protocol';
+export * from './lib/ai/open-ai';
+
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';
 export * from './lib/ci-providers/bitbucket';
@@ -48,6 +57,7 @@ export * from './lib/customers/paramount';
 export * from './lib/customers/payfit';
 export * from './lib/customers/paylocity';
 export * from './lib/customers/philips';
+export * from './lib/customers/plex';
 export * from './lib/customers/react-query';
 export * from './lib/customers/red-bull';
 export * from './lib/customers/redwood-js';
@@ -56,6 +66,8 @@ export * from './lib/customers/sainsburys';
 export * from './lib/customers/sentry';
 export * from './lib/customers/sharp';
 export * from './lib/customers/shopify';
+export * from './lib/customers/siriusxm';
+export * from './lib/customers/vattenfall';
 export * from './lib/customers/splice';
 // export * from './lib/customers/storybook'; // Present in "Technologies".
 export * from './lib/customers/strapi';
@@ -78,6 +90,22 @@ export * from './lib/editors/visual-studio-code';
 // OTHERS
 export * from './lib/monorepo-world';
 export * from './lib/others/amazon-s3';
+export * from './lib/others/linux';
+export * from './lib/others/min-io';
+export * from './lib/others/windows';
+
+// PARTNERS
+export * from './lib/partners/bitovi';
+export * from './lib/partners/callstack';
+export * from './lib/partners/hero-devs';
+export * from './lib/partners/push-based';
+export * from './lib/partners/e-square';
+export * from './lib/partners/briebug';
+export * from './lib/partners/liveloveapp';
+export * from './lib/partners/nstudio';
+export * from './lib/partners/zephry-cloud';
+export * from './lib/partners/angular-architects';
+export * from './lib/partners/this-dot-labs';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';
@@ -90,6 +118,7 @@ export * from './lib/products';
 
 // SOCIALS
 export * from './lib/socials/discord-icon';
+export * from './lib/socials/meta';
 export * from './lib/socials/x-icon';
 export * from './lib/socials/youtube';
 

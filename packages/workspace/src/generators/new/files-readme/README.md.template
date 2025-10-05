@@ -87,7 +87,7 @@ npx nx release
 
 Pass `--dry-run` to see what would happen without actually releasing the library.
 
-[Learn more about Nx release &raquo;](hhttps://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 <% } %><% if (isTsPreset && isUsingNewTsSolutionSetup) { %>
 ## Keep TypeScript project references up to date
 
@@ -119,7 +119,7 @@ npx nx add @nx/react
 Use the plugin's generator to create new projects. For example, to create a new React app or library:
 
 ```sh
-# Genenerate an app
+# Generate an app
 npx nx g @nx/react:app demo
 
 # Generate a library

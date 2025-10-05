@@ -25,13 +25,13 @@
     },
     "main": {
       "type": "string",
-      "description": "Path relative to the workspace root for the main entry file. Defaults to '<projectRoot>/src/main.ts'.",
+      "description": "Path relative to the workspace root for the main entry file. Defaults to '<projectRoot>/src/index.ts'.",
       "alias": "entryFile",
       "x-priority": "important"
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.app.json'.",
+      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.lib.json'.",
       "x-priority": "important"
     },
     "skipFormat": {

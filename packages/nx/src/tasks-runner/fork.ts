@@ -1,6 +1,7 @@
 import { fork, Serializable } from 'child_process';
 import { join } from 'path';
 import { PseudoIPCClient } from './pseudo-ipc';
+import { signalToCode } from '../utils/exit-codes';
 
 const pseudoIPCPath = process.argv[2];
 const forkId = process.argv[3];
@@ -21,9 +22,22 @@ const childProcess = fork(script, {
 
 const pseudoIPC = new PseudoIPCClient(pseudoIPCPath);
 
-pseudoIPC.onMessageFromParent(forkId, (message) => {
-  childProcess.send(message);
-});
+pseudoIPC.onMessageFromParent(
+  forkId,
+  (message) => {
+    childProcess.send(message);
+  },
+  () => {
+    // IPC connection closed
+    cleanup();
+    process.exit(0);
+  },
+  () => {
+    // IPC connection error
+    cleanup();
+    process.exit(0);
+  }
+);
 
 pseudoIPC.notifyChildIsReady(forkId);
 
@@ -32,6 +46,41 @@ process.on('message', (message: Serializable) => {
 });
 
 childProcess.on('exit', (code) => {
-  pseudoIPC.close();
+  cleanup();
   process.exit(code);
+});
+
+let isCleaningUp = false;
+function cleanup() {
+  if (isCleaningUp) {
+    return;
+  }
+  isCleaningUp = true;
+
+  // Kill child process if still running
+  if (childProcess && !childProcess.killed) {
+    childProcess.kill('SIGTERM');
+  }
+
+  // Close IPC connection
+  try {
+    pseudoIPC.close();
+  } catch {
+    // Ignore errors when closing, connection might already be broken
+  }
+}
+
+// Terminate the child process when exiting
+process.on('exit', () => {
+  cleanup();
+});
+process.on('SIGINT', () => {
+  cleanup();
+  process.exit(signalToCode('SIGINT'));
+});
+process.on('SIGTERM', () => {
+  cleanup();
+});
+process.on('SIGHUP', () => {
+  cleanup();
 });

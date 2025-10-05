@@ -11,6 +11,7 @@ export function setGeneratorDefaults(
   nxJson.generators['@nx/angular:library'] = {
     linter: options.libraryOptions.linter,
     unitTestRunner: options.libraryOptions.unitTestRunner,
+    strict: !options.libraryOptions.strict ? false : undefined,
     ...(nxJson.generators['@nx/angular:library'] || {}),
   };
 

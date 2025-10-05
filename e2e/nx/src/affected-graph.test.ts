@@ -14,7 +14,7 @@ import {
   isWindows,
   fileExists,
   removeFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('Nx Affected and Graph Tests', () => {
@@ -31,8 +31,8 @@ describe('Nx Affected and Graph Tests', () => {
       const mylib = uniq('mylib');
       const mylib2 = uniq('mylib2');
       const mypublishablelib = uniq('mypublishablelib');
-      runCLI(`generate @nx/web:app apps/${myapp}`);
-      runCLI(`generate @nx/web:app apps/${myapp2}`);
+      runCLI(`generate @nx/web:app apps/${myapp} --unitTestRunner=vitest`);
+      runCLI(`generate @nx/web:app apps/${myapp2} --unitTestRunner=vitest`);
       runCLI(`generate @nx/js:lib libs/${mylib}`);
       runCLI(`generate @nx/js:lib libs/${mylib2}`);
       runCLI(
@@ -193,8 +193,12 @@ describe('Nx Affected and Graph Tests', () => {
     });
 
     function generateAll() {
-      runCLI(`generate @nx/web:app apps/${myapp}`);
-      runCLI(`generate @nx/web:app apps/${myapp2}`);
+      runCLI(
+        `generate @nx/web:app apps/${myapp} --bundler=webpack --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/web:app apps/${myapp2} --bundler=webpack --unitTestRunner=vitest`
+      );
       runCLI(`generate @nx/js:lib  libs/${mylib}`);
       runCommand(`git add . && git commit -am "add all"`);
     }
@@ -494,7 +498,7 @@ describe('Nx Affected and Graph Tests', () => {
       const environmentJs = readFile('static/environment.js');
 
       expect(environmentJs).toContain('window.projectGraphResponse');
-      expect(environmentJs).toContain('"affected":[]');
+      expect(environmentJs).toMatch(/"affected":\[.*\]/);
     });
 
     // TODO(@AgentEnder): Please re-enable this when you fix the output
@@ -536,8 +540,12 @@ describe('show projects --affected', () => {
     const mylib2 = uniq('mylib2');
     const mypublishablelib = uniq('mypublishablelib');
 
-    runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
-    runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
+    runCLI(
+      `generate @nx/web:app ${myapp} --directory=apps/${myapp} --unitTestRunner=vitest`
+    );
+    runCLI(
+      `generate @nx/web:app ${myapp2} --directory=apps/${myapp2} --unitTestRunner=vitest`
+    );
     runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
     runCLI(`generate @nx/js:lib ${mylib2} --directory=libs/${mylib2}`);
     runCLI(

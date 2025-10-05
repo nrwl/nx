@@ -3,6 +3,7 @@
   "implementation": "/packages/react/src/executors/module-federation-dev-server/module-federation-dev-server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "title": "Module Federation Dev Server",
     "description": "Serve a web application.",
@@ -25,14 +26,16 @@
             }
           ]
         },
-        "description": "List of remote applications to run in development mode (i.e. using serve target).",
-        "x-priority": "important"
+        "description": "List of Producer (remote) applications to run in development mode (i.e. using serve target).",
+        "x-priority": "important",
+        "alias": "devProducers"
       },
       "skipRemotes": {
         "type": "array",
         "items": { "type": "string" },
-        "description": "List of remote applications to not automatically serve, either statically or in development mode. This will not remove the remotes from the `module-federation.config` file, and therefore the application may still try to fetch these remotes.\nThis option is useful if you have other means for serving the `remote` application(s).\n**NOTE:** Remotes that are not in the workspace will be skipped automatically.",
-        "x-priority": "important"
+        "description": "List of Producer (remote) applications to not automatically serve, either statically or in development mode. This will not remove the Producers (remotes) from the `module-federation.config` file, and therefore the application may still try to fetch these Producers (remotes).\nThis option is useful if you have other means for serving the Producer (remote) application(s).\n**NOTE:** Producers (remotes) that are not in the workspace will be skipped automatically.",
+        "x-priority": "important",
+        "alias": "skipProducers"
       },
       "buildTarget": {
         "type": "string",
@@ -106,25 +109,27 @@
       },
       "static": {
         "type": "boolean",
-        "description": "Whether to use a static file server instead of the webpack-dev-server. This should be used for remote applications that are also host applications."
+        "description": "Whether to use a static file server instead of the webpack-dev-server. This should be used for Producer (remote) applications that are also Consumer (host) applications."
       },
       "isInitialHost": {
         "type": "boolean",
-        "description": "Whether the host that is running this executor is the first in the project tree to do so.",
+        "description": "Whether the Consumer (host) that is running this executor is the first in the project tree to do so.",
         "default": true,
-        "x-priority": "internal"
+        "x-priority": "internal",
+        "alias": "isInitialConsumer"
       },
       "parallel": {
         "type": "number",
-        "description": "Max number of parallel processes for building static remotes"
+        "description": "Max number of parallel processes for building static Producers (remotes)"
       },
       "staticRemotesPort": {
         "type": "number",
-        "description": "The port at which to serve the file-server for the static remotes."
+        "description": "The port at which to serve the file-server for the static Producers (remotes).",
+        "alias": "staticProducersPort"
       },
       "pathToManifestFile": {
         "type": "string",
-        "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
+        "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic Producer (remote) applications relative to the workspace root."
       }
     },
     "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve them statically also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve\": {\n    \"executor\": \"@nx/react:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\"\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Serve host with remotes that can be live reloaded\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve a set selection with live reloading enabled also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve-with-hmr-remotes\": {\n    \"executor\": \"@nx/react:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\",\n      \"devRemotes\": [\n        \"remote1\",\n        {\n          \"remoteName\": \"remote2\",\n          \"configuration\": \"development\"\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",

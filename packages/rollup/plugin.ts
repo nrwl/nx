@@ -1,1 +1,5 @@
-export { createNodes, RollupPluginOptions } from './src/plugins/plugin';
+export {
+  createNodes,
+  createNodesV2,
+  RollupPluginOptions,
+} from './src/plugins/plugin';

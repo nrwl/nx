@@ -1,10 +1,11 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
+import { extname } from 'path';
 import { ProjectGraph } from '../../../config/project-graph';
-import { Tree } from '../../../generators/tree';
-import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
+import { WholeFileChange } from '../../../project-graph/file-utils';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
 
@@ -12,44 +13,41 @@ export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
 );
 
-export type ReleaseVersionGeneratorResult = {
-  data: VersionData;
-  callback: (
-    tree: Tree,
-    opts: {
-      dryRun?: boolean;
-      verbose?: boolean;
-      generatorOptions?: Record<string, unknown>;
-    }
-  ) => Promise<
-    | string[]
-    | {
-        changedFiles: string[];
-        deletedFiles: string[];
-      }
-  >;
-};
+// project name -> version data entry
+export type VersionData = Record<string, VersionDataEntry>;
 
-export type VersionData = Record<
-  string,
-  {
-    /**
-     * newVersion will be null in the case that no changes are detected for the project,
-     * e.g. when using conventional commits
-     */
-    newVersion: string | null;
-    currentVersion: string;
-    /**
-     * The list of projects which depend upon the current project.
-     * TODO: investigate generic type for this once more ecosystems are explored
-     */
-    dependentProjects: any[];
-  }
->;
+export interface VersionDataEntry {
+  currentVersion: string;
+  /**
+   * newVersion will be null in the case that no changes are detected for the project,
+   * e.g. when using conventional commits
+   */
+  newVersion: string | null;
+  /**
+   * dockerVersion will be populated if the project is a docker project and has been
+   * included within this release.
+   */
+  dockerVersion?: string;
+  /**
+   * The list of projects which depend upon the current project.
+   */
+  dependentProjects: {
+    source: string;
+    target: string;
+    type: string;
+    dependencyCollection: string;
+    rawVersionSpec: string;
+  }[];
+}
 
-function isPrerelease(version: string): boolean {
+export function isPrerelease(version: string): boolean {
   // prerelease returns an array of matching prerelease "components", or null if the version is not a prerelease
-  return prerelease(version) !== null;
+  try {
+    return prerelease(version) !== null;
+  } catch {
+    // If non-semver, prerelease will error. Prevent this from erroring the command
+    return false;
+  }
 }
 
 export class ReleaseVersion {
@@ -238,6 +236,26 @@ function stripPlaceholders(str: string, placeholders: string[]): string {
   return str;
 }
 
+export function shouldPreferDockerVersionForReleaseGroup(
+  releaseGroup: ReleaseGroupWithName
+): boolean {
+  // The inference was already done in the config phase, so if docker projects exist,
+  // releaseTagPatternRequireSemver would be false
+  return !releaseGroup.releaseTagPatternRequireSemver;
+}
+
+export function shouldSkipVersionActions(
+  dockerOptions: { skipVersionActions?: string[] | boolean },
+  projectName: string
+): boolean {
+  return (
+    dockerOptions.skipVersionActions === true ||
+    (Array.isArray(dockerOptions.skipVersionActions) &&
+      // skipVersionActions as string[] already normalized to matching projects in config.ts
+      dockerOptions.skipVersionActions.includes(projectName))
+  );
+}
+
 export function createGitTagValues(
   releaseGroups: ReleaseGroupWithName[],
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
@@ -253,10 +271,17 @@ export function createGitTagValues(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
-        if (projectVersionData.newVersion !== null) {
+        if (
+          projectVersionData.newVersion !== null ||
+          projectVersionData.dockerVersion !== null
+        ) {
+          const preferDockerVersion =
+            shouldPreferDockerVersionForReleaseGroup(releaseGroup);
           tags.push(
             interpolate(releaseGroup.releaseTagPattern, {
-              version: projectVersionData.newVersion,
+              version: preferDockerVersion
+                ? projectVersionData.dockerVersion
+                : projectVersionData.newVersion,
               projectName: project,
             })
           );
@@ -266,10 +291,17 @@ export function createGitTagValues(
     }
     // For fixed groups we want one tag for the overall group
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
-    if (projectVersionData.newVersion !== null) {
+    if (
+      projectVersionData.newVersion !== null ||
+      projectVersionData.dockerVersion !== null
+    ) {
+      const preferDockerVersion =
+        shouldPreferDockerVersionForReleaseGroup(releaseGroup);
       tags.push(
         interpolate(releaseGroup.releaseTagPattern, {
-          version: projectVersionData.newVersion,
+          version: preferDockerVersion
+            ? projectVersionData.dockerVersion
+            : projectVersionData.newVersion,
           releaseGroupName: releaseGroup.name,
         })
       );
@@ -312,28 +344,45 @@ export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
   projects: string[]
-): Promise<GitCommit[]> {
-  const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
-  const filesInReleaseGroup = new Set<string>(
-    projects.reduce(
-      (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
-      [] as string[]
-    )
-  );
+): // Map of projectName to GitCommit[]
+Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
+  const projectSet = new Set(projects);
+  const relevantCommits: Map<
+    string,
+    { commit: GitCommit; isProjectScopedCommit: boolean }[]
+  > = new Map();
 
-  /**
-   * The relevant commits are those that either:
-   * - touch project files which are contained within the list of projects directly
-   * - touch non-project files and the commit is not scoped
-   */
-  return commits.filter((c) =>
-    c.affectedFiles.some(
-      (f) =>
-        filesInReleaseGroup.has(f) ||
-        (!c.scope &&
-          fileMap.nonProjectFiles.some(
-            (nonProjectFile) => nonProjectFile.file === f
-          ))
-    )
-  );
+  for (const commit of commits) {
+    // Convert affectedFiles to FileChange[] format
+    const touchedFiles = commit.affectedFiles.map((f) => ({
+      file: f,
+      getChanges: () => [new WholeFileChange()],
+    }));
+
+    // Use the same affected detection logic as `nx affected`
+    const affectedGraph = await filterAffected(projectGraph, touchedFiles);
+
+    for (const projectName of Object.keys(affectedGraph.nodes)) {
+      if (projectSet.has(projectName)) {
+        if (!relevantCommits.has(projectName)) {
+          relevantCommits.set(projectName, []);
+        }
+        if (
+          commit.scope === projectName ||
+          commit.scope.split(',').includes(projectName) ||
+          !commit.scope
+        ) {
+          relevantCommits
+            .get(projectName)
+            ?.push({ commit, isProjectScopedCommit: true });
+        } else {
+          relevantCommits
+            .get(projectName)
+            ?.push({ commit, isProjectScopedCommit: false });
+        }
+      }
+    }
+  }
+
+  return relevantCommits;
 }

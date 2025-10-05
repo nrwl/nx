@@ -8,12 +8,12 @@ description: This guide explains how to set up Storybook for React projects in y
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for React projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/nx-api/storybook) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/introduction) to get started.
 {% /callout %}
 
 ## Generate Storybook Configuration for a React project
 
-You can generate Storybook configuration for an individual React project by using the [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual React project by using the [`@nx/react:storybook-configuration` generator](/technologies/react/api/generators/storybook-configuration), like this:
 
 ```shell
 nx g @nx/react:storybook-configuration project-name
@@ -21,7 +21,7 @@ nx g @nx/react:storybook-configuration project-name
 
 ## Auto-generate Stories
 
-The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nx/react:storybook-configuration` generator](/technologies/react/api/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
@@ -29,7 +29,7 @@ The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/sto
 └── my-component.stories.tsx
 ```
 
-If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/react:stories` generator](/nx-api/react/generators/stories):
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/react:stories` generator](/technologies/react/api/generators/stories):
 
 ```shell
 nx g @nx/react:stories --project=<project-name>
@@ -99,19 +99,20 @@ export default MyButton;
 
 ### Story file
 
-The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) would generate a Story file that looks like this:
+The [`@nx/react:storybook-configuration` generator](/technologies/react/api/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.tsx" %}
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MyButton } from './my-button';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<typeof MyButton> = {
+const meta = {
   component: MyButton,
   title: 'MyButton',
-};
+} satisfies Meta<typeof MyButton>;
 export default meta;
+
 type Story = StoryObj<typeof MyButton>;
 
 export const Primary = {
@@ -120,9 +121,9 @@ export const Primary = {
     padding: 0,
     disabled: false,
   },
-};
+} satisfies Story;
 
-export const Heading: Story = {
+export const Heading = {
   args: {
     text: '',
     padding: 0,
@@ -130,16 +131,16 @@ export const Heading: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to MyButton!/gi)).toBeTruthy();
+    expect(canvas.getByText(/MyButton!/gi)).toBeTruthy();
   },
-};
+} satisfies Story;
 ```
 
 Notice the interaction test on the second story, inside the `play` function. This just tests if the default text that appears on generated components exists in the rendered component. You can edit this test to suit your needs. You can read more about interaction tests [here](https://storybook.js.org/docs/react/writing-tests/interaction-testing).
 
 ## More Documentation
 
-You can find all Storybook-related Nx topics [here](/nx-api#storybook).
+You can find all Storybook-related Nx topics [here](/technologies/test-tools/storybook/introduction).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/react/get-started/introduction).
 
@@ -147,5 +148,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
-- [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
+- [Set up Storybook version 9](/technologies/test-tools/storybook/recipes/storybook-9-setup)
+- [Migrate to Storybook version 9](/technologies/test-tools/storybook/api/generators/migrate-9)

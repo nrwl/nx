@@ -1,14 +1,16 @@
-import * as devkit from '@nx/devkit';
-import type { Tree } from '@nx/devkit';
+import { Tree, updateJson, writeJson } from '@nx/devkit';
 import { ProjectGraph, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import hostGenerator from './host';
-import { Linter } from '@nx/eslint';
 
 jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
   return {
     ...original,
+    createProjectGraphAsync: jest.fn().mockResolvedValue({
+      dependencies: {},
+      nodes: {},
+    }),
     readCachedProjectGraph: jest.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
@@ -85,8 +87,7 @@ jest.mock('@nx/devkit', () => {
   };
 });
 
-// TODO(colum): turn these on when rspack is moved into the main repo
-xdescribe('hostGenerator', () => {
+describe('hostGenerator', () => {
   let tree: Tree;
 
   // TODO(@jaysoo): Turn this back to adding the plugin
@@ -110,7 +111,7 @@ xdescribe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -121,16 +122,22 @@ xdescribe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
 
-      expect(tree.exists('test/src/bootstrap.js')).toBeTruthy();
-      expect(tree.exists('test/src/main.js')).toBeTruthy();
-      expect(tree.exists('test/src/app/app.js')).toBeTruthy();
+      expect(tree.exists('test/src/bootstrap.jsx')).toBeTruthy();
+      expect(tree.exists('test/src/main.jsx')).toBeTruthy();
+      expect(tree.exists('test/src/app/app.jsx')).toBeTruthy();
+      // as no remotes provided, dynamic federation helper should not be included
+      expect(tree.read('test/src/app/app.jsx', 'utf-8')).not.toEqual(
+        expect.stringContaining(
+          `import { loadRemote } from '@module-federation/enhanced/runtime';`
+        )
+      );
     });
 
     it('should generate host files and configs when --js=false', async () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -148,7 +155,7 @@ xdescribe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: true,
@@ -173,7 +180,7 @@ xdescribe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -198,7 +205,7 @@ xdescribe('hostGenerator', () => {
       await hostGenerator(tree, {
         directory: 'test',
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         skipFormat: true,
@@ -206,6 +213,7 @@ xdescribe('hostGenerator', () => {
       });
 
       const packageJson = readJson(tree, 'package.json');
+      console.log(packageJson);
       expect(packageJson.devDependencies['@nx/web']).toBeDefined();
     });
 
@@ -214,7 +222,7 @@ xdescribe('hostGenerator', () => {
         directory: 'test',
         ssr: true,
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: false,
@@ -223,7 +231,6 @@ xdescribe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
       expect(tree.exists('test/rspack.config.prod.js')).toBeTruthy();
-      expect(tree.exists('test/rspack.server.config.js')).toBeTruthy();
       expect(tree.exists('test/rspack.config.js')).toBeTruthy();
       expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
       expect(
@@ -248,9 +255,6 @@ xdescribe('hostGenerator', () => {
       });
 
       expect(
-        tree.read('test/rspack.server.config.js', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
         tree.read('test/module-federation.server.config.js', 'utf-8')
       ).toMatchSnapshot();
     });
@@ -260,7 +264,7 @@ xdescribe('hostGenerator', () => {
         directory: 'test',
         ssr: true,
         style: 'css',
-        linter: Linter.None,
+        linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
         typescriptConfiguration: true,
@@ -269,7 +273,6 @@ xdescribe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
       expect(tree.exists('test/rspack.config.prod.ts')).toBeTruthy();
-      expect(tree.exists('test/rspack.server.config.ts')).toBeTruthy();
       expect(tree.exists('test/rspack.config.ts')).toBeTruthy();
       expect(tree.exists('test/module-federation.config.ts')).toBeTruthy();
       expect(
@@ -294,9 +297,6 @@ xdescribe('hostGenerator', () => {
       });
 
       expect(
-        tree.read('test/rspack.server.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
         tree.read('test/module-federation.server.config.ts', 'utf-8')
       ).toMatchSnapshot();
     });
@@ -308,7 +308,7 @@ xdescribe('hostGenerator', () => {
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
         e2eTestRunner: 'none',
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: 'none',
         typescriptConfiguration: false,
@@ -330,7 +330,7 @@ xdescribe('hostGenerator', () => {
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
         e2eTestRunner: 'none',
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: 'none',
         typescriptConfiguration: true,
@@ -355,13 +355,198 @@ xdescribe('hostGenerator', () => {
           remotes: [remote],
           dynamic: true,
           e2eTestRunner: 'none',
-          linter: Linter.None,
+          linter: 'none',
           style: 'css',
           unitTestRunner: 'none',
           typescriptConfiguration: false,
           bundler: 'rspack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${remote}.`);
+    });
+
+    it('should generate create files with dynamic host', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const remote = 'remote1';
+
+      await hostGenerator(tree, {
+        directory: 'myhostapp',
+        remotes: [remote],
+        dynamic: true,
+        e2eTestRunner: 'none',
+        linter: 'none',
+        style: 'css',
+        unitTestRunner: 'none',
+        typescriptConfiguration: false,
+        bundler: 'rspack',
+      });
+
+      expect(tree.read('myhostapp/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { registerRemotes } from '@module-federation/enhanced/runtime';
+
+        fetch('/assets/module-federation.manifest.json')
+          .then((res) => res.json())
+          .then((remotes: Record<string, string>) =>
+            Object.entries(remotes).map(([name, entry]) => ({ name, entry }))
+          )
+          .then((remotes) => registerRemotes(remotes))
+          .then(() => import('./bootstrap').catch((err) => console.error(err)));
+        "
+      `);
+      expect(tree.read('myhostapp/src/app/app.tsx', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import * as React from 'react';
+        import NxWelcome from './nx-welcome';
+        import { Link, Route, Routes } from 'react-router-dom';
+        import { loadRemote } from '@module-federation/enhanced/runtime';
+
+        const Remote1 = React.lazy(() => loadRemote('remote1/Module') as any);
+
+        export function App() {
+          return (
+            <React.Suspense fallback={null}>
+              <ul>
+                <li>
+                  <Link to="/">Home</Link>
+                </li>
+                <li>
+                  <Link to="/remote1">Remote1</Link>
+                </li>
+              </ul>
+              <Routes>
+                <Route path="/" element={<NxWelcome title="myhostapp" />} />
+                <Route path="/remote1" element={<Remote1 />} />
+              </Routes>
+            </React.Suspense>
+          );
+        }
+
+        export default App;
+        "
+      `);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await hostGenerator(tree, {
+        directory: 'myapp',
+        addPlugin: true,
+        remotes: ['remote1', 'remote2', 'remote3'],
+        e2eTestRunner: 'none',
+        linter: 'none',
+        style: 'css',
+        unitTestRunner: 'none',
+        typescriptConfiguration: false,
+        bundler: 'rspack',
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp",
+          },
+          {
+            "path": "./remote1",
+          },
+          {
+            "path": "./remote2",
+          },
+          {
+            "path": "./remote3",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "../remote1",
+            },
+            {
+              "path": "../remote2",
+            },
+            {
+              "path": "../remote3",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "lib": [
+              "dom",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "dist",
+            "rootDir": "src",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+            "types": [
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.js",
+            "src/**/*.test.js",
+            "src/**/*.spec.jsx",
+            "src/**/*.test.jsx",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+          "references": [
+            {
+              "path": "../remote1/tsconfig.app.json",
+            },
+            {
+              "path": "../remote2/tsconfig.app.json",
+            },
+            {
+              "path": "../remote3/tsconfig.app.json",
+            },
+          ],
+        }
+      `);
     });
   });
 });

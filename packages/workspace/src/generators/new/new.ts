@@ -13,6 +13,7 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
+import { Agent } from 'nx/src/ai/utils';
 
 interface Schema {
   directory: string;
@@ -28,29 +29,42 @@ interface Schema {
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
   linter?: Linter | LinterType;
-  bundler?: 'vite' | 'webpack';
+  bundler?: string;
   standaloneApi?: boolean;
   routing?: boolean;
-  packageManager?: PackageManager;
-  e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
+  useReactRouter?: boolean;
+  packageManager?: string;
+  unitTestRunner?: string;
+  e2eTestRunner?: string;
   ssr?: boolean;
   prefix?: string;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
-  formatter?: 'none' | 'prettier';
+  formatter?: string;
+  workspaces?: boolean;
+  workspaceGlobs?: string | string[];
+  useProjectJson?: boolean;
+  aiAgents?: Agent[] | Agent;
 }
 
 export interface NormalizedSchema extends Schema {
   presetVersion?: string;
   isCustomPreset: boolean;
   nxCloudToken?: string;
+  workspaceGlobs?: string[];
+  aiAgents?: Agent[];
 }
 
 export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  options.nxCloudToken = await generateWorkspaceFiles(tree, options);
+  const { token, aiAgentsCallback } = await generateWorkspaceFiles(
+    tree,
+    options
+  );
+
+  options.nxCloudToken = token;
 
   addPresetDependencies(tree, options);
 
@@ -58,25 +72,31 @@ export async function newGenerator(tree: Tree, opts: Schema) {
 
   return async () => {
     if (!options.skipInstall) {
-      const pmc = getPackageManagerCommand(options.packageManager);
+      const pmc = getPackageManagerCommand(
+        options.packageManager as PackageManager
+      );
       if (pmc.preInstall) {
         execSync(pmc.preInstall, {
           cwd: joinPathFragments(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-          windowsHide: true,
+          windowsHide: false,
         });
       }
       installPackagesTask(
         tree,
         false,
         options.directory,
-        options.packageManager
+        options.packageManager as PackageManager
       );
     }
     // TODO: move all of these into create-nx-workspace
     if (options.preset !== Preset.NPM && !options.isCustomPreset) {
       await generatePreset(tree, options);
+    }
+    // if we move this into create-nx-workspace, we can also easily log things out like nx console install success
+    if (aiAgentsCallback) {
+      await aiAgentsCallback();
     }
   };
 }
@@ -136,6 +156,16 @@ function parsePresetName(input: string): { package: string; version?: string } {
 function normalizeOptions(options: Schema): NormalizedSchema {
   const normalized: Partial<NormalizedSchema> = {
     ...options,
+    workspaceGlobs: Array.isArray(options.workspaceGlobs)
+      ? options.workspaceGlobs
+      : options.workspaceGlobs
+      ? [options.workspaceGlobs]
+      : undefined,
+    aiAgents: Array.isArray(options.aiAgents)
+      ? options.aiAgents
+      : options.aiAgents
+      ? [options.aiAgents]
+      : undefined,
   };
 
   if (!options.directory) {

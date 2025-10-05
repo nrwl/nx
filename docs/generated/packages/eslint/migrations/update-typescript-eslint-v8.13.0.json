@@ -1,0 +1,12 @@
+{
+  "name": "update-typescript-eslint-v8.13.0",
+  "version": "20.2.0-beta.5",
+  "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
+  "implementation": "/packages/eslint/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/eslint",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Update TypeScript ESLint to v8.13.0\n\nUpdate TypeScript ESLint packages to v8.13.0 if they are already on v8\n\n#### Sample Code Changes\n\nThis migration will update `typescript-eslint`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser` and `@typescript-eslint/utils` to `8.13.0` if they are between version `8.0.0` and `8.13.0`.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"package.json\" %}\n{\n  \"devDependencies\": {\n    \"typescript-eslint\": \"^8.0.0\",\n    \"@typescript-eslint/eslint-plugin\": \"^8.0.0\",\n    \"@typescript-eslint/parser\": \"^8.0.0\",\n    \"@typescript-eslint/utils\": \"^8.0.0\"\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% fileName=\"package.json\" %}\n{\n  \"devDependencies\": {\n    \"typescript-eslint\": \"^8.13.0\",\n    \"@typescript-eslint/eslint-plugin\": \"^8.13.0\",\n    \"@typescript-eslint/parser\": \"^8.13.0\",\n    \"@typescript-eslint/utils\": \"^8.13.0\"\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

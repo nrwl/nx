@@ -11,6 +11,7 @@ export function addProject(tree: Tree, options: NormalizedOptions): void {
   }
 
   const project = readProjectConfiguration(tree, options.projectName);
+  project.targets ??= {};
   project.targets.build = {
     executor: '@nx/js:tsc',
     outputs: ['{options.outputPath}'],

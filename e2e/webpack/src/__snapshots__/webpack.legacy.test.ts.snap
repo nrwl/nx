@@ -85,15 +85,15 @@ exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert wi
         }
       }
     },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
     "test": {
       "executor": "@nx/vite:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
         "reportsDirectory": "../coverage/app3224373"
       }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint"
     },
     "serve-static": {
       "executor": "@nx/web:file-server",
@@ -114,6 +114,7 @@ exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert wi
 module.exports = composePlugins((config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
+  config.output.clean = true;
   return config;
 });
 "

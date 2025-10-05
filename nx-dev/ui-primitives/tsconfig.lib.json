@@ -1,13 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "outDir": "../../dist/out-tsc/nx-dev/ui-primitives",
+    "types": ["node"],
+    "lib": ["DOM", "ES2022"],
+    "composite": true,
+    "declaration": true
   },
-  "files": [
-    "../../node_modules/@nx/react/typings/cssmodule.d.ts",
-    "../../node_modules/@nx/react/typings/image.d.ts"
-  ],
+  "files": [],
   "exclude": [
     "jest.config.ts",
     "src/**/*.spec.ts",

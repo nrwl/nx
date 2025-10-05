@@ -1,26 +1,21 @@
 import { Tree } from '@nx/devkit';
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
-  readProjectConfiguration,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
-import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   // since e2e are separate projects, default to adding plugins
   const nxJson = readNxJson(tree);
   const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+    nxJson['useInferencePlugins'] !== false &&
+    process.env.NX_ADD_PLUGINS !== 'false';
 
   const e2eWebServerInfo = getAngularE2EWebServerInfo(
     tree,
@@ -58,14 +53,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       rootProject: options.rootProject,
       addPlugin,
     });
-    if (addPlugin) {
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        joinPathFragments(options.e2eProjectRoot, 'cypress.config.ts')
-      );
-    }
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/playwright')
@@ -90,14 +77,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       rootProject: options.rootProject,
       addPlugin,
     });
-    if (addPlugin) {
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/playwright/plugin',
-        '^build',
-        joinPathFragments(options.e2eProjectRoot, 'playwright.config.ts')
-      );
-    }
   }
 
   return e2eWebServerInfo.e2ePort;

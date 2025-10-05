@@ -1,4 +1,4 @@
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { usePrefersReducedMotion } from './prefers-reduced-motion';
 
 interface MarqueeProps {
@@ -53,13 +53,16 @@ export function Marquee({
         .map((_, i) => (
           <div
             key={i}
-            className={cx('flex shrink-0 justify-around [gap:var(--gap)]', {
-              'animate-marquee flex-row': !vertical,
-              'animate-marquee-vertical flex-col': vertical,
-              '[animation-play-state:paused]': shouldReduceMotion,
-              'group-hover:[animation-play-state:paused]': pauseOnHover,
-              '[animation-direction:reverse]': reverse,
-            })}
+            className={cx(
+              'flex shrink-0 items-center justify-around [gap:var(--gap)]',
+              {
+                'animate-marquee flex-row': !vertical,
+                'animate-marquee-vertical flex-col': vertical,
+                '[animation-play-state:paused]': shouldReduceMotion,
+                'group-hover:[animation-play-state:paused]': pauseOnHover,
+                '[animation-direction:reverse]': reverse,
+              }
+            )}
           >
             {children}
           </div>

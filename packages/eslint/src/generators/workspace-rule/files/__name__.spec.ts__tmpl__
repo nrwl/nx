@@ -1,10 +1,19 @@
-import { TSESLint } from '@typescript-eslint/utils';
+<% if (flatConfig) { %>import { RuleTester } from '@typescript-eslint/rule-tester';
+import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
+import { rule, RULE_NAME } from './<%= name %>';
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: require('@typescript-eslint/parser'),
+  },
+} as RuleTesterConfig);
+<% } else { %>import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './<%= name %>';
 
 const ruleTester = new TSESLint.RuleTester({
   parser: require.resolve('@typescript-eslint/parser'),
 });
-
+<% } %>
 ruleTester.run(RULE_NAME, rule, {
   valid: [`const example = true;`],
   invalid: [],

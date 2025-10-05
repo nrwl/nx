@@ -1,8 +1,9 @@
 export const getAngularCliMigrationGenerator = (
-  version: string
+  version: string,
+  isPrerelease: boolean
 ) => `import { formatFiles, Tree, updateJson } from '@nx/devkit';
 
-export const angularCliVersion = '~${version}';
+export const angularCliVersion = '${isPrerelease ? version : `~${version}`}';
 
 export default async function (tree: Tree) {
   let shouldFormat = false;
@@ -68,4 +69,38 @@ describe('update-angular-cli migration', () => {
     expect(packageJson).toStrictEqual(initialPackageJson);
   });
 });
+`;
+
+export const getAngularCliMigrationDocs = (
+  fromVersion: string,
+  toVersion: string
+) => `#### Sample Code Changes
+
+Update the \`@angular/cli\` package version in the \`package.json\` file at the workspace root to **~${toVersion}**.
+
+{% tabs %}
+{% tab label="Before" %}
+
+\`\`\`json {% fileName="package.json" %}
+{
+  "devDependencies": {
+    "@angular/cli": "~${fromVersion}"
+  }
+}
+\`\`\`
+
+{% /tab %}
+{% tab label="After" %}
+
+\`\`\`json {% highlightLines=[3] fileName="package.json" %}
+{
+  "devDependencies": {
+    "@angular/cli": "~${toVersion}"
+  }
+}
+\`\`\`
+
+{% /tab %}
+
+{% /tabs %}
 `;

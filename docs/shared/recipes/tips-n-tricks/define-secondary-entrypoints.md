@@ -1,3 +1,8 @@
+---
+title: Define Secondary Entry Points for TypeScript Packages
+description: Learn how to configure multiple entry points for your TypeScript packages using Nx, allowing consumers to import specific parts of your library.
+---
+
 # Define Secondary Entry Points for Typescript Packages
 
 If you have a package where you want people to be able to access more than just the `main` file, you can define an `exports` property in the `package.json` file. Like this:
@@ -80,4 +85,4 @@ When building the library, the `@nx/js:tsc` executor automatically adds the corr
 
 ## Compile to Multiple Formats
 
-You can also compile to multiple formats, if you switch to using the `@nx/rollup:rollup` executor. Read all [the details here](/recipes/tips-n-tricks/compile-multiple-formats).
+You can also compile to multiple formats, if you switch to using the `@nx/rollup:rollup` executor. Read all [the details here](/technologies/typescript/recipes/compile-multiple-formats).

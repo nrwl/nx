@@ -1,0 +1,10 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                                                        "
+" NX    Running Many Pages Test...                                                                       Cache   Duration"
+"                                                                                                                        "
+"> ·    task52                                                                                             ...        ..."
+"                                                                                                                        "
+"  ← 50/101 →                        quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

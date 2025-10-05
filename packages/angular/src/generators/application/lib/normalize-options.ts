@@ -1,19 +1,33 @@
 import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+
+function arePluginsExplicitlyDisabled(host: Tree) {
+  const { useInferencePlugins } = readNxJson(host);
+  const addPluginEnvVar = process.env.NX_ADD_PLUGINS;
+  return useInferencePlugins === false || addPluginEnvVar === 'false';
+}
+
+function validateBundler(bundler: string): 'esbuild' | 'webpack' | 'rspack' {
+  if (['esbuild', 'webpack', 'rspack'].includes(bundler)) {
+    return bundler as 'esbuild' | 'webpack' | 'rspack';
+  }
+  throw new Error(
+    `Invalid bundler: ${bundler}. Please use one of the following: 'esbuild', 'webpack', 'rspack'.`
+  );
+}
 
 export async function normalizeOptions(
   host: Tree,
-  options: Partial<Schema>
+  options: Partial<Schema>,
+  isRspack?: boolean
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options as Schema, 'application');
+  await ensureRootProjectName(options as Schema, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
     await determineProjectNameAndRootOptions(host, {
       name: options.name,
@@ -30,23 +44,22 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  let bundler = options.bundler;
-  if (!bundler) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
-    bundler = angularMajorVersion >= 17 ? 'esbuild' : 'webpack';
-  }
+  const bundler = validateBundler(options.bundler ?? 'esbuild');
+
+  const addPlugin =
+    options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);
 
   // Set defaults and then overwrite with user options
   return {
+    addPlugin,
     style: 'css',
     routing: true,
     inlineStyle: false,
     inlineTemplate: false,
     skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
-    unitTestRunner: UnitTestRunner.Jest,
     e2eTestRunner: E2eTestRunner.Playwright,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     strict: true,
     standalone: true,
     directory: appProjectRoot,
@@ -64,5 +77,6 @@ export async function normalizeOptions(
       !options.rootProject ? appProjectRoot : appProjectName
     ),
     ssr: options.ssr ?? false,
+    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
   };
 }

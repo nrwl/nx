@@ -1,3 +1,8 @@
+---
+title: Workspace Plugin for Nx
+description: Learn about the core workspace plugin that provides essential executors and generators for any Nx workspace, including tools for project management.
+---
+
 The workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.
 
 ## Creating Local Generators
@@ -9,7 +14,7 @@ Codifying your organization's best practices into local generators is a great wa
 ## Reorganizing Projects
 
 After some time of working within a workspace, projects might need to be moved or sometimes even removed.
-The workspace plugin provides the [`@nx/workspace:move`](/nx-api/workspace/generators/move) and [`@nx/workspace:remove`](/nx-api/workspace/generators/remove) generators to help aid with this.
+The workspace plugin provides the [`@nx/workspace:move`](/reference/core-api/workspace/generators/move) and [`@nx/workspace:remove`](/reference/core-api/workspace/generators/remove) generators to help aid with this.
 
 ### Moving Projects
 
@@ -24,7 +29,7 @@ Moving the files manually can be done easily but a lot of steps are often missed
 5. Paths in target options such as output path will be changed
 6. Other configuration will be updated too, such as `extends` in `tsconfig.json`, the name of the project in `jest.config.js`, and the extends in `.eslintrc.json`
 
-> See more about [`@nx/workspace:move`](/nx-api/workspace/generators/move)
+> See more about [`@nx/workspace:move`](/reference/core-api/workspace/generators/move)
 
 ### Removing Projects
 
@@ -37,4 +42,4 @@ Like when moving projects, some steps are often missed when removing projects. T
 3. The project's configuration will be removed.
 4. The path mapping in `tsconfig.base.json` will be removed.
 
-> See more about [`@nx/workspace:remove`](/nx-api/workspace/generators/remove)
+> See more about [`@nx/workspace:remove`](/reference/core-api/workspace/generators/remove)

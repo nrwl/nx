@@ -1,7 +1,7 @@
 {
   "extends": "<%= rootTsConfig %>",
   "compilerOptions": {
-    "outDir": "<%= rootOffset %>/out-tsc/worker",
+    "outDir": "<%= rootOffset %>out-tsc/worker",
     "lib": [
       "es2018",
       "webworker"

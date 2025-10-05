@@ -1,3 +1,8 @@
+---
+title: 'workspace.json'
+description: 'Learn about the deprecation of workspace.json in Nx and how to migrate to project.json files for better project configuration management.'
+---
+
 # workspace.json
 
 Nx used to have a `workspace.json` file at the root of the repo that at various points performed these functions:
@@ -17,7 +22,7 @@ To remove `workspace.json` in favor of `project.json` files, run:
 nx g @nx/workspace:fix-configuration
 ```
 
-See [fix-configuration](/nx-api/workspace/generators/fix-configuration) for more options.
+See [fix-configuration](/reference/core-api/workspace/generators/fix-configuration) for more options.
 
 After this command, `workspace.json` should look like this:
 

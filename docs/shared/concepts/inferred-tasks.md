@@ -1,3 +1,8 @@
+---
+title: Inferred Tasks (Project Crystal)
+description: Learn how Nx plugins automatically infer tasks from tool configurations, enabling caching, task dependencies, and optimized execution without manual setup.
+---
+
 # Inferred Tasks (Project Crystal)
 
 In Nx version 18, Nx plugins can automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
@@ -83,4 +88,4 @@ When `useInferencePlugins` is `false`:
 
 If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/recipes/running-tasks/convert-to-inferred).
 
-Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)).
+Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/technologies/typescript/recipes/enable-tsc-batch-mode)).

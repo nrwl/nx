@@ -5,7 +5,9 @@ import {
   targetToTargetString,
 } from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
-import type { Configuration, Stats } from 'webpack';
+import { getRootTsConfigPath } from '@nx/js';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { resolve } from 'path';
 import { from, of } from 'rxjs';
 import {
   bufferCount,
@@ -14,37 +16,20 @@ import {
   switchMap,
   tap,
 } from 'rxjs/operators';
-import { resolve } from 'path';
-import {
-  calculateProjectBuildableDependencies,
-  createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import { runWebpack } from './lib/run-webpack';
-import { deleteOutputDir } from '../../utils/fs';
+import type { Configuration, Stats } from 'webpack';
+import { isNxWebpackComposablePlugin } from '../../utils/config';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
+import { normalizeOptions } from './lib/normalize-options';
+import { runWebpack } from './lib/run-webpack';
 import type {
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,
 } from './schema';
-import { normalizeOptions } from './lib/normalize-options';
-import {
-  composePluginsSync,
-  isNxWebpackComposablePlugin,
-} from '../../utils/config';
-import { withNx } from '../../utils/with-nx';
-import { getRootTsConfigPath } from '@nx/js';
-import { withWeb } from '../../utils/with-web';
 
 async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
   context: ExecutorContext
 ): Promise<Configuration | Configuration[]> {
-  if (options.isolatedConfig && !options.webpackConfig) {
-    throw new Error(
-      `Using "isolatedConfig" without a "webpackConfig" is not supported.`
-    );
-  }
-
   let userDefinedWebpackConfig = null;
   if (options.webpackConfig) {
     userDefinedWebpackConfig = resolveUserDefinedWebpackConfig(
@@ -57,11 +42,7 @@ async function getWebpackConfigs(
     }
   }
 
-  const config = options.isolatedConfig
-    ? {}
-    : (options.target === 'web'
-        ? composePluginsSync(withNx(options), withWeb(options))
-        : withNx(options))({}, { options, context });
+  const config = {};
 
   if (
     typeof userDefinedWebpackConfig === 'function' &&
@@ -108,7 +89,7 @@ export async function* webpackExecutor(
   process.env['NODE_ENV'] ||= 'production';
 
   const metadata = context.projectsConfigurations.projects[context.projectName];
-  const sourceRoot = metadata.sourceRoot;
+  const sourceRoot = getProjectSourceRoot(metadata);
   const options = normalizeOptions(
     _options,
     context.root,
@@ -146,11 +127,6 @@ export async function* webpackExecutor(
         options,
       };
     }
-  }
-
-  // Delete output path before bundling
-  if (options.deleteOutputPath && options.outputPath) {
-    deleteOutputDir(context.root, options.outputPath);
   }
 
   if (options.generatePackageJson && metadata.projectType !== 'application') {

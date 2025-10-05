@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { SourceInfo } from './source-info';
 
 const meta: Meta<typeof SourceInfo> = {

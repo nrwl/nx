@@ -9,31 +9,43 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync, readdirSync } from 'fs';
-import { hashObject } from 'nx/src/hasher/file-hasher';
+import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
+import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface RspackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
   serveStaticTargetName?: string;
   previewTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
+const pmc = getPackageManagerCommand();
+
 function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
-  cachePath,
+  cachePath: string,
   results?: Record<string, RspackTargets>
 ) {
   writeJsonFile(cachePath, results);
@@ -54,10 +66,17 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
       `rspack-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            isTsSolutionSetup
+          ),
         configFilePaths,
         options,
         context
@@ -72,7 +91,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
   context: CreateNodesContext,
-  targetsCache: Record<string, RspackTargets>
+  targetsCache: Record<string, RspackTargets>,
+  isTsSolutionSetup: boolean
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -84,23 +104,39 @@ async function createNodesInternal(
     return {};
   }
 
+  let packageJson = {};
+  if (siblingFiles.includes('package.json')) {
+    packageJson = readJsonFile(
+      join(context.workspaceRoot, projectRoot, 'package.json')
+    );
+  }
+
   const normalizedOptions = normalizeOptions(options);
 
+  const lockFileHash =
+    hashFile(
+      join(
+        context.workspaceRoot,
+        getLockFileName(detectPackageManager(context.workspaceRoot))
+      )
+    ) ?? '';
+
+  const nodeHash = hashArray([
+    hashFile(join(context.workspaceRoot, configFilePath)),
+    lockFileHash,
+    hashObject({ ...options, isTsSolutionSetup }),
+    hashObject(packageJson),
+  ]);
   // We do not want to alter how the hash is calculated, so appending the config file path to the hash
   // to prevent vite/vitest files overwriting the target cache created by the other
-  const hash =
-    (await calculateHashForCreateNodes(
-      projectRoot,
-      normalizedOptions,
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
-    )) + configFilePath;
+  const hash = `${nodeHash}_${configFilePath}`;
 
   targetsCache[hash] ??= await createRspackTargets(
     configFilePath,
     projectRoot,
     normalizedOptions,
-    context
+    context,
+    isTsSolutionSetup
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -120,11 +156,12 @@ async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
   options: RspackPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  isTsSolutionSetup: boolean
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const rspackConfig = resolveUserDefinedRspackConfig(
+  const rspackConfig = await resolveUserDefinedRspackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
     true
@@ -132,16 +169,33 @@ async function createRspackTargets(
 
   const rspackOptions = await readRspackOptions(rspackConfig);
 
-  const outputPath = normalizeOutputPath(
-    rspackOptions.output?.path,
-    projectRoot
-  );
+  const outputs = [];
+  for (const config of rspackOptions) {
+    if (config.output?.path) {
+      outputs.push(normalizeOutputPath(config.output.path, projectRoot));
+    }
+  }
 
   const targets = {};
 
+  const env: NodeJS.ProcessEnv = {};
+  const isTsConfig = ['.ts', '.cts', '.mts'].includes(extname(configFilePath));
+  if (isTsConfig) {
+    // https://rspack.dev/config/#using-ts-node
+    env['TS_NODE_COMPILER_OPTIONS'] = JSON.stringify({
+      module: 'CommonJS',
+      moduleResolution: 'Node10',
+      customConditions: null,
+    });
+  }
+
   targets[options.buildTargetName] = {
     command: `rspack build`,
-    options: { cwd: projectRoot, args: ['--node-env=production'] },
+    options: {
+      cwd: projectRoot,
+      args: ['--node-env=production'],
+      env,
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs:
@@ -160,32 +214,67 @@ async function createRspackTargets(
               externalDependencies: ['@rspack/cli'],
             },
           ],
-    outputs: [outputPath],
+    outputs,
   };
 
   targets[options.serveTargetName] = {
+    continuous: true,
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
       args: ['--node-env=development'],
+      env,
     },
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
       args: ['--node-env=production'],
+      env,
     },
   };
 
   targets[options.serveStaticTargetName] = {
+    dependsOn: [`${options.buildTargetName}`],
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,
       spa: true,
     },
   };
+
+  // for `convert-to-inferred` we need to leave the port undefined or the options will not match
+  if (rspackConfig.devServer?.port && rspackConfig.devServer?.port !== 4200) {
+    targets[options.serveStaticTargetName].options.port =
+      rspackConfig.devServer.port;
+  }
+
+  if (isTsSolutionSetup) {
+    targets[options.buildTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.serveTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.previewTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.serveStaticTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+  }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return { targets, metadata: {} };
 }

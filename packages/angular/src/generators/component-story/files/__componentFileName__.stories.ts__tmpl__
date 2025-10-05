@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { <%=componentName%> } from './<%=componentFileName%>';
-<% if ( interactionTests ) { %>
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
-<% } %>
+<%_ if ( interactionTests ) { _%>
+import { expect } from 'storybook/test';
+<%_ } _%>
 
 const meta: Meta<<%= componentName %>> = {
   component: <%= componentName %>,
   title: '<%= componentName %>',
 };
 export default meta;
+
 type Story = StoryObj<<%=componentName%>>;
 
 export const Primary: Story = {
@@ -17,15 +17,14 @@ export const Primary: Story = {
     <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
 };
+<%_ if ( interactionTests ) { _%>
 
-<% if ( interactionTests ) { %>
 export const Heading: Story = {
   args: {<% for (let prop of props) { %>
     <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/<%=componentNameSimple%> works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/<%=componentNameSimple%>/gi)).toBeTruthy();
   },
 };
-<% } %>
+<%_ } _%>

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Pill } from '../pill';
+import { useState, useRef, useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { Pill } from '../pill';
 
 interface TagListProps {
   tags: string[];

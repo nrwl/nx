@@ -18,7 +18,7 @@
       "type": "boolean",
       "description": "Skips the setup file required for angular.",
       "default": false,
-      "x-deprecated": "Use `--setup-file` instead."
+      "x-deprecated": "Use the `setupFile` option instead. It will be removed in Nx v22."
     },
     "setupFile": {
       "type": "string",
@@ -55,7 +55,7 @@
       "type": "boolean",
       "alias": "babel-jest",
       "description": "Use `babel-jest` instead of `ts-jest`.",
-      "x-deprecated": "Use `--compiler=babel` instead.",
+      "x-deprecated": "Use the `compiler` option instead. It will be removed in Nx v22.",
       "default": false
     },
     "skipFormat": {
@@ -78,6 +78,12 @@
     "runtimeTsconfigFileName": {
       "type": "string",
       "description": "The name of the project's tsconfig file that includes the runtime source files. If not provided, it will default to `tsconfig.lib.json` for libraries and `tsconfig.app.json` for applications."
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": true
     }
   },
   "required": []

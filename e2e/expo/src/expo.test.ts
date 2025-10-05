@@ -14,16 +14,23 @@ import {
   killPorts,
   createFile,
   removeFile,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('@nx/expo', () => {
   let appName: string;
+  let libName: string;
 
   beforeAll(() => {
-    newProject();
+    newProject({ packages: ['@nx/expo'] });
     appName = uniq('app');
-    runCLI(`generate @nx/expo:app ${appName} --no-interactive`);
+    libName = uniq('lib');
+    runCLI(
+      `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`
+    );
+    runCLI(
+      `generate @nx/expo:library ${libName} --buildable --publishable --importPath=@proj/${libName} --unitTestRunner=jest --linter=eslint`
+    );
   });
 
   afterAll(() => cleanupProject());
@@ -37,6 +44,41 @@ describe('@nx/expo', () => {
     expect(expoPlugin.options).toBeDefined();
     expect(expoPlugin.options.exportTargetName).toEqual('export');
     expect(expoPlugin.options.startTargetName).toEqual('start');
+  });
+
+  it('should test, lint and build library', async () => {
+    const componentName = uniq('Component');
+
+    runCLI(
+      `generate @nx/expo:component ${libName}/src/${componentName} --name ${componentName} --export --no-interactive`
+    );
+
+    updateFile(`${appName}/src/app/App.tsx`, (content) => {
+      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '@proj/${libName}';\n${content}`;
+      return updated;
+    });
+
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
+
+    const appLintResults = await runCLIAsync(`lint ${appName}`);
+    expect(appLintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
+
+    const libLintResults = await runCLIAsync(`lint ${libName}`);
+    expect(libLintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
+
+    const buildResults = await runCLIAsync(`build ${libName}`);
+    expect(buildResults.combinedOutput).toContain(
+      'Successfully ran target build'
+    );
+    checkFilesExist(
+      `dist/${libName}/index.esm.js`,
+      `dist/${libName}/src/index.d.ts`
+    );
   });
 
   it('should export the app', async () => {
@@ -53,12 +95,12 @@ describe('@nx/expo', () => {
 
   it('should start the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8088;
 
     try {
       process = await runCommandUntil(
         `start ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`)
+        (output) => output.includes(`http://localhost:${port}`)
       );
     } catch (err) {
       console.error(err);
@@ -72,12 +114,12 @@ describe('@nx/expo', () => {
 
   it('should serve the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8071;
 
     try {
       process = await runCommandUntil(
         `serve ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`)
+        (output) => output.includes(`http://localhost:${port}`)
       );
     } catch (err) {
       console.error(err);
@@ -152,7 +194,7 @@ describe('@nx/expo', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive --linter=eslint`
     );
     checkFilesExist(
       `${appName}/.storybook/main.ts`,

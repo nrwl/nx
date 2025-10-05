@@ -2,7 +2,7 @@
   "name": "create-nx-workspace",
   "version": "0.0.1",
   "private": false,
-  "description": "Smart Monorepos · Fast CI",
+  "description": "Smart Repos · Fast Builds",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -37,7 +37,7 @@
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
     "yargs": "^17.6.2",
-    "axios": "^1.7.4"
+    "axios": "^1.8.3"
   },
   "publishConfig": {
     "access": "public"

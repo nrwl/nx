@@ -1,0 +1,13 @@
+{
+  "name": "19-2-2-update-nx-wrapper",
+  "cli": "nx",
+  "version": "19.2.2-beta.0",
+  "description": "Updates the nx wrapper.",
+  "implementation": "/packages/nx/src/migrations/update-17-3-0/update-nxw.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

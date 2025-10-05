@@ -2,7 +2,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import remote from './remote';
 import { getRootTsConfigPathInTree } from '@nx/js';
 
@@ -106,7 +105,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -138,7 +137,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -171,7 +170,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
@@ -198,7 +197,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -215,7 +214,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -233,7 +232,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -253,7 +252,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -282,7 +281,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
@@ -313,7 +312,7 @@ describe('remote generator', () => {
           devServerPort: 4209,
           dynamic: true,
           e2eTestRunner: 'cypress',
-          linter: Linter.EsLint,
+          linter: 'eslint',
           skipFormat: false,
           style: 'css',
           unitTestRunner: 'jest',
@@ -321,7 +320,7 @@ describe('remote generator', () => {
           typescriptConfiguration: true,
           bundler: 'webpack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${name}.`);
     });
   });
 });

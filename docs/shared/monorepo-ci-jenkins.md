@@ -1,3 +1,8 @@
+---
+title: Configuring CI Using Jenkins and Nx
+description: Learn how to set up Jenkins CI for your Nx workspace with examples of Groovy pipeline configuration for building and testing affected projects efficiently.
+---
+
 # Configuring CI Using Jenkins and Nx
 
 Below is an example of a Jenkins setup, building and testing only what is affected.
@@ -21,7 +26,13 @@ pipeline {
                         // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
                         // sh "npx nx-cloud start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
                         sh "npm ci"
-                        sh "npx nx-cloud record -- nx format:check"
+
+                        // Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+                        // This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+                        // sh "npx nx-cloud record -- nx format:check"
+
+                        // Without Nx Cloud, run format:check directly
+                        sh "npx nx format:check"
                         sh "npx nx affected --base=HEAD~1 -t lint test build e2e-ci"
                     }
                 }
@@ -35,7 +46,13 @@ pipeline {
                         // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
                         // sh "npx nx-cloud start-ci-run --distribute-on='3 linux-medium-js' --stop-agents-after='e2e-ci'"
                         sh "npm ci"
-                        sh "npx nx-cloud record -- nx format:check"
+
+                        // Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+                        // This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+                        // sh "npx nx-cloud record -- nx format:check"
+
+                        // Without Nx Cloud, run format:check directly
+                        sh "npx nx format:check"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint test build e2e-ci"
                     }
                 }

@@ -1,0 +1,10 @@
+{
+  "include": ["apps/**/*", "libs/**/*", "packages/**/*"],
+  "exclude": [
+    "**/*.spec.*",
+    "**/test/**/*",
+    "**/__tests__/**/*",
+    "**/*.test.*",
+    "node_modules/**/*"
+  ]
+}

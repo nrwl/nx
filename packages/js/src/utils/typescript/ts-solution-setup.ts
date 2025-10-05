@@ -1,5 +1,24 @@
-import { output, readJson, readNxJson, type Tree } from '@nx/devkit';
-import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
+import {
+  globAsync,
+  joinPathFragments,
+  offsetFromRoot,
+  output,
+  type ProjectConfiguration,
+  readJson,
+  readNxJson,
+  type Tree,
+  updateJson,
+  workspaceRoot,
+} from '@nx/devkit';
+import { existsSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path/posix';
+import { FsTree } from 'nx/src/generators/tree';
+import {
+  getPackageManagerWorkspacesPatterns,
+  getProjectPackageManagerWorkspaceState,
+  isUsingPackageManagerWorkspaces,
+} from '../package-manager-workspaces';
+import { getNeededCompilerOptionOverrides } from './configuration';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -13,13 +32,52 @@ export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   );
 }
 
-export function isUsingTsSolutionSetup(tree: Tree): boolean {
+export function shouldConfigureTsSolutionSetup(
+  tree: Tree,
+  addPlugins: boolean,
+  addTsPlugin?: boolean
+): boolean {
+  if (addTsPlugin !== undefined) {
+    return addTsPlugin;
+  }
+
+  if (addPlugins === undefined) {
+    const nxJson = readNxJson(tree);
+    addPlugins =
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false;
+  }
+
+  if (!addPlugins) {
+    return false;
+  }
+
+  if (!isUsingPackageManagerWorkspaces(tree)) {
+    return false;
+  }
+
+  // if there are no root tsconfig files, we should configure the TS solution setup
+  return !tree.exists('tsconfig.base.json') && !tree.exists('tsconfig.json');
+}
+
+export function isUsingTsSolutionSetup(tree?: Tree): boolean {
+  tree ??= new FsTree(workspaceRoot, false);
+
   return (
     isUsingPackageManagerWorkspaces(tree) &&
     isWorkspaceSetupWithTsSolution(tree)
   );
 }
 
+/**
+ * The TS solution setup requires:
+ * - `tsconfig.base.json`: TS config with common compiler options needed by the
+ *    majority of projects in the workspace. It's meant to be extended by other
+ *    tsconfig files in the workspace to reuse them.
+ * - `tsconfig.json`: TS solution config file that references all other projects
+ *    in the repo. It shouldn't include any file and it's not meant to be
+ *    extended or define any common compiler options.
+ */
 function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   if (!tree.exists('tsconfig.base.json') || !tree.exists('tsconfig.json')) {
     return false;
@@ -31,31 +89,33 @@ function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   }
 
   /**
-   * New setup:
-   * - `files` is defined and set to an empty array
-   * - `references` is defined and set to an empty array
-   * - `include` is not defined or is set to an empty array
+   * TS solution setup requires:
+   * - One of `files` or `include` defined
+   * - If set, they must be empty arrays
+   *
+   * Note: while the TS solution setup uses TS project references, in the initial
+   * state of the workspace, where there are no projects, `references` is not
+   * required to be defined.
    */
   if (
-    !tsconfigJson.files ||
-    tsconfigJson.files.length > 0 ||
-    !tsconfigJson.references ||
-    !!tsconfigJson.include?.length
+    (!tsconfigJson.files && !tsconfigJson.include) ||
+    tsconfigJson.files?.length > 0 ||
+    tsconfigJson.include?.length > 0
   ) {
     return false;
   }
 
+  /**
+   * TS solution setup requires:
+   * - `compilerOptions.composite`: true
+   * - `compilerOptions.declaration`: true or not set (default to true)
+   */
   const baseTsconfigJson = readJson(tree, 'tsconfig.base.json');
   if (
     !baseTsconfigJson.compilerOptions ||
     !baseTsconfigJson.compilerOptions.composite ||
-    !baseTsconfigJson.compilerOptions.declaration
+    baseTsconfigJson.compilerOptions.declaration === false
   ) {
-    return false;
-  }
-
-  const { compilerOptions, ...rest } = baseTsconfigJson;
-  if (Object.keys(rest).length > 0) {
     return false;
   }
 
@@ -85,5 +145,307 @@ export function assertNotUsingTsSolutionSetup(
     ],
   });
 
-  process.exit(1);
+  throw new Error(
+    `The ${artifactString} doesn't yet support the existing TypeScript setup. See the error above.`
+  );
+}
+
+export function findRuntimeTsConfigName(
+  projectRoot: string,
+  tree?: Tree
+): string | null {
+  tree ??= new FsTree(workspaceRoot, false);
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.app.json')))
+    return 'tsconfig.app.json';
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.lib.json')))
+    return 'tsconfig.lib.json';
+  return null;
+}
+
+export function updateTsconfigFiles(
+  tree: Tree,
+  projectRoot: string,
+  runtimeTsconfigFileName: string,
+  compilerOptions: Record<string, string | boolean | string[]>,
+  exclude: string[] = [],
+  rootDir = 'src'
+) {
+  if (!isUsingTsSolutionSetup(tree)) {
+    return;
+  }
+
+  const offset = offsetFromRoot(projectRoot);
+  const runtimeTsconfigPath = `${projectRoot}/${runtimeTsconfigFileName}`;
+  const specTsconfigPath = `${projectRoot}/tsconfig.spec.json`;
+
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
+      json.extends = joinPathFragments(offset, 'tsconfig.base.json');
+
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        outDir: 'dist',
+        rootDir,
+        ...compilerOptions,
+      };
+
+      if (rootDir && rootDir !== '.') {
+        // when rootDir is different from '.', the tsbuildinfo file is output
+        // at `<outDir>/<relative path to config from rootDir>/`, so we need
+        // to set it explicitly to ensure it's output to the outDir
+        // https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile
+        json.compilerOptions.tsBuildInfoFile = join(
+          json.compilerOptions.outDir,
+          basename(runtimeTsconfigFileName, '.json') + '.tsbuildinfo'
+        );
+      } else if (json.compilerOptions.tsBuildInfoFile) {
+        // when rootDir is '.' or not set, it would be output to the outDir, so
+        // we don't need to set it explicitly
+        delete json.compilerOptions.tsBuildInfoFile;
+      }
+
+      // don't duplicate compiler options from base tsconfig
+      json.compilerOptions = getNeededCompilerOptionOverrides(
+        tree,
+        json.compilerOptions,
+        'tsconfig.base.json'
+      );
+
+      const excludeSet: Set<string> = json.exclude
+        ? new Set(['out-tsc', 'dist', ...json.exclude, ...exclude])
+        : new Set(exclude);
+      json.exclude = Array.from(excludeSet);
+
+      return json;
+    });
+  }
+
+  if (tree.exists(specTsconfigPath)) {
+    updateJson(tree, specTsconfigPath, (json) => {
+      json.extends = joinPathFragments(offset, 'tsconfig.base.json');
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        ...compilerOptions,
+      };
+      // don't duplicate compiler options from base tsconfig
+      json.compilerOptions = getNeededCompilerOptionOverrides(
+        tree,
+        json.compilerOptions,
+        'tsconfig.base.json'
+      );
+      const runtimePath = `./${runtimeTsconfigFileName}`;
+      json.references ??= [];
+      if (!json.references.some((x) => x.path === runtimePath)) {
+        json.references.push({ path: runtimePath });
+      }
+      return json;
+    });
+  }
+
+  if (tree.exists('tsconfig.json')) {
+    updateJson(tree, 'tsconfig.json', (json) => {
+      const projectPath = './' + projectRoot;
+      json.references ??= [];
+      if (!json.references.some((x) => x.path === projectPath)) {
+        json.references.push({ path: projectPath });
+      }
+      return json;
+    });
+  }
+}
+
+export async function addProjectToTsSolutionWorkspace(
+  tree: Tree,
+  projectDir: string
+) {
+  const state = getProjectPackageManagerWorkspaceState(tree, projectDir);
+  if (state === 'included') {
+    return;
+  }
+
+  // If dir is "libs/foo", we try to use "libs/*" but we only do it if it's
+  // safe to do so. So, we first check if adding that pattern doesn't result
+  // in extra projects being matched. If extra projects are matched, or the
+  // dir is just "foo" then we add it as is.
+  const baseDir = dirname(projectDir);
+  let pattern = projectDir;
+  if (baseDir !== '.') {
+    const patterns = getPackageManagerWorkspacesPatterns(tree);
+    const projectsBefore =
+      patterns.length > 0 ? await globAsync(tree, patterns) : [];
+    patterns.push(`${baseDir}/*/package.json`);
+    const projectsAfter = await globAsync(tree, patterns);
+
+    if (projectsBefore.length + 1 === projectsAfter.length) {
+      // Adding the pattern to the parent directory only results in one extra
+      // project being matched, which is the project we're adding. It's safe
+      // to add the pattern to the parent directory.
+      pattern = `${baseDir}/*`;
+    }
+  }
+
+  if (tree.exists('pnpm-workspace.yaml')) {
+    const { load, dump } = require('@zkochan/js-yaml');
+    const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
+    const yamlData = load(workspaceFile) ?? {};
+    yamlData.packages ??= [];
+
+    if (!yamlData.packages.includes(pattern)) {
+      yamlData.packages.push(pattern);
+      tree.write(
+        'pnpm-workspace.yaml',
+        dump(yamlData, { indent: 2, quotingType: '"', forceQuotes: true })
+      );
+    }
+  } else {
+    // Update package.json
+    const packageJson = readJson(tree, 'package.json');
+    if (!packageJson.workspaces) {
+      packageJson.workspaces = [];
+    }
+
+    if (!packageJson.workspaces.includes(pattern)) {
+      packageJson.workspaces.push(pattern);
+      tree.write('package.json', JSON.stringify(packageJson, null, 2));
+    }
+  }
+}
+
+export function getProjectType(
+  tree: Tree,
+  projectRoot: string,
+  projectType?: 'library' | 'application'
+): 'library' | 'application' {
+  if (projectType) return projectType;
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.lib.json')))
+    return 'library';
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.app.json')))
+    return 'application';
+  // If it doesn't have any common library entry points, assume it is an application
+  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  const packageJson = tree.exists(packageJsonPath)
+    ? readJson(tree, joinPathFragments(projectRoot, 'package.json'))
+    : null;
+  if (
+    !packageJson?.exports &&
+    !packageJson?.main &&
+    !packageJson?.module &&
+    !packageJson?.bin
+  ) {
+    return 'application';
+  }
+  return 'library';
+}
+
+export function getProjectSourceRoot(
+  project: ProjectConfiguration,
+  tree?: Tree
+): string {
+  if (tree) {
+    return (
+      project.sourceRoot ??
+      (tree.exists(joinPathFragments(project.root, 'src'))
+        ? joinPathFragments(project.root, 'src')
+        : project.root)
+    );
+  }
+
+  return (
+    project.sourceRoot ??
+    (existsSync(join(workspaceRoot, project.root, 'src'))
+      ? joinPathFragments(project.root, 'src')
+      : project.root)
+  );
+}
+
+const defaultCustomConditionName = '@nx/source';
+const backwardCompatibilityCustomConditionName = 'development';
+const customConditionNamePrefix = '@nx-source/';
+/**
+ * Get the already defined or expected custom condition name. In case it's not
+ * yet defined, it returns the workspace package name or '@nx/source' in case
+ * it's not defined.
+ */
+export function getCustomConditionName(
+  tree: Tree,
+  options: { skipDevelopmentFallback?: boolean } = {}
+): string {
+  let name: string | undefined;
+  try {
+    ({ name } = readJson<{ name?: string }>(tree, 'package.json'));
+  } catch {}
+
+  if (!name) {
+    // Most workspaces should have a name, but let's default to something if not.
+    name = defaultCustomConditionName;
+  }
+
+  let definedCustomConditions: string[] = [];
+  if (tree.exists('tsconfig.base.json')) {
+    const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+    definedCustomConditions =
+      tsconfigJson.compilerOptions?.customConditions ?? [];
+  }
+
+  if (!definedCustomConditions.length) {
+    return name;
+  }
+
+  // Try to find a condition that matches the following (in order):
+  // - a custom condition that starts with '@nx-source/'
+  // - the 'development' backward compatibility name (if not skipped)
+  const customCondition =
+    definedCustomConditions.find((condition) =>
+      condition.startsWith(customConditionNamePrefix)
+    ) ??
+    (!options.skipDevelopmentFallback
+      ? definedCustomConditions.find(
+          (condition) => condition === backwardCompatibilityCustomConditionName
+        )
+      : undefined);
+
+  // If a custom condition matches, use it, otherwise use the name.
+  return customCondition ?? name;
+}
+
+/**
+ * Get the already defined custom condition name or null if none is defined.
+ */
+export function getDefinedCustomConditionName(tree: Tree): string | null {
+  if (!tree.exists('tsconfig.base.json')) {
+    return null;
+  }
+
+  const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+  const definedCustomConditions: string[] | undefined =
+    tsconfigJson.compilerOptions?.customConditions;
+
+  if (!definedCustomConditions?.length) {
+    return null;
+  }
+
+  let name: string | undefined;
+  try {
+    ({ name } = readJson<{ name?: string }>(tree, 'package.json'));
+  } catch {}
+
+  if (!name) {
+    // Most workspaces should have a name, but let's default to something if not.
+    name = defaultCustomConditionName;
+  }
+
+  // Try to find a condition that matches the following (in order):
+  // - the workspace package name or '@nx/source'
+  // - a custom condition that starts with '@nx-source/'
+  // - the 'development' backward compatibility name
+  const conditionName =
+    definedCustomConditions.find((condition) => condition === name) ??
+    definedCustomConditions.find((condition) =>
+      condition.startsWith(customConditionNamePrefix)
+    ) ??
+    definedCustomConditions.find(
+      (condition) => condition === backwardCompatibilityCustomConditionName
+    );
+
+  return conditionName ?? null;
 }
