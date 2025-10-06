@@ -24,6 +24,8 @@ assignment-rules:
       - e2e-react
     targets:
       - e2e-ci**react-package**
+      - e2e-ci**react.test**
+      - e2e-ci**react-router-ts-solution**
     run-on:
         - agent: linux-large
           parallelism: 1
