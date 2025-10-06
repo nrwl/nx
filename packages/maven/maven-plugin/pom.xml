@@ -5,12 +5,13 @@
   <parent>
     <groupId>dev.nx</groupId>
     <artifactId>nx-parent</artifactId>
-    <version>${revision}</version>
+    <version>0.0.1</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
 
   <groupId>dev.nx.maven</groupId>
   <artifactId>nx-maven-plugin</artifactId>
+  <version>${project.parent.version}</version>
   <packaging>maven-plugin</packaging>
 
   <name>Nx Maven Plugin</name>
