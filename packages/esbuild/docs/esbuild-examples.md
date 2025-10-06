@@ -49,7 +49,7 @@ nx build <app-name> # defaults to es# defaults to esm
 {% /tab %}
 {% tab label="External packages" %}
 
-External packages are not bundled by default. To included them in the bundle you can use either the `thirdParty` option to include all third-party dependencies, or use `excludeFromExternal` option to include specific dependencies in the bundle.
+External packages are not bundled by default. To include them in the bundle you can use either the `thirdParty` option to include all third-party dependencies, or use `excludeFromExternal` option to include specific dependencies in the bundle.
 
 To mark additional packages or assets as external, you may use the `external` option, which supports the `*` wildcard to match assets.
 
