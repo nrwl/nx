@@ -8,7 +8,7 @@ import {
   updateFile,
   getAvailablePort,
 } from '@nx/e2e-utils';
-import { readPort, runCLI } from '../utils';
+import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
 
 describe('React Rspack Module Federation Misc - Interoperability', () => {

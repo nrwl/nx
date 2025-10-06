@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
-import { readPort, runCLI } from '../utils';
+import { readPort, runCLI } from './utils';
 import {
   setupCoreWebpackTest,
   cleanupCoreWebpackTest,
