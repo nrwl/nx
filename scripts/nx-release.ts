@@ -125,7 +125,6 @@ const VALID_AUTHORS_FOR_LATEST = [
   // TODO(colum): Remove when we have a better way to handle this
   let angularRspackPrevVersion = '0.0.1';
   let angularRspackCompilerPrevVersion = '0.0.1';
-  let mavenPrevVersion = '0.0.1';
   if (options.local) {
     angularRspackPrevVersion = JSON.parse(
       readFileSync(
@@ -138,9 +137,6 @@ const VALID_AUTHORS_FOR_LATEST = [
         join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
         'utf-8'
       )
-    ).version;
-    mavenPrevVersion = JSON.parse(
-      readFileSync(join(workspaceRoot, 'packages/maven/package.json'), 'utf-8')
     ).version;
   }
 
@@ -266,19 +262,9 @@ const VALID_AUTHORS_FOR_LATEST = [
       version: angularRspackCompilerPrevVersion,
     })
   );
-  console.log('Resetting maven package.json versions to previous versions');
-  const mavenPackageJson = JSON.parse(
-    readFileSync(join(workspaceRoot, 'packages/maven/package.json'), 'utf-8')
-  );
-  mavenPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
-  mavenPackageJson.version = mavenPrevVersion;
-  writeFileSync(
-    join(workspaceRoot, 'packages/maven/package.json'),
-    JSON.stringify(mavenPackageJson)
-  );
 
   execSync(
-    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json packages/maven/package.json`,
+    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
     {
       cwd: workspaceRoot,
     }
