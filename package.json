@@ -368,7 +368,7 @@
     "@types/three": "^0.166.0",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.2",
-    "axios": "^1.8.3",
+    "axios": "^1.12.0",
     "classnames": "^2.5.1",
     "cliui": "^8.0.1",
     "clsx": "^2.0.0",
