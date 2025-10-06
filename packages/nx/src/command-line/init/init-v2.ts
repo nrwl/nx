@@ -304,6 +304,18 @@ export async function detectPlugins(
     detectedPlugins.add('@nx/dotnet');
   }
 
+  let mvnwFiles = globWithWorkspaceContextSync(process.cwd(), [
+    'mvnw',
+    'mvnw.cmd',
+    'pom.xml',
+    '**/mvnw',
+    '**/mvnw.cmd',
+    '**/pom.xml',
+  ]);
+  if (mvnwFiles.length > 0) {
+    detectedPlugins.add('@nx/maven');
+  }
+
   // Remove existing plugins
   for (const plugin of detectedPlugins) {
     if (currentPlugins.has(plugin)) {
