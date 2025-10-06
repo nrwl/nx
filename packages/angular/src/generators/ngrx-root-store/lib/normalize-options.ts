@@ -23,11 +23,12 @@ export function normalizeOptions(
   let rxjsVersion: string;
   try {
     rxjsVersion = checkAndCleanWithSemver(
+      tree,
       'rxjs',
       readJson(tree, 'package.json').dependencies['rxjs']
     );
   } catch {
-    rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);
+    rxjsVersion = checkAndCleanWithSemver(tree, 'rxjs', defaultRxjsVersion);
   }
 
   const project = readProjectConfiguration(tree, options.project);

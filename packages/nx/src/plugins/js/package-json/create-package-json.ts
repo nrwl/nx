@@ -17,6 +17,7 @@ import {
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
+import { getCatalogManager } from '../../../utils/catalog';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -45,10 +46,9 @@ export function createPackageJson(
 ): PackageJson {
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
+  const root = options.root ?? workspaceRoot;
 
-  const rootPackageJson: PackageJson = readJsonFile(
-    join(options.root ?? workspaceRoot, 'package.json')
-  );
+  const rootPackageJson: PackageJson = readJsonFile(join(root, 'package.json'));
 
   const npmDeps = findProjectsNpmDependencies(
     projectNode,
@@ -68,7 +68,7 @@ export function createPackageJson(
     version: '0.0.1',
   };
   const projectPackageJsonPath = join(
-    options.root ?? workspaceRoot,
+    root,
     projectNode.data.root,
     'package.json'
   );
@@ -99,11 +99,25 @@ export function createPackageJson(
     version: string,
     section: 'devDependencies' | 'dependencies'
   ) => {
-    return (
-      packageJson[section][packageName] ||
-      (isLibrary && rootPackageJson[section]?.[packageName]) ||
-      version
-    );
+    const projectVersion = packageJson[section]?.[packageName];
+    if (projectVersion) {
+      const manager = getCatalogManager(root);
+      return manager.isCatalogReference(projectVersion)
+        ? manager.resolveCatalogReference(packageName, projectVersion, root) ??
+            version
+        : projectVersion;
+    }
+
+    if (isLibrary && rootPackageJson[section]?.[packageName]) {
+      const rootVersion = rootPackageJson[section][packageName];
+      const manager = getCatalogManager(root);
+      return manager.isCatalogReference(rootVersion)
+        ? manager.resolveCatalogReference(packageName, rootVersion, root) ??
+            version
+        : rootVersion;
+    }
+
+    return version;
   };
 
   Object.entries(npmDeps.dependencies).forEach(([packageName, version]) => {

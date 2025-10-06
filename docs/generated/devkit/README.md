@@ -126,6 +126,7 @@ It only uses language primitives and immutable objects
 - [extractLayoutDirectory](/reference/core-api/devkit/documents/extractLayoutDirectory)
 - [formatFiles](/reference/core-api/devkit/documents/formatFiles)
 - [generateFiles](/reference/core-api/devkit/documents/generateFiles)
+- [getDependencyVersionFromPackageJson](/reference/core-api/devkit/documents/getDependencyVersionFromPackageJson)
 - [getOutputsForTargetAndConfiguration](/reference/core-api/devkit/documents/getOutputsForTargetAndConfiguration)
 - [getPackageManagerCommand](/reference/core-api/devkit/documents/getPackageManagerCommand)
 - [getPackageManagerVersion](/reference/core-api/devkit/documents/getPackageManagerVersion)

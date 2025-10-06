@@ -1,12 +1,14 @@
+import { gte, satisfies } from 'semver';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
-import { satisfies, gte } from 'semver';
-import { PackageJson } from '../../../utils/package-json';
-import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { reverse } from '../../../project-graph/operators';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
+import { getCatalogManager } from '../../../utils/catalog';
+import { PackageJson } from '../../../utils/package-json';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 /**
@@ -15,14 +17,16 @@ import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-f
  */
 export function pruneProjectGraph(
   graph: ProjectGraph,
-  prunedPackageJson: PackageJson
+  prunedPackageJson: PackageJson,
+  workspaceRootPath: string = workspaceRoot
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
   const combinedDependencies = normalizeDependencies(
     prunedPackageJson,
     graph,
-    workspacePackages
+    workspacePackages,
+    workspaceRootPath
   );
 
   addNodesAndDependencies(
@@ -49,7 +53,8 @@ export function pruneProjectGraph(
 function normalizeDependencies(
   packageJson: PackageJson,
   graph: ProjectGraph,
-  workspacePackages: Map<string, ProjectGraphProjectNode>
+  workspacePackages: Map<string, ProjectGraphProjectNode>,
+  workspaceRootPath: string
 ) {
   const {
     dependencies,
@@ -67,25 +72,47 @@ function normalizeDependencies(
 
   Object.entries(combinedDependencies).forEach(
     ([packageName, versionRange]) => {
-      if (graph.externalNodes[`npm:${packageName}@${versionRange}`]) {
+      let resolvedVersionRange = versionRange;
+      const manager = getCatalogManager(workspaceRootPath);
+      if (manager.isCatalogReference(versionRange)) {
+        const resolvedVersionRange = manager.resolveCatalogReference(
+          packageName,
+          versionRange,
+          workspaceRootPath
+        );
+        if (!resolvedVersionRange) {
+          throw new Error(
+            `Could not resolve catalog reference for ${packageName}@${versionRange}.`
+          );
+        }
+      }
+
+      if (graph.externalNodes[`npm:${packageName}@${resolvedVersionRange}`]) {
+        combinedDependencies[packageName] = resolvedVersionRange;
         return;
       }
       if (
         graph.externalNodes[`npm:${packageName}`] &&
-        graph.externalNodes[`npm:${packageName}`].data.version === versionRange
+        graph.externalNodes[`npm:${packageName}`].data.version ===
+          resolvedVersionRange
       ) {
+        combinedDependencies[packageName] = resolvedVersionRange;
         return;
       }
       // otherwise we need to find the correct version
-      const node = findNodeMatchingVersion(graph, packageName, versionRange);
+      const node = findNodeMatchingVersion(
+        graph,
+        packageName,
+        resolvedVersionRange
+      );
       if (node) {
         combinedDependencies[packageName] = node.data.version;
       } else if (workspacePackages.has(packageName)) {
         // workspace module, leave as is
-        combinedDependencies[packageName] = versionRange;
+        combinedDependencies[packageName] = resolvedVersionRange;
       } else {
         throw new Error(
-          `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`
+          `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${resolvedVersionRange}`
         );
       }
     }

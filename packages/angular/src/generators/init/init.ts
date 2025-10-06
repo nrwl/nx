@@ -4,6 +4,7 @@ import {
   ensurePackage,
   formatFiles,
   type GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   logger,
   readNxJson,
   type Tree,
@@ -13,7 +14,6 @@ import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-so
 import { createNodesV2 } from '../../plugins/plugin';
 import {
   getInstalledAngularDevkitVersion,
-  getInstalledPackageVersion,
   versions,
 } from '../utils/version-utils';
 import { Schema } from './schema';
@@ -57,7 +57,7 @@ function installAngularDevkitCoreIfMissing(
   tree: Tree,
   options: Schema
 ): GeneratorCallback {
-  const packageVersion = getInstalledPackageVersion(
+  const packageVersion = getDependencyVersionFromPackageJson(
     tree,
     '@angular-devkit/core'
   );

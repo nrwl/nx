@@ -1,15 +1,23 @@
-import { clean, coerce, gt } from 'semver';
+import { existsSync } from 'fs';
+import { Module } from 'module';
 import {
-  GeneratorCallback,
+  type GeneratorCallback,
+  output,
   readJson,
-  Tree,
+  readJsonFile,
+  type Tree,
   updateJson,
   workspaceRoot,
 } from 'nx/src/devkit-exports';
 import { installPackageToTmp } from 'nx/src/devkit-internals';
-import { join } from 'path';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { join, resolve } from 'path';
+import { clean, coerce, gt } from 'semver';
 import { installPackagesTask } from '../tasks/install-packages-task';
-import { Module } from 'module';
+import {
+  getCatalogDependenciesFromPackageJson,
+  getCatalogManager,
+} from './catalog';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -20,6 +28,162 @@ const NON_SEMVER_TAGS = {
   previous: -1,
   legacy: -2,
 };
+
+/**
+ * Get the resolved version of a dependency from package.json.
+ *
+ * Retrieves a package version and automatically resolves PNPM catalog references
+ * (e.g., "catalog:default") to their actual version strings. Searches `dependencies`
+ * first, then falls back to `devDependencies`.
+ *
+ * **Tree-based usage** (generators and migrations):
+ * Use when you have a `Tree` object, which is typical in Nx generators and migrations.
+ *
+ * **Filesystem-based usage** (CLI commands and scripts):
+ * Use when reading directly from the filesystem without a `Tree` object.
+ *
+ * @example
+ * ```typescript
+ * // Tree-based - from root package.json
+ * const reactVersion = getDependencyVersionFromPackageJson(tree, 'react');
+ * // Returns: "^18.0.0" (resolves "catalog:default" if present)
+ *
+ * // Tree-based - from specific package.json
+ * const version = getDependencyVersionFromPackageJson(
+ *   tree,
+ *   '@my/lib',
+ *   'packages/my-lib/package.json'
+ * );
+ *
+ * // Tree-based - with pre-loaded package.json
+ * const packageJson = readJson(tree, 'package.json');
+ * const version = getDependencyVersionFromPackageJson(tree, 'react', packageJson);
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Filesystem-based - from current directory
+ * const reactVersion = getDependencyVersionFromPackageJson('react');
+ *
+ * // Filesystem-based - with workspace root
+ * const version = getDependencyVersionFromPackageJson('react', '/path/to/workspace');
+ *
+ * // Filesystem-based - with specific package.json
+ * const version = getDependencyVersionFromPackageJson(
+ *   'react',
+ *   '/path/to/workspace',
+ *   'apps/my-app/package.json'
+ * );
+ * ```
+ *
+ * @returns The resolved version string, or `null` if the package is not found in either dependencies or devDependencies
+ */
+export function getDependencyVersionFromPackageJson(
+  tree: Tree,
+  packageName: string,
+  packageJsonPath?: string
+): string | null;
+export function getDependencyVersionFromPackageJson(
+  tree: Tree,
+  packageName: string,
+  packageJson?: PackageJson
+): string | null;
+export function getDependencyVersionFromPackageJson(
+  packageName: string,
+  workspaceRootPath?: string,
+  packageJsonPath?: string
+): string | null;
+export function getDependencyVersionFromPackageJson(
+  packageName: string,
+  workspaceRootPath?: string,
+  packageJson?: PackageJson
+): string | null;
+export function getDependencyVersionFromPackageJson(
+  treeOrPackageName: Tree | string,
+  packageNameOrRoot?: string,
+  packageJsonPathOrObjectOrRoot?: string | PackageJson
+): string | null {
+  if (typeof treeOrPackageName !== 'string') {
+    return getDependencyVersionFromPackageJsonFromTree(
+      treeOrPackageName,
+      packageNameOrRoot!,
+      packageJsonPathOrObjectOrRoot
+    );
+  } else {
+    return getDependencyVersionFromPackageJsonFromFileSystem(
+      treeOrPackageName,
+      packageNameOrRoot,
+      packageJsonPathOrObjectOrRoot
+    );
+  }
+}
+
+/**
+ * Tree-based implementation for getDependencyVersionFromPackageJson
+ */
+function getDependencyVersionFromPackageJsonFromTree(
+  tree: Tree,
+  packageName: string,
+  packageJsonPathOrObject: string | PackageJson = 'package.json'
+): string | null {
+  let packageJson: PackageJson;
+  if (typeof packageJsonPathOrObject === 'object') {
+    packageJson = packageJsonPathOrObject;
+  } else if (tree.exists(packageJsonPathOrObject)) {
+    packageJson = readJson(tree, packageJsonPathOrObject);
+  } else {
+    return null;
+  }
+
+  const manager = getCatalogManager(tree.root);
+
+  let version =
+    packageJson.dependencies?.[packageName] ??
+    packageJson.devDependencies?.[packageName] ??
+    null;
+
+  // Resolve catalog reference if needed
+  if (version && manager.isCatalogReference(version)) {
+    version = manager.resolveCatalogReference(tree, packageName, version);
+  }
+
+  return version;
+}
+
+/**
+ * Filesystem-based implementation for getDependencyVersionFromPackageJson
+ */
+function getDependencyVersionFromPackageJsonFromFileSystem(
+  packageName: string,
+  root: string = workspaceRoot,
+  packageJsonPathOrObject: string | PackageJson = 'package.json'
+): string | null {
+  let packageJson: PackageJson;
+  if (typeof packageJsonPathOrObject === 'object') {
+    packageJson = packageJsonPathOrObject;
+  } else {
+    const packageJsonPath = resolve(root, packageJsonPathOrObject);
+    if (existsSync(packageJsonPath)) {
+      packageJson = readJsonFile(packageJsonPath);
+    } else {
+      return null;
+    }
+  }
+
+  const manager = getCatalogManager(root);
+
+  let version =
+    packageJson.dependencies?.[packageName] ??
+    packageJson.devDependencies?.[packageName] ??
+    null;
+
+  // Resolve catalog reference if needed
+  if (version && manager.isCatalogReference(version)) {
+    version = manager.resolveCatalogReference(packageName, version, root);
+  }
+
+  return version;
+}
 
 function filterExistingDependencies(
   dependencies: Record<string, string>,
@@ -34,23 +198,65 @@ function filterExistingDependencies(
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
 
-function cleanSemver(version: string) {
+function cleanSemver(tree: Tree, version: string, packageName: string) {
+  const manager = getCatalogManager(tree.root);
+  if (manager.isCatalogReference(version)) {
+    const resolvedVersion = manager.resolveCatalogReference(
+      tree,
+      packageName,
+      version
+    );
+    if (!resolvedVersion) {
+      throw new Error(
+        `Failed to resolve catalog reference '${version}' for package '${packageName}'`
+      );
+    }
+    return clean(resolvedVersion) ?? coerce(resolvedVersion);
+  }
   return clean(version) ?? coerce(version);
 }
 
 function isIncomingVersionGreater(
+  tree: Tree,
   incomingVersion: string,
-  existingVersion: string
+  existingVersion: string,
+  packageName: string
 ) {
+  // the existing version might be a catalog reference, so we need to resolve
+  // it if that's the case
+  let resolvedExistingVersion = existingVersion;
+  const manager = getCatalogManager(tree.root);
+  if (manager.isCatalogReference(existingVersion)) {
+    if (!manager.supportsCatalogs()) {
+      // If catalog is unsupported, we assume the incoming version is newer
+      return true;
+    }
+
+    const resolved = manager.resolveCatalogReference(
+      tree,
+      packageName,
+      existingVersion
+    );
+    if (!resolved) {
+      // catalog is supported, but failed to resolve, we throw an error
+      throw new Error(
+        `Failed to resolve catalog reference '${existingVersion}' for package '${packageName}'`
+      );
+    }
+    resolvedExistingVersion = resolved;
+  }
+
   // if version is in the format of "latest", "next" or similar - keep it, otherwise try to parse it
   const incomingVersionCompareBy =
     incomingVersion in NON_SEMVER_TAGS
       ? incomingVersion
-      : cleanSemver(incomingVersion)?.toString() ?? UNIDENTIFIED_VERSION;
+      : cleanSemver(tree, incomingVersion, packageName)?.toString() ??
+        UNIDENTIFIED_VERSION;
   const existingVersionCompareBy =
-    existingVersion in NON_SEMVER_TAGS
-      ? existingVersion
-      : cleanSemver(existingVersion)?.toString() ?? UNIDENTIFIED_VERSION;
+    resolvedExistingVersion in NON_SEMVER_TAGS
+      ? resolvedExistingVersion
+      : cleanSemver(tree, resolvedExistingVersion, packageName)?.toString() ??
+        UNIDENTIFIED_VERSION;
 
   if (
     incomingVersionCompareBy in NON_SEMVER_TAGS &&
@@ -69,12 +275,17 @@ function isIncomingVersionGreater(
     return true;
   }
 
-  return gt(cleanSemver(incomingVersion), cleanSemver(existingVersion));
+  return gt(
+    cleanSemver(tree, incomingVersion, packageName),
+    cleanSemver(tree, resolvedExistingVersion, packageName)
+  );
 }
 
 function updateExistingAltDependenciesVersion(
+  tree: Tree,
   dependencies: Record<string, string>,
-  existingAltDependencies: Record<string, string>
+  existingAltDependencies: Record<string, string>,
+  workspaceRootPath: string
 ) {
   return Object.keys(existingAltDependencies || {})
     .filter((d) => {
@@ -84,14 +295,21 @@ function updateExistingAltDependenciesVersion(
 
       const incomingVersion = dependencies[d];
       const existingVersion = existingAltDependencies[d];
-      return isIncomingVersionGreater(incomingVersion, existingVersion);
+      return isIncomingVersionGreater(
+        tree,
+        incomingVersion,
+        existingVersion,
+        d
+      );
     })
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
 
 function updateExistingDependenciesVersion(
+  tree: Tree,
   dependencies: Record<string, string>,
-  existingDependencies: Record<string, string> = {}
+  existingDependencies: Record<string, string> = {},
+  workspaceRootPath: string
 ) {
   return Object.keys(dependencies)
     .filter((d) => {
@@ -102,7 +320,12 @@ function updateExistingDependenciesVersion(
       const incomingVersion = dependencies[d];
       const existingVersion = existingDependencies[d];
 
-      return isIncomingVersionGreater(incomingVersion, existingVersion);
+      return isIncomingVersionGreater(
+        tree,
+        incomingVersion,
+        existingVersion,
+        d
+      );
     })
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
@@ -150,22 +373,30 @@ export function addDependenciesToPackageJson(
   // - specified dependencies of the other type that have greater version and are already installed as current type
   filteredDependencies = {
     ...updateExistingDependenciesVersion(
+      tree,
       filteredDependencies,
-      currentPackageJson.dependencies
+      currentPackageJson.dependencies,
+      tree.root
     ),
     ...updateExistingAltDependenciesVersion(
+      tree,
       devDependencies,
-      currentPackageJson.dependencies
+      currentPackageJson.dependencies,
+      tree.root
     ),
   };
   filteredDevDependencies = {
     ...updateExistingDependenciesVersion(
+      tree,
       filteredDevDependencies,
-      currentPackageJson.devDependencies
+      currentPackageJson.devDependencies,
+      tree.root
     ),
     ...updateExistingAltDependenciesVersion(
+      tree,
       dependencies,
-      currentPackageJson.devDependencies
+      currentPackageJson.devDependencies,
+      tree.root
     ),
   };
 
@@ -180,38 +411,42 @@ export function addDependenciesToPackageJson(
     );
   } else {
     filteredDependencies = removeLowerVersions(
+      tree,
       filteredDependencies,
-      currentPackageJson.dependencies
+      currentPackageJson.dependencies,
+      tree.root
     );
     filteredDevDependencies = removeLowerVersions(
+      tree,
       filteredDevDependencies,
-      currentPackageJson.devDependencies
+      currentPackageJson.devDependencies,
+      tree.root
     );
   }
 
   if (
     requiresAddingOfPackages(
+      tree,
       currentPackageJson,
       filteredDependencies,
-      filteredDevDependencies
+      filteredDevDependencies,
+      tree.root
     )
   ) {
-    updateJson(tree, packageJsonPath, (json) => {
-      json.dependencies = {
-        ...(json.dependencies || {}),
-        ...filteredDependencies,
-      };
-
-      json.devDependencies = {
-        ...(json.devDependencies || {}),
-        ...filteredDevDependencies,
-      };
-
-      json.dependencies = sortObjectByKeys(json.dependencies);
-      json.devDependencies = sortObjectByKeys(json.devDependencies);
-
-      return json;
-    });
+    const { catalogUpdates, directDependencies, directDevDependencies } =
+      splitDependenciesByCatalogType(
+        tree,
+        filteredDependencies,
+        filteredDevDependencies,
+        packageJsonPath
+      );
+    writeCatalogDependencies(tree, catalogUpdates);
+    writeDirectDependencies(
+      tree,
+      packageJsonPath,
+      directDependencies,
+      directDevDependencies
+    );
 
     return (): void => {
       installPackagesTask(tree);
@@ -220,17 +455,184 @@ export function addDependenciesToPackageJson(
   return () => {};
 }
 
+interface DependencySplit {
+  catalogUpdates: Array<{
+    packageName: string;
+    version: string;
+    catalogName?: string;
+  }>;
+  directDependencies: Record<string, string>;
+  directDevDependencies: Record<string, string>;
+}
+
+function splitDependenciesByCatalogType(
+  tree: Tree,
+  filteredDependencies: Record<string, string>,
+  filteredDevDependencies: Record<string, string>,
+  packageJsonPath: string
+): DependencySplit {
+  const allFilteredUpdates = {
+    ...filteredDependencies,
+    ...filteredDevDependencies,
+  };
+  const catalogUpdates: Array<{
+    packageName: string;
+    version: string;
+    catalogName?: string;
+  }> = [];
+  let directDependencies = { ...filteredDependencies };
+  let directDevDependencies = { ...filteredDevDependencies };
+
+  const manager = getCatalogManager(tree.root);
+  const existingCatalogDeps = getCatalogDependenciesFromPackageJson(
+    tree,
+    packageJsonPath,
+    manager
+  );
+  if (!existingCatalogDeps.size) {
+    return {
+      catalogUpdates: [],
+      directDependencies: filteredDependencies,
+      directDevDependencies: filteredDevDependencies,
+    };
+  }
+
+  const supportsCatalogs = manager.supportsCatalogs();
+
+  // Check filtered results for catalog references or existing catalog dependencies
+  for (const [packageName, version] of Object.entries(allFilteredUpdates)) {
+    if (!existingCatalogDeps.has(packageName)) {
+      continue;
+    }
+
+    let shouldUseCatalog = false;
+    let catalogName: string | undefined;
+
+    if (!supportsCatalogs) {
+      // we're trying to update the version of a package that has a catalog reference
+      // but Nx does not support catalogs for this package manager, we warn the user
+      // and update the dependencies directly to package.json to keep the existing
+      // behavior
+      output.warn({
+        title: 'Nx does not support catalogs for this package manager',
+        bodyLines: [
+          'Dependencies will be added directly to package.json and might override catalog dependencies.',
+        ],
+      });
+
+      // bail out early since we'll add the dependencies directly to package.json
+      return {
+        catalogUpdates: [],
+        directDependencies: filteredDependencies,
+        directDevDependencies: filteredDevDependencies,
+      };
+    }
+
+    catalogName = existingCatalogDeps.get(packageName)!;
+    const catalogRef = catalogName ? `catalog:${catalogName}` : 'catalog:';
+
+    try {
+      const manager = getCatalogManager(tree.root);
+      const { isValid, error } = manager.validateCatalogReference(
+        tree,
+        packageName,
+        catalogRef
+      );
+
+      if (isValid) {
+        shouldUseCatalog = true;
+      } else {
+        output.error({
+          title: 'Invalid catalog reference',
+          bodyLines: [
+            `Invalid catalog reference "${catalogRef}" for package "${packageName}".`,
+            ...(error?.message ? [error.message] : []),
+            ...(error?.suggestions || []),
+          ],
+        });
+        throw new Error(
+          `Could not update "${packageName}" to version "${version}". See above for more details.`
+        );
+      }
+    } catch (error) {
+      output.error({
+        title: 'Could not update catalog dependency',
+        bodyLines: [
+          `Unexpected error while updating catalog reference "${catalogRef}" for package "${packageName}".`,
+          ...(error?.message ? [error.message] : []),
+          ...(error?.stack ? [error.stack] : []),
+        ],
+      });
+      throw new Error(
+        `Could not update "${packageName}" to version "${version}". See above for more details.`
+      );
+    }
+
+    if (shouldUseCatalog) {
+      catalogUpdates.push({ packageName, version, catalogName });
+
+      // Remove from direct updates since this will be handled via catalog
+      delete directDependencies[packageName];
+      delete directDevDependencies[packageName];
+    }
+  }
+
+  return { catalogUpdates, directDependencies, directDevDependencies };
+}
+
+function writeCatalogDependencies(
+  tree: Tree,
+  catalogUpdates: Array<{
+    packageName: string;
+    version: string;
+    catalogName?: string;
+  }>
+): void {
+  if (!catalogUpdates.length) {
+    return;
+  }
+
+  const manager = getCatalogManager(tree.root);
+  manager.updateCatalogVersions(tree, catalogUpdates);
+}
+
+function writeDirectDependencies(
+  tree: Tree,
+  packageJsonPath: string,
+  dependencies: Record<string, string>,
+  devDependencies: Record<string, string>
+): void {
+  updateJson(tree, packageJsonPath, (json) => {
+    json.dependencies = {
+      ...(json.dependencies || {}),
+      ...dependencies,
+    };
+
+    json.devDependencies = {
+      ...(json.devDependencies || {}),
+      ...devDependencies,
+    };
+
+    json.dependencies = sortObjectByKeys(json.dependencies);
+    json.devDependencies = sortObjectByKeys(json.devDependencies);
+
+    return json;
+  });
+}
+
 /**
  * @returns The the incoming dependencies that are higher than the existing verions
  **/
 function removeLowerVersions(
+  tree: Tree,
   incomingDeps: Record<string, string>,
-  existingDeps: Record<string, string>
+  existingDeps: Record<string, string>,
+  workspaceRootPath: string
 ) {
   return Object.keys(incomingDeps).reduce((acc, d) => {
     if (
       !existingDeps?.[d] ||
-      isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
+      isIncomingVersionGreater(tree, incomingDeps[d], existingDeps[d], d)
     ) {
       acc[d] = incomingDeps[d];
     }
@@ -317,7 +719,13 @@ function sortObjectByKeys<T>(obj: T): T {
  * Verifies whether the given packageJson dependencies require an update
  * given the deps & devDeps passed in
  */
-function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
+function requiresAddingOfPackages(
+  tree: Tree,
+  packageJsonFile: PackageJson,
+  deps: Record<string, string>,
+  devDeps: Record<string, string>,
+  workspaceRootPath: string
+): boolean {
   let needsDepsUpdate = false;
   let needsDevDepsUpdate = false;
 
@@ -329,12 +737,22 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
       const incomingVersion = deps[entry];
       if (packageJsonFile.dependencies[entry]) {
         const existingVersion = packageJsonFile.dependencies[entry];
-        return isIncomingVersionGreater(incomingVersion, existingVersion);
+        return isIncomingVersionGreater(
+          tree,
+          incomingVersion,
+          existingVersion,
+          entry
+        );
       }
 
       if (packageJsonFile.devDependencies[entry]) {
         const existingVersion = packageJsonFile.devDependencies[entry];
-        return isIncomingVersionGreater(incomingVersion, existingVersion);
+        return isIncomingVersionGreater(
+          tree,
+          incomingVersion,
+          existingVersion,
+          entry
+        );
       }
 
       return true;
@@ -346,12 +764,22 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
       const incomingVersion = devDeps[entry];
       if (packageJsonFile.devDependencies[entry]) {
         const existingVersion = packageJsonFile.devDependencies[entry];
-        return isIncomingVersionGreater(incomingVersion, existingVersion);
+        return isIncomingVersionGreater(
+          tree,
+          incomingVersion,
+          existingVersion,
+          entry
+        );
       }
       if (packageJsonFile.dependencies[entry]) {
         const existingVersion = packageJsonFile.dependencies[entry];
 
-        return isIncomingVersionGreater(incomingVersion, existingVersion);
+        return isIncomingVersionGreater(
+          tree,
+          incomingVersion,
+          existingVersion,
+          entry
+        );
       }
 
       return true;
@@ -526,11 +954,11 @@ function addToNodePath(dir: string) {
   process.env.NODE_PATH = paths.join(delimiter);
 }
 
-function getPackageVersion(pkg: string): string {
+function getInstalledPackageModuleVersion(pkg: string): string {
   return require(join(pkg, 'package.json')).version;
 }
 
 /**
  * @description The version of Nx used by the workspace. Returns null if no version is found.
  */
-export const NX_VERSION = getPackageVersion('nx');
+export const NX_VERSION = getInstalledPackageModuleVersion('nx');
