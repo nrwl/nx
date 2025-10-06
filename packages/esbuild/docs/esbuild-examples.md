@@ -113,7 +113,7 @@ Additional [esbuild options](https://esbuild.github.io/api/) can be passed using
     "tsConfig": "<app-root>/tsconfig.app.json",
     "outputPath": "dist/<app-root>",
     "esbuildOptions": {
-      "legalComments": "inline"
+      "legalComments": "inline",
       "banner": {
         ".js": "// banner"
       },
