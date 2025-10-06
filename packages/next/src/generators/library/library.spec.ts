@@ -89,6 +89,34 @@ describe('next library', () => {
 
     expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
   });
+
+  it('should configure server entry point for buildable library with Vite', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(appTree, {
+      directory: 'my-buildable-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+      bundler: 'vite',
+    });
+
+    // Check vite.config.ts has multiple entry points
+    const viteConfig = appTree.read('my-buildable-lib/vite.config.ts', 'utf-8');
+    expect(viteConfig).toContain("index: 'src/index.ts'");
+    expect(viteConfig).toContain("server: 'src/server.ts'");
+    expect(viteConfig).toContain('fileName: (format, entryName) =>');
+
+    // Check package.json has server export
+    const packageJson = readJson(appTree, 'my-buildable-lib/package.json');
+    expect(packageJson.exports['./server']).toBeDefined();
+    expect(packageJson.exports['./server'].types).toBe('./dist/server.d.ts');
+    expect(packageJson.exports['./server'].import).toBe('./dist/server.js');
+    expect(packageJson.exports['./server'].default).toBe('./dist/server.js');
+  });
+
   it('should generate a server-only entry point', async () => {
     const appTree = createTreeWithEmptyWorkspace();
 
