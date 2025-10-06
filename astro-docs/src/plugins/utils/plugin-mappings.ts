@@ -363,8 +363,6 @@ export function pluginSpecialCasePluginRemapping(pluginName: string) {
     // we call the js plugin `typescript` in the URLs technologies
     case 'js':
       return 'typescript';
-    case 'java':
-      return 'java';
     default:
       return pluginName;
   }
