@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "install": {
-      "command": "mvn install"
+      "command": "./mvnw install"
     }
   },
   "tags": [],
