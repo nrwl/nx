@@ -15,6 +15,30 @@
 
   <name>Nx Maven Plugin</name>
   <description>Maven plugin for Nx integration and project analysis</description>
+  <url>https://github.com/nrwl/nx</url>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://github.com/nrwl/nx/blob/master/LICENSE</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Nx Team</name>
+      <email>hello@nrwl.io</email>
+      <organization>Nx</organization>
+      <organizationUrl>https://nx.dev</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/nrwl/nx.git</connection>
+    <developerConnection>scm:git:ssh://github.com:nrwl/nx.git</developerConnection>
+    <url>https://github.com/nrwl/nx</url>
+  </scm>
 
   <properties>
     <!-- Enable install, deploy, and signing for this module -->
@@ -28,30 +52,38 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Maven Core -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Maven Plugin Annotations -->
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
       <artifactId>maven-plugin-annotations</artifactId>
+      <version>${maven.plugin.tools.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- JSON Processing -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
 
     <!-- Jackson Kotlin Module -->
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-kotlin</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
 
     <!-- Removed JavaParser - was causing StackOverflowError -->
@@ -60,24 +92,31 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- SLF4J API -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Kotlin -->
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib</artifactId>
+      <version>${kotlin.version}</version>
     </dependency>
 
     <!-- Test Dependencies -->
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-test</artifactId>
+      <version>${kotlin.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <!-- Maven Plugin Testing Harness -->
@@ -116,18 +155,24 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <version>${junit5.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <!-- AssertJ -->
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <!-- Mockito -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <!-- JGit for gitignore parsing -->
