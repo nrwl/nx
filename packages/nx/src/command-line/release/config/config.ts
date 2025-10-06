@@ -1216,7 +1216,6 @@ function hasInvalidConventionalCommitsConfig(
   // at the root
   if (
     userConfig.version?.conventionalCommits === true &&
-    // v2 config - directly on version config
     (userConfig.version?.currentVersionResolver ||
       userConfig.version?.specifierSource)
   ) {
@@ -1227,7 +1226,6 @@ function hasInvalidConventionalCommitsConfig(
     for (const group of Object.values(userConfig.groups)) {
       if (
         group.version?.conventionalCommits === true &&
-        // v2 config - directly on version config
         (group.version?.currentVersionResolver ||
           group.version?.specifierSource)
       ) {
