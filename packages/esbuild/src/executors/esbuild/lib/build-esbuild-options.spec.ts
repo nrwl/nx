@@ -582,6 +582,7 @@ describe('buildEsbuildOptions', () => {
             sourcemap: true,
           },
           external: [],
+          excludeFromExternal: [],
         },
         context
       )
@@ -623,6 +624,7 @@ describe('buildEsbuildOptions', () => {
           },
           sourcemap: true,
           external: [],
+          excludeFromExternal: [],
         },
         context
       )
