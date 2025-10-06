@@ -65,7 +65,7 @@ describe('React Router Applications - TS Solution', () => {
     if (runE2ETests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
-        `Successfully ran target e2e for project ${appName}-e2e`
+        `Successfully ran target e2e for project @proj/${appName}-e2e`
       );
     }
   });
@@ -79,7 +79,7 @@ describe('React Router Applications - TS Solution', () => {
     if (runE2ETests()) {
       const result = runCLI(`e2e ${cypressAppName}-e2e --verbose`);
       expect(result).toContain(
-        `Successfully ran target e2e for project ${cypressAppName}-e2e`
+        `Successfully ran target e2e for project @proj/${cypressAppName}-e2e`
       );
     }
   });
