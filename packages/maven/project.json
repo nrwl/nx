@@ -36,6 +36,11 @@
             "glob": "**/*.json",
             "ignore": ["maven-plugin/**/*"],
             "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "@(generators|executors).json",
+            "output": "/"
           }
         ]
       }
