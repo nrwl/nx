@@ -238,7 +238,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   execSync(
-    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json packages/maven/package.json`,
+    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
     {
       cwd: workspaceRoot,
     }
