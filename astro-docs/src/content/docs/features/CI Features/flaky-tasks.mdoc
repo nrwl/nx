@@ -47,3 +47,74 @@ If you suspect that a task is flaky, but Nx has not confirmed it yet, you can ma
 Once you've resolved the issue that caused a task to be flaky, you can immediately mark the task as not flaky by clicking on **"Mark task as no longer flaky"** on the same run details screen.
 
 ![Mark task as no longer flaky button](../../../../assets/features/ci-features/mark-task-as-no-longer-flaky.png)
+
+## Understanding Flaky Task Analytics
+
+Nx Cloud provides analytics to help you understand the scope and impact of flaky tasks in your workspace.
+
+### Key Metrics
+
+**Flake Rate** - The probability that when a task fails, it's failing due to flakiness rather than a real issue. This answers: _"Of all the task failures we see, what percentage are just random flaky failures that aren't indicative of actual problems?"_
+
+**Recovery Rate** - The probability that a task which has previously failed due to flakiness will succeed when run again. This answers: _"If we know a task failed because of flakiness, what are the chances it will pass if we retry it?"_
+
+### Workspace Health Overview
+
+The analytics dashboard provides KPI metrics that give you a quick glance at the overall health of your workspace:
+
+- **Active flaky tasks** - The number of tasks with a flake rate greater than 0 for the selected date range
+- **Average flake rate** - A weighted average flake rate across all tasks in your workspace. Tasks are weighted by their sample size, so a task that ran 1000 times with 5% flake rate has more impact than one that ran 10 times with 50% flake rate
+- **High risk tasks** - Tasks with a flake rate higher than 50%, indicating severe flakiness that needs immediate attention
+
+### Visualizing Flaky Tasks
+
+The **scatter plot** provides a visual representation of your tasks, helping you quickly identify which tasks need attention. Tasks are assigned a priority level:
+
+| Priority | Flake Rate        | Sample Size | Definition                                                |
+| -------- | ----------------- | ----------- | --------------------------------------------------------- |
+| High     | ≥ 20%             | ≥ 10 runs   | Severe flakiness with enough data to confirm the pattern  |
+| Medium   | ≥ 10%             | ≥ 5 runs    | Moderate flakiness with decent data                       |
+| Low      | < 10% OR < 5 runs | Any         | Minor flakiness or not enough data to determine a pattern |
+
+An **impact score** helps you prioritize which tasks to fix first by considering both flake rate and frequency:
+
+- A task with 50% flake rate and 100 runs = 50 impact score
+- A task with 10% flake rate and 500 runs = 50 impact score
+- A task with 20% flake rate and 10 runs = 2 impact score
+
+Tasks on the right side of the scatter plot (high impact score) should typically be your highest priority.
+
+### Detailed Task Information
+
+The analytics table shows your most recent flaky tasks with the following information:
+
+- **Total reruns** - The total number of times this task has been re-run due to flakiness
+- **Flake rate** - The percentage of failures that are due to flakiness
+- **Recovery rate** - The percentage of flaky failures that succeed when retried
+- **Time wasted** - An estimate of time spent running this flaky task (total reruns × average task duration)
+- **First/Last failure** - When the task first exhibited flakiness and when it most recently failed
+
+## Common Questions
+
+### How do I prioritize which flaky tasks to fix?
+
+Start with tasks that have both a high flake rate and high frequency (high impact score). These tasks are wasting the most time and causing the most disruption to your team. Use the scatter plot to visually identify these high-priority tasks.
+
+### What if a task has a high flake rate but low sample size?
+
+Tasks with fewer than 5-10 runs may not have enough data to determine a reliable flake rate. Monitor these tasks over time to see if the pattern continues. If the flakiness persists as the sample size grows, then prioritize fixing it.
+
+### My task has a 100% recovery rate. Should I still fix it?
+
+Yes! While automatic retries mean the task eventually passes, you're still wasting CI time and resources on unnecessary reruns. A task with 100% recovery rate and high frequency is still costing your team valuable time that could be spent on other work.
+
+### How can I reduce flaky tasks in my workspace?
+
+Common causes of flaky tasks include:
+
+- **Race conditions** - Tests that depend on timing or async operations completing in a specific order
+- **Environment dependencies** - Tests that rely on external services, network conditions, or specific machine states
+- **Shared state** - Tests that don't properly clean up after themselves or depend on execution order
+- **Resource constraints** - Tests that fail when system resources (CPU, memory) are under pressure
+
+Focus on making your tests deterministic and isolated from external factors. Use proper setup/teardown, mock external dependencies, and ensure tests can run in any order.
