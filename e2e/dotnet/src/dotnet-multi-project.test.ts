@@ -47,7 +47,7 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
 
       // Set up project references to create a dependency chain
       runCommand(
-        `exec -- dotnet add Infrastructure/Infrastructure.csproj reference Core/Core.csproj`
+        `dotnet add Infrastructure/Infrastructure.csproj reference Core/Core.csproj`
       );
       runCommand(
         `dotnet add Application/Application.csproj reference Core/Core.csproj`
@@ -71,6 +71,8 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
 
       checkFilesExist('complex-graph.json');
       const { graph } = readJson('complex-graph.json');
+
+      console.log('[debug] Project graph:', JSON.stringify(graph, null, 2));
 
       // Verify dependency chain
       const webApiDeps = graph.dependencies['web-api'] || [];

@@ -93,7 +93,10 @@ describe('.NET Plugin', () => {
     });
 
     it('should build a console application', () => {
-      const output = runCLI('build my-app', { verbose: true });
+      const output = runCLI('build my-app', {
+        verbose: true,
+        env: { NX_DAEMON: 'false' },
+      });
       expect(output).toContain('Build succeeded');
       checkFilesMatchingPatternExist(
         '.*/MyApp.dll',
@@ -102,7 +105,7 @@ describe('.NET Plugin', () => {
     });
 
     it('should have expected dependencies', () => {
-      runCLI('graph --file=graph.json');
+      runCLI('graph --file=graph.json', { env: { NX_DAEMON: 'false' } });
       const { graph } = readJson('graph.json');
 
       console.log('GRAPH DEBUG OUTPUT', JSON.stringify(graph, null, 2));
