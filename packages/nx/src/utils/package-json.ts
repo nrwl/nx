@@ -1,5 +1,5 @@
 import { existsSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
@@ -384,6 +384,77 @@ export function installPackageToTmp(
     tempDir,
     cleanup,
   };
+}
+
+/**
+ * Get the resolved version of a dependency from package.json.
+ *
+ * Retrieves a package version and automatically resolves PNPM catalog references
+ * (e.g., "catalog:default") to their actual version strings. Searches `dependencies`
+ * first, then falls back to `devDependencies`.
+ *
+ * **Filesystem-based usage** (CLI commands and scripts):
+ * Use when reading directly from the filesystem without a `Tree` object.
+ *
+ * @example
+ * ```typescript
+ * // Filesystem-based - from current directory
+ * const reactVersion = getDependencyVersionFromPackageJson('react');
+ *
+ * // Filesystem-based - with workspace root
+ * const version = getDependencyVersionFromPackageJson('react', '/path/to/workspace');
+ *
+ * // Filesystem-based - with specific package.json
+ * const version = getDependencyVersionFromPackageJson(
+ *   'react',
+ *   '/path/to/workspace',
+ *   'apps/my-app/package.json'
+ * );
+ * ```
+ *
+ * @returns The resolved version string, or `null` if the package is not found in either dependencies or devDependencies
+ */
+export function getDependencyVersionFromPackageJson(
+  packageName: string,
+  workspaceRootPath?: string,
+  packageJsonPath?: string
+): string | null;
+export function getDependencyVersionFromPackageJson(
+  packageName: string,
+  workspaceRootPath?: string,
+  packageJson?: PackageJson
+): string | null;
+export function getDependencyVersionFromPackageJson(
+  packageName: string,
+  root: string = process.cwd(),
+  packageJsonPathOrObject: string | PackageJson = 'package.json'
+): string | null {
+  let packageJson: PackageJson;
+  if (typeof packageJsonPathOrObject === 'object') {
+    packageJson = packageJsonPathOrObject;
+  } else {
+    const packageJsonPath = resolve(root, packageJsonPathOrObject);
+    if (existsSync(packageJsonPath)) {
+      packageJson = readJsonFile(packageJsonPath);
+    } else {
+      return null;
+    }
+  }
+
+  const { getCatalogManager } = require('./catalog');
+  const manager = getCatalogManager(root);
+
+  let version =
+    packageJson.dependencies?.[packageName] ??
+    packageJson.devDependencies?.[packageName] ??
+    null;
+
+  // Resolve catalog reference if needed
+  if (version && manager.isCatalogReference(version)) {
+    version = manager.resolveCatalogReference(packageName, version, root);
+  }
+
+  return version;
 }
 
 /**

@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
@@ -12,10 +13,7 @@ import {
   getComponentType,
   getModuleTypeSeparator,
 } from '../../utils/artifact-types';
-import {
-  getInstalledAngularVersionInfo,
-  getInstalledPackageVersion,
-} from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 
 export function generateSSRFiles(
@@ -65,7 +63,7 @@ export function generateSSRFiles(
 
   const sourceRoot = getProjectSourceRoot(project, tree);
 
-  const ssrVersion = getInstalledPackageVersion(tree, '@angular/ssr');
+  const ssrVersion = getDependencyVersionFromPackageJson(tree, '@angular/ssr');
   const cleanedSsrVersion = ssrVersion
     ? clean(ssrVersion) ?? coerce(ssrVersion).version
     : null;

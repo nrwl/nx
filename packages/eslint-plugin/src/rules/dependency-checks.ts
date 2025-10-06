@@ -1,4 +1,8 @@
 import { NX_VERSION, normalizePath, workspaceRoot } from '@nx/devkit';
+import {
+  formatCatalogError,
+  getCatalogManager,
+} from '@nx/devkit/src/utils/catalog';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import { AST } from 'jsonc-eslint-parser';
@@ -35,7 +39,8 @@ export type MessageIds =
   | 'missingDependency'
   | 'obsoleteDependency'
   | 'versionMismatch'
-  | 'missingDependencySection';
+  | 'missingDependencySection'
+  | 'invalidCatalogReference';
 
 export const RULE_NAME = 'dependency-checks';
 
@@ -72,6 +77,7 @@ export default ESLintUtils.RuleCreator(
       obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}" project.`,
       versionMismatch: `The version specifier does not contain the installed version of "{{packageName}}" package: {{version}}.`,
       missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected:{{dependencies}}`,
+      invalidCatalogReference: `Invalid catalog reference for "{{packageName}}": {{error}}`,
     },
   },
   defaultOptions: [
@@ -200,6 +206,34 @@ export default ESLintUtils.RuleCreator(
                 `${mappedDeps}\n  `
               );
             }
+          },
+        });
+      }
+    }
+
+    function validateCatalogReferenceForPackage(
+      node: AST.JSONProperty,
+      packageName: string,
+      packageRange: string
+    ) {
+      const manager = getCatalogManager(workspaceRoot);
+      if (!manager.isCatalogReference(packageRange)) {
+        return;
+      }
+
+      const validationResult = manager.validateCatalogReference(
+        packageName,
+        packageRange,
+        workspaceRoot
+      );
+
+      if (!validationResult.isValid) {
+        context.report({
+          node: node as any,
+          messageId: 'invalidCatalogReference',
+          data: {
+            packageName: packageName,
+            error: formatCatalogError(validationResult.error!),
           },
         });
       }
@@ -358,6 +392,8 @@ export default ESLintUtils.RuleCreator(
         if (ignoredDependencies.includes(packageName)) {
           return;
         }
+
+        validateCatalogReferenceForPackage(node, packageName, packageRange);
 
         if (expectedDependencyNames.includes(packageName)) {
           validateVersionMatchesInstalled(node, packageName, packageRange);

@@ -197,7 +197,12 @@ describe('pnpm LockFile utility', () => {
 
         // this should not fail
         expect(() =>
-          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+          stringifyPnpmLockfile(
+            prunedGraph,
+            lockFile,
+            appPackageJson,
+            '/virtual'
+          )
         ).not.toThrow();
       });
     });
@@ -308,7 +313,12 @@ describe('pnpm LockFile utility', () => {
 
         // this should not fail
         expect(() =>
-          stringifyPnpmLockfile(prunedGraph, appLockFile, appPackageJson)
+          stringifyPnpmLockfile(
+            prunedGraph,
+            appLockFile,
+            appPackageJson,
+            '/virtual'
+          )
         ).not.toThrow();
       });
     });
@@ -503,7 +513,8 @@ describe('pnpm LockFile utility', () => {
       const result = stringifyPnpmLockfile(
         prunedGraph,
         lockFile,
-        prunedPackageJson
+        prunedPackageJson,
+        '/virtual'
       );
       // we replace the dev: true with dev: false because the lock file is generated with dev: false
       // this does not break the intallation, despite being inaccurate
@@ -731,7 +742,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -750,7 +762,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -830,7 +843,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -849,7 +863,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -929,7 +944,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -948,7 +964,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -1259,7 +1276,12 @@ describe('pnpm LockFile utility', () => {
       `);
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
       expect(result).toEqual(lockFile);
     });
 
@@ -1507,7 +1529,12 @@ describe('pnpm LockFile utility', () => {
       `);
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
       expect(result).toEqual(lockFile);
     });
   });
@@ -1579,7 +1606,12 @@ describe('pnpm LockFile utility', () => {
       graph = builder.getUpdatedProjectGraph();
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
       expect(result).toEqual(prunedLockFile);
     });
   });
@@ -1643,7 +1675,12 @@ describe('pnpm LockFile utility', () => {
       };
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
 
       expect(result).toEqual(expectedPrunedLockFile);
     });
