@@ -245,6 +245,9 @@ function addBuildTargets(
         command: 'dotnet build',
         options: {
           cwd: '{projectRoot}',
+          // .NET CLI generally will build dependencies and restore automatically,
+          // but Nx's task graph is already handling that so we skip it here to ensure
+          // we aren't rebuilding or restoring more than necessary.
           args: [fileName, '--no-restore', '--no-dependencies'],
         },
         dependsOn: [`${options.restoreTargetName}:${projectName}`, '^build'],
@@ -293,6 +296,9 @@ function addBuildTargets(
       command: 'dotnet build',
       options: {
         cwd: '{projectRoot}',
+        // .NET CLI generally will build dependencies and restore automatically,
+        // but Nx's task graph is already handling that so we skip it here to ensure
+        // we aren't rebuilding or restoring more than necessary.
         args: ['--no-restore', '--no-dependencies'],
       },
       dependsOn: [options.restoreTargetName, '^build'],
@@ -332,6 +338,9 @@ function addTestTargets(
           command: 'dotnet test',
           options: {
             cwd: '{projectRoot}',
+            // .NET CLI generally will build dependencies and restore automatically,
+            // but Nx's task graph is already handling that so we skip it here to ensure
+            // we aren't rebuilding or restoring more than necessary.
             args: [fileName, '--no-dependencies', '--no-build'],
           },
           dependsOn: [`${options.buildTargetName}:${projectName}`],
@@ -483,6 +492,9 @@ function addPublishTargets(
           command: 'dotnet publish',
           options: {
             cwd: '{projectRoot}',
+            // .NET CLI generally will build dependencies and restore automatically,
+            // but Nx's task graph is already handling that so we skip it here to ensure
+            // we aren't rebuilding or restoring more than necessary.
             args: [fileName, '--no-dependencies'],
           },
           dependsOn: [`${options.buildTargetName}:${projectName}`],
@@ -529,6 +541,9 @@ function addPublishTargets(
       command: 'dotnet publish',
       options: {
         cwd: '{projectRoot}',
+        // .NET CLI generally will build dependencies and restore automatically,
+        // but Nx's task graph is already handling that so we skip it here to ensure
+        // we aren't rebuilding or restoring more than necessary.
         args: ['--no-dependencies'],
       },
       dependsOn: [options.buildTargetName],
@@ -569,6 +584,9 @@ function addPackTargets(
           command: 'dotnet pack',
           options: {
             cwd: '{projectRoot}',
+            // .NET CLI generally will build dependencies and restore automatically,
+            // but Nx's task graph is already handling that so we skip it here to ensure
+            // we aren't rebuilding or restoring more than necessary.
             args: [fileName, '--no-dependencies'],
           },
           dependsOn: [`${options.buildTargetName}:${projectName}`],
@@ -613,6 +631,9 @@ function addPackTargets(
       command: 'dotnet pack',
       options: {
         cwd: '{projectRoot}',
+        // .NET CLI generally will build dependencies and restore automatically,
+        // but Nx's task graph is already handling that so we skip it here to ensure
+        // we aren't rebuilding or restoring more than necessary.
         args: ['--no-dependencies'],
       },
       dependsOn: [options.buildTargetName],

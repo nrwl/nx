@@ -26,6 +26,7 @@ import {
   createProjectRootMappings,
   resolveReferenceToProject,
 } from '../utils/dependency-detection';
+import { verboseLog, verboseError } from '../utils/logger';
 
 export interface DotNetPluginOptions {
   buildTargetName?: string;
@@ -149,27 +150,49 @@ export const createDependencies: CreateDependencies<
 
   const rootMap = createProjectRootMappings(ctx.projects);
 
+  verboseLog('[dotnet] createDependencies: Starting dependency detection');
+  verboseLog(`[dotnet] Workspace root: ${ctx.workspaceRoot}`);
+  verboseLog(
+    `[dotnet] Number of projects: ${Object.keys(ctx.projects).length}`
+  );
+  verboseLog(`[dotnet] Projects: ${Object.keys(ctx.projects).join(', ')}`);
+  verboseLog(`[dotnet] Root map entries: ${Object.keys(rootMap).length}`);
+  verboseLog(`[dotnet] Root map: ${JSON.stringify(rootMap, null, 2)}`);
+
   // Use dotnet CLI for dependency detection
   const dotnetClient = new NativeDotNetClient(ctx.workspaceRoot);
 
   for (const [source] of Object.entries(ctx.projects)) {
     const files = ctx.filesToProcess.projectFileMap[source] || [];
+    verboseLog(
+      `[dotnet] Processing project: ${source} (${files.length} files)`
+    );
 
     for (const file of files) {
       const { ext } = parse(file.file);
+      verboseLog(`[dotnet]   File: ${file.file} (ext: ${ext})`);
       if (['.csproj', '.fsproj', '.vbproj'].includes(ext)) {
         try {
+          const fullPath = join(ctx.workspaceRoot, file.file);
+          verboseLog(`[dotnet]   Getting references for: ${fullPath}`);
           const references = await dotnetClient.getProjectReferencesAsync(
-            join(ctx.workspaceRoot, file.file)
+            fullPath
+          );
+          verboseLog(
+            `[dotnet]   Found ${references.length} references: ${JSON.stringify(
+              references
+            )}`
           );
 
           for (const reference of references) {
+            verboseLog(`[dotnet]     Resolving reference: ${reference}`);
             const target = resolveReferenceToProject(
               reference,
               file.file,
               rootMap,
               ctx.workspaceRoot
             );
+            verboseLog(`[dotnet]     Resolved to target: ${target}`);
             if (target) {
               dependencies.push({
                 source,
@@ -177,16 +200,31 @@ export const createDependencies: CreateDependencies<
                 type: DependencyType.static,
                 sourceFile: file.file,
               });
+              verboseLog(
+                `[dotnet]     ✓ Added dependency: ${source} -> ${target}`
+              );
+            } else {
+              verboseLog(
+                `[dotnet]     ✗ Could not resolve reference to project`
+              );
             }
           }
         } catch (error) {
-          logger.debug(
-            `Failed to get dependencies for ${file.file}: ${error.message}`
+          verboseError(
+            `[dotnet] Failed to get dependencies for ${file.file}: ${error.message}`
           );
+          verboseError(`[dotnet] Error stack: ${error.stack}`);
         }
       }
     }
   }
+
+  verboseLog(
+    `[dotnet] createDependencies: Completed with ${dependencies.length} dependencies`
+  );
+  verboseLog(
+    `[dotnet] Final dependencies: ${JSON.stringify(dependencies, null, 2)}`
+  );
 
   return dependencies;
 };
