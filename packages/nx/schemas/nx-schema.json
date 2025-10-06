@@ -216,6 +216,11 @@
               "type": "boolean",
               "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
             },
+            "releaseTagPatternPreferDockerVersion": {
+              "type": ["boolean", "string"],
+              "enum": [true, false, "both"],
+              "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
+            },
             "releaseTagPatternStrictPreid": {
               "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
             },
@@ -322,6 +327,11 @@
         "releaseTagPatternRequireSemver": {
           "type": "boolean",
           "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
+        },
+        "releaseTagPatternPreferDockerVersion": {
+          "type": ["boolean", "string"],
+          "enum": [true, false, "both"],
+          "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
         },
         "releaseTagPatternStrictPreid": {
           "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"

@@ -1265,7 +1265,8 @@ async function generateChangelogForProjects({
       shouldPreferDockerVersionForReleaseGroup(releaseGroup);
     const releaseVersion = new ReleaseVersion({
       version:
-        preferDockerVersion && projectsVersionData[project.name].dockerVersion
+        (preferDockerVersion === true || preferDockerVersion === 'both') &&
+        projectsVersionData[project.name].dockerVersion
           ? projectsVersionData[project.name].dockerVersion
           : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTagPattern,

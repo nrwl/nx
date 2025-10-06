@@ -287,6 +287,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -305,6 +306,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -494,6 +496,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -512,6 +515,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -704,6 +708,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -722,6 +727,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -945,6 +951,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -963,6 +970,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -1170,6 +1178,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -1188,6 +1197,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -1403,6 +1413,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -1421,6 +1432,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -1637,6 +1649,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -1655,6 +1668,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -1851,6 +1865,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -1869,6 +1884,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -2064,6 +2080,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -2082,6 +2099,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -2288,6 +2306,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -2306,6 +2325,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -2506,6 +2526,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -2540,6 +2561,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -2558,6 +2580,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -2756,6 +2779,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -2774,6 +2798,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -2963,6 +2988,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -2986,6 +3012,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3004,6 +3031,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -3209,6 +3237,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3238,6 +3267,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3256,6 +3286,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -3463,6 +3494,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3492,6 +3524,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3510,6 +3543,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -3719,6 +3753,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3748,6 +3783,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3766,6 +3802,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -3963,6 +4000,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -3981,6 +4019,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -4176,6 +4215,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -4194,6 +4234,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -4392,6 +4433,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -4410,6 +4452,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -4604,6 +4647,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -4622,6 +4666,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -4819,6 +4864,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -4837,6 +4883,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -5026,6 +5073,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -5049,6 +5097,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -5067,6 +5116,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": false,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -5256,6 +5306,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -5279,6 +5330,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -5297,6 +5349,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -5513,6 +5566,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -5531,6 +5585,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -5740,6 +5795,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -5758,6 +5814,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -5952,6 +6009,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -5970,6 +6028,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -6167,6 +6226,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -6188,6 +6248,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -6403,6 +6464,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -6421,6 +6483,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -6615,6 +6678,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}__{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -6633,6 +6697,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{projectName}__{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -6843,6 +6908,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -6862,6 +6928,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -7048,6 +7115,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -7066,6 +7134,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -7293,6 +7362,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -7311,6 +7381,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -7528,6 +7599,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -7546,6 +7618,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -7741,6 +7814,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -7759,6 +7833,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -7959,6 +8034,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -7977,6 +8053,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -8180,6 +8257,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -8198,6 +8276,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -8401,6 +8480,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -8419,6 +8499,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -8623,6 +8704,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -8641,6 +8723,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -8923,6 +9006,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -8941,6 +9025,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -9161,6 +9246,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -9179,6 +9265,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -9565,6 +9652,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -9583,6 +9671,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -9776,6 +9865,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -9794,6 +9884,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -10023,6 +10114,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -10041,6 +10133,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -10246,6 +10339,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -10264,6 +10358,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -10472,6 +10567,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -10490,6 +10586,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -10699,6 +10796,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -10717,6 +10815,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -10929,6 +11028,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -10947,6 +11047,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -11184,6 +11285,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -11207,6 +11309,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -11241,6 +11344,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -11259,6 +11363,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -11498,6 +11603,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}-{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -11516,6 +11622,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -11752,6 +11859,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -11770,6 +11878,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -11987,6 +12096,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -12005,6 +12115,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -12443,6 +12554,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -12461,6 +12573,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -12866,6 +12979,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -12890,6 +13004,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -12908,6 +13023,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -13090,6 +13206,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -13108,6 +13225,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -13304,6 +13422,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -13323,6 +13442,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -13515,6 +13635,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -13534,6 +13655,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -13728,6 +13850,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -13748,6 +13871,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -13949,6 +14073,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -13968,6 +14093,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -14168,6 +14294,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -14187,6 +14314,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -14384,6 +14512,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -14407,6 +14536,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -14604,6 +14734,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -14628,6 +14759,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -14646,6 +14778,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -14839,6 +14972,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -14867,6 +15001,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -14885,6 +15020,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -15078,6 +15214,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -15101,6 +15238,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -15120,6 +15258,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
@@ -15315,6 +15454,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -15338,6 +15478,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": true,
                 "version": {
@@ -15361,6 +15502,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": true,
             "version": {
