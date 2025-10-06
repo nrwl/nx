@@ -50,9 +50,9 @@
     "semver": "^7.6.3"
   },
   "devDependencies": {
-    "nx": "workspace:*",
     "@nx/cypress": "workspace:*",
-    "@nx/playwright": "workspace:*"
+    "@nx/playwright": "workspace:*",
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

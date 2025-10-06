@@ -52,9 +52,9 @@
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "devDependencies": {
-    "nx": "workspace:*",
     "@nx/cypress": "workspace:*",
-    "@nx/playwright": "workspace:*"
+    "@nx/playwright": "workspace:*",
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

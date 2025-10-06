@@ -39,9 +39,6 @@ export async function createNxReleaseConfigAndPopulateWorkspace(
     {
       ...additionalNxReleaseConfig,
       groups,
-      version: {
-        ...additionalNxReleaseConfig.version,
-      },
     }
   );
   if (configError) {

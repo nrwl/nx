@@ -131,7 +131,6 @@ export async function addReleaseConfigForNonTsSolution(
     },
   };
 
-  // TODO: re-evaluate this config in new versions
   projectConfiguration.release = {
     version: {
       manifestRootsToUpdate: [packageRoot],
