@@ -296,6 +296,18 @@ export async function detectPlugins(
     detectedPlugins.add('@nx/gradle');
   }
 
+  let mvnwFiles = globWithWorkspaceContextSync(process.cwd(), [
+    'mvnw',
+    'mvnw.bat',
+    'pom.xml',
+    '**/mvnw',
+    '**/mvnw.bat',
+    '**/pom.xml',
+  ]);
+  if (mvnwFiles.length > 0) {
+    detectedPlugins.add('@nx/maven');
+  }
+
   // Remove existing plugins
   for (const plugin of detectedPlugins) {
     if (currentPlugins.has(plugin)) {
