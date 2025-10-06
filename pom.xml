@@ -5,7 +5,7 @@
 
   <groupId>dev.nx</groupId>
   <artifactId>nx-parent</artifactId>
-  <version>${revision}</version>
+  <version>0.0.1</version>
   <packaging>pom</packaging>
 
   <name>Nx Parent</name>
@@ -41,9 +41,6 @@
   </modules>
 
   <properties>
-    <!-- Version -->
-    <revision>0.0.1</revision>
-
     <!-- Skip deploying parent POM -->
     <maven.deploy.skip>true</maven.deploy.skip>
     <maven.install.skip>true</maven.install.skip>
@@ -258,6 +255,7 @@
             </execution>
           </executions>
         </plugin>
+
     </plugins>
     </pluginManagement>
   </build>
