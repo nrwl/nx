@@ -1401,11 +1401,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/csr-css:
     dependencies:
@@ -1414,11 +1414,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/csr-css-assets:
     dependencies:
@@ -1427,11 +1427,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/csr-i18n:
     dependencies:
@@ -1440,11 +1440,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/csr-scss:
     dependencies:
@@ -1453,11 +1453,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/csr-tailwind:
     dependencies:
@@ -1469,11 +1469,11 @@ importers:
         version: 4.1.11
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/ssg-css:
     dependencies:
@@ -1482,11 +1482,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/ssr-css:
     dependencies:
@@ -1495,11 +1495,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/zoneless-csr-css:
     dependencies:
@@ -1508,11 +1508,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/zoneless-csr-i18n:
     dependencies:
@@ -1521,11 +1521,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/zoneless-ssg-css:
     dependencies:
@@ -1534,11 +1534,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   examples/angular-rspack/zoneless-ssr-css:
     dependencies:
@@ -1547,11 +1547,11 @@ importers:
         version: link:../../../packages/angular-rspack
     devDependencies:
       '@rspack/cli':
-        specifier: 1.5.0
-        version: 1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        specifier: 1.5.2
+        version: 1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       '@rspack/core':
-        specifier: 1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)
+        specifier: 1.5.2
+        version: 1.5.2(@swc/helpers@0.5.17)
 
   graph/client:
     dependencies:
@@ -1579,7 +1579,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.9.2))
+        version: 29.7.0(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@24.2.0)(typescript@5.9.2))
 
   graph/migrate:
     dependencies:
@@ -1592,7 +1592,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^29.4.1
-        version: 29.7.0(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@24.2.0)(typescript@5.9.2))
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.9.2))
 
   graph/project-details:
     dependencies:
@@ -10472,8 +10472,8 @@ packages:
   '@rspack/binding@1.5.2':
     resolution: {integrity: sha512-NKiBcsxmAzFDYRnK2ZHWbTtDFVT5/704eK4OfpgsDXPMkaMnBKijMKNgP5pbe18X4rUlz+8HnGm4+Xllo9EESw==}
 
-  '@rspack/cli@1.5.0':
-    resolution: {integrity: sha512-M4/fNyoomHbxEbseB2gBbayaCtCLUEcknw5MohDEGaJ+cwVQYKOLga1AI+lpIWwzO5FCRG9tlIxjxa9vNotLeg==}
+  '@rspack/cli@1.5.2':
+    resolution: {integrity: sha512-GnbIxqeNobD1U5a21IX2OFEH2B7nsNzMwP1SKjMR5liDJ9ThKzreSbRTIPPekQQ5eX693cMN2JlE5AvnIIWeTw==}
     hasBin: true
     peerDependencies:
       '@rspack/core': ^1.0.0-alpha || ^1.x
@@ -34360,11 +34360,11 @@ snapshots:
       '@rspack/binding-win32-ia32-msvc': 1.5.2
       '@rspack/binding-win32-x64-msvc': 1.5.2
 
-  '@rspack/cli@1.5.0(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))':
+  '@rspack/cli@1.5.2(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))':
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      '@rspack/core': 1.5.0(@swc/helpers@0.5.17)
-      '@rspack/dev-server': 1.1.4(@rspack/core@1.5.0(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+      '@rspack/core': 1.5.2(@swc/helpers@0.5.17)
+      '@rspack/dev-server': 1.1.4(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
       colorette: 2.0.20
       exit-hook: 4.0.0
       pirates: 4.0.7
@@ -34440,6 +34440,23 @@ snapshots:
   '@rspack/dev-server@1.1.4(@rspack/core@1.5.2(@swc/helpers@0.5.11))(@types/express@4.17.23)(webpack-cli@5.1.4)(webpack@5.101.3)':
     dependencies:
       '@rspack/core': 1.5.2(@swc/helpers@0.5.11)
+      chokidar: 3.6.0
+      http-proxy-middleware: 2.0.9(@types/express@4.17.23)
+      p-retry: 6.2.1
+      webpack-dev-server: 5.2.2(webpack-cli@5.1.4)(webpack@5.101.3)
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - '@types/express'
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+      - webpack
+      - webpack-cli
+
+  '@rspack/dev-server@1.1.4(@rspack/core@1.5.2(@swc/helpers@0.5.17))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))(webpack@5.101.3(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))':
+    dependencies:
+      '@rspack/core': 1.5.2(@swc/helpers@0.5.17)
       chokidar: 3.6.0
       http-proxy-middleware: 2.0.9(@types/express@4.17.23)
       p-retry: 6.2.1
