@@ -110,6 +110,10 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         collapsed: true,
         items: [
           {
+            label: 'Introduction',
+            link: 'technologies/java/introduction',
+          },
+          {
             label: 'Gradle',
             collapsed: true,
             items: getPluginItems('gradle', 'java'),
