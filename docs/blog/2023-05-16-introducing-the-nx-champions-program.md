@@ -27,5 +27,5 @@ We appreciate everyone who was part of the initial group of Nx Champions, but ac
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 🐥 [Nx Twitter Handle](https://twitter.com/NxDevTools)
+- 🐥 [Nx Twitter Handle](https://x.com/NxDevTools)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

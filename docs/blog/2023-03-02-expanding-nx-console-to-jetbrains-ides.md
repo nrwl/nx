@@ -7,7 +7,7 @@ tags: [nx]
 description: Explore the technical journey of bringing Nx Console to JetBrains IDEs, featuring Language Server integration and Generate UI implementation for IntelliJ.
 ---
 
-**_Co-authored by_** [**_Jon Cammisuli_**](https://twitter.com/jcammisuli)
+**_Co-authored by_** [**_Jon Cammisuli_**](https://x.com/jcammisuli)
 
 Nx Console has been on the Visual Studio Code marketplace for years, and with over 1.2 million downloads, we know that a
 lot of folks enjoy using it for their day to day Nx related tasks.
@@ -20,7 +20,7 @@ Go grab it on the official store.
 
 ![](/blog/images/2023-03-02/gnMRzttFFaoTX0tVw-zZbQ.avif)
 
-Before we go into details of Nx Console for IntelliJ, we'd really want to go and **thank our community**. [\* \*_Issam Guissouma_\*\*](https://twitter.com/iguissouma) and [**_Edward Tkachev_**](https://twitter.com/etkachev) from the
+Before we go into details of Nx Console for IntelliJ, we'd really want to go and **thank our community**. [\* \*_Issam Guissouma_\*\*](https://x.com/iguissouma) and [**_Edward Tkachev_**](https://x.com/etkachev) from the
 Nx community had their own Nx Console plugins for IntelliJ out there already for a while. And they have been super
 popular. As such we'd like to take the occasion to give them a shout-out for the awesome work on the community plugins,
 but also for closely collaborating with us over the last weeks to build our official IntelliJ support for Nx Console.

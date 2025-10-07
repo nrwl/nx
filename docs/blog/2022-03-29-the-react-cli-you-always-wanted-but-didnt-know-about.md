@@ -300,7 +300,7 @@ It is not even only about upgrading the frameworks such as React or Angular them
 
 ## Common Questions
 
-Here are some common questions developers have. Have some more? Feel free to ping me on Twitter ([@juristr](https://twitter.com/juristr)), the official Nx account ([@NxDevtools](https://twitter.com/nxdevtools)) or in the [Nx community Discord](https://go.nx.dev/community).
+Here are some common questions developers have. Have some more? Feel free to ping me on Twitter ([@juristr](https://x.com/juristr)), the official Nx account ([@NxDevtools](https://x.com/nxdevtools)) or in the [Nx community Discord](https://go.nx.dev/community).
 
 ## Q: How can I customize how my project is built and served?
 
@@ -441,12 +441,12 @@ This is a common but understandable misconception. Although Nx was heavily inspi
 
 ## Conclusion
 
-Congrats, you made it to the end of this article. By now you should have gotten a pretty good overview of what Nx is about, its strengths and how it can be useful in your next React project. If you still got questions or are hesitant to adopt Nx, [reach out to me on Twitter](https://twitter.com/juristr)!
+Congrats, you made it to the end of this article. By now you should have gotten a pretty good overview of what Nx is about, its strengths and how it can be useful in your next React project. If you still got questions or are hesitant to adopt Nx, [reach out to me on Twitter](https://x.com/juristr)!
 
 Where to go from here?
 
 - [Nx Official Discord Server](https://go.nx.dev/community)
-- [follow me on Twitter](https://twitter.com/juristr)
-- [follow Nx on Twitter](https://twitter.com/nxdevtools)
+- [follow me on Twitter](https://x.com/juristr)
+- [follow Nx on Twitter](https://x.com/nxdevtools)
 - subscribe on the [Nx Youtube channel](https://youtube.com/c/Nrwl_io)
 - join more than 200+ developers and [take the free Egghead course](https://egghead.io/courses/scale-react-development-with-nx-4038) on how to scale React development with Nx.

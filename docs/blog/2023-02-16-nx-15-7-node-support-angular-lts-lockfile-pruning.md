@@ -34,7 +34,7 @@ It's almost a tradition to have some stats at the beginning of our Nx release bl
 
 Apart from delivering high-quality engineering work, we're very invested in producing educational content around developer tooling and monorepos. We've been almost consistently shipping new content every week, whether that is blog posts on the [Nx blog](/blog) or in the form of new videos and live streams on our channel. Seeing our audience grow on Youtube confirms we're on the right track and gives us new fuel to keep pushing!!
 
-If you haven't subscribed yet, please do 🙏: [https://www.youtube.com/@nxdevtools](https://www.youtube.com/@nxdevtools). We also announce most of our new videos and live streams [on Twitter](https://twitter.com/nxdevtools).
+If you haven't subscribed yet, please do 🙏: [https://www.youtube.com/@nxdevtools](https://www.youtube.com/@nxdevtools). We also announce most of our new videos and live streams [on Twitter](https://x.com/nxdevtools).
 
 ## Updates to our Nx Plugin Guides
 
@@ -178,7 +178,7 @@ We are currently working on some exciting stuff, including
 - Nx for non-JS environments
 - …
 
-So keep an eye on our [Twitter](https://twitter.com/nxdevtools), [Youtube](https://www.youtube.com/@nxdevtools) and [blog](/blog) to not miss those announcements.
+So keep an eye on our [Twitter](https://x.com/nxdevtools), [Youtube](https://www.youtube.com/@nxdevtools) and [blog](/blog) to not miss those announcements.
 
 ## Learn more
 

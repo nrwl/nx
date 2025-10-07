@@ -38,7 +38,7 @@ Nx provides many presets by default to support many different ecosystems. Nx for
 npx create-nx-workspace --preset=your-npm-package-name
 ```
 
-Nicholas Cunningham just joined Nrwl and already implemented this new Nx feature! In the following video, [Juri Strumpflohner](https://twitter.com/juristr) walks you through the process of creating a new Nx Plugin with a custom preset.
+Nicholas Cunningham just joined Nrwl and already implemented this new Nx feature! In the following video, [Juri Strumpflohner](https://x.com/juristr) walks you through the process of creating a new Nx Plugin with a custom preset.
 
 {% youtube src="https://www.youtube.com/watch?v=yGUrF0-uqaU" /%}
 
@@ -95,4 +95,4 @@ nx migrate --run-migrations
 - Get our [free basic Nx workspaces course on YouTube](https://youtu.be/2mYLe9Kp9VM)!
 - Purchase our premium video course on advanced practices for Nx workspaces: [here](https://nxplaybook.com/p/advanced-nx-workspaces)!
 
-Follow us [on Twitter](https://twitter.com/NxDevTools), and subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!
+Follow us [on Twitter](https://x.com/NxDevTools), and subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!

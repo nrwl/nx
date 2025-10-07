@@ -145,7 +145,7 @@ Finally! We talked about it; now it is here! Official Vite and Vitest support fo
 
 So before we dive into this: if you are using a package-based monorepo with Nx, you could already use Vite or whatever other technology you want. Nx does just the task scheduling there, running your `package.json` scripts efficiently. Whatever those scripts do "internally" is up to you.
 
-But if you power an integrated setup, you'd want more support via a dedicated Nx plugin. And there has already been a [Nx community plugin](/community) created by the folks from [https://nxext.dev/](https://nxext.dev/). Given the high demand for Vite support, we (the Nx core team) started to look into creating and maintaining our own. We reached out to the out [Dominik Piper](https://mobile.twitter.com/dominik_pieper) and [Jordan Hall](https://mobile.twitter.com/JordanHall_dev) from the NxExt team and they were on board from the beginning! We got lots of helpful input, while designing the new Vite plugin. Huge shoutout to them!!
+But if you power an integrated setup, you'd want more support via a dedicated Nx plugin. And there has already been a [Nx community plugin](/community) created by the folks from [https://nxext.dev/](https://nxext.dev/). Given the high demand for Vite support, we (the Nx core team) started to look into creating and maintaining our own. We reached out to the out [Dominik Piper](https://mobile.x.com/dominik_pieper) and [Jordan Hall](https://mobile.x.com/JordanHall_dev) from the NxExt team and they were on board from the beginning! We got lots of helpful input, while designing the new Vite plugin. Huge shoutout to them!!
 
 `@nrwl/vite` (just like `@nrwl/webpack`) is a package that can be integrated as part of other packages. Right now, we're prioritizing our React setup. If you generate a new Nx workspace and choose the new "Standalone React app" version, you will get a React application powered by Vite and Vitest.
 
@@ -396,7 +396,7 @@ Wow, what a launch! But more features are on the way in the coming weeks that di
 - Lock-file pruning
 - Nx Cloud integration into Nx Console
 
-Follow us [on our socials](https://twitter.com/nxdevtools) and on [Youtube](https://www.youtube.com/@nxdevtools) to make sure to see it when we announce them!
+Follow us [on our socials](https://x.com/nxdevtools) and on [Youtube](https://www.youtube.com/@nxdevtools) to make sure to see it when we announce them!
 
 ## How to Update Nx
 

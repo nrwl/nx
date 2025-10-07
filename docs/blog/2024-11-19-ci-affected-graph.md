@@ -47,7 +47,7 @@ Get started with Nx Cloud
 
 - [Recipe: Reduce the Number of Affected Projects in a CI Pipeline Execution](/ci/recipes/other/cipe-affected-project-graph)
 - [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools)
+- [X/Twitter](https://x.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

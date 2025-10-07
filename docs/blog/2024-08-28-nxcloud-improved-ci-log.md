@@ -43,6 +43,6 @@ This command will guide you through the setup. We recently introduced a [new Hob
 - [Nx on CI](/ci/recipes/set-up)
 - [Task Distribution with Nx Agents](/ci/features/distribute-task-execution)
 - [Automated e2e Test Splitting](/ci/features/split-e2e-tasks)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+- [X/Twitter](https://x.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

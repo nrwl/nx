@@ -598,6 +598,6 @@ Also, make sure you
 
 - ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+- [Follow Nx on Twitter](https://x.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

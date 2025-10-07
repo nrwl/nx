@@ -180,7 +180,7 @@ You can learn more about Nx Cloud on [our docs](/nx-cloud).
 ## Learn more
 
 - [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools)
+- [X / Twitter](https://x.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)

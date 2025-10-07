@@ -267,5 +267,5 @@ npx nx migrate --run-migrations
 Then wait for Nx v14 to land 😉.
 
 - Check out the [release changelog](https://github.com/nrwl/nx/releases/tag/13.10.0)
-- Follow us [on Twitter](https://twitter.com/NxDevTools), and
+- Follow us [on Twitter](https://x.com/NxDevTools), and
 - subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!

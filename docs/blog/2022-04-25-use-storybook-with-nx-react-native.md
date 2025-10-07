@@ -306,5 +306,5 @@ Here are how to use Storybook with Nx React Native and some common errors you ma
 - [Step by Step Guide on Creating a Monorepo for React Native Apps using Nx](/blog/step-by-step-guide-on-creating-a-monorepo-for-react-native-apps-using-nx)
 - [Share code between React Web & React Native Mobile with Nx](/blog/share-code-between-react-web-react-native-mobile-with-nx)
 - [join the Nx Official Discord Server](https://go.nx.dev/community)
-- [follow Nx on Twitter](https://twitter.com/nxdevtools)
+- [follow Nx on Twitter](https://x.com/nxdevtools)
 - subscribe to the [Nx Youtube channel](https://youtube.com/c/Nrwl_io)

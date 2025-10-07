@@ -124,7 +124,7 @@ In Nx, [presets](/extending-nx/recipes/create-preset#create-a-custom-plugin-pres
 
 ![](/blog/images/2022-12-22/d4gI6k61RAEU_XfF.avif)
 
-For instance, I happen to know [Shai Reznik](https://twitter.com/shai_reznik) at [builder.io](https://builder.io/) has been working on a qwik plugin for Nx, and since the [qwik-nx](https://www.npmjs.com/package/qwik-nx) plugin that he's published includes an [Nx generator called "preset"](https://github.com/qwikifiers/qwik-nx/blob/main/packages/qwik-nx/generators.json#L33), I can run the command:
+For instance, I happen to know [Shai Reznik](https://x.com/shai_reznik) at [builder.io](https://builder.io/) has been working on a qwik plugin for Nx, and since the [qwik-nx](https://www.npmjs.com/package/qwik-nx) plugin that he's published includes an [Nx generator called "preset"](https://github.com/qwikifiers/qwik-nx/blob/main/packages/qwik-nx/generators.json#L33), I can run the command:
 
 ```shell
 npx nx create-nx-workspace –preset=qwik-nx
@@ -134,7 +134,7 @@ As we can see, the preset option matches the name of the published npm package.
 
 This custom preset feature has been around for a while, but as of 15.4 we've added support for these custom presets to interactively prompt the user following the initial installation step!
 
-This should open up some powerful functionality for plugin and package authors to parameterize their code generation scripts with Nx, and we're excited to see folks like [Shai](https://twitter.com/shai_reznik), [builder.io](https://builder.io/), and [qwik](https://qwik.builder.io/) leverage this new feature!
+This should open up some powerful functionality for plugin and package authors to parameterize their code generation scripts with Nx, and we're excited to see folks like [Shai](https://x.com/shai_reznik), [builder.io](https://builder.io/), and [qwik](https://qwik.builder.io/) leverage this new feature!
 
 ## That's it for this release.
 

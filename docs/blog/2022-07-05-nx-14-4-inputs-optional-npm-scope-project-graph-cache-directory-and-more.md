@@ -195,6 +195,6 @@ We're already deep into following our v15 [roadmap](https://github.com/nrwl/nx/d
 
 Makes sure you don't miss anything by
 
-- Following us [on Twitter](https://twitter.com/NxDevTools), and
+- Following us [on Twitter](https://x.com/NxDevTools), and
 - Subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!
 - Subscribing to [our newsletter](https://go.nx.dev/nx-newsletter)!

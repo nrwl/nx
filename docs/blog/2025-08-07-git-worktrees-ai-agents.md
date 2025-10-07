@@ -99,7 +99,7 @@ git merge feature-a
 
 ## Streamlining worktrees with the worktree CLI
 
-While Git worktrees are powerful, I highly recommend checking out [John Lindquist's](https://twitter.com/johnlindquist) worktree CLI, which streamlines some of the worktree management.
+While Git worktrees are powerful, I highly recommend checking out [John Lindquist's](https://x.com/johnlindquist) worktree CLI, which streamlines some of the worktree management.
 
 You can [find out more on the corresponding GitHub repo](https://github.com/johnlindquist/worktree-cli), but here's the TL;DR:
 

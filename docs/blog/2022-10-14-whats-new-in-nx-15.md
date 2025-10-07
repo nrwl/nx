@@ -157,7 +157,7 @@ Get a more in-depth walkthrough here:
 
 There's also a language server that comes with Nx Console now, which gives you intelligent autocompletion support in your configuration files:
 
-{% tweet url="https://twitter.com/NxDevTools/status/1573323012476051456" /%}
+{% tweet url="https://x.com/NxDevTools/status/1573323012476051456" /%}
 
 ## Website Redesign & Docs Updates
 
@@ -171,7 +171,7 @@ Every now and then, it's time to revamp our website. Because it doesn't feel as 
 
 We keep improving our docs, and we invest a lot of time to make things easier for you all.
 
-{% tweet url="https://twitter.com/victorsavkin/status/1580283233916186624" /%}
+{% tweet url="https://x.com/victorsavkin/status/1580283233916186624" /%}
 
 It is an ongoing process, and we have a lot of content to cover! We follow the [Diataxis](https://diataxis.fr/) framework for structuring our technical content where we want to clearly assign responsibilities to each page content, so it's easy for you to get out of it what you most need. It is mostly structured around whether
 
@@ -221,7 +221,7 @@ Read more here: [/technologies/test-tools/cypress/recipes/cypress-component-test
 
 We landed generators to support Angular developers in leveraging the new standalone components API in their Nx-based projects. Here's a preview:
 
-{% tweet url="https://twitter.com/NxDevTools/status/1567513106380894215" /%}
+{% tweet url="https://x.com/NxDevTools/status/1567513106380894215" /%}
 
 In addition, we improved the migration support for moving projects from the Angular CLI to an Nx workspace. Whether for a single Angular CLI project or to consolidate multiple Angular CLI projects into a single Nx workspace. Please read all about it here: [/technologies/angular/migration/angular](/technologies/angular/migration/angular)
 

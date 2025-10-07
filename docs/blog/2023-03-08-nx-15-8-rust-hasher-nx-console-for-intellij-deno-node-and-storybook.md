@@ -123,10 +123,10 @@ To see some of this in action, be sure to check out our [recent livestream with 
 Developer tool CLIs are known for being, well, command-line interfaces. Nx comes with many such CLI commands for scaffolding projects, running tasks, and more. We wanted to make some of this more approachable, so we introduced Nx Console, an extension to the Visual Studio Code editor. And it turned out to be highly successful. Nx Console now has over 1.2 million downloads on the [Visual Studio Code marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console). We kept improving it over the years,
 
 - adding support for [rendering the Nx graph](https://youtu.be/ZST_rmhzRXI)
-- [providing IntelliSense](https://twitter.com/NxDevTools/status/1573323012476051456) support for Nx configuration files
+- [providing IntelliSense](https://x.com/NxDevTools/status/1573323012476051456) support for Nx configuration files
 - [integrating Nx Cloud](https://youtu.be/WfWmK1x52HE)
 
-With the growing popularity, the ask for an equivalent extension for JetBrains' IntelliJ & WebStorm editors got louder and louder. At Nx, we're lucky to have an awesome community. [Issam Guissouma](https://twitter.com/iguissouma) and [Edward Tkachev](https://twitter.com/etkachev) from the Nx community jumped in and provided their implementation of Nx Console for IntelliJ.
+With the growing popularity, the ask for an equivalent extension for JetBrains' IntelliJ & WebStorm editors got louder and louder. At Nx, we're lucky to have an awesome community. [Issam Guissouma](https://x.com/iguissouma) and [Edward Tkachev](https://x.com/etkachev) from the Nx community jumped in and provided their implementation of Nx Console for IntelliJ.
 
 Since our team [now works full-time on Nx](/blog/from-bootstrapped-to-venture-backed) and the surrounding tooling, we decided to have a dedicated Nx Console extensions for IntelliJ and WebStorm that is actively maintained and developed by the core team. We reached out to Issam and Edward and started collaborating on it. The result can now be installed from the JetBrains marketplace:  
 [https://plugins.jetbrains.com/plugin/21060-nx-console](https://plugins.jetbrains.com/plugin/21060-nx-console)

@@ -235,4 +235,4 @@ This approach transforms configuration maintenance into a completely automated p
 - 📖 [Nx Sync Generators Documentation](/extending-nx/recipes/create-sync-generator)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 🐦 [Follow me on Twitter/X](https://twitter.com/juristr)
+- 🐦 [Follow me on Twitter/X](https://x.com/juristr)

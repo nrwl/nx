@@ -97,7 +97,7 @@ export function LaunchNxIntro() {
             <p className="mb-6 mt-6 sm:text-lg">
               Follow us on{' '}
               <a
-                href="https://twitter.com/nxdevtools"
+                href="https://x.com/nxdevtools"
                 rel="noreferrer"
                 target="_blank"
                 className="text-blue-500 dark:text-sky-500"

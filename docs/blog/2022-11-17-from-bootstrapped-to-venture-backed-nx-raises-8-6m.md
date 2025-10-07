@@ -38,7 +38,7 @@ _Most of the Nx team at Nx Conf in Tempe, AZ, October 2022_
 
 We are only scratching the surface of how we can help teams scale their development, and we're drastically increasing our R&D time to move even faster on new innovations in build performance and team scaling. Fortunately, we already have a world-class team of top engineers who've helped us build Nx and Nx Cloud, while also helping our customers succeed with Nx. With this new capital, our engineers are able spend significantly more R&D time building industry-changing products and features, while continuing to work with and learn from our Nx Cloud and Nx Enterprise customers.
 
-We'll be sharing more exciting announcements soon, so make sure to follow our journey on [@NxDevTools](https://twitter.com/nxdevtools)!
+We'll be sharing more exciting announcements soon, so make sure to follow our journey on [@NxDevTools](https://x.com/nxdevtools)!
 
 Jeff Cross  
 CEO, Nx

@@ -98,7 +98,7 @@ Nx provides an unparalleled toolkit for developers and teams looking to optimize
 ## Learn more
 
 - [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools)
+- [X / Twitter](https://x.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)

@@ -44,13 +44,13 @@ And don't miss our two conference talks on this subject:
 
 ### Conference Talk: Project Crystal
 
-**Speaker:** [Juri Strumpflohner](https://twitter.com/juristr) | [slides](https://drive.google.com/file/d/1q6M0drdssU7Zb-4Y_f99fuupuOl1KYQN/view)
+**Speaker:** [Juri Strumpflohner](https://x.com/juristr) | [slides](https://drive.google.com/file/d/1q6M0drdssU7Zb-4Y_f99fuupuOl1KYQN/view)
 
 {% youtube src="https://www.youtube.com/embed/PzCgpM7qtTU?si=U5aEC7XjeS1NeKbT" title="Juri Conference Talk Project Crystal" /%}
 
 ### Conference Talk: Project Crystal + .NET in Action
 
-**Speaker:** [Craigory Coppola](https://twitter.com/enderagent) | [slides](https://docs.google.com/presentation/d/1uveIe6HB7xwSkh7FBGZfF8Unh5YZzm5X/edit?usp=sharing&ouid=109667724870581513512&rtpof=true&sd=true) | [example repo](https://github.com/AgentEnder/nx-launch-conf-demos)
+**Speaker:** [Craigory Coppola](https://x.com/enderagent) | [slides](https://docs.google.com/presentation/d/1uveIe6HB7xwSkh7FBGZfF8Unh5YZzm5X/edit?usp=sharing&ouid=109667724870581513512&rtpof=true&sd=true) | [example repo](https://github.com/AgentEnder/nx-launch-conf-demos)
 
 {% youtube src="https://www.youtube.com/embed/fh-yzOuQGE8?si=a-XRXJfaBCerz3i-" title="Craigory Conference Talk Project Crystal + .Net" /%}
 
@@ -68,7 +68,7 @@ To add @nx/nuxt to your codebase, use the command:
 nx add @nx/nuxt
 ```
 
-Huge thanks to [Katerina](https://twitter.com/psybercity) for her work on the plugin, and Nuxt maintainer, [Daniel Roe](https://twitter.com/danielcroe), for helping to guide the project!
+Huge thanks to [Katerina](https://x.com/psybercity) for her work on the plugin, and Nuxt maintainer, [Daniel Roe](https://x.com/danielcroe), for helping to guide the project!
 
 Zack, Katerina, and Daniel got together to live code a working tic-tac-toe app using the new Nuxt plugin and [partykit](https://www.partykit.io/) in this livestream:
 
@@ -90,13 +90,13 @@ Rares and Altan are on the team building Nx Cloud, and during the conference, th
 
 ### Conference Talk: Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos
 
-**Speaker:** [Rares Matei](https://twitter.com/__rares) | [slides](https://drive.google.com/file/d/1k-cGCJUMP4axcCWoeih8n3dvo1oO_i_X/view?usp=sharing) | [example repo](https://github.com/rarmatei/shops-workflows/pulls) | [failed runs example](https://cloud.nx.app/cipes/65b27cf6d3ef5934decad746?utm_source=pull-request&utm_medium=comment) | [nx agents full run](https://cloud.nx.app/cipes/65b38179d3ef5934dede74c2?utm_source=pull-request&utm_medium=comment)
+**Speaker:** [Rares Matei](https://x.com/__rares) | [slides](https://drive.google.com/file/d/1k-cGCJUMP4axcCWoeih8n3dvo1oO_i_X/view?usp=sharing) | [example repo](https://github.com/rarmatei/shops-workflows/pulls) | [failed runs example](https://cloud.nx.app/cipes/65b27cf6d3ef5934decad746?utm_source=pull-request&utm_medium=comment) | [nx agents full run](https://cloud.nx.app/cipes/65b38179d3ef5934dede74c2?utm_source=pull-request&utm_medium=comment)
 
 {% youtube src="https://www.youtube.com/embed/XS-exYYP_Gg?si=skZTGYPEVJG7BrYZ" title="Nx Agents Walkthrough" /%}
 
 ### Conference Talk: Solving E2E Tests
 
-**Speaker:** [Altan Stalker](https://twitter.com/StalkAltan)
+**Speaker:** [Altan Stalker](https://x.com/StalkAltan)
 
 {% youtube src="https://www.youtube.com/embed/EO_tGa0Nx1s?si=3AvGaJkJaCeEjz1r" title="Solving E2E Tests" /%}
 
@@ -126,7 +126,7 @@ Juri goes into [full details in this blog post](/blog/versioning-and-releasing-p
 
 ### Conference Talk: Releasing Nx Release
 
-**Speaker:** [James Henry](https://twitter.com/MrJamesHenry) | [example repo](https://github.com/JamesHenry/nx-release-cmd)
+**Speaker:** [James Henry](https://x.com/MrJamesHenry) | [example repo](https://github.com/JamesHenry/nx-release-cmd)
 
 {% youtube src="https://www.youtube.com/embed/KjZKFGu3_9I?si=83DjaHhpBSP7NP4n" title="Releasing Nx Release" /%}
 

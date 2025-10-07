@@ -46,7 +46,7 @@ We've just started this initiative and have already been able to help [Sentry](h
 
 This initiative complements [our free tier of unlimited Nx Cloud](/pricing) for any Open Source project.
 
-If you're interested in optimizing your Open Source project to take advantage of the latest Lerna features, [reach out to us on Twitter!](https://twitter.com/lernajs)
+If you're interested in optimizing your Open Source project to take advantage of the latest Lerna features, [reach out to us on Twitter!](https://x.com/lernajs)
 
 Now let's jump into the newest Lerna 6.5 features!
 
@@ -105,7 +105,7 @@ Find more on this change [here](https://github.com/lerna/lerna/pull/3517).
 
 ## Getting Started With Lerna From The Lerna Team
 
-We recently ran a live stream with [James Henry](https://twitter.com/MrJamesHenry) and [Austin Fahsl](https://twitter.com/AustinFahsl) from our Lerna team to show how to get started with Lerna, all the way through to versioning and publishing our packages to npm!
+We recently ran a live stream with [James Henry](https://x.com/MrJamesHenry) and [Austin Fahsl](https://x.com/AustinFahsl) from our Lerna team to show how to get started with Lerna, all the way through to versioning and publishing our packages to npm!
 
 {% youtube src="https://youtu.be/HqPOoU35xzA" /%}
 

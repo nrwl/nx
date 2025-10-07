@@ -196,7 +196,7 @@ Read all the details on how to [get started with workspace conformance rules in 
 ## Learn More
 
 - [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+- [X/Twitter](https://x.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

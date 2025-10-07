@@ -58,7 +58,7 @@ In v14.4 we [introduced inputs and namedInputs](/blog/nx-14-4-inputs-optional-np
 
 Specifying such inputs can drastically increase the number of cache hits!
 
-{% tweet url="https://twitter.com/victorsavkin/status/1550187124678205440" /%}
+{% tweet url="https://x.com/victorsavkin/status/1550187124678205440" /%}
 
 In this release, we also allow specifying globs for `outputs`. Outputs are optional as Nx comes with reasonable defaults, but you can specify your own if your setup differs from the most commonly used ones:
 
@@ -161,7 +161,7 @@ What happens to parameters when invoking the target on a project's dependencies?
 
 We are obsessed with performance, yes we are! And I have good news: the Nx module boundary lint rule just got an order of magnitude faster 🤯.
 
-{% tweet url="https://twitter.com/meeroslav/status/1550058325236191232" /%}
+{% tweet url="https://x.com/meeroslav/status/1550058325236191232" /%}
 
 Replacing `Sets`, `foreach`, `reduce` with plain `for` loops can often have quite a significant impact. You won't notice much on smaller projects, but on large Nx workspaces with 500+ projects you should see some huge improvements 🚀.
 

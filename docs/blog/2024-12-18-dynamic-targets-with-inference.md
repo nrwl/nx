@@ -246,7 +246,7 @@ In the end, what we've achieved here is more than just unique ports – it's abo
 Also make sure to check out:
 
 - [Nx Docs](https://www.notion.so/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools)
+- [X/Twitter](https://x.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Bluesky](https://bsky.app/profile/nx.dev)
 - [Nx GitHub](https://github.com/nrwl/nx)

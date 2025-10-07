@@ -88,7 +88,7 @@ npx nx graph
 
 to download the Nx package, have it analyze your monorepo's project graph and visualize it in its powerful project graph UI. Give it a try. Here's Victor demoing it on the Next.js and Babel.js repository!
 
-{% tweet url="https://twitter.com/victorsavkin/status/1534909897976041474" /%}
+{% tweet url="https://x.com/victorsavkin/status/1534909897976041474" /%}
 
 ## Nx just got faster, again!
 
@@ -158,6 +158,6 @@ We're already deep into following our v15 [roadmap](https://github.com/nrwl/nx/d
 
 Makes sure you don't miss anything by
 
-- Following us [on Twitter](https://twitter.com/NxDevTools), and
+- Following us [on Twitter](https://x.com/NxDevTools), and
 - Subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!
 - Subscribing to [our newsletter](https://go.nx.dev/nx-newsletter)!

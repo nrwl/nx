@@ -295,7 +295,7 @@ As mentioned earlier, Angular comes with a lot more features out-of-the-box than
 
 We were able to reduce the bundle size (w/o compression) from about 733 kB to 282 kB, which comes out to about a 2,6x decrease. Unlike a website, where the bundle needs to be shipped to users when they load a page, Nx Console users only need to download it once when installing the plugin. This means we're not affected by network speeds after installation, which makes the bundle size less critical.
 
-> 💡 Because of a misconfiguration from a few Angular versions ago, the bundle size that we reported in [this tweet](https://twitter.com/MaxKless/status/1671095858182381569) was overly bloated. We corrected it, but Lit still came out ahead in terms of size and rendering times.
+> 💡 Because of a misconfiguration from a few Angular versions ago, the bundle size that we reported in [this tweet](https://x.com/MaxKless/status/1671095858182381569) was overly bloated. We corrected it, but Lit still came out ahead in terms of size and rendering times.
 
 ### Build Time
 
@@ -328,7 +328,7 @@ If the prettier UI and better performance haven't convinced you, this surely wil
 ## Learn more
 
 - [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+- [X/Twitter](https://x.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
@@ -631,7 +631,7 @@ As mentioned earlier, Angular comes with a lot more features out-of-the-box than
 
 We were able to reduce the bundle size (w/o compression) from about 733 kB to 282 kB, which comes out to about a 2,6x decrease. Unlike a website, where the bundle needs to be shipped to users when they load a page, Nx Console users only need to download it once when installing the plugin. This means we’re not affected by network speeds after installation, which makes the bundle size less critical.
 
-> 💡 Because of a misconfiguration from a few Angular versions ago, the bundle size that we reported in [this tweet](https://twitter.com/MaxKless/status/1671095858182381569) was overly bloated. We corrected it, but Lit still came out ahead in terms of size and rendering times.
+> 💡 Because of a misconfiguration from a few Angular versions ago, the bundle size that we reported in [this tweet](https://x.com/MaxKless/status/1671095858182381569) was overly bloated. We corrected it, but Lit still came out ahead in terms of size and rendering times.
 
 ### Build Time
 
@@ -664,7 +664,7 @@ If the prettier UI and better performance haven’t convinced you, this surely w
 ## Learn more
 
 - [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+- [X/Twitter](https://x.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

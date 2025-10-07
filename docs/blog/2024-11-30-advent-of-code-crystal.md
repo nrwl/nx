@@ -113,7 +113,7 @@ For example, if I wanted to create a data set called `foo`, I'd create in the fi
 
 - [Tutorial: Creating Your Own Plugin With Inferred Tasks](/extending-nx/tutorials/tooling-plugin#create-an-inferred-task)
 - [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools)
+- [X/Twitter](https://x.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

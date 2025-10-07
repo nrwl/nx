@@ -9,7 +9,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@SantoshYadavDev',
-        link: 'https://twitter.com/SantoshYadavDev',
+        link: 'https://x.com/SantoshYadavDev',
       },
       {
         label: 'github.com/santoshyadavdev',
@@ -39,7 +39,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@JayCooperBell',
-        link: 'https://twitter.com/JayCooperBell',
+        link: 'https://x.com/JayCooperBell',
       },
     ],
     location: 'British Columbia, Canada',
@@ -52,7 +52,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@jorgeucano',
-        link: 'https://twitter.com/jorgeucano',
+        link: 'https://x.com/jorgeucano',
       },
     ],
     location: 'Argentina',
@@ -78,7 +78,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@danielglejzner',
-        link: 'https://twitter.com/danielglejzner',
+        link: 'https://x.com/danielglejzner',
       },
     ],
     location: 'Poland',
@@ -91,7 +91,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@beaussan',
-        link: 'https://twitter.com/beaussan',
+        link: 'https://x.com/beaussan',
       },
     ],
     location: 'France',
@@ -117,7 +117,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@bobstrecansky',
-        link: 'https://twitter.com/bobstrecansky',
+        link: 'https://x.com/bobstrecansky',
       },
     ],
     location: 'Atlanta, GA, USA',
@@ -130,7 +130,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@laforge_toma',
-        link: 'https://twitter.com/laforge_toma',
+        link: 'https://x.com/laforge_toma',
       },
     ],
     location: 'France',
@@ -181,7 +181,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@brandontroberts',
-        link: 'https://twitter.com/brandontroberts',
+        link: 'https://x.com/brandontroberts',
       },
       {
         label: 'LinkedIn: brandontroberts',
@@ -202,7 +202,7 @@ export const champions: Champion[] = [
       },
       {
         label: '@yjaaidi',
-        link: 'https://twitter.com/yjaaidi',
+        link: 'https://x.com/yjaaidi',
       },
     ],
     location: 'France',
@@ -228,7 +228,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@tinesoft',
-        link: 'https://twitter.com/tinesoft',
+        link: 'https://x.com/tinesoft',
       },
       {
         label: 'kondotine@gmail.com',
@@ -247,7 +247,7 @@ export const champions: Champion[] = [
         label: 'LinkedIn: Stefan Haas',
         link: 'https://www.linkedin.com/in/stefan-haas-686a921b4/',
       },
-      // https://github.com/HaasStefan/, https://twitter.com/StefanvHaas,  stefan.haas.privat@gmail.com
+      // https://github.com/HaasStefan/, https://x.com/StefanvHaas,  stefan.haas.privat@gmail.com
     ],
     location: 'Austria',
   },
@@ -259,7 +259,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@naxodev',
-        link: 'https://twitter.com/naxodev',
+        link: 'https://x.com/naxodev',
       },
     ],
     location: 'Uruguay',
@@ -272,7 +272,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@wwwalkerrun',
-        link: 'https://twitter.com/wwwalkerrun',
+        link: 'https://x.com/wwwalkerrun',
       },
     ],
     location: 'USA',
@@ -310,7 +310,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@KateSky8',
-        link: 'https://twitter.com/KateSky8',
+        link: 'https://x.com/KateSky8',
       },
     ],
     location: 'USA',
@@ -335,7 +335,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@iguissouma',
-        link: 'https://twitter.com/iguissouma',
+        link: 'https://x.com/iguissouma',
       },
     ],
     location: 'France',
@@ -347,7 +347,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@prestonjlamb',
-        link: 'https://twitter.com/prestonjlamb',
+        link: 'https://x.com/prestonjlamb',
       },
     ],
     location: 'Utah, USA',
@@ -371,7 +371,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@edbzn',
-        link: 'https://twitter.com/edbzn',
+        link: 'https://x.com/edbzn',
       },
     ],
     location: 'France',
@@ -384,7 +384,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@beeman_nl',
-        link: 'https://twitter.com/beeman_nl',
+        link: 'https://x.com/beeman_nl',
       },
     ],
     location: 'Spain',
@@ -396,7 +396,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@AdrianBaran_',
-        link: 'https://twitter.com/AdrianBaran_',
+        link: 'https://x.com/AdrianBaran_',
       },
     ],
     location: 'USA',
@@ -408,7 +408,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@ixahmedxii',
-        link: 'https://twitter.com/ixahmedxii',
+        link: 'https://x.com/ixahmedxii',
       },
     ],
     location: 'London, United Kingdom',
@@ -420,7 +420,7 @@ export const champions: Champion[] = [
     contact: [
       {
         label: '@koliveira15',
-        link: 'https://twitter.com/koliveira15',
+        link: 'https://x.com/koliveira15',
       },
     ],
     location: 'Rhode Island, USA',

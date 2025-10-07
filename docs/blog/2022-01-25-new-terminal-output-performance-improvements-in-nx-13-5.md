@@ -23,7 +23,7 @@ There are a few things to note here (and which kinda emphasize our love with det
 - **Off in CI —** On CI you'll still see the full output.
 - **The full terminal output is still cached —** this is purely UI cosmetic. We still cache the entire terminal output. Hence, if you run the build of a single project that has previously been cached as part of a run-many command, you will see still the full output.
 
-Thanks to [James Henry](https://twitter.com/mrjameshenry) for working on this feature!
+Thanks to [James Henry](https://x.com/mrjameshenry) for working on this feature!
 
 ### Nx keeps getting faster and faster 🚀
 
@@ -50,14 +50,14 @@ NX_PROFILE=profile.json nx build cart
 
 It'll produce a JSON file which you can then open with Chrome's devtools. [Read more about it on the Nx Docs](/troubleshooting/performance-profiling).
 
-Thanks [Jason](https://twitter.com/FrozenPandaz) for working on this feature!
+Thanks [Jason](https://x.com/FrozenPandaz) for working on this feature!
 
 ### React Native now supports Environment Variables
 
 Whenever you set up React Native support within an Nx workspace, it should now automatically come with the [react-native-config](https://github.com/luggit/react-native-config) package installed. That allows you to have a `.env` file in the React Native app folder which can then be loaded from within your React Native application.  
 You can find all the details on the [Nx docs](/technologies/react/react-native/introduction).
 
-Thanks [Emily Xiong](https://twitter.com/xiongemily) for implementing this!
+Thanks [Emily Xiong](https://x.com/xiongemily) for implementing this!
 
 ### Improvements to the Project Graph Visualization
 
@@ -70,7 +70,7 @@ _Nx dep graph now stores filters in the URL_
 
 Here's our deployed live example of the above screenshot: [https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page](https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page)
 
-Thanks [Philip Fulcher](https://twitter.com/PhilipJFulcher) for adding this feature!
+Thanks [Philip Fulcher](https://x.com/PhilipJFulcher) for adding this feature!
 
 There's one more thing: As developers, we like to be as efficient as possible. We wanted to help by saving you some keystrokes. The project graph visualization can now be launched with
 
@@ -108,4 +108,4 @@ nx migrate --run-migrations
 - Get our [free basic Nx workspaces course on YouTube](https://youtu.be/2mYLe9Kp9VM)!
 - Purchase our premium video course on advanced practices for Nx workspaces: [here](https://nxplaybook.com/p/advanced-nx-workspaces)!
 
-Follow us [on Twitter](https://twitter.com/NxDevTools), and subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!
+Follow us [on Twitter](https://x.com/NxDevTools), and subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!

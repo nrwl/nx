@@ -23,7 +23,7 @@ export default function AuthorDetail({ author }: AuthorDetailProps) {
       </span>
       <span className="text-balance">{author.name}</span>
       <a
-        href={`https://twitter.com/${author.twitter}`}
+        href={`https://x.com/${author.twitter}`}
         target="_blank"
         aria-label={`Follow ${author.name} on X`}
       >

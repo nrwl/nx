@@ -198,7 +198,7 @@ Stay tuned for our next article in the series about managing TypeScript packages
 ---
 
 - [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools)
+- [X/Twitter](https://x.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Bluesky](https://bsky.app/profile/nx.dev)
 - [Nx GitHub](https://github.com/nrwl/nx)

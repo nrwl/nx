@@ -195,4 +195,4 @@ Check out the [example repo](https://github.com/mandarini/my-nx-nuxt-workspace) 
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
 - [Speed up your CI](/nx-cloud)
 
-Also, if you liked this, make sure to follow [Katerina](https://twitter.com/psybercity) and [Nx](https://twitter.com/nxdevtools) on Twitter for more!
+Also, if you liked this, make sure to follow [Katerina](https://x.com/psybercity) and [Nx](https://x.com/nxdevtools) on Twitter for more!

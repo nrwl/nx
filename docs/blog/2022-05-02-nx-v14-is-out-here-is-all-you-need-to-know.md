@@ -49,7 +49,7 @@ We made a lot of improvements in Nx core since v13 that can roughly be categoriz
 
 ## Making Nx even faster!
 
-Being as fast as possible is a key design principle in Nx. Back in December we [tweeted about our speed benchmarks](https://twitter.com/victorsavkin/status/1471582667212738562?s=20&t=fZQ82vUXMztNXFRMmuYQTw) and we keep running them against our releases to see how we compare.
+Being as fast as possible is a key design principle in Nx. Back in December we [tweeted about our speed benchmarks](https://x.com/victorsavkin/status/1471582667212738562?s=20&t=fZQ82vUXMztNXFRMmuYQTw) and we keep running them against our releases to see how we compare.
 
 Turns out the latest Nx v14 release is considerably faster than Nx v13:
 
@@ -267,7 +267,7 @@ Finally, similar to React also Angular gets built-in support for Webpack Module 
 
 Docs are hard! But we keep investing and a lot of work has gone into making docs more organized and even more interactive.
 
-{% tweet url="https://twitter.com/bencabanes/status/1509641445086535687" /%}
+{% tweet url="https://x.com/bencabanes/status/1509641445086535687" /%}
 
 ## There's more
 
@@ -303,6 +303,6 @@ We already started working on v15. You can [find the roadmap on our GitHub repos
 
 Make sure you don't miss anything by
 
-- Following us [on Twitter](https://twitter.com/NxDevTools), and
+- Following us [on Twitter](https://x.com/NxDevTools), and
 - Subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!
 - Subscribing to [our newsletter](https://go.nx.dev/nx-newsletter)!

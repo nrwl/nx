@@ -307,14 +307,14 @@ Here are some example repositories already leveraging Nx release:
 - [Our own Nx Repo](https://github.com/nrwl/nx/blob/master/scripts/nx-release.ts)
 - [RxJS repo](https://github.com/ReactiveX/rxjs/tree/master/scripts)
 - [Typescript-eslint](https://github.com/typescript-eslint/typescript-eslint/blob/main/tools/release/release.mts)
-- [Watch the live stream](https://www.youtube.com/watch?v=lYNa6Ct4RkY) with [Kent](https://twitter.com/kentcdodds) and [James](https://twitter.com/MrJamesHenry) as they enable Nx Release on the [EpicWeb workshop app repository](https://github.com/epicweb-dev/kcdshop)
+- [Watch the live stream](https://www.youtube.com/watch?v=lYNa6Ct4RkY) with [Kent](https://x.com/kentcdodds) and [James](https://x.com/MrJamesHenry) as they enable Nx Release on the [EpicWeb workshop app repository](https://github.com/epicweb-dev/kcdshop)
 
 ---
 
 ## Learn more
 
 - [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools) — [LinkedIn](https://www.linkedin.com/company/nrwl/)
+- [X / Twitter](https://x.com/nxdevtools) — [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

@@ -21,7 +21,7 @@ export function MemberCard(data: Member): JSX.Element {
         {data.twitter ? (
           <a
             className="font-input-mono mt-6 block"
-            href={'https://twitter.com/' + data.twitter}
+            href={'https://x.com/' + data.twitter}
             target="_blank"
             rel="noreferrer"
           >

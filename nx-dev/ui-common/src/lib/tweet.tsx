@@ -27,7 +27,7 @@ export function Tweet(props: TweetProps) {
       </blockquote>
       <Script
         async
-        src="https://platform.twitter.com/widgets.js"
+        src="https://platform.x.com/widgets.js"
         charSet="utf-8"
       />
     </>

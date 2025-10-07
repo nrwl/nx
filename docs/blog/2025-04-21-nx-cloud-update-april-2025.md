@@ -92,7 +92,7 @@ Using GitHub Enterprise and having a custom URL? Nx Agents now works with these 
 
 - [Nx Cloud Docs](/ci)
 - [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools)
+- [X/Twitter](https://x.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

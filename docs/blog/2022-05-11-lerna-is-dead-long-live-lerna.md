@@ -13,7 +13,7 @@ If you're in a hurry, here's the **TL;DR:**
 
 ## Who is Nrwl?
 
-We (Nrwl) are the company behind Nx ([GitHub](https://github.com/nrwl/nx)) and we have been founded by two ex-Googlers and Angular core team members [Jeff Cross](https://twitter.com/jeffbcross) and [Victor Savkin](https://twitter.com/victorsavkin). Experiencing a large-scale monorepo in action at Google, gave them a lot of insights into the advantages and productivity gains for software teams as well as the features and tooling support that is required to make monorepos work, especially at a large scale. When they left Google, they decided to bring such a tool to the masses, but with a clear goal of
+We (Nrwl) are the company behind Nx ([GitHub](https://github.com/nrwl/nx)) and we have been founded by two ex-Googlers and Angular core team members [Jeff Cross](https://x.com/jeffbcross) and [Victor Savkin](https://x.com/victorsavkin). Experiencing a large-scale monorepo in action at Google, gave them a lot of insights into the advantages and productivity gains for software teams as well as the features and tooling support that is required to make monorepos work, especially at a large scale. When they left Google, they decided to bring such a tool to the masses, but with a clear goal of
 
 - building it in the open as an open-source product and
 - making it approachable and easy to use by focusing on great DX
@@ -50,7 +50,7 @@ We think Lerna's and Nx's future is bright and we are excited to help move the m
 
 Make sure you don't miss anything by
 
-- Following us [on Twitter](https://twitter.com/NxDevTools)
+- Following us [on Twitter](https://x.com/NxDevTools)
 - Subscribing to our [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1)
 - Subscribing to [our newsletter](https://go.nx.dev/nx-newsletter)!
 

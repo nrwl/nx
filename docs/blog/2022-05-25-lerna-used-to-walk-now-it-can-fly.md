@@ -99,4 +99,4 @@ npx nx@latest connect-to-nx-cloud
 
 This is the first beta which we are trying out on some projects already. We aren't worried about task orchestration, caching or distribution — all of those are done by Nx, which has been around for 5 years and is solid. We are trying to see if there is something in the integration that is confusing. We hope to release s stable version by mid-June.
 
-Please have a look, upgrade your repo and [open an issue](https://github.com/lerna/lerna/issues) if you run into some weird behavior with the new `useNx` enabled. But not only that, feel free to ping us on the [@NxDevTools](https://twitter.com/nxdevtools) account with your success stories too. We'd love to hear 😃.
+Please have a look, upgrade your repo and [open an issue](https://github.com/lerna/lerna/issues) if you run into some weird behavior with the new `useNx` enabled. But not only that, feel free to ping us on the [@NxDevTools](https://x.com/nxdevtools) account with your success stories too. We'd love to hear 😃.
