@@ -14,15 +14,11 @@ const navigation = {
     { name: 'App', href: 'https://cloud.nx.app' },
     {
       name: 'Docs',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? '/docs/features/ci-features'
-        : '/ci/features',
+      href: '/docs/features/ci-features',
     },
     {
       name: 'Pricing',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/nx-cloud#plans'
-        : '/nx-cloud#plans',
+      href: 'https://nx.dev/nx-cloud#plans',
     },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
@@ -30,21 +26,17 @@ const navigation = {
     { name: 'Nx', href: 'https://nx.dev' },
     {
       name: 'Nx Cloud',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/nx-cloud'
-        : '/nx-cloud',
+      href: 'https://nx.dev/nx-cloud',
     },
     {
       name: 'Nx Enterprise',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/enterprise'
-        : '/enterprise',
+      href: 'https://nx.dev/enterprise',
     },
   ],
   resources: [
     {
       name: 'Blog',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL ? 'https://nx.dev/blog' : '/blog',
+      href: 'https://nx.dev/blog',
     },
     {
       name: 'Youtube',
@@ -52,41 +44,29 @@ const navigation = {
     },
     {
       name: 'Community',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/community'
-        : '/community',
+      href: 'https://nx.dev/community',
     },
     {
       name: 'Customers',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/customers'
-        : '/customers',
+      href: 'https://nx.dev/customers',
     },
   ],
   company: [
     {
       name: 'About us',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/company'
-        : '/company',
+      href: 'https://nx.dev/company',
     },
     {
       name: 'Careers',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/careers'
-        : '/careers',
+      href: 'https://nx.dev/careers',
     },
     {
       name: 'Brands & Guidelines',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/brands'
-        : '/brands',
+      href: 'https://nx.dev/brands',
     },
     {
       name: 'Contact us',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/contact'
-        : '/contact',
+      href: 'https://nx.dev/contact',
     },
   ],
   social: [
