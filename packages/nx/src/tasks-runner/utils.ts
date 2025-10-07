@@ -604,3 +604,15 @@ function longRunningTask(task: Task) {
 export function unparse(options: Object): string[] {
   return serializeOverridesIntoCommandLine(options);
 }
+
+export function createTaskId(
+  project: string,
+  target: string,
+  configuration: string | undefined
+): string {
+  let id = `${project}:${target}`;
+  if (configuration) {
+    id += `:${configuration}`;
+  }
+  return id;
+}
