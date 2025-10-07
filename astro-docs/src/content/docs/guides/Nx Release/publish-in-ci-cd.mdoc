@@ -12,14 +12,14 @@ Nx Release makes it easy to move your publishing process into your CI/CD pipelin
 
 When running `nx release`, after the version updates and changelog generation, you will be prompted with the following question:
 
-```{% frame="terminal" title="nx release" %}
+```text {% frame="terminal" title="nx release" %}
 ...
 ? Do you want to publish these versions? (y/N) ›
 ```
 
 To move publishing into an automated pipeline, you will want to skip publishing when running `nx release` locally. To do this automatically, use the `--skip-publish` flag:
 
-```{% frame="terminal" title="nx release --skip-publish" %}
+```text {% frame="terminal" title="nx release --skip-publish" %}
 ...
 
 Skipped publishing packages.
@@ -29,7 +29,7 @@ Skipped publishing packages.
 
 Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
 
-```{% frame="terminal" title="nx release publish" %}
+```text {% frame="terminal" title="nx release publish" %}
 NX   Running target nx-release-publish for 3 projects:
 
 - pkg-1
@@ -43,7 +43,7 @@ NX   Running target nx-release-publish for 3 projects:
 
 ### Example NPM Publish Output
 
-```{% frame="terminal" title="nx release publish" %}
+```text {% frame="terminal" title="nx release publish" %}
 NX   Running target nx-release-publish for 3 projects:
 
 - pkg-1
