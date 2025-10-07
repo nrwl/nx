@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {},
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

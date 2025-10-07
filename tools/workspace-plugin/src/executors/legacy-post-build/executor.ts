@@ -170,7 +170,13 @@ Or with TypeScript config:
 
     // Output path is relative to project root, so resolve it
     if (!path.isAbsolute(outputPath)) {
-      outputPath = path.resolve(workspaceRoot, projectRoot, outputPath);
+      outputPath = path.resolve(
+        workspaceRoot,
+        projectRoot,
+        outputPath.startsWith(projectRoot)
+          ? path.relative(projectRoot, outputPath)
+          : outputPath
+      );
     }
 
     // Ensure output directory exists
