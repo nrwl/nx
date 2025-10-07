@@ -558,9 +558,13 @@ export class TaskOrchestrator {
           streamOutput,
         };
 
-        const runningTask = await runCommands(runCommandsOptions, {
-          root: workspaceRoot, // only root is needed in runCommands
-        } as any);
+        const runningTask = await runCommands(
+          runCommandsOptions,
+          {
+            root: workspaceRoot, // only root is needed in runCommands
+          } as any,
+          task.id
+        );
 
         this.runningRunCommandsTasks.set(task.id, runningTask);
         runningTask.onExit(() => {

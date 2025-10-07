@@ -27,6 +27,7 @@ export declare class AppLifeCycle {
 
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
+  getPid(): number
   kill(signal?: NodeJS.Signals): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
@@ -92,6 +93,38 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
+/**
+ * NAPI wrapper for the process metrics collector
+ * Provides a JavaScript-friendly interface for metrics collection
+ */
+export declare class ProcessMetricsCollector {
+  /** Create a new metrics collector with default configuration */
+  constructor()
+  /**
+   * Start metrics collection
+   * Idempotent - safe to call multiple times
+   */
+  startCollection(): void
+  /**
+   * Stop metrics collection
+   * Returns true if collection was stopped, false if not running
+   */
+  stopCollection(): boolean
+  /** Register the main CLI process for metrics collection */
+  registerMainCliProcess(pid: number): void
+  /** Register the daemon process for metrics collection */
+  registerDaemonProcess(pid: number): void
+  /**
+   * Register a process for a specific task
+   * Automatically creates the task if it doesn't exist
+   */
+  registerTaskProcess(taskId: string, pid: number): void
+  /** Register a batch with multiple tasks sharing a worker */
+  registerBatch(batchId: string, taskIds: Array<string>, pid: number): void
+  /** Subscribe to push-based metrics notifications from TypeScript */
+  subscribe(callback: (err: Error | null, event: MetricsUpdate) => void): void
+}
+
 export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
@@ -153,6 +186,13 @@ export declare class WorkspaceContext {
   getFilesInDirectory(directory: string): Array<string>
 }
 
+/** Batch metrics snapshot */
+export interface BatchMetricsSnapshot {
+  batchId: string
+  taskIds: Array<string>
+  processes: Array<ProcessMetrics>
+}
+
 export interface CachedResult {
   code: number
   terminalOutput?: string
@@ -169,6 +209,12 @@ export declare export declare function closeDbConnection(connection: ExternalObj
 export declare export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
 export declare export declare function copy(src: string, dest: string): number
+
+/** Daemon metrics with main process and subprocesses */
+export interface DaemonMetrics {
+  main: ProcessMetrics
+  subprocesses: Array<ProcessMetrics>
+}
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
@@ -264,6 +310,20 @@ export declare export declare function isEditorInstalled(editor: SupportedEditor
 
 export declare export declare function logDebug(message: string): void
 
+/** Metrics data for collection cycle */
+export interface MetricsData {
+  timestamp: number
+  mainCliProcess?: ProcessSnapshot
+  daemonProcesses: Array<ProcessSnapshot>
+  tasks: Record<string, Array<ProcessSnapshot>>
+}
+
+/** Metrics update sent every collection cycle */
+export interface MetricsUpdate {
+  metrics: ProcessMetricsSnapshot
+  metadata?: Record<string, ProcessMetadata>
+}
+
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
   namedInputs?: Record<string, Array<JsInputs>>
@@ -282,6 +342,43 @@ export interface NxWorkspaceFilesExternals {
 }
 
 export declare export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
+/** Process metadata (static, doesn't change during process lifetime) */
+export interface ProcessMetadata {
+  ppid: number
+  name: string
+  command: string
+  exePath: string
+  cwd: string
+}
+
+/** Process metrics (dynamic, changes every collection) */
+export interface ProcessMetrics {
+  pid: number
+  cpu: number
+  memory: number
+}
+
+/** Organized collection of process metrics with timestamp */
+export interface ProcessMetricsSnapshot {
+  timestamp: number
+  mainCli?: ProcessMetrics
+  daemon?: DaemonMetrics
+  tasks: Record<string, Array<ProcessMetrics>>
+  batches: Record<string, BatchMetricsSnapshot>
+}
+
+/** Process snapshot with full metadata and metrics */
+export interface ProcessSnapshot {
+  pid: number
+  ppid: number
+  name: string
+  command: string
+  exePath: string
+  cwd: string
+  cpu: number
+  memory: number
+}
 
 export interface Project {
   root: string

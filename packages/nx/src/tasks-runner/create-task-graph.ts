@@ -1,5 +1,10 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { getDependencyConfigs, getOutputs, interpolate } from './utils';
+import {
+  getDependencyConfigs,
+  getOutputs,
+  interpolate,
+  createTaskId,
+} from './utils';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
@@ -555,16 +560,4 @@ function createTaskOverrides(
   return dependencyConfig.params === 'forward'
     ? { ...optionsToForward, ...cliOverrides }
     : { ...optionsToForward, __overrides_unparsed__: [] };
-}
-
-function createTaskId(
-  project: string,
-  target: string,
-  configuration: string | undefined
-): string {
-  let id = `${project}:${target}`;
-  if (configuration) {
-    id += `:${configuration}`;
-  }
-  return id;
 }
