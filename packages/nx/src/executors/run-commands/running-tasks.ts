@@ -14,6 +14,7 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
+import { getProcessMetricsService } from '../../tasks-runner/process-metrics-service';
 import { signalToCode } from '../../utils/exit-codes';
 import {
   LARGE_BUFFER,
@@ -30,7 +31,11 @@ export class ParallelRunningTasks implements RunningTask {
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
-  constructor(options: NormalizedRunCommandsOptions, context: ExecutorContext) {
+  constructor(
+    options: NormalizedRunCommandsOptions,
+    context: ExecutorContext,
+    taskId: string
+  ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
         new RunningNodeProcess(
@@ -40,7 +45,8 @@ export class ParallelRunningTasks implements RunningTask {
           options.env ?? {},
           options.readyWhenStatus,
           options.streamOutput,
-          options.envFile
+          options.envFile,
+          taskId
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -228,7 +234,8 @@ export class SeriallyRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    private readonly tuiEnabled: boolean
+    private readonly tuiEnabled: boolean,
+    private readonly taskId: string
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -279,6 +286,7 @@ export class SeriallyRunningTasks implements RunningTask {
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
+        this.taskId,
         options.usePty,
         options.streamOutput,
         options.tty,
@@ -314,6 +322,7 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
+    taskId: string,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -330,7 +339,7 @@ export class SeriallyRunningTasks implements RunningTask {
       const pseudoTerminal = createPseudoTerminal();
       registerProcessListener(this, pseudoTerminal);
 
-      return createProcessWithPseudoTty(
+      const pseudoTtyProcess = await createProcessWithPseudoTty(
         pseudoTerminal,
         commandConfig,
         color,
@@ -340,6 +349,15 @@ export class SeriallyRunningTasks implements RunningTask {
         tty,
         envFile
       );
+
+      // Register process for metrics collection (direct run-commands execution)
+      // Skip registration if we're in a forked executor - the fork wrapper already registered
+      const pid = pseudoTtyProcess.getPid();
+      if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+        getProcessMetricsService().registerTaskProcess(taskId, pid);
+      }
+
+      return pseudoTtyProcess;
     }
 
     return new RunningNodeProcess(
@@ -349,7 +367,8 @@ export class SeriallyRunningTasks implements RunningTask {
       env,
       [],
       streamOutput,
-      envFile
+      envFile,
+      taskId
     );
   }
 }
@@ -369,7 +388,8 @@ class RunningNodeProcess implements RunningTask {
     env: Record<string, string>,
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     streamOutput = true,
-    envFile: string
+    envFile: string,
+    private taskId: string
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
@@ -383,6 +403,15 @@ class RunningNodeProcess implements RunningTask {
       cwd,
       windowsHide: false,
     });
+
+    // Register process for metrics collection
+    // Skip registration if we're in a forked executor - the fork wrapper already registered
+    if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+      getProcessMetricsService().registerTaskProcess(
+        this.taskId,
+        this.childProcess.pid
+      );
+    }
 
     this.addListeners(commandConfig, streamOutput);
   }
@@ -508,7 +537,8 @@ class RunningNodeProcess implements RunningTask {
 
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  taskId: string
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -521,6 +551,14 @@ export async function runSingleCommandWithPseudoTerminal(
     pseudoTerminal ? normalized.isTTY : false,
     normalized.envFile
   );
+
+  // Register process for metrics collection (direct run-commands execution)
+  // Skip registration if we're in a forked executor - the fork wrapper already registered
+  const pid = pseudoTtyProcess.getPid();
+  if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+    getProcessMetricsService().registerTaskProcess(taskId, pid);
+  }
+
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);
   return pseudoTtyProcess;
 }
