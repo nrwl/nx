@@ -334,7 +334,7 @@ export class TargetProjectLocator {
 
     const maybeDepMetadata = maybeDep?.data.metadata.js;
 
-    if (!maybeDepMetadata?.isInPackageManagerWorkspaces) {
+    if (!maybeDepMetadata) {
       return null;
     }
 
