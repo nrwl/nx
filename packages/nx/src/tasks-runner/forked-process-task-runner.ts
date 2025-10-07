@@ -18,6 +18,7 @@ import {
 import { BatchProcess } from './running-tasks/batch-process';
 import { RunningTask } from './running-tasks/running-task';
 import { RustPseudoTerminal } from '../native';
+import { getProcessMetricsService } from './process-metrics-service';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -63,8 +64,19 @@ export class ForkedProcessTaskRunner {
 
     const p = fork(workerPath, {
       stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-      env,
+      env: {
+        ...env,
+        NX_FORKED_TASK_EXECUTOR: 'true',
+      },
     });
+
+    // Register batch worker process with all tasks
+    if (p.pid) {
+      const batchId = `${executorName}-${p.pid}`;
+      const taskIds = Object.keys(batchTaskGraph.tasks);
+      getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
+    }
+
     const cp = new BatchProcess(p, executorName);
     this.processes.add(cp);
 
@@ -205,10 +217,19 @@ export class ForkedProcessTaskRunner {
     const p = await pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
       execArgv: process.execArgv,
-      jsEnv: env,
+      jsEnv: {
+        ...env,
+        NX_FORKED_TASK_EXECUTOR: 'true',
+      },
       quiet: !streamOutput,
       commandLabel: `nx run ${task.id}`,
     });
+
+    // Register forked process for metrics collection
+    const pid = p.getPid();
+    if (pid) {
+      getProcessMetricsService().registerTaskProcess(task.id, pid);
+    }
 
     p.send({
       targetDescription: task.target,
@@ -264,8 +285,16 @@ export class ForkedProcessTaskRunner {
 
       const p = fork(this.cliPath, {
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-        env,
+        env: {
+          ...env,
+          NX_FORKED_TASK_EXECUTOR: 'true',
+        },
       });
+
+      // Register forked process for metrics collection
+      if (p.pid) {
+        getProcessMetricsService().registerTaskProcess(task.id, p.pid);
+      }
 
       // Send message to run the executor
       p.send({
@@ -322,8 +351,17 @@ export class ForkedProcessTaskRunner {
       }
       const p = fork(this.cliPath, {
         stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-        env,
+        env: {
+          ...env,
+          NX_FORKED_TASK_EXECUTOR: 'true',
+        },
       });
+
+      // Register forked process for metrics collection
+      if (p.pid) {
+        getProcessMetricsService().registerTaskProcess(task.id, p.pid);
+      }
+
       const cp = new NodeChildProcessWithDirectOutput(p, temporaryOutputPath);
 
       this.processes.add(cp);

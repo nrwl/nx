@@ -13,6 +13,10 @@ impl ProcessKiller {
         Self { pid }
     }
 
+    pub fn get_pid(&self) -> i32 {
+        self.pid
+    }
+
     pub fn kill(&self, signal: Option<&str>) -> anyhow::Result<()> {
         let signal = signal.unwrap_or("SIGINT");
         debug!("Killing process {} with {}", &self.pid, signal);
