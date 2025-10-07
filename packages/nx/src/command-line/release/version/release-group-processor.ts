@@ -1337,11 +1337,10 @@ Valid values are: ${validReleaseVersionPrefixes
       releaseGroupVersionConfig?.preserveLocalDependencyProtocols ??
       true;
 
-    // TODO(v22): flip to true by default
     const preserveMatchingDependencyRanges =
       projectVersionConfig?.preserveMatchingDependencyRanges ??
       releaseGroupVersionConfig?.preserveMatchingDependencyRanges ??
-      false;
+      true;
 
     /**
      * fallbackCurrentVersionResolver, defaults to disk when performing a first release, otherwise undefined

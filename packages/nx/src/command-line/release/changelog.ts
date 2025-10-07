@@ -76,7 +76,6 @@ import {
   isPrerelease,
   noDiffInChangelogMessage,
 } from './utils/shared';
-import * as console from 'node:console';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
