@@ -5,7 +5,7 @@ export interface ConfigureAiAgentsOptions {
   agents?: string[];
   interactive?: boolean;
   verbose?: boolean;
-  check?: false | 'outdated' | 'all';
+  check?: boolean | 'outdated' | 'all';
 }
 
 export const yargsConfigureAiAgentsCommand: CommandModule<

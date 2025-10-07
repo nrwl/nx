@@ -104,11 +104,11 @@ export async function configureAiAgentsHandlerImpl(
   const usingAllAgents =
     normalizedOptions.agents.length === supportedAgents.length;
 
-  if (options.check) {
+  if (normalizedOptions.check) {
     const outOfDateAgents = fullyConfiguredAgents.filter((a) => a?.outdated);
 
     // only error if something is fully configured but outdated
-    if (options.check === 'outdated') {
+    if (normalizedOptions.check === 'outdated') {
       if (fullyConfiguredAgents.length === 0) {
         output.log({
           title: 'No AI agents are configured',
@@ -143,7 +143,7 @@ export async function configureAiAgentsHandlerImpl(
         process.exit(1);
       }
       // error on any partial, outdated or non-configured agent
-    } else if (options.check === 'all') {
+    } else if (normalizedOptions.check === 'all') {
       if (
         partiallyConfiguredAgents.length === 0 &&
         outOfDateAgents.length === 0 &&
@@ -344,9 +344,11 @@ function normalizeOptions(
   const agents = (options.agents ?? supportedAgents).filter((a) =>
     supportedAgents.includes(a as Agent)
   ) as Agent[];
+  // it used to be just --check which was implicitly 'outdated'
+  const check = (options.check === true ? 'outdated' : options.check) ?? false;
   return {
     ...options,
     agents,
-    check: options.check ?? false,
+    check,
   };
 }
