@@ -16,7 +16,7 @@ Remix does not currently support Vite 6 and therefore any `vite.config` file for
 {% tabs %}
 {% tab label="Before" %}
 
-```{% fileName="vite.config.ts" %}
+```typescript {% fileName="vite.config.ts" %}
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -32,7 +32,7 @@ export default defineConfig({
 {% /tab %}
 {% tab label="After" %}
 
-```{% highlightLines=[4,5,6] fileName="vite.config.ts" %}
+```typescript {% highlightLines=[4,5,6] fileName="vite.config.ts" %}
 import { defineConfig } from 'vite';
 
 export default defineConfig({
