@@ -117,6 +117,7 @@ export function Graph({
             affectedProjects={parsedProps.affectedProjectIds}
             enableContextMenu={parsedProps.enableTooltips}
             composite={parsedProps.composite}
+            showAffectedWithNodes={parsedProps.showAffectedWithNodes}
           />
         ) : (
           <NxDevTaskGraph
