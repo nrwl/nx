@@ -495,16 +495,8 @@ describe('addDependenciesToPackageJson', () => {
   });
 
   describe('catalog support', () => {
-    const mockDetectPackageManager = jest.fn();
-
     beforeEach(() => {
-      mockDetectPackageManager.mockReturnValue('pnpm');
-
-      const packageManager = require('nx/src/devkit-exports');
-      jest
-        .spyOn(packageManager, 'detectPackageManager')
-        .mockImplementation(mockDetectPackageManager);
-
+      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('pnpm');
       tree.root = '/test-workspace';
     });
 
@@ -546,7 +538,7 @@ catalog:
     });
 
     it('should use direct dependencies with unsupported package managers', () => {
-      mockDetectPackageManager.mockReturnValue('npm');
+      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('npm');
       writeJson(tree, 'package.json', {
         dependencies: { react: 'catalog:' },
       });

@@ -20,29 +20,28 @@ export function checkAndCleanWithSemver(
   const root = tree?.root ?? workspaceRoot;
   const pkgName =
     typeof treeOrPkgName === 'string' ? treeOrPkgName : pkgNameOrVersion;
-  const actualVersion =
+  let newVersion =
     typeof treeOrPkgName === 'string' ? pkgNameOrVersion : version!;
-  let newVersion = actualVersion;
 
   const manager = getCatalogManager(root);
-  if (manager.isCatalogReference(actualVersion)) {
+  if (manager.isCatalogReference(newVersion)) {
     const validation = tree
-      ? manager.validateCatalogReference(tree, pkgName, actualVersion)
-      : manager.validateCatalogReference(root, pkgName, actualVersion);
+      ? manager.validateCatalogReference(tree, pkgName, newVersion)
+      : manager.validateCatalogReference(root, pkgName, newVersion);
     if (!validation.isValid) {
       throw new Error(
-        `The catalog reference for ${pkgName} is invalid - (${actualVersion})\n${formatCatalogError(
+        `The catalog reference for ${pkgName} is invalid - (${newVersion})\n${formatCatalogError(
           validation.error!
         )}`
       );
     }
 
     const resolvedVersion = tree
-      ? manager.resolveCatalogReference(tree, pkgName, actualVersion)
-      : manager.resolveCatalogReference(root, pkgName, actualVersion);
+      ? manager.resolveCatalogReference(tree, pkgName, newVersion)
+      : manager.resolveCatalogReference(root, pkgName, newVersion);
     if (!resolvedVersion) {
       throw new Error(
-        `Could not resolve catalog reference for package ${pkgName}@${actualVersion}.`
+        `Could not resolve catalog reference for package ${pkgName}@${newVersion}.`
       );
     }
 
@@ -53,13 +52,13 @@ export function checkAndCleanWithSemver(
     return newVersion;
   }
 
-  if (actualVersion.startsWith('~') || actualVersion.startsWith('^')) {
-    newVersion = actualVersion.substring(1);
+  if (newVersion.startsWith('~') || newVersion.startsWith('^')) {
+    newVersion = newVersion.substring(1);
   }
 
   if (!valid(newVersion)) {
     throw new Error(
-      `The package.json lists a version of ${pkgName} that Nx is unable to validate - (${actualVersion})`
+      `The package.json lists a version of ${pkgName} that Nx is unable to validate - (${newVersion})`
     );
   }
 
