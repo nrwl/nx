@@ -161,7 +161,10 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
-      ]
+      ],
+      "options": {
+        "args": ["--forceExit"]
+      }
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
