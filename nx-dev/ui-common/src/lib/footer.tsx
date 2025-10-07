@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { DiscordIcon } from './discord-icon';
 import { VersionPicker } from './version-picker';
 
+// Use NX_DEV_URL if set, otherwise default to empty string for relative URLs
+const nxDevUrl = process.env.NX_DEV_URL || '';
 const navigation = {
   nx: [
     { name: 'Status', href: 'https://status.nx.app' },
@@ -18,25 +20,25 @@ const navigation = {
     },
     {
       name: 'Pricing',
-      href: 'https://nx.dev/nx-cloud#plans',
+      href: `${nxDevUrl}/nx-cloud#plans`,
     },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
   solutions: [
-    { name: 'Nx', href: 'https://nx.dev' },
+    { name: 'Nx', href: nxDevUrl || 'https://nx.dev' },
     {
       name: 'Nx Cloud',
-      href: 'https://nx.dev/nx-cloud',
+      href: `${nxDevUrl}/nx-cloud`,
     },
     {
       name: 'Nx Enterprise',
-      href: 'https://nx.dev/enterprise',
+      href: `${nxDevUrl}/enterprise`,
     },
   ],
   resources: [
     {
       name: 'Blog',
-      href: 'https://nx.dev/blog',
+      href: `${nxDevUrl}/blog`,
     },
     {
       name: 'Youtube',
@@ -44,29 +46,29 @@ const navigation = {
     },
     {
       name: 'Community',
-      href: 'https://nx.dev/community',
+      href: `${nxDevUrl}/community`,
     },
     {
       name: 'Customers',
-      href: 'https://nx.dev/customers',
+      href: `${nxDevUrl}/customers`,
     },
   ],
   company: [
     {
       name: 'About us',
-      href: 'https://nx.dev/company',
+      href: `${nxDevUrl}/company`,
     },
     {
       name: 'Careers',
-      href: 'https://nx.dev/careers',
+      href: `${nxDevUrl}/careers`,
     },
     {
       name: 'Brands & Guidelines',
-      href: 'https://nx.dev/brands',
+      href: `${nxDevUrl}/brands`,
     },
     {
       name: 'Contact us',
-      href: 'https://nx.dev/contact',
+      href: `${nxDevUrl}/contact`,
     },
   ],
   social: [
@@ -190,7 +192,7 @@ export function Footer({
 } = {}): JSX.Element {
   const prefixHref = (href: string) => {
     if (useDomainPrefix && href.startsWith('/')) {
-      return `https://nx.dev${href}`;
+      return `${nxDevUrl}${href}`;
     }
     return href;
   };
