@@ -238,10 +238,8 @@ function stripPlaceholders(str: string, placeholders: string[]): string {
 
 export function shouldPreferDockerVersionForReleaseGroup(
   releaseGroup: ReleaseGroupWithName
-): boolean {
-  // The inference was already done in the config phase, so if docker projects exist,
-  // releaseTagPatternRequireSemver would be false
-  return !releaseGroup.releaseTagPatternRequireSemver;
+): boolean | 'both' {
+  return releaseGroup.releaseTagPatternPreferDockerVersion;
 }
 
 export function shouldSkipVersionActions(
@@ -277,14 +275,36 @@ export function createGitTagValues(
         ) {
           const preferDockerVersion =
             shouldPreferDockerVersionForReleaseGroup(releaseGroup);
-          tags.push(
-            interpolate(releaseGroup.releaseTagPattern, {
-              version: preferDockerVersion
-                ? projectVersionData.dockerVersion
-                : projectVersionData.newVersion,
-              projectName: project,
-            })
-          );
+
+          if (preferDockerVersion === 'both') {
+            // Create tags for both docker and semver versions
+            if (projectVersionData.dockerVersion) {
+              tags.push(
+                interpolate(releaseGroup.releaseTagPattern, {
+                  version: projectVersionData.dockerVersion,
+                  projectName: project,
+                })
+              );
+            }
+            if (projectVersionData.newVersion) {
+              tags.push(
+                interpolate(releaseGroup.releaseTagPattern, {
+                  version: projectVersionData.newVersion,
+                  projectName: project,
+                })
+              );
+            }
+          } else {
+            // Use either docker version or semver version based on preference
+            tags.push(
+              interpolate(releaseGroup.releaseTagPattern, {
+                version: preferDockerVersion
+                  ? projectVersionData.dockerVersion
+                  : projectVersionData.newVersion,
+                projectName: project,
+              })
+            );
+          }
         }
       }
       continue;
@@ -297,14 +317,36 @@ export function createGitTagValues(
     ) {
       const preferDockerVersion =
         shouldPreferDockerVersionForReleaseGroup(releaseGroup);
-      tags.push(
-        interpolate(releaseGroup.releaseTagPattern, {
-          version: preferDockerVersion
-            ? projectVersionData.dockerVersion
-            : projectVersionData.newVersion,
-          releaseGroupName: releaseGroup.name,
-        })
-      );
+
+      if (preferDockerVersion === 'both') {
+        // Create tags for both docker and semver versions
+        if (projectVersionData.dockerVersion) {
+          tags.push(
+            interpolate(releaseGroup.releaseTagPattern, {
+              version: projectVersionData.dockerVersion,
+              releaseGroupName: releaseGroup.name,
+            })
+          );
+        }
+        if (projectVersionData.newVersion) {
+          tags.push(
+            interpolate(releaseGroup.releaseTagPattern, {
+              version: projectVersionData.newVersion,
+              releaseGroupName: releaseGroup.name,
+            })
+          );
+        }
+      } else {
+        // Use either docker version or semver version based on preference
+        tags.push(
+          interpolate(releaseGroup.releaseTagPattern, {
+            version: preferDockerVersion
+              ? projectVersionData.dockerVersion
+              : projectVersionData.newVersion,
+            releaseGroupName: releaseGroup.name,
+          })
+        );
+      }
     }
   }
 
