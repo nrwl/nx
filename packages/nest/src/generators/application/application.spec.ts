@@ -260,7 +260,17 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
-          "dependencies": {},
+          "dependencies": {
+            "@nestjs/common": "^11.0.0",
+            "@nestjs/core": "^11.0.0",
+            "@nestjs/platform-express": "^11.0.0",
+            "reflect-metadata": "^0.1.13",
+            "rxjs": "^7.8.0",
+            "tslib": "^2.3.0",
+          },
+          "devDependencies": {
+            "@nestjs/testing": "^11.0.0",
+          },
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -442,6 +452,7 @@ describe('application generator', () => {
           "private",
           "nx",
           "dependencies",
+          "devDependencies",
         ]
       `);
     });
