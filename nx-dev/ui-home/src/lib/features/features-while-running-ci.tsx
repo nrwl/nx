@@ -29,9 +29,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
               process.{' '}
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/ci-features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/ci/features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/features/ci-features/remote-cache?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >
@@ -40,9 +38,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
               and{' '}
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/ci-features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/ci/features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/features/ci-features/distribute-task-execution?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >
@@ -51,9 +47,7 @@ export function FeaturesWhileRunningCI(): ReactElement {
               speed up CI, while{' '}
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/ci-features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/ci/features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/features/ci-features/self-healing-ci?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >

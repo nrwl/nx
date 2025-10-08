@@ -5,7 +5,7 @@ import {
   createNodesFromFiles,
   readJsonFile,
   writeJsonFile,
-  CreateNodesContext,
+  CreateNodesContextV2,
 } from '@nx/devkit';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -80,7 +80,7 @@ async function createNodesInternal(
   configFilePath: string,
   hash: string,
   normalizedOptions: NormalizedDockerPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, DockerTargets>
 ) {
   const projectRoot = dirname(configFilePath);
@@ -107,7 +107,7 @@ async function createNodesInternal(
 async function createDockerTargets(
   projectRoot: string,
   options: NormalizedDockerPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const imageRef = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
 

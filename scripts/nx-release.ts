@@ -518,11 +518,11 @@ function hackFixForDevkitPeerDependencies() {
   );
 
   const beforeVersion = devkitPackageJson.peerDependencies['nx'];
-  if (!beforeVersion.includes('<')) {
+  const majorVersion = major(beforeVersion);
+  if (!beforeVersion.includes('<') && majorVersion !== 0) {
     console.log(
       '@nx/devkit peer dependencies range is broken - needs release fix. Patching it to avoid broken publishes.'
     );
-    const majorVersion = major(beforeVersion);
     devkitPackageJson.peerDependencies['nx'] = `>= ${majorVersion - 1} <= ${
       majorVersion + 1
     }`;

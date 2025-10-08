@@ -6,7 +6,6 @@ import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
 describe('nx package.json workspaces plugin', () => {
   const context = {
     workspaceRoot: '/root',
-    configFiles: [],
     nxJsonConfiguration: {},
   };
 
@@ -255,7 +254,6 @@ describe('nx package.json workspaces plugin', () => {
 
       const context = {
         workspaceRoot: '/root',
-        configFiles: [],
         nxJsonConfiguration: {},
       };
 
@@ -359,7 +357,6 @@ describe('nx package.json workspaces plugin', () => {
 
       const context = {
         workspaceRoot: '/root',
-        configFiles: [],
         nxJsonConfiguration: {},
       };
 
