@@ -319,7 +319,10 @@ export class DaemonClient {
   async registerProjectGraphRecomputationListener(
     callback: (
       error: Error | null | 'closed',
-      projectGraph: ProjectGraph | null
+      data: {
+        projectGraph: ProjectGraph;
+        sourceMaps: ConfigurationSourceMaps;
+      } | null
     ) => void
   ): Promise<UnregisterCallback> {
     let messenger: DaemonSocketMessenger | undefined;

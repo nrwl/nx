@@ -1,5 +1,6 @@
 import { Socket } from 'net';
 import { ProjectGraph } from '../../config/project-graph';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 import { handleResult } from './server';
 
 export let registeredProjectGraphListenerSockets: Socket[] = [];
@@ -14,7 +15,8 @@ export function hasRegisteredProjectGraphListenerSockets() {
 }
 
 export async function notifyProjectGraphListenerSockets(
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  sourceMaps: ConfigurationSourceMaps
 ) {
   if (!hasRegisteredProjectGraphListenerSockets()) {
     return;
@@ -25,7 +27,7 @@ export async function notifyProjectGraphListenerSockets(
       handleResult(socket, 'PROJECT_GRAPH_UPDATED', () =>
         Promise.resolve({
           description: 'Project graph updated',
-          response: JSON.stringify(projectGraph),
+          response: JSON.stringify({ projectGraph, sourceMaps }),
         })
       )
     )
