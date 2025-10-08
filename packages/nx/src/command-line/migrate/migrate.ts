@@ -1477,10 +1477,6 @@ function runInstall(nxWorkspaceRoot?: string) {
     pmCommands = getPackageManagerCommand();
   }
 
-  // TODO: remove this
-  if (packageManager ?? detectPackageManager() === 'npm') {
-    process.env.npm_config_legacy_peer_deps ??= 'true';
-  }
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
