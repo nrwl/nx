@@ -73,6 +73,16 @@ describe('createNxReleaseConfig()', () => {
             },
           } as any,
         },
+        'lib-c': {
+          name: 'lib-c',
+          type: 'lib',
+          data: {
+            root: 'libs/lib-c',
+            targets: {
+              'nx-release-publish': {},
+            },
+          } as any,
+        },
         nx: {
           name: 'nx',
           type: 'lib',
@@ -107,6 +117,12 @@ describe('createNxReleaseConfig()', () => {
       'lib-b': [
         {
           file: 'libs/lib-b/package.json',
+          hash: 'abc',
+        },
+      ],
+      'lib-c': [
+        {
+          file: 'libs/lib-c/package.json',
           hash: 'abc',
         },
       ],
@@ -2076,6 +2092,7 @@ describe('createNxReleaseConfig()', () => {
                 "projects": [
                   "lib-a",
                   "lib-b",
+                  "lib-c",
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{releaseGroupName}-v{version}",
@@ -3574,6 +3591,7 @@ describe('createNxReleaseConfig()', () => {
         }
       `);
     });
+
     it('should not apply top level prevserion command to docker groups', async () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
@@ -3821,6 +3839,303 @@ describe('createNxReleaseConfig()', () => {
               },
               "logUnchangedProjects": true,
               "preVersionCommand": "npx nx run-many -t build",
+              "preserveLocalDependencyProtocols": true,
+              "preserveMatchingDependencyRanges": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow groups to specify releaseTagPatternPreferDockerVersion specifically', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+                hotfix: '{currentDate|YYMM.DD}-hotfix',
+              },
+            },
+            releaseTagPatternPreferDockerVersion: true,
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YY.MM.DD}',
+                hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+              },
+            },
+            releaseTagPatternPreferDockerVersion: false,
+          },
+          'group-3': {
+            projects: ['lib-c'],
+            docker: {
+              versionSchemes: {
+                production: '{currentDate|YY.MM.DD}',
+                hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+              },
+            },
+            releaseTagPatternPreferDockerVersion: 'both',
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "docker": undefined,
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}-hotfix",
+                    "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                  },
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "{releaseGroupName}-v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": true,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "preserveMatchingDependencyRanges": true,
+                  "updateDependents": "auto",
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                    "production": "{currentDate|YY.MM.DD}",
+                  },
+                },
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "{releaseGroupName}-v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "preserveMatchingDependencyRanges": true,
+                  "updateDependents": "auto",
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-3": {
+                "changelog": false,
+                "docker": {
+                  "groupPreVersionCommand": "",
+                  "versionSchemes": {
+                    "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                    "production": "{currentDate|YY.MM.DD}",
+                  },
+                },
+                "projects": [
+                  "lib-c",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "{releaseGroupName}-v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": "both",
+                "releaseTagPatternRequireSemver": false,
+                "releaseTagPatternStrictPreid": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "preserveMatchingDependencyRanges": true,
+                  "updateDependents": "auto",
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
+            "releaseTagPatternRequireSemver": true,
+            "releaseTagPatternStrictPreid": true,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
               "preserveLocalDependencyProtocols": true,
               "preserveMatchingDependencyRanges": true,
               "specifierSource": undefined,
