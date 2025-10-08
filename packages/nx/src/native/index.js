@@ -1,5 +1,13 @@
 const { join, basename } = require('path');
-const { copyFileSync, existsSync, mkdirSync, renameSync } = require('fs');
+const {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  renameSync,
+  openSync,
+  closeSync,
+  unlinkSync,
+} = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
@@ -83,19 +91,76 @@ Module._load = function (request, parent, isMain) {
     );
     // This is the path that will get loaded
     const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
+    // Lock file to prevent race conditions
+    const lockFile = join(nativeFileCacheLocation, '.lock');
 
     // If the file to be loaded already exists, just load it
     if (existsSync(tmpFile)) {
       return originalLoad.apply(this, [tmpFile, parent, isMain]);
     }
+
+    // If lock file exists, wait for it to disappear (another process is working)
+    if (existsSync(lockFile)) {
+      const maxWaitMs = 5000;
+      const startTime = Date.now();
+      while (existsSync(lockFile)) {
+        if (Date.now() - startTime > maxWaitMs) {
+          break; // Timeout - maybe stale lock, proceed anyway
+        }
+        const sleep = 10;
+        const start = Date.now();
+        while (Date.now() - start < sleep) {
+          // busy wait
+        }
+      }
+
+      // After lock disappears, check if file exists now
+      if (existsSync(tmpFile)) {
+        return originalLoad.apply(this, [tmpFile, parent, isMain]);
+      }
+    }
+
+    // Create cache dir if needed
     if (!existsSync(nativeFileCacheLocation)) {
       mkdirSync(nativeFileCacheLocation, { recursive: true });
     }
-    // First copy to a unique location for each process
-    copyFileSync(nativeLocation, tmpTmpFile);
 
-    // Then rename to the final location
-    renameSync(tmpTmpFile, tmpFile);
+    // Try to create lock
+    try {
+      const fd = openSync(lockFile, 'wx');
+      closeSync(fd);
+
+      // Double-check file doesn't exist (race between wait ending and lock creation)
+      if (existsSync(tmpFile)) {
+        unlinkSync(lockFile);
+        return originalLoad.apply(this, [tmpFile, parent, isMain]);
+      }
+
+      // We have the lock - do the copy-rename
+      copyFileSync(nativeLocation, tmpTmpFile);
+      renameSync(tmpTmpFile, tmpFile);
+
+      // Release lock
+      unlinkSync(lockFile);
+    } catch (err) {
+      if (err.code === 'EEXIST') {
+        // Lock was created between our check and now - wait for tmpFile
+        const maxWaitMs = 5000;
+        const startTime = Date.now();
+        while (!existsSync(tmpFile)) {
+          if (Date.now() - startTime > maxWaitMs) {
+            throw new Error(`Timeout waiting for native module: ${tmpFile}`);
+          }
+          const sleep = 10;
+          const start = Date.now();
+          while (Date.now() - start < sleep) {
+            // busy wait
+          }
+        }
+      } else {
+        throw err;
+      }
+    }
 
     // Load from the final location
     return originalLoad.apply(this, [tmpFile, parent, isMain]);
