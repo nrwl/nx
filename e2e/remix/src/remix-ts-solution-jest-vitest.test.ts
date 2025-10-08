@@ -1,30 +1,25 @@
+import { runCLI, uniq } from "@nx/e2e-utils";
 import {
-  cleanupProject,
-  newProject,
-  readJson,
-  runCLI,
-  uniq,
-} from '@nx/e2e-utils';
+  setupRemixTsSolutionTest,
+  cleanupRemixTsSolutionTest,
+} from "./remix-ts-solution-setup";
 
-describe('Remix - TS solution setup', () => {
+describe("Remix - TS solution setup", () => {
   beforeEach(() => {
-    newProject({
-      packages: ['@nx/remix'],
-      preset: 'ts',
-    });
+    setupRemixTsSolutionTest();
   });
 
   afterEach(() => {
-    cleanupProject();
+    cleanupRemixTsSolutionTest();
   });
 
-  it('should generate apps and libraries with jest and vitest and work correctly', async () => {
-    const appJest = uniq('app-jest');
-    const appVitest = uniq('app-vitest');
-    const libJest = uniq('lib-jest');
-    const buildableLibJest = uniq('buildable-lib-jest');
-    const libVitest = uniq('lib-vitest');
-    const buildableLibVitest = uniq('buildable-lib-vitest');
+  it("should generate apps and libraries with jest and vitest and work correctly", async () => {
+    const appJest = uniq("app-jest");
+    const appVitest = uniq("app-vitest");
+    const libJest = uniq("lib-jest");
+    const buildableLibJest = uniq("buildable-lib-jest");
+    const libVitest = uniq("lib-vitest");
+    const buildableLibVitest = uniq("buildable-lib-vitest");
 
     runCLI(
       `generate @nx/remix:application apps/${appVitest} --unitTestRunner=vitest --linter=eslint`
@@ -117,30 +112,6 @@ describe('Remix - TS solution setup', () => {
     );
     expect(runCLI(`test ${buildableLibJest}`)).toContain(
       `Successfully ran target test for project @proj/${buildableLibJest}`
-    );
-  }, 120_000);
-
-  it('should respect and support generating libraries with a name different than the import path', async () => {
-    const lib = uniq('lib');
-
-    runCLI(
-      `generate @nx/remix:library packages/${lib} --name=${lib} --linter=eslint --unitTestRunner=vitest --buildable`
-    );
-
-    const packageJson = readJson(`packages/${lib}/package.json`);
-    expect(packageJson.nx.name).toBe(lib);
-
-    expect(runCLI(`build ${lib}`)).toContain(
-      `Successfully ran target build for project ${lib}`
-    );
-    expect(runCLI(`typecheck ${lib}`)).toContain(
-      `Successfully ran target typecheck for project ${lib}`
-    );
-    expect(runCLI(`lint ${lib}`)).toContain(
-      `Successfully ran target lint for project ${lib}`
-    );
-    expect(runCLI(`test ${lib}`)).toContain(
-      `Successfully ran target test for project ${lib}`
     );
   }, 120_000);
 });
