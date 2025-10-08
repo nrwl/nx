@@ -92,17 +92,13 @@ export function DocumentationHeader({
   };
 
   // Use the new docs URL when Astro docs are enabled
-  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
-    ? '/docs/getting-started/intro'
-    : '/getting-started/intro';
+  const docsUrl = '/docs/getting-started/intro';
 
   const sections = [
     { name: 'Nx', href: docsUrl, current: isNx },
     {
       name: 'CI',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? '/docs/features/ci-features'
-        : '/ci/features',
+      href: '/docs/features/ci-features',
       current: isCI,
     },
     {
@@ -112,9 +108,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? '/docs/plugin-registry'
-        : '/plugin-registry',
+      href: '/docs/plugin-registry',
       current: isPlugins,
     },
     {
@@ -245,11 +239,6 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
-            <div className="mx-4 w-auto flex-grow">
-              <AlgoliaSearch />
-            </div>
-          )}
         </div>
         {/*LOGO*/}
         <div className="flex items-center gap-4">
@@ -283,11 +272,6 @@ export function DocumentationHeader({
           <VersionPicker />
         </div>
         {/*SEARCH*/}
-        {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
-          <div className="hidden w-full max-w-[14rem] lg:inline">
-            <AlgoliaSearch />
-          </div>
-        )}
         {/*NAVIGATION*/}
         <div className="hidden flex-shrink-0 lg:flex">
           <nav

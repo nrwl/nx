@@ -1,12 +1,10 @@
 import {
   CreateDependencies,
-  CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
-  logger,
   parseJson,
   readJsonFile,
   TargetConfiguration,
@@ -52,7 +50,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<StorybookPluginOptions> = [
+export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
   storybookConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -82,25 +80,12 @@ export const createNodesV2: CreateNodesV2<StorybookPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<StorybookPluginOptions> = [
-  storybookConfigGlob,
-  (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(
-      configFilePath,
-      normalizeOptions(options),
-      context,
-      {}
-    );
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: Required<StorybookPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, Record<string, TargetConfiguration>>
 ) {
   let projectRoot = '';
@@ -156,7 +141,7 @@ async function buildStorybookTargets(
   configFilePath: string,
   projectRoot: string,
   options: StorybookPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   projectName: string
 ) {
   const buildOutputs = getOutputs();
@@ -328,7 +313,7 @@ function serveStaticTarget(
 
 async function getStorybookFramework(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<string | undefined> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const mainTsJs = readFileSync(resolvedPath, 'utf-8');
@@ -385,7 +370,7 @@ function parseFrameworkName(mainTsJs: string) {
 
 async function getStorybookFullyResolvedFramework(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<string> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const { framework } = await loadConfigFile<StorybookConfig>(resolvedPath);

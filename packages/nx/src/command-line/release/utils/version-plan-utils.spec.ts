@@ -25,6 +25,7 @@ describe('version-plan-utils', () => {
       releaseTagPatternCheckAllBranchesWhen: undefined,
       releaseTagPatternRequireSemver: true,
       releaseTagPatternStrictPreid: false,
+      releaseTagPatternPreferDockerVersion: undefined,
       versionPlans: true,
       resolvedVersionPlans: false,
     };
