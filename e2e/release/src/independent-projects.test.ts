@@ -2,20 +2,18 @@ import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
-  getSelectedPackageManager,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   newProject,
   readFile,
   runCLI,
   runCommand,
-  runCommandAsync,
   tmpProjPath,
   uniq,
   updateJson,
-  removeFile,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
-import { setupWorkspaces, prepareAndInstallDependencies } from './utils';
+import { prepareAndInstallDependencies, setupWorkspaces } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -680,7 +678,7 @@ describe('nx release - independent projects', () => {
                   integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                   total files:   4
 
-                  Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+                  Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -729,7 +727,7 @@ describe('nx release - independent projects', () => {
                   integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                   total files:   4
 
-                  Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+                  Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -766,7 +764,7 @@ describe('nx release - independent projects', () => {
                   integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                   total files:   4
 
-                  Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+                  Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -811,7 +809,7 @@ describe('nx release - independent projects', () => {
                   integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                   total files:   4
 
-                  Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+                  Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
                   > nx run {project-name}:nx-release-publish
 
@@ -833,7 +831,7 @@ describe('nx release - independent projects', () => {
                   integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                   total files:   4
 
-                  Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+                  Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -875,7 +873,7 @@ describe('nx release - independent projects', () => {
                   integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                   total files:   4
 
-                  Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+                  Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -1002,7 +1000,7 @@ describe('nx release - independent projects', () => {
             'g'
           )
         ).length
-      ).toEqual(2);
+      ).toEqual(1);
       expect(
         releaseOutput.match(
           new RegExp(
@@ -1020,11 +1018,11 @@ describe('nx release - independent projects', () => {
       expect(
         releaseOutput.match(
           new RegExp(
-            `New version 1\\.6\\.0 written to manifest: my-pkg-2\\d*`,
+            `New version 1\\.5\\.1 written to manifest: my-pkg-2\\d*`,
             'g'
           )
         ).length
-      ).toEqual(1);
+      ).toEqual(2);
 
       expect(
         releaseOutput.match(
@@ -1033,7 +1031,7 @@ describe('nx release - independent projects', () => {
             'g'
           )
         ).length
-      ).toEqual(1);
+      ).toEqual(2);
       expect(
         releaseOutput.match(
           new RegExp(
