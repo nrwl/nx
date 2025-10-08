@@ -36,11 +36,22 @@ Please verify closely that you have the following setup:
 2. A corresponding GitHub repository for the workspace with a `.github/workflows/ci.yml` pipeline preconfigured
 3. You completed the full Nx Cloud onboarding and you now have a Nx Cloud dashboard that is connected to your example repository on GitHub.
 
+Clone your repository to your local machine:
+
+```shell {% frame="none" %}
+git clone <your-repository-url>
+cd <your-repository-name>
+```
+
+Install dependencies:
+
+```shell {% frame="none" %}
+npm install
+```
+
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
 ![](../../../../assets/tutorials/connected-workspace.avif)
-
-If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace/angular/github).
 
 This is important for using remote caching and self-healing in CI later in the tutorial.
 
@@ -49,17 +60,15 @@ This is important for using remote caching and self-healing in CI later in the t
 Let's take a look at the structure of our new Nx workspace:
 {%filetree%}
 
-- acme
-  - apps
-    - demo
-  - packages
-    - ui
-  - eslint.config.mjs
-  - nx.json
-  - package-lock.json
-  - package.json
-  - tsconfig.base.json
-  - vitest.workspace.ts
+- apps/
+  - angular-demo/
+- .github/
+- eslint.config.mjs
+- nx.json
+- package-lock.json
+- package.json
+- tsconfig.base.json
+- vitest.workspace.ts
 
 {%/filetree%}
 
@@ -76,7 +85,7 @@ Now, let's build some features and see how Nx helps get us to production faster.
 To serve your new Angular app, run:
 
 ```shell {% frame="none" %}
-npx nx serve demo
+npx nx serve angular-demo
 ```
 
 The app is served at [http://localhost:4200](http://localhost:4200).
@@ -90,9 +99,9 @@ Nx uses the following syntax to run tasks:
 The project tasks are defined in the `project.json` file.
 
 ```json
-// apps/demo/project.json
+// apps/angular-demo/project.json
 {
-  "name": "demo",
+  "name": "angular-demo",
   ...
   "targets": {
     "build": { ... },
@@ -110,22 +119,22 @@ Each target contains a configuration object that tells Nx how to run that target
 ```json
 // project.json
 {
-  "name": "angular-store",
+  "name": "angular-demo",
   ...
   "targets": {
     "serve": {
       "executor": "@angular/build:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "angular-store:build"
+        "buildTarget": "angular-demo:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "angular-store:build:development",
+          "buildTarget": "angular-demo:build:development",
           "hmr": true
         },
         "production": {
-          "buildTarget": "angular-store:build:production",
+          "buildTarget": "angular-demo:build:production",
           "hmr": false
         }
       }
@@ -143,7 +152,7 @@ The most critical parts are:
 To view all tasks for a project, look in the [Nx Console](/docs/getting-started/editor-setup) project detail view or run:
 
 ```shell {% frame="none" %}
-npx nx show project demo
+npx nx show project angular-demo
 ```
 
 {% project_details title="Project Details View (Simplified)" %}
@@ -151,26 +160,26 @@ npx nx show project demo
 ```json
 {
   "project": {
-    "name": "demo",
+    "name": "angular-demo",
     "type": "app",
     "data": {
-      "root": "apps/demo",
+      "root": "apps/angular-demo",
       "targets": {
         "build": {
           "executor": "@angular/build:application",
           "outputs": ["{options.outputPath}"],
           "options": {
-            "outputPath": "dist/apps/demo",
-            "browser": "apps/demo/src/main.ts",
+            "outputPath": "dist/apps/angular-demo",
+            "browser": "apps/angular-demo/src/main.ts",
             "polyfills": ["zone.js"],
-            "tsConfig": "apps/demo/tsconfig.app.json",
+            "tsConfig": "apps/angular-demo/tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "apps/demo/public"
+                "input": "apps/angular-demo/public"
               }
             ],
-            "styles": ["apps/demo/src/styles.css"]
+            "styles": ["apps/angular-demo/src/styles.css"]
           },
           "configurations": {
             "production": {
@@ -204,14 +213,14 @@ npx nx show project demo
     }
   },
   "sourceMap": {
-    "root": ["apps/demo/project.json", "nx/core/project-json"],
-    "targets": ["apps/demo/project.json", "nx/core/project-json"],
-    "targets.build": ["apps/demo/project.json", "nx/core/project-json"],
-    "name": ["apps/demo/project.json", "nx/core/project-json"],
-    "$schema": ["apps/demo/project.json", "nx/core/project-json"],
-    "sourceRoot": ["apps/demo/project.json", "nx/core/project-json"],
-    "projectType": ["apps/demo/project.json", "nx/core/project-json"],
-    "tags": ["apps/demo/project.json", "nx/core/project-json"]
+    "root": ["apps/angular-demo/project.json", "nx/core/project-json"],
+    "targets": ["apps/angular-demo/project.json", "nx/core/project-json"],
+    "targets.build": ["apps/angular-demo/project.json", "nx/core/project-json"],
+    "name": ["apps/angular-demo/project.json", "nx/core/project-json"],
+    "$schema": ["apps/angular-demo/project.json", "nx/core/project-json"],
+    "sourceRoot": ["apps/angular-demo/project.json", "nx/core/project-json"],
+    "projectType": ["apps/angular-demo/project.json", "nx/core/project-json"],
+    "tags": ["apps/angular-demo/project.json", "nx/core/project-json"]
   }
 }
 ```
@@ -224,15 +233,14 @@ When you develop your Angular application, usually all your logic sits in the ap
 
 {% filetree %}
 
-- acme/
-  - apps/
-    - demo/
-      - src/
-        - app/
-        - cart/
-        - products/
-        - orders/
-        - ui/
+- apps/
+  - angular-demo/
+    - src/
+      - app/
+      - cart/
+      - products/
+      - orders/
+      - ui/
 
 {%/filetree %}
 
@@ -258,21 +266,20 @@ Running the above command should lead to the following directory structure:
 
 {% filetree %}
 
-- acme/
-  - apps/
-    - demo/
-  - packages/
-    - ui
-  - eslint.config.mjs
-  - nx.json
-  - package-lock.json
-  - package.json
-  - tsconfig.base.json
-  - vitest.workspace.ts
+- apps/
+  - angular-demo/
+- packages/
+  - ui/
+- eslint.config.mjs
+- nx.json
+- package-lock.json
+- package.json
+- tsconfig.base.json
+- vitest.workspace.ts
 
 {%/filetree %}
 
-Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
+Just as with the `angular-demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 
 ```shell {% frame="none" %}
 npx nx show project ui
@@ -295,7 +302,7 @@ All libraries that we generate are automatically included in the TypeScript path
   "compilerOptions": {
     ...
     "paths": {
-      "@acme/ui": ["packages/ui/src/index.ts"]
+      "@angular-demo/ui": ["packages/ui/src/index.ts"]
     },
     ...
   },
@@ -383,28 +390,38 @@ export * from './lib/ui/ui';
 We're ready to import it into our main application now.
 
 ```ts
-// apps/demo/src/app/app.ts
+// apps/angular-demo/src/app/app.ts
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import { NxWelcome } from './nx-welcome';
 // importing the component from the library
-import { Hero } from '@acme/ui';
+import { Hero } from '@angular-demo/ui';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Hero],
-  template: `
-    <lib-hero
-      title="Welcmoe demo"
-      subtitle="Build something amazing today"
-      cta="Get Started"
-    ></lib-hero>
-  `,
+  imports: [RouterModule, NxWelcome, Hero],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class App {}
+export class App {
+  protected title = 'angular-demo';
+}
 ```
 
-Serve your app again (`npx nx serve demo`) and you should see the new Hero component from the `ui` library rendered on the home page.
+Now update the template file to use the Hero component:
+
+```html
+<!-- apps/angular-demo/src/app/app.html -->
+<lib-hero
+  title="Welcmoe angular-demo"
+  subtitle="Build something amazing today"
+  cta="Get Started"
+></lib-hero>
+<router-outlet></router-outlet>
+```
+
+Serve your app again (`npx nx serve angular-demo`) and you should see the new Hero component from the `ui` library rendered on the home page.
 
 ![](../../../../assets/tutorials/angular-demo-with-hero.avif)
 
@@ -428,7 +445,7 @@ You should be able to see something similar to the following in your browser.
 {
   "projects": [
     {
-      "name": "demo",
+      "name": "angular-demo",
       "type": "app",
       "data": {
         "tags": []
@@ -443,7 +460,9 @@ You should be able to see something similar to the following in your browser.
     }
   ],
   "dependencies": {
-    "demo": [{ "source": "demo", "target": "ui", "type": "static" }],
+    "angular-demo": [
+      { "source": "angular-demo", "target": "ui", "type": "static" }
+    ],
     "ui": []
   },
   "affectedProjectIds": [],
@@ -467,8 +486,8 @@ git commit -m 'add hero component'
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing, e2e testing and linting. The `test` and `lint` targets are defined in the application `project.json` file. We can use the same syntax as before to run these tasks:
 
 ```shell {% frame="none" %}
-npx nx test demo # runs the tests for demo
-npx nx lint ui   # runs the linter on ui
+npx nx test angular-demo # runs the tests for angular-demo
+npx nx lint ui           # runs the linter on ui
 ```
 
 More conveniently, we can also run tasks in parallel using the following syntax:
@@ -479,7 +498,7 @@ npx nx run-many -t test lint
 
 This is exactly what is configured in `.github/workflows/ci.yml` for the CI pipeline. The `run-many` command allows you to run multiple tasks across multiple projects in parallel, which is particularly useful in a monorepo setup.
 
-There is a test failure for the `demo` app due to the updated content. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
+There is a test failure for the `angular-demo` app due to the updated content. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
 
 ### Local Task Cache
 
@@ -490,8 +509,8 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 ```text {% title="npx nx run-many -t test lint" frame="terminal" %}
    ✔  nx run ui:lint
    ✔  nx run ui:test
-   ✔  nx run demo:lint
-   ✖  nx run demo:test
+   ✔  nx run angular-demo:lint
+   ✖  nx run angular-demo:test
 
 —————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -501,18 +520,18 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
    ✖  1/4 targets failed, including the following:
 
-      - nx run demo:test
+      - nx run angular-demo:test
 ```
 
-Again, the `demo:test` task failed, but notice that the remaining three tasks were read from cache.
+Again, the `angular-demo:test` task failed, but notice that the remaining three tasks were read from cache.
 
 Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/docs/features/cache-task-results).
 
 ## Self-Healing CI with Nx Cloud
 
-In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our demo app has a test failure, so let's see how this can be automatically resolved.
+In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our angular-demo app has a test failure, so let's see how this can be automatically resolved.
 
-The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
+The `npx nx fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
 ```yaml {32,33}
 # .github/workflows/ci.yml
@@ -546,7 +565,7 @@ jobs:
 
       - run: npx nx run-many -t lint test build
 
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
         if: always()
 ```
 
@@ -561,7 +580,7 @@ git push origin add-hero-component
 # Don't forget to open a pull request on GitHub
 ```
 
-As expected, the CI check fails because of the test failure in the `demo` app. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and that it has a suggested fix for the failing test. This means that you don't have to waste time **babysitting your PRs**, and the fix can be applied directly from your editor.
+As expected, the CI check fails because of the test failure in the `angular-demo` app. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and that it has a suggested fix for the failing test. This means that you don't have to waste time **babysitting your PRs**, and the fix can be applied directly from your editor.
 
 ![Nx Console with failure notification](../../../../assets/tutorials/angular-ci-notification.avif)
 
@@ -583,7 +602,7 @@ When you click `View Results` to show the run in Nx Cloud, you'll notice somethi
 
 ![Nx Cloud run showing remote cache hits](../../../../assets/tutorials/angular-remote-cache-cloud.avif)
 
-This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/docs/features/ci-features/remote-cache). In this case, since the last fix was applied only to the `demo` app's source code, none of the tasks for `ui` library had to be run again.
+This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/docs/features/ci-features/remote-cache). In this case, since the last fix was applied only to the `angular-demo` app's source code, none of the tasks for `ui` library had to be run again.
 
 This significantly speeds up the time to green for your pull requests, because subsequent changes to them have a good chance to replay tasks from cache.
 
