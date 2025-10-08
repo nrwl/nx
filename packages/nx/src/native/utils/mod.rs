@@ -17,5 +17,6 @@ pub mod atomics;
 pub mod ci;
 pub mod file_lock;
 pub mod git;
+pub mod home_dir;
 
 pub use atomics::*;
