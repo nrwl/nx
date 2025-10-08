@@ -16,8 +16,11 @@ import {
   DEFAULT_VERSION_ACTIONS_PATH,
   NxReleaseConfig,
 } from '../config/config';
-import { filterReleaseGroups } from '../config/filter-release-groups';
-import { FinalConfigForProject } from './release-group-processor';
+import {
+  createReleaseGraph,
+  type FinalConfigForProject,
+} from '../utils/release-graph';
+import { ReleaseGroupProcessor } from './release-group-processor';
 import { VersionActions } from './version-actions';
 
 export async function createNxReleaseConfigAndPopulateWorkspace(
@@ -45,20 +48,6 @@ export async function createNxReleaseConfigAndPopulateWorkspace(
     throw configError;
   }
 
-  let {
-    error: filterError,
-    releaseGroups,
-    releaseGroupToFilteredProjects,
-  } = filterReleaseGroups(
-    projectGraph,
-    nxReleaseConfig!,
-    filters.projects,
-    filters.groups
-  );
-  if (filterError) {
-    throw filterError;
-  }
-
   // Mock the implementation of resolveCurrentVersion to reliably return the version of the project based on our graph definition
   mockResolveCurrentVersion?.mockImplementation((_, { name }) => {
     for (const [projectName, project] of Object.entries(graph.projects)) {
@@ -72,10 +61,50 @@ export async function createNxReleaseConfigAndPopulateWorkspace(
   return {
     projectGraph,
     nxReleaseConfig: nxReleaseConfig!,
-    releaseGroups,
-    releaseGroupToFilteredProjects,
     filters,
   };
+}
+
+export async function createTestReleaseGroupProcessor(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  nxReleaseConfig: NxReleaseConfig,
+  filters: {
+    projects?: string[];
+    groups?: string[];
+  },
+  options: {
+    dryRun?: boolean;
+    verbose?: boolean;
+    firstRelease?: boolean;
+    preid?: string;
+    userGivenSpecifier?: string;
+  } = {}
+) {
+  const releaseGraph = await createReleaseGraph({
+    tree,
+    projectGraph,
+    nxReleaseConfig,
+    filters,
+    firstRelease: options.firstRelease ?? false,
+    preid: options.preid,
+    verbose: options.verbose ?? false,
+  });
+
+  return new ReleaseGroupProcessor(
+    tree,
+    projectGraph,
+    nxReleaseConfig,
+    releaseGraph,
+    {
+      dryRun: options.dryRun ?? false,
+      verbose: options.verbose ?? false,
+      firstRelease: options.firstRelease ?? false,
+      preid: options.preid ?? '',
+      userGivenSpecifier: options.userGivenSpecifier,
+      filters,
+    }
+  );
 }
 
 /**
@@ -581,8 +610,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
   tree: Tree,
   releaseGroup: any,
   projectGraphNode: any,
-  finalConfigForProject: FinalConfigForProject,
-  isInProjectsToProcess: boolean
+  finalConfigForProject: FinalConfigForProject
 ) {
   if (
     projectGraphNode.data.release?.versionActions ===
@@ -595,7 +623,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
       finalConfigForProject
     );
     // Initialize the versionActions with all the required manifest paths etc
-    await versionActions.init(tree, isInProjectsToProcess);
+    await versionActions.init(tree);
     return {
       versionActionsPath: exampleRustVersionActions,
       versionActions,
@@ -613,7 +641,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
       finalConfigForProject
     );
     // Initialize the versionActions with all the required manifest paths etc
-    await versionActions.init(tree, isInProjectsToProcess);
+    await versionActions.init(tree);
     return {
       versionActionsPath: exampleNonSemverVersionActions,
       versionActions,
@@ -630,7 +658,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
     finalConfigForProject
   );
   // Initialize the versionActions with all the required manifest paths etc
-  await versionActions.init(tree, isInProjectsToProcess);
+  await versionActions.init(tree);
   return {
     versionActionsPath,
     versionActions: versionActions,

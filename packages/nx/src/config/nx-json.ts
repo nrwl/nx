@@ -1,8 +1,7 @@
-import { existsSync } from 'fs';
-import { dirname, join } from 'path';
-
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
-import type { validReleaseVersionPrefixes } from '../command-line/release/version';
+import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
 import { readJsonFile } from '../utils/fileutils';
 import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -167,10 +166,12 @@ export interface NxReleaseVersionConfiguration {
   deleteVersionPlans?: boolean;
   /**
    * When versioning independent projects, this controls whether to update their dependents (i.e. the things that depend on them).
-   * 'never' means no dependents will be updated (unless they happen to be versioned directly as well).
-   * 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned.
+   * - 'never' means no dependents will be updated (unless they happen to be versioned directly as well).
+   * - 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned, as long as a
+   *   group or projects filter is not applied that does not include them.
+   * - 'always' will cause dependents to be updated (a patch version bump) when a dependency is versioned, even if they are not included in the group or projects filter.
    */
-  updateDependents?: 'auto' | 'never';
+  updateDependents?: 'auto' | 'always' | 'never';
   /**
    * Whether to log projects that have not changed during versioning.
    */
