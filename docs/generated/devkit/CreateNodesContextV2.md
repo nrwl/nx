@@ -1,11 +1,5 @@
 # Interface: CreateNodesContextV2
 
-## Hierarchy
-
-- **`CreateNodesContextV2`**
-
-  ↳ [`CreateNodesContext`](/reference/core-api/devkit/documents/CreateNodesContext)
-
 ## Table of contents
 
 ### Properties
