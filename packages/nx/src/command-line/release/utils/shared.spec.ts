@@ -31,6 +31,7 @@ describe('shared', () => {
             releaseTagPattern: '{projectName}-{version}',
             releaseTagPatternCheckAllBranchesWhen: undefined,
             releaseTagPatternRequireSemver: true,
+            releaseTagPatternPreferDockerVersion: undefined,
             releaseTagPatternStrictPreid: false,
             versionPlans: false,
             resolvedVersionPlans: false,
@@ -47,6 +48,7 @@ describe('shared', () => {
             releaseTagPattern: '{projectName}-{version}',
             releaseTagPatternCheckAllBranchesWhen: undefined,
             releaseTagPatternRequireSemver: true,
+            releaseTagPatternPreferDockerVersion: undefined,
             releaseTagPatternStrictPreid: false,
             versionPlans: false,
             resolvedVersionPlans: false,
@@ -106,6 +108,7 @@ describe('shared', () => {
             releaseTagPattern: '{projectName}-{version}',
             releaseTagPatternCheckAllBranchesWhen: undefined,
             releaseTagPatternRequireSemver: true,
+            releaseTagPatternPreferDockerVersion: undefined,
             releaseTagPatternStrictPreid: false,
             versionPlans: false,
             resolvedVersionPlans: false,
@@ -122,6 +125,7 @@ describe('shared', () => {
             releaseTagPattern: '{projectName}-{version}',
             releaseTagPatternCheckAllBranchesWhen: undefined,
             releaseTagPatternRequireSemver: true,
+            releaseTagPatternPreferDockerVersion: undefined,
             releaseTagPatternStrictPreid: false,
             versionPlans: false,
             resolvedVersionPlans: false,
@@ -195,6 +199,7 @@ describe('shared', () => {
             releaseTagPattern: '{projectName}-{version}',
             releaseTagPatternCheckAllBranchesWhen: undefined,
             releaseTagPatternRequireSemver: true,
+            releaseTagPatternPreferDockerVersion: undefined,
             releaseTagPatternStrictPreid: false,
             name: '__default__',
             versionPlans: false,
@@ -282,6 +287,162 @@ describe('shared', () => {
       expect(tags).toEqual([]);
     });
 
+    it('should use docker version when releaseTagPatternPreferDockerVersion is true', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTagPatternPreferDockerVersion = true;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-2024.01.abc123']);
+    });
+
+    it('should use semver version when releaseTagPatternPreferDockerVersion is false', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTagPatternPreferDockerVersion = false;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-1.1.0']);
+    });
+
+    it('should create tags for both versions when releaseTagPatternPreferDockerVersion is "both"', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTagPatternPreferDockerVersion = 'both';
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-2024.01.abc123', 'my-group-1.1.0']);
+    });
+
+    it('should handle "both" when only dockerVersion is available', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTagPatternPreferDockerVersion = 'both';
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-2024.01.abc123']);
+    });
+
+    it('should handle independent projects with "both" preference', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTagPattern: '{projectName}-{version}',
+        releaseTagPatternCheckAllBranchesWhen: undefined,
+        releaseTagPatternRequireSemver: true,
+        releaseTagPatternPreferDockerVersion: 'both',
+        releaseTagPatternStrictPreid: false,
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+            dockerVersion: '2024.01.def456',
+          },
+        }
+      );
+
+      expect(tags).toEqual([
+        'a-2024.01.abc123',
+        'a-1.1.0',
+        'b-2024.01.def456',
+        'b-1.2.0',
+      ]);
+    });
+
     function setUpReleaseGroup() {
       const projects = ['a', 'b'];
       const releaseGroup: ReleaseGroupWithName = {
@@ -291,6 +452,7 @@ describe('shared', () => {
         releaseTagPattern: 'my-group-{version}',
         releaseTagPatternCheckAllBranchesWhen: undefined,
         releaseTagPatternRequireSemver: true,
+        releaseTagPatternPreferDockerVersion: undefined,
         releaseTagPatternStrictPreid: false,
         changelog: undefined,
         version: undefined,

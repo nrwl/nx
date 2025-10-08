@@ -13,7 +13,7 @@ import {
 } from '../../../config/project-graph';
 import {
   CreateDependenciesContext,
-  CreateNodesContext,
+  CreateNodesContextV2,
 } from '../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
 import { readJsonFile } from '../../../utils/fileutils';
@@ -73,7 +73,7 @@ export function getLockFileNodes(
   packageManager: PackageManager,
   contents: string,
   lockFileHash: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Record<string, ProjectGraphExternalNode> {
   try {
     if (packageManager === 'yarn') {

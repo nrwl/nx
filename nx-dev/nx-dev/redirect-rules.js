@@ -895,12 +895,7 @@ const missingAndCatchAllRedirects = {
   '/packages/:path*': '/nx-api/:path*',
 };
 
-if (process.env['NEXT_PUBLIC_ASTRO_URL']) {
-  missingAndCatchAllRedirects['/docs'] = '/docs/getting-started/intro';
-} else {
-  // For new docs, we rewrite all docs URLs to astro site, so we can skip this redirect
-  missingAndCatchAllRedirects['/docs'] = '/getting-started/intro';
-}
+missingAndCatchAllRedirects['/docs'] = '/docs/getting-started/intro';
 
 const marketing = {
   '/conf': 'https://monorepo.world',
@@ -1552,8 +1547,5 @@ module.exports = {
   ciTutorialRedirects,
   dockerReleaseRedirect,
   contentDedupeRedirects,
-  // Only enable these redirects if the new docs are enabled
-  docsToAstroRedirects: process.env['NEXT_PUBLIC_ASTRO_URL']
-    ? docsToAstroRedirects
-    : {},
+  docsToAstroRedirects: docsToAstroRedirects,
 };

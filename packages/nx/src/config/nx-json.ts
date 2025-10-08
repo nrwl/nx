@@ -437,6 +437,16 @@ export interface NxReleaseConfiguration {
        */
       releaseTagPatternRequireSemver?: boolean;
       /**
+       * Controls how docker versions are used relative to semver versions when creating git tags and changelog entries.
+       *
+       * - true: Use only the docker version
+       * - false: Use only the semver version
+       * - 'both': Create tags and changelog entries for both docker and semver versions
+       *
+       * By default, this is set to true when docker configuration is present, and false otherwise.
+       */
+      releaseTagPatternPreferDockerVersion?: boolean | 'both';
+      /**
        * When set to true and multiple tags match your configured "releaseTagPattern", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one
        * given to the nx release invocation.
        *
@@ -531,6 +541,16 @@ export interface NxReleaseConfiguration {
    * - Setting this to false will cause us to not use semver to match the version allowing for non-semver versions
    */
   releaseTagPatternRequireSemver?: boolean;
+  /**
+   * Controls how docker versions are used relative to semver versions when creating git tags and changelog entries.
+   *
+   * - true: Use only the docker version
+   * - false: Use only the semver version
+   * - 'both': Create tags and changelog entries for both docker and semver versions
+   *
+   * By default, this is set to true when docker configuration is present, and false otherwise.
+   */
+  releaseTagPatternPreferDockerVersion?: boolean | 'both';
   /**
    * When set to true and multiple tags match your configured "releaseTagPattern", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one
    * given to the nx release invocation.
