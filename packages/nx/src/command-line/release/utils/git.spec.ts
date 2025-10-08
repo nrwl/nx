@@ -149,84 +149,84 @@ See merge request nx-release-test/nx-release-test!2`,
           projectName: 'my-lib-1',
           expectedTag: 'v4.0.1',
           expectedVersion: '4.0.1',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: 'x{version}',
           projectName: 'my-lib-1',
           expectedTag: 'x5.0.0',
           expectedVersion: '5.0.0',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: 'release/{version}',
           projectName: 'my-lib-1',
           expectedTag: 'release/4.2.1',
           expectedVersion: '4.2.1',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: 'release/{projectName}@v{version}',
           projectName: 'my-lib-1',
           expectedTag: 'release/my-lib-1@v4.2.1',
           expectedVersion: '4.2.1',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: '{version}',
           projectName: 'my-lib-1',
           expectedTag: '4.0.0-rc.1+build.1',
           expectedVersion: '4.0.0-rc.1+build.1',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: '{projectName}@v{version}',
           projectName: 'my-lib-1',
           expectedTag: 'my-lib-1@v4.0.0-beta.1',
           expectedVersion: '4.0.0-beta.1',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: '{projectName}v{version}',
           projectName: 'my-lib-2',
           expectedTag: 'my-lib-2v4.0.0-beta.1',
           expectedVersion: '4.0.0-beta.1',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: '{projectName}{version}',
           projectName: 'my-lib-3',
           expectedTag: 'my-lib-34.0.0-beta.1',
           expectedVersion: '4.0.0-beta.1',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: '{version}-{projectName}',
           projectName: 'my-lib-1',
           expectedTag: '4.0.0-beta.0-my-lib-1',
           expectedVersion: '4.0.0-beta.0',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: '{version}-{projectName}',
           projectName: 'alpha',
           expectedTag: '3.0.0-beta.0-alpha',
           expectedVersion: '3.0.0-beta.0',
-          releaseTagPatternRequireSemver: true,
+          requireSemver: true,
         },
         {
           pattern: 'hotfix/{projectName}/{version}',
           projectName: 'api',
           expectedTag: 'hotfix/api/2506.30.abcdef',
           expectedVersion: '2506.30.abcdef',
-          releaseTagPatternRequireSemver: false,
+          requireSemver: false,
         },
         {
           pattern: 'release/{projectName}/{version}',
           projectName: 'api',
           expectedTag: 'release/api/2506.30.abcdef',
           expectedVersion: '2506.30.abcdef',
-          releaseTagPatternRequireSemver: false,
+          requireSemver: false,
         },
         {
           pattern: '{projectName}@{version}',
@@ -297,7 +297,7 @@ See merge request nx-release-test/nx-release-test!2`,
           projectName,
           expectedTag,
           expectedVersion,
-          releaseTagPatternRequireSemver,
+          requireSemver,
           preid,
         }) => {
           const result = await getLatestGitTagForPattern(
@@ -306,9 +306,9 @@ See merge request nx-release-test/nx-release-test!2`,
               projectName,
             },
             {
-              releaseTagPatternRequireSemver,
+              requireSemver,
               preid: preid,
-              releaseTagPatternStrictPreid: false,
+              strictPreid: false,
             }
           );
 
@@ -398,8 +398,8 @@ See merge request nx-release-test/nx-release-test!2`,
             },
             {
               preid: preid,
-              releaseTagPatternRequireSemver: true,
-              releaseTagPatternStrictPreid: true,
+              requireSemver: true,
+              strictPreid: true,
             }
           );
 
@@ -422,8 +422,8 @@ See merge request nx-release-test/nx-release-test!2`,
           projectName: 'my-lib-1',
         },
         {
-          releaseTagPatternRequireSemver: true,
-          releaseTagPatternStrictPreid: false,
+          requireSemver: true,
+          strictPreid: false,
         }
       );
       expect(result).toEqual(null);
@@ -436,8 +436,8 @@ See merge request nx-release-test/nx-release-test!2`,
           projectName: 'my-lib-1',
         },
         {
-          releaseTagPatternRequireSemver: true,
-          releaseTagPatternStrictPreid: false,
+          requireSemver: true,
+          strictPreid: false,
         }
       );
 

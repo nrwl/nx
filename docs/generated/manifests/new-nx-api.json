@@ -3539,6 +3539,16 @@
       }
     },
     "migrations": {
+      "/reference/core-api/nx/migrations/22-0-0-consolidate-release-tag-config": {
+        "description": "Consolidates releaseTag* options into nested releaseTag object structure",
+        "file": "generated/packages/nx/migrations/22-0-0-consolidate-release-tag-config.json",
+        "hidden": false,
+        "name": "22-0-0-consolidate-release-tag-config",
+        "version": "22.0.0-beta.2",
+        "originalFilePath": "/packages/nx",
+        "path": "/reference/core-api/nx/migrations/22-0-0-consolidate-release-tag-config",
+        "type": "migration"
+      },
       "/reference/core-api/nx/migrations/22-0-0-release-version-config-changes": {
         "description": "Updates release version config based on the breaking changes in Nx v22",
         "file": "generated/packages/nx/migrations/22-0-0-release-version-config-changes.json",

@@ -621,7 +621,7 @@ export class ReleaseGraph {
         let latestMatchingGitTag:
           | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
           | undefined;
-        const releaseTagPattern = releaseGroupNode.group.releaseTagPattern;
+        const releaseTagPattern = releaseGroupNode.group.releaseTag.pattern;
 
         if (finalConfigForProject.currentVersionResolver === 'git-tag') {
           latestMatchingGitTag = await getLatestGitTagForPattern(
@@ -631,12 +631,10 @@ export class ReleaseGraph {
             },
             {
               checkAllBranchesWhen:
-                releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen,
+                releaseGroupNode.group.releaseTag.checkAllBranchesWhen,
               preid: preid,
-              releaseTagPatternRequireSemver:
-                releaseGroupNode.group.releaseTagPatternRequireSemver,
-              releaseTagPatternStrictPreid:
-                releaseGroupNode.group.releaseTagPatternStrictPreid,
+              requireSemver: releaseGroupNode.group.releaseTag.requireSemver,
+              strictPreid: releaseGroupNode.group.releaseTag.strictPreid,
             }
           );
           this.cachedLatestMatchingGitTag.set(

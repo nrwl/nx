@@ -196,9 +196,46 @@
                   }
                 ]
               },
+              "releaseTag": {
+                "type": "object",
+                "description": "Configuration for release tag generation and matching.",
+                "properties": {
+                  "pattern": {
+                    "type": "string",
+                    "description": "Optionally override the git/release tag pattern to use for this group."
+                  },
+                  "checkAllBranchesWhen": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
+                  },
+                  "requireSemver": {
+                    "type": "boolean",
+                    "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
+                  },
+                  "preferDockerVersion": {
+                    "type": ["boolean", "string"],
+                    "enum": [true, false, "both"],
+                    "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
+                  },
+                  "strictPreid": {
+                    "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
+                  }
+                },
+                "additionalProperties": false
+              },
               "releaseTagPattern": {
                 "type": "string",
-                "description": "Optionally override the git/release tag pattern to use for this group."
+                "description": "DEPRECATED: Use releaseTag.pattern instead. Will be removed in Nx 23."
               },
               "releaseTagPatternCheckAllBranchesWhen": {
                 "oneOf": [
@@ -212,19 +249,20 @@
                     }
                   }
                 ],
-                "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
+                "description": "DEPRECATED: Use releaseTag.checkAllBranchesWhen instead. Will be removed in Nx 23."
               },
               "releaseTagPatternRequireSemver": {
                 "type": "boolean",
-                "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
+                "description": "DEPRECATED: Use releaseTag.requireSemver instead. Will be removed in Nx 23."
               },
               "releaseTagPatternPreferDockerVersion": {
                 "type": ["boolean", "string"],
                 "enum": [true, false, "both"],
-                "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
+                "description": "DEPRECATED: Use releaseTag.preferDockerVersion instead. Will be removed in Nx 23."
               },
               "releaseTagPatternStrictPreid": {
-                "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
+                "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration",
+                "description": "DEPRECATED: Use releaseTag.strictPreid instead. Will be removed in Nx 23."
               },
               "versionPlans": {
                 "oneOf": [
@@ -309,9 +347,46 @@
             }
           ]
         },
+        "releaseTag": {
+          "type": "object",
+          "description": "Configuration for release tag generation and matching.",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing. It supports interpolating the version as {version} and (if releasing independently or forcing project level version control system releases) the project name as {projectName} within the string. The default releaseTagPattern for fixed/unified releases is: \"v{version}\". The default releaseTagPattern for independent releases at the project level is: \"{projectName}@{version}\""
+            },
+            "checkAllBranchesWhen": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
+            },
+            "requireSemver": {
+              "type": "boolean",
+              "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
+            },
+            "preferDockerVersion": {
+              "type": ["boolean", "string"],
+              "enum": [true, false, "both"],
+              "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
+            },
+            "strictPreid": {
+              "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
+            }
+          },
+          "additionalProperties": false
+        },
         "releaseTagPattern": {
           "type": "string",
-          "description": "Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing. It supports interpolating the version as {version} and (if releasing independently or forcing project level version control system releases) the project name as {projectName} within the string. The default releaseTagPattern for fixed/unified releases is: \"v{version}\". The default releaseTagPattern for independent releases at the project level is: \"{projectName}@{version}\""
+          "description": "DEPRECATED: Use releaseTag.pattern instead. Will be removed in Nx 23."
         },
         "releaseTagPatternCheckAllBranchesWhen": {
           "oneOf": [
@@ -325,19 +400,20 @@
               }
             }
           ],
-          "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
+          "description": "DEPRECATED: Use releaseTag.checkAllBranchesWhen instead. Will be removed in Nx 23."
         },
         "releaseTagPatternRequireSemver": {
           "type": "boolean",
-          "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
+          "description": "DEPRECATED: Use releaseTag.requireSemver instead. Will be removed in Nx 23."
         },
         "releaseTagPatternPreferDockerVersion": {
           "type": ["boolean", "string"],
           "enum": [true, false, "both"],
-          "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
+          "description": "DEPRECATED: Use releaseTag.preferDockerVersion instead. Will be removed in Nx 23."
         },
         "releaseTagPatternStrictPreid": {
-          "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
+          "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration",
+          "description": "DEPRECATED: Use releaseTag.strictPreid instead. Will be removed in Nx 23."
         },
         "docker": {
           "oneOf": [
