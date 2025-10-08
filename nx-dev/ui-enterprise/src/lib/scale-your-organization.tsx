@@ -157,9 +157,7 @@ export function ScaleYourOrganization(): ReactElement {
                       <li>
                         <Link
                           href={
-                            process.env.NEXT_PUBLIC_ASTRO_URL
-                              ? '/docs/reference/powerpack/conformance/overview'
-                              : '/ci/recipes/enterprise/conformance'
+                            '/docs/reference/powerpack/conformance/overview'
                           }
                           prefetch={false}
                           title="Learn More About Conformance"
