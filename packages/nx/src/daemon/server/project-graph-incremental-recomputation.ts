@@ -27,6 +27,7 @@ import {
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
 import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
@@ -455,4 +456,5 @@ function notifyProjectGraphRecomputationListeners(projectGraph: ProjectGraph) {
   for (const listener of projectGraphRecomputationListeners) {
     listener(projectGraph);
   }
+  notifyProjectGraphListenerSockets(projectGraph);
 }

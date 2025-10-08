@@ -316,6 +316,41 @@ export class DaemonClient {
     };
   }
 
+  async registerProjectGraphRecomputationListener(
+    callback: (
+      error: Error | null | 'closed',
+      projectGraph: ProjectGraph | null
+    ) => void
+  ): Promise<UnregisterCallback> {
+    let messenger: DaemonSocketMessenger | undefined;
+
+    await this.queue.sendToQueue(() => {
+      messenger = new DaemonSocketMessenger(
+        connect(getFullOsSocketPath())
+      ).listen(
+        (message) => {
+          try {
+            const parsedMessage = JSON.parse(message);
+            callback(null, parsedMessage);
+          } catch (e) {
+            callback(e, null);
+          }
+        },
+        () => {
+          callback('closed', null);
+        },
+        (err) => callback(err, null)
+      );
+      return messenger.sendMessage({
+        type: 'REGISTER_PROJECT_GRAPH_LISTENER',
+      });
+    });
+
+    return () => {
+      messenger?.close();
+    };
+  }
+
   processInBackground(requirePath: string, data: any): Promise<any> {
     return this.sendToDaemonViaQueue({
       type: 'PROCESS_IN_BACKGROUND',
