@@ -127,21 +127,23 @@ Module._load = function (request, parent, isMain) {
 
     // Try to create lock
     try {
-      const fd = openSync(lockFile, 'wx');
-      closeSync(fd);
+      const lockHandle = openSync(lockFile, 'wx');
+      try {
+        // Double-check file doesn't exist (race between wait ending and lock creation)
+        if (existsSync(tmpFile)) {
+          closeSync(lockHandle);
+          unlinkSync(lockFile);
+          return originalLoad.apply(this, [tmpFile, parent, isMain]);
+        }
 
-      // Double-check file doesn't exist (race between wait ending and lock creation)
-      if (existsSync(tmpFile)) {
+        // We have the lock - do the copy-rename
+        copyFileSync(nativeLocation, tmpTmpFile);
+        renameSync(tmpTmpFile, tmpFile);
+      } finally {
+        // Release lock
+        closeSync(lockHandle);
         unlinkSync(lockFile);
-        return originalLoad.apply(this, [tmpFile, parent, isMain]);
       }
-
-      // We have the lock - do the copy-rename
-      copyFileSync(nativeLocation, tmpTmpFile);
-      renameSync(tmpTmpFile, tmpFile);
-
-      // Release lock
-      unlinkSync(lockFile);
     } catch (err) {
       if (err.code === 'EEXIST') {
         // Lock was created between our check and now - wait for tmpFile
