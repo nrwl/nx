@@ -3,7 +3,7 @@ title: nx.json Reference
 description: A comprehensive reference for the nx.json configuration file, which controls Nx CLI behavior, project defaults, and workspace settings.
 sidebar:
   order: 2
-  label: Nx configuration
+  label: Nx Configuration
 filter: 'type:References'
 ---
 
@@ -72,6 +72,18 @@ The following is an expanded example showing all options. Your `nx.json` will li
   "tui": {
     "enabled": true,
     "autoExit": true
+  },
+  "conformance": {
+    "rules": [
+      {
+        "rule": "@nx/conformance/enforce-module-boundaries",
+        "status": "evaluated"
+      },
+      {
+        "rule": "./tools/local-conformance-rules/check-project.ts",
+        "projects": ["*"]
+      }
+    ]
   }
 }
 ```
@@ -770,3 +782,96 @@ The `tui` property in `nx.json` configures the [Terminal UI](/docs/guides/tasks-
   }
 }
 ```
+
+## Conformance
+
+The `conformance` property in `nx.json` configures the usage of [Nx Conformance](/docs/enterprise/powerpack/conformance).
+
+```jsonc
+// nx.json
+{
+  "conformance": {
+    "outputPath": "dist/conformance-result.json",
+    "rules": [
+      {
+        "rule": "@nx/conformance/enforce-module-boundaries",
+        "status": "evaluated",
+        "explanation": "This rule ensures proper module boundaries are maintained across the workspace"
+      },
+      {
+        "rule": "./tools/local-conformance-rules/check-project.ts",
+        "projects": ["*"],
+        "options": {
+          "strictMode": true
+        }
+      },
+      {
+        "rule": "nx-cloud://my-custom-rule",
+        "projects": [
+          "frontend-*",
+          {
+            "matcher": "backend-legacy",
+            "explanation": "Legacy backend project is exempt until migration is complete"
+          }
+        ],
+        "status": "enforced"
+      }
+    ]
+  }
+}
+```
+
+### Configuration Options
+
+| Property       | Type                | Description                                                                                                                                           |
+| -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **outputPath** | `string \| false`   | Optional path to write the conformance results to. Defaults to `"dist/conformance-result.json"`. Set to `false` to disable writing results to a file. |
+| **rules**      | `Array<RuleConfig>` | List of conformance rules to apply to your workspace.                                                                                                 |
+
+### Rule Configuration
+
+Each rule in the `rules` array can have the following properties:
+
+| Property        | Type                                                        | Required | Description                                                                                                                                                                                              |
+| --------------- | ----------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **rule**        | `string`                                                    | Yes      | Relative path to a local rule implementation, node_module path, or nx-cloud rule ID for Nx Cloud Enterprise (e.g., `"nx-cloud://my-rule"`).                                                              |
+| **options**     | `Record<string, unknown>`                                   | No       | Rule-specific configuration options. The available options depend on the specific rule being used.                                                                                                       |
+| **projects**    | `Array<string \| { matcher: string; explanation: string }>` | No       | Projects to apply the rule to. See [Projects](#projects-conformance) section below.                                                                                                                      |
+| **explanation** | `string`                                                    | No       | Optional explanation to communicate to colleagues why this rule is enabled and important to the workspace.                                                                                               |
+| **status**      | `"enforced" \| "evaluated" \| "disabled"`                   | No       | Override the default status of the rule (defaults to `"enforced"`). If set to `"evaluated"`, violations are reported but don't cause failures. If set to `"disabled"`, the rule is not evaluated at all. |
+
+### Projects (Conformance)
+
+If you want to limit the projects that a conformance rule applies to, you can use the `projects` property. This property accepts an array of strings which can be project names, glob patterns, directories, tag references or anything else that is supported by the `--projects` filter you may know from other commands such as `nx run`.
+
+By default, the implied value is `["*"]` (all projects).
+
+You can also use objects with `matcher` and `explanation` properties to document why specific projects are included or excluded from the rule.
+
+```jsonc
+{
+  "rule": "my-rule",
+  // Here we are configuring the rule to apply to all frontend projects
+  // except the one called "frontend-legacy"
+  "projects": ["frontend-*", "!frontend-legacy"]
+}
+```
+
+```jsonc
+{
+  "rule": "my-rule",
+  "projects": [
+    "frontend-*",
+    {
+      "matcher": "!frontend-legacy",
+      "explanation": "Exempt until migration to new architecture is complete"
+    }
+  ]
+}
+```
+
+### Rule Status Values
+
+- **enforced** (default): Rule violations will cause the conformance check to fail (exit code 1)
+- **evaluated**: Rule violations are reported but don't cause failures (exit code 0)
+- **disabled**: Rule is not evaluated at all
