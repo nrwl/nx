@@ -1,10 +1,4 @@
-import {
-  createFile,
-  readFile,
-  runCLI,
-  uniq,
-  updateFile,
-} from '@nx/e2e-utils';
+import { createFile, readFile, runCLI, uniq, updateFile } from '@nx/e2e-utils';
 import { setupWebTest } from './web-setup';
 
 describe('index.html interpolation', () => {

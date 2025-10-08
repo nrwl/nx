@@ -1,9 +1,4 @@
-import {
-  checkFilesExist,
-  packageInstall,
-  runCLI,
-  uniq,
-} from '@nx/e2e-utils';
+import { checkFilesExist, packageInstall, runCLI, uniq } from '@nx/e2e-utils';
 import {
   setupNpmWorkspaceTest,
   getWorkspaceName,
