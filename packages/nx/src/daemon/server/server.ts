@@ -134,7 +134,10 @@ import {
   handleRunPostTasksExecution,
   handleRunPreTasksExecution,
 } from './handle-tasks-execution-hooks';
-import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
+import {
+  isRegisterProjectGraphListenerMessage,
+  REGISTER_PROJECT_GRAPH_LISTENER,
+} from '../message-types/register-project-graph-listener';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -251,7 +254,7 @@ async function handleMessage(socket, data: string) {
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
-  } else if (payload.type === REGISTER_PROJECT_GRAPH_LISTENER) {
+  } else if (isRegisterProjectGraphListenerMessage(payload)) {
     registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {
     await handleResult(socket, GLOB, () =>
