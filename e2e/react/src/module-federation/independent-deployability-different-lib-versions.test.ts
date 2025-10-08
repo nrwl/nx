@@ -6,15 +6,15 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from "@nx/e2e-utils";
-import { stripIndents } from "nx/src/utils/strip-indents";
-import { readPort, runCLI } from "./utils";
+} from '@nx/e2e-utils';
+import { stripIndents } from 'nx/src/utils/strip-indents';
+import { readPort, runCLI } from './utils';
 import {
   setupIndependentDeployabilityTest,
   cleanupIndependentDeployabilityTest,
-} from "./independent-deployability-setup";
+} from './independent-deployability-setup';
 
-describe("Independent Deployability", () => {
+describe('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     proj = setupIndependentDeployabilityTest();
@@ -24,10 +24,10 @@ describe("Independent Deployability", () => {
     cleanupIndependentDeployabilityTest();
   });
 
-  it("should support different versions workspace libs for host and remote", async () => {
-    const shell = uniq("shell");
-    const remote = uniq("remote");
-    const lib = uniq("lib");
+  it('should support different versions workspace libs for host and remote', async () => {
+    const shell = uniq('shell');
+    const remote = uniq('remote');
+    const lib = uniq('lib');
 
     const shellPort = await getAvailablePort();
 
@@ -51,7 +51,7 @@ describe("Independent Deployability", () => {
     updateJson(`${lib}/package.json`, (json) => {
       return {
         ...json,
-        version: "0.0.1",
+        version: '0.0.1',
       };
     });
 
@@ -148,7 +148,7 @@ describe("Independent Deployability", () => {
       // test remote e2e
       const remoteE2eResults = await runCommandUntil(
         `e2e ${remote}-e2e --no-watch --verbose`,
-        (output) => output.includes("All specs passed!")
+        (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(remoteE2eResults.pid, remotePort);
 
@@ -165,7 +165,7 @@ describe("Independent Deployability", () => {
       await killProcessAndPorts(remoteProcess.pid, remotePort);
       const shellE2eResults = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes("All specs passed!")
+        (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(
         shellE2eResults.pid,

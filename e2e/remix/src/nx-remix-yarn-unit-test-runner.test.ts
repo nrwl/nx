@@ -1,11 +1,11 @@
-import { runCLI, uniq } from "@nx/e2e-utils";
+import { runCLI, uniq } from '@nx/e2e-utils';
 import {
   setupNxRemixTestYarn,
   cleanupNxRemixTest,
-} from "./nx-remix-setup-yarn";
+} from './nx-remix-setup-yarn';
 
-describe("Remix E2E Tests", () => {
-  describe("--integrated (yarn)", () => {
+describe('Remix E2E Tests', () => {
+  describe('--integrated (yarn)', () => {
     beforeAll(async () => {
       setupNxRemixTestYarn();
     });
@@ -14,9 +14,9 @@ describe("Remix E2E Tests", () => {
       cleanupNxRemixTest();
     });
 
-    describe("--unitTestRunner", () => {
-      it("should generate a library with vitest and test correctly", async () => {
-        const plugin = uniq("remix");
+    describe('--unitTestRunner', () => {
+      it('should generate a library with vitest and test correctly', async () => {
+        const plugin = uniq('remix');
         runCLI(
           `generate @nx/remix:library ${plugin} --unitTestRunner=vitest --linter=eslint`
         );
@@ -25,12 +25,12 @@ describe("Remix E2E Tests", () => {
         expect(result).toContain(`Successfully ran target test`);
       }, 120_000);
 
-      it("should generate a library with jest and test correctly", async () => {
-        const reactapp = uniq("react");
+      it('should generate a library with jest and test correctly', async () => {
+        const reactapp = uniq('react');
         runCLI(
           `generate @nx/react:application ${reactapp} --unitTestRunner=jest --linter=eslint`
         );
-        const plugin = uniq("remix");
+        const plugin = uniq('remix');
         runCLI(
           `generate @nx/remix:application ${plugin} --unitTestRunner=jest --linter=eslint`
         );

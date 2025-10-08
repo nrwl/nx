@@ -1,4 +1,4 @@
-import { names } from "@nx/devkit";
+import { names } from '@nx/devkit';
 import {
   cleanupProject,
   newProject,
@@ -6,16 +6,16 @@ import {
   runCLI,
   uniq,
   updateFile,
-} from "@nx/e2e-utils";
+} from '@nx/e2e-utils';
 
-describe("Vite Plugin", () => {
+describe('Vite Plugin', () => {
   let proj: string;
   let originalEnv: string;
   beforeAll(() => {
     originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = "false";
+    process.env.NX_ADD_PLUGINS = 'false';
     proj = newProject({
-      packages: ["@nx/react", "@nx/web"],
+      packages: ['@nx/react', '@nx/web'],
     });
   });
 
@@ -24,13 +24,13 @@ describe("Vite Plugin", () => {
     cleanupProject();
   });
 
-  describe("incremental building", () => {
-    const app = uniq("demo");
-    const lib = uniq("my-lib");
+  describe('incremental building', () => {
+    const app = uniq('demo');
+    const lib = uniq('my-lib');
     beforeAll(() => {
       proj = newProject({
-        name: uniq("vite-incr-build"),
-        packages: ["@nx/react"],
+        name: uniq('vite-incr-build'),
+        packages: ['@nx/react'],
       });
       runCLI(
         `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=vitest --no-interactive  --directory=${app}`
@@ -81,35 +81,35 @@ export default App;
       cleanupProject();
     });
 
-    it("should build app from libs source", () => {
+    it('should build app from libs source', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=true`);
-      expect(results).toContain("Successfully ran target build for project");
+      expect(results).toContain('Successfully ran target build for project');
       // this should be more modules than build from dist
-      expect(results).toContain("38 modules transformed");
+      expect(results).toContain('38 modules transformed');
     });
 
-    it("should build app from libs dist", () => {
+    it('should build app from libs dist', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=false`);
-      expect(results).toContain("Successfully ran target build for project");
+      expect(results).toContain('Successfully ran target build for project');
       // this should be less modules than building from source
-      expect(results).toContain("36 modules transformed");
+      expect(results).toContain('36 modules transformed');
     });
 
-    it("should build app from libs without package.json in lib", () => {
+    it('should build app from libs without package.json in lib', () => {
       removeFile(`${lib}-buildable/package.json`);
 
       const buildFromSourceResults = runCLI(
         `build ${app} --buildLibsFromSource=true`
       );
       expect(buildFromSourceResults).toContain(
-        "Successfully ran target build for project"
+        'Successfully ran target build for project'
       );
 
       const noBuildFromSourceResults = runCLI(
         `build ${app} --buildLibsFromSource=false`
       );
       expect(noBuildFromSourceResults).toContain(
-        "Successfully ran target build for project"
+        'Successfully ran target build for project'
       );
     });
   });

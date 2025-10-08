@@ -7,21 +7,21 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from "@nx/e2e-utils";
-import { join } from "path";
+} from '@nx/e2e-utils';
+import { join } from 'path';
 
-describe("index.html interpolation (legacy)", () => {
+describe('index.html interpolation (legacy)', () => {
   beforeAll(() => newProject());
   afterAll(() => cleanupProject());
 
-  test("should interpolate environment variables", async () => {
-    const appName = uniq("app");
+  test('should interpolate environment variables', async () => {
+    const appName = uniq('app');
 
     runCLI(
       `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive`,
       {
         env: {
-          NX_ADD_PLUGINS: "false",
+          NX_ADD_PLUGINS: 'false',
         },
       }
     );
@@ -57,9 +57,9 @@ describe("index.html interpolation (legacy)", () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    updateJson(join("apps", appName, "project.json"), (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       const buildOptions = config.targets.build.options;
-      buildOptions.deployUrl = "baz";
+      buildOptions.deployUrl = 'baz';
       return config;
     });
 

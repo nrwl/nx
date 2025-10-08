@@ -8,16 +8,16 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from "@nx/e2e-utils";
+} from '@nx/e2e-utils';
 
-describe("Vite Plugin", () => {
+describe('Vite Plugin', () => {
   let proj: string;
   let originalEnv: string;
   beforeAll(() => {
     originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = "false";
+    process.env.NX_ADD_PLUGINS = 'false';
     proj = newProject({
-      packages: ["@nx/react", "@nx/web"],
+      packages: ['@nx/react', '@nx/web'],
     });
   });
 
@@ -26,26 +26,26 @@ describe("Vite Plugin", () => {
     cleanupProject();
   });
 
-  describe("ESM-only apps", () => {
+  describe('ESM-only apps', () => {
     beforeAll(() => {
       newProject({
-        packages: ["@nx/react"],
+        packages: ['@nx/react'],
       });
     });
 
-    it("should support ESM-only plugins in vite.config.ts for root apps (#NXP-168)", () => {
+    it('should support ESM-only plugins in vite.config.ts for root apps (#NXP-168)', () => {
       // ESM-only plugin to test with
       updateFile(
-        "foo/package.json",
+        'foo/package.json',
         JSON.stringify({
-          name: "@acme/foo",
-          type: "module",
-          version: "1.0.0",
-          main: "index.js",
+          name: '@acme/foo',
+          type: 'module',
+          version: '1.0.0',
+          main: 'index.js',
         })
       );
       updateFile(
-        "foo/index.js",
+        'foo/index.js',
         `
         export default function fooPlugin() {
           return {
@@ -56,19 +56,19 @@ describe("Vite Plugin", () => {
           }
         }`
       );
-      updateJson("package.json", (json) => {
-        json.devDependencies["@acme/foo"] = "file:./foo";
+      updateJson('package.json', (json) => {
+        json.devDependencies['@acme/foo'] = 'file:./foo';
         return json;
       });
       runCommand(getPackageManagerCommand().install);
 
-      const rootApp = uniq("root");
+      const rootApp = uniq('root');
       runCLI(
         `generate @nx/react:app ${rootApp} --rootProject --bundler=vite --unitTestRunner=none --e2eTestRunner=none --style=css --no-interactive`
       );
       updateJson(`package.json`, (json) => {
         // This allows us to use ESM-only packages in vite.config.ts.
-        json.type = "module";
+        json.type = 'module';
         return json;
       });
       updateFile(

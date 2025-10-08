@@ -8,23 +8,23 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from "@nx/e2e-utils";
-import { join } from "path";
-import { setupWebLegacyTest, cleanupWebLegacyTest } from "./web-legacy-setup";
+} from '@nx/e2e-utils';
+import { join } from 'path';
+import { setupWebLegacyTest, cleanupWebLegacyTest } from './web-legacy-setup';
 
-describe("Web Components Applications (legacy)", () => {
+describe('Web Components Applications (legacy)', () => {
   beforeEach(() => setupWebLegacyTest());
   afterEach(() => cleanupWebLegacyTest());
 
-  it("should remove previous output before building", async () => {
-    const appName = uniq("app");
-    const libName = uniq("lib");
+  it('should remove previous output before building', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
 
     runCLI(
       `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --compiler swc`,
       {
         env: {
-          NX_ADD_PLUGINS: "false",
+          NX_ADD_PLUGINS: 'false',
         },
       }
     );
@@ -32,7 +32,7 @@ describe("Web Components Applications (legacy)", () => {
       `generate @nx/react:lib libs/${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`,
       {
         env: {
-          NX_ADD_PLUGINS: "false",
+          NX_ADD_PLUGINS: 'false',
         },
       }
     );
@@ -57,18 +57,18 @@ describe("Web Components Applications (legacy)", () => {
     );
   }, 120000);
 
-  it("should support custom webpackConfig option", async () => {
-    const appName = uniq("app");
+  it('should support custom webpackConfig option', async () => {
+    const appName = uniq('app');
     runCLI(
       `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive`,
       {
         env: {
-          NX_ADD_PLUGINS: "false",
+          NX_ADD_PLUGINS: 'false',
         },
       }
     );
 
-    updateJson(join("apps", appName, "project.json"), (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
       return config;
     });

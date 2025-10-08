@@ -10,16 +10,16 @@ import {
   updateFile,
   updateJson,
   checkFilesExist,
-} from "@nx/e2e-utils";
+} from '@nx/e2e-utils';
 
-describe("Vite Plugin", () => {
+describe('Vite Plugin', () => {
   let proj: string;
   let originalEnv: string;
   beforeAll(() => {
     originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = "false";
+    process.env.NX_ADD_PLUGINS = 'false';
     proj = newProject({
-      packages: ["@nx/react", "@nx/web"],
+      packages: ['@nx/react', '@nx/web'],
     });
   });
 
@@ -28,12 +28,12 @@ describe("Vite Plugin", () => {
     cleanupProject();
   });
 
-  describe("Vite on React apps", () => {
-    describe("set up new React app with --bundler=vite option", () => {
+  describe('Vite on React apps', () => {
+    describe('set up new React app with --bundler=vite option', () => {
       let myApp;
 
       beforeAll(() => {
-        myApp = uniq("my-app");
+        myApp = uniq('my-app');
         runCLI(
           `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
         );
@@ -43,14 +43,14 @@ describe("Vite Plugin", () => {
         rmDist();
       });
 
-      describe("build the app", () => {
-        it("should build application", async () => {
+      describe('build the app', () => {
+        it('should build application', async () => {
           runCLI(`build ${myApp}`);
           expect(readFile(`dist/${myApp}/favicon.ico`)).toBeDefined();
           expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
         }, 200_000);
 
-        describe("when the app has static assets", () => {
+        describe('when the app has static assets', () => {
           beforeAll(() => {
             createFile(`${myApp}/public/hello.md`, `# Hello World`);
           });
@@ -59,7 +59,7 @@ describe("Vite Plugin", () => {
             removeFile(`${myApp}/public/hello.md`);
           });
 
-          it("should copy the assets to the output path", async () => {
+          it('should copy the assets to the output path', async () => {
             runCLI(`build ${myApp}`);
             expect(readFile(`dist/${myApp}/favicon.ico`)).toBeDefined();
             expect(readFile(`dist/${myApp}/hello.md`)).toBeDefined();
@@ -68,31 +68,31 @@ describe("Vite Plugin", () => {
         });
       });
 
-      describe("test the app", () => {
-        it("should test application", async () => {
+      describe('test the app', () => {
+        it('should test application', async () => {
           const result = runCLI(`test ${myApp}`);
-          expect(result).toContain("Successfully ran target test");
+          expect(result).toContain('Successfully ran target test');
         }, 200_000);
 
-        it("should generate a coverage file specified by the executor", async () => {
+        it('should generate a coverage file specified by the executor', async () => {
           updateJson(`${myApp}/project.json`, (json) => {
-            json.targets.test.options.reportsDirectory = "../coverage/test-dir";
+            json.targets.test.options.reportsDirectory = '../coverage/test-dir';
             return json;
           });
 
           const result = runCLI(`test ${myApp} --coverage`);
 
           checkFilesExist(`coverage/test-dir/index.html`);
-          expect(result).toContain("Coverage report");
+          expect(result).toContain('Coverage report');
         }, 200_000);
       });
     });
 
-    describe("set up new React app with --bundler=vite option and use environments api", () => {
+    describe('set up new React app with --bundler=vite option and use environments api', () => {
       let myApp;
 
       beforeAll(() => {
-        myApp = uniq("my-app");
+        myApp = uniq('my-app');
         runCLI(
           `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
         );
@@ -177,7 +177,7 @@ export default async function render(_url: string, document: string) {
         rmDist();
       });
 
-      it("should build application", async () => {
+      it('should build application', async () => {
         runCLI(`build ${myApp}`);
         expect(readFile(`dist/${myApp}/favicon.ico`)).toBeDefined();
         expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();

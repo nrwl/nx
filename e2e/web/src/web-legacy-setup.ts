@@ -1,4 +1,4 @@
-import { cleanupProject, newProject } from "@nx/e2e-utils";
+import { cleanupProject, newProject } from '@nx/e2e-utils';
 
 export function setupWebLegacyTest() {
   newProject();

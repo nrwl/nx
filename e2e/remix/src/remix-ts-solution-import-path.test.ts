@@ -1,10 +1,10 @@
-import { runCLI, readJson, uniq } from "@nx/e2e-utils";
+import { runCLI, readJson, uniq } from '@nx/e2e-utils';
 import {
   setupRemixTsSolutionTest,
   cleanupRemixTsSolutionTest,
-} from "./remix-ts-solution-setup";
+} from './remix-ts-solution-setup';
 
-describe("Remix - TS solution setup", () => {
+describe('Remix - TS solution setup', () => {
   beforeEach(() => {
     setupRemixTsSolutionTest();
   });
@@ -13,8 +13,8 @@ describe("Remix - TS solution setup", () => {
     cleanupRemixTsSolutionTest();
   });
 
-  it("should respect and support generating libraries with a name different than the import path", async () => {
-    const lib = uniq("lib");
+  it('should respect and support generating libraries with a name different than the import path', async () => {
+    const lib = uniq('lib');
 
     runCLI(
       `generate @nx/remix:library packages/${lib} --name=${lib} --linter=eslint --unitTestRunner=vitest --buildable`

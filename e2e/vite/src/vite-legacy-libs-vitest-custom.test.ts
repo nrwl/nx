@@ -9,17 +9,17 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from "@nx/e2e-utils";
-import { join } from "path";
+} from '@nx/e2e-utils';
+import { join } from 'path';
 
-describe("Vite Plugin", () => {
+describe('Vite Plugin', () => {
   let proj: string;
   let originalEnv: string;
   beforeAll(() => {
     originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = "false";
+    process.env.NX_ADD_PLUGINS = 'false';
     proj = newProject({
-      packages: ["@nx/react", "@nx/web"],
+      packages: ['@nx/react', '@nx/web'],
     });
   });
 
@@ -28,14 +28,14 @@ describe("Vite Plugin", () => {
     cleanupProject();
   });
 
-  describe("should be able to create libs that use vitest", () => {
-    describe("using custom project configuration", () => {
-      const lib = uniq("my-custom-lib");
+  describe('should be able to create libs that use vitest', () => {
+    describe('using custom project configuration', () => {
+      const lib = uniq('my-custom-lib');
       beforeEach(() => {
-        proj = newProject({ name: uniq("vite-proj"), packages: ["@nx/react"] });
+        proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
       });
 
-      it("should be able to run tests", async () => {
+      it('should be able to run tests', async () => {
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
@@ -54,7 +54,7 @@ describe("Vite Plugin", () => {
         );
       }, 100_000);
 
-      it("should collect coverage", () => {
+      it('should collect coverage', () => {
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
@@ -104,7 +104,7 @@ describe("Vite Plugin", () => {
         expect(directoryExists(coverageDir)).toBeTruthy();
       }, 100_000);
 
-      it("should not delete the project directory when coverage is enabled", async () => {
+      it('should not delete the project directory when coverage is enabled', async () => {
         // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
         // from the @nx/vite:test executor options, vite will delete the project root directory
         runCLI(
@@ -142,7 +142,7 @@ export default defineConfig({
 });
 `;
         });
-        updateJson(join("libs", lib, "project.json"), (config) => {
+        updateJson(join('libs', lib, 'project.json'), (config) => {
           delete config.targets.test.options.reportsDirectory;
           return config;
         });
@@ -151,7 +151,7 @@ export default defineConfig({
 
         const results = runCLI(`test ${lib}`, {
           env: {
-            CI: "true", // prevent vitest from watching for file changes and making the process hang
+            CI: 'true', // prevent vitest from watching for file changes and making the process hang
           },
         });
 
@@ -162,7 +162,7 @@ export default defineConfig({
         expect(results).toContain(`JUNIT report written`);
       }, 100_000);
 
-      it("should be able to run tests with inSourceTests set to true", async () => {
+      it('should be able to run tests with inSourceTests set to true', async () => {
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest --inSourceTests`
         );

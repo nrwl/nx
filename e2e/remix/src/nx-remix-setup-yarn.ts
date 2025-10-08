@@ -1,9 +1,9 @@
-import { cleanupProject, killPorts, newProject } from "@nx/e2e-utils";
+import { cleanupProject, killPorts, newProject } from '@nx/e2e-utils';
 
 export function setupNxRemixTestYarn() {
   newProject({
-    packages: ["@nx/remix", "@nx/react"],
-    packageManager: "yarn",
+    packages: ['@nx/remix', '@nx/react'],
+    packageManager: 'yarn',
   });
 }
 

@@ -1,8 +1,8 @@
-import { cleanupProject, newProject } from "@nx/e2e-utils";
+import { cleanupProject, newProject } from '@nx/e2e-utils';
 
 export function setupIndependentDeployabilityTest() {
   let proj: string;
-  process.env.NX_ADD_PLUGINS = "false";
+  process.env.NX_ADD_PLUGINS = 'false';
   proj = newProject();
   return proj;
 }

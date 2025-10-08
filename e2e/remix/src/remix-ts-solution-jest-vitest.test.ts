@@ -1,10 +1,10 @@
-import { runCLI, uniq } from "@nx/e2e-utils";
+import { runCLI, uniq } from '@nx/e2e-utils';
 import {
   setupRemixTsSolutionTest,
   cleanupRemixTsSolutionTest,
-} from "./remix-ts-solution-setup";
+} from './remix-ts-solution-setup';
 
-describe("Remix - TS solution setup", () => {
+describe('Remix - TS solution setup', () => {
   beforeEach(() => {
     setupRemixTsSolutionTest();
   });
@@ -13,13 +13,13 @@ describe("Remix - TS solution setup", () => {
     cleanupRemixTsSolutionTest();
   });
 
-  it("should generate apps and libraries with jest and vitest and work correctly", async () => {
-    const appJest = uniq("app-jest");
-    const appVitest = uniq("app-vitest");
-    const libJest = uniq("lib-jest");
-    const buildableLibJest = uniq("buildable-lib-jest");
-    const libVitest = uniq("lib-vitest");
-    const buildableLibVitest = uniq("buildable-lib-vitest");
+  it('should generate apps and libraries with jest and vitest and work correctly', async () => {
+    const appJest = uniq('app-jest');
+    const appVitest = uniq('app-vitest');
+    const libJest = uniq('lib-jest');
+    const buildableLibJest = uniq('buildable-lib-jest');
+    const libVitest = uniq('lib-vitest');
+    const buildableLibVitest = uniq('buildable-lib-vitest');
 
     runCLI(
       `generate @nx/remix:application apps/${appVitest} --unitTestRunner=vitest --linter=eslint`

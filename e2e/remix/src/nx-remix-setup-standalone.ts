@@ -1,7 +1,7 @@
-import { cleanupProject, killPorts, newProject } from "@nx/e2e-utils";
+import { cleanupProject, killPorts, newProject } from '@nx/e2e-utils';
 
 export function setupNxRemixTestStandalone() {
-  const proj = newProject({ packages: ["@nx/remix"] });
+  const proj = newProject({ packages: ['@nx/remix'] });
   return proj;
 }
 

@@ -5,15 +5,15 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from "@nx/e2e-utils";
-import { stripIndents } from "nx/src/utils/strip-indents";
-import { readPort, runCLI } from "./utils";
+} from '@nx/e2e-utils';
+import { stripIndents } from 'nx/src/utils/strip-indents';
+import { readPort, runCLI } from './utils';
 import {
   setupIndependentDeployabilityTest,
   cleanupIndependentDeployabilityTest,
-} from "./independent-deployability-setup";
+} from './independent-deployability-setup';
 
-describe("Independent Deployability", () => {
+describe('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     proj = setupIndependentDeployabilityTest();
@@ -23,9 +23,9 @@ describe("Independent Deployability", () => {
     cleanupIndependentDeployabilityTest();
   });
 
-  it("should support host and remote with library type var", async () => {
-    const shell = uniq("shell");
-    const remote = uniq("remote");
+  it('should support host and remote with library type var', async () => {
+    const shell = uniq('shell');
+    const remote = uniq('remote');
     const shellPort = await getAvailablePort();
 
     runCLI(
@@ -106,13 +106,13 @@ describe("Independent Deployability", () => {
     const buildOutput = runCLI(`build ${shell}`);
     const remoteOutput = runCLI(`build ${remote}`);
 
-    expect(buildOutput).toContain("Successfully ran target build");
-    expect(remoteOutput).toContain("Successfully ran target build");
+    expect(buildOutput).toContain('Successfully ran target build');
+    expect(remoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests()) {
       const hostE2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes("All specs passed!")
+        (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(
         hostE2eResultsSwc.pid,
@@ -123,15 +123,15 @@ describe("Independent Deployability", () => {
 
       const remoteE2eResultsSwc = await runCommandUntil(
         `e2e ${remote}-e2e --no-watch --verbose`,
-        (output) => output.includes("All specs passed!")
+        (output) => output.includes('All specs passed!')
       );
 
       await killProcessAndPorts(remoteE2eResultsSwc.pid, remotePort);
 
       const hostE2eResultsTsNode = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes("All specs passed!"),
-        { env: { NX_PREFER_TS_NODE: "true" } }
+        (output) => output.includes('All specs passed!'),
+        { env: { NX_PREFER_TS_NODE: 'true' } }
       );
 
       await killProcessAndPorts(
@@ -143,8 +143,8 @@ describe("Independent Deployability", () => {
 
       const remoteE2eResultsTsNode = await runCommandUntil(
         `e2e ${remote}-e2e --no-watch --verbose`,
-        (output) => output.includes("All specs passed!"),
-        { env: { NX_PREFER_TS_NODE: "true" } }
+        (output) => output.includes('All specs passed!'),
+        { env: { NX_PREFER_TS_NODE: 'true' } }
       );
 
       await killProcessAndPorts(remoteE2eResultsTsNode.pid, remotePort);

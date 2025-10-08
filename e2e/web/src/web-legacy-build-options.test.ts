@@ -6,20 +6,20 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from "@nx/e2e-utils";
-import { join } from "path";
+} from '@nx/e2e-utils';
+import { join } from 'path';
 
-describe("Build Options (legacy) ", () => {
-  it("should inject/bundle external scripts and styles", async () => {
+describe('Build Options (legacy) ', () => {
+  it('should inject/bundle external scripts and styles', async () => {
     newProject();
 
-    const appName = uniq("app");
+    const appName = uniq('app');
 
     runCLI(
       `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive`,
       {
         env: {
-          NX_ADD_PLUGINS: "false",
+          NX_ADD_PLUGINS: 'false',
         },
       }
     );
@@ -29,10 +29,10 @@ describe("Build Options (legacy) ", () => {
     const barCss = `${srcPath}/bar.css`;
     const fooJs = `${srcPath}/foo.js`;
     const barJs = `${srcPath}/bar.js`;
-    const fooCssContent = `/* ${uniq("foo")} */`;
-    const barCssContent = `/* ${uniq("bar")} */`;
-    const fooJsContent = `/* ${uniq("foo")} */`;
-    const barJsContent = `/* ${uniq("bar")} */`;
+    const fooCssContent = `/* ${uniq('foo')} */`;
+    const barCssContent = `/* ${uniq('bar')} */`;
+    const fooJsContent = `/* ${uniq('foo')} */`;
+    const barJsContent = `/* ${uniq('bar')} */`;
 
     createFile(fooCss);
     createFile(barCss);
@@ -45,10 +45,10 @@ describe("Build Options (legacy) ", () => {
     updateFile(fooJs, fooJsContent);
     updateFile(barJs, barJsContent);
 
-    const barScriptsBundleName = "bar-scripts";
-    const barStylesBundleName = "bar-styles";
+    const barScriptsBundleName = 'bar-scripts';
+    const barStylesBundleName = 'bar-styles';
 
-    updateJson(join("apps", appName, "project.json"), (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       const buildOptions = config.targets.build.options;
 
       buildOptions.scripts = [

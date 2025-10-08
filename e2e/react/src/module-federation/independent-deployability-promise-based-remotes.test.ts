@@ -6,15 +6,15 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from "@nx/e2e-utils";
-import { stripIndents } from "nx/src/utils/strip-indents";
-import { readPort, runCLI } from "./utils";
+} from '@nx/e2e-utils';
+import { stripIndents } from 'nx/src/utils/strip-indents';
+import { readPort, runCLI } from './utils';
 import {
   setupIndependentDeployabilityTest,
   cleanupIndependentDeployabilityTest,
-} from "./independent-deployability-setup";
+} from './independent-deployability-setup';
 
-describe("Independent Deployability", () => {
+describe('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     proj = setupIndependentDeployabilityTest();
@@ -24,9 +24,9 @@ describe("Independent Deployability", () => {
     cleanupIndependentDeployabilityTest();
   });
 
-  it("should support promised based remotes", async () => {
-    const remote = uniq("remote");
-    const host = uniq("host");
+  it('should support promised based remotes', async () => {
+    const remote = uniq('remote');
+    const host = uniq('host');
 
     const shellPort = await getAvailablePort();
 
@@ -141,8 +141,8 @@ describe("Independent Deployability", () => {
     const buildOutput = runCLI(`build ${host}`);
     const remoteOutput = runCLI(`build ${remote}`);
 
-    expect(buildOutput).toContain("Successfully ran target build");
-    expect(remoteOutput).toContain("Successfully ran target build");
+    expect(buildOutput).toContain('Successfully ran target build');
+    expect(remoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests()) {
       const remoteProcess = await runCommandUntil(
@@ -153,7 +153,7 @@ describe("Independent Deployability", () => {
       );
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
-        (output) => output.includes("All specs passed!")
+        (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(hostE2eResults.pid, hostPort, hostPort + 1);
       await killProcessAndPorts(remoteProcess.pid, remotePort);
