@@ -49,7 +49,7 @@ jobs:
         run: npx nx-cloud@next start-ci-run --fix-tasks="!*check-commit*" --auto-apply-fixes="*format:check*,*astro-docs:validate-links*" --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
 
       - name: sleep
-        run: sleep 1800
+        run: sleep 1801
       - name: Install dependencies
         run: |
           sudo apt-get update
