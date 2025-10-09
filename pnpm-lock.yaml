@@ -3519,6 +3519,9 @@ importers:
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
+      '@nx/rsbuild':
+        specifier: workspace:*
+        version: link:../rsbuild
       nx:
         specifier: workspace:*
         version: link:../nx
