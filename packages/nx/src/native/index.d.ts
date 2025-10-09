@@ -110,6 +110,11 @@ export declare class ProcessMetricsCollector {
    * Returns true if collection was stopped, false if not running
    */
   stopCollection(): boolean
+  /**
+   * Get system information (CPU cores and total memory)
+   * This is separate from the collection interval and meant to be called imperatively
+   */
+  getSystemInfo(): SystemInfo
   /** Register the main CLI process for metrics collection */
   registerMainCliProcess(pid: number): void
   /** Register the daemon process for metrics collection */
@@ -413,6 +418,12 @@ export declare const enum SupportedEditor {
   Windsurf = 3,
   JetBrains = 4,
   Unknown = 5
+}
+
+/** System information (static system-level data) */
+export interface SystemInfo {
+  cpuCores: number
+  totalMemory: number
 }
 
 export interface Target {

@@ -9,7 +9,7 @@ use parking_lot::RwLock;
 use tracing::error;
 
 use crate::native::metrics::collector::MetricsCollector;
-use crate::native::metrics::types::MetricsUpdate;
+use crate::native::metrics::types::{MetricsUpdate, SystemInfo};
 
 /// NAPI wrapper for the process metrics collector
 /// Provides a JavaScript-friendly interface for metrics collection
@@ -55,6 +55,14 @@ impl ProcessMetricsCollector {
                 Err(anyhow::anyhow!("Failed to stop collection: {}", e))
             }
         }
+    }
+
+    /// Get system information (CPU cores and total memory)
+    /// This is separate from the collection interval and meant to be called imperatively
+    #[napi]
+    pub fn get_system_info(&self) -> SystemInfo {
+        let collector = self.collector.read();
+        collector.get_system_info()
     }
 
     /// Register the main CLI process for metrics collection

@@ -168,3 +168,11 @@ pub struct MetricsUpdate {
     pub metrics: Arc<ProcessMetricsSnapshot>,
     pub metadata: Option<Arc<HashMap<String, ProcessMetadata>>>,
 }
+
+/// System information (static system-level data)
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct SystemInfo {
+    pub cpu_cores: u32,
+    pub total_memory: i64,
+}
