@@ -3,6 +3,7 @@ packages:
   - 'e2e/*'
   - 'graph/*'
   - 'nx-dev/*'
+  - 'tools/documentation/*'
   - 'tools/*'
   - 'typedoc-theme'
   - 'astro-docs'

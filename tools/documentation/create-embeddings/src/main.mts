@@ -15,6 +15,12 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import { toString } from 'mdast-util-to-string';
 import { u } from 'unist-builder';
 import { join, relative } from 'path';
+import { unified } from 'unified';
+import rehypeParse from 'rehype-parse';
+import rehypeRemark from 'rehype-remark';
+import remarkStringify from 'remark-stringify';
+import remarkGfm from 'remark-gfm';
+
 let identityMap = {};
 
 const myEnv = loadDotEnvFile();
@@ -125,7 +131,22 @@ class MarkdownEmbeddingSource extends BaseEmbeddingSource {
     public url_partial: string,
     public fileContent?: string
   ) {
-    const path = filePath.replace(/^docs/, '').replace(/\.md?$/, '');
+    let path: string;
+
+    // Check if this is an Astro HTML file
+    if (filePath.includes('astro-docs/dist') && filePath.endsWith('.html')) {
+      // Get path relative to astro-docs root (e.g., dist/concepts/mental-model/index.html)
+      const astroDocsIndex = filePath.indexOf('astro-docs/');
+      if (astroDocsIndex !== -1) {
+        path = filePath.substring(astroDocsIndex + 'astro-docs/'.length);
+      } else {
+        path = filePath;
+      }
+    } else {
+      // Legacy behavior for markdown files
+      path = filePath.replace(/^docs/, '').replace(/\.md?$/, '');
+    }
+
     super(source, path, url_partial);
   }
 
@@ -133,7 +154,16 @@ class MarkdownEmbeddingSource extends BaseEmbeddingSource {
     const contents =
       this.fileContent ?? (await readFile(this.filePath, 'utf8'));
 
-    const { checksum, sections } = processMdxForSearch(contents);
+    let markdown: string;
+
+    // Check if this is HTML (Astro mode)
+    if (this.filePath.endsWith('.html')) {
+      markdown = await htmlToMarkdown(contents);
+    } else {
+      markdown = contents;
+    }
+
+    const { checksum, sections } = processMdxForSearch(markdown);
 
     this.checksum = checksum;
     this.sections = sections;
@@ -482,15 +512,14 @@ function delay(ms: number) {
 }
 
 /**
- * Recursively find all mdoc/md files in Astro content directory
+ * Recursively find all index.html files in Astro dist directory
  */
 async function getAstroPaths(): Promise<WalkEntry[]> {
-  console.log('Using Astro mode - reading from astro-docs/src/content/docs');
-  const files: WalkEntry[] = [];
-  // Navigate from tools/documentation/create-embeddings/src to repo root
+  console.log('Using Astro mode - reading from astro-docs/dist');
   const repoRoot = join(import.meta.dirname, '../../../../');
   const astroDocsRoot = join(repoRoot, 'astro-docs');
-  const contentDir = join(astroDocsRoot, 'src/content/docs');
+  const files: WalkEntry[] = [];
+  const distDir = join(astroDocsRoot, 'dist');
 
   async function walkDir(dir: string) {
     const entries = await readdir(dir, { withFileTypes: true });
@@ -500,33 +529,22 @@ async function getAstroPaths(): Promise<WalkEntry[]> {
 
       if (entry.isDirectory()) {
         await walkDir(fullPath);
-      } else if (entry.name.endsWith('.mdoc') || entry.name.endsWith('.md')) {
-        // Get path relative to astro-docs root (e.g., src/content/docs/concepts/...)
-        const relativePathFromAstroRoot = relative(astroDocsRoot, fullPath);
-
-        // Convert file path to URL - normalize to lowercase and use dashes
-        const relativePath = relative(contentDir, fullPath);
-        const urlPath = relativePath
-          .replace(/\.mdoc?$/, '')
-          .replace(/\\/g, '/')
-          .split('/')
-          .map(segment =>
-            segment
-              .toLowerCase()
-              .replace(/\s+/g, '-')
-              .replace(/_/g, '-')
-          )
-          .join('/');
+      } else if (entry.name === 'index.html') {
+        // Derive URL from directory path
+        // dist/getting-started/index.html -> /docs/getting-started
+        // dist/concepts/mental-model/index.html -> /docs/concepts/mental-model
+        const dirPath = relative(distDir, join(fullPath, '..'));
+        const urlPath = dirPath === '.' ? '' : '/' + dirPath;
 
         files.push({
-          path: relativePathFromAstroRoot,
-          url_partial: `/docs/${urlPath}`
+          path: fullPath,  // Full path for reading the file
+          url_partial: `/docs${urlPath}` || '/docs'
         });
       }
     }
   }
 
-  await walkDir(contentDir);
+  await walkDir(distDir);
   return files;
 }
 
@@ -688,4 +706,46 @@ async function main() {
   await generateEmbeddings();
 }
 
+// <astro-island> can also contain content so we need to make them plain HTML first
+function preprocessAstroIslands(html) {
+  const astroIslandPattern = /<astro-island[^>]*>([\s\S]*?)<\/astro-island>/g;
+
+  let processed = html;
+  let match;
+
+  while ((match = astroIslandPattern.exec(html)) !== null) {
+    const fullIsland = match[0];
+    const islandContent = match[1];
+    const templateMatch = islandContent.match(/<template data-astro-template[^>]*>([\s\S]*?)<\/template>/);
+    if (templateMatch) {
+      const templateContent = templateMatch[1];
+      const visibleContent = islandContent.replace(/<template data-astro-template[^>]*>[\s\S]*?<\/template>/, '');
+      const cleanedVisible = visibleContent.replace(/<!--astro:end-->/, '');
+      const replacement = `<div class="astro-island-content">${cleanedVisible}${templateContent}</div>`;
+      processed = processed.replace(fullIsland, replacement);
+    }
+  }
+  return processed;
+}
+
+async function htmlToMarkdown(html) {
+  const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/);
+  const htmlToProcess = mainMatch ? mainMatch[1] : html;
+
+  const processedHtml = preprocessAstroIslands(htmlToProcess);
+  const file = await unified()
+    .use(rehypeParse, { fragment: true })
+    .use(remarkGfm)
+    .use(rehypeRemark)
+    .use(remarkStringify, {
+      bullet: '-',
+      emphasis: '*',
+      strong: '*',
+      fence: '`',
+      fences: true,
+      incrementListMarker: true
+    })
+    .process(processedHtml);
+  return String(file);
+}
 main().catch((err) => console.error(err));
