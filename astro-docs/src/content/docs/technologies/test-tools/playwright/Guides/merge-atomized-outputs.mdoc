@@ -61,7 +61,10 @@ export default defineConfig({
 export default defineConfig({
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
-    ...(process.env.CI ? [['blob', { outputDir: 'blob-report' }]] : []),
+    // NOTE: depending on your TS config, you might need to use `as const` to prevent type errors
+    ...(process.env.CI
+      ? [['blob', { outputDir: 'blob-report' }] as const]
+      : []),
   ],
   // Your other configuration
 });
