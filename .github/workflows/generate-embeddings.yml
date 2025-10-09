@@ -3,16 +3,7 @@ name: Generate embeddings
 on:
   schedule:
     - cron: "0 5 * * 0,4" # sunday, thursday 5AM
-  workflow_dispatch:
-    inputs:
-      mode:
-        description: 'Source mode for embeddings'
-        required: true
-        type: choice
-        options:
-          - legacy
-          - astro
-        default: legacy
+
 jobs:
   cache-and-install:
     if: github.repository == 'nrwl/nx'
@@ -55,11 +46,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Build docs
+        run: npx nx build astro-docs
+
       - name: Run embeddings script
-        run: |
-          npx nx documentation
-          npx nx build astro-docs
-          node --import tsx tools/documentation/create-embeddings/src/main.mts --mode=${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'legacy' }}
+        run: node --import tsx tools/documentation/create-embeddings/src/main.mts --mode=astro
         env:
             NX_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_URL }}
             NX_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NX_SUPABASE_SERVICE_ROLE_KEY }}
