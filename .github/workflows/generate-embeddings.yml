@@ -56,7 +56,10 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Run embeddings script
-        run: node --import tsx tools/documentation/create-embeddings/src/main.mts --mode=${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'legacy' }}
+        run: |
+          npx nx documentation
+          npx nx build astro-docs
+          node --import tsx tools/documentation/create-embeddings/src/main.mts --mode=${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'legacy' }}
         env:
             NX_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_URL }}
             NX_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NX_SUPABASE_SERVICE_ROLE_KEY }}
