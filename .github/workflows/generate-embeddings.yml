@@ -3,7 +3,7 @@ name: Generate embeddings
 on:
   schedule:
     - cron: "0 5 * * 0,4" # sunday, thursday 5AM
-  workflow_dispatch:
+
 jobs:
   cache-and-install:
     if: github.repository == 'nrwl/nx'
@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: '20.19.0'
+          package-manager-cache: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
@@ -45,8 +46,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Build docs
+        run: npx nx build astro-docs
+
       - name: Run embeddings script
-        run: pnpm exec nx run tools-documentation-create-embeddings:run-node
+        run: node --import tsx tools/documentation/create-embeddings/src/main.mts --mode=astro
         env:
             NX_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_URL }}
             NX_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NX_SUPABASE_SERVICE_ROLE_KEY }}
