@@ -11,7 +11,7 @@ use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
 use crate::native::metrics::types::{
     BatchMetricsSnapshot, BatchRegistration, CollectorConfig, DaemonMetrics,
     IndividualTaskRegistration, MetricsError, MetricsUpdate, ProcessMetadata, ProcessMetrics,
-    ProcessMetricsSnapshot,
+    ProcessMetricsSnapshot, SystemInfo,
 };
 use napi::threadsafe_function::{
     ErrorStrategy::CalleeHandled, ThreadsafeFunction, ThreadsafeFunctionCallMode,
@@ -198,6 +198,15 @@ impl MetricsCollector {
     /// Check if collection is currently running
     pub fn is_collecting(&self) -> bool {
         self.is_collecting.load(Ordering::Acquire)
+    }
+
+    /// Get system information (CPU cores and total memory)
+    pub fn get_system_info(&self) -> SystemInfo {
+        let sys = self.system.lock();
+        SystemInfo {
+            cpu_cores: sys.cpus().len() as u32,
+            total_memory: sys.total_memory() as i64,
+        }
     }
 
     /// Register the main CLI process

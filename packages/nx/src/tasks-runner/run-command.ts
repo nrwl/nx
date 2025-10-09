@@ -57,7 +57,6 @@ import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle'
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
-import { ProcessMetricsLifeCycle } from './life-cycles/process-metrics-life-cycle';
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
@@ -1057,10 +1056,6 @@ export async function invokeTasksRunner({
 export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
-  if (process.env.NX_DEBUG_PROCESS_METRICS === 'true') {
-    // Temporary throwaway life cycle only used for debugging purposes
-    lifeCycles.push(new ProcessMetricsLifeCycle());
-  }
   lifeCycles.push(lifeCycle);
   if (process.env.NX_PERF_LOGGING === 'true') {
     lifeCycles.push(new TaskTimingsLifeCycle());
