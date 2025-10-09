@@ -4,7 +4,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
-import { readFile } from 'fs/promises';
+import { readFile, readdir } from 'fs/promises';
 import 'openai';
 import OpenAI from 'openai';
 import yargs from 'yargs';
@@ -14,14 +14,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toMarkdown } from 'mdast-util-to-markdown';
 import { toString } from 'mdast-util-to-string';
 import { u } from 'unist-builder';
-import mapJson from '../../../../docs/map.json' with { type: 'json' };
-import manifestsCI from '../../../../docs/generated/manifests/ci.json' with { type: 'json' };
-import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' with { type: 'json' };
-import manifestsNx from '../../../../docs/generated/manifests/nx.json' with { type: 'json' };
-import manifestsPackages from '../../../../docs/generated/manifests/new-nx-api.json' with { type: 'json' };
-import manifestsTags from '../../../../docs/generated/manifests/tags.json' with { type: 'json' };
-import communityPlugins from '../../../../community/approved-plugins.json' with { type: 'json' };
-
+import { join, relative } from 'path';
 let identityMap = {};
 
 const myEnv = loadDotEnvFile();
@@ -155,57 +148,71 @@ class MarkdownEmbeddingSource extends BaseEmbeddingSource {
 type EmbeddingSource = MarkdownEmbeddingSource;
 
 async function generateEmbeddings() {
-  const argv = await yargs(process.argv).option('refresh', {
-    alias: 'r',
-    description: 'Refresh data',
-    type: 'boolean'
-  }).argv;
+  const argv = await yargs(process.argv)
+    .option('refresh', {
+      alias: 'r',
+      description: 'Refresh data',
+      type: 'boolean'
+    })
+    .option('local', {
+      alias: 'l',
+      description: 'Write to local JSON files instead of Supabase',
+      type: 'boolean'
+    })
+    .option('mode', {
+      alias: 'm',
+      description: 'Source mode: astro or legacy',
+      type: 'string',
+      choices: ['astro', 'legacy'],
+      default: 'legacy'
+    })
+    .argv;
 
   const shouldRefresh = argv.refresh;
+  const isLocal = argv.local;
+  const sourceMode = argv.mode as 'astro' | 'legacy';
 
-  if (!process.env.NX_NEXT_PUBLIC_SUPABASE_URL) {
-    throw new Error(
-      'Environment variable NX_NEXT_PUBLIC_SUPABASE_URL is required: skipping embeddings generation'
-    );
-  }
-
-  if (!process.env.NX_SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error(
-      'Environment variable NX_SUPABASE_SERVICE_ROLE_KEY is required: skipping embeddings generation'
-    );
-  }
-
-  if (!process.env.NX_OPENAI_KEY) {
-    throw new Error(
-      'Environment variable NX_OPENAI_KEY is required: skipping embeddings generation'
-    );
-  }
-
-  const supabaseClient = createClient(
-    process.env.NX_NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NX_SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false
-      }
+  // Skip validation when in local mode
+  if (!isLocal) {
+    if (!process.env.NX_NEXT_PUBLIC_SUPABASE_URL) {
+      throw new Error(
+        'Environment variable NX_NEXT_PUBLIC_SUPABASE_URL is required: skipping embeddings generation'
+      );
     }
-  );
 
-  // Ensures that indentityMap gets populated first
-  let allFilesPaths = [...getAllFilesWithItemList(manifestsNx)];
+    if (!process.env.NX_SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error(
+        'Environment variable NX_SUPABASE_SERVICE_ROLE_KEY is required: skipping embeddings generation'
+      );
+    }
 
-  allFilesPaths = [
-    ...allFilesPaths,
-    ...getAllFilesFromMapJson(mapJson),
-    ...getAllFilesWithItemList(manifestsCI),
-    ...getAllFilesWithItemList(manifestsExtending),
-    ...getAllFilesWithItemList(manifestsPackages),
-    ...getAllFilesWithItemList(manifestsTags)
-  ].filter(
-    (entry) =>
-      !entry.path.includes('sitemap') && !entry.path.includes('deprecated')
-  );
+    if (!process.env.NX_OPENAI_KEY) {
+      throw new Error(
+        'Environment variable NX_OPENAI_KEY is required: skipping embeddings generation'
+      );
+    }
+  }
+
+  const supabaseClient = !isLocal
+    ? createClient(
+        process.env.NX_NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NX_SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false
+          }
+        }
+      )
+    : null;
+
+  // Local storage for JSON output
+  const localPages: any[] = [];
+  const localPageSections: any[] = [];
+  let nextPageId = 1;
+  let nextSectionId = 1;
+
+  const allFilesPaths: WalkEntry[] = sourceMode === 'astro' ? await getAstroPaths() : await getLegacyPaths();
 
   const embeddingSources: EmbeddingSource[] = [
     ...allFilesPaths.map((entry) => {
@@ -215,7 +222,7 @@ async function generateEmbeddings() {
         entry.url_partial
       );
     }),
-    ...createMarkdownForCommunityPlugins().map((content, index) => {
+    ...(await createMarkdownForCommunityPlugins()).map((content, index) => {
       return new MarkdownEmbeddingSource(
         'community-plugins',
         '/community/approved-plugins.json#' + index,
@@ -239,99 +246,44 @@ async function generateEmbeddings() {
     try {
       const { checksum, sections } = await embeddingSource.load();
 
-      // Check for existing page in DB and compare checksums
-      const { error: fetchPageError, data: existingPage } = await supabaseClient
-        .from('nods_page')
-        .select('id, path, checksum')
-        .filter('path', 'eq', path)
-        .limit(1)
-        .maybeSingle();
+      if (isLocal) {
+        // Local mode: skip queries, just accumulate data
+        const pageId = nextPageId++;
 
-      if (fetchPageError) {
-        throw fetchPageError;
-      }
+        console.log(
+          `#${index}: [${path}] Adding ${sections.length} page sections (with embeddings)`
+        );
+        console.log(
+          `${embeddingSources.length - index - 1} pages remaining to process.`
+        );
 
-      // We use checksum to determine if this page & its sections need to be regenerated
-      if (!shouldRefresh && existingPage?.checksum === checksum) {
-        continue;
-      }
+        // Create page record (will update checksum after all sections succeed)
+        const pageRecord = {
+          id: pageId,
+          checksum: null,
+          path,
+          url_partial,
+          type,
+          source
+        };
 
-      if (existingPage) {
-        if (!shouldRefresh) {
-          console.log(
-            `#${index}: [${path}] Docs have changed, removing old page sections and their embeddings`
-          );
-        } else {
-          console.log(
-            `#${index}: [${path}] Refresh flag set, removing old page sections and their embeddings`
-          );
-        }
+        for (const { slug, heading, content } of sections) {
+          // OpenAI recommends replacing newlines with spaces for best results (specific to embeddings)
+          const input = content.replace(/\n/g, ' ');
 
-        const { error: deletePageSectionError } = await supabaseClient
-          .from('nods_page_section')
-          .delete()
-          .filter('page_id', 'eq', existingPage.id);
+          try {
+            // For local mode, skip actual embedding generation
+            // Just create placeholder data with same structure
+            const longer_heading =
+              source !== 'community-plugins'
+                ? removeTitleDescriptionFromHeading(
+                  createLongerHeading(heading, url_partial)
+                )
+                : heading;
 
-        if (deletePageSectionError) {
-          throw deletePageSectionError;
-        }
-      }
-
-      // Create/update page record. Intentionally clear checksum until we
-      // have successfully generated all page sections.
-      const { error: upsertPageError, data: page } = await supabaseClient
-        .from('nods_page')
-        .upsert(
-          {
-            checksum: null,
-            path,
-            url_partial,
-            type,
-            source
-          },
-          { onConflict: 'path' }
-        )
-        .select()
-        .limit(1)
-        .single();
-
-      if (upsertPageError) {
-        throw upsertPageError;
-      }
-
-      console.log(
-        `#${index}: [${path}] Adding ${sections.length} page sections (with embeddings)`
-      );
-      console.log(
-        `${embeddingSources.length - index - 1} pages remaining to process.`
-      );
-
-      for (const { slug, heading, content } of sections) {
-        // OpenAI recommends replacing newlines with spaces for best results (specific to embeddings)
-        const input = content.replace(/\n/g, ' ');
-
-        try {
-          const openai = new OpenAI({
-            apiKey: process.env.NX_OPENAI_KEY
-          });
-          const embeddingResponse = await openai.embeddings.create({
-            model: 'text-embedding-ada-002',
-            input
-          });
-
-          const [responseData] = embeddingResponse.data;
-
-          const longer_heading =
-            source !== 'community-plugins'
-              ? removeTitleDescriptionFromHeading(
-                createLongerHeading(heading, url_partial)
-              )
-              : heading;
-
-          const { error: insertPageSectionError } = await supabaseClient
-            .from('nods_page_section')
-            .insert({
-              page_id: page.id,
+            localPageSections.push({
+              id: nextSectionId++,
+              page_id: pageId,
               slug,
               heading:
                 heading?.length && heading !== null && heading !== 'null'
@@ -340,40 +292,161 @@ async function generateEmbeddings() {
               longer_heading,
               content,
               url_partial,
-              token_count: embeddingResponse.usage.total_tokens,
-              embedding: responseData.embedding
-            })
-            .select()
-            .limit(1)
-            .single();
+              token_count: 0, // Placeholder
+              embedding: [] // Placeholder
+            });
+          } catch (err) {
+            console.error(
+              `Failed to process section for '${path}' starting with '${input.slice(
+                0,
+                40
+              )}...'`
+            );
+            throw err;
+          }
+        }
 
-          if (insertPageSectionError) {
-            throw insertPageSectionError;
+        // Set page checksum now that all sections succeeded
+        pageRecord.checksum = checksum;
+        localPages.push(pageRecord);
+      } else {
+        // Supabase mode: existing logic
+        // Check for existing page in DB and compare checksums
+        const { error: fetchPageError, data: existingPage } = await supabaseClient
+          .from('nods_page')
+          .select('id, path, checksum')
+          .filter('path', 'eq', path)
+          .limit(1)
+          .maybeSingle();
+
+        if (fetchPageError) {
+          throw fetchPageError;
+        }
+
+        // We use checksum to determine if this page & its sections need to be regenerated
+        if (!shouldRefresh && existingPage?.checksum === checksum) {
+          continue;
+        }
+
+        if (existingPage) {
+          if (!shouldRefresh) {
+            console.log(
+              `#${index}: [${path}] Docs have changed, removing old page sections and their embeddings`
+            );
+          } else {
+            console.log(
+              `#${index}: [${path}] Refresh flag set, removing old page sections and their embeddings`
+            );
           }
 
-          // Add delay after each request
-          await delay(500); // delay of 0.5 second
-        } catch (err) {
-          // TODO: decide how to better handle failed embeddings
-          console.error(
-            `Failed to generate embeddings for '${path}' page section starting with '${input.slice(
-              0,
-              40
-            )}...'`
-          );
+          const { error: deletePageSectionError } = await supabaseClient
+            .from('nods_page_section')
+            .delete()
+            .filter('page_id', 'eq', existingPage.id);
 
-          throw err;
+          if (deletePageSectionError) {
+            throw deletePageSectionError;
+          }
         }
-      }
 
-      // Set page checksum so that we know this page was stored successfully
-      const { error: updatePageError } = await supabaseClient
-        .from('nods_page')
-        .update({ checksum })
-        .filter('id', 'eq', page.id);
+        // Create/update page record. Intentionally clear checksum until we
+        // have successfully generated all page sections.
+        const { error: upsertPageError, data: page } = await supabaseClient
+          .from('nods_page')
+          .upsert(
+            {
+              checksum: null,
+              path,
+              url_partial,
+              type,
+              source
+            },
+            { onConflict: 'path' }
+          )
+          .select()
+          .limit(1)
+          .single();
 
-      if (updatePageError) {
-        throw updatePageError;
+        if (upsertPageError) {
+          throw upsertPageError;
+        }
+
+        console.log(
+          `#${index}: [${path}] Adding ${sections.length} page sections (with embeddings)`
+        );
+        console.log(
+          `${embeddingSources.length - index - 1} pages remaining to process.`
+        );
+
+        for (const { slug, heading, content } of sections) {
+          // OpenAI recommends replacing newlines with spaces for best results (specific to embeddings)
+          const input = content.replace(/\n/g, ' ');
+
+          try {
+            const openai = new OpenAI({
+              apiKey: process.env.NX_OPENAI_KEY
+            });
+            const embeddingResponse = await openai.embeddings.create({
+              model: 'text-embedding-ada-002',
+              input
+            });
+
+            const [responseData] = embeddingResponse.data;
+
+            const longer_heading =
+              source !== 'community-plugins'
+                ? removeTitleDescriptionFromHeading(
+                  createLongerHeading(heading, url_partial)
+                )
+                : heading;
+
+            const { error: insertPageSectionError } = await supabaseClient
+              .from('nods_page_section')
+              .insert({
+                page_id: page.id,
+                slug,
+                heading:
+                  heading?.length && heading !== null && heading !== 'null'
+                    ? heading
+                    : longer_heading,
+                longer_heading,
+                content,
+                url_partial,
+                token_count: embeddingResponse.usage.total_tokens,
+                embedding: responseData.embedding
+              })
+              .select()
+              .limit(1)
+              .single();
+
+            if (insertPageSectionError) {
+              throw insertPageSectionError;
+            }
+
+            // Add delay after each request
+            await delay(500); // delay of 0.5 second
+          } catch (err) {
+            // TODO: decide how to better handle failed embeddings
+            console.error(
+              `Failed to generate embeddings for '${path}' page section starting with '${input.slice(
+                0,
+                40
+              )}...'`
+            );
+
+            throw err;
+          }
+        }
+
+        // Set page checksum so that we know this page was stored successfully
+        const { error: updatePageError } = await supabaseClient
+          .from('nods_page')
+          .update({ checksum })
+          .filter('id', 'eq', page.id);
+
+        if (updatePageError) {
+          throw updatePageError;
+        }
       }
     } catch (err) {
       console.error(
@@ -383,11 +456,78 @@ async function generateEmbeddings() {
     }
   }
 
+  // Write local JSON files if in local mode
+  if (isLocal) {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+
+    const tmpDir = path.join(process.cwd(), 'tmp');
+    await fs.mkdir(tmpDir, { recursive: true });
+
+    const pagesFile = path.join(tmpDir, `nods_page_${sourceMode}.json`);
+    const sectionsFile = path.join(tmpDir, `nods_page_section_${sourceMode}.json`);
+
+    await fs.writeFile(pagesFile, JSON.stringify(localPages, null, 2));
+    await fs.writeFile(sectionsFile, JSON.stringify(localPageSections, null, 2));
+
+    console.log(`\nWrote ${localPages.length} pages to ${pagesFile}`);
+    console.log(`Wrote ${localPageSections.length} sections to ${sectionsFile}`);
+  }
+
   console.log('Embedding generation complete');
 }
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Recursively find all mdoc/md files in Astro content directory
+ */
+async function getAstroPaths(): Promise<WalkEntry[]> {
+  console.log('Using Astro mode - reading from astro-docs/src/content/docs');
+  const files: WalkEntry[] = [];
+  // Navigate from tools/documentation/create-embeddings/src to repo root
+  const repoRoot = join(import.meta.dirname, '../../../../');
+  const astroDocsRoot = join(repoRoot, 'astro-docs');
+  const contentDir = join(astroDocsRoot, 'src/content/docs');
+
+  async function walkDir(dir: string) {
+    const entries = await readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        await walkDir(fullPath);
+      } else if (entry.name.endsWith('.mdoc') || entry.name.endsWith('.md')) {
+        // Get path relative to astro-docs root (e.g., src/content/docs/concepts/...)
+        const relativePathFromAstroRoot = relative(astroDocsRoot, fullPath);
+
+        // Convert file path to URL - normalize to lowercase and use dashes
+        const relativePath = relative(contentDir, fullPath);
+        const urlPath = relativePath
+          .replace(/\.mdoc?$/, '')
+          .replace(/\\/g, '/')
+          .split('/')
+          .map(segment =>
+            segment
+              .toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace(/_/g, '-')
+          )
+          .join('/');
+
+        files.push({
+          path: relativePathFromAstroRoot,
+          url_partial: `/docs/${urlPath}`
+        });
+      }
+    }
+  }
+
+  await walkDir(contentDir);
+  return files;
 }
 
 function getAllFilesFromMapJson(doc): WalkEntry[] {
@@ -482,10 +622,38 @@ function createLongerHeading(
   }
 }
 
-function createMarkdownForCommunityPlugins(): {
+async function getLegacyPaths(): Promise<WalkEntry[]> {
+  const mapJson = await import( '../../../../docs/map.json').then((m) => m.default);
+  const manifestsCI = await import('../../../../docs/generated/manifests/ci.json' ).then((m) => m.default);
+  const manifestsExtending =await import ('../../../../docs/generated/manifests/extending-nx.json' ).then((m) => m.default);
+  const manifestsNx = await import('../../../../docs/generated/manifests/nx.json' ).then((m) => m.default);
+  const manifestsPackages = await import( '../../../../docs/generated/manifests/new-nx-api.json' ).then((m) => m.default);
+  const manifestsTags = await import('../../../../docs/generated/manifests/tags.json' ).then((m) => m.default);
+
+  console.log('Using legacy mode - reading from docs/ and manifests');
+  // Ensures that indentityMap gets populated first
+  let legacyPaths = [...getAllFilesWithItemList(manifestsNx)];
+
+  legacyPaths = [
+    ...legacyPaths,
+    ...getAllFilesFromMapJson(mapJson),
+    ...getAllFilesWithItemList(manifestsCI),
+    ...getAllFilesWithItemList(manifestsExtending),
+    ...getAllFilesWithItemList(manifestsPackages),
+    ...getAllFilesWithItemList(manifestsTags)
+  ].filter(
+    (entry) =>
+      !entry.path.includes('sitemap') && !entry.path.includes('deprecated')
+  );
+
+  return legacyPaths;
+}
+
+async function createMarkdownForCommunityPlugins(): Promise<{
   text: string;
   url: string;
-}[] {
+}[]> {
+  const communityPlugins = await import( '../../../../community/approved-plugins.json' ).then(m => m.default);
   return communityPlugins.map((plugin) => {
     return {
       text: `## ${plugin.name} plugin\n\nThere is a ${plugin.name} community plugin.\n\nHere is the description for it: ${plugin.description}\n\nHere is the link to it: [${plugin.url}](${plugin.url})\n\nHere is the list of all the plugins that exist for Nx: https://nx.dev/plugin-registry`,
