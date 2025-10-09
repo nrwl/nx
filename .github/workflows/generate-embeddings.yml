@@ -56,7 +56,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Run embeddings script
-        run: pnpm exec nx run tools-documentation-create-embeddings:run-node --args="--mode=${{ inputs.mode || 'legacy' }}"
+        run: pnpm exec nx run tools-documentation-create-embeddings:run-node --args="--mode=${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'legacy' }}"
         env:
             NX_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_URL }}
             NX_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NX_SUPABASE_SERVICE_ROLE_KEY }}
