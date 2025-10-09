@@ -10,7 +10,6 @@ import {
   readProjectConfiguration,
   updateNxJson,
   updateProjectConfiguration,
-  type CreateNodes,
   type CreateNodesV2,
   type ExpandedPluginConfiguration,
   type NxJsonConfiguration,
@@ -62,7 +61,7 @@ class ExecutorToPluginMigrator<T> {
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
-  #createNodes?: CreateNodes<T>;
+  #createNodes?: CreateNodesV2<T>;
   #createNodesV2?: CreateNodesV2<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
   #skippedProjects: Set<string>;
@@ -74,7 +73,7 @@ class ExecutorToPluginMigrator<T> {
     pluginPath: string,
     pluginOptionsBuilder: PluginOptionsBuilder<T>,
     postTargetTransformer: PostTargetTransformer,
-    createNodes?: CreateNodes<T>,
+    createNodes?: CreateNodesV2<T>,
     createNodesV2?: CreateNodesV2<T>,
     specificProjectToMigrate?: string,
     filters?: {
@@ -381,7 +380,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   pluginPath: string,
-  createNodes: CreateNodes<T>,
+  createNodes: CreateNodesV2<T>,
   defaultPluginOptions: T,
   migrations: Array<{
     executors: string[];
@@ -410,7 +409,7 @@ async function migrateProjects<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   pluginPath: string,
-  createNodes: CreateNodes<T>,
+  createNodes: CreateNodesV2<T>,
   createNodesV2: CreateNodesV2<T>,
   defaultPluginOptions: T,
   migrations: Array<{
@@ -487,7 +486,7 @@ async function addPluginRegistrations<T>(
   tree: Tree,
   projects: Map<string, Record<string, string>>,
   pluginPath: string,
-  createNodes: CreateNodes | undefined,
+  createNodes: CreateNodesV2 | undefined,
   createNodesV2: CreateNodesV2 | undefined,
   defaultPluginOptions: T,
   projectGraph: ProjectGraph
@@ -590,7 +589,7 @@ async function getCreateNodesResultsForPlugin(
   tree: Tree,
   pluginConfiguration: ExpandedPluginConfiguration,
   pluginPath: string,
-  createNodes: CreateNodes | undefined,
+  createNodes: CreateNodesV2 | undefined,
   createNodesV2: CreateNodesV2 | undefined,
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {

@@ -76,6 +76,7 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
+      "preserveMatchingDependencyRanges": false,
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
@@ -161,7 +162,10 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
-      ]
+      ],
+      "options": {
+        "args": ["--forceExit"]
+      }
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
@@ -328,7 +332,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 1,
+  "bust": 3,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true

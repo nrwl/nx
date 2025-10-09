@@ -313,7 +313,9 @@ describe('nx release', () => {
       (output) => output.includes(`warn --- http address`)
     );
 
-    const versionOutput2 = runCLI(`release version premajor --preid next`); // version using semver keyword this time (and custom preid)
+    const versionOutput2 = runCLI(
+      `release version premajor --preid next --gitTag`
+    ); // version using semver keyword this time (and custom preid)
 
     expect(
       versionOutput2.match(/Running release version for project: my-pkg-\d*/g)
@@ -698,7 +700,7 @@ describe('nx release', () => {
       ### 🚀 Features
 
 
-      NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for {releaseGroupName}-v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -706,7 +708,7 @@ describe('nx release', () => {
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for {releaseGroupName}-v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -714,7 +716,7 @@ describe('nx release', () => {
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for {releaseGroupName}-v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0

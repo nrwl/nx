@@ -49,6 +49,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {},
         },
         context
@@ -91,6 +92,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: false,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {},
         },
         context
@@ -132,6 +134,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {},
         },
         context
@@ -173,6 +176,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {},
         },
         context
@@ -211,6 +215,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {
             outExtension: {
               '.js': '.mjs',
@@ -251,6 +256,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {
             outExtension: {
               '.js': '.js',
@@ -292,6 +298,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {
             outExtension: {
               '.js': '.cjs',
@@ -334,6 +341,7 @@ describe('buildEsbuildOptions', () => {
           singleEntry: true,
           outputFileName: 'index.js',
           external: ['foo'],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {
             external: ['bar'],
           },
@@ -373,6 +381,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: ['foo'],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {},
         },
         context
@@ -387,6 +396,86 @@ describe('buildEsbuildOptions', () => {
       tsconfig:
         'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: undefined,
+      outExtension: {
+        '.js': '.js',
+      },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+    });
+  });
+
+  it('should exclude packages from external list using excludeFromExternal', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          assets: [],
+          singleEntry: true,
+          outputFileName: 'index.js',
+          external: ['foo', 'bar', 'baz'],
+          excludeFromExternal: ['bar'],
+          userDefinedBuildOptions: {},
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outfile: 'dist/apps/myapp/index.js',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      external: ['foo', 'baz'],
+      outExtension: {
+        '.js': '.js',
+      },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+    });
+  });
+
+  it('should exclude packages from both user-defined and Nx external lists', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          assets: [],
+          singleEntry: true,
+          outputFileName: 'index.js',
+          external: ['foo', 'fsevents'],
+          excludeFromExternal: ['fsevents'],
+          userDefinedBuildOptions: {
+            external: ['bar', 'fsevents'],
+          },
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outfile: 'dist/apps/myapp/index.js',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      external: ['bar', 'foo'],
       outExtension: {
         '.js': '.js',
       },
@@ -412,6 +501,7 @@ describe('buildEsbuildOptions', () => {
           singleEntry: true,
           sourcemap: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {},
         },
         context
@@ -450,6 +540,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
+          excludeFromExternal: [],
           userDefinedBuildOptions: {},
         },
         context
@@ -491,6 +582,7 @@ describe('buildEsbuildOptions', () => {
             sourcemap: true,
           },
           external: [],
+          excludeFromExternal: [],
         },
         context
       )
@@ -532,6 +624,7 @@ describe('buildEsbuildOptions', () => {
           },
           sourcemap: true,
           external: [],
+          excludeFromExternal: [],
         },
         context
       )

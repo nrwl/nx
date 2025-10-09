@@ -44,7 +44,13 @@ export async function applicationGeneratorInternal(
   updateTsConfig(tree, options);
 
   if (!options.skipPackageJson) {
+    // Install dependencies to root package.json
     tasks.push(ensureDependencies(tree));
+
+    // Install dependencies to project's package.json (for PM Workspaces)
+    if (tree.exists(`${options.appProjectRoot}/package.json`)) {
+      tasks.push(ensureDependencies(tree, options.appProjectRoot));
+    }
   }
 
   if (!options.skipFormat) {

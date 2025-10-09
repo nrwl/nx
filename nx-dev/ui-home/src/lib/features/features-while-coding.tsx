@@ -29,9 +29,7 @@ export function FeaturesWhileCoding(): ReactElement {
               project structure,{' '}
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/run-tasks?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/features/run-tasks?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/features/run-tasks?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >
@@ -40,9 +38,7 @@ export function FeaturesWhileCoding(): ReactElement {
               with intelligent{' '}
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/cache-task-results?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/features/cache-task-results?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/features/cache-task-results?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >
@@ -51,9 +47,7 @@ export function FeaturesWhileCoding(): ReactElement {
               and a clean{' '}
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/guides/tasks--caching/terminal-ui?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/recipes/running-tasks/terminal-ui?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/guides/tasks--caching/terminal-ui?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >
@@ -64,9 +58,7 @@ export function FeaturesWhileCoding(): ReactElement {
             <p>
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/concepts/nx-plugins?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/concepts/nx-plugins?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/concepts/nx-plugins?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >
@@ -80,9 +72,7 @@ export function FeaturesWhileCoding(): ReactElement {
               Your{' '}
               <TextLink
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/enhance-ai?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/features/enhance-AI?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/features/enhance-ai?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 className="decoration-2"
               >
@@ -96,9 +86,7 @@ export function FeaturesWhileCoding(): ReactElement {
             <div className="mt-10 flex gap-x-6">
               <Link
                 href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                    : '/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+                  '/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
                 }
                 title="Find out about Nx"
                 prefetch={false}

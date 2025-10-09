@@ -17,11 +17,11 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-| Option          | Type                                             | Description                                                                                                          |
-| --------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `--agents`      | `claude`, `codex`, `copilot`, `cursor`, `gemini` | List of AI agents to set up.                                                                                         |
-| `--check`       | boolean                                          | Check if any configured agents are out of date and need to be updated. Does not make any changes. (Default: `false`) |
-| `--help`        | boolean                                          | Show help.                                                                                                           |
-| `--interactive` | boolean                                          | When false disables interactive input prompts for options. (Default: `true`)                                         |
-| `--verbose`     | boolean                                          | Prints additional information about the commands (e.g., stack traces).                                               |
-| `--version`     | boolean                                          | Show version number.                                                                                                 |
+| Option          | Type                                             | Description                                                                                                                                                                            |
+| --------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--agents`      | `claude`, `codex`, `copilot`, `cursor`, `gemini` | List of AI agents to set up.                                                                                                                                                           |
+| `--check`       | `outdated`, `all`                                | Check agent configurations. Use --check or --check=outdated to check only configured agents, or --check=all to include unconfigured/partial configurations. Does not make any changes. |
+| `--help`        | boolean                                          | Show help.                                                                                                                                                                             |
+| `--interactive` | boolean                                          | When false disables interactive input prompts for options. (Default: `true`)                                                                                                           |
+| `--verbose`     | boolean                                          | Prints additional information about the commands (e.g., stack traces).                                                                                                                 |
+| `--version`     | boolean                                          | Show version number.                                                                                                                                                                   |

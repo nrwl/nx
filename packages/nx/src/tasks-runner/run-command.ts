@@ -144,7 +144,7 @@ async function getTerminalOutputLifeCycle(
         pinnedTasks.push(mainContinuousDependencies[0]);
       }
       const [, target] = mainTaskId.split(':');
-      titleText = `Running 1 ${target} task`;
+      titleText = `1 ${target} task`;
       if (tasks.length > 1) {
         const dependentTasksCount = tasks.length - 1;
         const dependentTaskText =
@@ -155,7 +155,7 @@ async function getTerminalOutputLifeCycle(
       const mainTasksCount = projectNames.length;
       const targetText = nxArgs.targets.join(', ');
       const mainTaskText = mainTasksCount === 1 ? 'task' : 'tasks';
-      titleText = `Running ${mainTasksCount} ${targetText} ${mainTaskText}`;
+      titleText = `${mainTasksCount} ${targetText} ${mainTaskText}`;
       if (tasks.length > projectNames.length) {
         const dependentTasksCount = tasks.length - projectNames.length;
         const dependentTaskText =

@@ -74,6 +74,12 @@ To try out the generator in dry-run mode, use the following command:
 npx nx g @myorg/recommended:library test-library --dry-run
 ```
 
+{% aside type="caution" title="Use the package.json name" %}
+When referencing your plugin, you must use the name defined in `tools/recommended/package.json`.
+In this example, we're using `@myorg/recommended` as the plugin name.
+If your package.json has a different name, adjust the command accordingly.
+{% /aside %}
+
 Remove the `--dry-run` flag to actually create a new project.
 
 ### Add Generator Options

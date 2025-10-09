@@ -1,5 +1,4 @@
 import {
-  type CreateNodes,
   type CreateNodesV2,
   type PluginConfiguration,
   type Tree,
@@ -45,7 +44,7 @@ export async function addE2eCiTargetDefaults(
   }
 
   const resolvedE2ePlugin: {
-    createNodes?: CreateNodes;
+    createNodes?: CreateNodesV2;
     createNodesV2?: CreateNodesV2;
   } = await import(e2ePlugin);
   const e2ePluginGlob =
