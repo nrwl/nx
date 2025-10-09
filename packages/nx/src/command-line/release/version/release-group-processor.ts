@@ -866,7 +866,7 @@ export class ReleaseGroupProcessor {
       (releaseGroupVersionConfig?.updateDependents as
         | 'auto'
         | 'always'
-        | 'never') || 'auto';
+        | 'never') || 'always';
 
     // Only update dependencies for dependents if the group's updateDependents is 'auto' or 'always'
     if (updateDependents === 'auto' || updateDependents === 'always') {

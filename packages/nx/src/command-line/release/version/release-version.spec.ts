@@ -587,7 +587,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
-                  // No value for updateDependents, should default to 'auto'
+                  // No value for updateDependents, should default to 'always'
                 },
               },
               undefined,

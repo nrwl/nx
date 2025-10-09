@@ -202,7 +202,7 @@ export class ReleaseGraph {
 
         const updateDependents =
           (group.version as NxReleaseVersionConfiguration)?.updateDependents ||
-          'auto';
+          'always';
         this.projectToUpdateDependentsSetting.set(project, updateDependents);
       }
     }
@@ -399,7 +399,7 @@ export class ReleaseGraph {
 
   /**
    * Apply dependency-aware filtering that considers updateDependents configuration.
-   * This includes transitive dependents when updateDependents='auto'.
+   * This includes transitive dependents based on updateDependents setting ('always' by default, or 'auto').
    */
   private applyDependencyAwareFiltering(): void {
     // Track the original filtered projects before adding dependents
