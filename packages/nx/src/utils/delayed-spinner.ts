@@ -1,3 +1,4 @@
+import { glob } from '../devkit-exports';
 import { isCI } from './is-ci';
 import { globalSpinner } from './spinner';
 
@@ -34,7 +35,7 @@ export class DelayedSpinner {
         this.lastMessage = message;
         if (!SHOULD_SHOW_SPINNERS) {
           console.warn(this.lastMessage);
-        } else {
+        } else if (!globalSpinner.isSpinning()) {
           this.spinner = globalSpinner.start(this.lastMessage);
         }
       }, delay).unref()
