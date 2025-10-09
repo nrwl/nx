@@ -1,6 +1,6 @@
 import { join, basename } from 'node:path';
 import {
-  CreateNodesContext,
+  CreateNodesContextV2,
   ProjectConfiguration,
   TargetConfiguration,
 } from '@nx/devkit';
@@ -32,7 +32,7 @@ export async function buildDotNetTargets(
   projectRoot: string,
   projectFiles: string[],
   options: NormalizedOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<DotNetTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
   const targets: ProjectConfiguration['targets'] = {};

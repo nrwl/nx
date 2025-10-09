@@ -1831,7 +1831,17 @@
     "description": "The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.",
     "documents": [],
     "executors": [],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Initialize .NET support in an Nx workspace",
+        "file": "generated/packages/dotnet/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/packages/dotnet/dist/generators/init/schema.json",
+        "path": "dotnet/generators/init",
+        "type": "generator"
+      }
+    ],
     "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "dotnet",
