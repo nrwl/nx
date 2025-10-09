@@ -20,6 +20,7 @@ import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkStringify from 'remark-stringify';
 import remarkGfm from 'remark-gfm';
+import { workspaceRoot } from '@nx/devkit';
 
 let identityMap = {};
 
@@ -516,8 +517,7 @@ function delay(ms: number) {
  */
 async function getAstroPaths(): Promise<WalkEntry[]> {
   console.log('Using Astro mode - reading from astro-docs/dist');
-  const repoRoot = join(import.meta.dirname, '../../../../');
-  const astroDocsRoot = join(repoRoot, 'astro-docs');
+  const astroDocsRoot = join(workspaceRoot, 'astro-docs');
   const files: WalkEntry[] = [];
   const distDir = join(astroDocsRoot, 'dist');
 
@@ -707,13 +707,13 @@ async function main() {
 }
 
 // <astro-island> can also contain content so we need to make them plain HTML first
-function preprocessAstroIslands(html) {
+function preprocessAstroIslands(html: string): string {
   const astroIslandPattern = /<astro-island[^>]*>([\s\S]*?)<\/astro-island>/g;
 
   let processed = html;
   let match;
 
-  while ((match = astroIslandPattern.exec(html)) !== null) {
+  while ((match = astroIslandPattern.exec(processed)) !== null) {
     const fullIsland = match[0];
     const islandContent = match[1];
     const templateMatch = islandContent.match(/<template data-astro-template[^>]*>([\s\S]*?)<\/template>/);
@@ -728,10 +728,9 @@ function preprocessAstroIslands(html) {
   return processed;
 }
 
-async function htmlToMarkdown(html) {
+async function htmlToMarkdown(html:string): Promise<string> {
   const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/);
   const htmlToProcess = mainMatch ? mainMatch[1] : html;
-
   const processedHtml = preprocessAstroIslands(htmlToProcess);
   const file = await unified()
     .use(rehypeParse, { fragment: true })
