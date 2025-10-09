@@ -2,7 +2,7 @@
 const { withNx } = require('@nx/next/plugins/with-nx');
 const redirectRules = require('./redirect-rules');
 
-if (!process.env.NEXT_PUBLIC_ASTRO_URL) {
+if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
   // If we're building for production throw error as each env must set this value.
   if (process.env.NODE_ENV === 'production') {
     throw new Error(

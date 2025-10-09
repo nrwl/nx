@@ -76,6 +76,7 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
+      "preserveMatchingDependencyRanges": false,
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true

@@ -29,12 +29,11 @@ export function isValidSemverSpecifier(specifier: string): boolean {
   );
 }
 
-// https://github.com/unjs/changelogen/blob/main/src/semver.ts
 export function determineSemverChange(
   relevantCommits: Map<
     string,
     { commit: GitCommit; isProjectScopedCommit: boolean }[]
-  >, // <projectName, commits>
+  >,
   config: NxReleaseConfig['conventionalCommits']
 ): Map<string, SemverSpecifier | null> {
   const semverChangePerProject: Map<string, SemverSpecifier | null> = new Map();
@@ -43,8 +42,8 @@ export function determineSemverChange(
 
     for (const { commit, isProjectScopedCommit } of relevantCommit) {
       if (!isProjectScopedCommit) {
-        // commit is relevant to the project, but not directly, report minor change
-        highestChange = Math.max(SemverSpecifier.MINOR, highestChange ?? 0);
+        // commit is relevant to the project, but not directly, report patch change to match side-effectful bump behavior in update dependents in release-group-processor
+        highestChange = Math.max(SemverSpecifier.PATCH, highestChange ?? 0);
         continue;
       }
       const semverType = config.types[commit.type]?.semverBump;
