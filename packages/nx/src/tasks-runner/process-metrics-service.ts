@@ -6,6 +6,7 @@ import {
   ProcessMetricsSnapshot,
   BatchMetricsSnapshot,
   MetricsUpdate,
+  SystemInfo,
 } from '../native';
 import { getDaemonProcessIdSync } from '../daemon/cache';
 
@@ -16,6 +17,7 @@ export type {
   ProcessMetricsSnapshot,
   BatchMetricsSnapshot,
   MetricsUpdate,
+  SystemInfo,
 };
 
 export type MetricsCallback = (event: MetricsUpdate) => void;
@@ -131,6 +133,18 @@ class ProcessMetricsService {
       this.collector?.registerDaemonProcess(pid);
     } catch {
       // Silent failure - metrics collection is optional
+    }
+  }
+
+  /**
+   * Get system information (CPU cores and total memory)
+   */
+  getSystemInfo(): SystemInfo | null {
+    try {
+      return this.collector?.getSystemInfo();
+    } catch {
+      // Silent failure - metrics collection is optional
+      return null;
     }
   }
 
