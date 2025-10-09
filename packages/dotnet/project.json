@@ -1,0 +1,47 @@
+{
+  "name": "dotnet",
+  "sourceRoot": "packages/dotnet/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/README.md__tmpl__ packages/dotnet/README.md",
+      "outputs": ["{projectRoot}/README.md"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "packages/dotnet",
+            "glob": "**/@(files|files-angular)/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/dotnet",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/dotnet/src",
+            "glob": "**/*.json",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "packages/dotnet"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    }
+  }
+}

@@ -1,13 +1,12 @@
 import { join, basename, dirname, parse } from 'node:path';
 import {
-  CreateNodes,
-  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesV2,
   CreateDependencies,
   DependencyType,
   logger,
   RawProjectGraphDependency,
+  CreateNodesContextV2,
 } from '@nx/devkit';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -93,7 +92,7 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
 async function createNodesInternal(
   projectRoot: string,
   options: DotNetPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, DotNetTargets>,
   projectFiles: string[],
   hash: string
