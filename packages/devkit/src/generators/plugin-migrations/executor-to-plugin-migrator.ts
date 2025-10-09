@@ -23,6 +23,7 @@ import {
   ProjectConfigurationsError,
   mergeTargetConfigurations,
   retrieveProjectConfigurations,
+  globalSpinner,
 } from 'nx/src/devkit-internals';
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
@@ -424,6 +425,7 @@ async function migrateProjects<T>(
   logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
   const projects = new Map<string, Record<string, string>>();
+  const spinner = globalSpinner.start(`Migrating configuration...`, pluginPath);
 
   for (const migration of migrations) {
     for (const executor of migration.executors) {
@@ -443,9 +445,7 @@ async function migrateProjects<T>(
         },
         logger
       );
-
       const result = await migrator.run();
-
       // invert the result to have a map of projects to their targets
       for (const [target, projectList] of result.entries()) {
         for (const project of projectList) {
@@ -477,8 +477,10 @@ async function migrateProjects<T>(
     createNodes,
     createNodesV2,
     defaultPluginOptions,
-    projectGraph
+    projectGraph,
+    spinner
   );
+  spinner.succeed();
 
   return projects;
 }
@@ -490,7 +492,8 @@ async function addPluginRegistrations<T>(
   createNodes: CreateNodes | undefined,
   createNodesV2: CreateNodesV2 | undefined,
   defaultPluginOptions: T,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  spinner: typeof globalSpinner
 ) {
   const nxJson = readNxJson(tree);
 
@@ -498,7 +501,10 @@ async function addPluginRegistrations<T>(
   const createNodesResults = new Map<string, ConfigurationResult>();
   global.NX_GRAPH_CREATION = true;
   try {
+    let index = 0;
     for (const [project, options] of projects.entries()) {
+      index++;
+      spinner.updateText(`${index}/${projects.size} - Migrating ${project}`);
       const projectConfigs = await getCreateNodesResultsForPlugin(
         tree,
         { plugin: pluginPath, options },
@@ -582,6 +588,7 @@ async function addPluginRegistrations<T>(
       }
     }
   }
+  spinner.updateText(`Migrations done`);
 
   updateNxJson(tree, nxJson);
 }

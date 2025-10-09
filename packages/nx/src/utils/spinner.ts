@@ -38,6 +38,10 @@ class SpinnerManager {
     }
   }
 
+  isSpinning() {
+    return this.#ora?.isSpinning ?? false;
+  }
+
   #createOra(text?: string) {
     this.#ora = ora({
       text: text,
