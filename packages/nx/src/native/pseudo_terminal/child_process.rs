@@ -52,6 +52,11 @@ impl ChildProcess {
         External::new((self.parser.clone(), self.writer_arc.clone()))
     }
 
+    #[napi]
+    pub fn get_pid(&self) -> i32 {
+        self.process_killer.get_pid()
+    }
+
     #[napi(ts_args_type = "signal?: NodeJS.Signals")]
     pub fn kill(&mut self, signal: Option<&str>) -> anyhow::Result<()> {
         self.process_killer.kill(signal)
