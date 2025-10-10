@@ -1,5 +1,59 @@
 # Enterprise Release Notes
 
+### 2025.10
+
+##### Self-Healing CI / AI Fixes
+
+See [self-healing CI guide](https://nx.dev/docs/guides/nx-cloud/enable-ai-features#self-healing-ci-for-enterprise-on-prem-installations) for enablement steps.
+
+- Feat: Automatically detect and fix failing CI tasks with AI-generated solutions
+- Feat: New `nx-cloud self-heal apply-locally` command to test AI fixes before applying them in CI
+- Feat: Revert previously applied AI fixes or automatically apply verified ones
+- Feat: GitHub review comments now surface suggested AI-generated fixes
+- Feat: Improved verification flow, prompt wording, and commit awareness to increase fix quality
+
+##### Graph & Visualization
+
+- Feat: Workspace graph now surfaces implicit dependencies and Nx version data
+- Feat: New circular dependency analysis view
+- Feat: Graph toolbar persists state and adds refined controls
+- Feat: Edge interactions open context menus with additional details
+
+##### Analytics & Reporting
+
+- Feat: Time to Green (TTG) reports compare hypothetical versus observed time savings
+- Feat: Context switch tracking chart highlights time saved by reducing interruptions
+
+##### Custom Workflows
+
+- Feat: Configure working directories per workflow step
+- Feat: Apply environment variables across custom workflows
+- Feat: Improved launch template management UI
+
+##### Onboarding
+
+- Feat: Revamped end-to-end UI-only onboarding flow for GitHub workspaces
+
+##### Enterprise Features
+
+- Feat: SCIM support for Okta, PingIdentity and Azure AD
+
+##### Conformance
+
+- Feat: Richer conformance violation notification emails
+- Feat: Better commands and validation when publishing conformance rules
+- Feat: Improved GitLab section mapping to owners files
+
+##### Developer Experience
+
+- Feat: Better reconciliation and visibility for restarted agents (view which tasks caused an agent to restart and previous logs for restarted agents)
+- Feat: Comprehensive dark mode refinements across the application
+
+##### Deployment
+
+- Chore: Released Helm chart `1.0.0` for Nx Cloud
+  - Review the [migration guide](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/MIGRATION.md) before upgrading
+
 ### 2025.07.2
 
 - Feat: Support Valkey TLS
