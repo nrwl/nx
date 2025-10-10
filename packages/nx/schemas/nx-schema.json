@@ -384,6 +384,85 @@
         }
       },
       "additionalProperties": false
+    },
+    "conformance": {
+      "type": "object",
+      "description": "Configuration for Nx Conformance",
+      "properties": {
+        "outputPath": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Path to write the conformance results to"
+            },
+            {
+              "type": "boolean",
+              "enum": [false],
+              "description": "Disable writing the conformance results to a file"
+            }
+          ],
+          "description": "Optional path to write the conformance results to, defaults to 'dist/conformance-result.json'. Set to false to disable writing the conformance results to a file."
+        },
+        "rules": {
+          "type": "array",
+          "description": "List of conformance rules to apply",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string",
+                "description": "Relative path to a local rule implementation, node_module path or nx-cloud rule ID for Nx Cloud Enterprise."
+              },
+              "options": {
+                "type": "object",
+                "description": "Rule specific configuration options.",
+                "additionalProperties": true
+              },
+              "projects": {
+                "type": "array",
+                "description": "The projects to apply this rule to. This property accepts an array of strings which can be project names, glob patterns, directories, tag references or anything else that is supported by the `--projects` filter. By default, the implied value is ['*'] (all projects). You can also use objects with 'matcher' and 'explanation' properties to document why specific projects are included or excluded.",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "A project name, glob pattern, directory, tag reference, or any other valid project filter"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "matcher": {
+                          "type": "string",
+                          "description": "A project name, glob pattern, directory, tag reference, or any other valid project filter"
+                        },
+                        "explanation": {
+                          "type": "string",
+                          "description": "An explanation to communicate to colleagues why this particular project or projects were included or excluded from the rule"
+                        }
+                      },
+                      "required": ["matcher", "explanation"],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "explanation": {
+                "type": "string",
+                "description": "Optional explanation field for users to be able to communicate to their colleagues why a particular rule is enabled and important to the workspace in question."
+              },
+              "status": {
+                "type": "string",
+                "enum": ["enforced", "evaluated", "disabled"],
+                "description": "Override the default status of the rule, which is 'enforced'. If set to 'evaluated', the rule will be reported as normal, but not enforced (will exit with code 0). If set to 'disabled', the rule will not be evaluated at all.",
+                "default": "enforced"
+              }
+            },
+            "required": ["rule"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["rules"],
+      "additionalProperties": false
     }
   },
   "definitions": {
