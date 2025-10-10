@@ -340,7 +340,6 @@ function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
     `autoInstallPeers: true
-strictPeerDependencies: false
 `
   );
 }

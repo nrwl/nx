@@ -16,7 +16,7 @@ describe('@nx/detox (legacy)', () => {
   beforeAll(() => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
-    newProject();
+    newProject({ packages: ['@nx/react-native', '@nx/expo'] });
   });
 
   afterAll(() => {

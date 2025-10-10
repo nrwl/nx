@@ -29,7 +29,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
@@ -51,7 +51,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this
             # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World

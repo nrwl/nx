@@ -20,8 +20,6 @@ export async function addJest(
   options: AddJestOptions
 ): Promise<void> {
   if (!options.skipPackageJson) {
-    process.env.npm_config_legacy_peer_deps ??= 'true';
-
     const pkgVersions = versions(tree);
     addDependenciesToPackageJson(
       tree,

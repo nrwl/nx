@@ -187,7 +187,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build

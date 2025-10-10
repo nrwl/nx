@@ -60,7 +60,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci --legacy-peer-deps
+      - script: npm ci
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 

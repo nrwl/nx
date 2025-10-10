@@ -28,13 +28,16 @@
       "path": "../devkit"
     },
     {
+      "path": "../nx"
+    },
+    {
+      "path": "../rsbuild"
+    },
+    {
       "path": "../playwright"
     },
     {
       "path": "../cypress"
-    },
-    {
-      "path": "../nx"
     },
     {
       "path": "./tsconfig.lib.json"

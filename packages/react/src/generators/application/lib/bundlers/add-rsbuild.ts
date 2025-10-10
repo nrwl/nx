@@ -35,6 +35,7 @@ export async function setupRsbuildConfiguration(
     addCopyAssets,
     addHtmlTemplatePath,
     addExperimentalSwcPlugin,
+    addSourceDefine,
     versions,
   } = await import('@nx/rsbuild/config-utils');
   const rsbuildTask = await configurationGenerator(tree, {
@@ -56,6 +57,10 @@ export async function setupRsbuildConfiguration(
     options.appProjectRoot,
     'rsbuild.config.ts'
   );
+
+  if (options.inSourceTests && options.unitTestRunner === 'vitest') {
+    addSourceDefine(tree, pathToConfigFile, 'import.meta.vitest', 'undefined');
+  }
 
   const deps = { '@rsbuild/plugin-react': versions.rsbuildPluginReactVersion };
 

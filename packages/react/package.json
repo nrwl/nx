@@ -52,6 +52,7 @@
   "devDependencies": {
     "@nx/cypress": "workspace:*",
     "@nx/playwright": "workspace:*",
+    "@nx/rsbuild": "workspace:*",
     "nx": "workspace:*"
   },
   "publishConfig": {

@@ -398,7 +398,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         - "packages/*"
 
       autoInstallPeers: true
-      strictPeerDependencies: false
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();
