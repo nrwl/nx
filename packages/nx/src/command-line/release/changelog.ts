@@ -829,7 +829,7 @@ function resolveChangelogVersions(
          */
         if (!args.versionData[projectName]) {
           throw new Error(
-            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations.`
+            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations. Please ensure that you have used the same "group" or "project" filter between commands.`
           );
         }
       }

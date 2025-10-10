@@ -167,9 +167,9 @@ export interface NxReleaseVersionConfiguration {
   /**
    * When versioning independent projects, this controls whether to update their dependents (i.e. the things that depend on them).
    * - 'never' means no dependents will be updated (unless they happen to be versioned directly as well).
-   * - 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned, as long as a
+   * - 'always' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned, even if they are not included in the group or projects filter.
+   * - 'auto' will cause dependents to be updated (a patch version bump) when a dependency is versioned, as long as a
    *   group or projects filter is not applied that does not include them.
-   * - 'always' will cause dependents to be updated (a patch version bump) when a dependency is versioned, even if they are not included in the group or projects filter.
    */
   updateDependents?: 'auto' | 'always' | 'never';
   /**

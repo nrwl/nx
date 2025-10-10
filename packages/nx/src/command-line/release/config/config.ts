@@ -354,7 +354,7 @@ export async function createNxReleaseConfig(
       preserveMatchingDependencyRanges:
         userConfig.version?.preserveMatchingDependencyRanges ?? true,
       logUnchangedProjects: userConfig.version?.logUnchangedProjects ?? true,
-      updateDependents: userConfig.version?.updateDependents ?? 'auto',
+      updateDependents: userConfig.version?.updateDependents ?? 'always',
     } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
       git: changelogGitDefaults,
