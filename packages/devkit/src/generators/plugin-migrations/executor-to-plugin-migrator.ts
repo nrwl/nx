@@ -424,7 +424,10 @@ async function migrateProjects<T>(
   logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
   const projects = new Map<string, Record<string, string>>();
-  const spinner = globalSpinner.start(`Migrating configuration...`, pluginPath);
+  const spinner = globalSpinner.start(
+    `Calculating migration scope...`,
+    pluginPath
+  );
 
   for (const migration of migrations) {
     for (const executor of migration.executors) {
@@ -479,7 +482,7 @@ async function migrateProjects<T>(
     projectGraph,
     spinner
   );
-  spinner.succeed();
+  spinner.succeed(`Migrated configuration for ${projects.size} project(s).\n`);
 
   return projects;
 }
