@@ -1,4 +1,3 @@
-import { glob } from '../devkit-exports';
 import { isCI } from './is-ci';
 import { globalSpinner } from './spinner';
 
