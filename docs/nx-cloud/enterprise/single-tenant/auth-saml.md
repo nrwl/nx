@@ -1,8 +1,5 @@
 # SAML Auth
 
-SAML support for Nx Cloud is an addon for Nx Enterprise contracts and requires an unlock key. Please [get in touch](mailto:cloud-support@nrwl.io)
-if you are interested.
-
 ### Jump To
 
 - [Azure AD Config](#azure-active-directory-set-up)
