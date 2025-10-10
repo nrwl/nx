@@ -503,7 +503,9 @@ async function addPluginRegistrations<T>(
     let index = 0;
     for (const [project, options] of projects.entries()) {
       index++;
-      spinner.updateText(`${index}/${projects.size} - Migrating ${project}`);
+      spinner.updateText(
+        `${index}/${projects.size} - Parsing "${project}" configuration...`
+      );
       const projectConfigs = await getCreateNodesResultsForPlugin(
         tree,
         { plugin: pluginPath, options },
@@ -543,7 +545,12 @@ async function addPluginRegistrations<T>(
     return !deepEqual(originalResults, result);
   };
 
+  let index = 0;
   for (const [project, options] of projects.entries()) {
+    index++;
+    spinner.updateText(
+      `${index}/${projects.size} - Applying "${project}" configuration...`
+    );
     const existingPlugin = nxJson.plugins?.find(
       (plugin): plugin is ExpandedPluginConfiguration =>
         typeof plugin !== 'string' &&
@@ -565,11 +572,10 @@ async function addPluginRegistrations<T>(
       const plugin: ExpandedPluginConfiguration = {
         plugin: pluginPath,
         options,
-        include: [projectIncludeGlob],
       };
 
-      if (!(await arePluginIncludesRequired(project, plugin))) {
-        delete plugin.include;
+      if (await arePluginIncludesRequired(project, plugin)) {
+        plugin.include = [projectIncludeGlob];
       }
 
       nxJson.plugins.push(plugin);
@@ -580,10 +586,9 @@ async function addPluginRegistrations<T>(
         )
       ) {
         existingPlugin.include.push(projectIncludeGlob);
-
-        if (!(await arePluginIncludesRequired(project, existingPlugin))) {
-          delete existingPlugin.include;
-        }
+      }
+      if (!(await arePluginIncludesRequired(project, existingPlugin))) {
+        delete existingPlugin.include;
       }
     }
   }
