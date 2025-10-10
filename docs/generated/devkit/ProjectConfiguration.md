@@ -98,10 +98,10 @@ Project specific configuration for `nx release`
 
 #### Type declaration
 
-| Name       | Type                                                                                                                                                                                                                                                                                                                                                                                     |
-| :--------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docker?`  | `true` \| `NxReleaseDockerConfiguration`                                                                                                                                                                                                                                                                                                                                                 |
-| `version?` | `Pick`\<`LegacyNxReleaseVersionConfiguration`, `"generator"` \| `"generatorOptions"`\> \| `Pick`\<`NxReleaseVersionConfiguration`, `"versionActions"` \| `"versionActionsOptions"` \| `"manifestRootsToUpdate"` \| `"currentVersionResolver"` \| `"currentVersionResolverMetadata"` \| `"fallbackCurrentVersionResolver"` \| `"versionPrefix"` \| `"preserveLocalDependencyProtocols"`\> |
+| Name       | Type                                                                                                                                                                                                                                                                                           |
+| :--------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docker?`  | `true` \| `NxReleaseDockerConfiguration`                                                                                                                                                                                                                                                       |
+| `version?` | `Pick`\<`NxReleaseVersionConfiguration`, `"versionActions"` \| `"versionActionsOptions"` \| `"manifestRootsToUpdate"` \| `"currentVersionResolver"` \| `"currentVersionResolverMetadata"` \| `"fallbackCurrentVersionResolver"` \| `"versionPrefix"` \| `"preserveLocalDependencyProtocols"`\> |
 
 ---
 

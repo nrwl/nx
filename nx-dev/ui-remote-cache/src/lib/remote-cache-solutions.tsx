@@ -168,11 +168,7 @@ export function RemoteCacheSolutions(): ReactElement {
                 </p>
                 <div className="my-8">
                   <ButtonLink
-                    href={
-                      process.env.NEXT_PUBLIC_ASTRO_URL
-                        ? '/docs/guides/tasks--caching/self-hosted-caching'
-                        : '/recipes/running-tasks/self-hosted-caching'
-                    }
+                    href={'/docs/guides/tasks--caching/self-hosted-caching'}
                     aria-describedby="official-plugins"
                     title="Free official remote cache plugins"
                     size="default"
@@ -261,9 +257,7 @@ export function RemoteCacheSolutions(): ReactElement {
                 <div className="mt-8">
                   <ButtonLink
                     href={
-                      process.env.NEXT_PUBLIC_ASTRO_URL
-                        ? '/docs/guides/tasks--caching/self-hosted-caching#build-your-own-caching-server'
-                        : '/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server'
+                      '/docs/guides/tasks--caching/self-hosted-caching#build-your-own-caching-server'
                     }
                     aria-describedby="open-api"
                     title="Remote cache api specs"

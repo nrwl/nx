@@ -305,7 +305,7 @@ This is an example of a launch template using all pre-built features:
 ```yaml
 // ./nx/workflows/agents.yaml
 # Define common setup steps that can be reused across templates
-common-init-steps: &common-init-steps
+common-js-init-steps: &common-js-init-steps
   # using a reusable step in an external GitHub repo,
   # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
   - name: Checkout
@@ -315,8 +315,8 @@ common-init-steps: &common-init-steps
     # the cache step requires configuration via env vars
     # https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/cache#options
     inputs:
-    # Include patches directories to ensure cache is busted when patches change
-    # If you use a custom patches directory, add it to the key as well
+      # Include patches directories to ensure cache is busted when patches change
+      # If you use a custom patches directory, add it to the key as well
       key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**'
       paths: |
         ~/.npm
@@ -345,6 +345,18 @@ common-init-steps: &common-init-steps
     script: |
       echo "MY_STEP_ENV=step-env-var" >> $NX_CLOUD_ENV
 
+common-rust-init-steps: &common-rust-init-steps
+  - name: Checkout
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+  # add Rust-specific steps
+  - name: Install Rust
+    script: |
+      curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+      source "$HOME/.cargo/env"
+      rustup toolchain install stable
+      # persist cargo bin into PATH
+      echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
 launch-templates:
   # Custom template name, the name is referenced via --distribute-on="3 my-linux-medium-js"
@@ -358,7 +370,7 @@ launch-templates:
     # list out steps to run on the agent before accepting tasks
     # the agent will need a copy of the source code and dependencies installed
     # note we are using yaml anchors to reduce duplication with the below launch-template (they have the same init-steps)
-    init-steps: *common-init-steps
+    init-steps: *common-js-init-steps
 
   # another template which does the same as above, but with a large resource class
   # You're not required to define a template for every resource class, only define what you need!
@@ -368,29 +380,13 @@ launch-templates:
     env:
       MY_ENV_VAR: shared
     # note we are using yaml anchors to reduce duplication with the above launch-template (they have the same init-steps)
-    init-steps:
-      # use YAML anchor to include common init setup
-      <<: *common-init-steps
-      - name: Print Env Var from reusable step
-        script: |
-          echo $MY_STEP_ENV # prints "step-env-var"
+    init-steps: *common-js-init-steps
 
-
-  # template that installs rust (demonstrates extending base steps)
+  # template that installs rust
   my-linux-rust-large:
     resource-class: 'docker_linux_amd64/large'
     image: 'ubuntu22.04-node20.11-v9'
-    init-steps:
-      # use YAML anchor to include common init setup
-      <<: *common-init-steps
-      # add Rust-specific steps
-      - name: Install Rust
-        script: |
-          curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-          source "$HOME/.cargo/env"
-          rustup toolchain install stable
-          # persist cargo bin into PATH
-          echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+    init-steps: *common-rust-init-steps
 ```
 
 These templates can be used by passing the number of agents desired, and the template name via `--distribute-on` when starting your CI run.

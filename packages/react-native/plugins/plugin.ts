@@ -1,6 +1,5 @@
 import {
-  CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
@@ -55,7 +54,7 @@ function writeTargetsToCache(
   });
 }
 
-export const createNodesV2: CreateNodesV2<ReactNativePluginOptions> = [
+export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -79,33 +78,12 @@ export const createNodesV2: CreateNodesV2<ReactNativePluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<ReactNativePluginOptions> = [
-  '**/app.{json,config.js,config.ts}',
-  async (configFilePath, options, context) => {
-    const optionsHash = hashObject(options);
-    const cachePath = join(
-      workspaceDataDirectory,
-      `react-native-${optionsHash}.hash`
-    );
-
-    const targetsCache = readTargetsCache(cachePath);
-    const result = await createNodesInternal(
-      configFilePath,
-      options,
-      context,
-      targetsCache
-    );
-
-    writeTargetsToCache(cachePath, targetsCache);
-
-    return result;
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFile: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<ReactNativePluginOptions>>
@@ -157,7 +135,7 @@ async function createNodesInternal(
 function buildReactNativeTargets(
   projectRoot: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -218,7 +196,7 @@ function buildReactNativeTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 

@@ -20,7 +20,9 @@ describe('Gradle Plugin V1', () => {
     ({ type }: { type: 'kotlin' | 'groovy' }) => {
       let gradleProjectName = uniq('my-gradle-project');
       beforeAll(() => {
-        newProject();
+        newProject({
+          packages: ['@nx/js'],
+        });
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
         updateJson('nx.json', (json) => {

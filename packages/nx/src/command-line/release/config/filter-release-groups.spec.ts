@@ -47,6 +47,7 @@ describe('filterReleaseGroups()', () => {
       releaseTagPatternCheckAllBranchesWhen: undefined,
       releaseTagPatternRequireSemver: true,
       releaseTagPatternStrictPreid: false,
+      releaseTagPatternPreferDockerVersion: undefined,
       git: {
         commit: false,
         commitMessage: '',
@@ -112,6 +113,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
       };
@@ -140,6 +142,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
         bar: {
@@ -152,6 +155,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
       };
@@ -170,6 +174,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,
@@ -204,6 +209,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,
@@ -242,6 +248,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,
@@ -278,6 +285,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,
@@ -338,6 +346,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
       };
@@ -365,6 +374,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
         bar: {
@@ -377,6 +387,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
       };
@@ -405,6 +416,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
         bar: {
@@ -417,6 +429,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
       };
@@ -435,6 +448,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,
@@ -473,6 +487,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,
@@ -531,6 +546,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
         bar: {
@@ -543,6 +559,7 @@ describe('filterReleaseGroups()', () => {
           releaseTagPatternCheckAllBranchesWhen: undefined,
           releaseTagPatternRequireSemver: true,
           releaseTagPatternStrictPreid: false,
+          releaseTagPatternPreferDockerVersion: undefined,
           versionPlans: false,
         },
       };
@@ -561,6 +578,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,
@@ -599,6 +617,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": undefined,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "resolvedVersionPlans": false,

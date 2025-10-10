@@ -194,12 +194,14 @@ export async function getLatestGitTagForPattern(
     const interpolatedTagPattern = interpolate(releaseTagPattern, {
       version: '%v%',
       projectName: '%p%',
+      releaseGroupName: '%rg%',
       ...additionalInterpolationData,
     });
 
     const tagRegexp = `^${escapeRegExp(interpolatedTagPattern)
       .replace('%v%', '(.+)')
-      .replace('%p%', '(.+)')}`;
+      .replace('%p%', '(.+)')
+      .replace('%rg%', '(.+)')}`;
 
     const matchingTags = tags.filter((tag) => {
       if (releaseTagPatternRequireSemver) {

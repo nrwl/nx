@@ -138,6 +138,8 @@ If you accidentally run this command locally, remove all generated marker files 
 | `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails                                                                                                                                                 | `true`  |
 | `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                                        | `true`  |
 | `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Nx Agents                                                                                                                        |         |
+| `--fix-tasks`                   | string  | Comma-separated glob patterns for tasks to enable [AI self-healing](/docs/features/ci-features/self-healing-ci). Supports negation with `!` prefix                                        |         |
+| `--auto-apply-fixes`            | string  | Comma-separated glob patterns for [self-healing](/docs/features/ci-features/self-healing-ci) tasks to auto-apply to PRs without manual review                                             |         |
 | `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                                                     |         |
 
 #### Detailed Option Usage
@@ -257,6 +259,40 @@ If you want to pass other environment variables from the main job to Nx Agents, 
 This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main job before any steps run.
 
 > Note: none of the values passed to Nx Agents are stored by Nx Cloud.
+
+##### --fix-tasks
+
+Enable [AI-powered self-healing](/docs/features/ci-features/self-healing-ci) for specific tasks. When a task fails, Nx Cloud will attempt to analyze the error and generate a fix. By default, all tasks are enabled for self-healing. You can use glob patterns to limit which tasks are eligible.
+
+Examples:
+
+```shell {% frame="none" %}
+# Enable for lint and format tasks only
+npx nx-cloud start-ci-run --fix-tasks="*lint*,*format*" --no-distribution
+
+# Enable for all tasks except deploy and test
+npx nx-cloud start-ci-run --fix-tasks="!*deploy*,!*test*" --no-distribution
+```
+
+The patterns support:
+
+- `*` wildcard to match any characters
+- `!` prefix to exclude tasks (negation)
+- Multiple comma-separated patterns
+
+##### --auto-apply-fixes
+
+Automatically apply [AI-generated fixes](/docs/features/ci-features/self-healing-ci) to pull requests for specific tasks without requiring manual review. Fixes are only applied if the verification phase passes.
+
+Examples:
+
+```shell {% frame="none" %}
+# Auto-apply fixes for linting tasks only
+npx nx-cloud start-ci-run --auto-apply-fixes="*lint*" --no-distribution
+
+# Auto-apply fixes for both lint and format tasks
+npx nx-cloud start-ci-run --auto-apply-fixes="*lint*,*format*" --no-distribution
+```
 
 #### Enabling/Disabling Distribution
 

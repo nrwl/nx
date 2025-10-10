@@ -50,9 +50,7 @@ export function Header({
   let [isOpen, setIsOpen] = useState(false);
 
   // Use the new docs URL when Astro docs are enabled
-  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
-    ? '/docs/getting-started/intro'
-    : '/getting-started/intro';
+  const docsUrl = '/docs/getting-started/intro';
   let [isScrolled, setIsScrolled] = useState(false);
 
   const router = useRouter();
@@ -291,14 +289,6 @@ export function Header({
             >
               Nx Enterprise
             </Link>
-            {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
-              <>
-                <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-                <div className="px-3 opacity-50 hover:opacity-100">
-                  <AlgoliaSearch tiny={true} />
-                </div>
-              </>
-            )}
           </nav>
         </div>
         {/*SECONDARY NAVIGATION*/}

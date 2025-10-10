@@ -57,7 +57,10 @@
     },
     "e2e-ci--**/*": {
       "dependsOn": ["preview"],
-      "parallelism": true
+      "parallelism": true,
+      "options": {
+        "args": []
+      }
     },
     "show-report": {
       "command": "playwright show-report dist/astro-docs/playwright-report"

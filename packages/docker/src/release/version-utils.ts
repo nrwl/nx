@@ -3,7 +3,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
 import type { ProjectGraphProjectNode } from '@nx/devkit';
-import type { FinalConfigForProject } from 'nx/src/command-line/release/version/release-group-processor';
+import type { FinalConfigForProject } from 'nx/src/command-line/release/utils/release-graph';
 import { interpolateVersionPattern } from './version-pattern-utils';
 
 const DEFAULT_VERSION_SCHEMES = {

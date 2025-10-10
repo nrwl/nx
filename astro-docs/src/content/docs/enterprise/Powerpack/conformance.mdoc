@@ -9,7 +9,7 @@ filter: 'type:Guides'
 
 {% youtube src="https://youtu.be/6wg23sLveTQ" title="Nx Powerpack workspace conformance" /%}
 
-The [`@nx/conformance`](/docs/reference/core-api/conformance) plugin allows [Nx Powerpack](https://nx.dev/powerpack) and [Nx Enterprise](https://nx.dev/enterprise) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
+The [`@nx/conformance`](/docs/reference/powerpack/conformance/overview) plugin allows [Nx Powerpack](https://nx.dev/powerpack) and [Nx Enterprise](https://nx.dev/enterprise) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
 
 ## Why Conformance?
 
@@ -22,7 +22,7 @@ The `@nx/conformance` plugin lets you write custom rules in TypeScript that enfo
 The plugin also provides the following pre-written rules:
 
 - **Enforce Project Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
-- **Ensure Owners**: Require every project to have an owner defined for the [`@nx/owners` plugin](/docs/reference/core-api/owners)
+- **Ensure Owners**: Require every project to have an owner defined for the [`@nx/owners` plugin](/docs/reference/powerpack/owners)
 
 ## Setup
 
@@ -32,11 +32,11 @@ The `@nx/conformance` plugin requires an Nx Powerpack or [Nx Enterprise license]
 
 Then, add the Conformance plugin to your workspace.
 
-{% linkcard title="Conformance Overview"  href="/docs/reference/core-api/conformance/overview" /%}
+{% linkcard title="Conformance Overview"  href="/docs/reference/powerpack/conformance/overview" /%}
 
 ## Configure Conformance Rules
 
-Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/docs/reference/core-api/conformance#custom-conformance-rules). See the [plugin documentation](/docs/reference/core-api/conformance) for more details.
+Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/docs/reference/powerpack/conformance#custom-conformance-rules). See the [plugin documentation](/docs/reference/powerpack/conformance) for more details.
 
 ```jsonc
 // nx.json
@@ -68,9 +68,12 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
 
 ## Enforce Rules with the `nx conformance` and `nx conformance:check` Commands
 
-The `@nx/conformance` plugin enables the `nx conformance` and `nx conformance:check` commands which check all the configured rules. The difference is that `nx conformance` will invoke any fix generators on a configured rule automatically, whereas `nx conformance:check` will only check the current workspace state and show any violations.
+The `@nx/conformance` plugin enables two commands:
 
-Therefore, `nx conformance` is intended to be run locally while working on a feature branch. `nx conformance:check` should be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
+- **`nx conformance`**: Evaluates rules and applies any available fix generators. Changes are written to disk and rules are evaluated once more to calculate how many violations were fixed. Use this locally while working on feature branches.
+- **`nx conformance:check`**: Evaluates rules only. Fix generators are not applied (useful for CI).
+
+Fix generators are only applied for rules whose final status is not `disabled`.
 
 {% tabs %}
 {% tabitem label="Nx CLI" %}
@@ -124,6 +127,7 @@ Learn more about [publishing](/docs/enterprise/powerpack/publish-conformance-rul
 
 - [Conformance Plugin API Reference](/docs/reference/powerpack/conformance/overview) - Detailed documentation on configuration options and provided rules
 - [Create a Custom Conformance Rule](/docs/reference/powerpack/conformance/create-conformance-rule) - Step-by-step guide to writing your own rules
+- [Testing Conformance Rules](/docs/reference/powerpack/conformance/test-conformance-rule) - Learn how to test your conformance rules
 - [Publish Conformance Rules to Nx Cloud](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud) - Share rules across your organization
 - [Configure Conformance Rules in Nx Cloud](/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud) - Manage rules via the Nx Cloud dashboard
 - [Blog: Automating Consistency with Nx Cloud Conformance](https://nx.dev/blog/nx-cloud-conformance-automate-consistency) - Learn about the philosophy and benefits of conformance

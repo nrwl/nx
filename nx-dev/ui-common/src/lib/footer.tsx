@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { DiscordIcon } from './discord-icon';
 import { VersionPicker } from './version-picker';
 
+// Use NX_DEV_URL if set, otherwise default to empty string for relative URLs
+const nxDevUrl = process.env.NX_DEV_URL || '';
 const navigation = {
   nx: [
     { name: 'Status', href: 'https://status.nx.app' },
@@ -14,37 +16,29 @@ const navigation = {
     { name: 'App', href: 'https://cloud.nx.app' },
     {
       name: 'Docs',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? '/docs/features/ci-features'
-        : '/ci/features',
+      href: '/docs/features/ci-features',
     },
     {
       name: 'Pricing',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/nx-cloud#plans'
-        : '/nx-cloud#plans',
+      href: `${nxDevUrl}/nx-cloud#plans`,
     },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
   solutions: [
-    { name: 'Nx', href: 'https://nx.dev' },
+    { name: 'Nx', href: nxDevUrl || 'https://nx.dev' },
     {
       name: 'Nx Cloud',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/nx-cloud'
-        : '/nx-cloud',
+      href: `${nxDevUrl}/nx-cloud`,
     },
     {
       name: 'Nx Enterprise',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/enterprise'
-        : '/enterprise',
+      href: `${nxDevUrl}/enterprise`,
     },
   ],
   resources: [
     {
       name: 'Blog',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL ? 'https://nx.dev/blog' : '/blog',
+      href: `${nxDevUrl}/blog`,
     },
     {
       name: 'Youtube',
@@ -52,41 +46,29 @@ const navigation = {
     },
     {
       name: 'Community',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/community'
-        : '/community',
+      href: `${nxDevUrl}/community`,
     },
     {
       name: 'Customers',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/customers'
-        : '/customers',
+      href: `${nxDevUrl}/customers`,
     },
   ],
   company: [
     {
       name: 'About us',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/company'
-        : '/company',
+      href: `${nxDevUrl}/company`,
     },
     {
       name: 'Careers',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/careers'
-        : '/careers',
+      href: `${nxDevUrl}/careers`,
     },
     {
       name: 'Brands & Guidelines',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/brands'
-        : '/brands',
+      href: `${nxDevUrl}/brands`,
     },
     {
       name: 'Contact us',
-      href: process.env.NEXT_PUBLIC_ASTRO_URL
-        ? 'https://nx.dev/contact'
-        : '/contact',
+      href: `${nxDevUrl}/contact`,
     },
   ],
   social: [
@@ -210,7 +192,7 @@ export function Footer({
 } = {}): JSX.Element {
   const prefixHref = (href: string) => {
     if (useDomainPrefix && href.startsWith('/')) {
-      return `https://nx.dev${href}`;
+      return `${nxDevUrl}${href}`;
     }
     return href;
   };

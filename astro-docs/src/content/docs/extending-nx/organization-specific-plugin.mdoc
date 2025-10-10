@@ -74,6 +74,12 @@ To try out the generator in dry-run mode, use the following command:
 npx nx g @myorg/recommended:library test-library --dry-run
 ```
 
+{% aside type="caution" title="Use the package.json name" %}
+When referencing your plugin, you must use the name defined in `tools/recommended/package.json`.
+In this example, we're using `@myorg/recommended` as the plugin name.
+If your package.json has a different name, adjust the command accordingly.
+{% /aside %}
+
 Remove the `--dry-run` flag to actually create a new project.
 
 ### Add Generator Options
@@ -301,7 +307,7 @@ function updateViteConfiguration(tree, directory) {
 export default libraryGenerator;
 ```
 
-We updated the generator to use some new helper functions from the Nx devkit. Here are a few functions you may find useful. See the [full API reference](/docs/reference/core-api/devkit/documents/nx_devkit) for all the options.
+We updated the generator to use some new helper functions from the Nx devkit. Here are a few functions you may find useful. See the [full API reference](/docs/reference/devkit) for all the options.
 
 - [`runTasksInSerial`](/docs/reference/devkit/runTasksInSerial) - Allows you to collect many callbacks and return them all at the end of the generator.
 - [`formatFiles`](/docs/reference/devkit/formatFiles) - Run Prettier on the repository

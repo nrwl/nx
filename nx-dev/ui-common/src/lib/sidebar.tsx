@@ -312,16 +312,12 @@ export function SidebarMobile({
     documentation: [
       {
         name: 'Nx',
-        href: process.env.NEXT_PUBLIC_ASTRO_URL
-          ? '/docs/getting-started/intro'
-          : '/getting-started/intro',
+        href: '/docs/getting-started/intro',
         current: isNx,
       },
       {
         name: 'CI',
-        href: process.env.NEXT_PUBLIC_ASTRO_URL
-          ? '/docs/features/ci-features'
-          : '/ci/features',
+        href: '/docs/features/ci-features',
         current: isCI,
       },
       {
@@ -379,11 +375,6 @@ export function SidebarMobile({
                 </button>
 
                 {/*SEARCH*/}
-                {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
-                  <div className="mx-4 w-auto">
-                    <AlgoliaSearch />
-                  </div>
-                )}
                 {/*LOGO*/}
                 <div className="ml-auto flex items-center">
                   <Link

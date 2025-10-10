@@ -62,15 +62,17 @@ export async function mergeReportsExecutor(
   const absoluteBlobReportDir = join(projectRoot, blobReportDir);
 
   if (!existsSync(absoluteBlobReportDir)) {
-    output.error({
-      title: 'The blob reporter output directory does not exist',
+    output.warn({
+      title: 'Merging the blob reports skipped',
       bodyLines: [
         `The blob reporter output directory "${blobReportDir}" does not exist.`,
-        'Please ensure the directory is configured correctly and it exists.',
+        'This can happen if no Playwright tests were run, or due to a misconfiguration.',
+        '',
+        'For more information see:',
+        '- Merge Atomized Outputs: https://nx.dev/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs',
       ],
     });
-
-    return { success: false };
+    return { success: true };
   }
 
   const blobReportFiles = collectBlobReports(absoluteBlobReportDir);

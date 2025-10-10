@@ -6,7 +6,7 @@ import type { Tree } from '../../../generators/tree';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getLatestGitTagForPattern } from '../utils/git';
 import { ProjectLogger } from './project-logger';
-import type { FinalConfigForProject } from './release-group-processor';
+import type { FinalConfigForProject } from '../utils/release-graph';
 import { VersionActions } from './version-actions';
 import { globalSpinner } from '../../../utils/spinner';
 
@@ -109,7 +109,7 @@ export async function resolveCurrentVersionFromDisk(
         projectGraphNode.name
       }" does not have a ${versionActions.validManifestFilenames.join(
         ' or '
-      )} file available in ./${projectGraphNode.data.root}.
+      )} file available in ${projectGraphNode.data.root}
 
 To fix this you will either need to add a ${versionActions.validManifestFilenames.join(
         ' or '

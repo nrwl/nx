@@ -17,9 +17,7 @@ export function Features(): ReactElement {
           Whether you're a startup shipping fast or managing enterprise{' '}
           <TextLink
             href={
-              process.env.NEXT_PUBLIC_ASTRO_URL
-                ? '/docs/concepts/decisions/why-monorepos?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
-                : '/concepts/decisions/why-monorepos?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
+              '/docs/concepts/decisions/why-monorepos?utm_medium=website&utm_campaign=homepage_links&utm_content=features'
             }
           >
             monorepos

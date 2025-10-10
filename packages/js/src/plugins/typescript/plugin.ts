@@ -8,8 +8,6 @@ import {
   readJsonFile,
   writeJsonFile,
   type CreateDependencies,
-  type CreateNodes,
-  type CreateNodesContext,
   type CreateNodesContextV2,
   type CreateNodesV2,
   type NxJsonConfiguration,
@@ -200,7 +198,8 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
             join(context.workspaceRoot, configFilePath),
             projectRoot,
             options,
-            context
+            context,
+            validConfigFilePaths
           );
 
           const { targets } = targetsCache[cacheKey];
@@ -226,50 +225,12 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<TscPluginOptions> = [
-  tsConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-
-    const projectRoot = dirname(configFilePath);
-    if (
-      !checkIfConfigFileShouldBeProject(configFilePath, projectRoot, context)
-    ) {
-      return {};
-    }
-
-    const normalizedOptions = normalizePluginOptions(options);
-    cache = { fileHashes: {}, rawFiles: {}, isExternalProjectReference: {} };
-    initializeTsConfigCache([configFilePath], context.workspaceRoot);
-
-    const { targets } = buildTscTargets(
-      join(context.workspaceRoot, configFilePath),
-      projectRoot,
-      normalizedOptions,
-      context
-    );
-
-    writeTsConfigCache(
-      toRelativePaths(tsConfigCacheData, context.workspaceRoot)
-    );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          projectType: 'library',
-          targets,
-        },
-      },
-    };
-  },
-];
+export const createNodes = createNodesV2;
 
 async function resolveValidConfigFilesAndHashes(
   configFilePaths: readonly string[],
   optionsHash: string,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): Promise<{
   configFilePaths: string[];
   hashes: string[];
@@ -369,7 +330,7 @@ async function getConfigFileHash(
 function checkIfConfigFileShouldBeProject(
   configFilePath: string,
   projectRoot: string,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): boolean {
   // Do not create a project for the workspace root tsconfig files.
   if (projectRoot === '.') {
@@ -411,7 +372,8 @@ function buildTscTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2,
+  configFiles: readonly string[]
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -466,7 +428,7 @@ function buildTscTargets(
           options.build.configName
         );
         if (
-          context.configFiles.some((f) => f === buildConfigPath) &&
+          configFiles.some((f) => f === buildConfigPath) &&
           (options.build.skipBuildCheck ||
             isValidPackageJsonBuildConfig(
               retrieveTsConfigFromCache(buildConfigPath, context.workspaceRoot),

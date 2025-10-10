@@ -118,6 +118,12 @@ Our last step is to add this executor to a given project's `targets` object in y
 }
 ```
 
+{% aside type="caution" title="Use the package.json name" %}
+When referencing your plugin, you must use the name defined in `tools/my-plugin/package.json`.
+In this example, we're using `@myorg/my-plugin` as the plugin name.
+If your package.json has a different name, adjust the command accordingly.
+{% /aside %}
+
 Finally, you run the executor via the CLI as follows:
 
 ```shell {% frame="none" %}

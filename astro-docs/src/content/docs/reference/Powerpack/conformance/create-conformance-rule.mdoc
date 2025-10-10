@@ -2,13 +2,15 @@
 title: Create a Conformance Rule
 description: Learn how to create custom conformance rules for Nx Powerpack and Nx Enterprise to enforce standards and best practices across your Nx workspace.
 sidebar:
-  label: Create a Conformance Rule
+  label: Create Conformance Rule
 filter: 'type:References'
 ---
 
 For local conformance rules, the resolution utilities from `@nx/js` are used in the same way they are for all other JavaScript/TypeScript files in Nx. Therefore, you can simply reference an adhoc JavaScript file or TypeScript file in your `"rule"` property (as long as the path is resolvable based on your package manager and/or tsconfig setup), and the rule will be loaded/transpiled as needed. The rule implementation file should also have a `schema.json` file next to it that defines the available rule options, if any.
 
-Therefore, in practice, writing your local conformance rules in an Nx generated library is the easiest way to organize them and ensure that they are easily resolvable via TypeScript. The library in question could also be an Nx plugin, but it does not have to be.
+In practice, writing your local conformance rules in an Nx generated library is the easiest way to organize them and ensure that they are easily resolvable via TypeScript. The library in question could also be an Nx plugin, but it does not have to be.
+
+## Generate a Conformance Rule
 
 To write your own conformance rule, run the `@nx/conformance:create-rule` generator and answer the prompts.
 
@@ -63,15 +65,85 @@ To enable the rule, you need to register it in the `nx.json` file.
 
 Note that the severity of the error is defined by the rule author and can be adjusted based on the specific violations that are found.
 
+## Understanding Rule Context
+
+The implementation function of the rule is passed a `context` object which contains:
+
+- **`tree`**: A `ReadOnlyConformanceTree` that can be used to read files from the workspace instead of directly from disk. Useful for unit testing rules as a test tree can be provided to the rule implementation (see [Testing Conformance Rules](/docs/reference/powerpack/conformance/test-conformance-rule)).
+- **`projectGraph`**: The Nx project graph
+- **`fileMapCache`**: The Nx file map cache
+- **`ruleOptions`**: The resolved rule configuration options based on the current workspace
+
+## Violation Interface
+
+Violations must follow this interface:
+
+```typescript
+interface ConformanceViolation {
+  message: string;
+  file?: string; // Used if the violation is attributed to a specific file
+  sourceProject?: string; // Used if the violation is attributed to a specific project
+  workspaceViolation?: boolean; // Used if the violation is attributed to the entire workspace
+}
+```
+
+### Automatic Project Inference
+
+```typescript
+violations.push({
+  message: 'File violates standards',
+  file: 'libs/my-lib/src/problematic.ts', // sourceProject auto-inferred as 'my-lib'
+});
+```
+
+### Best Practices for Violations
+
+1. **Use `workspaceViolation: true`** for issues affecting the entire workspace (global configs, workspace structure, etc.)
+2. **Use `sourceProject` only** for project-wide issues (missing configuration, structure problems)
+3. **Use `file` (and optional explicit `sourceProject`)** for violations tied to specific files in projects
+4. **Use `file` only** for files that may not belong to projects (CI configs, root files, etc.)
+
 ## Conformance Rule Examples
 
-Rules should report on the most specific thing that is in violation of the rule. They can report on one or more of the following things within a workspace:
-
-- file - The rule reports on a particular file being in violation of the rule.
-- project - The rule reports on a particular project being in violation of the rule, because no one file within it would be applicable to flag up.
-- the workspace itself - Sometimes there is no specific file or project that is most applicable to flag up, so the rule can report on the workspace itself.
+The following examples demonstrate how to write rules that report violations at different scopes.
 
 {% tabs %}
+{% tabitem label="workspace violation" %}
+
+This rule checks to see if there is a root README.md file in the workspace, and if there is not, it reports on the workspace itself.
+
+```ts
+import { workspaceRoot } from '@nx/devkit';
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+
+export default createConformanceRule<object>({
+  name: 'readme-file',
+  category: 'maintainability',
+  description: 'The workspace should have a root README.md file',
+  implementation: async () => {
+    const violations: ConformanceViolation[] = [];
+
+    const readmePath = join(workspaceRoot, 'README.md');
+    if (!existsSync(readmePath)) {
+      violations.push({
+        message: 'The workspace should have a root README.md file',
+        workspaceViolation: true,
+      });
+    }
+
+    return {
+      severity: 'low',
+      details: {
+        violations,
+      },
+    };
+  },
+});
+```
+
+{% /tabitem %}
 {% tabitem label="project violation" %}
 
 The `@nx/conformance:ensure-owners` rule provides us an example of how to write a rule that reports on a project being in violation of the rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
@@ -245,43 +317,131 @@ function isModuleSpecifierViolated(
 ```
 
 {% /tabitem %}
-{% tabitem label="workspace violation" %}
+{% /tabs %}
 
-This rule checks to see if there is a root README.md file in the workspace, and if there is not, it reports on the workspace itself.
+## Auto-fixing Violations with Fix Generators
 
-```ts
-import { workspaceRoot } from '@nx/devkit';
-import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+Rules can optionally implement a `fixGenerator` function that will be used to automatically fix violations.
 
-export default createConformanceRule<object>({
-  name: 'readme-file',
+### When Fix Generators Run
+
+- **`nx conformance`**: Evaluates rules and applies any available fix generators. Changes are written to disk and rules are evaluated once more to calculate how many violations were fixed.
+- **`nx conformance:check`**: Evaluates rules only. Fix generators are not applied (useful for CI).
+
+Fix generators are only ever applied for rules whose final status is not `disabled`.
+
+### Fix Generator Function Signature
+
+Fix generators are essentially standard Nx generators. They receive a `WritableConformanceTree` (an extension of the `FsTree` used in other Nx generators) and a schema containing violations, rule options, and optional extra data exposed by the rule implementation via `result.details.fixGeneratorData`.
+
+```typescript
+type ConformanceRuleFixGenerator<RuleOptions> = (
+  tree: WritableConformanceTree,
+  schema: {
+    violations: ConformanceViolation[];
+    ruleOptions: RuleOptions;
+    fixGeneratorData?: Record<string, unknown>;
+  }
+) => Promise<void> | void;
+```
+
+During rule evaluation (diagnostics phase) the `tree` is read-only. During the fix phase, the `tree` is writable for generators to modify files.
+
+### Passing Data from Rules to Fix Generators
+
+There are two supported ways to pass data from your rule implementation to its fix generator:
+
+1. **Per-violation data**: The exact `details.violations` array returned by your rule is provided to the fix generator. Each violation can provide `fixGeneratorData` for targeted fixes.
+
+   ```typescript
+   violations.push({
+     message: 'Missing license header',
+     file: 'libs/my-lib/src/index.ts',
+     fixGeneratorData: { header: '/* LICENSE */\n', missing: true },
+   });
+   ```
+
+   Note: Before final results are reported, any `fixGeneratorData` fields are stripped out.
+
+2. **Global data**: Put shared data on `details.fixGeneratorData`. If present, it will be passed as `schema.fixGeneratorData` to the fix generator and then stripped from the final report.
+
+   ```typescript
+   return {
+     severity: 'low',
+     details: {
+       violations,
+       fixGeneratorData: { dryRun: ruleOptions.addHeader === false },
+     },
+   };
+   ```
+
+   Useful for expensive precomputed lookups or workspace-wide context that applies to all violations.
+
+### Additional Notes
+
+- **Project filtering**: If the rule is configured with `projects`, the runner filters the violations accordingly before calling the fix generator. The generator receives only the filtered set.
+- **File-to-project inference**: If a violation specifies `file` but not `sourceProject`, the runner attempts to infer the owning project and will include that on the violation provided to the fix generator where possible.
+- **Data privacy**: Both `details.fixGeneratorData` and per-violation `fixGeneratorData` are never included in the emitted report. They are only available to the fix generator.
+
+### Example Conformance Rule with Fix Generator
+
+```typescript
+import { createConformanceRule } from '@nx/conformance';
+import type { ConformanceViolation } from '@nx/conformance';
+
+type RuleOptions = {
+  addHeader: boolean;
+};
+
+export default createConformanceRule<RuleOptions>({
+  name: 'license-header',
   category: 'maintainability',
-  description: 'The workspace should have a root README.md file',
-  implementation: async () => {
+  description: 'Ensure files contain a license header',
+  implementation: async ({ tree, ruleOptions }) => {
     const violations: ConformanceViolation[] = [];
 
-    const readmePath = join(workspaceRoot, 'README.md');
-    if (!existsSync(readmePath)) {
-      violations.push({
-        message: 'The workspace should have a root README.md file',
-        workspaceViolation: true,
-      });
+    for (const filePath of tree.children('libs/my-lib/src')) {
+      if (!filePath.endsWith('.ts')) continue;
+      const contents = tree.read(filePath, 'utf-8') ?? '';
+      if (!contents.startsWith('/* LICENSE */')) {
+        violations.push({
+          message: 'Missing license header',
+          file: `libs/my-lib/src/${filePath}`,
+          fixGeneratorData: { header: '/* LICENSE */\n', missing: true },
+        });
+      }
     }
 
     return {
       severity: 'low',
       details: {
         violations,
+        fixGeneratorData: { dryRun: ruleOptions.addHeader === false },
       },
     };
+  },
+  fixGenerator: async (tree, { violations, ruleOptions, fixGeneratorData }) => {
+    if (fixGeneratorData?.dryRun) return;
+
+    for (const v of violations) {
+      if (!('file' in v) || !v.file) continue;
+      const header = (v as any).fixGeneratorData?.header ?? '/* LICENSE */\n';
+      const existing = tree.read(v.file, 'utf-8') ?? '';
+      if (!existing.startsWith(header) && ruleOptions.addHeader !== false) {
+        tree.write(v.file, header + existing);
+      }
+    }
   },
 });
 ```
 
-{% /tabitem %}
-{% /tabs %}
+### Best Practices for Fix Generators
+
+- **Idempotent**: Generators should be safe to run multiple times without changing files after the first successful run.
+- **Minimal changes**: Modify only what is necessary to address the reported violations.
+- **Respect options**: Honor `ruleOptions` so users can tune behavior.
+- **Avoid re-discovery**: Prefer using the provided `violations` and optional `fixGeneratorData` rather than rescanning the workspace.
+- **Clear boundaries**: Keep heavy computation inside the rule implementation and pass the results via `fixGeneratorData` to the generator.
 
 ## Share Conformance Rules Across Workspaces
 

@@ -174,7 +174,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   if (selectedAgents && selectedAgents.length > 0) {
     const tree = new FsTree(repoRoot, false);
     const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
-      directory: repoRoot,
+      directory: '.',
       writeNxCloudRules: options.nxCloud !== false,
       packageVersion: 'latest',
       agents: [...selectedAgents],

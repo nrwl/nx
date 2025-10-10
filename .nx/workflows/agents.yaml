@@ -8,8 +8,10 @@ launch-templates:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
-
       NX_NATIVE_LOGGING: 'nx::native::db'
+      # These are need for build and link validation for next.js and astro apps
+      NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
+      NX_DEV_URL: 'https://canary.nx.dev'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -91,6 +93,9 @@ launch-templates:
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
       NX_NATIVE_LOGGING: 'nx::native::db'
+      # These are need for build and link validation for next.js and astro apps
+      NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
+      NX_DEV_URL: 'https://canary.nx.dev'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'

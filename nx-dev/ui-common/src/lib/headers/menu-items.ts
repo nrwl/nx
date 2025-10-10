@@ -156,9 +156,7 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
     description: null,
-    href: process.env.NEXT_PUBLIC_ASTRO_URL
-      ? '/docs/getting-started/tutorials'
-      : '/getting-started/tutorials',
+    href: '/docs/getting-started/tutorials',
     icon: AcademicCapIcon,
     isNew: false,
     isHighlight: false,

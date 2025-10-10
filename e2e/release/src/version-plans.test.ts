@@ -493,13 +493,14 @@ const yargs = require('yargs');
     })
     .parseAsync();
 
-  const { workspaceVersion, projectsVersionData } = await releaseVersion({
+  const { workspaceVersion, projectsVersionData, releaseGraph } = await releaseVersion({
     specifier: options.version,
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
 
   await releaseChangelog({
+    releaseGraph,
     versionData: projectsVersionData,
     version: workspaceVersion,
     dryRun: options.dryRun,
@@ -507,6 +508,7 @@ const yargs = require('yargs');
   });
 
   const publishProjectsResult = await releasePublish({
+    releaseGraph,
     dryRun: options.dryRun,
     verbose: options.verbose,
   });

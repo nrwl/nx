@@ -2,6 +2,19 @@
 const { withNx } = require('@nx/next/plugins/with-nx');
 const redirectRules = require('./redirect-rules');
 
+if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
+  // If we're building for production throw error as each env must set this value.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      `The NEXT_PUBLIC_ASTRO_URL environment variable is not set. Please set it to the URL of the Astro site.`
+    );
+  }
+  // For dev, default to the canary docs.
+  else {
+    process.env.NEXT_PUBLIC_ASTRO_URL = 'https://master--nx-docs.netlify.app';
+  }
+}
+
 module.exports = withNx({
   // Disable the type checking for now, we need to resolve the issues first.
   typescript: {

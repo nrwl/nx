@@ -139,22 +139,14 @@ export function GetStarted(): ReactElement {
                 <p className="mt-2">
                   Install Powerpack plugins such as{' '}
                   <TextLink
-                    href={
-                      process.env.NEXT_PUBLIC_ASTRO_URL
-                        ? '/docs/enterprise/powerpack/conformance'
-                        : '/nx-enterprise/powerpack/conformance'
-                    }
+                    href={'/docs/enterprise/powerpack/conformance'}
                     title="Workspace conformance"
                   >
                     workspace conformance
                   </TextLink>
                   , and{' '}
                   <TextLink
-                    href={
-                      process.env.NEXT_PUBLIC_ASTRO_URL
-                        ? '/docs/enterprise/powerpack/owners'
-                        : '/nx-enterprise/powerpack/owners'
-                    }
+                    href={'/docs/enterprise/powerpack/owners'}
                     title="Codeowners for monorepos"
                   >
                     Codeowners for monorepos

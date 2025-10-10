@@ -7,6 +7,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
+import { FsTree } from '../../generators/tree';
 import { hashArray } from '../../native';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import {
@@ -30,8 +31,8 @@ import {
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
-import { filterReleaseGroups } from './config/filter-release-groups';
 import { printConfigAndExit } from './utils/print-config';
+import { createReleaseGraph } from './utils/release-graph';
 
 export interface PublishProjectsResult {
   [projectName: string]: {
@@ -95,26 +96,30 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       });
     }
 
-    const {
-      error: filterError,
-      filterLog,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      _args.projects,
-      _args.groups
-    );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
+    // Use pre-built release graph if provided, otherwise create a new one
+    const releaseGraph =
+      args.releaseGraph ||
+      (await createReleaseGraph({
+        // Only build the tree if no existing graph, it's only needed for this
+        tree: new FsTree(workspaceRoot, args.verbose),
+        projectGraph,
+        nxReleaseConfig,
+        filters: {
+          projects: _args.projects,
+          groups: _args.groups,
+        },
+        firstRelease: args.firstRelease,
+        verbose: args.verbose,
+        // Publish doesn't need to resolve current versions during graph construction
+        skipVersionResolution: true,
+      }));
+
+    // Display filter log if filters were applied
     if (
-      filterLog &&
+      releaseGraph.filterLog &&
       process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
     ) {
-      output.note(filterLog);
+      output.note(releaseGraph.filterLog);
     }
 
     /**
@@ -131,13 +136,23 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     if (args.projects?.length) {
       /**
        * Run publishing for all remaining release groups and filtered projects within them
+       * in topological order
        */
-      for (const releaseGroup of releaseGroups) {
+      for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
+        const releaseGroup = releaseGraph.releaseGroups.find(
+          (g) => g.name === releaseGroupName
+        );
+        if (!releaseGroup) {
+          // Release group was filtered out, skip
+          continue;
+        }
         const publishProjectsResult = await runPublishOnProjects(
           _args,
           projectGraph,
           nxJson,
-          Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
+          Array.from(
+            releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+          ),
           {
             excludeTaskDependencies: shouldExcludeTaskDependencies,
             loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
@@ -155,7 +170,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     /**
      * Run publishing for all remaining release groups
      */
-    for (const releaseGroup of releaseGroups) {
+    for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
+      const releaseGroup = releaseGraph.releaseGroups.find(
+        (g) => g.name === releaseGroupName
+      );
+      if (!releaseGroup) {
+        // Release group was filtered out, skip
+        continue;
+      }
       const publishProjectsResult = await runPublishOnProjects(
         _args,
         projectGraph,

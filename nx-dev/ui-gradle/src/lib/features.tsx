@@ -18,11 +18,7 @@ export function Features(): ReactElement {
         <FeatureCard
           title="Task Caching"
           description="Cache task results locally and remotely, avoiding redundant builds and speeding up your development workflow."
-          href={
-            process.env.NEXT_PUBLIC_ASTRO_URL
-              ? '/docs/features/cache-task-results'
-              : '/features/cache-task-results'
-          }
+          href={'/docs/features/cache-task-results'}
           icon={
             <svg
               className="h-6 w-6"

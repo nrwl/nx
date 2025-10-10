@@ -50,9 +50,7 @@ export function Hero(): ReactElement {
               Get started
             </ButtonLink>
             <ButtonLink
-              href={`${
-                process.env['NEXT_PUBLIC_ASTRO_URL'] ? '/docs' : ''
-              }/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started`}
+              href="/docs/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started"
               title="Get started"
               variant="secondary"
               size="default"

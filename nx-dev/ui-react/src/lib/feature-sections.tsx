@@ -20,11 +20,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-affected.avif"
             alt="Nx Affected: Run tasks only on affected projects"
             tag="Affected"
-            href={
-              process.env.NEXT_PUBLIC_ASTRO_URL
-                ? '/docs/ci/features/affected'
-                : '/ci/features/affected'
-            }
+            href={'/docs/ci/features/affected'}
           />
 
           {/* Remote Caching Section */}
@@ -34,11 +30,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-replay.avif"
             alt="Nx Replay: Remote caching"
             tag="Nx Replay"
-            href={
-              process.env.NEXT_PUBLIC_ASTRO_URL
-                ? '/docs/features/cache-task-results'
-                : '/features/cache-task-results'
-            }
+            href={'/docs/features/cache-task-results'}
           />
 
           {/* Distribution Section */}
@@ -48,11 +40,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-agents.avif"
             alt="Nx Agents: Task distribution"
             tag="Nx Agents"
-            href={
-              process.env.NEXT_PUBLIC_ASTRO_URL
-                ? '/docs/ci/features/distribute-task-execution'
-                : '/ci/features/distribute-task-execution'
-            }
+            href={'/docs/ci/features/distribute-task-execution'}
           />
 
           {/* Atomizer Section */}
@@ -62,11 +50,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-atomizer.avif"
             alt="Nx Atomizer: Split large test tasks"
             tag="Atomizer"
-            href={
-              process.env.NEXT_PUBLIC_ASTRO_URL
-                ? '/docs/ci/features/split-e2e-tasks'
-                : '/ci/features/split-e2e-tasks'
-            }
+            href={'/docs/ci/features/split-e2e-tasks'}
           />
 
           {/* Flaky Test Retries Section */}

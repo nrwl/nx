@@ -71,8 +71,13 @@ describe('normalizeOptions', () => {
       outputFileName: 'index.js',
       singleEntry: true,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 
@@ -99,8 +104,13 @@ describe('normalizeOptions', () => {
       additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
       singleEntry: false,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 
@@ -126,8 +136,13 @@ describe('normalizeOptions', () => {
       outputFileName: 'test.js',
       singleEntry: true,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 
@@ -170,8 +185,13 @@ describe('normalizeOptions', () => {
       outputFileName: 'index.js',
       singleEntry: true,
       external: [],
+      excludeFromExternal: [],
       thirdParty: false,
       isTsSolutionSetup: false,
+      declaration: undefined,
+      declarationRootDir: undefined,
+      skipTypeCheck: undefined,
+      userDefinedBuildOptions: undefined,
     });
   });
 

@@ -493,11 +493,7 @@ export function Hero(): JSX.Element {
               className="mt-8 flex justify-start"
             >
               <ButtonLink
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/enhance-ai#setting-up-nx-mcp'
-                    : '/features/enhance-AI#setting-up-nx-mcp'
-                }
+                href={'/docs/features/enhance-ai#setting-up-nx-mcp'}
                 variant="primary"
                 size="default"
                 title="Enhance your AI assistant"

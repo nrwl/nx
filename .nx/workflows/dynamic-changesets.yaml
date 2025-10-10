@@ -22,8 +22,17 @@ assignment-rules:
   
   - projects:
       - e2e-react
+      - e2e-next
+      - e2e-web
     targets:
       - e2e-ci**react-package**
+      - e2e-ci**react.test**
+      - e2e-ci**react-router-ts-solution**
+      - e2e-ci**next-e2e-and-snapshots**
+      - e2e-ci**next-generation**
+      - e2e-ci**next-ts-solutions**
+      - e2e-ci**next-webpack**
+      - e2e-ci**web**
     run-on:
         - agent: linux-large
           parallelism: 1

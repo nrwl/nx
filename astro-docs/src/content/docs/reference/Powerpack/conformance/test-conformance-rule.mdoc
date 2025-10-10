@@ -1,0 +1,333 @@
+---
+title: Test a Conformance Rules
+description: Learn how to test custom conformance rules the @nx/conformance/testing utilities.
+sidebar:
+  label: Test Conformance Rule
+filter: 'type:References'
+---
+
+The `@nx/conformance/testing` package provides utilities for testing conformance rules in a controlled environment.
+
+It's recommended for all conformance rule tests to follow the same pattern using `createReadOnlyTree` and `createStubbedProjectGraphAndFileMapCache` when setting up test workspaces:
+
+```typescript
+import type { ReadOnlyConformanceTree } from '@nx/conformance';
+import {
+  applyProjectNodesAndFiles,
+  createReadOnlyTree,
+  createStubbedProjectGraphAndFileMapCache,
+} from '@nx/conformance/testing';
+import type { ProjectGraph } from '@nx/devkit';
+import type { FileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import rule from './index';
+
+describe('my-rule', () => {
+  let tree: ReadOnlyConformanceTree;
+  let projectGraph: ProjectGraph;
+  let fileMapCache: FileMapCache;
+  let cleanup: () => void;
+
+  beforeEach(async () => {
+    // Create the test workspace in a temporary directory and return a read-only tree and a cleanup function
+    ({ tree, cleanup } = await createReadOnlyTree());
+    // Prepare a stubbed project graph and file map cache for the test workspace
+    ({ projectGraph, fileMapCache } =
+      await createStubbedProjectGraphAndFileMapCache(tree, [
+        // Optionally add projects and files to the tree, project graph and file map cache if the rule implementation needs them
+        // This can also be done later in specific tests using the `applyProjectNodesAndFiles` function
+      ]));
+  });
+
+  // Invoke the cleanup function to remove the generated temporary directory after each test
+  afterEach(() => cleanup());
+
+  it('should return a violation when something specific happens', async () => {
+    // Optionally add projects and files to the tree, project graph and file map cache if the rule implementation needs them
+    applyProjectNodesAndFiles(tree, projectGraph, fileMapCache, [
+      {
+        projectNode: {
+          name: 'my-lib',
+          type: 'lib',
+          data: {
+            root: 'libs/my-lib',
+          },
+        },
+        projectFiles: [
+          // If our specific rule needs to know about project graph dependencies, we add them like so
+          // In this example this entry causes my-lib to depend on my-app on the project graph and have it correctly attributed to my-lib in the file map cache
+          {
+            projectRootRelativeFile: 'src/index.ts',
+            depsItCreates: ['my-app'],
+          },
+        ],
+      },
+      {
+        projectNode: {
+          name: 'my-app',
+          type: 'app',
+          data: {
+            root: 'apps/my-app',
+          },
+        },
+      },
+    ]);
+
+    const result = await rule.implementation({
+      tree,
+      projectGraph,
+      fileMapCache,
+      ruleOptions: {},
+    });
+
+    expect(result.details.violations).toMatchInlineSnapshot(`
+      // YOUR SNAPSHOT HERE
+    `);
+  });
+});
+```
+
+## Adding Files to the Test Workspace
+
+You can optionally provide an async callback to `createReadOnlyTree` to add files or even run Nx generators before the tests run:
+
+```typescript
+const { tree, cleanup } = await createReadOnlyTree(async (writableTree) => {
+  // Add files to the tree before it becomes read-only
+  writableTree.write(
+    'libs/my-lib/custom-config.json',
+    JSON.stringify({ setting: 'value' })
+  );
+  // Run some Nx generator
+  await libraryGenerator(writableTree, {
+    // generator options
+  });
+});
+```
+
+## Testing Fix Generators
+
+If your rule includes a fix generator, you can test it by converting the read-only tree to a writable one using `convertToWritable` and then running the fix generator:
+
+```typescript
+import { convertToWritable, convertToReadOnly } from '@nx/conformance/testing';
+
+it('should fix violations when fix generator is applied', async () => {
+  // ... setup and rule implementation test ...
+
+  // Convert to a WritableConformanceTree and run fix generator
+  const writableTree = convertToWritable(tree);
+  await rule.fixGenerator(writableTree, {
+    violations: result.details.violations,
+    ruleOptions: {},
+  });
+
+  const resultAfterFix = await rule.implementation({
+    // Convert back to a ReadOnlyConformanceTree for the rule implementation and verify the fix worked
+    tree: convertToReadOnly(writableTree),
+    projectGraph,
+    fileMapCache,
+    ruleOptions: {},
+  });
+
+  expect(resultAfterFix.details.violations).toMatchInlineSnapshot(`[]`);
+});
+```
+
+## Complete Example
+
+Here's a complete example testing a rule that checks for license headers and includes a fix generator:
+
+```typescript
+import type { ReadOnlyConformanceTree } from '@nx/conformance';
+import {
+  applyProjectNodesAndFiles,
+  createReadOnlyTree,
+  createStubbedProjectGraphAndFileMapCache,
+  convertToWritable,
+  convertToReadOnly,
+} from '@nx/conformance/testing';
+import type { ProjectGraph } from '@nx/devkit';
+import type { FileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import rule from './license-header-rule';
+
+describe('license-header-rule', () => {
+  let tree: ReadOnlyConformanceTree;
+  let projectGraph: ProjectGraph;
+  let fileMapCache: FileMapCache;
+  let cleanup: () => void;
+
+  beforeEach(async () => {
+    ({ tree, cleanup } = await createReadOnlyTree(async (writableTree) => {
+      // Create a test file without a license header
+      writableTree.write(
+        'libs/my-lib/src/index.ts',
+        'export const foo = "bar";'
+      );
+    }));
+
+    ({ projectGraph, fileMapCache } =
+      await createStubbedProjectGraphAndFileMapCache(tree, [
+        {
+          projectNode: {
+            name: 'my-lib',
+            type: 'lib',
+            data: {
+              root: 'libs/my-lib',
+            },
+          },
+        },
+      ]));
+  });
+
+  afterEach(() => cleanup());
+
+  it('should detect missing license header', async () => {
+    const result = await rule.implementation({
+      tree,
+      projectGraph,
+      fileMapCache,
+      ruleOptions: { addHeader: true },
+    });
+
+    expect(result.details.violations).toHaveLength(1);
+    expect(result.details.violations[0]).toMatchObject({
+      message: 'Missing license header',
+      file: 'libs/my-lib/src/index.ts',
+    });
+  });
+
+  it('should fix missing license header when fix generator is applied', async () => {
+    const result = await rule.implementation({
+      tree,
+      projectGraph,
+      fileMapCache,
+      ruleOptions: { addHeader: true },
+    });
+
+    expect(result.details.violations).toHaveLength(1);
+
+    // Apply the fix
+    const writableTree = convertToWritable(tree);
+    await rule.fixGenerator(writableTree, {
+      violations: result.details.violations,
+      ruleOptions: { addHeader: true },
+    });
+
+    // Verify the fix worked
+    const resultAfterFix = await rule.implementation({
+      tree: convertToReadOnly(writableTree),
+      projectGraph,
+      fileMapCache,
+      ruleOptions: { addHeader: true },
+    });
+
+    expect(resultAfterFix.details.violations).toHaveLength(0);
+
+    // Verify the file content
+    const fixedContent = writableTree.read('libs/my-lib/src/index.ts', 'utf-8');
+    expect(fixedContent).toContain('/* LICENSE */');
+  });
+});
+```
+
+## Conformance Testing Best Practices
+
+1. **Use snapshots**: Use `toMatchInlineSnapshot()` for violation arrays to easily see changes in test output.
+2. **Test isolation**: Always use cleanup in the `afterEach` (or your testing framework equivalent) to ensure tests don't interfere with each other.
+3. **Test both detection and fixes**: If your rule has a fix generator, test both that violations are detected and that the fix works correctly.
+4. **Test edge cases**: Test with empty workspaces, missing files, and various project configurations.
+
+### Writing Performant Conformance Rules
+
+Each rule will show its respective execution time and you can use this to identify rules that are slow to run.
+
+#### Avoid Blocking the Main Thread
+
+Sometimes you may notice that a rule that seems to take a while to complete when run as part of the full rule set but is much faster when run individually. This is because another rule is blocking the main thread. Conformance rules are executed in parallel on the main thread so it is important to avoid blocking actions in a particular rule or it will impact the execution of others.
+
+## Available Conformance Testing Utilities
+
+The `@nx/conformance/testing` package exports the following utilities:
+
+### `createReadOnlyTree(callback?)`
+
+Creates a read-only tree with a basic Nx workspace structure. Returns `Promise<{ tree, cleanup }>`.
+
+**Parameters:**
+
+- `callback` (optional): An async function that receives a writable tree before it becomes read-only. Use this to add files or run generators.
+
+**Returns:**
+
+- `tree`: A `ReadOnlyConformanceTree` instance
+- `cleanup`: A function to call in `afterEach` to remove the temporary directory
+
+### `createStubbedProjectGraphAndFileMapCache(tree, projectNodesWithFiles)`
+
+Creates a stubbed project graph and file map cache for testing. Returns `Promise<{ projectGraph, fileMapCache }>`.
+
+**Parameters:**
+
+- `tree`: The `ReadOnlyConformanceTree` from `createReadOnlyTree`
+- `projectNodesWithFiles`: An array of `ProjectNodesWithFiles` to initialize the graph with (can be empty)
+
+**Returns:**
+
+- `projectGraph`: A stubbed `ProjectGraph` instance
+- `fileMapCache`: A stubbed `FileMapCache` instance
+
+### `applyProjectNodesAndFiles(tree, projectGraph, fileMapCache, projectNodesWithFiles)`
+
+Adds projects and files to the test workspace, updating both the tree and the project graph.
+
+**Parameters:**
+
+- `tree`: The `ReadOnlyConformanceTree`
+- `projectGraph`: The `ProjectGraph` to update
+- `fileMapCache`: The `FileMapCache` to update
+- `projectNodesWithFiles`: An array of `ProjectNodesWithFiles` describing projects and their files to add
+
+### `convertToWritable(tree)`
+
+Converts a `ReadOnlyConformanceTree` to a `WritableConformanceTree` for fix generator testing.
+
+**Parameters:**
+
+- `tree`: The `ReadOnlyConformanceTree` to convert
+
+**Returns:** A `WritableConformanceTree` instance
+
+### `convertToReadOnly(tree)`
+
+Converts a `WritableConformanceTree` back to a `ReadOnlyConformanceTree`.
+
+**Parameters:**
+
+- `tree`: The `WritableConformanceTree` to convert
+
+**Returns:** A `ReadOnlyConformanceTree` instance
+
+### `type ProjectNodesWithFiles`
+
+A type that represents the projects and files to be added to the test workspace:
+
+```typescript
+type ProjectNodesWithFiles = {
+  projectNode: {
+    name: string;
+    type: string;
+    data: {
+      root: string;
+      // ... other project data
+    };
+  };
+  projectFiles?: Array<{
+    projectRootRelativeFile: string;
+    depsItCreates?: string[];
+  }>;
+};
+```

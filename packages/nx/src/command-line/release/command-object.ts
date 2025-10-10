@@ -1,17 +1,18 @@
-import { Argv, CommandModule, showHelp } from 'yargs';
+import { type Argv, type CommandModule, showHelp } from 'yargs';
 import { logger } from '../../utils/logger';
 import {
-  OutputStyle,
-  RunManyOptions,
+  type OutputStyle,
+  type RunManyOptions,
   parseCSV,
+  readParallelFromArgsAndEnv,
   withAffectedOptions,
   withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
   withVerbose,
-  readParallelFromArgsAndEnv,
 } from '../yargs-utils/shared-options';
-import { VersionData } from './utils/shared';
+import type { ReleaseGraph } from './utils/release-graph';
+import type { VersionData } from './utils/shared';
 
 // Implemented by every command and subcommand
 export interface BaseNxReleaseArgs {
@@ -52,6 +53,8 @@ export type VersionOptions = NxReleaseArgs &
     preid?: string;
     stageChanges?: boolean;
     versionActionsOptionsOverrides?: Record<string, unknown>;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -65,6 +68,8 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     createRelease?: false | 'github' | 'gitlab';
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -75,6 +80,8 @@ export type PublishOptions = NxReleaseArgs &
     otp?: number;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
     versionData?: VersionData;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
   };
 
 export type PlanOptions = NxReleaseArgs & {

@@ -241,16 +241,10 @@ export async function createNxReleaseConfig(
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
-  /**
-   * TODO(v22): in v22, make it so that this pattern is used by default when any custom groups are used
-   */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
   const defaultReleaseTagPatternRequireSemver = true;
-  /**
-   * TODO(v22): in v22, set this to true by default
-   */
-  const defaultReleaseTagPatternStrictPreid = false;
+  const defaultReleaseTagPatternStrictPreid = true;
 
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
@@ -351,16 +345,14 @@ export async function createNxReleaseConfig(
       git: versionGitDefaults,
       conventionalCommits: userConfig.version?.conventionalCommits || false,
       preVersionCommand: userConfig.version?.preVersionCommand || '',
-
       versionActions: DEFAULT_VERSION_ACTIONS_PATH,
       versionActionsOptions: {},
       currentVersionResolver: defaultGeneratorOptions.currentVersionResolver,
       specifierSource: defaultGeneratorOptions.specifierSource,
       preserveLocalDependencyProtocols:
         userConfig.version?.preserveLocalDependencyProtocols ?? true,
-      // TODO(v22): flip default to true
       preserveMatchingDependencyRanges:
-        userConfig.version?.preserveMatchingDependencyRanges ?? false,
+        userConfig.version?.preserveMatchingDependencyRanges ?? true,
       logUnchangedProjects: userConfig.version?.logUnchangedProjects ?? true,
       updateDependents: userConfig.version?.updateDependents ?? 'auto',
     } as DeepRequired<NxReleaseConfiguration['version']>,
@@ -410,6 +402,8 @@ export async function createNxReleaseConfig(
     releaseTagPatternRequireSemver:
       userConfig.releaseTagPatternRequireSemver ??
       defaultReleaseTagPatternRequireSemver,
+    releaseTagPatternPreferDockerVersion:
+      userConfig.releaseTagPatternPreferDockerVersion ?? false,
     releaseTagPatternStrictPreid:
       userConfig.releaseTagPatternStrictPreid ??
       defaultReleaseTagPatternStrictPreid,
@@ -478,6 +472,7 @@ export async function createNxReleaseConfig(
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
     releaseTagPatternRequireSemver: groupReleaseTagPatternRequireSemver,
+    releaseTagPatternPreferDockerVersion: false,
     releaseTagPatternStrictPreid: groupReleaseTagPatternStrictPreid,
     versionPlans: false,
   };
@@ -665,6 +660,13 @@ export async function createNxReleaseConfig(
           nxReleaseConfig: null,
         };
       }
+    } else {
+      releaseGroup.releaseTagPattern =
+        releaseGroup.projectsRelationship === 'independent'
+          ? WORKSPACE_DEFAULTS.releaseTagPattern?.includes('{projectName}')
+            ? WORKSPACE_DEFAULTS.releaseTagPattern
+            : defaultIndependentReleaseTagPattern
+          : userConfig?.releaseTagPattern ?? defaultFixedGroupReleaseTagPattern;
     }
 
     for (const project of matchingProjects) {
@@ -754,6 +756,10 @@ export async function createNxReleaseConfig(
         releaseGroup.releaseTagPatternRequireSemver ??
         userConfig.releaseTagPatternRequireSemver ??
         defaultReleaseTagPatternRequireSemver,
+      releaseTagPatternPreferDockerVersion:
+        releaseGroup.releaseTagPatternPreferDockerVersion ??
+        userConfig.releaseTagPatternPreferDockerVersion ??
+        false,
       releaseTagPatternStrictPreid:
         releaseGroup.releaseTagPatternStrictPreid ??
         userConfig.releaseTagPatternStrictPreid ??
@@ -825,6 +831,17 @@ export async function createNxReleaseConfig(
     if (hasDockerProjects) {
       // If any project in the group has docker configuration, disable semver requirement
       releaseGroup.releaseTagPatternRequireSemver = false;
+
+      // Set releaseTagPatternPreferDockerVersion to true by default when docker projects exist,
+      // unless user has explicitly configured it
+      if (
+        releaseGroup.releaseTagPatternPreferDockerVersion === false &&
+        userConfig.groups?.[releaseGroupName]
+          ?.releaseTagPatternPreferDockerVersion === undefined &&
+        userConfig.releaseTagPatternPreferDockerVersion === undefined
+      ) {
+        releaseGroup.releaseTagPatternPreferDockerVersion = true;
+      }
     }
   }
 
@@ -854,6 +871,8 @@ export async function createNxReleaseConfig(
         WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver,
       releaseTagPatternStrictPreid:
         WORKSPACE_DEFAULTS.releaseTagPatternStrictPreid,
+      releaseTagPatternPreferDockerVersion:
+        WORKSPACE_DEFAULTS.releaseTagPatternPreferDockerVersion,
       git: rootGitConfig,
       docker: rootDockerConfig,
       version: rootVersionConfig,

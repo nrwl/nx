@@ -51,15 +51,9 @@ export default function AiDocs(): JSX.Element {
           'h-[calc(100dvh)]'
         )}
       >
-        {process.env.NEXT_PUBLIC_ASTRO_URL ? (
-          <div className="mb-12">
-            <Header />
-          </div>
-        ) : (
-          <div className="w-full flex-shrink-0">
-            <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
-          </div>
-        )}
+        <div className="mb-12">
+          <Header />
+        </div>
         <main
           id="main"
           role="main"

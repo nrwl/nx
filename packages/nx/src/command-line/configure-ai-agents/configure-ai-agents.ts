@@ -100,39 +100,71 @@ export async function configureAiAgentsHandlerImpl(
     process.exit(1);
   }
 
-  if (options.check) {
-    if (fullyConfiguredAgents.length === 0) {
-      output.log({
-        title: 'No AI agents are configured',
-        bodyLines: [
-          'You can configure AI agents by running `nx configure-ai-agents`.',
-        ],
-      });
-      process.exit(0);
-    }
+  // important for wording
+  const usingAllAgents =
+    normalizedOptions.agents.length === supportedAgents.length;
 
+  if (normalizedOptions.check) {
     const outOfDateAgents = fullyConfiguredAgents.filter((a) => a?.outdated);
 
-    if (outOfDateAgents.length === 0) {
-      output.success({
-        title: 'All configured AI agents are up to date',
-        bodyLines: fullyConfiguredAgents.map((a) => `- ${a.displayName}`),
-      });
-      process.exit(0);
-    } else {
-      output.log({
-        title: 'The following AI agents are out of date:',
+    // only error if something is fully configured but outdated
+    if (normalizedOptions.check === 'outdated') {
+      if (fullyConfiguredAgents.length === 0) {
+        output.log({
+          title: 'No AI agents are configured',
+          bodyLines: [
+            'You can configure AI agents by running `nx configure-ai-agents`.',
+          ],
+        });
+        process.exit(0);
+      }
+
+      if (outOfDateAgents.length === 0) {
+        output.success({
+          title: 'All configured AI agents are up to date',
+          bodyLines: fullyConfiguredAgents.map((a) => `- ${a.displayName}`),
+        });
+        process.exit(0);
+      } else {
+        output.log({
+          title: 'The following AI agents are out of date:',
+          bodyLines: [
+            ...outOfDateAgents.map((a) => {
+              const rulesPath = a.rulesPath;
+              const displayPath = rulesPath.startsWith(workspaceRoot)
+                ? relative(workspaceRoot, rulesPath)
+                : rulesPath;
+              return `- ${a.displayName} (${displayPath})`;
+            }),
+            '',
+            'You can update them by running `nx configure-ai-agents`.',
+          ],
+        });
+        process.exit(1);
+      }
+      // error on any partial, outdated or non-configured agent
+    } else if (normalizedOptions.check === 'all') {
+      if (
+        partiallyConfiguredAgents.length === 0 &&
+        outOfDateAgents.length === 0 &&
+        nonConfiguredAgents.length === 0
+      ) {
+        output.success({
+          title: `All ${
+            !usingAllAgents ? 'selected' : 'supported'
+          } AI agents are fully configured and up to date`,
+          bodyLines: fullyConfiguredAgents.map((a) => `- ${a.displayName}`),
+        });
+        process.exit(0);
+      }
+
+      output.error({
+        title: 'The following agents are not fully configured or up to date:',
         bodyLines: [
-          ...outOfDateAgents.map((a) => {
-            const rulesPath = a.rulesPath;
-            const displayPath = rulesPath.startsWith(workspaceRoot)
-              ? relative(workspaceRoot, rulesPath)
-              : rulesPath;
-            return `- ${a.displayName} (${displayPath})`;
-          }),
-          '',
-          'You can update them by running `nx configure-ai-agents`.',
-        ],
+          ...partiallyConfiguredAgents,
+          ...outOfDateAgents,
+          ...nonConfiguredAgents,
+        ].map((a) => getAgentChoiceForPrompt(a).message),
       });
       process.exit(1);
     }
@@ -164,8 +196,6 @@ export async function configureAiAgentsHandlerImpl(
   });
 
   if (allAgentChoices.length === 0) {
-    const usingAllAgents =
-      normalizedOptions.agents.length === supportedAgents.length;
     output.success({
       title: `No new agents to configure. All ${
         !usingAllAgents ? 'selected' : 'supported'
@@ -314,9 +344,11 @@ function normalizeOptions(
   const agents = (options.agents ?? supportedAgents).filter((a) =>
     supportedAgents.includes(a as Agent)
   ) as Agent[];
+  // it used to be just --check which was implicitly 'outdated'
+  const check = (options.check === true ? 'outdated' : options.check) ?? false;
   return {
     ...options,
     agents,
-    check: options.check ?? false,
+    check,
   };
 }
