@@ -159,6 +159,10 @@ export class ReleaseGroupProcessor {
       if (this.processedGroups.has(nextGroup)) {
         continue;
       }
+      // The next group might not present in the groupGraph if it has been filtered out
+      if (!this.releaseGraph.groupGraph.has(nextGroup)) {
+        continue;
+      }
 
       const allDependenciesProcessed = Array.from(
         this.releaseGraph.groupGraph.get(nextGroup)!.dependencies
@@ -171,6 +175,10 @@ export class ReleaseGroupProcessor {
         for (const dep of this.releaseGraph.groupGraph.get(nextGroup)!
           .dependencies) {
           if (!this.processedGroups.has(dep)) {
+            // The next group might not present in the groupGraph if it has been filtered out
+            if (!this.releaseGraph.groupGraph.has(dep)) {
+              continue;
+            }
             await this.processGroup(dep);
             this.processedGroups.add(dep);
             processOrder.push(dep);
