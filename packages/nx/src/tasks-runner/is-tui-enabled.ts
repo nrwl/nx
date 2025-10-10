@@ -4,8 +4,6 @@ import { NxArgs } from '../utils/command-line-utils';
 import { isCI } from '../utils/is-ci';
 import { logger } from '../utils/logger';
 
-let tuiEnabled = undefined;
-
 /**
  * @returns If tui is enabled
  */
