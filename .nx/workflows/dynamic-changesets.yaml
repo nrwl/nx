@@ -1,5 +1,5 @@
 distribute-on:
-  default: auto linux-large, 1 linux-extra-large
+  default: 8 linux-large, 1 linux-extra-large
 assignment-rules:
   # e2e-release tests must run sequentially due to shared git state and publishing operations
   - projects:
