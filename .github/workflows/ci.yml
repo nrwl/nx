@@ -46,7 +46,7 @@ jobs:
           main-branch-name: 'master'
 
       - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="3 linux-large"
+        run: npx nx-cloud@next start-ci-run --distribute-on="3 linux-large" --stop-agents-after="e2e"
       - name: sleep
         run: sleep 1800
       - name: Install dependencies
