@@ -29,7 +29,7 @@ Introducing the new `configure-ai-agents` command:
 nx configure-ai-agents
 ```
 
-This command [sets up your workspace](/getting-started/ai-setup#automatic-ai-setup) with the necessary configuration files so AI assistants can leverage Nx's deep understanding of your monorepo's project relationships, dependencies, and tasks. Your AI coding assistant gets instant access to the bigger picture, moving beyond simple file edits to understand how your entire codebase fits together.
+This command [sets up your workspace](/docs/getting-started/ai-setup#automatic-ai-setup) with the necessary configuration files so AI assistants can leverage Nx's deep understanding of your monorepo's project relationships, dependencies, and tasks. Your AI coding assistant gets instant access to the bigger picture, moving beyond simple file edits to understand how your entire codebase fits together.
 
 [Learn more about enhancing AI assistants with Nx](/features/enhance-AI)
 
@@ -55,7 +55,7 @@ We've also refined the visual experience with improved title styling when panels
 
 ## Merging atomized Playwright test results
 
-Atomized tests help lower your [Time to Green](/guides/nx-cloud/optimize-your-ttg) by running more in parallel during CI, but they do come with one downside: your test logs are now split over multiple task results. To simplify this, Nx can now merge the results of atomized tests so you get the best of both worlds.
+Atomized tests help lower your [Time to Green](/docs/guides/nx-cloud/optimize-your-ttg) by running more in parallel during CI, but they do come with one downside: your test logs are now split over multiple task results. To simplify this, Nx can now merge the results of atomized tests so you get the best of both worlds.
 
 For [Playwright users](/technologies/test-tools/playwright/recipes/merge-atomized-outputs), Nx now automatically infers a new task (`e2e-ci--merge-reports`) to merge reports from atomized test runs. This means you can split your test suite across multiple machines for faster CI runs, and Nx handles combining the results for you.
 
