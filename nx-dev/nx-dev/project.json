@@ -6,6 +6,7 @@
   "targets": {
     "build": {
       "dependsOn": [
+        "astro-docs:build",
         {
           "target": "build-base"
         }

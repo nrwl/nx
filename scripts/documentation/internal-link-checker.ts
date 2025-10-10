@@ -88,10 +88,8 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
     };
   } = parser.parse(readFileContents(join(directoryPath, filename)));
 
-  const internalSitemap = sitemapIndex.sitemapindex.sitemap.find(
-    // astro sitemap adds a new item into the sitemap entries with <domain>/docs/sitemap-index.xml.
-    // we already validate the sitemap links insite astro. no need to do it in nextjs
-    (s) => !s.loc.endsWith('/docs/sitemap-index.xml')
+  const internalSitemap = sitemapIndex.sitemapindex.sitemap.find((s) =>
+    s.loc.endsWith('sitemap-0.xml')
   );
   if (!internalSitemap) {
     console.warn(join(directoryPath, filename), sitemapIndex);
@@ -121,10 +119,21 @@ function readSiteMapLinks(filePath: string): string[] {
 
 // Main
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
-const sitemapUrls = readSiteMapIndex(
+
+// Read Next.js sitemap URLs
+const nextjsSitemapUrls = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
+console.log(nextjsSitemapUrls.length + ' URLs found in Next.js sitemap');
+
+// Read Astro sitemap URLs
+const astroSitemapUrls = readSiteMapLinks(
+  join(workspaceRoot, 'astro-docs/dist/sitemap-0.xml')
+);
+console.log(astroSitemapUrls.length + ' URLs found in Astro sitemap');
+// Combine all sitemap URLs into a single set
+const sitemapUrls = [...new Set([...nextjsSitemapUrls, ...astroSitemapUrls])];
 
 function headerToAnchor(line: string): string {
   return line
@@ -177,6 +186,9 @@ const ignoreAnchorUrls = [
   '/ci/reference',
   '/changelog',
   '/conf',
+  // NOTE: ignore astro docs anchor links since
+  // we don't have a simple way to get all header contents from src at this point
+  '/docs',
 ];
 
 const errors: Array<{ file: string; link: string }> = [];
