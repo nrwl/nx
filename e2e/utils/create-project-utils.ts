@@ -65,6 +65,7 @@ const nxPackages = [
   `@nx/webpack`,
   `@nx/react-native`,
   `@nx/expo`,
+  '@nx/dotnet',
 ] as const;
 
 type NxPackage = (typeof nxPackages)[number];
@@ -122,14 +123,17 @@ export function newProject({
           'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options'
         );
       }
-      const packageInstallStart = performance.mark('packageInstall:start');
-      packageInstall((packages ?? nxPackages).join(` `), projScope);
-      const packageInstallEnd = performance.mark('packageInstall:end');
-      packageInstallMeasure = performance.measure(
-        'packageInstall',
-        packageInstallStart.name,
-        packageInstallEnd.name
-      );
+      const packagesToInstall = packages ?? nxPackages;
+      if (packagesToInstall.length > 0) {
+        const packageInstallStart = performance.mark('packageInstall:start');
+        packageInstall((packages ?? nxPackages).join(` `), projScope);
+        const packageInstallEnd = performance.mark('packageInstall:end');
+        packageInstallMeasure = performance.measure(
+          'packageInstall',
+          packageInstallStart.name,
+          packageInstallEnd.name
+        );
+      }
       // stop the daemon
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
