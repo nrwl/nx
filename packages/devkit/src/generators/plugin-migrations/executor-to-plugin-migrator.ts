@@ -575,10 +575,11 @@ async function addPluginRegistrations<T>(
       const plugin: ExpandedPluginConfiguration = {
         plugin: pluginPath,
         options,
+        include: [projectIncludeGlob],
       };
 
-      if (await arePluginIncludesRequired(project, plugin)) {
-        plugin.include = [projectIncludeGlob];
+      if (!(await arePluginIncludesRequired(project, plugin))) {
+        delete plugin.include;
       }
 
       nxJson.plugins.push(plugin);
