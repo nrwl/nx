@@ -61,16 +61,6 @@ function getOutputPathFromTsConfig(tsConfigPath: string): string | null {
 }
 
 /**
- * Convert .ts extension to .js for compiled output references
- */
-function convertTsToJs(filePath: string): string {
-  if (filePath.endsWith('.ts')) {
-    return filePath.replace(/\.ts$/, '.js');
-  }
-  return filePath;
-}
-
-/**
  * Add required package.json fields
  */
 async function addPackageJsonFields(
@@ -112,6 +102,32 @@ async function addPackageJsonFields(
   if (!packageJson.type) {
     packageJson.type = 'commonjs';
     hasChanges = true;
+  }
+
+  // Copy specified fields from source package.json nx object to distributed package.json root
+  const sourcePackageJsonPath = path.join(
+    workspaceRoot,
+    'packages',
+    packageJson.name,
+    'package.json'
+  );
+  if (fs.existsSync(sourcePackageJsonPath)) {
+    const sourcePackageJson = readJson(sourcePackageJsonPath);
+
+    // Copy bin field from nxConfig.bin to root if it exists in source
+    if (sourcePackageJson.nxConfig?.bin) {
+      packageJson.bin = sourcePackageJson.nxConfig.bin;
+      hasChanges = true;
+    }
+
+    // Copy/merge scripts field from nxConfig.scripts to root if it exists in source
+    if (sourcePackageJson.nxConfig?.scripts) {
+      packageJson.scripts = {
+        ...packageJson.scripts,
+        ...sourcePackageJson.nxConfig.scripts,
+      };
+      hasChanges = true;
+    }
   }
 
   if (hasChanges) {
