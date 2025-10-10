@@ -8,13 +8,13 @@ filter: 'type:References'
 
 ##### Self-Healing CI / AI Fixes
 
+- See [self-healing CI guide](https://nx.dev/docs/guides/nx-cloud/enable-ai-features#self-healing-ci-for-enterprise-on-prem-installations) for enablement steps.
+
 - Feat: Automatically detect and fix failing CI tasks with AI-generated solutions
 - Feat: New `nx-cloud self-heal apply-locally` command to test AI fixes before applying them in CI
 - Feat: Revert previously applied AI fixes or automatically apply verified ones
 - Feat: GitHub review comments now surface suggested AI-generated fixes
 - Feat: Improved verification flow, prompt wording, and commit awareness to increase fix quality
-- Feat: Workspace setting to enable or disable self-healing CI
-  - See the [self-healing CI guide](https://nx.dev/docs/guides/nx-cloud/enable-ai-features#self-healing-ci-for-enterprise-on-prem-installations) for enablement steps
 
 ##### Graph & Visualization
 
@@ -40,7 +40,7 @@ filter: 'type:References'
 
 ##### Enterprise Features
 
-- Feat: JWT-based authentication and more resilient SCIM operations
+- Feat: SCIM support for Okta, PingIdentity and Azure AD
 
 ##### Conformance
 
@@ -50,12 +50,12 @@ filter: 'type:References'
 
 ##### Developer Experience
 
-- Feat: Better reconciliation and visibility for restarted agents
+- Feat: Better reconciliation and visibility for restarted agents (view which tasks caused an agent to restart and previous logs for restarted agents)
 - Feat: Comprehensive dark mode refinements across the application
 
 ##### Deployment
 
-- Chore: Released Helm chart `1.1.0` for Nx Cloud
+- Chore: Released Helm chart `1.0.0` for Nx Cloud
   - Review the [migration guide](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/MIGRATION.md) before upgrading
 
 ### 2025.07.1
