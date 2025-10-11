@@ -31,7 +31,7 @@ export async function getNxProjectGraphLines(
       'none',
       ...gradlePluginOptionsArgs,
       `-PworkspaceRoot=${workspaceRoot}`,
-      process.env.NX_VERBOSE_LOGGING ? '--info' : '',
+      process.env.NX_GRADLE_VERBOSE_LOGGING ? '--info' : '',
     ]);
   } catch (e: Buffer | Error | any) {
     if (e.toString()?.includes('ERROR: JAVA_HOME')) {
