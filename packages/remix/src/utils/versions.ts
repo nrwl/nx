@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nx/devkit';
+import { getDependencyVersionFromPackageJson, Tree } from '@nx/devkit';
 
 export const nxVersion = require('../../package.json').version;
 
@@ -21,14 +21,7 @@ export const testingLibraryUserEventsVersion = '^14.5.2';
 export const viteVersion = '^5.0.0';
 
 export function getRemixVersion(tree: Tree): string {
-  return getPackageVersion(tree, '@remix-run/dev') ?? remixVersion;
-}
-
-export function getPackageVersion(tree: Tree, packageName: string) {
-  const packageJsonContents = readJson(tree, 'package.json');
   return (
-    packageJsonContents?.['devDependencies']?.[packageName] ??
-    packageJsonContents?.['dependencies']?.[packageName] ??
-    null
+    getDependencyVersionFromPackageJson(tree, '@remix-run/dev') ?? remixVersion
   );
 }

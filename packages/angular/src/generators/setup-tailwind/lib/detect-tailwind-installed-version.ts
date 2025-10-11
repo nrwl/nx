@@ -13,7 +13,7 @@ export function detectTailwindInstalledVersion(
     return undefined;
   }
 
-  const version = checkAndCleanWithSemver('tailwindcss', tailwindVersion);
+  const version = checkAndCleanWithSemver(tree, 'tailwindcss', tailwindVersion);
   if (lt(version, '2.0.0')) {
     throw new Error(
       `The Tailwind CSS version "${tailwindVersion}" is not supported. Please upgrade to v2.0.0 or higher.`

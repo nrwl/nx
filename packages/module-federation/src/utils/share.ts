@@ -17,6 +17,7 @@ import {
   logger,
   readJsonFile,
   joinPathFragments,
+  getDependencyVersionFromPackageJson,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
@@ -112,7 +113,13 @@ export function shareWorkspaceLibraries(
       }
       return pathMappings.reduce((libraries, library) => {
         // Check to see if the library version is declared in the app's package.json
-        let version = pkgJson?.dependencies?.[library.name];
+        let version = pkgJson
+          ? getDependencyVersionFromPackageJson(
+              library.name,
+              workspaceRoot,
+              pkgJson
+            )
+          : null;
         if (!version && workspaceLibs.length > 0) {
           const workspaceLib = workspaceLibs.find(
             (lib) => lib.importKey === library.name
@@ -215,8 +222,11 @@ export function sharePackages(
   const pkgJson = readRootPackageJson();
   const allPackages: { name: string; version: string }[] = [];
   packages.forEach((pkg) => {
-    const pkgVersion =
-      pkgJson.dependencies?.[pkg] ?? pkgJson.devDependencies?.[pkg];
+    const pkgVersion = getDependencyVersionFromPackageJson(
+      pkg,
+      workspaceRoot,
+      pkgJson
+    );
     allPackages.push({ name: pkg, version: pkgVersion });
     collectPackageSecondaryEntryPoints(pkg, pkgVersion, allPackages);
   });
@@ -302,8 +312,7 @@ function addStringDependencyToSharedConfig(
     const pkgJson = readRootPackageJson();
     const config = getNpmPackageSharedConfig(
       dependency,
-      pkgJson.dependencies?.[dependency] ??
-        pkgJson.devDependencies?.[dependency]
+      getDependencyVersionFromPackageJson(dependency, workspaceRoot, pkgJson)
     );
 
     if (!config) {

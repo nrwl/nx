@@ -7,6 +7,7 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
+import { getCatalogManager } from '@nx/devkit/src/utils/catalog';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
@@ -167,6 +168,22 @@ export default class JsVersionActions extends VersionActions {
         break;
       }
     }
+
+    // Resolve catalog references if needed
+    if (currentVersion) {
+      const catalogManager = getCatalogManager(tree.root);
+      if (
+        catalogManager.supportsCatalogs() &&
+        catalogManager.isCatalogReference(currentVersion)
+      ) {
+        currentVersion = catalogManager.resolveCatalogReference(
+          tree,
+          dependencyPackageName,
+          currentVersion
+        );
+      }
+    }
+
     return {
       currentVersion,
       dependencyCollection,
@@ -201,6 +218,13 @@ export default class JsVersionActions extends VersionActions {
     }
 
     const logMessages: string[] = [];
+    const catalogUpdates: Array<{
+      packageName: string;
+      version: string;
+      catalogName?: string;
+    }> = [];
+    const catalogManager = getCatalogManager(tree.root);
+
     for (const manifestToUpdate of this.manifestsToUpdate) {
       updateJson(tree, manifestToUpdate.manifestPath, (json) => {
         const dependencyTypes = [
@@ -232,8 +256,24 @@ export default class JsVersionActions extends VersionActions {
               }
               const currentVersion = json[depType][packageName];
               if (currentVersion) {
-                // Check if the local dependency protocol should be preserved or not
                 if (
+                  catalogManager.supportsCatalogs() &&
+                  catalogManager.isCatalogReference(currentVersion)
+                ) {
+                  // collect the catalog updates so we can update the catalog definitions later
+                  const catalogRef =
+                    catalogManager.parseCatalogReference(currentVersion)!;
+                  catalogUpdates.push({
+                    packageName,
+                    version,
+                    catalogName: catalogRef.catalogName,
+                  });
+
+                  numDependenciesToUpdate--;
+                  continue;
+                }
+                // Check if other local dependency protocols should be preserved
+                else if (
                   manifestToUpdate.preserveLocalDependencyProtocols &&
                   this.isLocalDependencyProtocol(currentVersion)
                 ) {
@@ -278,6 +318,17 @@ export default class JsVersionActions extends VersionActions {
         `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
       );
     }
+
+    // Update catalog definitions in pnpm-workspace.yaml
+    if (catalogUpdates.length > 0) {
+      catalogManager.updateCatalogVersions(tree, catalogUpdates);
+
+      const catalogText = catalogUpdates.length === 1 ? 'entry' : 'entries';
+      logMessages.push(
+        `✍️  Updated ${catalogUpdates.length} catalog ${catalogText} in pnpm-workspace.yaml`
+      );
+    }
+
     return logMessages;
   }
 
