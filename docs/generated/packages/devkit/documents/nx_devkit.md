@@ -25,6 +25,7 @@ It only uses language primitives and immutable objects
 ### Interfaces
 
 - [CreateDependenciesContext](/reference/core-api/devkit/documents/CreateDependenciesContext)
+- [CreateNodesContext](/reference/core-api/devkit/documents/CreateNodesContext)
 - [CreateNodesContextV2](/reference/core-api/devkit/documents/CreateNodesContextV2)
 - [CreateNodesResult](/reference/core-api/devkit/documents/CreateNodesResult)
 - [DefaultTasksRunnerOptions](/reference/core-api/devkit/documents/DefaultTasksRunnerOptions)
@@ -69,6 +70,8 @@ It only uses language primitives and immutable objects
 - [CreateDependencies](/reference/core-api/devkit/documents/CreateDependencies)
 - [CreateMetadata](/reference/core-api/devkit/documents/CreateMetadata)
 - [CreateMetadataContext](/reference/core-api/devkit/documents/CreateMetadataContext)
+- [CreateNodes](/reference/core-api/devkit/documents/CreateNodes)
+- [CreateNodesFunction](/reference/core-api/devkit/documents/CreateNodesFunction)
 - [CreateNodesFunctionV2](/reference/core-api/devkit/documents/CreateNodesFunctionV2)
 - [CreateNodesResultV2](/reference/core-api/devkit/documents/CreateNodesResultV2)
 - [CreateNodesV2](/reference/core-api/devkit/documents/CreateNodesV2)
