@@ -1,4 +1,5 @@
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
+import { interpolatePattern } from '../utils/interpolate-pattern';
 
 /**
  * Support Tokens in Version Patterns
@@ -16,26 +17,6 @@ export interface PatternTokens {
   shortCommitSha: string;
 }
 
-const tokenRegex = /\{(env\.([^}]+)|([^|{}]+)(?:\|([^{}]+))?)\}/g;
-
-function formatDate(date: Date, format: string) {
-  const year = String(date.getUTCFullYear());
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-
-  return format
-    .replace(/YYYY/g, year)
-    .replace(/YY/g, year.slice(-2))
-    .replace(/MM/g, month)
-    .replace(/DD/g, day)
-    .replace(/HH/g, hours)
-    .replace(/mm/g, minutes)
-    .replace(/ss/g, seconds);
-}
-
 export function interpolateVersionPattern(
   versionPattern: string,
   data: Partial<PatternTokens>
@@ -48,32 +29,5 @@ export function interpolateVersionPattern(
     shortCommitSha: data.shortCommitSha ?? commitSha.slice(0, 7),
   };
 
-  return versionPattern.replace(
-    tokenRegex,
-    (match, fullMatch, envVarName, identifier, format) => {
-      // Handle environment variables
-      if (envVarName) {
-        const envValue = process.env[envVarName];
-        return envValue !== undefined ? envValue : match;
-      }
-
-      // Handle other tokens
-      const value = substitutions[identifier];
-
-      if (value === undefined) {
-        return match; // Keep original token if no data
-      }
-
-      // Handle date formatting
-      if (identifier === 'currentDate') {
-        if (format) {
-          return formatDate(value, format);
-        } else {
-          return (value as Date).toISOString();
-        }
-      }
-
-      return value;
-    }
-  );
+  return interpolatePattern(versionPattern, substitutions);
 }

@@ -58,6 +58,129 @@ The `@nx/docker` plugin is configured in the `plugins` array in `nx.json`.
 
 The `buildTarget` and `runTarget` options control the names of the inferred Docker tasks. The default names are `docker:build` and `docker:run`.
 
+### Advanced Plugin Configuration
+
+The `buildTarget` and `runTarget` options can be configured as objects to provide additional customization beyond just naming the targets. This allows you to pass custom arguments, set environment variables, and use pattern interpolation.
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": {
+          "name": "docker:build",
+          "args": [
+            "--platform",
+            "linux/amd64,linux/arm64",
+            "--label",
+            "project={projectName}"
+          ],
+          "env": {
+            "DOCKER_BUILDKIT": "1"
+          },
+          "envFile": ".env.docker",
+          "cwd": "{projectRoot}/docker"
+        },
+        "runTarget": {
+          "name": "docker:run",
+          "args": ["--rm"],
+          "env": {
+            "NODE_ENV": "production"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+#### Configuration Properties
+
+When using the object format, the following properties are available:
+
+- **`name`** (string, required): The name of the inferred target
+- **`args`** (string[], optional): Additional arguments to pass to the Docker command. Supports pattern interpolation.
+- **`env`** (object, optional): Environment variables to set when running the Docker command. Values support pattern interpolation.
+- **`envFile`** (string, optional): Path to an environment file to load
+- **`cwd`** (string, optional): Working directory for the command. Supports pattern interpolation.
+
+#### Pattern Interpolation
+
+All string values in the configuration support pattern interpolation using the following tokens:
+
+- **`{projectName}`** - The name of the project from `project.json` or `package.json`
+- **`{projectRoot}`** - The root directory of the project (e.g., `apps/api`)
+- **`{imageRef}`** - The default image reference derived from the project root (e.g., `apps-api`)
+- **`{currentDate}`** - Current date in ISO format (e.g., `2025-01-30T14:30:00.000Z`)
+- **`{currentDate|FORMAT}`** - Current date with custom formatting (e.g., `{currentDate|YYYY.MM.DD}` → `2025.01.30`)
+- **`{commitSha}`** - Full Git commit SHA
+- **`{shortCommitSha}`** - First 7 characters of the commit SHA
+- **`{env.VAR_NAME}`** - Environment variable values (e.g., `{env.BUILD_NUMBER}`)
+
+Date formatting supports these tokens: `YYYY` (year), `YY` (2-digit year), `MM` (month), `DD` (day), `HH` (hours), `mm` (minutes), `ss` (seconds).
+
+#### Example: Multi-Platform Build with Metadata
+
+Here's a practical example that builds Docker images for multiple platforms and includes build metadata:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": {
+          "name": "build",
+          "args": [
+            "--platform",
+            "linux/amd64,linux/arm64",
+            "--label",
+            "org.opencontainers.image.title={projectName}",
+            "--label",
+            "org.opencontainers.image.source={projectRoot}",
+            "--label",
+            "org.opencontainers.image.revision={commitSha}",
+            "--label",
+            "org.opencontainers.image.created={currentDate}",
+            "--build-arg",
+            "BUILD_DATE={currentDate|YYYY-MM-DD}",
+            "--build-arg",
+            "VERSION={env.VERSION}",
+            "--tag",
+            "{imageRef}:{currentDate|YYMMDD}.{shortCommitSha}"
+          ],
+          "env": {
+            "DOCKER_BUILDKIT": "1",
+            "IMAGE_NAME": "{imageRef}"
+          }
+        },
+        "runTarget": {
+          "name": "run",
+          "args": [
+            "--rm",
+            "--publish",
+            "3000:3000",
+            "--env",
+            "NODE_ENV=production"
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+This configuration:
+
+- Builds for both AMD64 and ARM64 architectures
+- Adds OpenContainers metadata labels with project information
+- Tags images with a calendar version and commit SHA (e.g., `my-app:250130.abc1234`)
+- Enables Docker BuildKit for improved build performance
+- Injects build arguments and environment variables from the CI/CD pipeline
+
 ## Using Nx Release to Publish Docker Images
 
 The `@nx/docker` plugin provides a `nx-release-publish` target for publishing docker images to a registry.
