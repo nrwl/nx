@@ -54,7 +54,7 @@ Then for each package, you must have a `.babelrc` file that will be applied to t
 
 All packages will use its own `.babelrc` file, thus you must ensure the right presets and plugins are set in each config file. This behavior can lead to build discrepancies between packages, so we recommend that you don't set `babelUpwardRootMode` at all.
 
-```treeview
+```text
 ├── packages
 │   ├── a
 │   │   └── .babelrc
