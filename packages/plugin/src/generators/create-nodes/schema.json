@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxPluginCreateNodes",
+  "title": "Create an Inference Plugin (createNodes) for an Nx Plugin",
+  "description": "Create an Inference Plugin (createNodes) for an Nx Plugin.",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The file path to the plugin. Relative to the current working directory.",
+      "x-prompt": "What is the plugin file path?",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-priority": "important"
+    },
+    "name": {
+      "type": "string",
+      "description": "The plugin name."
+    },
+    "targetName": {
+      "type": "string",
+      "description": "The default name for the target created by this plugin.",
+      "default": "echo",
+      "x-priority": "important"
+    },
+    "configFile": {
+      "type": "string",
+      "description": "The configuration file glob pattern to match (e.g., '**/my-config.json').",
+      "default": "**/.my-plugin-config.json",
+      "x-priority": "important"
+    },
+    "skipReadme": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not create or update README.md with plugin documentation."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["path"],
+  "additionalProperties": false
+}

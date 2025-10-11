@@ -33,6 +33,11 @@
       "schema": "./src/generators/executor/schema.json",
       "description": "Create an executor for an Nx Plugin."
     },
+    "create-nodes": {
+      "factory": "./src/generators/create-nodes/create-nodes",
+      "schema": "./src/generators/create-nodes/schema.json",
+      "description": "Create an Inference Plugin (createNodes) for an Nx Plugin."
+    },
     "plugin-lint-checks": {
       "factory": "./src/generators/lint-checks/generator",
       "schema": "./src/generators/lint-checks/schema.json",

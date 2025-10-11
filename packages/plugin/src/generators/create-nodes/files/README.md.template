@@ -1,0 +1,77 @@
+# <%= className %> Plugin
+
+This directory contains an Inference plugin (createNodes) for Nx.
+
+## What is an Inference Plugin?
+
+Inference plugins (also known as createNodes plugins) are Nx's modern approach to automatically inferring project configuration and targets from your workspace. Instead of manually maintaining `project.json` or `package.json` configurations, Inference plugins automatically detect configuration files and generate the appropriate Nx targets.
+
+## How This Plugin Works
+
+This plugin looks for `<%= configFile %>` files in your workspace and automatically creates Nx targets for those projects.
+
+**Generated Targets:**
+- `<%= targetName %>`: Runs the <%= className %> command
+
+## Usage
+
+### 1. Register the Plugin
+
+Add this plugin to your `nx.json`:
+
+```json
+{
+  "plugins": [
+    {
+      "plugin": "<%= importPath %>",
+      "options": {
+        "targetName": "<%= targetName %>"
+      }
+    }
+  ]
+}
+```
+
+### 2. Add Configuration Files
+
+Create a `<%= configFile.replace("**/", "") %>` file in any project directory:
+
+```json
+{}
+```
+
+### 3. Run the Target
+
+Once registered, you can run the generated target:
+
+```bash
+nx <%= targetName %> <project-name>
+```
+
+Or run it for all projects:
+
+```bash
+nx run-many -t <%= targetName %>
+```
+
+## Plugin Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `targetName` | `string` | `<%= targetName %>` | The name of the target to create |
+
+## Customization
+
+You can customize the plugin by modifying the `<%= fileName %>.ts` file:
+
+- Change the glob pattern to match different configuration files
+- Modify the target configuration
+- Add additional targets
+- Customize caching behavior
+- Add custom inputs/outputs
+
+## Learn More
+
+- [Nx Inference Plugins Documentation](https://nx.dev/concepts/inferred-tasks)
+- [Creating Nx Plugins](https://nx.dev/extending-nx/intro/getting-started)
+- [Plugin API Reference](https://nx.dev/extending-nx/recipes/create-nodes)
