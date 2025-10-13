@@ -33,7 +33,7 @@ export function stringifyDate(date: Date) {
  * */
 export async function getNpmData(
   plugin: PluginRegistry,
-  skipNxVersion = false,
+  skipNxVersion = false
 ) {
   try {
     const response = await fetch(`https://registry.npmjs.org/${plugin.name}`);
@@ -45,7 +45,7 @@ export async function getNpmData(
 
     if (!data.repository) {
       console.warn(
-        `- No repository defined in package.json for ${plugin.name}`,
+        `- No repository defined in package.json for ${plugin.name}`
       );
       return { lastPublishedDate, nxVersion, githubRepo: '' };
     }
@@ -82,8 +82,8 @@ export async function getNpmDownloads(plugin: PluginRegistry): Promise<number> {
   try {
     const response = await fetch(
       `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-        lastMonth,
-      )}/${plugin.name}`,
+        lastMonth
+      )}/${plugin.name}`
     );
     const data = (await response.json()) as NpmDownloadRequest;
     return data.downloads;
@@ -130,18 +130,24 @@ async function findNxRange(devkitVersion: string) {
   return devkitData.versions[devkitVersion]?.peerDependencies?.nx;
 }
 
-/**
- * Stars
- * i.e. https://api.github.com/graphql
- * */
 export async function getGithubStars(
-  repos: { owner: string; repo: string }[],
+  repos: { owner: string; repo: string }[]
 ): Promise<Map<string, GitHubRepoStarResult>> {
-  if (process.env.GITHUB_TOKEN === undefined) {
-    // TODO(caleb): should we error in CI if the token isn't set?
-    console.warn('No GITHUB_TOKEN set!');
+  if (!process.env.GITHUB_TOKEN) {
+    console.warn('GITHUB_TOKEN not set. GitHub stars will not be fetched.');
     return new Map<string, GitHubRepoStarResult>();
   }
+
+  const validRepos = repos.filter(
+    ({ owner, repo }) => owner && repo && !owner.includes('.')
+  );
+
+  if (validRepos.length === 0) {
+    return new Map<string, GitHubRepoStarResult>();
+  }
+
+  console.log(`Fetching GitHub stars for ${validRepos.length} repos...`);
+
   const query = `
   fragment repoProperties on Repository {
     nameWithOwner
@@ -149,18 +155,17 @@ export async function getGithubStars(
       totalCount
     }
   }
-  
+
   {
-    ${repos
-      .filter(({ owner, repo }) => owner && repo && !owner.includes('.'))
+    ${validRepos
       .map(
         ({ owner, repo }) =>
           `${owner.replace(/[\-#]/g, '')}${repo.replace(
             /[\-#]/g,
-            '',
+            ''
           )}: repository(owner: "${owner}", name: "${repo}") {
       ...repoProperties
-    }`,
+    }`
       )
       .join('\n')}
   }`;
@@ -177,38 +182,55 @@ export async function getGithubStars(
       }),
     });
 
+    if (!response.ok) {
+      console.error(
+        `GitHub API error: ${response.status} ${response.statusText}`
+      );
+
+      try {
+        console.warn(await response.text());
+      } catch (e) {
+        console.error('unable to parse response body');
+        console.error(e);
+      }
+      return new Map<string, GitHubRepoStarResult>();
+    }
+
     const result = (await response.json()) as {
       data?: {
         [escapedName: string]: GitHubRepoStarResult;
       };
-      errors?: Array<{ message: string }>;
+      errors?: Array<{ message: string; type?: string; path?: string[] }>;
     };
 
-    // Check if the response contains errors or missing data
-    if (!result.data) {
-      if (result.errors) {
-        console.warn(
-          'GitHub API returned errors:',
-          result.errors.map((e) => e.message).join(', '),
-        );
-      } else {
-        console.warn('GitHub API returned no data');
-        console.warn('Response', JSON.stringify(result, null, 2));
-      }
+    if (result.errors && result.errors.length > 0) {
+      console.error(
+        `GitHub GraphQL errors: ${result.errors
+          .map((e) => e.message)
+          .join(', ')}`
+      );
+    }
+
+    if (!result.data || Object.keys(result.data).length === 0) {
+      console.warn('GitHub API returned no data', result);
       return new Map<string, GitHubRepoStarResult>();
     }
 
     const reposWithStars = new Map<string, GitHubRepoStarResult>();
 
-    Object.entries(result.data).forEach(([_, repo]) => {
-      // NOTE: returned GH response escapes the repo name for the key i.e. org/repo -> orgrepo,
-      // so we return the expected repo name the consumer is expecting
-      reposWithStars.set(repo.nameWithOwner, repo);
+    Object.values(result.data).forEach((repo) => {
+      if (repo && repo.nameWithOwner) {
+        // NOTE: returned GH response escapes the repo name for the key i.e. org/repo -> orgrepo,
+        // so we return the expected repo name the consumer is expecting
+        reposWithStars.set(repo.nameWithOwner, repo);
+      }
     });
+
+    console.log(`Fetched stars for ${reposWithStars.size} repos`);
 
     return reposWithStars;
   } catch (err) {
-    console.warn('Failed to load github stars', err);
+    console.error('Failed to fetch GitHub stars:', err);
     return new Map<string, GitHubRepoStarResult>();
   }
 }
@@ -271,7 +293,7 @@ export function isPluginStatsFetchingEnabled(): boolean {
 }
 
 export function shouldFetchStats(
-  existingEntry: CacheableEntry | undefined,
+  existingEntry: CacheableEntry | undefined
 ): boolean {
   if (!isPluginStatsFetchingEnabled()) {
     return false;
@@ -332,7 +354,7 @@ export interface StatsEntry {
  */
 export function getCachedOrDefaultStats(
   existingEntry: StatsEntry | undefined,
-  includeNxVersion = false,
+  includeNxVersion = false
 ): PluginStats {
   if (existingEntry?.data) {
     const stats: PluginStats = {
@@ -378,7 +400,7 @@ export async function fetchFreshStats(
   plugin: PluginRegistry,
   repoKey: string,
   ghStarMap: Map<string, GitHubRepoStarResult>,
-  includeNxVersion = false,
+  includeNxVersion = false
 ): Promise<PluginStats> {
   const [npmDownloads, npmMeta] = await Promise.all([
     getNpmDownloads(plugin),
