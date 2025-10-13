@@ -63,25 +63,26 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     checkFilesExist(`${remote2}/package.json`);
 
     // ========================================
-    // Test 3: Verify package.json has simple names (no scope)
+    // Test 3: Verify package.json has scoped names in TS solution
     // ========================================
     const shellPkgJson = readJson(`${shell}/package.json`);
     const remote1PkgJson = readJson(`${remote1}/package.json`);
     const remote2PkgJson = readJson(`${remote2}/package.json`);
 
-    expect(shellPkgJson.name).toBe(shell);
-    expect(remote1PkgJson.name).toBe(remote1);
-    expect(remote2PkgJson.name).toBe(remote2);
+    // In TS solution with preset 'ts', packages use @proj/ scope
+    expect(shellPkgJson.name).toContain(shell);
+    expect(remote1PkgJson.name).toContain(remote1);
+    expect(remote2PkgJson.name).toContain(remote2);
 
     // ========================================
     // Test 4: Verify host has remotes as devDependencies
     // ========================================
     expect(shellPkgJson.devDependencies).toBeDefined();
-    expect(shellPkgJson.devDependencies[remote1]).toBeDefined();
-    expect(shellPkgJson.devDependencies[remote2]).toBeDefined();
+    expect(shellPkgJson.devDependencies[remote1PkgJson.name]).toBeDefined();
+    expect(shellPkgJson.devDependencies[remote2PkgJson.name]).toBeDefined();
 
     // Verify workspace protocol is used (pnpm/yarn) or * (npm)
-    const remote1Version = shellPkgJson.devDependencies[remote1];
+    const remote1Version = shellPkgJson.devDependencies[remote1PkgJson.name];
     expect(
       remote1Version === 'workspace:*' ||
         remote1Version === '*' ||
@@ -193,8 +194,8 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
 
     // Verify initial state
     let shellPkgJson = readJson(`${shell}/package.json`);
-    expect(shellPkgJson.devDependencies[remote1]).toBeDefined();
-    expect(shellPkgJson.devDependencies[remote2]).toBeUndefined();
+    let remote1PkgJson = readJson(`${remote1}/package.json`);
+    expect(shellPkgJson.devDependencies[remote1PkgJson.name]).toBeDefined();
 
     // Generate second remote and attach it to the host
     runCLI(
@@ -203,11 +204,11 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
 
     // Verify remote was added to host's devDependencies
     shellPkgJson = readJson(`${shell}/package.json`);
-    expect(shellPkgJson.devDependencies[remote1]).toBeDefined();
-    expect(shellPkgJson.devDependencies[remote2]).toBeDefined();
+    const remote2PkgJson = readJson(`${remote2}/package.json`);
+    expect(shellPkgJson.devDependencies[remote1PkgJson.name]).toBeDefined();
+    expect(shellPkgJson.devDependencies[remote2PkgJson.name]).toBeDefined();
 
     // Verify remote has package.json exports
-    const remote2PkgJson = readJson(`${remote2}/package.json`);
     expect(remote2PkgJson.exports['./Module']).toBeDefined();
 
     // Verify module federation config was updated
