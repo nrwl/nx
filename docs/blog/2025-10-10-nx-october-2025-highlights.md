@@ -41,7 +41,7 @@ We've significantly improved the graph experience with a redesigned control pane
 
 The graph renders in composite mode by default, which provides two key benefits: it looks cleaner and prevents crashes when visualizing large workspaces. For workspaces with thousands of projects, the composite mode makes the graph usable again!
 
-The workflow for exploring your graph has been streamlined too. Left-click to select a project and open the details panel, or right-click for quick actions via context menu. When you start tracing dependencies between projects, the UI intelligently shows you a list of traceable projects, so you don't have to hunt through the visualization. Click on edges to navigate between connected projects, making it easier to understand how your workspace fits together.
+The workflow for exploring your graph has been streamlined too. Left-click to select a project and open the details panel. When you start tracing dependencies between projects, the UI intelligently shows you a list of traceable projects, so you don't have to hunt through the visualization. Click on edges to navigate between connected projects, making it easier to understand how your workspace fits together.
 
 [Explore the project graph documentation](/features/explore-graph)
 
