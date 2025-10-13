@@ -5,7 +5,7 @@ date: 2025-10-27
 slug: 'beyond-remote-cache-unlock-the-full-70-of-your-ci-performance-gains'
 authors: ['Jeff Cross', 'Victor Savkin']
 tags: [webinar]
-cover_image: /blog/images/2025-10-27/October-2025-Webinar-Card-v2.png
+cover_image: /blog/images/2025-10-27/October-2025-Webinar-Card-v2.avif
 time: 1pm ET/5pm UTC
 status: Upcoming
 registrationUrl: https://go.nx.dev/oct2025-webinar
