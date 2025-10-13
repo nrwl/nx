@@ -24,6 +24,7 @@ assignment-rules:
       - e2e-react
       - e2e-next
       - e2e-web
+      - e2e-eslint
     targets:
       - e2e-ci**react-package**
       - e2e-ci**react.test**
@@ -33,6 +34,8 @@ assignment-rules:
       - e2e-ci**next-ts-solutions**
       - e2e-ci**next-webpack**
       - e2e-ci**web**
+      - e2e-ci**remix-ts-solution**
+      - e2e-ci**linter**
     run-on:
         - agent: linux-large
           parallelism: 1
