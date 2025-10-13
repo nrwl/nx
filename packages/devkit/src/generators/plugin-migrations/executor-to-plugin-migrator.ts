@@ -590,9 +590,10 @@ async function addPluginRegistrations<T>(
         )
       ) {
         existingPlugin.include.push(projectIncludeGlob);
-      }
-      if (!(await arePluginIncludesRequired(project, existingPlugin))) {
-        delete existingPlugin.include;
+
+        if (!(await arePluginIncludesRequired(project, existingPlugin))) {
+          delete existingPlugin.include;
+        }
       }
     }
   }
