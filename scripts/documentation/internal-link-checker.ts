@@ -5,6 +5,10 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as parseLinks from 'parse-markdown-links';
 
+const siteUrl = process.env.NX_DEV_URL || 'https://nx.dev';
+
+console.log(`Using site URL: ${siteUrl}`);
+
 /**
  * Check the integrity of internal links on nx-dev
  * - Error if a link present in markdown files target a non-existing nextjs app url
@@ -18,7 +22,8 @@ function isLinkInternal(linkPath: string): boolean {
   return (
     linkPath.startsWith('/') ||
     linkPath.startsWith('https://nx.dev') ||
-    linkPath.startsWith('https://nx-dev')
+    linkPath.startsWith('https://nx-dev') ||
+    linkPath.startsWith(siteUrl)
   );
 }
 
@@ -82,15 +87,29 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
   const parser = new XMLParser();
   const sitemapIndex: {
     sitemapindex: {
-      sitemap: Array<{
-        loc: string;
-      }>;
+      sitemap:
+        | Array<{
+            loc: string;
+          }>
+        | { loc: string };
     };
   } = parser.parse(readFileContents(join(directoryPath, filename)));
 
-  const internalSitemap = sitemapIndex.sitemapindex.sitemap.find((s) =>
-    s.loc.endsWith('sitemap-0.xml')
-  );
+  if (!sitemapIndex.sitemapindex) {
+    throw new Error(
+      `Invalid sitemap index file: ${join(
+        directoryPath,
+        filename
+      )}. Expected sitemap to have sitemapIndex property`
+    );
+  }
+
+  const internalSitemap = Array.isArray(sitemapIndex.sitemapindex.sitemap)
+    ? sitemapIndex.sitemapindex.sitemap.find(
+        (s) => !s.loc.endsWith('sitemap-index.xml')
+      )
+    : sitemapIndex.sitemapindex.sitemap;
+
   if (!internalSitemap) {
     console.warn(join(directoryPath, filename), sitemapIndex);
     throw new Error('Unable to find sitemap location for nx.dev');
@@ -98,11 +117,15 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
 
   console.log('Using sitemap with url: ', internalSitemap.loc);
   return [
-    join(directoryPath, internalSitemap.loc.replace('https://nx.dev', '')),
+    join(
+      directoryPath,
+      internalSitemap.loc.replace(siteUrl, '').replace('https://nx.dev', '')
+    ),
   ];
 }
 
 function readSiteMapLinks(filePath: string): string[] {
+  console.log('Reading sitemap links from: ', filePath);
   const parser = new XMLParser();
   const sitemap: {
     urlset: {
@@ -128,9 +151,11 @@ const nextjsSitemapUrls = readSiteMapIndex(
 console.log(nextjsSitemapUrls.length + ' URLs found in Next.js sitemap');
 
 // Read Astro sitemap URLs
-const astroSitemapUrls = readSiteMapLinks(
-  join(workspaceRoot, 'astro-docs/dist/sitemap-0.xml')
-);
+const astroSitemapUrls = readSiteMapIndex(
+  join(workspaceRoot, 'astro-docs/dist/'),
+  'sitemap-index.xml'
+  // astro-docs links are prefixed with /docs, but that isn't reflected in the file paths
+).flatMap((path) => readSiteMapLinks(path.replace('/docs/', '/')));
 console.log(astroSitemapUrls.length + ' URLs found in Astro sitemap');
 // Combine all sitemap URLs into a single set
 const sitemapUrls = [...new Set([...nextjsSitemapUrls, ...astroSitemapUrls])];
@@ -197,7 +222,8 @@ for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
     if (
       link.startsWith('https://nx.dev') ||
-      link.startsWith('https://nx-dev')
+      link.startsWith('https://nx-dev') ||
+      link.startsWith(siteUrl)
     ) {
       localLinkErrors.push({ file, link });
     } else if (
@@ -210,7 +236,8 @@ for (let file in documentLinks) {
       errors.push({ file, link });
     } else if (
       !link.includes('#') &&
-      !sitemapUrls.includes(['https://nx.dev', link].join(''))
+      !sitemapUrls.includes(['https://nx.dev', link].join('')) &&
+      !sitemapUrls.includes([siteUrl, link].join(''))
     ) {
       errors.push({ file, link });
     } else if (
@@ -218,7 +245,8 @@ for (let file in documentLinks) {
       ignoreAnchorUrls.some((ignoreAnchorUrl) =>
         link.startsWith(ignoreAnchorUrl)
       ) &&
-      !sitemapUrls.includes(['https://nx.dev', removeAnchors(link)].join(''))
+      !sitemapUrls.includes(['https://nx.dev', removeAnchors(link)].join('')) &&
+      !sitemapUrls.includes([siteUrl, removeAnchors(link)].join(''))
     ) {
       errors.push({ file, link });
     }
