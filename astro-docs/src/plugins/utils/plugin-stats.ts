@@ -33,7 +33,7 @@ export function stringifyDate(date: Date) {
  * */
 export async function getNpmData(
   plugin: PluginRegistry,
-  skipNxVersion = false
+  skipNxVersion = false,
 ) {
   try {
     const response = await fetch(`https://registry.npmjs.org/${plugin.name}`);
@@ -45,7 +45,7 @@ export async function getNpmData(
 
     if (!data.repository) {
       console.warn(
-        `- No repository defined in package.json for ${plugin.name}`
+        `- No repository defined in package.json for ${plugin.name}`,
       );
       return { lastPublishedDate, nxVersion, githubRepo: '' };
     }
@@ -82,8 +82,8 @@ export async function getNpmDownloads(plugin: PluginRegistry): Promise<number> {
   try {
     const response = await fetch(
       `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-        lastMonth
-      )}/${plugin.name}`
+        lastMonth,
+      )}/${plugin.name}`,
     );
     const data = (await response.json()) as NpmDownloadRequest;
     return data.downloads;
@@ -135,7 +135,7 @@ async function findNxRange(devkitVersion: string) {
  * i.e. https://api.github.com/graphql
  * */
 export async function getGithubStars(
-  repos: { owner: string; repo: string }[]
+  repos: { owner: string; repo: string }[],
 ): Promise<Map<string, GitHubRepoStarResult>> {
   if (process.env.GITHUB_TOKEN === undefined) {
     // TODO(caleb): should we error in CI if the token isn't set?
@@ -157,10 +157,10 @@ export async function getGithubStars(
         ({ owner, repo }) =>
           `${owner.replace(/[\-#]/g, '')}${repo.replace(
             /[\-#]/g,
-            ''
+            '',
           )}: repository(owner: "${owner}", name: "${repo}") {
       ...repoProperties
-    }`
+    }`,
       )
       .join('\n')}
   }`;
@@ -178,10 +178,25 @@ export async function getGithubStars(
     });
 
     const result = (await response.json()) as {
-      data: {
+      data?: {
         [escapedName: string]: GitHubRepoStarResult;
       };
+      errors?: Array<{ message: string }>;
     };
+
+    // Check if the response contains errors or missing data
+    if (!result.data) {
+      if (result.errors) {
+        console.warn(
+          'GitHub API returned errors:',
+          result.errors.map((e) => e.message).join(', '),
+        );
+      } else {
+        console.warn('GitHub API returned no data');
+        console.warn('Response', JSON.stringify(result, null, 2));
+      }
+      return new Map<string, GitHubRepoStarResult>();
+    }
 
     const reposWithStars = new Map<string, GitHubRepoStarResult>();
 
@@ -242,9 +257,26 @@ type CacheableEntry = {
 };
 
 const ONE_WEEK_MS = 1000 * 60 * 60 * 24 * 7;
+
+/**
+ * Checks if plugin stats fetching is enabled.
+ * Stats are only fetched when:
+ * - Running in CI (CI=true), OR
+ * - Explicitly enabled via NX_DOCS_PLUGIN_STATS=true
+ */
+export function isPluginStatsFetchingEnabled(): boolean {
+  return (
+    process.env.CI === 'true' || process.env.NX_DOCS_PLUGIN_STATS === 'true'
+  );
+}
+
 export function shouldFetchStats(
-  existingEntry: CacheableEntry | undefined
+  existingEntry: CacheableEntry | undefined,
 ): boolean {
+  if (!isPluginStatsFetchingEnabled()) {
+    return false;
+  }
+
   if (process.env.CI === 'true') {
     return true;
   }
@@ -265,3 +297,104 @@ export const PLUGIN_IGNORE_LIST = [
   'make-angular-cli-faster',
   'tao',
 ];
+
+/**
+ * Common plugin stats structure shared across all plugin loaders
+ */
+export interface PluginStats {
+  githubStars: number;
+  npmDownloads: number;
+  lastPublishedDate: Date | undefined;
+  nxVersion?: string;
+  lastFetched: Date | undefined;
+}
+
+/**
+ * Type for any store entry that has cacheable stats
+ */
+export interface StatsEntry {
+  data?: {
+    githubStars?: number;
+    npmDownloads?: number;
+    lastPublishedDate?: Date;
+    nxVersion?: string;
+    lastFetched?: Date;
+  };
+}
+
+/**
+ * Extract cached stats from an existing store entry, or return defaults if not available.
+ * This is a generic helper used by all plugin loaders.
+ *
+ * @param existingEntry The existing entry from the store (if any)
+ * @param includeNxVersion Whether to include nxVersion in the result (for community plugins)
+ * @returns Stats object with cached values or safe defaults
+ */
+export function getCachedOrDefaultStats(
+  existingEntry: StatsEntry | undefined,
+  includeNxVersion = false,
+): PluginStats {
+  if (existingEntry?.data) {
+    const stats: PluginStats = {
+      githubStars: existingEntry.data.githubStars ?? 0,
+      npmDownloads: existingEntry.data.npmDownloads ?? 0,
+      lastPublishedDate: existingEntry.data.lastPublishedDate,
+      lastFetched: existingEntry.data.lastFetched,
+    };
+
+    if (includeNxVersion) {
+      stats.nxVersion = existingEntry.data.nxVersion ?? '';
+    }
+
+    return stats;
+  }
+
+  // Return defaults when no cached data is available
+  const defaults: PluginStats = {
+    githubStars: 0,
+    npmDownloads: 0,
+    lastPublishedDate: undefined,
+    lastFetched: undefined,
+  };
+
+  if (includeNxVersion) {
+    defaults.nxVersion = '';
+  }
+
+  return defaults;
+}
+
+/**
+ * Fetch fresh plugin stats from NPM and GitHub.
+ * This is a generic helper that can be used by all plugin loaders.
+ *
+ * @param plugin The plugin to fetch stats for
+ * @param repoKey The key to look up GitHub stars (e.g., 'nrwl/nx' or 'owner/repo')
+ * @param ghStarMap Map of GitHub stars by repo key
+ * @param includeNxVersion Whether to fetch and include nxVersion
+ * @returns Fresh stats from external sources
+ */
+export async function fetchFreshStats(
+  plugin: PluginRegistry,
+  repoKey: string,
+  ghStarMap: Map<string, GitHubRepoStarResult>,
+  includeNxVersion = false,
+): Promise<PluginStats> {
+  const [npmDownloads, npmMeta] = await Promise.all([
+    getNpmDownloads(plugin),
+    getNpmData(plugin, !includeNxVersion),
+  ]);
+
+  const stats: PluginStats = {
+    githubStars: ghStarMap.get(repoKey)?.stargazers?.totalCount ?? 0,
+    npmDownloads,
+    lastPublishedDate: npmMeta.lastPublishedDate,
+    lastFetched: new Date(),
+  };
+
+  if (includeNxVersion && npmMeta.nxVersion) {
+    stats.nxVersion = npmMeta.nxVersion;
+  }
+
+  return stats;
+}
