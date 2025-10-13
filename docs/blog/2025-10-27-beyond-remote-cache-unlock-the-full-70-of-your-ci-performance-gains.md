@@ -1,5 +1,5 @@
 ---
-title: 'Beyond Remote Cache: Unlock 70% More CI Performancelg'
+title: 'Beyond Remote Cache: Unlock 70% More CI Performance'
 description: "You've implemented remote caching. Your builds are faster. Success, right? Not quite. If you're only using remote cache, you're leaving 70% of potential CI performance improvements on the table—and we have the data to prove it. The real transformation comes from addressing what happens after tasks run: the endless cycle of flaky tests, random failures, and the manual intervention that keeps developers waiting for green builds. In this data-driven webinar, we’ll show you how to stop settling for partial optimization and learn how modern CI should work—and how Nx Cloud makes it happen."
 date: 2025-10-27
 slug: 'beyond-remote-cache-unlock-the-full-70-of-your-ci-performance-gains'
