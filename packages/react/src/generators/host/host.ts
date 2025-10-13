@@ -1,11 +1,14 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  readJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
@@ -23,6 +26,7 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
@@ -41,7 +45,6 @@ export async function hostGenerator(
     ...(await normalizeOptions<Schema>(host, {
       ...schema,
       name,
-      useProjectJson: true,
     })),
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
@@ -74,7 +77,6 @@ export async function hostGenerator(
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
     skipFormat: true,
-    useProjectJson: true,
   });
   tasks.push(initTask);
 
@@ -112,6 +114,11 @@ export async function hostGenerator(
   updateModuleFederationProject(host, options, true);
   updateModuleFederationE2eProject(host, options);
   updateModuleFederationTsconfig(host, options);
+
+  // Add remotes as devDependencies in TS solution setup
+  if (isUsingTsSolutionSetup(host) && remotesWithPorts.length > 0) {
+    addRemotesAsHostDependencies(host, options.projectName, remotesWithPorts);
+  }
 
   if (options.ssr) {
     if (options.bundler !== 'rspack') {
@@ -164,6 +171,50 @@ export async function hostGenerator(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function addRemotesAsHostDependencies(
+  tree: Tree,
+  hostName: string,
+  remotes: { name: string; port: number }[]
+) {
+  const hostConfig = readProjectConfiguration(tree, hostName);
+  const hostPackageJsonPath = joinPathFragments(
+    hostConfig.root,
+    'package.json'
+  );
+
+  if (!tree.exists(hostPackageJsonPath)) {
+    throw new Error(
+      `Host package.json not found at ${hostPackageJsonPath}. ` +
+        `TypeScript solution setup requires package.json for all projects.`
+    );
+  }
+
+  const packageManager = detectPackageManager(tree.root);
+  const versionSpec = packageManager === 'npm' ? '*' : 'workspace:*';
+
+  updateJson(tree, hostPackageJsonPath, (json) => {
+    json.devDependencies ??= {};
+
+    for (const remote of remotes) {
+      // Get the remote's package.json to find its name
+      const remoteConfig = readProjectConfiguration(tree, remote.name);
+      const remotePackageJsonPath = joinPathFragments(
+        remoteConfig.root,
+        'package.json'
+      );
+
+      if (tree.exists(remotePackageJsonPath)) {
+        const remotePackageJson = readJson(tree, remotePackageJsonPath);
+        if (remotePackageJson.name) {
+          json.devDependencies[remotePackageJson.name] = versionSpec;
+        }
+      }
+    }
+
+    return json;
+  });
 }
 
 export default hostGenerator;

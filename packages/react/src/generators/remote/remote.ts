@@ -15,7 +15,10 @@ import { join } from 'path';
 
 import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';
@@ -33,6 +36,7 @@ import { normalizeOptions } from '../application/lib/normalize-options';
 import { NormalizedSchema } from '../application/schema';
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
+import { setupPackageJsonExportsForRemote } from './lib/setup-package-json-exports-for-remote';
 import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
 import { updateHostWithRemote } from './lib/update-host-with-remote';
@@ -109,6 +113,19 @@ export function addModuleFederationFiles(
     if (host.exists(pathToWebpackProdConfig)) {
       host.delete(pathToWebpackProdConfig);
     }
+
+    // Delete TypeScript prod config in TS solution setup - not needed in Crystal
+    if (isUsingTsSolutionSetup(host)) {
+      const pathToTsProdConfig = joinPathFragments(
+        options.appProjectRoot,
+        options.bundler === 'rspack'
+          ? 'rspack.config.prod.ts'
+          : 'webpack.config.prod.ts'
+      );
+      if (host.exists(pathToTsProdConfig)) {
+        host.delete(pathToTsProdConfig);
+      }
+    }
   }
 }
 
@@ -119,7 +136,6 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...(await normalizeOptions<Schema>(host, {
       ...schema,
       name,
-      useProjectJson: true,
     })),
     // when js is set to true, we want to use the js configuration
     js: schema.js ?? false,
@@ -154,7 +170,6 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...options,
     name: options.projectName,
     skipFormat: true,
-    useProjectJson: true,
   });
   tasks.push(initAppTask);
 
@@ -184,7 +199,13 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
 
   addModuleFederationFiles(host, options);
   updateModuleFederationProject(host, options);
-  setupTspathForRemote(host, options);
+
+  // Conditionally setup TS path or package.json exports based on TS solution setup
+  if (isUsingTsSolutionSetup(host)) {
+    setupPackageJsonExportsForRemote(host, options);
+  } else {
+    setupTspathForRemote(host, options);
+  }
 
   if (options.ssr) {
     if (options.bundler !== 'rspack') {

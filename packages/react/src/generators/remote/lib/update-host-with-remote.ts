@@ -1,13 +1,19 @@
 import {
   applyChangesToString,
+  detectPackageManager,
   joinPathFragments,
   logger,
   names,
+  readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
   addRemoteRoute,
   addRemoteToConfig,
@@ -85,6 +91,11 @@ export function updateHostWithRemote(
       `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host" or "@nx/react:consumer"?`
     );
   }
+
+  // Add remote as devDependency in TS solution setup
+  if (isUsingTsSolutionSetup(host)) {
+    addRemoteAsHostDependency(host, hostName, remoteName);
+  }
 }
 
 function findAppComponentPath(host: Tree, sourceRoot: string) {
@@ -107,4 +118,57 @@ function findAppComponentPath(host: Tree, sourceRoot: string) {
       return joinPathFragments(sourceRoot, loc);
     }
   }
+}
+
+function addRemoteAsHostDependency(
+  tree: Tree,
+  hostName: string,
+  remoteName: string
+) {
+  const hostConfig = readProjectConfiguration(tree, hostName);
+  const hostPackageJsonPath = joinPathFragments(
+    hostConfig.root,
+    'package.json'
+  );
+  const remoteConfig = readProjectConfiguration(tree, remoteName);
+  const remotePackageJsonPath = joinPathFragments(
+    remoteConfig.root,
+    'package.json'
+  );
+
+  if (!tree.exists(hostPackageJsonPath)) {
+    throw new Error(
+      `Host package.json not found at ${hostPackageJsonPath}. ` +
+        `TypeScript solution setup requires package.json for all projects.`
+    );
+  }
+
+  if (!tree.exists(remotePackageJsonPath)) {
+    logger.warn(
+      `Remote package.json not found at ${remotePackageJsonPath}. ` +
+        `Skipping devDependency addition.`
+    );
+    return;
+  }
+
+  const remotePackageJson = readJson(tree, remotePackageJsonPath);
+  const remotePackageName = remotePackageJson.name;
+
+  if (!remotePackageName) {
+    logger.warn(
+      `Remote package.json at ${remotePackageJsonPath} has no name. ` +
+        `Skipping devDependency addition.`
+    );
+    return;
+  }
+
+  const packageManager = detectPackageManager(tree.root);
+  // npm doesn't support workspace: protocol, use * instead
+  const versionSpec = packageManager === 'npm' ? '*' : 'workspace:*';
+
+  updateJson(tree, hostPackageJsonPath, (json) => {
+    json.devDependencies ??= {};
+    json.devDependencies[remotePackageName] = versionSpec;
+    return json;
+  });
 }
