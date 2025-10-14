@@ -447,6 +447,9 @@
       },
       {
         "rule": "./tools/workspace-plugin/src/conformance-rules/codeblock-language"
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
       }
     ]
   }
