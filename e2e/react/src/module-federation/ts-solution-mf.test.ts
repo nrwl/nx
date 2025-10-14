@@ -255,6 +255,9 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
       )
     );
 
+    // Run install to link the workspace dependencies
+    runCommand(getPackageManagerCommand().install);
+
     // Import library in remote
     const remoteAppPath = `${remote}/src/app/app.tsx`;
     const remoteAppContent = readFile(remoteAppPath);
