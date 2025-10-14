@@ -15,7 +15,7 @@ import {
   isEslintConfigSupported,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { eslintConfigNextVersion } from '../../../utils/versions';
+import { getEslintConfigNextDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export async function addLinting(
@@ -98,6 +98,9 @@ export async function addLinting(
   }
 
   if (!options.skipPackageJson) {
+    const eslintConfigNextVersion =
+      await getEslintConfigNextDependenciesVersionsToInstall(host);
+
     tasks.push(
       addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
         ...extraEslintDependencies.devDependencies,
