@@ -36,7 +36,7 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     newProject({ packages: ['@nx/react'], preset: 'ts' });
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate host and remote apps without project.json, with package.json exports', async () => {
     const shell = uniq('shell');
