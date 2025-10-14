@@ -6,9 +6,11 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { join } from 'path';
@@ -172,6 +174,20 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     skipFormat: true,
   });
   tasks.push(initAppTask);
+
+  // In TS solution setup, update package.json to use simple name instead of scoped name
+  if (isUsingTsSolutionSetup(host)) {
+    const remotePackageJsonPath = joinPathFragments(
+      options.appProjectRoot,
+      'package.json'
+    );
+    if (host.exists(remotePackageJsonPath)) {
+      updateJson(host, remotePackageJsonPath, (json) => {
+        json.name = options.projectName;
+        return json;
+      });
+    }
+  }
 
   if (options.host) {
     updateHostWithRemote(host, options.host, options.projectName);

@@ -80,6 +80,20 @@ export async function hostGenerator(
   });
   tasks.push(initTask);
 
+  // In TS solution setup, update package.json to use simple name instead of scoped name
+  if (isUsingTsSolutionSetup(host)) {
+    const hostPackageJsonPath = joinPathFragments(
+      options.appProjectRoot,
+      'package.json'
+    );
+    if (host.exists(hostPackageJsonPath)) {
+      updateJson(host, hostPackageJsonPath, (json) => {
+        json.name = options.projectName;
+        return json;
+      });
+    }
+  }
+
   const remotesWithPorts: { name: string; port: number }[] = [];
 
   if (schema.remotes) {
@@ -198,19 +212,8 @@ function addRemotesAsHostDependencies(
     json.devDependencies ??= {};
 
     for (const remote of remotes) {
-      // Get the remote's package.json to find its name
-      const remoteConfig = readProjectConfiguration(tree, remote.name);
-      const remotePackageJsonPath = joinPathFragments(
-        remoteConfig.root,
-        'package.json'
-      );
-
-      if (tree.exists(remotePackageJsonPath)) {
-        const remotePackageJson = readJson(tree, remotePackageJsonPath);
-        if (remotePackageJson.name) {
-          json.devDependencies[remotePackageJson.name] = versionSpec;
-        }
-      }
+      // Use simple remote name directly to match module-federation.config.ts
+      json.devDependencies[remote.name] = versionSpec;
     }
 
     return json;

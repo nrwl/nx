@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   logger,
   names,
-  readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -130,11 +129,6 @@ function addRemoteAsHostDependency(
     hostConfig.root,
     'package.json'
   );
-  const remoteConfig = readProjectConfiguration(tree, remoteName);
-  const remotePackageJsonPath = joinPathFragments(
-    remoteConfig.root,
-    'package.json'
-  );
 
   if (!tree.exists(hostPackageJsonPath)) {
     throw new Error(
@@ -143,32 +137,14 @@ function addRemoteAsHostDependency(
     );
   }
 
-  if (!tree.exists(remotePackageJsonPath)) {
-    logger.warn(
-      `Remote package.json not found at ${remotePackageJsonPath}. ` +
-        `Skipping devDependency addition.`
-    );
-    return;
-  }
-
-  const remotePackageJson = readJson(tree, remotePackageJsonPath);
-  const remotePackageName = remotePackageJson.name;
-
-  if (!remotePackageName) {
-    logger.warn(
-      `Remote package.json at ${remotePackageJsonPath} has no name. ` +
-        `Skipping devDependency addition.`
-    );
-    return;
-  }
-
   const packageManager = detectPackageManager(tree.root);
   // npm doesn't support workspace: protocol, use * instead
   const versionSpec = packageManager === 'npm' ? '*' : 'workspace:*';
 
   updateJson(tree, hostPackageJsonPath, (json) => {
     json.devDependencies ??= {};
-    json.devDependencies[remotePackageName] = versionSpec;
+    // Use simple remote name directly to match module-federation.config.ts
+    json.devDependencies[remoteName] = versionSpec;
     return json;
   });
 }
