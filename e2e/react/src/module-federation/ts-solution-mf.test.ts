@@ -121,16 +121,23 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     // ========================================
     // Test 8: Run unit tests
     // ========================================
-    await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
+    await expect(
+      runCLIAsync(`test ${shellPkgJson.name}`)
+    ).resolves.toMatchObject({
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
     });
 
     // ========================================
     // Test 9: Build all apps in development and production
     // ========================================
-    [shell, remote1, remote2].forEach((app) => {
+    const apps = [
+      { dir: shell, name: shellPkgJson.name },
+      { dir: remote1, name: remote1PkgJson.name },
+      { dir: remote2, name: remote2PkgJson.name },
+    ];
+    apps.forEach((app) => {
       ['development', 'production'].forEach(async (configuration) => {
-        const cliOutput = runCLI(`run ${app}:build:${configuration}`);
+        const cliOutput = runCLI(`run ${app.name}:build:${configuration}`);
         expect(cliOutput).toContain('Successfully ran target');
       });
     });
@@ -138,8 +145,9 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     // ========================================
     // Test 10: Serve the host and verify it starts
     // ========================================
-    const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
-      output.includes(`http://localhost:${readPort(shell)}`)
+    const serveResult = await runCommandUntil(
+      `serve ${shellPkgJson.name}`,
+      (output) => output.includes(`http://localhost:${readPort(shell)}`)
     );
 
     await killProcessAndPorts(serveResult.pid, readPort(shell));
@@ -172,8 +180,9 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
       `
       );
 
+      const shellE2ePkgJson = readJson(`${shell}-e2e/package.json`);
       const e2eResults = await runCommandUntil(
-        `e2e ${shell}-e2e --verbose`,
+        `e2e ${shellE2ePkgJson.name} --verbose`,
         (output) => output.includes('All specs passed!')
       );
 
@@ -261,7 +270,7 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     );
 
     // Build should succeed
-    const buildOutput = runCLI(`build ${remote}`);
+    const buildOutput = runCLI(`build ${remotePkgJson.name}`);
     expect(buildOutput).toContain('Successfully ran target');
 
     // Verify library is shared properly
