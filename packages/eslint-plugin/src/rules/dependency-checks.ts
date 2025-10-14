@@ -222,9 +222,9 @@ export default ESLintUtils.RuleCreator(
       }
 
       const validationResult = manager.validateCatalogReference(
+        workspaceRoot,
         packageName,
-        packageRange,
-        workspaceRoot
+        packageRange
       );
 
       if (!validationResult.isValid) {
@@ -247,19 +247,38 @@ export default ESLintUtils.RuleCreator(
       if (!checkVersionMismatches) {
         return;
       }
+
+      // Resolve catalog references before validation
+      let resolvedPackageRange = packageRange;
+      const manager = getCatalogManager(workspaceRoot);
+
+      if (
+        manager.supportsCatalogs() &&
+        manager.isCatalogReference(packageRange)
+      ) {
+        const resolved = manager.resolveCatalogReference(
+          workspaceRoot,
+          packageName,
+          packageRange
+        );
+
+        if (!resolved) {
+          // Catalog resolution failed - this shouldn't happen because
+          // validateCatalogReferenceForPackage should have caught it earlier
+          // But if it does, skip validation gracefully
+          return;
+        }
+
+        resolvedPackageRange = resolved;
+      }
+
       if (
         npmDependencies[packageName].startsWith('file:') ||
-        packageRange.startsWith('file:') ||
+        resolvedPackageRange.startsWith('file:') ||
         npmDependencies[packageName] === '*' ||
-        packageRange === '*' ||
-        packageRange.startsWith('workspace:') ||
-        /**
-         * Catalogs can be named, or left unnamed
-         * So just checking up until the : will catch both cases
-         * e.g. catalog:some-catalog or catalog:
-         */
-        packageRange.startsWith('catalog:') ||
-        satisfies(npmDependencies[packageName], packageRange, {
+        resolvedPackageRange === '*' ||
+        resolvedPackageRange.startsWith('workspace:') ||
+        satisfies(npmDependencies[packageName], resolvedPackageRange, {
           includePrerelease: true,
         })
       ) {
