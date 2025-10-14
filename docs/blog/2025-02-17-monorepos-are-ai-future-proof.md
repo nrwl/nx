@@ -2,7 +2,7 @@
 title: 'Nx Just Made Your LLM Way Smarter'
 slug: nx-just-made-your-llm-smarter
 authors: ['Juri Strumpflohner']
-tags: ['nx']
+tags: ['nx', 'ai']
 description: 'Learn how monorepos with Nx enhance AI capabilities by providing rich metadata and context, making LLMs smarter and more architecturally aware.'
 cover_image: /blog/images/articles/monorepos-are-ai-future-proof-bg.jpg
 youtubeUrl: https://youtu.be/RNilYmJJzdk
