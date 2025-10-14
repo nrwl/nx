@@ -15,7 +15,7 @@ width="100%" /%}
 
 The `convert-to-monorepo` generator will attempt to convert a standalone repo to a monorepo.
 
-```shell {% frame="none" %}
+```shell
 nx g convert-to-monorepo
 ```
 
@@ -38,7 +38,7 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 
 2. Create a new app using the appropriate plugin under `apps/temp`
 
-   ```shell {% frame="none" %}
+   ```shell
    nx g app apps/temp
    ```
 
@@ -71,7 +71,7 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 
 6. Doublecheck that all the tasks defined in the `apps/temp/project.json` file still work.
 
-   ```shell {% frame="none" %}
+   ```shell
    nx build temp
    nx test temp
    nx lint temp
@@ -82,7 +82,7 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 9. Update the `/apps/temp-e2e/project.json` `implicitDependencies` to be `temp` instead of `my-app`
 10. Doublecheck that all the tasks defined in the `apps/temp-e2e/project.json` file still work.
 
-    ```shell {% frame="none" %}
+    ```shell
     nx lint temp-e2e
     nx e2e temp-e2e
     ```
@@ -90,7 +90,7 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 11. Delete all the project specific config files in the root and under `e2e`
 12. Once the `project.json` file has been deleted in the root, rename `temp-e2e` to `my-app-e2e` and rename `temp` to `my-app`
 
-    ```shell {% frame="none" %}
+    ```shell
     nx g move --projectName=temp-e2e --destination=my-app-e2e
     nx g move --projectName=temp --destination=my-app
     ```

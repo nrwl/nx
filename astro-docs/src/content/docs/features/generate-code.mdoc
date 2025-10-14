@@ -20,13 +20,13 @@ Generators come as part of [Nx plugins](/docs/concepts/nx-plugins) and can be in
 
 Here's an example of generating a React library:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:lib packages/mylib
 ```
 
 You can also specify just the generator name and Nx will prompt you to pick between the installed plugins that provide a generator with that name.
 
-```shell {% frame="none" %}
+```shell
 nx g lib packages/mylib
 ```
 
@@ -34,7 +34,7 @@ When running this command, you could be prompted to choose between the `@nx/reac
 
 To see a list of available generators in a given plugin, run `nx list <plugin-name>`. As an example, to list all generators in the @nx/react plugin:
 
-```shell {% frame="none" %}
+```shell
 nx list @nx/react
 ```
 

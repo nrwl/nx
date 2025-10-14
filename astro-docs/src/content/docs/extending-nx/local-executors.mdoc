@@ -12,14 +12,14 @@ This guide shows you how to create, run, and customize executors within your Nx 
 
 If you don't already have a plugin, use Nx to generate one:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/plugin
 nx g @nx/plugin:plugin tools/my-plugin
 ```
 
 Use the Nx CLI to generate the initial files needed for your executor.
 
-```shell {% frame="none" %}
+```shell
 nx generate @nx/plugin:executor tools/my-plugin/src/executors/echo
 ```
 
@@ -126,7 +126,7 @@ If your package.json has a different name, adjust the command accordingly.
 
 Finally, you run the executor via the CLI as follows:
 
-```shell {% frame="none" %}
+```shell
 nx run my-project:echo
 ```
 

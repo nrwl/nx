@@ -155,7 +155,7 @@ function checkTemplateOnlyFence(
 ): ConformanceViolation {
   return {
     message: `Code block at line ${lineNumber} has template fences but no language identifier. Add a language before the {% %} fences (e.g., \`\`\`text {% ... %})`,
-    file: filePath,
+    file: resolveFilePathToWorkspaceRoot(filePath),
   };
 }
 
@@ -168,9 +168,37 @@ function checkTreeviewLanguage(
   if (isMarkdoc && language === 'treeview') {
     return {
       message: `Code block at line ${lineNumber} uses 'treeview' which is not supported. Use 'text' or the {% filetree %} tag.`,
-      file: filePath,
+      file: resolveFilePathToWorkspaceRoot(filePath),
     };
   }
+  return null;
+}
+
+function checkShellFrameNone(
+  lineNumber: number,
+  language: string,
+  afterBackticks: string,
+  filePath: string,
+  isMarkdoc: boolean
+): ConformanceViolation | null {
+  // Only check in markdoc files
+  if (!isMarkdoc) {
+    return null;
+  }
+
+  // Only check shell language
+  if (language !== 'shell') {
+    return null;
+  }
+
+  // Check if the line contains frame="none"
+  if (afterBackticks.includes('frame="none"')) {
+    return {
+      message: `Code block at line ${lineNumber} uses 'shell' language with frame="none". Shell code blocks should not use frame="none".`,
+      file: resolveFilePathToWorkspaceRoot(filePath),
+    };
+  }
+
   return null;
 }
 
@@ -216,15 +244,32 @@ export function checkCodeBlocks(
 
     const languageMatch = afterBackticks.match(/^(\S+)/);
     if (languageMatch) {
-      const violation = checkTreeviewLanguage(
+      const treeviewViolation = checkTreeviewLanguage(
         i + 1,
         languageMatch[1],
         filePath,
         isMarkdoc
       );
-      if (violation) violations.push(violation);
+      if (treeviewViolation) violations.push(treeviewViolation);
+
+      const shellFrameViolation = checkShellFrameNone(
+        i + 1,
+        languageMatch[1],
+        afterBackticks,
+        filePath,
+        isMarkdoc
+      );
+      if (shellFrameViolation) violations.push(shellFrameViolation);
     }
   }
 
   return violations;
+}
+
+function resolveFilePathToWorkspaceRoot(filePath: string) {
+  if (!filePath || !filePath.startsWith(workspaceRoot)) {
+    return filePath;
+  }
+
+  return filePath.replace(workspaceRoot + '/', '');
 }

@@ -113,14 +113,14 @@ export default {
 These names match the names of the projects in the workspace. Therefore, Nx can find them in the project graph and determine the information it needs.
 This usually amounts to Nx creating the following URLs:
 
-```shell {% frame="none" %}
+```shell
 shop@localhost:4201
 cart@localhost:4202
 ```
 
 When it comes deployment to a real server, you'll need to configure the URLs to point to their real location. For example, if you deploy the host and the remotes to three servers, each with their own domain, you'd need to configure that:
 
-```shell {% frame="none" %}
+```shell
 shop@https://shop.example.com
 cart@https://cart.example.com
 ```

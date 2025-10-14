@@ -17,13 +17,13 @@ In this tutorial, we will create a generator that helps enforce the follow best 
 
 Let's first create a new workspace with the `create-nx-workspace` command:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace myorg --preset=react-monorepo --ci=github
 ```
 
 Then we , install the `@nx/plugin` package and generate a plugin:
 
-```shell {% frame="none" %}
+```shell
 npx nx add @nx/plugin
 npx nx g @nx/plugin:plugin tools/recommended
 ```
@@ -34,7 +34,7 @@ This will create a `recommended` project that contains all your plugin code.
 
 To create a new generator run:
 
-```shell {% frame="none" %}
+```shell
 npx nx generate @nx/plugin:generator tools/recommended/src/generators/library
 ```
 
@@ -70,7 +70,7 @@ We're returning the `callbackAfterFilesUpdated` function because the `@nx/react:
 
 To try out the generator in dry-run mode, use the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx g @myorg/recommended:library test-library --dry-run
 ```
 
@@ -139,7 +139,7 @@ The schema files not only provide structure to the CLI, but also allow [Nx Conso
 
 Notice how we made the `description` argument optional in both the JSON and type files. If we call the generator without passing a directory, the project will be created in a directory with same name as the project. We can test the changes to the generator with the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx g @myorg/recommended:library test-library --directory=nested/directory/test-library --dry-run
 ```
 
@@ -245,7 +245,7 @@ export default libraryGenerator;
 
 We can check that the scope logic is being applied correctly by running the generator again and specifying a scope.
 
-```shell {% frame="none" %}
+```shell
 npx nx g @myorg/recommended:library test-library --scope=shared --dry-run
 ```
 
@@ -316,7 +316,7 @@ We updated the generator to use some new helper functions from the Nx devkit. He
 
 Now let's check to make sure that the `clearMocks` property is set correctly by the generator. First, we'll commit our changes so far. Then, we'll run the generator without the `--dry-run` flag so we can inspect the file contents.
 
-```shell {% frame="none" %}
+```shell
 git add .
 git commit -am "library generator"
 npx nx g @myorg/recommended:library store-test --scope=store

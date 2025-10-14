@@ -415,7 +415,7 @@ within the launch template and all respective inputs within each step are approp
 
 To do this, run the `nx-cloud validate` command, with the path to the launch template:
 
-```shell {% frame="none" %}
+```shell
 nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
@@ -472,7 +472,7 @@ launch-templates:
 
 Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 
-```shell {% frame="none" %}
+```shell
 # this assumes SOME_AUTH_TOKEN is already defined on the main agent
 nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
 ```

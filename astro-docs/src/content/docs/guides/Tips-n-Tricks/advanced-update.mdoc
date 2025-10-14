@@ -14,7 +14,7 @@ The following steps are a summary of the [standard update process](/docs/feature
 
 First, run the `migrate` command:
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest # same as nx migrate nx@latest
 ```
 
@@ -27,7 +27,7 @@ This performs the following changes:
 
 The next step in the process involves using the `migrate` command to apply the migrations that were generated in the `migrations.json` file in the previous step. You can do so by running:
 
-```shell {% frame="none" %}
+```shell
 nx migrate --run-migrations
 ```
 
@@ -64,7 +64,7 @@ Depending on the size of the update (e.g. migrating between major versions is li
 
 If you pass `--create-commits` to the `--run-migrations` command, Nx will automatically create a dedicated commit for each successfully completed migration, for example:
 
-```shell {% frame="none" %}
+```shell
 nx migrate --run-migrations --create-commits
 ```
 
@@ -90,7 +90,7 @@ etc
 
 By default, nx will apply the prefix of `chore: [nx migration] ` to each commit in order to clearly identify it, but you can also customize this prefix by passing `--commit-prefix` to the command:
 
-```shell {% frame="none" %}
+```shell
 nx migrate --run-migrations --create-commits --commit-prefix="chore(core): AUTOMATED - "
 ```
 
@@ -125,7 +125,7 @@ Because you can run `nx migrate --run-migrations` as many times as you want, you
 
 You can even provide a custom location for the migrations file if you wish, you simply pass it to the `--run-migrations` option:
 
-```shell {% frame="none" %}
+```shell
 nx migrate --run-migrations=migrations.json
 ```
 
@@ -145,7 +145,7 @@ While opting out of applying some package updates is supported by Nx, please kee
 
 To opt out of package updates, you need to run the migration in interactive mode:
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest --interactive
 ```
 
@@ -157,7 +157,7 @@ Once you have skipped some optional updates, there'll come a time when you'll wa
 
 Say you skipped updating Angular to **v16.x.x**. That package update was meant to happen as part of the `@nx/angular@16.1.0` update, but you decided to skip it at the time. The recommended way to collect the migrations from such an older version is to run the following:
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest --from=nx@16.0.0 --exclude-applied-migrations
 ```
 
@@ -176,7 +176,7 @@ Automatically excluding previously applied migrations doesn't consider migration
 
 After running the migrations in interactive mode and opting-out of some package updates, a message is printed to the terminal with the command to run later to collect and apply those skipped updates. For example, if you skipped updating Angular to **v16.0.0**, this is the output you'll see (simplified for brevity):
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest --interactive
 Fetching meta data about packages.
 It may take a few minutes.
@@ -237,13 +237,13 @@ You can see the `16.1.0-beta.1` version is the one that contains the update for 
 
 Sometimes, you may want to use a different version of a package than what Nx recommends. To do that, specify the package and version:
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest --to="jest@22.0.0,cypress@3.4.0"
 ```
 
 By default, Nx uses currently installed packages to calculate what migrations need to run. To override them, override the version:
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest --to="@nx/jest@12.0.0"
 ```
 
@@ -257,7 +257,7 @@ Updates are best done on a clean git history so that it can be easily reversed i
 
 If an update fails for any reason, you can revert it as you do any other set of changes:
 
-```shell {% frame="none" %}
+```shell
 git reset --hard # Reset any changes
 git clean -fd # Delete newly added files and directories
 ```
