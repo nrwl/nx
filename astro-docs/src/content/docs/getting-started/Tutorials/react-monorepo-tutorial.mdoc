@@ -79,7 +79,7 @@ Now, let's build some features and see how Nx helps get us to production faster.
 
 To serve your new React app, run:
 
-```shell {% frame="none" %}
+```shell
 npx nx serve demo
 ```
 
@@ -120,7 +120,7 @@ In `nx.json` there's already the `@nx/vite` plugin registered which automaticall
 
 To view the tasks that Nx has detected, look in the [Nx Console](/docs/getting-started/editor-setup) project detail view or run:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project demo
 ```
 
@@ -235,7 +235,7 @@ Nx allows you to separate this logic into "local libraries." The main benefits i
 
 Let's create a reusable design system library called `ui` that we can use across our workspace. This library will contain reusable components such as buttons, inputs, and other UI elements.
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/react:library packages/ui --unitTestRunner=vitest --bundler=none
 ```
 
@@ -262,13 +262,13 @@ Running the above commands should lead to the following directory structure:
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project ui
 ```
 
 In this case, we have the `lint` and `test` tasks available, among other inferred tasks.
 
-```shell {% frame="none" %}
+```shell
 npx nx lint ui
 npx nx test ui
 ```
@@ -391,7 +391,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell {% frame="none" %}
+```shell
 npx nx graph
 ```
 
@@ -433,7 +433,7 @@ You should be able to see something similar to the following in your browser.
 
 Let's create a git branch with the new hero component so we can open a pull request later:
 
-```shell {% frame="none" %}
+```shell
 git checkout -b add-hero-component
 git add .
 git commit -m 'add hero component'
@@ -443,14 +443,14 @@ git commit -m 'add hero component'
 
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for testing and linting. We can use the same syntax as before to run these tasks:
 
-```shell {% frame="none" %}
+```shell
 npx nx test demo # runs the tests for demo
 npx nx lint ui   # runs the linter on ui
 ```
 
 More conveniently, we can also run tasks in parallel using the following syntax:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t test lint
 ```
 
@@ -533,7 +533,7 @@ You will also need to install the [Nx Console](/docs/getting-started/editor-setu
 
 Now, let's push the `add-hero-component` branch to GitHub and open a new pull request.
 
-```shell {% frame="none" %}
+```shell
 git push origin add-hero-component
 # Don't forget to open a pull request on GitHub
 ```

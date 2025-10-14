@@ -34,7 +34,7 @@ Make sure to install the `@nx/angular` or `@nx/react` versions that matches the 
 
 {% tabitem label="Angular" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/angular
 
 ```
@@ -43,7 +43,7 @@ nx add @nx/angular
 
 {% tabitem label="React" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/react
 
 ```
@@ -67,7 +67,7 @@ Nx allows you to do this with a single command:
 
 {% tabitem label="Angular" %}
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/angular:host apps/store --ssr --remotes=product,checkout
 
 ```
@@ -76,7 +76,7 @@ npx nx g @nx/angular:host apps/store --ssr --remotes=product,checkout
 
 {% tabitem label="React" %}
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/react:host apps/store --ssr --remotes=product,checkout
 
 ```
@@ -97,7 +97,7 @@ To do this, run:
 
 {% tabitem label="Angular" %}
 
-```shell {% frame="none" %}
+```shell
 npx nx serve-ssr store
 
 ```
@@ -106,7 +106,7 @@ npx nx serve-ssr store
 
 {% tabitem label="React" %}
 
-```shell {%  frame="none" %}
+```shell
 npx nx serve store
 
 ```
@@ -127,7 +127,7 @@ To serve the `store` application and watch for changes on the `checkout` applica
 
 {% tabitem label="Angular" %}
 
-```shell {%  frame="none" %}
+```shell
 npx nx serve-ssr store --devRemotes=checkout
 
 ```
@@ -136,7 +136,7 @@ npx nx serve-ssr store --devRemotes=checkout
 
 {% tabitem label="React" %}
 
-```shell {% frame="none" %}
+```shell
 npx nx serve store --devRemotes=checkout
 
 ```

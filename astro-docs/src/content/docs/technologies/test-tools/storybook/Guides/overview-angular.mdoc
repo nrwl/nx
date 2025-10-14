@@ -16,7 +16,7 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/docs/technologies/angular/generators#storybook-configuration), like this:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:storybook-configuration project-name
 ```
 
@@ -33,7 +33,7 @@ The [`@nx/angular:storybook-configuration` generator](/docs/technologies/angular
 {%/filetree %}
 If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/docs/technologies/angular/generators#stories):
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:stories --project=<project-name>
 ```
 
@@ -43,7 +43,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 The command to generate stories for that library would be:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:stories --project=feature-ui
 ```
 

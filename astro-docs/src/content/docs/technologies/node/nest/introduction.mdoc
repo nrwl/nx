@@ -22,13 +22,13 @@ Many conventions and best practices used in Angular applications can be also be 
 
 To create a new workspace with Nest, run the following command:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace my-workspace --preset=nest
 ```
 
 Yarn users can use the following command instead:
 
-```shell {% frame="none" %}
+```shell
 yarn create nx-workspace my-workspace --preset=nest
 ```
 
@@ -40,7 +40,7 @@ Make sure to install the `@nx/nest` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/nest` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/nest
 ```
 
@@ -50,7 +50,7 @@ This will install the correct version of `@nx/nest`.
 
 You can add a new Nest application with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/nest:app apps/my-nest-app
 ```
 
@@ -58,7 +58,7 @@ nx g @nx/nest:app apps/my-nest-app
 
 Generating Nest applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/nest:app apps/my-nest-app --frontendProject my-angular-app
 ```
 
@@ -66,19 +66,19 @@ nx g @nx/nest:app apps/my-nest-app --frontendProject my-angular-app
 
 You can add a new Nest library with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/nest:lib libs/my-nest-lib
 ```
 
 To make the library `buildable`, use the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/nest:lib libs/my-nest-lib --buildable
 ```
 
 To make the library `publishable`, use the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/nest:lib libs/my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
@@ -96,13 +96,13 @@ The Nest plugin for Nx extends the generators provided by Nest. Any commands tha
 
 You can build an application with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx build my-nest-app
 ```
 
 This applies to `buildable` libraries as well
 
-```shell {% frame="none" %}
+```shell
 nx build my-nest-lib
 ```
 
@@ -114,7 +114,7 @@ Setting the `waitUntilTargets` option with an array of projects (with the follow
 
 You can serve an application with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx serve my-nest-app
 ```
 
@@ -159,13 +159,13 @@ For additional information on Node.js debugging, see the [Node.js debugging gett
 
 You can lint an application with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx lint my-nest-app
 ```
 
 You can lint a library with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx lint my-nest-lib
 ```
 
@@ -173,13 +173,13 @@ nx lint my-nest-lib
 
 You can run unit test for an application with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx test my-nest-app
 ```
 
 You can run unit test for a library with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx test my-nest-lib
 ```
 

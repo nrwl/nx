@@ -17,7 +17,7 @@ Before starting, ensure you have:
 
 ## Install Nx Docker Plugin
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/docker
 ```
 
@@ -27,7 +27,7 @@ This command adds the `@nx/docker` plugin to your `nx.json` so that projects wit
 
 If you don't already have a backend application, create one using `@nx/node`:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/node
 nx g @nx/node:app apps/api --docker --framework=express
 ```
@@ -59,7 +59,7 @@ CMD [ "node", "app" ]
 
 You should be able to run the following commands to compile the application and create a Docker image:
 
-```shell {% frame="none" %}
+```shell
 nx build api
 nx docker:build api
 ```
@@ -155,13 +155,13 @@ Versioning will continue to work as normal.
 
 Dry run your first Docker release with calendar versioning:
 
-```shell {% frame="none" %}
+```shell
 nx release --dockerVersionScheme=production --first-release --dry-run
 ```
 
 When you are ready, run the release command again without `--dry-run`:
 
-```shell {% frame="none" %}
+```shell
 nx release --dockerVersionScheme=production --first-release
 ```
 
@@ -214,7 +214,7 @@ These are the default schemes that come with Nx Release. These schemes support w
 
 If you need to specify an exact Docker version instead of using version schemes, you can use the `--dockerVersion` flag:
 
-```shell {% frame="none" %}
+```shell
 nx release --dockerVersion=1.2.3
 ```
 

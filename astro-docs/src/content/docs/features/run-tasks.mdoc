@@ -114,7 +114,7 @@ In Nx 21, task output is displayed in an [interactive terminal UI](/docs/guides/
 
 To run the `test` task for the `header` project run this command:
 
-```shell {% frame="none" %}
+```shell
 npx nx test header
 ```
 
@@ -124,19 +124,19 @@ You can use the `run-many` command to run a task for multiple projects. Here are
 
 Run the `build` task for all projects in the repo:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t build
 ```
 
 Run the `build`, `lint` and `test` task for all projects in the repo:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t build lint test
 ```
 
 Run the `build`, `lint`, and `test` tasks only on the `header` and `footer` projects:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t build lint test -p header footer
 ```
 
@@ -148,7 +148,7 @@ Learn more about the [run-many](/docs/reference/nx-commands#nx-run-many) command
 
 You can also run a command for all the projects affected by your PR like this:
 
-```shell {% frame="none" %}
+```shell
 npx nx affected -t test
 ```
 
@@ -290,7 +290,7 @@ If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run th
 
 To invoke the task, use:
 
-```shell {% frame="none" %}
+```shell
 npx nx docs
 ```
 

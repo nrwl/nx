@@ -80,7 +80,7 @@ this [later in this guide](#remote-computation-caching-with-nx-cloud).
 
 Now, let's continue by creating an empty Nx workspace.
 
-```shell {% frame="none" %}
+```shell
 # Replace acme with desired scope
 npx create-nx-workspace acme --preset=apps
 cd acme
@@ -93,7 +93,7 @@ take advantage of remote caching and other features it provides.
 
 Then, for React users, install the `@nx/react` plugin; and for Angular users, install the `@nx/angular` plugin.
 
-```shell {% frame="none" %}
+```shell
 # If you use React
 nx add @nx/react
 
@@ -106,14 +106,14 @@ Next, generate the host and remote applications.
 {% tabs %}
 {% tabitem label="React" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:host apps/host --remotes=shop,cart,about
 ```
 
 {% /tabitem %}
 {% tabitem label="Angular" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:host apps/host --remotes=shop,cart,about
 ```
 
@@ -127,7 +127,7 @@ or `nx g @nx/angular:remote apps/shop --host=host`.
 
 Now, serve `host` to view it in your browser.
 
-```shell {% frame="none" %}
+```shell
 nx serve host --open
 ```
 
@@ -136,7 +136,7 @@ changes to `host` will update its bundle, but changes to remotes will not update
 
 To run one or more remotes in development mode, use the `--devRemotes` option or `run-many`.
 
-```shell {% frame="none" %}
+```shell
 ## React
 nx run-many -t serve -p "shop,cart"
 
@@ -368,7 +368,7 @@ source of a given remote hasn't changed, it will be served from cache.
 
 You can see this behavior locally if you serve the `host` twice.
 
-```shell {% frame="none" %}
+```shell
 nx serve host
 
 # (kill server)
@@ -382,7 +382,7 @@ If, say, someone is working on `shop`, they will get the `cart` and `about` buil
 
 If you inspect the terminal output, you'll see something like this, even if you are on different machines.
 
-```shell {% frame="none" %}
+```shell
 > nx run about:build:development  [existing outputs match the cache, left as is]
 
 (snip)
@@ -467,7 +467,7 @@ dist/apps
 
 Now, we can add a simple deploy command to simulate deploying this folder to production.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/workspace:run-commands \
 deploy \
 --project=host \

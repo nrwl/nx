@@ -18,7 +18,7 @@ You can create a new sync generator by hand or use the built-in generator that N
 
 Make sure you have `@nx/plugin` installed or add it to your workspace:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/plugin
 ```
 
@@ -26,7 +26,7 @@ nx add @nx/plugin
 
 Create a new local plugin where we can add our new sync generator. You can also add it to an existing local plugin if you already have one. In that case you can skip this step.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/plugin:plugin tools/my-plugin
 ```
 
@@ -34,7 +34,7 @@ nx g @nx/plugin:plugin tools/my-plugin
 
 Create a sync generator the same way you would [create any generator](/docs/extending-nx/local-generators).
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/plugin:generator --path=tools/my-plugin/src/generators/my-sync-generator
 ```
 

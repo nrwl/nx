@@ -80,19 +80,19 @@ One of the key benefits of independent releases is the ability to release only a
 
 Release only the `pkg-1` and `pkg-2` projects:
 
-```shell {% frame="none" %}
+```shell
 nx release --projects=pkg-1,pkg-2
 ```
 
 Release all projects in the `server` directory:
 
-```shell {% frame="none" %}
+```shell
 nx release --projects=server/*
 ```
 
 Release all projects except those in the `ui` directory:
 
-```shell {% frame="none" %}
+```shell
 nx release --projects='!ui/*'
 ```
 

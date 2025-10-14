@@ -77,7 +77,7 @@ Nx is not just exclusively for monorepos, but can create
 
 You can create a new Nx single-project workspace using the following command:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace myngapp --preset=angular-standalone
 ```
 
@@ -144,13 +144,13 @@ Nx comes with slightly different terminology than the Angular CLI for some featu
 
 **Angular Schematics** are called [Generators](/docs/features/generate-code) in Nx. You can invoke them in the same way as you would with the Angular CLI, but you use the `nx` command instead of `ng`:
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component
 ```
 
 You can also run Angular Schematics through the Nx CLI. So something like this works as well:
 
-```shell {% frame="none" %}
+```shell
 npx nx g @schematics/angular:component my-component
 ```
 
@@ -162,7 +162,7 @@ Support to run Angular Devkit builders and schematics is enabled by installing t
 
 Commands are run in the very same way as with the Angular CLI. You just switch `ng` with `nx`. For example:
 
-```shell {% frame="none" %}
+```shell
 npx nx serve
 ```
 
@@ -183,7 +183,7 @@ But Nx expands beyond just that, offering automated integration with a lot of mo
 
 Like the Angular CLI, Nx has a command that allows you to upgrade your existing workspace tools, packages, and source code to the next version. Instead of `ng update`, you run `nx migrate`:
 
-```shell {% frame="none" %}
+```shell
 npx nx migrate latest
 ```
 
@@ -207,7 +207,7 @@ To reiterate: `nx migrate` runs the migrations written by the Angular team the s
 
 The [`nx add` command](/docs/reference/nx-commands#nx-add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
 
-```shell {% frame="none" %}
+```shell
 nx add [package]
 ```
 
@@ -216,7 +216,7 @@ The command was introduced in **Nx 17.3.0**. If you're using an older version, y
 {% tabs %}
 {% tabitem label="npm" %}
 
-```shell {% frame="none" %}
+```shell
 npm add [package]
 nx g [package]:ng-add
 ```
@@ -225,7 +225,7 @@ nx g [package]:ng-add
 
 {% tabitem label="yarn" %}
 
-```shell {% frame="none" %}
+```shell
 yarn add [package]
 nx g [package]:ng-add
 ```
@@ -234,7 +234,7 @@ nx g [package]:ng-add
 
 {% tabitem label="pnpm" %}
 
-```shell {% frame="none" %}
+```shell
 pnpm add [package]
 nx g [package]:ng-add
 ```
@@ -243,7 +243,7 @@ nx g [package]:ng-add
 
 {% tabitem label="bun" %}
 
-```shell {% frame="none" %}
+```shell
 bun add [package]
 nx g [package]:ng-add
 ```
@@ -406,7 +406,7 @@ And if you ever need to expand beyond Angular or diversify your stack, you can s
 
 Migrating an Angular CLI project to Nx can be done by running
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest init
 ```
 

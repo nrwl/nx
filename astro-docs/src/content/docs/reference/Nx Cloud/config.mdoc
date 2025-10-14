@@ -84,7 +84,7 @@ Targets can be marked as cacheable either in the `targetDefaults` in `nx.json` o
 
 By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEOUTS` disables the timeout.
 
-```shell {% frame="none" %}
+```shell
 NX_CLOUD_NO_TIMEOUTS=true nx run-many -t build
 ```
 
@@ -136,7 +136,7 @@ In `nx.json`, locate the `taskRunnerOptions` property. Under its "options" prope
 
 To instead use an environment variable to provide your secret key, run any Nx command as follows:
 
-```shell {% frame="none" %}
+```shell
 NX_CLOUD_ENCRYPTION_KEY=myEncryptionKey nx build my-project
 ```
 
