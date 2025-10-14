@@ -6,6 +6,43 @@ use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
+// Error reporting constants
+const TRACE_LOG_COMMAND: &str = "NX_NATIVE_LOGGING=nx::native::db=trace nx <your-command>";
+const ISSUE_URL: &str = "https://github.com/nrwl/nx/issues/new/choose";
+
+/// Generates reporting instructions for error messages.
+///
+/// # Parameters
+/// * `is_known_error` - When `true`, adds "If the issue persists" prefix for errors with
+///   user-actionable guidance. When `false`, omits the prefix for unexpected errors that
+///   should be reported immediately.
+fn reporting_instructions(is_known_error: bool) -> String {
+    let prefix = if is_known_error {
+        "If the issue persists, please"
+    } else {
+        "Please"
+    };
+    format!(
+        "{} help us improve Nx by capturing logs and reporting this issue:\n\
+          1. Run: {}\n\
+          2. Create an issue at: {}",
+        prefix, TRACE_LOG_COMMAND, ISSUE_URL
+    )
+}
+
+/// Returns appropriate reset instruction based on whether error has user-actionable guidance.
+///
+/// # Parameters
+/// * `is_known_error` - When `true`, returns "Then try" for errors with guidance already provided.
+///   When `false`, returns more explicit instruction for unexpected errors.
+fn reset_instruction(is_known_error: bool) -> &'static str {
+    if is_known_error {
+        "Then try: nx reset"
+    } else {
+        "To try to fix this, run: nx reset"
+    }
+}
+
 pub(super) struct LockFile {
     file: File,
     path: PathBuf,
@@ -21,18 +58,10 @@ pub(super) fn unlock_file(lock_file: &LockFile) {
 
 /// Creates a user-friendly error message for filesystem IO errors with specific guidance based on error type
 fn create_io_error(operation: &str, path: &Path, error: std::io::Error) -> anyhow::Error {
-    let error_kind_msg = match error.kind() {
-        ErrorKind::PermissionDenied => "Permission denied",
-        ErrorKind::NotFound => "Directory not found",
-        ErrorKind::StorageFull => "Disk full",
-        ErrorKind::AlreadyExists => "File already exists",
-        _ => "Filesystem error",
-    };
-
     let specific_guidance = match error.kind() {
         ErrorKind::PermissionDenied => {
             format!(
-                "Possible solutions:\n\
+                "Try:\n\
                 - Verify you have read and write permissions for: {}\n\
                 - Check that you own the file/directory or your user has access\n\
                 - Ensure the filesystem is not mounted read-only\n\
@@ -41,95 +70,67 @@ fn create_io_error(operation: &str, path: &Path, error: std::io::Error) -> anyho
                 path.display()
             )
         }
-        ErrorKind::NotFound => {
-            if let Some(parent) = path.parent() {
-                format!(
-                    "The parent directory does not exist: {}\n\
-                    \n\
-                    This is unexpected as Nx should have created it.\n\
-                    \n\
-                    Possible solutions:\n\
-                    - Verify the workspace directory exists\n\
-                    - Check that the path is not on a removed or unmounted drive",
-                    parent.display()
-                )
-            } else {
-                "The specified path does not exist or is inaccessible.\n\
-                \n\
-                Possible solutions:\n\
-                - Verify the workspace directory exists\n\
-                - Check that the path is not on a removed or unmounted drive"
-                    .to_string()
-            }
-        }
-        ErrorKind::StorageFull => {
-            "Possible solutions:\n\
+        ErrorKind::StorageFull => "Try:\n\
             - Free up disk space on the drive containing the workspace\n\
             - Move the workspace to a drive with more available space\n\
             - Check for large files that can be removed"
-                .to_string()
-        }
+            .to_string(),
         ErrorKind::AlreadyExists => {
             "This may indicate a previous Nx process did not clean up properly.\n\
             \n\
-            Possible solutions:\n\
+            Try:\n\
             - Ensure no other Nx processes are running\n\
             - Run nx reset to clean up stale files"
                 .to_string()
         }
         _ => {
-            "This could be due to filesystem limitations, insufficient permissions, or disk space issues.\n\
-            \n\
-            Try:\n\
-            - Check available disk space\n\
-            - Verify file and directory permissions"
-                .to_string()
+            return anyhow::anyhow!(
+                "An unexpected error occurred while initializing the workspace data:\n\
+                \n\
+                {}\n\
+                \n\
+                {}\n\
+                \n\
+                {}",
+                error,
+                reporting_instructions(false),
+                reset_instruction(false)
+            );
         }
     };
 
     anyhow::anyhow!(
-        "Unable to initialize workspace data. Cannot {} at {}. {}.\n\
+        "Unable to initialize workspace data while attempting to {}:\n\
         \n\
         {}\n\
         \n\
-        If nothing else works: Run nx reset and try again\n\
+        {}\n\
         \n\
-        If the issue persists, please report it with detailed logs:\n\
-        1. Run: NX_NATIVE_LOGGING=nx::native::db=trace nx <your-command>\n\
-        2. Report at: https://github.com/nrwl/nx/issues/new/choose\n\
+        {}\n\
         \n\
-        Technical error: {}",
+        {}",
         operation,
-        path.display(),
-        error_kind_msg,
+        error,
         specific_guidance,
-        error
+        reporting_instructions(true),
+        reset_instruction(true)
     )
 }
 
 /// Creates a user-friendly error message for database errors
-fn create_db_error(operation: &str, db_path: &Path, error: anyhow::Error) -> anyhow::Error {
+fn create_db_error(operation: &str, error: anyhow::Error) -> anyhow::Error {
     anyhow::anyhow!(
-        "Unable to initialize workspace data. {}.\n\
+        "An unexpected error occurred while attempting to {}:\n\
         \n\
-        Database file: {}\n\
+        {}\n\
         \n\
-        This could be due to database corruption, filesystem issues, or insufficient permissions.\n\
+        {}\n\
         \n\
-        Try:\n\
-        - Check available disk space\n\
-        - Verify file and directory permissions\n\
-        - Ensure the filesystem supports SQLite databases\n\
-        - If nothing else works: Run nx reset and try again\n\
-        \n\
-        If the issue persists, please report it with detailed logs:\n\
-        1. Run: NX_NATIVE_LOGGING=nx::native::db=trace nx <your-command>\n\
-        2. Report at: https://github.com/nrwl/nx/issues/new/choose\n\
-        \n\
-        Technical error: {}",
+        {}",
         operation,
-        db_path.display(),
-        error
+        error,
+        reporting_instructions(false),
+        reset_instruction(false)
     )
 }
 
@@ -178,7 +179,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                         match current_mode.as_deref() {
                             Some(mode) if mode.eq_ignore_ascii_case("DELETE") => {
                                 trace!("Database already configured with DELETE journal mode");
-                                trace!("Attempting to upgrade to WAL for better performance");
+                                trace!("Attempting to upgrade to WAL");
 
                                 // Opportunistically try to upgrade to WAL
                                 c.pragma_update(None, "journal_mode", "WAL").ok();
@@ -191,16 +192,14 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                                         trace!("Successfully upgraded to WAL journal mode!");
                                     }
                                     _ => {
-                                        trace!(
-                                            "Still in DELETE mode (WAL not supported in this environment)"
-                                        );
+                                        trace!("Still in DELETE mode");
                                         // Clean up any orphaned WAL files if any since we're staying in DELETE mode
                                         remove_wal_files(db_path);
                                     }
                                 }
 
                                 // Set busy handler (connection-level, must be set every time)
-                                set_busy_handler(&c, db_path)?;
+                                set_busy_handler(&c)?;
 
                                 return Ok(c);
                             }
@@ -214,7 +213,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                                         trace!("WAL mode verified working");
 
                                         // Set busy handler (connection-level)
-                                        set_busy_handler(&c, db_path)?;
+                                        set_busy_handler(&c)?;
 
                                         return Ok(c);
                                     }
@@ -239,21 +238,17 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                                         debug!(
                                             "WAL mode failed after cleanup, falling back to DELETE mode"
                                         );
-                                        debug!(
-                                            "This is normal for network drives or certain filesystems"
-                                        );
 
                                         c.pragma_update(None, "journal_mode", "DELETE").map_err(
                                             |e| {
                                                 create_db_error(
                                                     "Cannot set DELETE journal mode",
-                                                    db_path,
                                                     e.into(),
                                                 )
                                             },
                                         )?;
 
-                                        set_busy_handler(&c, db_path)?;
+                                        set_busy_handler(&c)?;
 
                                         return Ok(c);
                                     }
@@ -364,10 +359,10 @@ fn query_journal_mode(connection: &NxDbConnection) -> Option<String> {
 
 /// Sets the busy handler for the database connection.
 /// The busy handler determines how SQLite handles locked databases during concurrent access.
-fn set_busy_handler(connection: &NxDbConnection, db_path: &Path) -> anyhow::Result<()> {
+fn set_busy_handler(connection: &NxDbConnection) -> anyhow::Result<()> {
     connection
         .busy_handler(Some(|tries| tries <= 12))
-        .map_err(|e| create_db_error("Cannot configure database busy handler", db_path, e.into()))
+        .map_err(|e| create_db_error("Cannot configure database busy handler", e.into()))
 }
 
 fn remove_all_database_files(db_path: &Path) -> anyhow::Result<()> {
@@ -419,12 +414,12 @@ fn open_database_connection(db_path: &Path) -> anyhow::Result<NxDbConnection> {
             | OpenFlags::SQLITE_OPEN_URI
             | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
     )
-    .map_err(|e| create_db_error("Cannot open database", db_path, e.into()))?;
+    .map_err(|e| create_db_error("Cannot open database", e.into()))?;
 
     // Load array module for rarray() functionality - needed per connection
     trace!("Loading SQLite array module");
     array::load_module(&conn)
-        .map_err(|e| create_db_error("Cannot load SQLite array extension", db_path, e.into()))?;
+        .map_err(|e| create_db_error("Cannot load SQLite array extension", e.into()))?;
 
     Ok(NxDbConnection::new(conn))
 }
@@ -442,19 +437,11 @@ fn configure_database(
     trace!("Configuring database pragmas");
     connection
         .pragma_update(None, "synchronous", "NORMAL")
-        .map_err(|e| {
-            create_db_error(
-                "Cannot configure database synchronous mode",
-                db_path,
-                e.into(),
-            )
-        })?;
+        .map_err(|e| create_db_error("Cannot configure database synchronous mode", e.into()))?;
 
     connection
         .busy_handler(Some(|tries| tries <= 12))
-        .map_err(|e| {
-            create_db_error("Cannot configure database busy handler", db_path, e.into())
-        })?;
+        .map_err(|e| create_db_error("Cannot configure database busy handler", e.into()))?;
 
     Ok(())
 }
@@ -467,7 +454,7 @@ fn set_journal_mode(
     // Proactively skip WAL on known-incompatible environments
     if is_known_incompatible_environment() {
         debug!("Detected environment with known WAL incompatibilities");
-        debug!("Using DELETE journal mode for compatibility");
+        debug!("Using DELETE journal mode");
         connection
             .pragma_update(None, "journal_mode", "DELETE")
             .map_err(|e| diagnose_filesystem_issue(db_path, e))?;
@@ -487,7 +474,7 @@ fn set_journal_mode(
             // If fallback is not allowed yet, WAL failure might be due to stale auxiliary files
             // Return error to trigger cleanup and retry
             if !allow_wal_fallback {
-                trace!("WAL failed before cleanup - may be stale auxiliary files");
+                trace!("WAL failed before cleanup");
                 trace!("Will clean up database files and retry");
                 return Err(anyhow::anyhow!(
                     "WAL mode failed - cleanup needed: {}",
@@ -497,7 +484,6 @@ fn set_journal_mode(
 
             // After cleanup, WAL still not supported - fall back to DELETE mode
             debug!("WAL not supported on this system after cleanup");
-            debug!("This is normal for WSL1, network drives, or certain filesystems");
         }
     }
 
@@ -553,56 +539,56 @@ fn diagnose_filesystem_issue(db_path: &Path, original_error: anyhow::Error) -> a
 
                 // Directory is writable, so the issue is something else
                 return anyhow::anyhow!(
-                    "Unable to initialize workspace data.\n\
+                    "Unable to initialize workspace data:\n\
                     \n\
-                    The directory exists and is writable, but SQLite cannot initialize.\n\
+                    {}\n\
                     \n\
-                    This may indicate:\n\
+                    The directory at {} exists and is writable, but SQLite cannot initialize.\n\
+                    This typically indicates:\n\
                     - The directory is on a network drive or NFS mount\n\
                     - The filesystem doesn't support required features\n\
                     - There are conflicting locks from another process\n\
                     \n\
-                    Location: {}\n\
-                    \n\
-                    Possible solutions:\n\
+                    Try:\n\
                     - Move your workspace to a local filesystem\n\
-                    - Check for other processes accessing cache directory at {}\n\
-                    - If nothing else works: Run nx reset and try again\n\
+                    - Check for other processes accessing the cache directory\n\
                     \n\
-                    If the issue persists, please report it with detailed logs:\n\
-                    1. Run: NX_NATIVE_LOGGING=nx::native::db=trace nx <your-command>\n\
-                    2. Report at: https://github.com/nrwl/nx/issues/new/choose\n\
+                    {}\n\
                     \n\
-                    Original error: {}",
+                    {}",
+                    original_error,
                     parent_dir.display(),
-                    parent_dir.display(),
-                    original_error
+                    reporting_instructions(true),
+                    reset_instruction(true)
                 );
             }
             Err(write_error) => {
                 // Directory exists but is not writable
                 return anyhow::anyhow!(
-                    "Unable to initialize workspace data.\n\
+                    "Unable to initialize workspace data:\n\
                     \n\
-                    Permission denied: Cannot write to directory\n\
+                    {}\n\
                     \n\
-                    Location: {}\n\
+                    The directory at {} exists but Nx cannot write to it.\n\
+                    This typically indicates a permissions issue.\n\
                     \n\
-                    The directory exists but Nx cannot write to it.\n\
-                    \n\
-                    Possible solutions:\n\
-                    - Verify you have read and write permissions for: {}\n\
+                    Try:\n\
+                    - Verify you have read and write permissions for the cache directory\n\
                     - Check that you own the directory or your user has access\n\
                     - Ensure the filesystem is not mounted read-only\n\
                     - If using Docker, ensure volume has correct permissions\n\
                     - If running in a restricted environment, you may need administrator privileges\n\
                     \n\
-                    Permission error: {}\n\
-                    Original error: {}",
+                    {}\n\
+                    \n\
+                    {}\n\
+                    \n\
+                    Write error: {}",
+                    original_error,
                     parent_dir.display(),
-                    parent_dir.display(),
-                    write_error,
-                    original_error
+                    reporting_instructions(true),
+                    reset_instruction(true),
+                    write_error
                 );
             }
         }
@@ -610,24 +596,16 @@ fn diagnose_filesystem_issue(db_path: &Path, original_error: anyhow::Error) -> a
 
     // Fallback if we can't get the parent directory path
     anyhow::anyhow!(
-        "Unable to initialize workspace data.\n\
+        "An unexpected error occurred while initializing the workspace data:\n\
         \n\
-        This may indicate:\n\
-        - File permissions issues in the workspace directory\n\
-        - The workspace directory is on a network drive or shared filesystem\n\
-        - Filesystem limitations\n\
+        {}\n\
         \n\
-        Possible solutions:\n\
-        - Ensure the workspace is on a local filesystem\n\
-        - Check file permissions on the cache directory\n\
-        - If nothing else works: Run nx reset and try again\n\
+        {}\n\
         \n\
-        If the issue persists, please report it with detailed logs:\n\
-        1. Run: NX_NATIVE_LOGGING=nx::native::db=trace nx <your-command>\n\
-        2. Report at: https://github.com/nrwl/nx/issues/new/choose\n\
-        \n\
-        Error: {}",
-        original_error
+        {}",
+        original_error,
+        reporting_instructions(false),
+        reset_instruction(false)
     )
 }
 
