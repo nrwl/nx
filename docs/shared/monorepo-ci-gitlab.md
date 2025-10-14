@@ -27,7 +27,7 @@ CI:
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - npm ci --legacy-peer-deps
+    - npm ci
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 

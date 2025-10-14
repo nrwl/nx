@@ -1725,6 +1725,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/detox/migrations/22.0.0-package-updates.json",
+        "hidden": false,
+        "name": "22.0.0-package-updates",
+        "version": "22.0.0-beta.5",
+        "originalFilePath": "/packages/detox",
+        "path": "detox/migrations/22.0.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/detox/migrations/20.4.0-package-updates.json",
         "hidden": false,
         "name": "20.4.0-package-updates",

@@ -573,7 +573,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - run: npx nx run-many -t lint test build
 
