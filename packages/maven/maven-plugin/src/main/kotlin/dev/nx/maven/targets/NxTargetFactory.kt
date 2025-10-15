@@ -162,6 +162,8 @@ class NxTargetFactory(
 
     val phaseTargets = mutableMapOf<String, NxTarget>()
     val ciPhaseTargets = mutableMapOf<String, NxTarget>()
+    val ciPhasesWithGoals = mutableSetOf<String>() // Track which CI phases have goals
+
     // Create phase targets from lifecycle, but only for phases that have goals
     lifecycles.lifeCycles.forEach { lifecycle ->
       log.info(
@@ -206,31 +208,48 @@ class NxTargetFactory(
 //                    if (testIndex > -1 && index >= testIndex) {
         if (testIndex > -1) {
           val ciPhaseName = "$phase-ci"
-          // Test and later phases get a CI counterpart
+          // Test and later phases get a CI counterpart - but only if they have goals
 
-          val ciTarget = if (hasGoals && phase !== "test") {
-            createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+          if (hasGoals) {
+            // Only create CI targets for phases with goals
+            val ciTarget = if (phase !== "test") {
+              createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+            } else {
+              createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+            }
+            val ciPhaseDependsOn = mutableListOf<String>()
+
+            // Find the nearest previous phase that has a CI target
+            var previousCiPhase: String? = null
+            for (prevIdx in index - 1 downTo 0) {
+              val prevPhase = lifecycle.phases.getOrNull(prevIdx)
+              if (prevPhase != null && ciPhasesWithGoals.contains(prevPhase)) {
+                previousCiPhase = prevPhase
+                break
+              }
+            }
+
+            if (previousCiPhase != null) {
+              ciPhaseDependsOn.add("$previousCiPhase-ci")
+              log.info("CI phase '$phase' depends on previous CI phase: '$previousCiPhase'")
+            }
+
+            if (hasInstall) {
+              ciPhaseDependsOn.add("^install-ci")
+            }
+
+            ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
+            ciPhaseDependsOn.forEach {
+              ciTarget.dependsOn?.add(it)
+            }
+
+            phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
+            ciPhaseTargets[ciPhaseName] = ciTarget
+            ciPhasesWithGoals.add(phase)
+            log.info("Created CI phase target '$phase-ci' with goals")
           } else {
-            createNoopPhaseTarget(phase)
+            log.info("Skipping noop CI phase target '$phase-ci' (no goals)")
           }
-          val ciPhaseDependsOn = mutableListOf<String>()
-
-          if (previousPhase != null) {
-            ciPhaseDependsOn.add("$previousPhase-ci")
-            log.info("Phase '$phase' depends on previous phase: '$previousPhase'")
-          }
-
-          if (hasInstall) {
-            ciPhaseDependsOn.add("^install-ci")
-          }
-
-          ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
-          ciPhaseDependsOn.forEach {
-            ciTarget.dependsOn?.add(it)
-          }
-
-          phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
-          ciPhaseTargets[ciPhaseName] = ciTarget
         }
 
 //                target.dependsOn?.add("^$phase")
