@@ -254,6 +254,7 @@
         </executions>
         <configuration>
           <updatePomFile>true</updatePomFile>
+          <outputDirectory>${project.build.directory}</outputDirectory>
         </configuration>
       </plugin>
     </plugins>
