@@ -210,12 +210,20 @@ class NxTargetFactory(
           val ciPhaseName = "$phase-ci"
           // Test and later phases get a CI counterpart - but only if they have goals
 
-          if (hasGoals) {
-            // Only create CI targets for phases with goals
-            val ciTarget = if (phase !== "test") {
-              createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+          // Always create verify-ci (structural phase), or create if has goals
+          val shouldCreateCiPhase = hasGoals || phase == "verify"
+
+          if (shouldCreateCiPhase) {
+            // Create CI targets for phases with goals, or structural phases like verify
+            val ciTarget = if (hasGoals) {
+              if (phase !== "test") {
+                createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+              } else {
+                createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+              }
             } else {
-              createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+              // Noop structural phase (like verify)
+              createNoopPhaseTarget(phase)
             }
             val ciPhaseDependsOn = mutableListOf<String>()
 
@@ -245,8 +253,12 @@ class NxTargetFactory(
 
             phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
             ciPhaseTargets[ciPhaseName] = ciTarget
-            ciPhasesWithGoals.add(phase)
-            log.info("Created CI phase target '$phase-ci' with goals")
+            if (hasGoals) {
+              ciPhasesWithGoals.add(phase)
+              log.info("Created CI phase target '$phase-ci' with goals")
+            } else {
+              log.info("Created structural CI phase target '$phase-ci' (noop)")
+            }
           } else {
             log.info("Skipping noop CI phase target '$phase-ci' (no goals)")
           }
