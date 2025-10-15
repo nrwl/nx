@@ -1216,17 +1216,12 @@ async function updatePackageJson(
   const json = readJsonFile(packageJsonPath, parseOptions);
 
   const manager = getCatalogManager(root);
-  const supportsCatalogs = manager.supportsCatalogs();
   const catalogUpdates = [];
 
   Object.keys(updatedPackages).forEach((p) => {
     const existingVersion = json.dependencies?.[p] ?? json.devDependencies?.[p];
 
-    if (
-      supportsCatalogs &&
-      existingVersion &&
-      manager.isCatalogReference(existingVersion)
-    ) {
+    if (existingVersion && manager?.isCatalogReference(existingVersion)) {
       const { catalogName } = manager.parseCatalogReference(existingVersion);
       catalogUpdates.push({
         packageName: p,
@@ -1261,8 +1256,9 @@ async function updatePackageJson(
   });
 
   // Update catalog definitions
-  if (catalogUpdates.length && supportsCatalogs) {
-    manager.updateCatalogVersions(root, catalogUpdates);
+  if (catalogUpdates.length) {
+    // manager is guaranteed to be defined when there are catalog updates
+    manager!.updateCatalogVersions(root, catalogUpdates);
   }
 }
 

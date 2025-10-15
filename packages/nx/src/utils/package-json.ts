@@ -537,8 +537,6 @@ function getDependencyVersionFromPackageJsonFromTree(
     return null;
   }
 
-  const manager = getCatalogManager(tree.root);
-
   let version: string | null = null;
   for (const section of dependencyLookup) {
     const foundVersion = packageJson[section]?.[packageName];
@@ -549,7 +547,8 @@ function getDependencyVersionFromPackageJsonFromTree(
   }
 
   // Resolve catalog reference if needed
-  if (version && manager.isCatalogReference(version)) {
+  const manager = getCatalogManager(tree.root);
+  if (version && manager?.isCatalogReference(version)) {
     version = manager.resolveCatalogReference(tree, packageName, version);
   }
 
@@ -580,8 +579,6 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
     }
   }
 
-  const manager = getCatalogManager(root);
-
   let version: string | null = null;
   for (const section of dependencyLookup) {
     const foundVersion = packageJson[section]?.[packageName];
@@ -592,7 +589,8 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
   }
 
   // Resolve catalog reference if needed
-  if (version && manager.isCatalogReference(version)) {
+  const manager = getCatalogManager(root);
+  if (version && manager?.isCatalogReference(version)) {
     version = manager.resolveCatalogReference(packageName, version, root);
   }
 

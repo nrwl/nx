@@ -1,6 +1,5 @@
 import { readJson, type Tree } from 'nx/src/devkit-exports';
 import { getCatalogManager } from './manager-factory';
-import type { CatalogError } from './types';
 import type { CatalogManager } from './manager';
 
 export { getCatalogManager };
@@ -17,10 +16,6 @@ export function getCatalogDependenciesFromPackageJson(
   const catalogDeps = new Map<string, string | undefined>();
 
   if (!tree.exists(packageJsonPath)) {
-    return catalogDeps;
-  }
-
-  if (!manager.supportsCatalogs()) {
     return catalogDeps;
   }
 
@@ -48,17 +43,4 @@ export function getCatalogDependenciesFromPackageJson(
   }
 
   return catalogDeps;
-}
-
-export function formatCatalogError(error: CatalogError): string {
-  let message = error.message;
-
-  if (error.suggestions && error.suggestions.length > 0) {
-    message += '\n\nSuggestions:';
-    error.suggestions.forEach((suggestion) => {
-      message += `\n  • ${suggestion}`;
-    });
-  }
-
-  return message;
 }

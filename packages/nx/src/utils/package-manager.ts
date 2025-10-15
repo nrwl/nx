@@ -460,7 +460,7 @@ export async function resolvePackageVersionUsingRegistry(
   try {
     let resolvedVersion = version;
     const manager = getCatalogManager(workspaceRoot);
-    if (manager.isCatalogReference(version)) {
+    if (manager?.isCatalogReference(version)) {
       resolvedVersion = manager.resolveCatalogReference(
         packageName,
         version,

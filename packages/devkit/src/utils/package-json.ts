@@ -173,8 +173,6 @@ function getDependencyVersionFromPackageJsonFromTree(
     return null;
   }
 
-  const manager = getCatalogManager(tree.root);
-
   let version: string | null = null;
   for (const section of dependencyLookup) {
     const foundVersion = packageJson[section]?.[packageName];
@@ -185,7 +183,8 @@ function getDependencyVersionFromPackageJsonFromTree(
   }
 
   // Resolve catalog reference if needed
-  if (version && manager.isCatalogReference(version)) {
+  const manager = getCatalogManager(tree.root);
+  if (version && manager?.isCatalogReference(version)) {
     version = manager.resolveCatalogReference(tree, packageName, version);
   }
 
@@ -216,8 +215,6 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
     }
   }
 
-  const manager = getCatalogManager(root);
-
   let version: string | null = null;
   for (const section of dependencyLookup) {
     const foundVersion = packageJson[section]?.[packageName];
@@ -228,7 +225,8 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
   }
 
   // Resolve catalog reference if needed
-  if (version && manager.isCatalogReference(version)) {
+  const manager = getCatalogManager(root);
+  if (version && manager?.isCatalogReference(version)) {
     version = manager.resolveCatalogReference(packageName, version, root);
   }
 
@@ -250,7 +248,7 @@ function filterExistingDependencies(
 
 function cleanSemver(tree: Tree, version: string, packageName: string) {
   const manager = getCatalogManager(tree.root);
-  if (manager.isCatalogReference(version)) {
+  if (manager?.isCatalogReference(version)) {
     const resolvedVersion = manager.resolveCatalogReference(
       tree,
       packageName,
@@ -276,12 +274,7 @@ function isIncomingVersionGreater(
   // it if that's the case
   let resolvedExistingVersion = existingVersion;
   const manager = getCatalogManager(tree.root);
-  if (manager.isCatalogReference(existingVersion)) {
-    if (!manager.supportsCatalogs()) {
-      // If catalog is unsupported, we assume the incoming version is newer
-      return true;
-    }
-
+  if (manager?.isCatalogReference(existingVersion)) {
     const resolved = manager.resolveCatalogReference(
       tree,
       packageName,
@@ -534,6 +527,14 @@ function splitDependenciesByCatalogType(
   let directDevDependencies = { ...filteredDevDependencies };
 
   const manager = getCatalogManager(tree.root);
+  if (!manager) {
+    return {
+      catalogUpdates: [],
+      directDependencies: filteredDependencies,
+      directDevDependencies: filteredDevDependencies,
+    };
+  }
+
   const existingCatalogDeps = getCatalogDependenciesFromPackageJson(
     tree,
     packageJsonPath,
@@ -547,83 +548,34 @@ function splitDependenciesByCatalogType(
     };
   }
 
-  const supportsCatalogs = manager.supportsCatalogs();
-
   // Check filtered results for catalog references or existing catalog dependencies
   for (const [packageName, version] of Object.entries(allFilteredUpdates)) {
     if (!existingCatalogDeps.has(packageName)) {
       continue;
     }
 
-    let shouldUseCatalog = false;
-    let catalogName: string | undefined;
-
-    if (!supportsCatalogs) {
-      // we're trying to update the version of a package that has a catalog reference
-      // but Nx does not support catalogs for this package manager, we warn the user
-      // and update the dependencies directly to package.json to keep the existing
-      // behavior
-      output.warn({
-        title: 'Nx does not support catalogs for this package manager',
-        bodyLines: [
-          'Dependencies will be added directly to package.json and might override catalog dependencies.',
-        ],
-      });
-
-      // bail out early since we'll add the dependencies directly to package.json
-      return {
-        catalogUpdates: [],
-        directDependencies: filteredDependencies,
-        directDevDependencies: filteredDevDependencies,
-      };
-    }
-
-    catalogName = existingCatalogDeps.get(packageName)!;
+    let catalogName = existingCatalogDeps.get(packageName)!;
     const catalogRef = catalogName ? `catalog:${catalogName}` : 'catalog:';
 
     try {
-      const manager = getCatalogManager(tree.root);
-      const { isValid, error } = manager.validateCatalogReference(
-        tree,
-        packageName,
-        catalogRef
-      );
+      manager.validateCatalogReference(tree, packageName, catalogRef);
 
-      if (isValid) {
-        shouldUseCatalog = true;
-      } else {
-        output.error({
-          title: 'Invalid catalog reference',
-          bodyLines: [
-            `Invalid catalog reference "${catalogRef}" for package "${packageName}".`,
-            ...(error?.message ? [error.message] : []),
-            ...(error?.suggestions || []),
-          ],
-        });
-        throw new Error(
-          `Could not update "${packageName}" to version "${version}". See above for more details.`
-        );
-      }
-    } catch (error) {
-      output.error({
-        title: 'Could not update catalog dependency',
-        bodyLines: [
-          `Unexpected error while updating catalog reference "${catalogRef}" for package "${packageName}".`,
-          ...(error?.message ? [error.message] : []),
-          ...(error?.stack ? [error.stack] : []),
-        ],
-      });
-      throw new Error(
-        `Could not update "${packageName}" to version "${version}". See above for more details.`
-      );
-    }
-
-    if (shouldUseCatalog) {
       catalogUpdates.push({ packageName, version, catalogName });
 
       // Remove from direct updates since this will be handled via catalog
       delete directDependencies[packageName];
       delete directDevDependencies[packageName];
+    } catch (error) {
+      output.error({
+        title: 'Invalid catalog reference',
+        bodyLines: [
+          `Invalid catalog reference "${catalogRef}" for package "${packageName}".`,
+          error.message,
+        ],
+      });
+      throw new Error(
+        `Could not update "${packageName}" to version "${version}". See above for more details.`
+      );
     }
   }
 

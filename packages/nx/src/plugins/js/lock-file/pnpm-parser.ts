@@ -602,7 +602,7 @@ function mapRootSnapshot(
       Object.keys(packageJson[depType]).forEach((packageName) => {
         let version = packageJson[depType][packageName];
         const manager = getCatalogManager(workspaceRoot);
-        if (manager.isCatalogReference(version)) {
+        if (manager?.isCatalogReference(version)) {
           version = manager.resolveCatalogReference(
             packageName,
             version,

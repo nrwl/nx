@@ -1,16 +1,12 @@
 import type { Tree } from 'nx/src/devkit-exports';
 import type { PnpmWorkspaceYaml } from 'nx/src/utils/pnpm-workspace';
-import type { CatalogError, CatalogReference } from './types';
+import type { CatalogReference } from './types';
 
 /**
  * Interface for catalog managers that handle package manager-specific catalog implementations.
  */
 export interface CatalogManager {
   readonly name: string;
-  /**
-   * Check if this package manager supports catalogs.
-   */
-  supportsCatalogs(): boolean;
 
   isCatalogReference(version: string): boolean;
 
@@ -43,12 +39,12 @@ export interface CatalogManager {
     workspaceRoot: string,
     packageName: string,
     version: string
-  ): { isValid: boolean; error?: CatalogError };
+  ): void;
   validateCatalogReference(
     tree: Tree,
     packageName: string,
     version: string
-  ): { isValid: boolean; error?: CatalogError };
+  ): void;
 
   /**
    * Updates catalog definitions for specified packages in their respective catalogs.

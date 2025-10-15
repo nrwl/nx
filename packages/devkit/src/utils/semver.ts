@@ -1,6 +1,6 @@
 import { workspaceRoot, type Tree } from 'nx/src/devkit-exports';
 import { valid } from 'semver';
-import { formatCatalogError, getCatalogManager } from './catalog';
+import { getCatalogManager } from './catalog';
 
 export function checkAndCleanWithSemver(
   pkgName: string,
@@ -24,15 +24,16 @@ export function checkAndCleanWithSemver(
     typeof treeOrPkgName === 'string' ? pkgNameOrVersion : version!;
 
   const manager = getCatalogManager(root);
-  if (manager.isCatalogReference(newVersion)) {
-    const validation = tree
-      ? manager.validateCatalogReference(tree, pkgName, newVersion)
-      : manager.validateCatalogReference(root, pkgName, newVersion);
-    if (!validation.isValid) {
+  if (manager?.isCatalogReference(newVersion)) {
+    try {
+      if (tree) {
+        manager.validateCatalogReference(tree, pkgName, newVersion);
+      } else {
+        manager.validateCatalogReference(root, pkgName, newVersion);
+      }
+    } catch (error) {
       throw new Error(
-        `The catalog reference for ${pkgName} is invalid - (${newVersion})\n${formatCatalogError(
-          validation.error!
-        )}`
+        `The catalog reference for ${pkgName} is invalid - (${newVersion})\n${error.message}`
       );
     }
 

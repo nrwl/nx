@@ -172,10 +172,7 @@ export default class JsVersionActions extends VersionActions {
     // Resolve catalog references if needed
     if (currentVersion) {
       const catalogManager = getCatalogManager(tree.root);
-      if (
-        catalogManager.supportsCatalogs() &&
-        catalogManager.isCatalogReference(currentVersion)
-      ) {
+      if (catalogManager?.isCatalogReference(currentVersion)) {
         currentVersion = catalogManager.resolveCatalogReference(
           tree,
           dependencyPackageName,
@@ -256,10 +253,7 @@ export default class JsVersionActions extends VersionActions {
               }
               const currentVersion = json[depType][packageName];
               if (currentVersion) {
-                if (
-                  catalogManager.supportsCatalogs() &&
-                  catalogManager.isCatalogReference(currentVersion)
-                ) {
+                if (catalogManager?.isCatalogReference(currentVersion)) {
                   // collect the catalog updates so we can update the catalog definitions later
                   const catalogRef =
                     catalogManager.parseCatalogReference(currentVersion)!;
@@ -321,7 +315,8 @@ export default class JsVersionActions extends VersionActions {
 
     // Update catalog definitions in pnpm-workspace.yaml
     if (catalogUpdates.length > 0) {
-      catalogManager.updateCatalogVersions(tree, catalogUpdates);
+      // catalogManager is guaranteed to be defined when there are catalog updates
+      catalogManager!.updateCatalogVersions(tree, catalogUpdates);
 
       const catalogText = catalogUpdates.length === 1 ? 'entry' : 'entries';
       logMessages.push(

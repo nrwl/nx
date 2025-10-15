@@ -1,8 +1,5 @@
 import { NX_VERSION, normalizePath, workspaceRoot } from '@nx/devkit';
-import {
-  formatCatalogError,
-  getCatalogManager,
-} from '@nx/devkit/src/utils/catalog';
+import { getCatalogManager } from '@nx/devkit/src/utils/catalog';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import { AST } from 'jsonc-eslint-parser';
@@ -217,23 +214,27 @@ export default ESLintUtils.RuleCreator(
       packageRange: string
     ) {
       const manager = getCatalogManager(workspaceRoot);
+      if (!manager) {
+        return;
+      }
+
       if (!manager.isCatalogReference(packageRange)) {
         return;
       }
 
-      const validationResult = manager.validateCatalogReference(
-        workspaceRoot,
-        packageName,
-        packageRange
-      );
-
-      if (!validationResult.isValid) {
+      try {
+        manager.validateCatalogReference(
+          workspaceRoot,
+          packageName,
+          packageRange
+        );
+      } catch (error) {
         context.report({
           node: node as any,
           messageId: 'invalidCatalogReference',
           data: {
             packageName: packageName,
-            error: formatCatalogError(validationResult.error!),
+            error: error.message,
           },
         });
       }
@@ -252,10 +253,7 @@ export default ESLintUtils.RuleCreator(
       let resolvedPackageRange = packageRange;
       const manager = getCatalogManager(workspaceRoot);
 
-      if (
-        manager.supportsCatalogs() &&
-        manager.isCatalogReference(packageRange)
-      ) {
+      if (manager?.isCatalogReference(packageRange)) {
         const resolved = manager.resolveCatalogReference(
           workspaceRoot,
           packageName,

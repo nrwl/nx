@@ -6,11 +6,7 @@ import { readYamlFile } from '../fileutils';
 import { output } from '../output';
 import type { PnpmCatalogEntry, PnpmWorkspaceYaml } from '../pnpm-workspace';
 import type { CatalogManager } from './manager';
-import {
-  type CatalogError,
-  CatalogErrorType,
-  type CatalogReference,
-} from './types';
+import type { CatalogReference } from './types';
 
 /**
  * PNPM-specific catalog manager implementation
@@ -18,10 +14,6 @@ import {
 export class PnpmCatalogManager implements CatalogManager {
   readonly name = 'pnpm';
   readonly catalogProtocol = 'catalog:';
-
-  supportsCatalogs(): boolean {
-    return true;
-  }
 
   isCatalogReference(version: string): boolean {
     return version.startsWith(this.catalogProtocol);
@@ -88,30 +80,22 @@ export class PnpmCatalogManager implements CatalogManager {
     treeOrRoot: Tree | string,
     packageName: string,
     version: string
-  ): { isValid: boolean; error?: CatalogError } {
+  ): void {
     const catalogRef = this.parseCatalogReference(version);
     if (!catalogRef) {
-      return {
-        isValid: false,
-        error: {
-          type: CatalogErrorType.INVALID_SYNTAX,
-          message: `Invalid catalog reference syntax: "${version}". Expected format: "catalog:" or "catalog:name"`,
-        },
-      };
+      throw new Error(
+        `Invalid catalog reference syntax: "${version}". Expected format: "catalog:" or "catalog:name"`
+      );
     }
 
     const workspaceConfig = this.getCatalogDefinitions(treeOrRoot);
     if (!workspaceConfig) {
-      return {
-        isValid: false,
-        error: {
-          type: CatalogErrorType.WORKSPACE_NOT_FOUND,
-          message: 'No pnpm-workspace.yaml found in workspace root',
-          suggestions: [
-            'Create a pnpm-workspace.yaml file in your workspace root',
-          ],
-        },
-      };
+      throw new Error(
+        formatCatalogError(
+          'Cannot get Pnpm catalog definitions. No pnpm-workspace.yaml found in workspace root.',
+          ['Create a pnpm-workspace.yaml file in your workspace root']
+        )
+      );
     }
 
     let catalogToUse: PnpmCatalogEntry | undefined;
@@ -122,15 +106,9 @@ export class PnpmCatalogManager implements CatalogManager {
 
       // Error if both defined (matches pnpm behavior)
       if (hasCatalog && hasCatalogsDefault) {
-        return {
-          isValid: false,
-          error: {
-            type: CatalogErrorType.INVALID_CATALOGS_CONFIGURATION,
-            message:
-              "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both.",
-            suggestions: [],
-          },
-        };
+        throw new Error(
+          "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both."
+        );
       }
 
       catalogToUse =
@@ -149,14 +127,12 @@ export class PnpmCatalogManager implements CatalogManager {
           );
         }
 
-        return {
-          isValid: false,
-          error: {
-            type: CatalogErrorType.CATALOG_NOT_FOUND,
-            message: 'No default catalog defined in pnpm-workspace.yaml',
-            suggestions,
-          },
-        };
+        throw new Error(
+          formatCatalogError(
+            'No default catalog defined in pnpm-workspace.yaml',
+            suggestions
+          )
+        );
       }
     } else if (catalogRef.catalogName) {
       catalogToUse = workspaceConfig.catalogs?.[catalogRef.catalogName];
@@ -184,15 +160,12 @@ export class PnpmCatalogManager implements CatalogManager {
           suggestions.push(`Or use the default catalog ("${defaultCatalog}")`);
         }
 
-        return {
-          isValid: false,
-          error: {
-            type: CatalogErrorType.CATALOG_NOT_FOUND,
-            message: `Catalog "${catalogRef.catalogName}" not found in pnpm-workspace.yaml`,
-            catalogName: catalogRef.catalogName,
-            suggestions,
-          },
-        };
+        throw new Error(
+          formatCatalogError(
+            `Catalog "${catalogRef.catalogName}" not found in pnpm-workspace.yaml`,
+            suggestions
+          )
+        );
       }
     }
 
@@ -220,19 +193,13 @@ export class PnpmCatalogManager implements CatalogManager {
         );
       }
 
-      return {
-        isValid: false,
-        error: {
-          type: CatalogErrorType.PACKAGE_NOT_FOUND,
-          message: `Package "${packageName}" not found in ${catalogName}`,
-          packageName,
-          catalogName: catalogRef.catalogName,
-          suggestions,
-        },
-      };
+      throw new Error(
+        formatCatalogError(
+          `Package "${packageName}" not found in ${catalogName}`,
+          suggestions
+        )
+      );
     }
-
-    return { isValid: true };
   }
 
   updateCatalogVersions(
@@ -349,4 +316,17 @@ function readYamlFileFromTree(tree: Tree, path: string): PnpmWorkspaceYaml {
     });
     return null;
   }
+}
+
+function formatCatalogError(error: string, suggestions: string[]): string {
+  let message = error;
+
+  if (suggestions && suggestions.length > 0) {
+    message += '\n\nSuggestions:';
+    suggestions.forEach((suggestion) => {
+      message += `\n  • ${suggestion}`;
+    });
+  }
+
+  return message;
 }

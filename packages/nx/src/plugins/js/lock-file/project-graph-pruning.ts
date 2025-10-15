@@ -74,7 +74,7 @@ function normalizeDependencies(
     ([packageName, versionRange]) => {
       let resolvedVersionRange = versionRange;
       const manager = getCatalogManager(workspaceRootPath);
-      if (manager.isCatalogReference(versionRange)) {
+      if (manager?.isCatalogReference(versionRange)) {
         const resolvedVersionRange = manager.resolveCatalogReference(
           packageName,
           versionRange,

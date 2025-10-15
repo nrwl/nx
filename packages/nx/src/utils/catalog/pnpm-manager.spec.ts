@@ -2,7 +2,6 @@ import { load } from '@zkochan/js-yaml';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import { PnpmCatalogManager } from './pnpm-manager';
-import { CatalogErrorType } from './types';
 
 describe('PnpmCatalogManager', () => {
   let tree: Tree;
@@ -232,21 +231,19 @@ catalogs:
 
   describe('validateCatalogReference', () => {
     it('should return invalid for non-catalog syntax', () => {
-      const result = manager.validateCatalogReference(tree, 'react', '^18.0.0');
-
-      expect(result.isValid).toBe(false);
-      expect(result.error!.type).toBe(CatalogErrorType.INVALID_SYNTAX);
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', '^18.0.0')
+      ).toThrow(
+        'Invalid catalog reference syntax: "^18.0.0". Expected format: "catalog:" or "catalog:name"'
+      );
     });
 
     it('should return invalid when workspace file not found', () => {
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:'
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:')
+      ).toThrow(
+        'Cannot get Pnpm catalog definitions. No pnpm-workspace.yaml found in workspace root.'
       );
-
-      expect(result.isValid).toBe(false);
-      expect(result.error!.type).toBe(CatalogErrorType.WORKSPACE_NOT_FOUND);
     });
 
     it('should return error for catalog: when both definitions exist', () => {
@@ -261,18 +258,10 @@ catalogs:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:'
-      );
-
-      expect(result.isValid).toBe(false);
-      expect(result.error!.type).toBe(
-        CatalogErrorType.INVALID_CATALOGS_CONFIGURATION
-      );
-      expect(result.error!.message).toContain(
-        "The 'default' catalog was defined multiple times"
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:')
+      ).toThrow(
+        "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both."
       );
     });
 
@@ -288,18 +277,10 @@ catalogs:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:default'
-      );
-
-      expect(result.isValid).toBe(false);
-      expect(result.error!.type).toBe(
-        CatalogErrorType.INVALID_CATALOGS_CONFIGURATION
-      );
-      expect(result.error!.message).toContain(
-        "The 'default' catalog was defined multiple times"
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:default')
+      ).toThrow(
+        "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both."
       );
     });
 
@@ -312,14 +293,9 @@ packages:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:'
-      );
-
-      expect(result.isValid).toBe(false);
-      expect(result.error!.type).toBe(CatalogErrorType.CATALOG_NOT_FOUND);
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:')
+      ).toThrow('No default catalog defined in pnpm-workspace.yaml');
     });
 
     it('should return invalid when named catalog not found', () => {
@@ -331,14 +307,9 @@ packages:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:non-existent'
-      );
-
-      expect(result.isValid).toBe(false);
-      expect(result.error!.type).toBe(CatalogErrorType.CATALOG_NOT_FOUND);
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:non-existent')
+      ).toThrow('Catalog "non-existent" not found in pnpm-workspace.yaml');
     });
 
     it('should return invalid for a missing package in catalog', () => {
@@ -352,14 +323,9 @@ catalog:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'lodash',
-        'catalog:'
-      );
-
-      expect(result.isValid).toBe(false);
-      expect(result.error!.type).toBe(CatalogErrorType.PACKAGE_NOT_FOUND);
+      expect(() =>
+        manager.validateCatalogReference(tree, 'lodash', 'catalog:')
+      ).toThrow('Package "lodash" not found in default catalog ("catalog")');
     });
 
     it('should return valid for existing catalog entry in top-level catalog', () => {
@@ -371,14 +337,9 @@ catalog:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:'
-      );
-
-      expect(result.isValid).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:')
+      ).not.toThrow();
     });
 
     it('should validate catalog:default with top-level catalog field', () => {
@@ -390,14 +351,9 @@ catalog:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:default'
-      );
-
-      expect(result.isValid).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:default')
+      ).not.toThrow();
     });
 
     it('should validate catalog: with catalogs.default field', () => {
@@ -410,14 +366,9 @@ catalogs:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:'
-      );
-
-      expect(result.isValid).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:')
+      ).not.toThrow();
     });
 
     it('should validate catalog:default with catalogs.default field', () => {
@@ -430,14 +381,9 @@ catalogs:
 `
       );
 
-      const result = manager.validateCatalogReference(
-        tree,
-        'react',
-        'catalog:default'
-      );
-
-      expect(result.isValid).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(() =>
+        manager.validateCatalogReference(tree, 'react', 'catalog:default')
+      ).not.toThrow();
     });
   });
 
