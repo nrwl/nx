@@ -4,7 +4,6 @@ import { spawn } from 'child_process';
 import { logger, readJsonFile } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
-import { mavenPluginVersion } from '../utils/versions';
 
 /**
  * Detect Maven executable: mvnd > mvnw > mvn
@@ -68,7 +67,7 @@ export async function runMavenAnalysis(
   const mavenExecutable = detectMavenExecutable(workspaceRoot);
 
   const mavenArgs = [
-    `dev.nx.maven:nx-maven-plugin:${mavenPluginVersion}:analyze`,
+    'dev.nx.maven:nx-maven-plugin:analyze',
     '-am',
     `-DoutputFile=${outputFile}`,
     `-DworkspaceRoot=${workspaceRoot}`,
