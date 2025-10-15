@@ -1141,6 +1141,9 @@ importers:
       '@nx/nx-dev-feature-analytics':
         specifier: workspace:*
         version: link:../nx-dev/feature-analytics
+      '@nx/nx-dev-ui-animations':
+        specifier: workspace:*
+        version: link:../nx-dev/ui-animations
       '@nx/nx-dev-ui-common':
         specifier: workspace:*
         version: link:../nx-dev/ui-common
@@ -2061,6 +2064,9 @@ importers:
       '@nx/nx-dev-models-menu':
         specifier: workspace:*
         version: link:../models-menu
+      '@nx/nx-dev-ui-animations':
+        specifier: workspace:*
+        version: link:../ui-animations
       '@nx/nx-dev-ui-icons':
         specifier: workspace:*
         version: link:../ui-icons
@@ -32621,6 +32627,7 @@ snapshots:
       '@nx/nx-dev-feature-search': link:nx-dev/feature-search
       '@nx/nx-dev-models-document': link:nx-dev/models-document
       '@nx/nx-dev-models-menu': link:nx-dev/models-menu
+      '@nx/nx-dev-ui-animations': link:nx-dev/ui-animations
       '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
       '@nx/nx-dev-ui-primitives': link:nx-dev/ui-primitives
       '@nx/nx-dev-ui-references': link:nx-dev/ui-references
