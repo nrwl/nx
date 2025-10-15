@@ -22,8 +22,14 @@ export function sendPageViewEvent(data: {
 
   // Check if user has consented to statistics cookies
   if (
-    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+    // Browswer only
     typeof window !== 'undefined' &&
+    // Disabled for Astro
+    !window.__CONFIG?.disableCookiebot &&
+    // Disabled for Next.js
+    typeof process === 'object' &&
+    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+    // Cookiebot
     window.Cookiebot &&
     !window.Cookiebot.consent?.statistics
   ) {
@@ -56,8 +62,14 @@ export function sendCustomEvent(
 
   // Check if user has consented to statistics cookies
   if (
-    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+    // Browswer only
     typeof window !== 'undefined' &&
+    // Disabled for Astro
+    !window.__CONFIG?.disableCookiebot &&
+    // Disabled for Next.js
+    typeof process === 'object' &&
+    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+    // Cookiebot
     window.Cookiebot &&
     !window.Cookiebot.consent?.statistics
   ) {

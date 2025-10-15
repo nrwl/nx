@@ -34,6 +34,7 @@ const currentVersion = versions.find((v) => v.current);
       <Image src={nxLogoLight} alt="Nx" class="h-12 w-auto hidden dark:block" />
     </a>
     <a
+      id="header-docs-home-link"
       href="/docs/getting-started/intro"
       class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
     >
@@ -438,8 +439,13 @@ const currentVersion = versions.find((v) => v.current);
   import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
   function setupAnalyticsTracking() {
+    const docsHomeLink = document.getElementById('header-docs-home-link');
     const contactBtn = document.getElementById('header-contact-btn');
     const tryNxCloudBtn = document.getElementById('header-try-nx-cloud-btn');
+
+    docsHomeLink?.addEventListener('click', () => {
+      sendCustomEvent('documentation-click', 'header-navigation', 'documentation-header');
+    });
 
     contactBtn?.addEventListener('click', () => {
       sendCustomEvent('contact-click', 'header-cta', 'documentation-header');
