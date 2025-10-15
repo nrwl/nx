@@ -4,8 +4,7 @@ import {
 } from '@nx/conformance';
 import { workspaceRoot } from '@nx/devkit';
 import { sync as globSync } from 'glob';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { bundledLanguages } from 'shiki';
 // Common mappings for file extensions that don't match language IDs exactly
 const extensionToLang: Record<string, string> = {
@@ -19,31 +18,39 @@ const extensionToLang: Record<string, string> = {
   env: 'dotenv',
 };
 
-const ignorePatterns = ['**/node_modules/**', '**/dist/**', '**/.astro/**'];
 export default createConformanceRule({
   name: 'codeblock-language',
   category: 'consistency',
   description:
     'Ensures that all code blocks in markdown and markdoc files have a language specified',
-  implementation: async ({ projectGraph }) => {
+  implementation: async ({ tree, fileMapCache }) => {
+    const docsProjectName = 'astro-docs';
     const violations: ConformanceViolation[] = [];
 
-    // Find markdown files in packages/*.md (excluding node_modules)
-    const packageMdFiles = globSync(join(workspaceRoot, 'packages/**/*.md'), {
-      ignore: ignorePatterns,
-    });
+    const docsFiles = fileMapCache.fileMap.projectFileMap?.[docsProjectName];
 
-    const markdocFiles = globSync(join(workspaceRoot, 'astro-docs/**/*.mdoc'), {
-      ignore: ignorePatterns,
-    });
+    if (!docsFiles) {
+      violations.push({
+        message: `Could not find ${docsProjectName} project files. This is most likely an issue where the graph failed to create correctly.`,
+        sourceProject: docsProjectName,
+      });
+      return {
+        severity: 'high',
+        details: {
+          violations,
+        },
+      };
+    }
 
-    const allFiles = [...packageMdFiles, ...markdocFiles];
-
-    for (const file of allFiles) {
-      const content = readFileSync(file, 'utf-8');
+    for (const { file } of docsFiles) {
       const isMarkdoc = file.endsWith('.mdoc');
+      if (!isMarkdoc) {
+        // only validate markdoc files
+        continue;
+      }
+      const content = tree.read(file, 'utf-8');
 
-      const fileViolations = checkCodeBlocks(content, file, isMarkdoc);
+      const fileViolations = checkCodeBlocks(content, file);
       violations.push(...fileViolations);
     }
 
@@ -162,10 +169,9 @@ function checkTemplateOnlyFence(
 function checkTreeviewLanguage(
   lineNumber: number,
   language: string,
-  filePath: string,
-  isMarkdoc: boolean
+  filePath: string
 ): ConformanceViolation | null {
-  if (isMarkdoc && language === 'treeview') {
+  if (language === 'treeview') {
     return {
       message: `Code block at line ${lineNumber} uses 'treeview' which is not supported. Use 'text' or the {% filetree %} tag.`,
       file: resolveFilePathToWorkspaceRoot(filePath),
@@ -178,20 +184,12 @@ function checkShellFrameNone(
   lineNumber: number,
   language: string,
   afterBackticks: string,
-  filePath: string,
-  isMarkdoc: boolean
+  filePath: string
 ): ConformanceViolation | null {
-  // Only check in markdoc files
-  if (!isMarkdoc) {
-    return null;
-  }
-
-  // Only check shell language
   if (language !== 'shell') {
     return null;
   }
 
-  // Check if the line contains frame="none"
   if (afterBackticks.includes('frame="none"')) {
     return {
       message: `Code block at line ${lineNumber} uses 'shell' language with frame="none". Shell code blocks should not use frame="none".`,
@@ -202,10 +200,9 @@ function checkShellFrameNone(
   return null;
 }
 
-export function checkCodeBlocks(
+function checkCodeBlocks(
   content: string,
-  filePath: string,
-  isMarkdoc: boolean
+  filePath: string
 ): ConformanceViolation[] {
   const violations: ConformanceViolation[] = [];
   const lines = content.split('\n');
@@ -247,8 +244,7 @@ export function checkCodeBlocks(
       const treeviewViolation = checkTreeviewLanguage(
         i + 1,
         languageMatch[1],
-        filePath,
-        isMarkdoc
+        filePath
       );
       if (treeviewViolation) violations.push(treeviewViolation);
 
@@ -256,8 +252,7 @@ export function checkCodeBlocks(
         i + 1,
         languageMatch[1],
         afterBackticks,
-        filePath,
-        isMarkdoc
+        filePath
       );
       if (shellFrameViolation) violations.push(shellFrameViolation);
     }
@@ -266,6 +261,10 @@ export function checkCodeBlocks(
   return violations;
 }
 
+/**
+ *  make sure file path is resolved from workspace root
+ *  so conformance reports are correctly grouped
+ **/
 function resolveFilePathToWorkspaceRoot(filePath: string) {
   if (!filePath || !filePath.startsWith(workspaceRoot)) {
     return filePath;
