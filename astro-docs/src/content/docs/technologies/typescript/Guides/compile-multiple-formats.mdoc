@@ -89,23 +89,24 @@ You'll need to specify `format`, `additionalEntryPoints` and `generateExportsFie
 
 After compiling our package using `nx build my-awesome-lib` we'll get the following output in our `dist` folder.
 
-```
-my-awesome-lib
-└─ .
-   ├─ README.md
-   ├─ foo.cjs.d.ts
-   ├─ foo.cjs.js
-   ├─ foo.esm.js
-   ├─ index.cjs.d.ts
-   ├─ index.cjs.js
-   ├─ index.esm.js
-   ├─ package.json
-   └─ src
-      ├─ foo.d.ts
-      ├─ index.d.ts
-      └─ lib
-         └─ my-awesome-lib.d.ts
-```
+{% filetree %}
+
+- my-awesome-lib/
+  - README.md
+  - foo.cjs.d.ts
+  - foo.cjs.js
+  - foo.esm.js
+  - index.cjs.d.ts
+  - index.cjs.js
+  - index.esm.js
+  - package.json
+  - src/
+    - foo.d.ts
+    - index.d.ts
+    - lib/
+      - my-awesome-lib.d.ts
+
+{% /filetree %}
 
 And our `package.json` will look like this:
 

@@ -181,7 +181,7 @@ For projects using [inferred targets](/docs/concepts/inferred-tasks) (no project
 {% aside type="caution" title="Verify the name of your plugin" %}
 You might have to adjust the name of your plugin based on your specific workspace scope. Verify the name in `tools/my-plugin/package.json`. If the name there is `@myorg/my-plugin` you have to register it as:
 
-```
+```jsonc
 {
   "syncGenerators": ["@myorg/my-plugin:my-sync-generator"]
 }
