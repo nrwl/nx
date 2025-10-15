@@ -123,3 +123,6 @@ test-results
 
 # TypeScript build info files
 *.tsbuildinfo
+/packages/dotnet/src/lib
+/packages/dotnet/analyzer/bin
+/packages/dotnet/analyzer/obj

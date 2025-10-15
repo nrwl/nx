@@ -1,7 +1,9 @@
 {
   "name": "dotnet",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/dotnet/src",
   "projectType": "library",
+  "tags": [],
   "release": {
     "version": {
       "preserveLocalDependencyProtocols": false,
@@ -13,25 +15,47 @@
       "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/README.md__tmpl__ packages/dotnet/README.md",
       "outputs": ["{projectRoot}/README.md"]
     },
+    "build-analyzer": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/src/lib"],
+      "options": {
+        "commands": [
+          "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o {projectRoot}/src/lib --self-contained false"
+        ],
+        "parallel": false
+      }
+    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "dependsOn": ["build-analyzer"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
+          "{projectRoot}/*.md",
           {
-            "input": "packages/dotnet",
-            "glob": "**/@(files|files-angular)/**",
-            "output": "/"
+            "input": "${projectRoot}/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
           },
           {
-            "input": "packages/dotnet",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
+            "input": "{projectRoot}",
+            "glob": "**/*.d.ts",
+            "output": "./src"
           },
           {
-            "input": "packages/dotnet/src",
-            "glob": "**/*.json",
-            "output": "/"
+            "input": "{projectRoot}",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "{projectRoot}",
+            "glob": "executors.json",
+            "output": "."
+          },
+          {
+            "input": "{projectRoot}",
+            "glob": "migrations.json",
+            "output": "."
           }
         ]
       }
