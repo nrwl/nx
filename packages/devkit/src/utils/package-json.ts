@@ -10,7 +10,10 @@ import {
   workspaceRoot,
 } from 'nx/src/devkit-exports';
 import { installPackageToTmp } from 'nx/src/devkit-internals';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type {
+  PackageJson,
+  PackageJsonDependencySection,
+} from 'nx/src/utils/package-json';
 import { join, resolve } from 'path';
 import { clean, coerce, gt } from 'semver';
 import { installPackagesTask } from '../tasks/install-packages-task';
@@ -33,8 +36,8 @@ const NON_SEMVER_TAGS = {
  * Get the resolved version of a dependency from package.json.
  *
  * Retrieves a package version and automatically resolves PNPM catalog references
- * (e.g., "catalog:default") to their actual version strings. Searches `dependencies`
- * first, then falls back to `devDependencies`.
+ * (e.g., "catalog:default") to their actual version strings. By default, searches
+ * `dependencies` first, then falls back to `devDependencies`.
  *
  * **Tree-based usage** (generators and migrations):
  * Use when you have a `Tree` object, which is typical in Nx generators and migrations.
@@ -44,20 +47,42 @@ const NON_SEMVER_TAGS = {
  *
  * @example
  * ```typescript
- * // Tree-based - from root package.json
+ * // Tree-based - from root package.json (checks dependencies then devDependencies)
  * const reactVersion = getDependencyVersionFromPackageJson(tree, 'react');
  * // Returns: "^18.0.0" (resolves "catalog:default" if present)
  *
- * // Tree-based - from specific package.json
+ * // Tree-based - check only dependencies section
  * const version = getDependencyVersionFromPackageJson(
  *   tree,
- *   '@my/lib',
- *   'packages/my-lib/package.json'
+ *   'react',
+ *   'package.json',
+ *   ['dependencies']
+ * );
+ *
+ * // Tree-based - check only devDependencies section
+ * const version = getDependencyVersionFromPackageJson(
+ *   tree,
+ *   'jest',
+ *   'package.json',
+ *   ['devDependencies']
+ * );
+ *
+ * // Tree-based - custom lookup order
+ * const version = getDependencyVersionFromPackageJson(
+ *   tree,
+ *   'pkg',
+ *   'package.json',
+ *   ['devDependencies', 'dependencies', 'peerDependencies']
  * );
  *
  * // Tree-based - with pre-loaded package.json
  * const packageJson = readJson(tree, 'package.json');
- * const version = getDependencyVersionFromPackageJson(tree, 'react', packageJson);
+ * const version = getDependencyVersionFromPackageJson(
+ *   tree,
+ *   'react',
+ *   packageJson,
+ *   ['dependencies']
+ * );
  * ```
  *
  * @example
@@ -68,52 +93,61 @@ const NON_SEMVER_TAGS = {
  * // Filesystem-based - with workspace root
  * const version = getDependencyVersionFromPackageJson('react', '/path/to/workspace');
  *
- * // Filesystem-based - with specific package.json
+ * // Filesystem-based - with specific package.json and section
  * const version = getDependencyVersionFromPackageJson(
  *   'react',
  *   '/path/to/workspace',
- *   'apps/my-app/package.json'
+ *   'apps/my-app/package.json',
+ *   ['dependencies']
  * );
  * ```
  *
- * @returns The resolved version string, or `null` if the package is not found in either dependencies or devDependencies
+ * @param dependencyLookup Array of dependency sections to check in order. Defaults to ['dependencies', 'devDependencies']
+ * @returns The resolved version string, or `null` if the package is not found in any of the specified sections
  */
 export function getDependencyVersionFromPackageJson(
   tree: Tree,
   packageName: string,
-  packageJsonPath?: string
+  packageJsonPath?: string,
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   tree: Tree,
   packageName: string,
-  packageJson?: PackageJson
+  packageJson?: PackageJson,
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   packageName: string,
   workspaceRootPath?: string,
-  packageJsonPath?: string
+  packageJsonPath?: string,
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   packageName: string,
   workspaceRootPath?: string,
-  packageJson?: PackageJson
+  packageJson?: PackageJson,
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   treeOrPackageName: Tree | string,
   packageNameOrRoot?: string,
-  packageJsonPathOrObjectOrRoot?: string | PackageJson
+  packageJsonPathOrObjectOrRoot?: string | PackageJson,
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null {
   if (typeof treeOrPackageName !== 'string') {
     return getDependencyVersionFromPackageJsonFromTree(
       treeOrPackageName,
       packageNameOrRoot!,
-      packageJsonPathOrObjectOrRoot
+      packageJsonPathOrObjectOrRoot,
+      dependencyLookup
     );
   } else {
     return getDependencyVersionFromPackageJsonFromFileSystem(
       treeOrPackageName,
       packageNameOrRoot,
-      packageJsonPathOrObjectOrRoot
+      packageJsonPathOrObjectOrRoot,
+      dependencyLookup
     );
   }
 }
@@ -124,7 +158,11 @@ export function getDependencyVersionFromPackageJson(
 function getDependencyVersionFromPackageJsonFromTree(
   tree: Tree,
   packageName: string,
-  packageJsonPathOrObject: string | PackageJson = 'package.json'
+  packageJsonPathOrObject: string | PackageJson = 'package.json',
+  dependencyLookup: PackageJsonDependencySection[] = [
+    'dependencies',
+    'devDependencies',
+  ]
 ): string | null {
   let packageJson: PackageJson;
   if (typeof packageJsonPathOrObject === 'object') {
@@ -137,10 +175,14 @@ function getDependencyVersionFromPackageJsonFromTree(
 
   const manager = getCatalogManager(tree.root);
 
-  let version =
-    packageJson.dependencies?.[packageName] ??
-    packageJson.devDependencies?.[packageName] ??
-    null;
+  let version: string | null = null;
+  for (const section of dependencyLookup) {
+    const foundVersion = packageJson[section]?.[packageName];
+    if (foundVersion) {
+      version = foundVersion;
+      break;
+    }
+  }
 
   // Resolve catalog reference if needed
   if (version && manager.isCatalogReference(version)) {
@@ -156,7 +198,11 @@ function getDependencyVersionFromPackageJsonFromTree(
 function getDependencyVersionFromPackageJsonFromFileSystem(
   packageName: string,
   root: string = workspaceRoot,
-  packageJsonPathOrObject: string | PackageJson = 'package.json'
+  packageJsonPathOrObject: string | PackageJson = 'package.json',
+  dependencyLookup: PackageJsonDependencySection[] = [
+    'dependencies',
+    'devDependencies',
+  ]
 ): string | null {
   let packageJson: PackageJson;
   if (typeof packageJsonPathOrObject === 'object') {
@@ -172,10 +218,14 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
 
   const manager = getCatalogManager(root);
 
-  let version =
-    packageJson.dependencies?.[packageName] ??
-    packageJson.devDependencies?.[packageName] ??
-    null;
+  let version: string | null = null;
+  for (const section of dependencyLookup) {
+    const foundVersion = packageJson[section]?.[packageName];
+    if (foundVersion) {
+      version = foundVersion;
+      break;
+    }
+  }
 
   // Resolve catalog reference if needed
   if (version && manager.isCatalogReference(version)) {

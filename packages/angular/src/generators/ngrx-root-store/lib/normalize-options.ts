@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import {
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   names,
-  readJson,
   readProjectConfiguration,
 } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
@@ -22,10 +22,16 @@ export function normalizeOptions(
 ): NormalizedNgRxRootStoreGeneratorOptions {
   let rxjsVersion: string;
   try {
+    const rxjsVersionFromPackageJson = getDependencyVersionFromPackageJson(
+      tree,
+      'rxjs',
+      'package.json',
+      ['dependencies']
+    );
     rxjsVersion = checkAndCleanWithSemver(
       tree,
       'rxjs',
-      readJson(tree, 'package.json').dependencies['rxjs']
+      rxjsVersionFromPackageJson
     );
   } catch {
     rxjsVersion = checkAndCleanWithSemver(tree, 'rxjs', defaultRxjsVersion);

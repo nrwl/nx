@@ -6,7 +6,10 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
-import { PackageJson } from '../../../utils/package-json';
+import {
+  getDependencyVersionFromPackageJson,
+  PackageJson,
+} from '../../../utils/package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { readNxJson } from '../../../config/configuration';
@@ -17,7 +20,6 @@ import {
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
-import { getCatalogManager } from '../../../utils/catalog';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -99,22 +101,28 @@ export function createPackageJson(
     version: string,
     section: 'devDependencies' | 'dependencies'
   ) => {
-    const projectVersion = packageJson[section]?.[packageName];
+    // Try project package.json first (single section)
+    const projectVersion = getDependencyVersionFromPackageJson(
+      packageName,
+      root,
+      packageJson,
+      [section]
+    );
     if (projectVersion) {
-      const manager = getCatalogManager(root);
-      return manager.isCatalogReference(projectVersion)
-        ? manager.resolveCatalogReference(packageName, projectVersion, root) ??
-            version
-        : projectVersion;
+      return projectVersion;
     }
 
-    if (isLibrary && rootPackageJson[section]?.[packageName]) {
-      const rootVersion = rootPackageJson[section][packageName];
-      const manager = getCatalogManager(root);
-      return manager.isCatalogReference(rootVersion)
-        ? manager.resolveCatalogReference(packageName, rootVersion, root) ??
-            version
-        : rootVersion;
+    // For libraries, fall back to root package.json (single section)
+    if (isLibrary) {
+      const rootVersion = getDependencyVersionFromPackageJson(
+        packageName,
+        root,
+        rootPackageJson,
+        [section]
+      );
+      if (rootVersion) {
+        return rootVersion;
+      }
     }
 
     return version;

@@ -33,10 +33,12 @@ export class PnpmCatalogManager implements CatalogManager {
     }
 
     const catalogName = version.substring(this.catalogProtocol.length);
+    // Normalize both "catalog:" and "catalog:default" to the same representation
+    const isDefault = !catalogName || catalogName === 'default';
 
     return {
-      catalogName: catalogName || undefined,
-      isDefaultCatalog: catalogName === '',
+      catalogName: isDefault ? undefined : catalogName,
+      isDefaultCatalog: isDefault,
     };
   }
 
@@ -72,7 +74,9 @@ export class PnpmCatalogManager implements CatalogManager {
 
     let catalogToUse: PnpmCatalogEntry | undefined;
     if (catalogRef.isDefaultCatalog) {
-      catalogToUse = workspaceConfig.catalog;
+      // Check both locations for default catalog
+      catalogToUse =
+        workspaceConfig.catalog ?? workspaceConfig.catalogs?.default;
     } else if (catalogRef.catalogName) {
       catalogToUse = workspaceConfig.catalogs?.[catalogRef.catalogName];
     }
@@ -113,7 +117,24 @@ export class PnpmCatalogManager implements CatalogManager {
     let catalogToUse: PnpmCatalogEntry | undefined;
 
     if (catalogRef.isDefaultCatalog) {
-      catalogToUse = workspaceConfig.catalog;
+      const hasCatalog = !!workspaceConfig.catalog;
+      const hasCatalogsDefault = !!workspaceConfig.catalogs?.default;
+
+      // Error if both defined (matches pnpm behavior)
+      if (hasCatalog && hasCatalogsDefault) {
+        return {
+          isValid: false,
+          error: {
+            type: CatalogErrorType.INVALID_CATALOGS_CONFIGURATION,
+            message:
+              "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both.",
+            suggestions: [],
+          },
+        };
+      }
+
+      catalogToUse =
+        workspaceConfig.catalog ?? workspaceConfig.catalogs?.default;
       if (!catalogToUse) {
         const availableCatalogs = Object.keys(workspaceConfig.catalogs || {});
 
@@ -140,8 +161,14 @@ export class PnpmCatalogManager implements CatalogManager {
     } else if (catalogRef.catalogName) {
       catalogToUse = workspaceConfig.catalogs?.[catalogRef.catalogName];
       if (!catalogToUse) {
-        const availableCatalogs = Object.keys(workspaceConfig.catalogs || {});
-        const hasDefaultCatalog = !!workspaceConfig.catalog;
+        const availableCatalogs = Object.keys(
+          workspaceConfig.catalogs || {}
+        ).filter((c) => c !== 'default');
+        const defaultCatalog = !!workspaceConfig.catalog
+          ? 'catalog'
+          : !workspaceConfig.catalogs?.default
+          ? 'catalogs.default'
+          : null;
 
         const suggestions = [
           'Define the catalog in pnpm-workspace.yaml under the "catalogs" key',
@@ -153,8 +180,8 @@ export class PnpmCatalogManager implements CatalogManager {
               .join(', ')}`
           );
         }
-        if (hasDefaultCatalog) {
-          suggestions.push('Or use the default catalog: "catalog:"');
+        if (defaultCatalog) {
+          suggestions.push(`Or use the default catalog ("${defaultCatalog}")`);
         }
 
         return {
@@ -170,9 +197,16 @@ export class PnpmCatalogManager implements CatalogManager {
     }
 
     if (!catalogToUse![packageName]) {
-      const catalogName = catalogRef.isDefaultCatalog
-        ? 'default catalog'
-        : `catalog '${catalogRef.catalogName}'`;
+      let catalogName: string;
+      if (catalogRef.isDefaultCatalog) {
+        // Context-aware messaging based on which location exists
+        const hasCatalog = !!workspaceConfig.catalog;
+        catalogName = hasCatalog
+          ? 'default catalog ("catalog")'
+          : 'default catalog ("catalogs.default")';
+      } else {
+        catalogName = `catalog '${catalogRef.catalogName}'`;
+      }
 
       const availablePackages = Object.keys(catalogToUse!);
       const suggestions = [
@@ -243,17 +277,26 @@ export class PnpmCatalogManager implements CatalogManager {
       let hasChanges = false;
       for (const update of updates) {
         const { packageName, version, catalogName } = update;
+        const normalizedCatalogName =
+          catalogName === 'default' ? undefined : catalogName;
 
         let targetCatalog: PnpmCatalogEntry;
-        if (catalogName) {
+        if (!normalizedCatalogName) {
+          // Default catalog - update whichever exists, prefer catalog over catalogs.default
+          if (workspaceData.catalog) {
+            targetCatalog = workspaceData.catalog;
+          } else if (workspaceData.catalogs?.default) {
+            targetCatalog = workspaceData.catalogs.default;
+          } else {
+            // Neither exists, create catalog (shorthand syntax)
+            workspaceData.catalog ??= {};
+            targetCatalog = workspaceData.catalog;
+          }
+        } else {
           // Named catalog
           workspaceData.catalogs ??= {};
-          workspaceData.catalogs[catalogName] ??= {};
-          targetCatalog = workspaceData.catalogs[catalogName];
-        } else {
-          // Default catalog
-          workspaceData.catalog ??= {};
-          targetCatalog = workspaceData.catalog;
+          workspaceData.catalogs[normalizedCatalogName] ??= {};
+          targetCatalog = workspaceData.catalogs[normalizedCatalogName];
         }
 
         if (targetCatalog[packageName] !== version) {

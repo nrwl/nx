@@ -515,6 +515,7 @@ describe('createPackageJson', () => {
     });
 
     it('should use fixed versions when creating package json for apps', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {
@@ -543,6 +544,7 @@ describe('createPackageJson', () => {
     });
 
     it('should override fixed versions with local ranges when creating package json for apps', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {

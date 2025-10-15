@@ -1,5 +1,6 @@
-import type { Tree } from '../../generators/tree';
+import { load } from '@zkochan/js-yaml';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import type { Tree } from '../../generators/tree';
 import { PnpmCatalogManager } from './pnpm-manager';
 import { CatalogErrorType } from './types';
 
@@ -28,6 +29,15 @@ describe('PnpmCatalogManager', () => {
   describe('parseCatalogReference', () => {
     it('should parse default catalog reference', () => {
       const result = manager.parseCatalogReference('catalog:');
+
+      expect(result).toStrictEqual({
+        catalogName: undefined,
+        isDefaultCatalog: true,
+      });
+    });
+
+    it('should normalize catalog:default to default catalog reference', () => {
+      const result = manager.parseCatalogReference('catalog:default');
 
       expect(result).toStrictEqual({
         catalogName: undefined,
@@ -108,7 +118,7 @@ catalogs:
   });
 
   describe('resolveCatalogReference', () => {
-    it('should resolve default catalog reference', () => {
+    it('should resolve default catalog reference from top-level catalog field', () => {
       tree.write(
         'pnpm-workspace.yaml',
         `
@@ -118,6 +128,58 @@ catalog:
       );
 
       const result = manager.resolveCatalogReference(tree, 'react', 'catalog:');
+
+      expect(result).toBe('^18.0.0');
+    });
+
+    it('should resolve catalog:default from top-level catalog field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+`
+      );
+
+      const result = manager.resolveCatalogReference(
+        tree,
+        'react',
+        'catalog:default'
+      );
+
+      expect(result).toBe('^18.0.0');
+    });
+
+    it('should resolve catalog: from catalogs.default field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalogs:
+  default:
+    react: ^18.0.0
+`
+      );
+
+      const result = manager.resolveCatalogReference(tree, 'react', 'catalog:');
+
+      expect(result).toBe('^18.0.0');
+    });
+
+    it('should resolve catalog:default from catalogs.default field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalogs:
+  default:
+    react: ^18.0.0
+`
+      );
+
+      const result = manager.resolveCatalogReference(
+        tree,
+        'react',
+        'catalog:default'
+      );
 
       expect(result).toBe('^18.0.0');
     });
@@ -173,7 +235,7 @@ catalogs:
       const result = manager.validateCatalogReference(tree, 'react', '^18.0.0');
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.type).toBe(CatalogErrorType.INVALID_SYNTAX);
+      expect(result.error!.type).toBe(CatalogErrorType.INVALID_SYNTAX);
     });
 
     it('should return invalid when workspace file not found', () => {
@@ -184,7 +246,61 @@ catalogs:
       );
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.type).toBe(CatalogErrorType.WORKSPACE_NOT_FOUND);
+      expect(result.error!.type).toBe(CatalogErrorType.WORKSPACE_NOT_FOUND);
+    });
+
+    it('should return error for catalog: when both definitions exist', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+catalogs:
+  default:
+    lodash: ^4.17.21
+`
+      );
+
+      const result = manager.validateCatalogReference(
+        tree,
+        'react',
+        'catalog:'
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.error!.type).toBe(
+        CatalogErrorType.INVALID_CATALOGS_CONFIGURATION
+      );
+      expect(result.error!.message).toContain(
+        "The 'default' catalog was defined multiple times"
+      );
+    });
+
+    it('should return error for catalog:default when both definitions exist', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+catalogs:
+  default:
+    lodash: ^4.17.21
+`
+      );
+
+      const result = manager.validateCatalogReference(
+        tree,
+        'react',
+        'catalog:default'
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.error!.type).toBe(
+        CatalogErrorType.INVALID_CATALOGS_CONFIGURATION
+      );
+      expect(result.error!.message).toContain(
+        "The 'default' catalog was defined multiple times"
+      );
     });
 
     it('should return invalid when default catalog not found', () => {
@@ -203,7 +319,7 @@ packages:
       );
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.type).toBe(CatalogErrorType.CATALOG_NOT_FOUND);
+      expect(result.error!.type).toBe(CatalogErrorType.CATALOG_NOT_FOUND);
     });
 
     it('should return invalid when named catalog not found', () => {
@@ -222,7 +338,7 @@ packages:
       );
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.type).toBe(CatalogErrorType.CATALOG_NOT_FOUND);
+      expect(result.error!.type).toBe(CatalogErrorType.CATALOG_NOT_FOUND);
     });
 
     it('should return invalid for a missing package in catalog', () => {
@@ -243,10 +359,10 @@ catalog:
       );
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.type).toBe(CatalogErrorType.PACKAGE_NOT_FOUND);
+      expect(result.error!.type).toBe(CatalogErrorType.PACKAGE_NOT_FOUND);
     });
 
-    it('should return valid for existing catalog entry', () => {
+    it('should return valid for existing catalog entry in top-level catalog', () => {
       tree.write(
         'pnpm-workspace.yaml',
         `
@@ -263,6 +379,231 @@ catalog:
 
       expect(result.isValid).toBe(true);
       expect(result.error).toBeUndefined();
+    });
+
+    it('should validate catalog:default with top-level catalog field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+`
+      );
+
+      const result = manager.validateCatalogReference(
+        tree,
+        'react',
+        'catalog:default'
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should validate catalog: with catalogs.default field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalogs:
+  default:
+    react: ^18.0.0
+`
+      );
+
+      const result = manager.validateCatalogReference(
+        tree,
+        'react',
+        'catalog:'
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should validate catalog:default with catalogs.default field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalogs:
+  default:
+    react: ^18.0.0
+`
+      );
+
+      const result = manager.validateCatalogReference(
+        tree,
+        'react',
+        'catalog:default'
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+  });
+
+  describe('updateCatalogVersions', () => {
+    it('should update existing top-level catalog field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+  lodash: ^4.17.21
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.3.0');
+      expect(result.catalog.lodash).toBe('^4.17.21');
+    });
+
+    it('should update existing catalogs.default field', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalogs:
+  default:
+    react: ^18.0.0
+    lodash: ^4.17.21
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalogs.default.react).toBe('^18.3.0');
+      expect(result.catalogs.default.lodash).toBe('^4.17.21');
+    });
+
+    it('should update existing top-level catalog field with catalogName: "default"', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+  lodash: ^4.17.21
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0', catalogName: 'default' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.3.0');
+      expect(result.catalog.lodash).toBe('^4.17.21');
+    });
+
+    it('should update existing catalogs.default field with catalogName: "default"', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalogs:
+  default:
+    react: ^18.0.0
+    lodash: ^4.17.21
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0', catalogName: 'default' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalogs.default.react).toBe('^18.3.0');
+      expect(result.catalogs.default.lodash).toBe('^4.17.21');
+    });
+
+    it('should create catalog field when neither exists', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+packages:
+  - 'packages/*'
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.0.0' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.0.0');
+      expect(result.catalogs).toBeUndefined();
+    });
+
+    it('should update named catalog', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalogs:
+  react18:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0', catalogName: 'react18' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalogs.react18.react).toBe('^18.3.0');
+      expect(result.catalogs.react18['react-dom']).toBe('^18.0.0');
+    });
+
+    it('should handle multiple updates at once', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+catalogs:
+  react17:
+    react: ^17.0.0
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0' },
+        { packageName: 'react', version: '^17.0.2', catalogName: 'react17' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.3.0');
+      expect(result.catalogs.react17.react).toBe('^17.0.2');
+    });
+
+    it('should add new packages to existing catalog', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+catalog:
+  react: ^18.0.0
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'lodash', version: '^4.17.21' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.0.0');
+      expect(result.catalog.lodash).toBe('^4.17.21');
     });
   });
 });
