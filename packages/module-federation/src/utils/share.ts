@@ -160,7 +160,12 @@ export function shareWorkspaceLibraries(
           pkgJson?.devDependencies?.[libraryName];
 
         // Normalize workspace protocol versions (workspace:*, workspace:^, *, etc.)
-        if (version && (version === '*' || version.startsWith('workspace:'))) {
+        if (
+          version &&
+          (version === '*' ||
+            version.startsWith('workspace:') ||
+            version.startsWith('file:'))
+        ) {
           // Look up the actual version from the library's package.json
           const workspaceLib = workspaceLibs.find(
             (lib) => lib.importKey === libraryName
