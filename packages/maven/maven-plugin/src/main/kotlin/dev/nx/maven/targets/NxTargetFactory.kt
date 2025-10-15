@@ -214,15 +214,11 @@ class NxTargetFactory(
           val shouldCreateCiPhase = hasGoals || phase == "verify"
 
           if (shouldCreateCiPhase) {
-            // Create CI targets for phases with goals, or structural phases like verify
-            // For test phase, create a noop target that will be orchestrated by atomized test targets
-            val ciTarget = if (phase == "test") {
-              // Test phase gets a noop coordinator target (atomized tests will handle actual execution)
-              createNoopPhaseTarget(phase)
-            } else if (hasGoals) {
+            // Create CI targets for phases with goals, or noop for test/structural phases
+            val ciTarget = if (hasGoals) {
               createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
             } else {
-              // Noop structural phase (like verify)
+              // Noop for test phase (will be orchestrated by atomized tests) or structural phases
               createNoopPhaseTarget(phase)
             }
             val ciPhaseDependsOn = mutableListOf<String>()
@@ -249,25 +245,20 @@ class NxTargetFactory(
             // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
             ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
 
-            // For test phase, don't add phase dependencies to the coordinator target
-            // Atomized test targets will have these dependencies instead
-            if (phase != "test") {
-              ciPhaseDependsOn.forEach {
-                ciTarget.dependsOn?.add(it)
-              }
+            // Add phase dependencies to all CI targets
+            ciPhaseDependsOn.forEach {
+              ciTarget.dependsOn?.add(it)
             }
 
             phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
             ciPhaseTargets[ciPhaseName] = ciTarget
-            if (hasGoals && phase != "test") {
-              ciPhasesWithGoals.add(phase)
+            // Track all CI phases so the dependency chain is preserved
+            ciPhasesWithGoals.add(phase)
+
+            if (hasGoals) {
               log.info("Created CI phase target '$phase-ci' with goals")
-            } else if (phase == "test") {
-              // Add test to ciPhasesWithGoals so later phases depend on test-ci
-              ciPhasesWithGoals.add(phase)
-              log.info("Created noop CI coordinator target '$phase-ci' for atomized tests")
             } else {
-              log.info("Created structural CI phase target '$phase-ci' (noop)")
+              log.info("Created noop CI phase target '$phase-ci'")
             }
           } else {
             log.info("Skipping noop CI phase target '$phase-ci' (no goals)")
