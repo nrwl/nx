@@ -2721,6 +2721,9 @@ importers:
 
   packages/devkit:
     dependencies:
+      '@zkochan/js-yaml':
+        specifier: 0.0.7
+        version: 0.0.7
       ejs:
         specifier: ^3.1.7
         version: 3.1.10

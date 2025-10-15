@@ -41,6 +41,7 @@ import { logger } from '../../utils/logger';
 import { commitChanges } from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
+  getDependencyVersionFromPackageJson,
   NxMigrationsConfiguration,
   PackageJson,
   readModulePackageJson,
@@ -83,6 +84,7 @@ import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
 } from '../../utils/provenance';
+import { getCatalogManager } from '../../utils/catalog';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1213,7 +1215,25 @@ async function updatePackageJson(
   const parseOptions: JsonReadOptions = {};
   const json = readJsonFile(packageJsonPath, parseOptions);
 
+  const manager = getCatalogManager(root);
+  const catalogUpdates = [];
+
   Object.keys(updatedPackages).forEach((p) => {
+    const existingVersion = json.dependencies?.[p] ?? json.devDependencies?.[p];
+
+    if (existingVersion && manager?.isCatalogReference(existingVersion)) {
+      const { catalogName } = manager.parseCatalogReference(existingVersion);
+      catalogUpdates.push({
+        packageName: p,
+        version: updatedPackages[p].version,
+        catalogName,
+      });
+
+      // don't overwrite the catalog reference with the new version
+      return;
+    }
+
+    // Update non-catalog packages in package.json
     if (json.devDependencies?.[p]) {
       json.devDependencies[p] = updatedPackages[p].version;
       return;
@@ -1234,6 +1254,12 @@ async function updatePackageJson(
   await writeFormattedJsonFile(packageJsonPath, json, {
     appendNewLine: parseOptions.endsWithNewline,
   });
+
+  // Update catalog definitions
+  if (catalogUpdates.length) {
+    // manager is guaranteed to be defined when there are catalog updates
+    manager!.updateCatalogVersions(root, catalogUpdates);
+  }
 }
 
 async function updateInstallationDetails(
@@ -1281,14 +1307,11 @@ async function isMigratingToNewMajor(from: string, to: string) {
   return major(from) < major(to);
 }
 
-function readNxVersion(packageJson: PackageJson) {
+function readNxVersion(packageJson: PackageJson, root: string) {
   return (
-    packageJson?.devDependencies?.['nx'] ??
-    packageJson?.dependencies?.['nx'] ??
-    packageJson?.devDependencies?.['@nx/workspace'] ??
-    packageJson?.dependencies?.['@nx/workspace'] ??
-    packageJson?.devDependencies?.['@nrwl/workspace'] ??
-    packageJson?.dependencies?.['@nrwl/workspace']
+    getDependencyVersionFromPackageJson('nx', root, packageJson) ??
+    getDependencyVersionFromPackageJson('@nx/workspace', root, packageJson) ??
+    getDependencyVersionFromPackageJson('@nrwl/workspace', root, packageJson)
   );
 }
 
@@ -1305,7 +1328,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const originalNxJson = readNxJson();
     const from =
       originalNxJson.installation?.version ??
-      readNxVersion(originalPackageJson);
+      readNxVersion(originalPackageJson, root);
 
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);

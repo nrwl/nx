@@ -1,22 +1,22 @@
 import { exec, execFile, execSync } from 'child_process';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
-import {
-  Pair,
-  ParsedNode,
-  parseDocument,
-  stringify as YAMLStringify,
-  YAMLMap,
-  YAMLSeq,
-  Scalar,
-} from 'yaml';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-
+import {
+  Pair,
+  ParsedNode,
+  parseDocument,
+  Scalar,
+  YAMLMap,
+  YAMLSeq,
+  stringify as YAMLStringify,
+} from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
+import { getCatalogManager } from './catalog';
 import {
   readFileIfExisting,
   readJsonFile,
@@ -458,10 +458,31 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
-    const result = await packageRegistryView(packageName, version, 'version');
+    let resolvedVersion = version;
+    const manager = getCatalogManager(workspaceRoot);
+    if (manager?.isCatalogReference(version)) {
+      resolvedVersion = manager.resolveCatalogReference(
+        packageName,
+        version,
+        workspaceRoot
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Unable to resolve catalog reference ${packageName}@${version}.`
+        );
+      }
+    }
+
+    const result = await packageRegistryView(
+      packageName,
+      resolvedVersion,
+      'version'
+    );
 
     if (!result) {
-      throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+      throw new Error(
+        `Unable to resolve version ${packageName}@${resolvedVersion}.`
+      );
     }
 
     const lines = result.split('\n');
@@ -476,13 +497,13 @@ export async function resolvePackageVersionUsingRegistry(
      *
      * <package>@<version> '<version>'
      */
-    const resolvedVersion = lines
+    const finalResolvedVersion = lines
       .map((line) => line.split(' ')[1])
       .sort()
       .pop()
       .replace(/'/g, '');
 
-    return resolvedVersion;
+    return finalResolvedVersion;
   } catch {
     throw new Error(`Unable to resolve version ${packageName}@${version}.`);
   }
@@ -500,8 +521,23 @@ export async function resolvePackageVersionUsingInstallation(
   const { dir, cleanup } = createTempNpmDirectory();
 
   try {
+    let resolvedVersion = version;
+    const manager = getCatalogManager(workspaceRoot);
+    if (manager.isCatalogReference(version)) {
+      resolvedVersion = manager.resolveCatalogReference(
+        packageName,
+        version,
+        workspaceRoot
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Unable to resolve catalog reference ${packageName}@${version}.`
+        );
+      }
+    }
+
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${version}`, {
+    await execAsync(`${pmc.add} ${packageName}@${resolvedVersion}`, {
       cwd: dir,
       windowsHide: true,
     });
