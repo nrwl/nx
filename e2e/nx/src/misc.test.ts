@@ -448,7 +448,7 @@ describe('Nx Commands', () => {
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
   beforeEach(() => {
-    newProject();
+    newProject({ packages: [] });
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
@@ -766,7 +766,7 @@ describe('migrate', () => {
     expect(output).toContain(`Migrations file 'migrations.json' doesn't exist`);
   });
 
-  it('hhhhhhshould handle Nx tokens correctly in Angular CLI migration schematics', () => {
+  it('should handle Nx tokens correctly in Angular CLI migration schematics', () => {
     const app1 = uniq('app1');
 
     updateFile(
@@ -915,7 +915,7 @@ describe('migrate', () => {
   });
 
   if (getSelectedPackageManager() === 'pnpm') {
-    it('hhhhhhshould handle pnpm catalog references and update catalog definitions during migration', () => {
+    it('should handle pnpm catalog references and update catalog definitions during migration', () => {
       // Setup pnpm-workspace.yaml with both default and named catalogs. Include
       // packages that WILL be updated and packages that SHOULD remain unchanged
       // to test both scenarios.
