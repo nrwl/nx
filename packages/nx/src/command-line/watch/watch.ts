@@ -47,11 +47,11 @@ export class BatchFunctionRunner {
       this.pendingFiles.add(fileChange.path);
     });
 
-    return this.process();
+    return this.process(true);
   }
 
-  private async process() {
-    if (!this.running && this.hasPending) {
+  private async process(runAnyway: boolean) {
+    if (!this.running && (this.hasPending || runAnyway)) {
       this.running = true;
 
       // Clone the pending projects and files before clearing
@@ -64,7 +64,7 @@ export class BatchFunctionRunner {
 
       return this.callback(projects, files).then(() => {
         this.running = false;
-        this.process();
+        this.process(false);
       });
     } else {
       this._verbose &&
