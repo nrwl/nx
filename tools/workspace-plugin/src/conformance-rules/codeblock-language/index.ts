@@ -139,9 +139,12 @@ function checkEmptyCodeFence(
   nextLine: string,
   filePath: string,
   supportedLanguages: Set<string>
-): ConformanceViolation | null {
+): ConformanceViolation {
   if (!looksLikeFilename(nextLine)) {
-    return null;
+    return {
+      message: `Code block at line ${lineNumber} is missing a language identifier. Add a language to code block e.g. \`\`\`text for command output or \`\`\`shell for a command`,
+      file: filePath,
+    };
   }
 
   const filename = extractFilenameFromComment(nextLine);
@@ -161,7 +164,7 @@ function checkTemplateOnlyFence(
   filePath: string
 ): ConformanceViolation {
   return {
-    message: `Code block at line ${lineNumber} has template fences but no language identifier. Add a language before the {% %} fences (e.g., \`\`\`text {% ... %})`,
+    message: `Code block at line ${lineNumber} has template fences but no language identifier. Add a language before the {% %} fences e.g., \`\`\`text {% ... %}`,
     file: resolveFilePathToWorkspaceRoot(filePath),
   };
 }
@@ -200,6 +203,24 @@ function checkShellFrameNone(
   return null;
 }
 
+function checkFileNameInFence(
+  lineNumber: number,
+  afterBackticks: string,
+  filePath: string
+): ConformanceViolation | null {
+  // Check if fileName attribute is present in the fence line
+  const fileNameMatch = afterBackticks.match(/fileName=["']([^"']+)["']/);
+  if (!fileNameMatch) {
+    return null;
+  }
+
+  const fileName = fileNameMatch[1];
+  return {
+    message: `Code block at line ${lineNumber} has fileName="${fileName}" in the fence line. Move the filename to a comment on the next line instead (e.g., // ${fileName} or # ${fileName}).`,
+    file: resolveFilePathToWorkspaceRoot(filePath),
+  };
+}
+
 function checkCodeBlocks(
   content: string,
   filePath: string
@@ -230,7 +251,7 @@ function checkCodeBlocks(
         filePath,
         supportedLanguages
       );
-      if (violation) violations.push(violation);
+      violations.push(violation);
       continue;
     }
 
@@ -255,6 +276,13 @@ function checkCodeBlocks(
         filePath
       );
       if (shellFrameViolation) violations.push(shellFrameViolation);
+
+      const fileNameViolation = checkFileNameInFence(
+        i + 1,
+        afterBackticks,
+        filePath
+      );
+      if (fileNameViolation) violations.push(fileNameViolation);
     }
   }
 
