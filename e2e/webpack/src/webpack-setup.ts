@@ -1,6 +1,6 @@
 import { cleanupProject, newProject } from '@nx/e2e-utils';
 
-// Define a type that matches what newProject accepts for packages
+
 type NxPackage =
   | '@nx/angular'
   | '@nx/cypress'
