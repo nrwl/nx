@@ -215,7 +215,7 @@ class NxTargetFactory(
 
           if (shouldCreateCiPhase) {
             // Create CI targets for phases with goals, or noop for test/structural phases
-            val ciTarget = if (hasGoals) {
+            val ciTarget = if (hasGoals && phase != "test") {
               createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
             } else {
               // Noop for test phase (will be orchestrated by atomized tests) or structural phases
