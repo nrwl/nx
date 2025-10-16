@@ -120,19 +120,17 @@ class NxBuildStateApplyMojo : AbstractMojo() {
         buildState.mainArtifact?.let { artifact ->
             val file = File(artifact.file)
             log.info("Applying main artifact: ${file.absolutePath} to ${targetProject.artifactId}")
-            if (file.isFile) targetProject.artifact.file = file
+            targetProject.artifact.file = file
         }
 
         // Apply attached artifacts
         buildState.attachedArtifacts.forEach { artifact ->
             val file = File(artifact.file)
             log.info("Applying attached artifact: ${file.absolutePath} to ${targetProject.artifactId}")
-            if (file.isFile) {
-                if (artifact.classifier.isNullOrEmpty()) {
-                    projectHelper.attachArtifact(targetProject, artifact.type, file)
-                } else {
-                    projectHelper.attachArtifact(targetProject, artifact.type, artifact.classifier, file)
-                }
+            if (artifact.classifier.isNullOrEmpty()) {
+                projectHelper.attachArtifact(targetProject, artifact.type, file)
+            } else {
+                projectHelper.attachArtifact(targetProject, artifact.type, artifact.classifier, file)
             }
         }
 
