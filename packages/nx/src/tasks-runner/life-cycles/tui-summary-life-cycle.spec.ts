@@ -333,11 +333,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
       expect(lines.join('\n')).toMatchInlineSnapshot(`
         "
-           ✔  nx run foo:test
 
         > nx run bar:test
 
         boom
+
+           ✔  nx run foo:test
            ✖  nx run bar:test
 
         ———————————————————————————————————————————————————————————————————————————————
@@ -412,6 +413,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         > nx run bar:test
 
         Love
+
            ◼  nx run bar:test
            ✔  nx run foo:test
 
@@ -491,6 +493,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
       expect(lines.join('\n')).toMatchInlineSnapshot(`
         "
+
            ✔  nx run foo:test
            ✔  nx run bar:test
 

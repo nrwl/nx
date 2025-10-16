@@ -288,7 +288,10 @@ export function getTuiTerminalSummaryLifeCycle({
   }) => {
     console.log('');
 
-    // Print task rows progressively
+    // Collect checklist lines to print after task outputs
+    const checklistLines: string[] = [];
+
+    // First pass: Print task outputs and collect checklist lines
     for (const taskId of taskIdsInTheOrderTheyStart) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = tasksToTerminalOutputs[taskId];
@@ -296,7 +299,7 @@ export function getTuiTerminalSummaryLifeCycle({
       if (!taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
-        console.log(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.cyan(
             figures.squareSmallFilled
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
@@ -304,13 +307,13 @@ export function getTuiTerminalSummaryLifeCycle({
       } else if (taskStatus === 'failure') {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
-        console.log(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.red(
             figures.cross
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
         );
       } else if (taskStatus === 'local-cache') {
-        console.log(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.green(
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
@@ -318,7 +321,7 @@ export function getTuiTerminalSummaryLifeCycle({
           )}`
         );
       } else if (taskStatus === 'local-cache-kept-existing') {
-        console.log(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.green(
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
@@ -326,7 +329,7 @@ export function getTuiTerminalSummaryLifeCycle({
           )}`
         );
       } else if (taskStatus === 'remote-cache') {
-        console.log(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.green(
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
@@ -334,18 +337,24 @@ export function getTuiTerminalSummaryLifeCycle({
           )}`
         );
       } else if (taskStatus === 'success') {
-        console.log(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.green(
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
         );
       } else {
-        console.log(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.green(
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
         );
       }
+    }
+
+    // Print all checklist lines together
+    console.log();
+    for (const line of checklistLines) {
+      console.log(line);
     }
 
     // Print vertical separator
