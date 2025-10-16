@@ -36,8 +36,11 @@ class NxBuildStateApplyMojo : AbstractMojo() {
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
+        val startTime = System.currentTimeMillis()
         try {
             applyAllBuildStates()
+            val duration = System.currentTimeMillis() - startTime
+            log.info("Build state application completed (took ${duration}ms)")
         } catch (e: Exception) {
             throw MojoExecutionException("Failed to reapply build state", e)
         }
