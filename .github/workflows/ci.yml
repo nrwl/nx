@@ -86,6 +86,9 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
+      - name: Debug
+        run: npx nx format:check
+
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()
