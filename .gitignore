@@ -115,9 +115,10 @@ astro-docs/.netlify
 packages/angular-rspack/coverage
 packages/angular-rspack-compiler/coverage
 
-# Angular Rspack Packages use a template to generate the correct README
+# Some Packages use a template to generate the correct README
 packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
+packages/dotnet/README.md
 
 test-output
 test-results

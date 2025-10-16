@@ -72,8 +72,6 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
       checkFilesExist('complex-graph.json');
       const { graph } = readJson('complex-graph.json');
 
-      console.log('[debug] Project graph:', JSON.stringify(graph, null, 2));
-
       // Verify dependency chain
       const webApiDeps = graph.dependencies['web-api'] || [];
       expect(webApiDeps.some((dep) => dep.target === 'application')).toBe(true);
@@ -91,24 +89,22 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
       expect(output).toContain('Build succeeded');
 
       // All dependencies should have been built
-      checkFilesMatchingPatternExist(
-        '.*/Core.dll',
-        tmpProjPath('Core/bin/Debug')
-      );
+      // Note: Paths include target framework (e.g., net8.0, net9.0)
+      checkFilesMatchingPatternExist('.*/Core.dll', tmpProjPath('Core/bin'));
 
       checkFilesMatchingPatternExist(
         '.*/Infrastructure.dll',
-        tmpProjPath('Infrastructure/bin/Debug')
+        tmpProjPath('Infrastructure/bin')
       );
 
       checkFilesMatchingPatternExist(
         '.*/Application.dll',
-        tmpProjPath('Application/bin/Debug')
+        tmpProjPath('Application/bin')
       );
 
       checkFilesMatchingPatternExist(
         '.*/WebApi.dll',
-        tmpProjPath('WebApi/bin/Debug')
+        tmpProjPath('WebApi/bin')
       );
     });
 

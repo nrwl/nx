@@ -91,21 +91,23 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
 
   describe('Custom Artifacts Path', () => {
     beforeAll(() => {
-      createDotNetProject({
-        name: 'CustomPathApp',
-        type: 'console',
-      });
-
-      // Use custom artifacts path
+      // Use custom artifacts path - must be set BEFORE creating the project
+      // so MSBuild evaluates it during project creation
+      // Use $(MSBuildThisFileDirectory) to make path relative to workspace root
       updateFile(
         'Directory.Build.props',
         `<Project>
   <PropertyGroup>
     <UseArtifactsOutput>true</UseArtifactsOutput>
-    <ArtifactsPath>build-output</ArtifactsPath>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)build-output</ArtifactsPath>
   </PropertyGroup>
 </Project>`
       );
+
+      createDotNetProject({
+        name: 'CustomPathApp',
+        type: 'console',
+      });
     });
 
     it('should use custom artifacts path', () => {
@@ -232,6 +234,15 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
         name: 'CustomOutputApp',
         type: 'console',
       });
+
+      // Remove Directory.Build.props to avoid inheriting UseArtifactsOutput
+      updateFile(
+        'Directory.Build.props',
+        `<Project>
+  <PropertyGroup>
+  </PropertyGroup>
+</Project>`
+      );
 
       // Customize output paths using traditional layout
       const csprojPath = tmpProjPath('CustomOutputApp/CustomOutputApp.csproj');

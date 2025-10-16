@@ -4,8 +4,8 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "dependencies": {
-    "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
+    "@nx/devkit": "22.0.0",
+    "nx": "22.0.0",
     "tslib": "^2.3.0"
   },
   "description": "The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.",

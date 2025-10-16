@@ -259,6 +259,7 @@ public static class TargetBuilder
     {
         var outputPath = GetOutputPath(properties, projectName, workspaceRoot);
         var intermediatePath = GetIntermediateOutputPath(properties, projectName, workspaceRoot);
+        var defaultConfiguration = properties.GetValueOrDefault("Configuration") ?? "Debug";
 
         // For artifacts output, paths are relative to workspace root
         // For traditional output, paths are relative to project root
@@ -271,8 +272,26 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-restore", "--no-dependencies" }
+                Args = new[] { "--no-restore", "--no-dependencies", "--configuration", defaultConfiguration }
             },
+            Configurations = new Dictionary<string, TargetConfiguration>
+            {
+                ["Debug"] = new TargetConfiguration
+                {
+                    Options = new TargetOptions
+                    {
+                        Args = new[] { "--configuration", "Debug" }
+                    }
+                },
+                ["Release"] = new TargetConfiguration
+                {
+                    Options = new TargetOptions
+                    {
+                        Args = new[] { "--configuration", "Release" }
+                    }
+                }
+            },
+            DefaultConfiguration = defaultConfiguration,
             DependsOn = new[] { "restore", "^build" },
             Cache = true,
             Inputs = new object[] { "default", "^production" },
@@ -393,6 +412,7 @@ public static class TargetBuilder
         string workspaceRoot)
     {
         var publishDir = GetPublishDir(properties, projectName, workspaceRoot);
+        var defaultConfiguration = properties.GetValueOrDefault("Configuration") ?? "Debug";
 
         var useWorkspaceRoot = UsesArtifactsOutput(properties);
         var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
@@ -403,8 +423,26 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-build", "--no-dependencies" }
+                Args = new[] { "--no-build", "--no-dependencies", "--configuration", defaultConfiguration }
             },
+            Configurations = new Dictionary<string, TargetConfiguration>
+            {
+                ["Debug"] = new TargetConfiguration
+                {
+                    Options = new TargetOptions
+                    {
+                        Args = new[] { "--configuration", "Debug" }
+                    }
+                },
+                ["Release"] = new TargetConfiguration
+                {
+                    Options = new TargetOptions
+                    {
+                        Args = new[] { "--configuration", "Release" }
+                    }
+                }
+            },
+            DefaultConfiguration = defaultConfiguration,
             DependsOn = new[] { "build" },
             Cache = true,
             Inputs = new object[] { "default", "^production" },
@@ -425,6 +463,7 @@ public static class TargetBuilder
         string workspaceRoot)
     {
         var packageOutputPath = GetPackageOutputPath(properties, projectName, workspaceRoot);
+        var defaultConfiguration = properties.GetValueOrDefault("Configuration") ?? "Debug";
 
         var useWorkspaceRoot = UsesArtifactsOutput(properties);
         var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
@@ -435,8 +474,26 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-dependencies", "--no-build" }
+                Args = new[] { "--no-dependencies", "--no-build", "--configuration", defaultConfiguration }
             },
+            Configurations = new Dictionary<string, TargetConfiguration>
+            {
+                ["Debug"] = new TargetConfiguration
+                {
+                    Options = new TargetOptions
+                    {
+                        Args = new[] { "--configuration", "Debug" }
+                    }
+                },
+                ["Release"] = new TargetConfiguration
+                {
+                    Options = new TargetOptions
+                    {
+                        Args = new[] { "--configuration", "Release" }
+                    }
+                }
+            },
+            DefaultConfiguration = defaultConfiguration,
             DependsOn = new[] { "build" },
             Cache = true,
             Inputs = new object[] { "default", "^production" },

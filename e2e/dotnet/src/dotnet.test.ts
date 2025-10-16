@@ -98,10 +98,7 @@ describe('.NET Plugin', () => {
         env: { NX_DAEMON: 'false' },
       });
       expect(output).toContain('Build succeeded');
-      checkFilesMatchingPatternExist(
-        '.*/MyApp.dll',
-        tmpProjPath('MyApp/bin/Debug')
-      );
+      checkFilesMatchingPatternExist('.*/MyApp.dll', tmpProjPath('MyApp/bin'));
     });
 
     it('should have expected dependencies', () => {
@@ -121,7 +118,7 @@ describe('.NET Plugin', () => {
       expect(output).toContain('Build succeeded');
       checkFilesMatchingPatternExist(
         '.*/MyLibrary.dll',
-        tmpProjPath('MyLibrary/bin/Debug')
+        tmpProjPath('MyLibrary/bin')
       );
     });
 
@@ -134,10 +131,7 @@ describe('.NET Plugin', () => {
     it('should clean build outputs', () => {
       // First build to create outputs
       runCLI('build my-app');
-      checkFilesMatchingPatternExist(
-        '.*/MyApp.dll',
-        tmpProjPath('MyApp/bin/Debug')
-      );
+      checkFilesMatchingPatternExist('.*/MyApp.dll', tmpProjPath('MyApp/bin'));
 
       // Then clean
       const output = runCLI('clean my-app', { verbose: true });
@@ -165,14 +159,11 @@ describe('.NET Plugin', () => {
       expect(output).toContain('Build succeeded');
 
       // Should have built the dependency first
-      checkFilesMatchingPatternExist(
-        '.*/Core.dll',
-        tmpProjPath('Core/bin/Debug')
-      );
+      checkFilesMatchingPatternExist('.*/Core.dll', tmpProjPath('Core/bin'));
 
       checkFilesMatchingPatternExist(
         '.*/WebApi.dll',
-        tmpProjPath('WebApi/bin/Debug')
+        tmpProjPath('WebApi/bin')
       );
     });
 
