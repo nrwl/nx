@@ -2,7 +2,7 @@ import { runCLI, uniq, updateFile } from '@nx/e2e-utils';
 import { setupWebpackTest } from './webpack-setup';
 
 describe('Webpack Plugin', () => {
-  setupWebpackTest(['@nx/js', '@nx/webpack']);
+  setupWebpackTest();
 
   it('should use either BABEL_ENV or NODE_ENV value for Babel environment configuration', async () => {
     const myPkg = uniq('my-pkg');

@@ -9,7 +9,7 @@ import {
 import { setupWebpackTest } from './webpack-setup';
 
 describe('Webpack Plugin', () => {
-  setupWebpackTest(['@nx/web', '@nx/webpack']);
+  setupWebpackTest();
 
   it('should allow options to be passed from the executor', async () => {
     const appName = uniq('app');

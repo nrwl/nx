@@ -10,7 +10,7 @@ import {
 import { setupWebpackTest } from './webpack-setup';
 
 describe('Webpack Plugin', () => {
-  setupWebpackTest(['@nx/web', '@nx/webpack']);
+  setupWebpackTest();
 
   it('should support babel + core-js to polyfill JS features', async () => {
     const appName = uniq('app');
