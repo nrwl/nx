@@ -30,7 +30,8 @@ export default async function* moduleFederationDevServer(
         },
         context
       )
-    : devServerExecutor(options, context);
+    : // TODO(JamesHenry): remove type assertion once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
+      devServerExecutor(options, context as any);
 
   const p = context.projectsConfigurations.projects[context.projectName];
 
