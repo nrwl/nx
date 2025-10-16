@@ -73,6 +73,8 @@ data class CacheConfig(
                 "maven-compiler-plugin:compile" to MojoConfig(
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
+                        // Include generated sources by convention
+                        Parameter("buildDirectory", "generated-sources/**/*.java"),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null),
