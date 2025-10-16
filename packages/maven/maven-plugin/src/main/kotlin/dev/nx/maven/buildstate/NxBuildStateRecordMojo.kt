@@ -126,7 +126,7 @@ class NxBuildStateRecordMojo : AbstractMojo() {
 
             // Capture attached artifacts (only if file exists)
             val attachedArtifacts = project.attachedArtifacts.mapNotNull { artifact: Artifact ->
-                if (artifact.file != null) {
+                if (artifact.file != null && artifact.file.exists()) {
                     ArtifactInfo(
                         file = artifact.file.absolutePath,
                         type = artifact.type,
@@ -136,7 +136,11 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                         version = artifact.version
                     )
                 } else {
-                    log.warn("Attached artifact has no file: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}")
+                    if (artifact.file == null) {
+                        log.warn("Attached artifact has no file: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}")
+                    } else {
+                        log.warn("Attached artifact file does not exist: ${artifact.file.absolutePath}")
+                    }
                     null
                 }
             }
