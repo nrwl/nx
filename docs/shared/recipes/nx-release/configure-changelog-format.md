@@ -92,3 +92,7 @@ Which will generate a changelog that looks similar to the following:
 
 - **rule-tester:** check for missing placeholder data in the message
 ```
+
+## Overwrite previous entries
+
+By default, a new changelog entry is prepended to the top of the changelog file (if files are applicable based on your config). If you want to overwrite the previous entries instead, you can set the `replaceExistingContents` option to `true` when calling the `releaseChangelog` function of the programmatic API, or the `nx release changelog` CLI subcommand.
