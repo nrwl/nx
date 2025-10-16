@@ -135,3 +135,97 @@ export function createWebApiWorkspace(cwd: string = tmpProjPath()) {
 
   return result;
 }
+
+export function updateProjectFile(
+  projectName: string,
+  updates: (content: string) => string,
+  cwd: string = tmpProjPath()
+) {
+  const projectPath = join(cwd, projectName, `${projectName}.csproj`);
+  const content = require('fs').readFileSync(projectPath, 'utf-8');
+  const updatedContent = updates(content);
+  writeFileSync(projectPath, updatedContent);
+}
+
+export function enableArtifactsOutput(
+  artifactsPath: string = 'artifacts',
+  cwd: string = tmpProjPath()
+) {
+  e2eConsoleLogger(`Enabling artifacts output with path: ${artifactsPath}`);
+  const directoryBuildPropsPath = join(cwd, 'Directory.Build.props');
+  writeFileSync(
+    directoryBuildPropsPath,
+    `<Project>
+  <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>${artifactsPath}</ArtifactsPath>
+  </PropertyGroup>
+</Project>`
+  );
+}
+
+export function setCustomPivot(
+  projectName: string,
+  pivot: string,
+  cwd: string = tmpProjPath()
+) {
+  e2eConsoleLogger(`Setting custom pivot for ${projectName}: ${pivot}`);
+  updateProjectFile(
+    projectName,
+    (content) =>
+      content.replace(
+        '</PropertyGroup>',
+        `  <ArtifactsPivots>${pivot}</ArtifactsPivots>\n</PropertyGroup>`
+      ),
+    cwd
+  );
+}
+
+export function enableMultiTargeting(
+  projectName: string,
+  targetFrameworks: string[],
+  cwd: string = tmpProjPath()
+) {
+  e2eConsoleLogger(
+    `Enabling multi-targeting for ${projectName}: ${targetFrameworks.join(
+      ', '
+    )}`
+  );
+  updateProjectFile(
+    projectName,
+    (content) =>
+      content.replace(
+        /<TargetFramework>.*?<\/TargetFramework>/,
+        `<TargetFrameworks>${targetFrameworks.join(';')}</TargetFrameworks>`
+      ),
+    cwd
+  );
+}
+
+export function setCustomOutputPath(
+  projectName: string,
+  outputPath: string,
+  intermediatePath?: string,
+  cwd: string = tmpProjPath()
+) {
+  e2eConsoleLogger(
+    `Setting custom output path for ${projectName}: ${outputPath}`
+  );
+  updateProjectFile(
+    projectName,
+    (content) => {
+      let updated = content.replace(
+        '</PropertyGroup>',
+        `  <OutputPath>${outputPath}</OutputPath>\n</PropertyGroup>`
+      );
+      if (intermediatePath) {
+        updated = updated.replace(
+          '</PropertyGroup>',
+          `  <IntermediateOutputPath>${intermediatePath}</IntermediateOutputPath>\n</PropertyGroup>`
+        );
+      }
+      return updated;
+    },
+    cwd
+  );
+}

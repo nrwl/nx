@@ -20,7 +20,8 @@
       "outputs": ["{projectRoot}/src/lib"],
       "options": {
         "commands": [
-          "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o {projectRoot}/src/lib --self-contained false"
+          "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o {projectRoot}/dist/lib --self-contained false",
+          "node scripts/chmod.js {projectRoot}/dist/lib/MsbuildAnalyzer"
         ],
         "parallel": false
       }
@@ -30,32 +31,13 @@
       "dependsOn": ["build-analyzer"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "dist",
         "assets": [
           "{projectRoot}/*.md",
           {
-            "input": "${projectRoot}/src",
-            "glob": "**/!(*.ts)",
-            "output": "./src"
-          },
-          {
-            "input": "{projectRoot}",
-            "glob": "**/*.d.ts",
-            "output": "./src"
-          },
-          {
-            "input": "{projectRoot}",
-            "glob": "generators.json",
-            "output": "."
-          },
-          {
-            "input": "{projectRoot}",
-            "glob": "executors.json",
-            "output": "."
-          },
-          {
-            "input": "{projectRoot}",
-            "glob": "migrations.json",
-            "output": "."
+            "input": "{projectRoot}/src",
+            "glob": "**/*.{d.ts,json}",
+            "output": "/"
           }
         ]
       }

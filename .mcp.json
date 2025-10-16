@@ -4,6 +4,11 @@
       "command": "pnpm",
       "args": ["nx-mcp"],
       "env": {}
+    },
+    "nx-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["nx", "mcp"]
     }
   }
 }
