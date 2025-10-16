@@ -8,7 +8,7 @@ import {
 import { setupWebpackTest } from './webpack-setup';
 
 describe('Webpack Plugin', () => {
-  setupWebpackTest();
+  setupWebpackTest(['@nx/web', '@nx/webpack']);
 
   it('should resolve assets from executors as relative to workspace root', () => {
     const appName = uniq('app');

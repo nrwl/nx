@@ -9,7 +9,7 @@ import {
 import { setupWebpackTest } from './webpack-setup';
 
 describe('Webpack Plugin', () => {
-  setupWebpackTest();
+  setupWebpackTest(['@nx/web', '@nx/webpack']);
 
   it('should bundle in NX_PUBLIC_ environment variables', () => {
     const appName = uniq('app');

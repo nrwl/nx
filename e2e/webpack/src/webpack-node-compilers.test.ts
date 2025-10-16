@@ -10,7 +10,7 @@ import { join } from 'path';
 import { setupWebpackTest } from './webpack-setup';
 
 describe('Webpack Plugin', () => {
-  setupWebpackTest();
+  setupWebpackTest(['@nx/js', '@nx/webpack']);
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');

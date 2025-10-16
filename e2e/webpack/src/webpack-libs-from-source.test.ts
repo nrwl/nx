@@ -2,7 +2,7 @@ import { runCLI, uniq, updateFile } from '@nx/e2e-utils';
 import { setupWebpackTest } from './webpack-setup';
 
 describe('Webpack Plugin', () => {
-  setupWebpackTest();
+  setupWebpackTest(['@nx/web', '@nx/js', '@nx/webpack']);
 
   it('it should support building libraries and apps when buildLibsFromSource is false', () => {
     const appName = uniq('app');

@@ -8,7 +8,7 @@ import {
 import { setupWebpackTest } from './webpack-setup';
 
 describe('config types', () => {
-  setupWebpackTest();
+  setupWebpackTest(['@nx/react', '@nx/webpack']);
 
   it('should support an array of standard config objects', () => {
     const appName = uniq('app');

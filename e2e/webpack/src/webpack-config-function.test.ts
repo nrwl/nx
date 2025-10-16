@@ -2,7 +2,7 @@ import { runCLI, uniq, updateFile } from '@nx/e2e-utils';
 import { setupWebpackTest } from './webpack-setup';
 
 describe('config types', () => {
-  setupWebpackTest();
+  setupWebpackTest(['@nx/react', '@nx/webpack']);
 
   it('should support a standard function that returns a config object', () => {
     const appName = uniq('app');
