@@ -26,6 +26,10 @@ describe('React Cypress Component Tests - async webpack', () => {
   it('should work with async webpack config', async () => {
     // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
     // are they overriding some option on top of each other causing cypress to not see it's running?
+    runCLI(
+      `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
+    );
+
     createFile(
       `apps/${appName}/webpack.config.js`,
       `
@@ -56,7 +60,7 @@ describe('React Cypress Component Tests - async webpack', () => {
     });
 
     if (runE2ETests()) {
-      const results = runCLI(`component-test ${appName}`);
+      const results = runCLI(`component-test ${appName} --no-watch`);
       expect(results).toContain('I am from the custom async Webpack config');
       expect(results).toContain('All specs passed!');
     }

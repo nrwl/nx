@@ -10,7 +10,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
-import { readPort } from '../utils';
+import { readPort } from './utils';
 import { setupIndependentDeployabilityTests } from './independent-deployability-rspack-setup';
 
 describe('Independent Deployability - different versions', () => {
