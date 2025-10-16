@@ -127,6 +127,27 @@ describe('semver', () => {
             [
               'default',
               [
+                { commit: fixCommit, isProjectScopedCommit: true },
+                {
+                  commit: featNonBreakingCommit,
+                  isProjectScopedCommit: true,
+                },
+                { commit: choreCommit, isProjectScopedCommit: true },
+              ],
+            ],
+          ]),
+          config
+        ).get('default')
+      ).toEqual(SemverSpecifier.MINOR);
+    });
+
+    it('should return a patch bump level if none of the commits are project scoped', () => {
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'default',
+              [
                 { commit: fixCommit, isProjectScopedCommit: false },
                 {
                   commit: featNonBreakingCommit,
@@ -138,7 +159,7 @@ describe('semver', () => {
           ]),
           config
         ).get('default')
-      ).toEqual(SemverSpecifier.MINOR);
+      ).toEqual(SemverSpecifier.PATCH);
     });
 
     it('should return major if any commits are breaking', () => {

@@ -3,7 +3,7 @@ import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/
 import type { Tree } from '../../../generators/tree';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { ProjectLogger } from './project-logger';
-import type { FinalConfigForProject } from './release-group-processor';
+import type { FinalConfigForProject } from '../utils/release-graph';
 import { resolveCurrentVersion } from './resolve-current-version';
 import { VersionActions } from './version-actions';
 
@@ -108,7 +108,7 @@ describe('resolveCurrentVersion', () => {
         new TestProjectLogger(projectGraphNode.name),
         new Map(),
         finalConfigForProject,
-        undefined
+        ''
       );
       expect(currentVersion).toBe('1.2.3');
     });
@@ -146,7 +146,7 @@ describe('resolveCurrentVersion', () => {
         new TestProjectLogger(projectGraphNode.name),
         new Map(),
         finalConfigForProject,
-        undefined
+        ''
       );
       expect(currentVersion).toBe('1.2.3');
     });
@@ -215,7 +215,7 @@ describe('resolveCurrentVersion', () => {
           new TestProjectLogger(projectGraphNode.name),
           new Map(),
           finalConfigForProject,
-          undefined
+          ''
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"For project "test", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "TestVersionActionsWithoutManifest". This is invalid because "TestVersionActionsWithoutManifest" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file"`

@@ -93,6 +93,11 @@
       "version": "22.0.0-beta.1",
       "description": "Updates release version config based on the breaking changes in Nx v22",
       "implementation": "./src/migrations/update-22-0-0/release-version-config-changes"
+    },
+    "22-0-0-consolidate-release-tag-config": {
+      "version": "22.0.0-beta.2",
+      "description": "Consolidates releaseTag* options into nested releaseTag object structure",
+      "implementation": "./src/migrations/update-22-0-0/consolidate-release-tag-config"
     }
   }
 }

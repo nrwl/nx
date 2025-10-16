@@ -102,13 +102,15 @@ import * as yargs from 'yargs';
     })
     .parseAsync();
 
-  const { workspaceVersion, projectsVersionData } = await releaseVersion({
-    specifier: options.version,
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
+  const { workspaceVersion, projectsVersionData, releaseGraph } =
+    await releaseVersion({
+      specifier: options.version,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+    });
 
   await releaseChangelog({
+    releaseGraph, // Re-use the existing release graph to avoid recomputing in each subcommand
     versionData: projectsVersionData,
     version: workspaceVersion,
     dryRun: options.dryRun,
@@ -117,6 +119,7 @@ import * as yargs from 'yargs';
 
   // publishResults contains a map of project names and their exit codes
   const publishResults = await releasePublish({
+    releaseGraph, // Re-use the existing release graph to avoid recomputing in each subcommand
     dryRun: options.dryRun,
     verbose: options.verbose,
     // You can optionally pass through the version data (e.g. if you are using a custom publish executor that needs to be aware of versions)
