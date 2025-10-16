@@ -54,7 +54,7 @@ We're leveraging this by exposing such an MCP from our Nx Language server that c
 
 Getting started with Nx's MCP integration in Cursor is straightforward. Here's what you need to do:
 
-**Install Nx Console** in your Cursor IDE by following our [editor setup guide](/getting-started/editor-setup).
+**Install Nx Console** in your Cursor IDE by following our [editor setup guide](/docs/getting-started/editor-setup).
 
 Once installed, Cursor will automatically detect Nx Console and prompt you to configure the MCP server. You'll see a notification like this:
 
@@ -78,7 +78,7 @@ If this is your first MCP installation, you'll notice a new `.cursor/mcp.json` f
 
 Share this configuration with your team to ensure consistent settings or add it to `.gitignore` if you prefer to keep your local configuration private.
 
-That's it! Your Cursor IDE is now configured to use Nx's MCP integration. For more details about the available features and capabilities, check out our [AI enhancement documentation](/features/enhance-AI).
+That's it! Your Cursor IDE is now configured to use Nx's MCP integration. For more details about the available features and capabilities, check out our [AI enhancement documentation](/docs/features/enhance-ai).
 
 {% callout type="note" title="Manual Setup" %}
 If you've missed the notification, you can always run the `nx.configureMcpServer` command via the command prompt (`Ctrl/Cmd` + `Shift` + `P`) and install the MCP server that way.
@@ -106,7 +106,7 @@ While the Model Context Protocol defines various functionalities (tools, resourc
 
 ### Data Flow
 
-Behind the scenes, we use the Nx Language Server (`nxls`) that comes as part of the [Nx Console extension](/getting-started/editor-setup) to gather workspace information. Each tool request triggers a specific data flow:
+Behind the scenes, we use the Nx Language Server (`nxls`) that comes as part of the [Nx Console extension](/docs/getting-started/editor-setup) to gather workspace information. Each tool request triggers a specific data flow:
 
 1. The tool receives your query
 2. `nxls` retrieves relevant workspace information from your Nx workspace
@@ -151,7 +151,7 @@ Stay tuned for more updates on this MCP integration as well as enhancements on t
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

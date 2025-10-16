@@ -17,7 +17,7 @@ Binning is an approach to distribution where the planning job divides the work i
 
 ![](/blog/images/2021-06-15/92NTlO7eM7-mc9WD.avif)
 
-Nx has always provided affordances to do that, and many workspaces took advantage of it. Most of the setups look similar. This is an [example of implementing binning using Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure).
+Nx has always provided affordances to do that, and many workspaces took advantage of it. Most of the setups look similar. This is an [example of implementing binning using Azure Pipelines](/docs/guides/nx-cloud/setup-ci).
 
 The planning job invokes _print-affected_. This command executes the same logic as _"affected:\*"_ but instead of running the tasks, it returns the tasks' descriptions. The job invokes this command for each target such as build/test/lint/e2e. After that, each worker agent runs the tasks assigned to it.
 
@@ -161,7 +161,7 @@ If you want to change this command without distribution, add `NX_CLOUD_DISTRIBUT
 
 ### Works With any CI System
 
-When using distributed task execution all the communication is done from your agents to Nx Cloud. This means that it works with any CI system, including your private Jenkins installations. See some examples [here](/ci/recipes/set-up). And even works locally if you create a docker image from the state of repo and push it to say ECS. It also works with Nx Private Cloud.
+When using distributed task execution all the communication is done from your agents to Nx Cloud. This means that it works with any CI system, including your private Jenkins installations. See some examples [here](/docs/guides/nx-cloud/setup-ci). And even works locally if you create a docker image from the state of repo and push it to say ECS. It also works with Nx Private Cloud.
 
 ## Summary
 

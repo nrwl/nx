@@ -75,7 +75,7 @@ Finally, to be able to use it, you need to update your `nx.json` file to include
 }
 ```
 
-To see whether you plugin loaded properly you can go to `.nx/workspace-data/d/daemon.log` and search for your plugin name. Behind the scenes the [Nx Daemon](/concepts/nx-daemon) re-calculates the project graph and loads all plugins, including ours.
+To see whether you plugin loaded properly you can go to `.nx/workspace-data/d/daemon.log` and search for your plugin name. Behind the scenes the [Nx Daemon](/docs/concepts/nx-daemon) re-calculates the project graph and loads all plugins, including ours.
 
 {% callout type="info" title="TypeScript configuration" %}
 Make sure you have some `tsconfig.json` file in the monorepo root. Nx loads the plugin dynamically (without you having to precompile it) which requires some TypeScript context to be present. [Have a look at the repo setup](https://github.com/juristr/dynamic-storybook-targets/blob/main/tsconfig.base.json).
@@ -240,8 +240,8 @@ In the end, what we've achieved here is more than just unique ports – it's abo
 
 ## Learn More
 
-- [Enforce Organizational Best Practices with a Local Plugin](/extending-nx/tutorials/organization-specific-plugin)
-- [Create a Tooling Plugin](/extending-nx/tutorials/tooling-plugin)
+- [Enforce Organizational Best Practices with a Local Plugin](/docs/extending-nx/organization-specific-plugin)
+- [Create a Tooling Plugin](/docs/extending-nx/tooling-plugin)
 
 Also make sure to check out:
 

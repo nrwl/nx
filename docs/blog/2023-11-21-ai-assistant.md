@@ -308,7 +308,7 @@ This role, in the context of OpenAI’s chat models, is the response of the AI. 
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](/community)

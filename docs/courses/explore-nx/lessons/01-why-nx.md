@@ -16,4 +16,4 @@ This video gives you a birds-eye view of Nx in ~10 minutes. It covers topics suc
 - Abstracting low-level configs
 - Automated Code Updates
 
-Read more [in our docs](/getting-started/intro)
+Read more [in our docs](/docs/getting-started/intro)

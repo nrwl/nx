@@ -48,10 +48,10 @@ Hetzner Cloud needed a solution that would streamline their development process,
 After evaluating Nx and Turborepo, Hetzner Cloud selected Nx for its advanced monorepo management capabilities. They started a [Nx Enterprise](/enterprise) contract and closely collaborated with the Nx Developer Productivity Engineers to assess Hetzner's current software landscape and evaluate the best strategy. Their goal was not necessarily to create a monorepo in the first place, but to modularize their monolithic application. Nx provided the right tools to:
 
 - **Break down the monolith** into modular packages without affecting deployment.
-- **Define clear domain boundaries** using [module boundary rules](/features/enforce-module-boundaries) and [conformance rules](/reference/core-api/conformance).
-- **Improve ownership management** by having a more modular structure with clear boundaries allowing for easier allocaton of owernship. Something that could further be improved in the future by using [CodeOwners](/nx-enterprise/powerpack/owners).
+- **Define clear domain boundaries** using [module boundary rules](/docs/features/enforce-module-boundaries) and [conformance rules](/docs/reference/powerpack/conformance).
+- **Improve ownership management** by having a more modular structure with clear boundaries allowing for easier allocaton of owernship. Something that could further be improved in the future by using [CodeOwners](/docs/enterprise/powerpack/owners).
 
-Beyond modularization, Nx helped consolidate fragmented projects into a single, structured workspace. This reduced the overhead of maintaining multiple repositories and simplified dependency management. Using the [Nx Graph](/features/explore-graph), the team gained visibility into their project relationships, making it easier to coordinate work and optimize collaboration.
+Beyond modularization, Nx helped consolidate fragmented projects into a single, structured workspace. This reduced the overhead of maintaining multiple repositories and simplified dependency management. Using the [Nx Graph](/docs/features/explore-graph), the team gained visibility into their project relationships, making it easier to coordinate work and optimize collaboration.
 
 {% testimonial
     name="Pavlo Grosse"
@@ -60,13 +60,13 @@ Beyond modularization, Nx helped consolidate fragmented projects into a single, 
 Junior developers were amazed at how fast things became. They'd run tests expecting them to take 20 minutes, and they'd finish in seconds!
 {% /testimonial %}
 
-To tackle the CI performance bottleneck, Hetzner Cloud adopted [Nx Cloud](/ci/features/remote-cache), highly leveraging its [Nx Replay feature](/ci/features/remote-cache), ability to [distribute runs](/ci/features/distribute-task-execution) and re-run [flaky tasks automatically](/ci/features/flaky-tasks). These capabilities allowed them to optimize their CI workflows and eliminate inefficiencies that had previously slowed down development cycles.
+To tackle the CI performance bottleneck, Hetzner Cloud adopted [Nx Cloud](/docs/features/ci-features/remote-cache), highly leveraging its [Nx Replay feature](/docs/features/ci-features/remote-cache), ability to [distribute runs](/docs/features/ci-features/distribute-task-execution) and re-run [flaky tasks automatically](/docs/features/ci-features/flaky-tasks). These capabilities allowed them to optimize their CI workflows and eliminate inefficiencies that had previously slowed down development cycles.
 
-- **Minimized redundant processing** – PRs in merge trains only reprocessed necessary parts, restoring everything else from the [Nx remote cache](/ci/features/remote-cache).
+- **Minimized redundant processing** – PRs in merge trains only reprocessed necessary parts, restoring everything else from the [Nx remote cache](/docs/features/ci-features/remote-cache).
 - **Drastic CI time reduction** – Pipelines that previously took **45 minutes** now averaged **6 minutes**, even as more projects were onboarded.
 - **Improved debugging capabilities** – Nx Cloud provides insights into task execution times and makes it easy to search logs of failed ones, making troubleshooting more efficient.
 
-Also having the **[Nx Console extension in their IDE](/getting-started/editor-setup)** was a big time saver when working with a large workspace with hundreds of projects. It allows you to explore the workspace in a more visual way and trigger tasks directly from within the IDE vs typing commands in the terminal.
+Also having the **[Nx Console extension in their IDE](/docs/getting-started/editor-setup)** was a big time saver when working with a large workspace with hundreds of projects. It allows you to explore the workspace in a more visual way and trigger tasks directly from within the IDE vs typing commands in the terminal.
 
 ## Results
 
