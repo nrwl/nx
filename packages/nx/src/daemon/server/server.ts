@@ -21,6 +21,11 @@ import {
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
+import {
+  hasRegisteredProjectGraphListenerSockets,
+  registeredProjectGraphListenerSockets,
+  removeRegisteredProjectGraphListenerSocket,
+} from './project-graph-listener-sockets';
 import { handleHashTasks } from './handle-hash-tasks';
 import {
   handleOutputsHashesMatch,
@@ -129,6 +134,10 @@ import {
   handleRunPostTasksExecution,
   handleRunPreTasksExecution,
 } from './handle-tasks-execution-hooks';
+import {
+  isRegisterProjectGraphListenerMessage,
+  REGISTER_PROJECT_GRAPH_LISTENER,
+} from '../message-types/register-project-graph-listener';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -180,6 +189,7 @@ const server = createServer(async (socket) => {
     );
 
     removeRegisteredFileWatcherSocket(socket);
+    removeRegisteredProjectGraphListenerSocket(socket);
   });
 });
 registerProcessTerminationListeners();
@@ -244,6 +254,8 @@ async function handleMessage(socket, data: string) {
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
+  } else if (isRegisterProjectGraphListenerMessage(payload)) {
+    registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {
     await handleResult(socket, GLOB, () =>
       handleGlob(payload.globs, payload.exclude)
@@ -352,9 +364,12 @@ export async function handleResult(
 }
 
 function handleInactivityTimeout() {
-  if (hasRegisteredFileWatcherSockets()) {
+  if (
+    hasRegisteredFileWatcherSockets() ||
+    hasRegisteredProjectGraphListenerSockets()
+  ) {
     serverLogger.log(
-      `There are open file watchers. Resetting inactivity timer.`
+      `There are open file watchers or project graph listeners. Resetting inactivity timer.`
     );
     resetInactivityTimeout(handleInactivityTimeout);
   } else {

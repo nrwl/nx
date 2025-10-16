@@ -251,7 +251,7 @@ describe('ReleaseGraph', () => {
             {
               version: {
                 conventionalCommits: true,
-                // updateDependents defaults to 'auto'
+                // updateDependents defaults to 'always'
               },
             },
             mockResolveCurrentVersion,

@@ -444,7 +444,16 @@ impl TasksList {
             if !self.has_active_tasks() {
                 return None;
             }
-            Some(self.max_parallel)
+
+            // Count in-progress tasks
+            let in_progress_count = self
+                .tasks
+                .iter()
+                .filter(|t| matches!(t.status, TaskStatus::InProgress))
+                .count();
+
+            // The separator is placed after max(in_progress_count, max_parallel) tasks
+            Some(std::cmp::max(in_progress_count, self.max_parallel))
         } else {
             // When filtering, calculate filtered InProgress count once and use for both checks
             let filtered_in_progress_count = self
@@ -2074,6 +2083,98 @@ mod tests {
         }
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_more_in_progress_tasks_than_parallel_limit() {
+        // Test case for bug: bottom corner └ is missing when there are more
+        // in-progress tasks than the parallel limit.
+        //
+        // Scenario: 4 tasks are InProgress, but parallel limit is 2
+        // Expected: Should show │ next to all 4 tasks, then └ separator
+        // Actual (bug): Shows │ next to all 4 tasks, but missing └ separator
+
+        let test_tasks = vec![
+            Task {
+                id: "task1".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "task2".to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "task3".to_string(),
+                target: TaskTarget {
+                    project: "app3".to_string(),
+                    target: "lint".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "task4".to_string(),
+                target: TaskTarget {
+                    project: "app4".to_string(),
+                    target: "deploy".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
+        let mut tasks_list = TasksList::new(
+            test_tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Test Tasks".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(80, 15);
+
+        // Set parallel limit to 2 (less than the 4 tasks we'll start)
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        // Start all 4 tasks - this exceeds the parallel limit
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::StartTasks(vec![task.clone()]))
+                .ok();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        // This snapshot will show the bug: bottom corner └ is missing after the 4 in-progress tasks
         insta::assert_snapshot!(terminal.backend());
     }
 

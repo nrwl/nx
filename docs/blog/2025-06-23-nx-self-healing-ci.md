@@ -6,7 +6,6 @@ tags: ['nx', 'nx-cloud', 'ai', 'ci']
 cover_image: /blog/images/articles/thumb-self-healing-ci.avif
 description: 'Introducing Nx Cloud Self-Healing CI: AI agents that automatically detect, analyze, and fix your CI failures so you do not have to babysit PRs.'
 youtubeUrl: https://youtu.be/JW5Ki3PkRWA
-pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter"  %}

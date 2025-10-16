@@ -1,12 +1,14 @@
 import {
   addDependenciesToPackageJson,
+  getDependencyVersionFromPackageJson,
+  readJson,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
-  getInstalledPackageVersion,
   versions,
 } from './version-utils';
 
@@ -15,9 +17,11 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
   const devDependencies: Record<string, string> = {};
   const pkgVersions = versions(tree);
 
-  const installedAngularCoreVersion = getInstalledPackageVersion(
+  const packageJson = readJson<PackageJson>(tree, 'package.json');
+  const installedAngularCoreVersion = getDependencyVersionFromPackageJson(
     tree,
-    '@angular/core'
+    '@angular/core',
+    packageJson
   );
   if (!installedAngularCoreVersion) {
     /**
@@ -28,11 +32,14 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
      */
     const angularVersion = pkgVersions.angularVersion;
     const rxjsVersion =
-      getInstalledPackageVersion(tree, 'rxjs') ?? pkgVersions.rxjsVersion;
+      getDependencyVersionFromPackageJson(tree, 'rxjs', packageJson) ??
+      pkgVersions.rxjsVersion;
     const tsLibVersion =
-      getInstalledPackageVersion(tree, 'tslib') ?? pkgVersions.tsLibVersion;
+      getDependencyVersionFromPackageJson(tree, 'tslib', packageJson) ??
+      pkgVersions.tsLibVersion;
     const zoneJsVersion =
-      getInstalledPackageVersion(tree, 'zone.js') ?? pkgVersions.zoneJsVersion;
+      getDependencyVersionFromPackageJson(tree, 'zone.js', packageJson) ??
+      pkgVersions.zoneJsVersion;
 
     dependencies['@angular/common'] = angularVersion;
     dependencies['@angular/compiler'] = angularVersion;

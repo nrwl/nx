@@ -358,18 +358,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         args.from ||
         (
           await getLatestGitTagForPattern(
-            nxReleaseConfig.releaseTagPattern,
+            nxReleaseConfig.releaseTag.pattern,
             {},
             {
               checkAllBranchesWhen:
-                nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+                nxReleaseConfig.releaseTag.checkAllBranchesWhen,
               preid:
                 workspacePreid ??
                 projectsPreid?.[Object.keys(projectsPreid)[0]],
-              releaseTagPatternRequireSemver:
-                nxReleaseConfig.releaseTagPatternRequireSemver,
-              releaseTagPatternStrictPreid:
-                nxReleaseConfig.releaseTagPatternStrictPreid,
+              requireSemver: nxReleaseConfig.releaseTag.requireSemver,
+              strictPreid: nxReleaseConfig.releaseTag.strictPreid,
             }
           )
         )?.tag;
@@ -383,7 +381,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           }
         } else {
           throw new Error(
-            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
           );
         }
       }
@@ -541,19 +539,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               args.from ||
               (
                 await getLatestGitTagForPattern(
-                  releaseGroup.releaseTagPattern,
+                  releaseGroup.releaseTag.pattern,
                   {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
                   {
                     checkAllBranchesWhen:
-                      releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                      releaseGroup.releaseTag.checkAllBranchesWhen,
                     preid: projectsPreid[project.name],
-                    releaseTagPatternRequireSemver:
-                      releaseGroup.releaseTagPatternRequireSemver,
-                    releaseTagPatternStrictPreid:
-                      releaseGroup.releaseTagPatternStrictPreid,
+                    requireSemver: releaseGroup.releaseTag.requireSemver,
+                    strictPreid: releaseGroup.releaseTag.strictPreid,
                   }
                 )
               )?.tag;
@@ -577,7 +573,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
             if (!fromRef && !commits) {
               throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+                `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
 
@@ -690,18 +686,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             args.from ||
             (
               await getLatestGitTagForPattern(
-                releaseGroup.releaseTagPattern,
+                releaseGroup.releaseTag.pattern,
                 {},
                 {
                   checkAllBranchesWhen:
-                    releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    releaseGroup.releaseTag.checkAllBranchesWhen,
                   preid:
                     workspacePreid ??
                     projectsPreid?.[Object.keys(projectsPreid)[0]],
-                  releaseTagPatternRequireSemver:
-                    releaseGroup.releaseTagPatternRequireSemver,
-                  releaseTagPatternStrictPreid:
-                    releaseGroup.releaseTagPatternStrictPreid,
+                  requireSemver: releaseGroup.releaseTag.requireSemver,
+                  strictPreid: releaseGroup.releaseTag.strictPreid,
                 }
               )
             )?.tag;
@@ -715,7 +709,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               }
             } else {
               throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+                `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
           }
@@ -829,7 +823,7 @@ function resolveChangelogVersions(
          */
         if (!args.versionData[projectName]) {
           throw new Error(
-            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations.`
+            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations. Please ensure that you have used the same "group" or "project" filter between commands.`
           );
         }
       }
@@ -1096,7 +1090,7 @@ async function generateChangelogForWorkspace({
 
   const releaseVersion = new ReleaseVersion({
     version: workspaceChangelogVersion,
-    releaseTagPattern: nxReleaseConfig.releaseTagPattern,
+    releaseTagPattern: nxReleaseConfig.releaseTag.pattern,
   });
 
   if (interpolatedTreePath) {
@@ -1262,7 +1256,7 @@ async function generateChangelogForProjects({
         projectsVersionData[project.name].dockerVersion
           ? projectsVersionData[project.name].dockerVersion
           : projectsVersionData[project.name].newVersion,
-      releaseTagPattern: releaseGroup.releaseTagPattern,
+      releaseTagPattern: releaseGroup.releaseTag.pattern,
       projectName: project.name,
     });
 
