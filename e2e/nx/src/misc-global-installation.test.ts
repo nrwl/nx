@@ -52,7 +52,7 @@ describe('global installation', () => {
 
   describe('inside nx directory', () => {
     beforeAll(() => {
-      newProject({ packages: [] });
+      newProject();
     });
 
     it('should invoke Nx commands from local repo', () => {

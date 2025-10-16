@@ -16,7 +16,7 @@ import {
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
   beforeEach(() => {
-    newProject({ packages: [] });
+    newProject();
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
