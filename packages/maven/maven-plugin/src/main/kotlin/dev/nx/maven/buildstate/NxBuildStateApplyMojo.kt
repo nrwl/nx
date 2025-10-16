@@ -61,7 +61,20 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     }
 
     private fun applyAllBuildStates() {
-        val projectsToApply = session.allProjects.mapNotNull { depProject ->
+        // Only check upstream projects (dependencies) instead of all projects in the monorepo
+        val dependencyGraph = session.projectDependencyGraph
+        val upstreamProjects = if (dependencyGraph != null) {
+            dependencyGraph.getUpstreamProjects(project, true) // transitive=true
+        } else {
+            emptyList()
+        }
+
+        // Include the current project as well
+        val relevantProjects = upstreamProjects + project
+
+        log.info("Checking ${relevantProjects.size} dependency projects for build state (out of ${session.allProjects.size} total projects)")
+
+        val projectsToApply = relevantProjects.mapNotNull { depProject ->
             val stateFile = File(depProject.build.directory, "nx-build-state.json")
             if (stateFile.exists()) depProject to stateFile else null
         }
@@ -76,6 +89,8 @@ class NxBuildStateApplyMojo : AbstractMojo() {
                     log.warn("Failed to apply build state to ${depProject.artifactId}: ${e.message}")
                 }
             }
+        } else {
+            log.info("No build state files found in dependency projects")
         }
     }
 
