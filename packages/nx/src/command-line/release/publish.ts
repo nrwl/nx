@@ -42,9 +42,10 @@ export interface PublishProjectsResult {
 
 export const releasePublishCLIHandler = (args: PublishOptions) =>
   handleErrors(args.verbose, async () => {
-    const publishProjectsResult: PublishProjectsResult = await createAPI({})(
-      args
-    );
+    const publishProjectsResult: PublishProjectsResult = await createAPI(
+      {},
+      false
+    )(args);
     // If all projects are published successfully, return 0, otherwise return 1
     return Object.values(publishProjectsResult).every(
       (result) => result.code === 0
@@ -53,7 +54,10 @@ export const releasePublishCLIHandler = (args: PublishOptions) =>
       : 1;
   });
 
-export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
+export function createAPI(
+  overrideReleaseConfig: NxReleaseConfiguration,
+  ignoreNxJsonConfig: boolean
+) {
   /**
    * NOTE: This function is also exported for programmatic usage and forms part of the public API
    * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
@@ -73,10 +77,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
     const nxJson = readNxJson();
-    const userProvidedReleaseConfig = deepMergeJson(
-      nxJson.release ?? {},
-      overrideReleaseConfig ?? {}
-    );
+    const overriddenConfig = overrideReleaseConfig ?? {};
+    const userProvidedReleaseConfig = ignoreNxJsonConfig
+      ? overriddenConfig
+      : deepMergeJson(nxJson.release ?? {}, overriddenConfig);
 
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
