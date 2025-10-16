@@ -5,7 +5,7 @@
 
   <groupId>dev.nx</groupId>
   <artifactId>nx-parent</artifactId>
-  <version>0.0.6-SNAPSHOT</version>
+  <version>0.0.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Nx Parent</name>

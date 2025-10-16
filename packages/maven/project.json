@@ -13,7 +13,15 @@
     },
     "build": {
       "command": "node ./scripts/copy-readme.js maven packages/maven/README.md__tpl__ packages/maven/README.md",
-      "outputs": ["{projectRoot}/README.md"]
+      "outputs": ["{projectRoot}/README.md"],
+      "dependsOn": [
+        "^build",
+        "typecheck",
+        "legacy-post-build",
+        "build-base",
+        "build-native",
+        "maven-batch-runner:package"
+      ]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -42,6 +50,12 @@
             "input": "packages/maven",
             "glob": "@(generators|executors).json",
             "output": "/"
+          },
+          {
+            "input": "packages/maven/batch-runner/target",
+            "glob": "batch-runner.jar",
+            "output": "/",
+            "includeIgnoredFiles": true
           }
         ]
       }
@@ -54,5 +68,5 @@
     }
   },
   "tags": [],
-  "implicitDependencies": ["nx-maven-plugin"]
+  "implicitDependencies": ["nx-maven-plugin", "maven-batch-runner"]
 }
