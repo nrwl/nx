@@ -22,7 +22,7 @@ export const metadata: Metadata = {
       'Add Nx to your Java project for distributed task execution, intelligent caching, and affected commands.',
     images: [
       {
-        url: 'https://nx.dev/socials/nx-gradle-media.png',
+        url: 'https://nx.dev/socials/nx-java-media.png',
         width: 800,
         height: 421,
         alt: 'Nx For Java',
