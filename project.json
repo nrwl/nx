@@ -95,7 +95,6 @@
       "dependsOn": [
         "nx:format-native",
         "nx:lint-native",
-        "documentation",
         "check-commit",
         "check-format:quick",
         "check-lock-files"

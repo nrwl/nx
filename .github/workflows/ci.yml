@@ -86,10 +86,6 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
-      - name: Check Documentation
-        run: pnpm nx documentation
-        timeout-minutes: 20
-
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()

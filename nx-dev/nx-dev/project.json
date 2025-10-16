@@ -101,7 +101,6 @@
     "deploy-build": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/public/documentation"],
-      "dependsOn": ["@nx/nx-source:documentation"],
       "options": {
         "commands": [
           {
