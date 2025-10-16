@@ -8,16 +8,14 @@ import {
   uniq,
   updateFile,
   removeFile,
+  newProject,
+  cleanupProject,
 } from '@nx/e2e-utils';
 import { join } from 'path';
-import {
-  setupAffectedGraphTest,
-  cleanupAffectedGraphTest,
-} from './affected-graph-setup';
 
 describe('Nx Affected and Graph Tests', () => {
-  beforeAll(() => setupAffectedGraphTest());
-  afterAll(() => cleanupAffectedGraphTest());
+  beforeAll(() => newProject());
+  afterAll(() => cleanupProject());
 
   describe('affected (with git)', () => {
     let myapp;
@@ -31,9 +29,6 @@ describe('Nx Affected and Graph Tests', () => {
       const nxJson: NxJsonConfiguration = readJson('nx.json');
 
       updateFile('nx.json', JSON.stringify(nxJson));
-      // clean up any projects from previous tests
-      runCommand(`rm -rf apps libs`);
-      runCommand(`mkdir -p apps libs`);
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);
       runCommand(`git config user.name "Test"`);
