@@ -1,5 +1,4 @@
 import {
-  ensurePackage,
   generateFiles,
   joinPathFragments,
   offsetFromRoot,
@@ -9,7 +8,7 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 import type { StorybookConfigurationSchema } from './schema';
-import { nxVersion } from '../../utils/versions';
+import { storybookConfigurationGenerator } from '@nx/react';
 
 export function remixStorybookConfiguration(
   tree: Tree,
@@ -49,9 +48,6 @@ export default async function remixStorybookConfigurationInternal(
     generateFiles(tree, join(__dirname, 'files'), root, { cacheDir, tpl: '' });
   }
 
-  const { storybookConfigurationGenerator } = ensurePackage<
-    typeof import('@nx/react')
-  >('@nx/react', nxVersion);
   const task = await storybookConfigurationGenerator(tree, schema);
 
   return task;

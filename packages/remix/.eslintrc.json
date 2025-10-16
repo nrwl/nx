@@ -51,7 +51,6 @@
               "@nx/cypress",
               "@nx/playwright",
               "@nx/jest",
-              "@nx/react",
               "@nx/rollup",
               "@nx/storybook",
               "@nx/vite",

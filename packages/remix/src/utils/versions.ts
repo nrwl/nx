@@ -26,13 +26,6 @@ export function getRemixVersion(tree: Tree): string {
 
 export function getPackageVersion(tree: Tree, packageName: string) {
   const packageJsonContents = readJson(tree, 'package.json');
-  return getPackageVersion(tree, '@remix-run/dev') ?? remixVersion;
-    packageJsonContents?.['devDependencies']?.[packageName] ??
-    packageJsonContents?.['dependencies']?.[packageName] ??
-    null
-
-export function getPackageVersion(tree: Tree, packageName: string) {
-  const packageJsonContents = readJson(tree, 'package.json');
   return (
     packageJsonContents?.['devDependencies']?.[packageName] ??
     packageJsonContents?.['dependencies']?.[packageName] ??
