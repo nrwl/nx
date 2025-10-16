@@ -1,9 +1,5 @@
 import { LinkIcon, TagIcon } from '@heroicons/react/24/outline';
-import {
-  Breadcrumbs,
-  Header,
-  Footer,
-} from '@nx/nx-dev-ui-common';
+import { Breadcrumbs, Header, Footer } from '@nx/nx-dev-ui-common';
 import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { NextSeo } from 'next-seo';
