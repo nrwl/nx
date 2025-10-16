@@ -31,15 +31,14 @@ describe('Nx Affected and Graph Tests', () => {
       const nxJson: NxJsonConfiguration = readJson('nx.json');
 
       updateFile('nx.json', JSON.stringify(nxJson));
+      runCommand(`rm -rf .git`);
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);
       runCommand(`git config user.name "Test"`);
       runCommand(`git config commit.gpgsign false`);
-      try {
-        runCommand(
-          `git add . && git commit -am "initial commit" && git checkout -b main`
-        );
-      } catch (e) {}
+      runCommand(
+        `git add . && git commit -am "initial commit" && git checkout -b main`
+      );
     });
 
     function generateAll() {
