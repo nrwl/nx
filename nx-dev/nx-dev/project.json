@@ -44,7 +44,6 @@
     "build-base": {
       "parallelism": false,
       "executor": "@nx/next:build",
-      "dependsOn": ["copy-docs"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -57,31 +56,12 @@
         "production": {}
       }
     },
-    "copy-docs": {
-      "inputs": ["{workspaceRoot}/docs/**/*"],
-      "outputs": ["{projectRoot}/public/documentation"],
-      "command": "node ./copy-docs.js",
-      "options": {
-        "cwd": "nx-dev/nx-dev"
-      }
-    },
-    "serve-docs": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx watch --projects=docs -- nx run-many -t=copy-docs -p nx-dev",
-          "nx run nx-dev:serve"
-        ],
-        "parallel": true
-      }
-    },
     "start": {
       "dependsOn": ["build-base"],
       "command": "nx run nx-dev:serve:production"
     },
     "serve": {
       "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true
@@ -108,10 +88,6 @@
             "description": "OG images generation"
           },
           {
-            "command": "nx copy-docs nx-dev",
-            "description": "Copy generated docs to build output"
-          },
-          {
             "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
             "description": "Fetch plugin data"
           },
@@ -125,6 +101,5 @@
       }
     }
   },
-  "tags": ["scope:nx-dev", "type:app"],
-  "implicitDependencies": ["docs"]
+  "tags": ["scope:nx-dev", "type:app"]
 }

@@ -1,10 +1,8 @@
 import { LinkIcon, TagIcon } from '@heroicons/react/24/outline';
 import {
   Breadcrumbs,
-  DocumentationHeader,
   Header,
   Footer,
-  SidebarContainer,
 } from '@nx/nx-dev-ui-common';
 import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { cx } from '@nx/nx-dev-ui-primitives';
@@ -13,10 +11,6 @@ import { useRouter } from 'next/router';
 import { Octokit } from 'octokit';
 import { compare, parse } from 'semver';
 import { changeLogApi } from '../lib/changelog.api';
-import { useNavToggle } from '../lib/navigation-toggle.effect';
-import { menusApi } from '../lib/menus.api';
-import { MenuItem } from '@nx/nx-dev-models-menu';
-import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
 import Link from 'next/link';
 
 interface ChangelogEntry {
@@ -30,7 +24,6 @@ interface ChangelogEntry {
 
 interface ChangeLogProps {
   changelog: ChangelogEntry[];
-  menu: MenuItem[];
 }
 
 interface GithubReleaseData {
@@ -178,7 +171,6 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   return {
     props: {
       changelog: groupedReleases,
-      menu: menusApi.getMenu('nx', ''),
     },
   };
 }
@@ -204,11 +196,6 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
   });
   const convertToDate = (invalidDate) =>
     new Date(invalidDate.replace(/(nd|th|rd|st)/g, ''));
-  const { toggleNav, navIsOpen } = useNavToggle();
-
-  const menu = {
-    sections: [getBasicNxSection(props.menu)],
-  };
 
   return (
     <>
@@ -240,13 +227,6 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
         <div className="mx-auto flex max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6">
             <Breadcrumbs path={router.asPath} />
-          </div>
-          <div className="hidden">
-            <SidebarContainer
-              menu={menu}
-              toggleNav={toggleNav}
-              navIsOpen={navIsOpen}
-            />
           </div>
           <header className="mt-0">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl dark:text-slate-100">
