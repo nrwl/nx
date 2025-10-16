@@ -51,7 +51,6 @@ export async function createMavenProject(
   addProjectJsonNamePrefix: string = ''
 ) {
   e2eConsoleLogger(`Using java version: ${execSync('java -version 2>&1')}`);
-  e2eConsoleLogger(`Using maven version: ${execSync('mvn --version')}`);
 
   e2eConsoleLogger(
     'Creating multi-module Maven project using Spring Initializr...'
