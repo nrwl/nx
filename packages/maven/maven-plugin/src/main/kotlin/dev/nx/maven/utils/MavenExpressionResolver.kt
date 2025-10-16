@@ -15,6 +15,16 @@ class MavenExpressionResolver(
     private val log: Logger = LoggerFactory.getLogger(MavenExpressionResolver::class.java)
 
     fun resolveParameter(parameter: Parameter, project: MavenProject): List<String> {
+        // For compileSourceRoots and testCompileSourceRoots, always use collection handling
+        // to include ALL source roots (including generated sources)
+        if (parameter.name in setOf("compileSourceRoots", "testCompileSourceRoots")) {
+            return when (parameter.name) {
+                "compileSourceRoots" -> project.compileSourceRoots ?: emptyList()
+                "testCompileSourceRoots" -> project.testCompileSourceRoots ?: emptyList()
+                else -> emptyList()
+            }
+        }
+
         return when (parameter.type) {
             "java.io.File" -> listOfNotNull(
                 resolveStringParameterValue(
@@ -82,8 +92,6 @@ class MavenExpressionResolver(
         // Try known parameter mappings based on what Maven actually provides
         val result = when (parameter.name) {
             // These map directly to Maven project model
-            "compileSourceRoots" -> project.compileSourceRoots.firstOrNull()
-            "testCompileSourceRoots" -> project.testCompileSourceRoots.firstOrNull()
             "sourceDirectory" -> project.build.sourceDirectory
             "testSourceDirectory" -> project.build.testSourceDirectory
             "outputDirectory" -> project.build.outputDirectory
