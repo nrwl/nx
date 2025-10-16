@@ -248,6 +248,10 @@ function processConvertedConfig(
     eslint: eslint9__eslintVersion,
     'eslint-config-prettier': eslintConfigPrettierVersion,
     'typescript-eslint': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/eslint-plugin': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/parser': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/utils': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/type-utils': eslint9__typescriptESLintVersion,
   };
 
   // add missing packages
@@ -260,10 +264,4 @@ function processConvertedConfig(
   }
 
   addDependenciesToPackageJson(tree, {}, devDependencies);
-
-  removeDependenciesFromPackageJson(
-    tree,
-    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser'],
-    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser']
-  );
 }
