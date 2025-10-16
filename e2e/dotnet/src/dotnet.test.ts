@@ -169,9 +169,11 @@ describe('.NET Plugin', () => {
 
     it('should create NuGet packages for libraries', () => {
       const output = runCLI('pack core', { verbose: true });
-      expect(output).toContain('Successfully created package');
-      // Note: The .nupkg file location varies by dotnet version
-      // Just verify the command succeeded
+
+      checkFilesMatchingPatternExist(
+        '.*/Core.*.nupkg',
+        tmpProjPath('Core/bin')
+      );
     });
   });
 

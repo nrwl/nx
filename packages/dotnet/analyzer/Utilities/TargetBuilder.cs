@@ -22,6 +22,7 @@ public static class TargetBuilder
         var targets = new Dictionary<string, Target>();
 
         AddBuildTarget(targets, projectName, fileName, isTest, properties, workspaceRoot);
+        AddBuildReleaseTarget(targets, projectName, fileName, isTest, properties, workspaceRoot);
 
         if (isTest)
         {
@@ -89,48 +90,40 @@ public static class TargetBuilder
         return MakeRelativeToWorkspace(artifactsPath, workspaceRoot);
     }
 
+
     /// <summary>
-    /// Gets the pivot string that distinguishes different builds.
-    /// The pivot combines configuration, target framework, and runtime identifier.
-    /// Format: {config}[_{tfm}][_{rid}] or uses custom ArtifactsPivots if specified.
+    /// Strips common configuration names from the end of a path segment.
+    /// Handles Debug/Release as magic strings for configuration-agnostic caching.
     /// </summary>
-    private static string GetArtifactsPivot(Dictionary<string, string> properties)
+    private static string StripConfiguration(string path)
     {
-        // If custom pivots are specified, use them
-        var customPivots = properties.GetValueOrDefault("ArtifactsPivots");
-        if (!string.IsNullOrEmpty(customPivots))
+        if (string.IsNullOrEmpty(path))
         {
-            return customPivots;
+            return path;
         }
 
-        // Build default pivot from config, tfm, and rid
-        var parts = new List<string>();
+        // Normalize path separators
+        var normalizedPath = path.Replace('\\', '/').TrimEnd('/');
+        var segments = normalizedPath.Split('/');
 
-        var config = properties.GetValueOrDefault("Configuration");
-        if (!string.IsNullOrEmpty(config))
+        // Check if the last segment is a configuration name
+        if (segments.Length > 0)
         {
-            parts.Add(config.ToLowerInvariant());
+            var lastSegment = segments[^1];
+            if (lastSegment.Equals("Debug", StringComparison.OrdinalIgnoreCase) ||
+                lastSegment.Equals("Release", StringComparison.OrdinalIgnoreCase))
+            {
+                // Remove the configuration segment
+                return string.Join("/", segments[..^1]);
+            }
         }
 
-        var tfm = properties.GetValueOrDefault("TargetFramework");
-        if (!string.IsNullOrEmpty(tfm))
-        {
-            parts.Add(tfm.ToLowerInvariant());
-        }
-
-        var rid = properties.GetValueOrDefault("RuntimeIdentifier");
-        if (!string.IsNullOrEmpty(rid))
-        {
-            parts.Add(rid.ToLowerInvariant());
-        }
-
-        // Default to "debug" if no parts
-        return parts.Count > 0 ? string.Join("_", parts) : "debug";
+        return normalizedPath;
     }
 
     /// <summary>
     /// Gets the output directory path for build outputs.
-    /// Handles both traditional (bin/) and artifacts (artifacts/bin/{ProjectName}/{pivot}/) layouts.
+    /// Handles both traditional (bin/) and artifacts (artifacts/bin/{ProjectName}/) layouts.
     /// </summary>
     private static string GetOutputPath(Dictionary<string, string> properties, string projectName, string workspaceRoot)
     {
@@ -138,17 +131,24 @@ public static class TargetBuilder
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            var pivot = GetArtifactsPivot(properties);
-            // Artifacts layout: artifacts/bin/{ProjectName}/{pivot}/
-            return $"{artifactsPath}/bin/{projectName}/{pivot}";
+            // Artifacts layout: artifacts/bin/{ProjectName}/
+            return $"{artifactsPath}/bin/{projectName}";
         }
 
-        // Traditional layout: OutputPath is the evaluated output directory
+        // Traditional layout: Prefer BaseOutputPath if available
+        var baseOutputPath = properties.GetValueOrDefault("BaseOutputPath");
+        if (!string.IsNullOrEmpty(baseOutputPath))
+        {
+            return MakeRelativeToWorkspace(baseOutputPath, workspaceRoot).TrimEnd('/');
+        }
+
+        // Otherwise use OutputPath and strip configuration if present
         var outputPath = properties.GetValueOrDefault("OutputPath")
             ?? properties.GetValueOrDefault("OutDir")
             ?? "bin";
-        // Make it relative to the workspace root (though it's typically already relative to project root)
-        return MakeRelativeToWorkspace(outputPath, workspaceRoot);
+
+        var relativePath = MakeRelativeToWorkspace(outputPath, workspaceRoot);
+        return StripConfiguration(relativePath);
     }
 
     /// <summary>
@@ -161,16 +161,22 @@ public static class TargetBuilder
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            var pivot = GetArtifactsPivot(properties);
-            // Artifacts layout: artifacts/obj/{ProjectName}/{pivot}/
-            return $"{artifactsPath}/obj/{projectName}/{pivot}";
+            // Artifacts layout: artifacts/obj/{ProjectName}/
+            return $"{artifactsPath}/obj/{projectName}";
         }
 
-        // Traditional layout: IntermediateOutputPath is the full path
-        var intermediatePath = properties.GetValueOrDefault("IntermediateOutputPath")
-            ?? properties.GetValueOrDefault("BaseIntermediateOutputPath")
-            ?? "obj";
-        return MakeRelativeToWorkspace(intermediatePath, workspaceRoot);
+        // Traditional layout: Prefer BaseIntermediateOutputPath if available
+        var baseIntermediatePath = properties.GetValueOrDefault("BaseIntermediateOutputPath");
+        if (!string.IsNullOrEmpty(baseIntermediatePath))
+        {
+            return MakeRelativeToWorkspace(baseIntermediatePath, workspaceRoot).TrimEnd('/');
+        }
+
+        // Otherwise use IntermediateOutputPath and strip configuration if present
+        var intermediatePath = properties.GetValueOrDefault("IntermediateOutputPath") ?? "obj";
+
+        var relativePath = MakeRelativeToWorkspace(intermediatePath, workspaceRoot);
+        return StripConfiguration(relativePath);
     }
 
     /// <summary>
@@ -183,9 +189,8 @@ public static class TargetBuilder
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            var pivot = GetArtifactsPivot(properties);
-            // Artifacts layout: artifacts/publish/{ProjectName}/{pivot}/
-            return $"{artifactsPath}/publish/{projectName}/{pivot}";
+            // Artifacts layout: artifacts/publish/{ProjectName}/
+            return $"{artifactsPath}/publish/{projectName}";
         }
 
         // Traditional layout: PublishDir can be customized
@@ -209,9 +214,8 @@ public static class TargetBuilder
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            var pivot = GetArtifactsPivot(properties);
-            // Artifacts layout: artifacts/package/{pivot}/
-            return $"{artifactsPath}/package/{pivot}";
+            // Artifacts layout: artifacts/package/
+            return $"{artifactsPath}/package";
         }
 
         // Traditional layout: PackageOutputPath is where .nupkg files go
@@ -234,9 +238,8 @@ public static class TargetBuilder
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            var pivot = GetArtifactsPivot(properties);
-            // Artifacts layout: artifacts/TestResults/{ProjectName}/{pivot}/
-            return $"{artifactsPath}/TestResults/{projectName}/{pivot}";
+            // Artifacts layout: artifacts/TestResults/{ProjectName}/
+            return $"{artifactsPath}/TestResults/{projectName}";
         }
 
         // Traditional layout: TestResultsDirectory can be customized
@@ -259,7 +262,7 @@ public static class TargetBuilder
     {
         var outputPath = GetOutputPath(properties, projectName, workspaceRoot);
         var intermediatePath = GetIntermediateOutputPath(properties, projectName, workspaceRoot);
-        var defaultConfiguration = properties.GetValueOrDefault("Configuration") ?? "Debug";
+        string[] defaultFlags = ["--no-restore", "--no-dependencies"];
 
         // For artifacts output, paths are relative to workspace root
         // For traditional output, paths are relative to project root
@@ -272,37 +275,83 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-restore", "--no-dependencies", "--configuration", defaultConfiguration }
+                Args = defaultFlags
             },
             Configurations = new Dictionary<string, TargetConfiguration>
             {
-                ["Debug"] = new TargetConfiguration
+                ["debug"] = new TargetConfiguration
                 {
-                    Options = new TargetOptions
-                    {
-                        Args = new[] { "--configuration", "Debug" }
-                    }
+                    Args = [.. defaultFlags, "--configuration", "Debug"]
                 },
-                ["Release"] = new TargetConfiguration
+                ["release"] = new TargetConfiguration
                 {
-                    Options = new TargetOptions
-                    {
-                        Args = new[] { "--configuration", "Release" }
-                    }
+                    Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DefaultConfiguration = defaultConfiguration,
-            DependsOn = new[] { "restore", "^build" },
+            DependsOn = ["restore", "^build"],
             Cache = true,
-            Inputs = new object[] { "default", "^production" },
-            Outputs = new[]
-            {
+            Inputs = ["default", "^production"],
+            Outputs =
+            [
                 $"{outputPrefix}/{outputPath}",
                 $"{outputPrefix}/{intermediatePath}"
-            },
+            ],
             Metadata = new TargetMetadata
             {
                 Description = "Build the .NET project",
+                Technologies = ProjectUtilities.GetTechnologies(fileName, isTest)
+            }
+        };
+    }
+
+    private static void AddBuildReleaseTarget(
+        Dictionary<string, Target> targets,
+        string projectName,
+        string fileName,
+        bool isTest,
+        Dictionary<string, string> properties,
+        string workspaceRoot)
+    {
+        var outputPath = GetOutputPath(properties, projectName, workspaceRoot);
+        var intermediatePath = GetIntermediateOutputPath(properties, projectName, workspaceRoot);
+
+        string[] defaultFlags = ["--no-restore", "--no-dependencies"];
+
+        // For artifacts output, paths are relative to workspace root
+        // For traditional output, paths are relative to project root
+        var useWorkspaceRoot = UsesArtifactsOutput(properties);
+        var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
+
+        targets["build:release"] = new Target
+        {
+            Command = "dotnet build",
+            Options = new TargetOptions
+            {
+                Cwd = "{projectRoot}",
+                Args = [.. defaultFlags, "--configuration", "Release"]
+            },
+            Configurations = new Dictionary<string, TargetConfiguration>
+            {
+                ["debug"] = new TargetConfiguration
+                {
+                    Args = [.. defaultFlags, "--configuration", "Debug"]
+                },
+                ["release"] = new TargetConfiguration
+                {
+                    Args = [.. defaultFlags, "--configuration", "Release"]
+                }
+            },
+            DependsOn = ["restore", "^build:release"],
+            Cache = true,
+            Inputs = ["default", "^production"],
+            Outputs =
+            [
+                $"{outputPrefix}/{outputPath}",
+                $"{outputPrefix}/{intermediatePath}"
+            ],
+            Metadata = new TargetMetadata
+            {
+                Description = "Build the .NET project in Release configuration",
                 Technologies = ProjectUtilities.GetTechnologies(fileName, isTest)
             }
         };
@@ -316,11 +365,16 @@ public static class TargetBuilder
         Dictionary<string, string> properties,
         string workspaceRoot)
     {
-        var externalDeps = packageRefs.Select(p => p.Include).ToArray();
+        // TODO(@AgentEnder): We should add this back in after external deps
+        // support is fleshed out.
+        //
+        // var externalDeps = packageRefs.Select(p => p.Include).ToArray();
         var testResultsDir = GetTestResultsDirectory(properties, projectName, workspaceRoot);
 
         var useWorkspaceRoot = UsesArtifactsOutput(properties);
         var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
+
+        string[] defaultFlags = ["--no-build", "--no-restore"];
 
         targets["test"] = new Target
         {
@@ -328,17 +382,17 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-dependencies", "--no-build" }
+                Args = [.. defaultFlags]
             },
-            DependsOn = new[] { "build" },
+            DependsOn = ["build", "restore"],
             Cache = true,
-            Inputs = new object[]
-            {
+            Inputs =
+            [
                 "default",
                 "^production",
-                new { externalDependencies = externalDeps }
-            },
-            Outputs = new[] { $"{outputPrefix}/{testResultsDir}" },
+                // new { externalDependencies = externalDeps }
+            ],
+            Outputs = [$"{outputPrefix}/{testResultsDir}"],
             Metadata = new TargetMetadata
             {
                 Description = "Run .NET tests",
@@ -366,17 +420,17 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-dependencies" }
+                Args = ["--no-dependencies"]
             },
-            DependsOn = new[] { "^restore" },
+            DependsOn = ["^restore"],
             Cache = true,
-            Inputs = new object[]
-            {
+            Inputs =
+            [
                 "{projectRoot}/*.csproj",
                 "{projectRoot}/*.fsproj",
                 "{projectRoot}/*.vbproj"
-            },
-            Outputs = new[] { $"{outputPrefix}/{intermediatePath}" },
+            ],
+            Outputs = [$"{outputPrefix}/{intermediatePath}"],
             Metadata = new TargetMetadata
             {
                 Description = "Restore .NET project dependencies",
@@ -411,11 +465,18 @@ public static class TargetBuilder
         Dictionary<string, string> properties,
         string workspaceRoot)
     {
-        var publishDir = GetPublishDir(properties, projectName, workspaceRoot);
-        var defaultConfiguration = properties.GetValueOrDefault("Configuration") ?? "Debug";
+        // Create a copy of properties with Configuration=Release
+        var releaseProperties = new Dictionary<string, string>(properties)
+        {
+            ["Configuration"] = "Release"
+        };
+
+        var publishDir = GetPublishDir(releaseProperties, projectName, workspaceRoot);
 
         var useWorkspaceRoot = UsesArtifactsOutput(properties);
         var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
+
+        string[] defaultFlags = ["--no-build", "--no-dependencies", "--no-restore"];
 
         targets["publish"] = new Target
         {
@@ -423,30 +484,23 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-build", "--no-dependencies", "--configuration", defaultConfiguration }
+                Args = [.. defaultFlags, "--configuration", "Release"]
             },
             Configurations = new Dictionary<string, TargetConfiguration>
             {
-                ["Debug"] = new TargetConfiguration
+                ["debug"] = new TargetConfiguration
                 {
-                    Options = new TargetOptions
-                    {
-                        Args = new[] { "--configuration", "Debug" }
-                    }
+                    Args = [.. defaultFlags, "--configuration", "Debug"]
                 },
-                ["Release"] = new TargetConfiguration
+                ["release"] = new TargetConfiguration
                 {
-                    Options = new TargetOptions
-                    {
-                        Args = new[] { "--configuration", "Release" }
-                    }
+                    Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DefaultConfiguration = defaultConfiguration,
-            DependsOn = new[] { "build" },
+            DependsOn = ["build:release"],
             Cache = true,
-            Inputs = new object[] { "default", "^production" },
-            Outputs = new[] { $"{outputPrefix}/{publishDir}" },
+            Inputs = ["default", "^production"],
+            Outputs = [$"{outputPrefix}/{publishDir}"],
             Metadata = new TargetMetadata
             {
                 Description = "Publish the .NET application",
@@ -462,8 +516,13 @@ public static class TargetBuilder
         Dictionary<string, string> properties,
         string workspaceRoot)
     {
-        var packageOutputPath = GetPackageOutputPath(properties, projectName, workspaceRoot);
-        var defaultConfiguration = properties.GetValueOrDefault("Configuration") ?? "Debug";
+        // Create a copy of properties with Configuration=Release
+        var releaseProperties = new Dictionary<string, string>(properties)
+        {
+            ["Configuration"] = "Release"
+        };
+
+        var packageOutputPath = GetPackageOutputPath(releaseProperties, projectName, workspaceRoot);
 
         var useWorkspaceRoot = UsesArtifactsOutput(properties);
         var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
@@ -474,30 +533,23 @@ public static class TargetBuilder
             Options = new TargetOptions
             {
                 Cwd = "{projectRoot}",
-                Args = new[] { "--no-dependencies", "--no-build", "--configuration", defaultConfiguration }
+                Args = ["--no-dependencies", "--no-build", "--configuration", "Release"]
             },
             Configurations = new Dictionary<string, TargetConfiguration>
             {
-                ["Debug"] = new TargetConfiguration
+                ["debug"] = new TargetConfiguration
                 {
-                    Options = new TargetOptions
-                    {
-                        Args = new[] { "--configuration", "Debug" }
-                    }
+                    Args = ["--no-dependencies", "--no-build", "--configuration", "Debug"]
                 },
-                ["Release"] = new TargetConfiguration
+                ["release"] = new TargetConfiguration
                 {
-                    Options = new TargetOptions
-                    {
-                        Args = new[] { "--configuration", "Release" }
-                    }
+                    Args = ["--no-dependencies", "--no-build", "--configuration", "Release"]
                 }
             },
-            DefaultConfiguration = defaultConfiguration,
-            DependsOn = new[] { "build" },
+            DependsOn = ["build:release"],
             Cache = true,
-            Inputs = new object[] { "default", "^production" },
-            Outputs = new[] { $"{outputPrefix}/{packageOutputPath}/*.nupkg" },
+            Inputs = ["default", "^production"],
+            Outputs = [$"{outputPrefix}/{packageOutputPath}/*.nupkg"],
             Metadata = new TargetMetadata
             {
                 Description = "Create NuGet package",

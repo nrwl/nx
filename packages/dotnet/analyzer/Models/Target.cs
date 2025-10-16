@@ -21,11 +21,6 @@ public record Target
     public Dictionary<string, TargetConfiguration>? Configurations { get; init; }
 
     /// <summary>
-    /// The default configuration to use when none is specified.
-    /// </summary>
-    public string? DefaultConfiguration { get; init; }
-
-    /// <summary>
     /// Other targets this target depends on.
     /// </summary>
     public string[]? DependsOn { get; init; }
