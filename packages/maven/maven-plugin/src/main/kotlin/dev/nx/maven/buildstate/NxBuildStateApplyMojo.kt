@@ -104,11 +104,15 @@ class NxBuildStateApplyMojo : AbstractMojo() {
             buildState.testClasspath.forEach { targetProject.testClasspathElements.add(it) }
         }
 
-        // Apply main artifact
+        // Apply main artifact (only if file exists)
         buildState.mainArtifact?.let { artifact ->
             val file = File(artifact.file)
-            log.info("Applying main artifact: ${file.absolutePath} to ${targetProject.artifactId}")
-            targetProject.artifact.file = file
+            if (file.exists()) {
+                log.info("Applying main artifact: ${file.absolutePath} to ${targetProject.artifactId}")
+                targetProject.artifact.file = file
+            } else {
+                log.warn("Main artifact file does not exist, skipping: ${file.absolutePath}")
+            }
         }
 
         // Apply attached artifacts

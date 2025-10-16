@@ -103,8 +103,8 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             }
             log.info("Captured ${testClasspath.size} test classpath elements")
 
-            // Capture main artifact
-            val mainArtifact = if (project.artifact?.file != null) {
+            // Capture main artifact (only if file exists)
+            val mainArtifact = if (project.artifact?.file != null && project.artifact.file.exists()) {
                 ArtifactInfo(
                     file = project.artifact.file.absolutePath,
                     type = project.artifact.type,
@@ -113,7 +113,12 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                     artifactId = project.artifact.artifactId,
                     version = project.artifact.version
                 )
-            } else null
+            } else {
+                if (project.artifact?.file != null) {
+                    log.warn("Main artifact file does not exist: ${project.artifact.file.absolutePath}")
+                }
+                null
+            }
 
             if (mainArtifact != null) {
                 log.info("Captured main artifact: ${mainArtifact.file}")
