@@ -1,4 +1,5 @@
 import {
+  ensurePackage,
   formatFiles,
   generateFiles,
   readProjectConfiguration,
@@ -7,7 +8,7 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 import { type CypressComponentConfigurationSchema } from './schema';
-import { cypressComponentConfigGenerator } from '@nx/react';
+import { nxVersion } from '../../utils/versions';
 
 export function cypressComponentConfigurationGenerator(
   tree: Tree,
@@ -28,6 +29,9 @@ export async function cypressComponentConfigurationGeneratorInternal(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
+  const { cypressComponentConfigGenerator } = ensurePackage<
+    typeof import('@nx/react')
+  >('@nx/react', nxVersion);
   await cypressComponentConfigGenerator(tree, {
     project: options.project,
     generateTests: options.generateTests,

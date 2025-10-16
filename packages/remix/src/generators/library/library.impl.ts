@@ -1,7 +1,11 @@
 import type { Tree } from '@nx/devkit';
-import { formatFiles, GeneratorCallback, runTasksInSerial } from '@nx/devkit';
+import {
+  ensurePackage,
+  formatFiles,
+  GeneratorCallback,
+  runTasksInSerial,
+} from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { libraryGenerator } from '@nx/react';
 import {
   addTsconfigEntryPoints,
   addUnitTestingSetup,
@@ -16,6 +20,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import { updateDependencies } from '../utils/update-dependencies';
+import { nxVersion } from '../../utils/versions';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -50,6 +55,10 @@ export async function remixLibraryGeneratorInternal(
     await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
+  const { libraryGenerator } = ensurePackage<typeof import('@nx/react')>(
+    '@nx/react',
+    nxVersion
+  );
   const libGenTask = await libraryGenerator(tree, {
     directory: options.directory,
     name: options.name,
