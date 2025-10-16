@@ -46,7 +46,7 @@ describe('Maven Analyzer', () => {
       expect(spawn).toHaveBeenCalledWith(
         expect.any(String),
         expect.arrayContaining([
-          'dev.nx.maven:nx-maven-plugin:0.0.1:analyze',
+          'dev.nx.maven:nx-maven-plugin:analyze',
           '-am',
           expect.stringContaining('-DoutputFile='),
           expect.stringContaining('-DworkspaceRoot='),
