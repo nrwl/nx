@@ -46,7 +46,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
       // Verify Debug outputs exist
       checkFilesMatchingPatternExist(
         '.*/MyApp.dll',
-        tmpProjPath('MyApp/bin/Debug/MyApp.dll')
+        tmpProjPath('MyApp/bin/Debug')
       );
     });
 

@@ -46,7 +46,7 @@ public static class Analyzer
                 var packageRefs = CollectPackageReferences(node.ProjectInstance!);
 
                 // Collect project references
-                var projectRefs = CollectProjectReferences(node.ProjectInstance!, projectPath, workspaceRoot);
+                var projectRefs = CollectProjectReferences(node, projectPath, workspaceRoot);
 
                 // Collect MSBuild properties
                 var properties = CollectProperties(node.ProjectInstance!);
@@ -117,15 +117,20 @@ public static class Analyzer
     }
 
     private static List<string> CollectProjectReferences(
-        ProjectInstance project,
+        ProjectGraphNode project,
         string projectPath,
         string workspaceRoot)
     {
         var projectRefs = new List<string>();
 
-        foreach (var item in project.GetItems("ProjectReference"))
+        foreach (var referencedProject in project.ProjectReferences)
         {
-            var refPath = item.EvaluatedInclude;
+            var refPath = referencedProject.ProjectInstance?.FullPath;
+            if (string.IsNullOrEmpty(refPath))
+            {
+                throw new InvalidOperationException(
+                    $"Project reference in {projectPath} is missing a valid path.");
+            }
             var absoluteRefPath = Path.IsPathRooted(refPath)
                 ? refPath
                 : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(projectPath)!, refPath));
