@@ -3503,9 +3503,6 @@ importers:
       '@nx/rollup':
         specifier: workspace:*
         version: link:../rollup
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../vite
       '@nx/web':
         specifier: workspace:*
         version: link:../web
@@ -3540,6 +3537,10 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
+    optionalDependencies:
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../vite
 
   packages/react-native:
     dependencies:
