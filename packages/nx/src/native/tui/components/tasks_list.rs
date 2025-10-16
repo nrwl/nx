@@ -17,7 +17,9 @@ use std::{
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::help_text::HelpText;
-use super::task_selection_manager::{ScrollMetrics, SelectionMode, TaskSelectionManager};
+use super::task_selection_manager::{
+    ScrollMetrics, SelectionMode, TaskSection, TaskSelectionManager,
+};
 use crate::native::tui::{
     scroll_momentum::{ScrollDirection, ScrollMomentum},
     status_icons,
@@ -79,7 +81,8 @@ pub struct TaskItem {
     pub status: TaskStatus,
     pub terminal_output: String,
     pub continuous: bool,
-    start_time: Option<i64>,
+    // Public to aid with sorting utility and testing
+    pub start_time: Option<i64>,
     // Public to aid with sorting utility and testing
     pub end_time: Option<i64>,
 }
@@ -310,7 +313,11 @@ impl TasksList {
     /// Creates a list of task entries with separators between different status groups.
     /// Groups tasks into in-progress, (maybe) highlighted, completed, and pending, with None values as separators.
     /// NEEDS ANALYSIS: Consider if this complex grouping logic should be moved to a dedicated type.
-    fn create_entries_with_separator(&self, filtered_names: &[String]) -> Vec<Option<String>> {
+    /// Creates entries with separators and returns both the entries and the actual in-progress section size
+    fn create_entries_with_separator(
+        &self,
+        filtered_names: &[String],
+    ) -> (Vec<Option<String>>, usize) {
         // Create vectors for each status group
         let mut in_progress = Vec::new();
         let mut highlighted = Vec::new();
@@ -348,6 +355,9 @@ impl TasksList {
         } else {
             !in_progress.is_empty() // Only show if there are filtered InProgress tasks
         };
+
+        // Track the actual in-progress section size
+        let actual_in_progress_size = in_progress.len();
 
         // Only show the parallel section if appropriate
         if should_show_parallel_section {
@@ -391,7 +401,7 @@ impl TasksList {
         // Add pending tasks
         entries.extend(pending.into_iter().map(Some));
 
-        entries
+        (entries, actual_in_progress_size)
     }
 
     /// Check if any parallel entries are visible in the current viewport.
@@ -554,16 +564,79 @@ impl TasksList {
         self.apply_filter();
     }
 
+    /// Checks if the terminal pane is currently showing the given task's output.
+    /// This happens when:
+    /// - Spacebar mode is active (terminal follows selection), OR
+    /// - Terminal pane is focused and the task is pinned to that pane
+    fn is_terminal_showing_task(&self, task_name: &str) -> bool {
+        if let Focus::MultipleOutput(focused_pane_idx) = self.focus {
+            self.spacebar_mode || self.pinned_tasks[focused_pane_idx].as_deref() == Some(task_name)
+        } else {
+            false
+        }
+    }
+
+    /// Determines the appropriate selection mode based on current state and output visibility.
+    ///
+    /// General rule: Track by name when task output is visible in terminal pane.
+    ///
+    /// Exception:
+    /// - Terminal pane showing selected task → Always TrackByName
+    ///
+    /// In-progress section:
+    /// - Always TrackByName (automatically switches to position when task finishes)
+    ///
+    /// Non-in-progress section:
+    /// - If pinned tasks exist → TrackByName only if selected task is pinned
+    /// - If no pinned tasks → TrackByName only if spacebar mode (terminal open)
+    /// - Otherwise → TrackByPosition
+    fn determine_selection_mode(&self) -> SelectionMode {
+        let selection_manager = self.selection_manager.lock().unwrap();
+        let selected_task_name = selection_manager.get_selected_task_name();
+
+        // EXCEPTION: Terminal pane showing selected task → always track by name
+        if let Some(selected_name) = selected_task_name {
+            if self.is_terminal_showing_task(selected_name) {
+                return SelectionMode::TrackByName;
+            }
+        }
+
+        // IN-PROGRESS section: Always track by name while running
+        if let Some(TaskSection::InProgress) = selection_manager.get_selected_task_section() {
+            return SelectionMode::TrackByName;
+        }
+
+        // NON-IN-PROGRESS section: Output visibility determines mode
+        let has_pinned_tasks = self.pinned_tasks.iter().any(|p| p.is_some());
+
+        if has_pinned_tasks {
+            // Pinned tasks exist: Only pinned task outputs are in terminal panes
+            let is_selected_pinned = selected_task_name.is_some_and(|name| {
+                self.pinned_tasks
+                    .iter()
+                    .any(|pinned| pinned.as_ref() == Some(name))
+            });
+
+            if is_selected_pinned {
+                SelectionMode::TrackByName // Output visible in terminal pane
+            } else {
+                SelectionMode::TrackByPosition // Output not visible
+            }
+        } else {
+            // No pinned tasks: Check if terminal pane is open
+            if self.spacebar_mode {
+                SelectionMode::TrackByName // Output visible in terminal pane
+            } else {
+                SelectionMode::TrackByPosition // No terminal pane open
+            }
+        }
+    }
+
     /// Applies the current filter text to the task list.
     /// Updates filtered tasks and selection manager entries.
     pub fn apply_filter(&mut self) {
-        // Set the appropriate selection mode based on our current state
-        let should_track_by_name = self.spacebar_mode;
-        let mode = if should_track_by_name {
-            SelectionMode::TrackByName
-        } else {
-            SelectionMode::TrackByPosition
-        };
+        let mode = self.determine_selection_mode();
+
         self.selection_manager
             .lock()
             .unwrap()
@@ -586,11 +659,11 @@ impl TasksList {
         }
 
         // Update entries in selection manager with separator
-        let entries = self.create_entries_with_separator(&self.filtered_names);
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .update_entries(entries);
+        let (entries, in_progress_size) = self.create_entries_with_separator(&self.filtered_names);
+        let mut manager = self.selection_manager.lock().unwrap();
+        manager.update_entries_with_size(entries, in_progress_size);
+        // Explicitly scroll to ensure selected task is visible
+        manager.ensure_selected_visible();
     }
 
     /// Gets the table style based on the current focus state.
@@ -625,13 +698,12 @@ impl TasksList {
     }
 
     pub fn sort_tasks(&mut self) {
-        // Set the appropriate selection mode based on our current state
-        let should_track_by_name = self.spacebar_mode;
-        let mode = if should_track_by_name {
-            SelectionMode::TrackByName
-        } else {
-            SelectionMode::TrackByPosition
-        };
+        self.sort_tasks_with_mode(None);
+    }
+
+    fn sort_tasks_with_mode(&mut self, mode_override: Option<SelectionMode>) {
+        let mode = mode_override.unwrap_or_else(|| self.determine_selection_mode());
+
         self.selection_manager
             .lock()
             .unwrap()
@@ -666,11 +738,11 @@ impl TasksList {
         }
 
         // Update the entries in the selection manager
-        let entries = self.create_entries_with_separator(&self.filtered_names);
+        let (entries, in_progress_size) = self.create_entries_with_separator(&self.filtered_names);
         self.selection_manager
             .lock()
             .unwrap()
-            .update_entries(entries);
+            .update_entries_with_size(entries, in_progress_size);
     }
 
     /// Calculates the effective width needed for task names including pinned indicators
@@ -855,14 +927,124 @@ impl TasksList {
                 }
             }
         }
+
+        // Sort first to ensure entries are up-to-date before any selection
         self.sort_tasks();
+
+        // Then auto-select if needed
+        self.auto_select_first_in_progress_if_needed();
+    }
+
+    /// Auto-select the first in-progress task if no task is currently selected.
+    ///
+    /// This should be called after tasks have been sorted to ensure entries are up-to-date.
+    /// Returns true if a task was auto-selected, false otherwise.
+    fn auto_select_first_in_progress_if_needed(&mut self) -> bool {
+        let mut selection_manager = self.selection_manager.lock().unwrap();
+
+        // Don't override existing selection
+        if selection_manager.get_selected_task_name().is_some() {
+            return false;
+        }
+
+        // Find first in-progress task
+        if let Some(first_in_progress) = self
+            .tasks
+            .iter()
+            .find(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::Shared))
+        {
+            selection_manager.select_task(first_in_progress.name.clone());
+            return true;
+        }
+
+        false
+    }
+
+    /// Handles an in-progress task finishing and moving to a different section.
+    ///
+    /// This is the most complex selection tracking scenario because:
+    /// 1. The task moves from InProgress section to Other section (requires re-sort)
+    /// 2. We need to decide if selection should switch to another task (position tracking)
+    /// 3. Terminal pane exception can override the normal behavior
+    ///
+    /// Steps:
+    /// 1. Sort while tracking by name (keeps the finished task selected)
+    /// 2. Check if terminal is showing this task's output (exception case)
+    /// 3. If no exception: switch selection to another task at same position
+    /// 4. Set the final mode based on the (possibly new) selected task
+    fn handle_in_progress_task_finished(
+        &mut self,
+        task_id: String,
+        old_in_progress_index: Option<usize>,
+    ) {
+        // Step 1: Sort while tracking by name to keep finished task selected
+        self.sort_tasks_with_mode(Some(SelectionMode::TrackByName));
+
+        // Step 2: Check if terminal pane exception applies
+        let terminal_showing_task = self.is_terminal_showing_task(&task_id);
+
+        // Step 3: If no exception, apply position-based selection switching
+        if !terminal_showing_task {
+            let has_pending_tasks = self
+                .tasks
+                .iter()
+                .any(|t| t.status == TaskStatus::NotStarted);
+
+            self.selection_manager
+                .lock()
+                .unwrap()
+                .handle_task_status_change(
+                    task_id,
+                    old_in_progress_index,
+                    false, // new_is_in_progress = false
+                    has_pending_tasks,
+                );
+        }
+
+        // Step 4: Set final mode based on current selection state
+        let final_mode = self.determine_selection_mode();
+        self.selection_manager
+            .lock()
+            .unwrap()
+            .set_selection_mode(final_mode);
     }
 
     /// Updates a task's status and triggers a sort of the list.
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
+        if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id.clone()) {
+            let old_status = task_item.status;
+            let old_is_in_progress =
+                matches!(old_status, TaskStatus::InProgress | TaskStatus::Shared);
+
+            // Calculate old index BEFORE updating status (needed for position tracking)
+            let old_in_progress_index = if old_is_in_progress {
+                self.selection_manager
+                    .lock()
+                    .unwrap()
+                    .get_index_in_in_progress_section(&task_id)
+            } else {
+                None
+            };
+
+            // Update the task status
             task_item.update_status(status);
-            self.sort_tasks();
+
+            let new_is_in_progress = matches!(status, TaskStatus::InProgress | TaskStatus::Shared);
+            let is_finishing = old_is_in_progress && !new_is_in_progress;
+
+            if is_finishing {
+                // Complex case: in-progress task finished, may need to switch selection
+                self.handle_in_progress_task_finished(task_id, old_in_progress_index);
+            } else {
+                // Simple case: just sort with appropriate mode
+                self.sort_tasks();
+            }
+
+            // Ensure selected task is visible
+            self.selection_manager
+                .lock()
+                .unwrap()
+                .ensure_selected_visible();
         }
     }
 
@@ -895,6 +1077,11 @@ impl TasksList {
             }
         }
         self.sort_tasks();
+        // Explicitly scroll to ensure selected task is visible after sort
+        self.selection_manager
+            .lock()
+            .unwrap()
+            .ensure_selected_visible();
     }
 
     fn generate_empty_row(&self, column_visibility: &ColumnVisibility) -> Row {
@@ -1914,6 +2101,11 @@ impl Component for TasksList {
             }
             Action::SortTasks => {
                 self.sort_tasks();
+                // Explicitly scroll to ensure selected task is visible after sort
+                self.selection_manager
+                    .lock()
+                    .unwrap()
+                    .ensure_selected_visible();
             }
             Action::UpdateTaskStatus(task_name, status) => {
                 self.update_task_status(task_name, status);
