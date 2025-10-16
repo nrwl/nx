@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   createFile,
+  killPort,
   runCLI,
   runE2ETests,
   updateFile,
@@ -24,7 +25,7 @@ describe('React Cypress Component Tests - buildable lib', () => {
     delete process.env.NX_ADD_PLUGINS;
   });
 
-  it('should test buildable lib not being used in app', () => {
+  it('should test buildable lib not being used in app', async () => {
     createFile(
       `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,
       `
@@ -53,6 +54,8 @@ describe(Input.name, () => {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
+      // Kill the dev server port to prevent EADDRINUSE errors
+      await killPort(8080);
     }
 
     // add tailwind
@@ -84,6 +87,8 @@ ${content}`;
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
+      // Kill the dev server port to clean up
+      await killPort(8080);
     }
   }, 300_000);
 });
