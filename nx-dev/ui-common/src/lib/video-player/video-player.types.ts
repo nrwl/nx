@@ -17,6 +17,12 @@ export interface VideoPlayerThumbnailProps {
 
 export interface VideoPlayerButtonProps extends ComponentProps<'div'> {
   variant?: VideoPlayerVariant;
+  /**
+   * Visual size of the button. Defaults to 'md'.
+   * - 'md': current default sizing
+   * - 'sm': all dimensions roughly halved
+   */
+  size?: 'md' | 'sm';
   text: {
     primary: string;
     secondary: string;
