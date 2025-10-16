@@ -2,7 +2,7 @@
 title: "What's New in Nx Self-Healing CI"
 slug: 'whats-new-in-nx-self-healing-ci'
 authors: ['Juri Strumpflohner']
-tags: [nx, nx-cloud, self-healing]
+tags: [nx, nx-cloud, self-healing, ai]
 cover_image: /blog/images/articles/self-healing-ci-update-blog-hero.avif
 description: 'Enhanced GitHub integration, interactive diffs, fine-grained task control, auto-apply fixes, and local fix application—discover the latest improvements to Nx Self-Healing CI.'
 pinned: true
