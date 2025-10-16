@@ -37,6 +37,7 @@
     "build-base": {
       "parallelism": false,
       "executor": "@nx/next:build",
+      "dependsOn": ["copy-docs"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -47,6 +48,24 @@
           "outputPath": "nx-dev/nx-dev"
         },
         "production": {}
+      }
+    },
+    "copy-docs": {
+      "inputs": ["{workspaceRoot}/docs/**/*"],
+      "outputs": ["{projectRoot}/public/documentation"],
+      "command": "node ./copy-docs.js",
+      "options": {
+        "cwd": "nx-dev/nx-dev"
+      }
+    },
+    "serve-docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx watch --projects=docs -- nx run-many -t=copy-docs -p nx-dev",
+          "nx run nx-dev:serve"
+        ],
+        "parallel": true
       }
     },
     "start": {
@@ -86,5 +105,6 @@
       }
     }
   },
-  "tags": ["scope:nx-dev", "type:app"]
+  "tags": ["scope:nx-dev", "type:app"],
+  "implicitDependencies": ["docs"]
 }
