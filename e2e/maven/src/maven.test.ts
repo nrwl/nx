@@ -14,7 +14,7 @@ describe('Maven', () => {
 
   beforeAll(async () => {
     newProject({
-      preset: 'empty',
+      preset: 'apps',
       packages: ['@nx/maven'],
     });
     await createMavenProject(mavenProjectName);
