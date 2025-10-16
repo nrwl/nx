@@ -1,6 +1,7 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { mavenInitGenerator } from './generator';
+import { mavenPluginVersion } from '../../utils/versions';
 
 describe('Maven Init Generator', () => {
   let tree: Tree;
@@ -34,7 +35,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('<plugins>');
       expect(updatedPom).toContain('dev.nx.maven');
       expect(updatedPom).toContain('nx-maven-plugin');
-      expect(updatedPom).toContain('0.0.1');
+      expect(updatedPom).toContain(mavenPluginVersion);
     });
 
     it('should add plugin to pom.xml with build but without plugins', async () => {
@@ -66,7 +67,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('<plugins>');
       expect(updatedPom).toContain('dev.nx.maven');
       expect(updatedPom).toContain('nx-maven-plugin');
-      expect(updatedPom).toContain('0.0.1');
+      expect(updatedPom).toContain(mavenPluginVersion);
     });
 
     it('should add plugin to pom.xml with existing plugins collection', async () => {
@@ -102,7 +103,7 @@ describe('Maven Init Generator', () => {
       expect(updatedPom).toContain('maven-compiler-plugin');
       expect(updatedPom).toContain('dev.nx.maven');
       expect(updatedPom).toContain('nx-maven-plugin');
-      expect(updatedPom).toContain('0.0.1');
+      expect(updatedPom).toContain(mavenPluginVersion);
     });
 
     it('should not add plugin if already present', async () => {
