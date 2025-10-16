@@ -88,7 +88,7 @@ jobs:
 
       - name: Nx Report
         run: 
-          npx nx report
+          pnpm nx report
 
       - name: Run Checks/Lint/Test/Build
         run: |
