@@ -32,6 +32,7 @@ class NxBuildStateRecordMojo : AbstractMojo() {
 
     @Throws(MojoExecutionException::class)
     override fun execute() {
+        val startTime = System.currentTimeMillis()
         try {
             log.info("Recording build state for project: ${project.artifactId}")
 
@@ -175,7 +176,9 @@ class NxBuildStateRecordMojo : AbstractMojo() {
 
             // Write to JSON file
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, buildState)
-            log.info("Build state recorded to: ${outputFile.absolutePath}")
+
+            val duration = System.currentTimeMillis() - startTime
+            log.info("Build state recorded to: ${outputFile.absolutePath} (took ${duration}ms)")
 
         } catch (e: Exception) {
             throw MojoExecutionException("Failed to record build state", e)
