@@ -34,13 +34,6 @@
         "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
       }
     },
-    "generate-og-images": {
-      "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/public/images/open-graph"],
-      "options": {
-        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/open-graph/generate-images.ts"
-      }
-    },
     "build-base": {
       "parallelism": false,
       "executor": "@nx/next:build",
@@ -83,14 +76,6 @@
       "outputs": ["{projectRoot}/public/documentation"],
       "options": {
         "commands": [
-          {
-            "command": "nx run nx-dev:generate-og-images",
-            "description": "OG images generation"
-          },
-          {
-            "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
-            "description": "Fetch plugin data"
-          },
           {
             "command": "nx run nx-dev:build",
             "description": "NextJs build step"
