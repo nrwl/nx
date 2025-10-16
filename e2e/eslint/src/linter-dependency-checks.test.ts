@@ -64,7 +64,7 @@ describe('Linter', () => {
           rootPackageJson.dependencies['tslib'] ||
           rootPackageJson.devDependencies['tslib'];
 
-        let out = runCLI(`lint ${mylib}`, {
+        let out = runCLI(`lint ${mylib} --skip-nx-cache`, {
           silenceError: true,
           env: { CI: 'false' },
         });
@@ -84,7 +84,7 @@ describe('Linter', () => {
         });
 
         // output should now report missing dependency and obsolete dependency
-        out = runCLI(`lint ${mylib}`, {
+        out = runCLI(`lint ${mylib} --skip-nx-cache`, {
           silenceError: true,
           env: { CI: 'false' },
         });
@@ -95,7 +95,7 @@ describe('Linter', () => {
         );
 
         // should fix the missing and obsolete dependency issues
-        out = runCLI(`lint ${mylib} --fix`, {
+        out = runCLI(`lint ${mylib} --fix --skip-nx-cache`, {
           silenceError: true,
           env: { CI: 'false' },
         });
@@ -121,7 +121,7 @@ describe('Linter', () => {
           json.dependencies['@nx/devkit'] = '100.0.0';
           return json;
         });
-        out = runCLI(`lint ${mylib}`, {
+        out = runCLI(`lint ${mylib} --skip-nx-cache`, {
           silenceError: true,
           env: { CI: 'false' },
         });
@@ -130,7 +130,7 @@ describe('Linter', () => {
         );
 
         // should fix the version mismatch issue
-        out = runCLI(`lint ${mylib} --fix`, {
+        out = runCLI(`lint ${mylib} --fix --skip-nx-cache`, {
           silenceError: true,
           env: { CI: 'false' },
         });
