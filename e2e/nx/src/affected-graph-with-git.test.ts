@@ -31,14 +31,18 @@ describe('Nx Affected and Graph Tests', () => {
       const nxJson: NxJsonConfiguration = readJson('nx.json');
 
       updateFile('nx.json', JSON.stringify(nxJson));
-      runCommand(`rm -rf .git`);
+      // clean up any projects from previous tests
+      runCommand(`rm -rf apps libs`);
+      runCommand(`mkdir -p apps libs`);
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);
       runCommand(`git config user.name "Test"`);
       runCommand(`git config commit.gpgsign false`);
-      runCommand(
-        `git add . && git commit -am "initial commit" && git checkout -b main`
-      );
+      try {
+        runCommand(
+          `git add . && git commit -am "initial commit" && git checkout -b main`
+        );
+      } catch (e) {}
     });
 
     function generateAll() {
@@ -107,7 +111,7 @@ describe('Nx Affected and Graph Tests', () => {
         return JSON.stringify(data, null, 2);
       });
 
-      runCommand('git commit -m "setup test"');
+      runCommand('git add . && git commit -m "setup test"');
       updateFile(`libs/${mylib}/index.html`, '<html></html>');
 
       const output = runCLI('show projects --affected');
