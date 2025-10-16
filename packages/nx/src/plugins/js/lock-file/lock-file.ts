@@ -252,7 +252,12 @@ export function createLockFile(
     }
     if (packageManager === 'pnpm') {
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
+      return stringifyPnpmLockfile(
+        prunedGraph,
+        content,
+        normalizedPackageJson,
+        workspaceRoot
+      );
     }
     if (packageManager === 'npm') {
       const prunedGraph = pruneProjectGraph(graph, packageJson);

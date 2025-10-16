@@ -45,8 +45,8 @@ export interface GitCommit extends RawGitCommit {
 export interface GetLatestGitTagForPatternOptions {
   checkAllBranchesWhen?: boolean | string[];
   preid?: string;
-  releaseTagPatternRequireSemver: boolean;
-  releaseTagPatternStrictPreid: boolean;
+  requireSemver: boolean;
+  strictPreid: boolean;
 }
 
 function escapeRegExp(string) {
@@ -70,10 +70,10 @@ export function extractTagAndVersion(
   tagRegexp: string,
   options: GetLatestGitTagForPatternOptions
 ): GitTagAndVersion {
-  const { releaseTagPatternRequireSemver } = options;
+  const { requireSemver } = options;
 
   const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
-  let version = releaseTagPatternRequireSemver
+  let version = requireSemver
     ? rest.filter((r) => {
         return r.match(SEMVER_REGEX);
       })[0]
@@ -105,12 +105,7 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {},
   options: GetLatestGitTagForPatternOptions
 ): Promise<GitTagAndVersion | null> {
-  const {
-    checkAllBranchesWhen,
-    releaseTagPatternRequireSemver,
-    releaseTagPatternStrictPreid,
-    preid,
-  } = options;
+  const { checkAllBranchesWhen, requireSemver, strictPreid, preid } = options;
 
   /**
    * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
@@ -204,7 +199,7 @@ export async function getLatestGitTagForPattern(
       .replace('%rg%', '(.+)')}`;
 
     const matchingTags = tags.filter((tag) => {
-      if (releaseTagPatternRequireSemver) {
+      if (requireSemver) {
         // Match against Semver Regex when using semverVersioning to ensure only valid semver tags are matched
         return (
           !!tag.match(tagRegexp) &&
@@ -219,7 +214,7 @@ export async function getLatestGitTagForPattern(
       return null;
     }
 
-    if (!releaseTagPatternStrictPreid) {
+    if (!strictPreid) {
       // If not using strict preid, we can just return the first matching tag
       return extractTagAndVersion(matchingTags[0], tagRegexp, options);
     }

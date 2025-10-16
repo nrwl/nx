@@ -266,7 +266,10 @@ export async function setResolvedVersionPlansOnGroups(
                 );
               }
             } else {
-              existingPlan.triggeredByProjects.push(key);
+              // Avoid duplicates when releaseGraph is reused and version plans are resolved multiple times
+              if (!existingPlan.triggeredByProjects.includes(key)) {
+                existingPlan.triggeredByProjects.push(key);
+              }
             }
           } else {
             groupForProject.resolvedVersionPlans.push(<GroupVersionPlan>{

@@ -99,6 +99,7 @@ import {
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
+import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -309,6 +310,44 @@ export class DaemonClient {
         (err) => callback(err, null)
       );
       return messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config });
+    });
+
+    return () => {
+      messenger?.close();
+    };
+  }
+
+  async registerProjectGraphRecomputationListener(
+    callback: (
+      error: Error | null | 'closed',
+      data: {
+        projectGraph: ProjectGraph;
+        sourceMaps: ConfigurationSourceMaps;
+      } | null
+    ) => void
+  ): Promise<UnregisterCallback> {
+    let messenger: DaemonSocketMessenger | undefined;
+
+    await this.queue.sendToQueue(() => {
+      messenger = new DaemonSocketMessenger(
+        connect(getFullOsSocketPath())
+      ).listen(
+        (message) => {
+          try {
+            const parsedMessage = JSON.parse(message);
+            callback(null, parsedMessage);
+          } catch (e) {
+            callback(e, null);
+          }
+        },
+        () => {
+          callback('closed', null);
+        },
+        (err) => callback(err, null)
+      );
+      return messenger.sendMessage({
+        type: REGISTER_PROJECT_GRAPH_LISTENER,
+      });
     });
 
     return () => {

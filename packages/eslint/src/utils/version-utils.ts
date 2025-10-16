@@ -1,4 +1,8 @@
-import { readJson, readJsonFile, type Tree } from '@nx/devkit';
+import {
+  getDependencyVersionFromPackageJson,
+  readJsonFile,
+  type Tree,
+} from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
 
@@ -13,12 +17,18 @@ export function getInstalledPackageVersion(
 
   // the package is not installed on disk, it could be in the package.json
   // but waiting to be installed
-  const rootPackageJson = tree
-    ? readJson(tree, 'package.json')
-    : readJsonFile('package.json');
-  const pkgVersionInRootPackageJson =
-    rootPackageJson.devDependencies?.[pkgName] ??
-    rootPackageJson.dependencies?.[pkgName];
+  let pkgVersionInRootPackageJson: string | null;
+  if (tree) {
+    pkgVersionInRootPackageJson = getDependencyVersionFromPackageJson(
+      tree,
+      pkgName
+    );
+  } else {
+    const rootPackageJson = readJsonFile('package.json');
+    pkgVersionInRootPackageJson =
+      rootPackageJson.devDependencies?.[pkgName] ??
+      rootPackageJson.dependencies?.[pkgName];
+  }
 
   if (!pkgVersionInRootPackageJson) {
     // the package is not installed
@@ -27,7 +37,9 @@ export function getInstalledPackageVersion(
 
   try {
     // try to parse and return the version
-    return checkAndCleanWithSemver(pkgName, pkgVersionInRootPackageJson);
+    return tree
+      ? checkAndCleanWithSemver(tree, pkgName, pkgVersionInRootPackageJson)
+      : checkAndCleanWithSemver(pkgName, pkgVersionInRootPackageJson);
   } catch {}
 
   // we could not resolve the version
