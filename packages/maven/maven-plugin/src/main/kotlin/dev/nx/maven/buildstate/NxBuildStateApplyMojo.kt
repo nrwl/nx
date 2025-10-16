@@ -93,9 +93,9 @@ class NxBuildStateApplyMojo : AbstractMojo() {
             buildState.outputDirectory?.let { if (File(it).isDirectory) targetProject.build.outputDirectory = it }
             buildState.testOutputDirectory?.let { if (File(it).isDirectory) targetProject.build.testOutputDirectory = it }
 
-            // Apply classpaths (only JAR files to avoid workspace conflicts)
-            buildState.compileClasspath.filter { it.endsWith(".jar") }.forEach { targetProject.compileClasspathElements.add(it) }
-            buildState.testClasspath.filter { it.endsWith(".jar") }.forEach { targetProject.testClasspathElements.add(it) }
+            // Apply classpaths - include all files, not just JARs
+            buildState.compileClasspath.forEach { targetProject.compileClasspathElements.add(it) }
+            buildState.testClasspath.forEach { targetProject.testClasspathElements.add(it) }
         }
 
         // Apply main artifact
