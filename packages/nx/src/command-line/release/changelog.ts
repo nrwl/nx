@@ -1142,7 +1142,7 @@ async function generateChangelogForWorkspace({
     let rootChangelogContents = tree.exists(interpolatedTreePath)
       ? tree.read(interpolatedTreePath).toString()
       : '';
-    if (rootChangelogContents) {
+    if (rootChangelogContents && !args.replaceExistingContents) {
       // NOTE: right now existing releases are always expected to be in markdown format, but in the future we could potentially support others via a custom parser option
       const changelogReleases = parseChangelogMarkdown(
         rootChangelogContents
@@ -1161,7 +1161,7 @@ async function generateChangelogForWorkspace({
         rootChangelogContents = `${contents}\n\n${rootChangelogContents}`;
       }
     } else {
-      // No existing changelog contents, simply create a new one using the generated contents
+      // No existing changelog contents, or replaceExistingContents is true, simply use the generated contents directly
       rootChangelogContents = contents;
     }
 
