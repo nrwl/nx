@@ -119,16 +119,21 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                 log.info("Captured main artifact: ${mainArtifact.file}")
             }
 
-            // Capture attached artifacts
-            val attachedArtifacts = project.attachedArtifacts.map { artifact: Artifact ->
-                ArtifactInfo(
-                    file = artifact.file?.absolutePath ?: "",
-                    type = artifact.type,
-                    classifier = artifact.classifier,
-                    groupId = artifact.groupId,
-                    artifactId = artifact.artifactId,
-                    version = artifact.version
-                )
+            // Capture attached artifacts (only if file exists)
+            val attachedArtifacts = project.attachedArtifacts.mapNotNull { artifact: Artifact ->
+                if (artifact.file != null) {
+                    ArtifactInfo(
+                        file = artifact.file.absolutePath,
+                        type = artifact.type,
+                        classifier = artifact.classifier,
+                        groupId = artifact.groupId,
+                        artifactId = artifact.artifactId,
+                        version = artifact.version
+                    )
+                } else {
+                    log.warn("Attached artifact has no file: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}")
+                    null
+                }
             }
 
             log.info("Captured ${attachedArtifacts.size} attached artifacts")
