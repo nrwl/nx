@@ -28,7 +28,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - nx/set-shas:
           main-branch-name: 'main'
 

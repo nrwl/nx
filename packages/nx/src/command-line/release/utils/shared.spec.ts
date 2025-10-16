@@ -28,11 +28,13 @@ describe('shared', () => {
               conventionalCommits: false,
             },
             changelog: false,
-            releaseTagPattern: '{projectName}-{version}',
-            releaseTagPatternCheckAllBranchesWhen: undefined,
-            releaseTagPatternRequireSemver: true,
-            releaseTagPatternPreferDockerVersion: undefined,
-            releaseTagPatternStrictPreid: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
             versionPlans: false,
             resolvedVersionPlans: false,
           },
@@ -45,11 +47,13 @@ describe('shared', () => {
               conventionalCommits: false,
             },
             changelog: false,
-            releaseTagPattern: '{projectName}-{version}',
-            releaseTagPatternCheckAllBranchesWhen: undefined,
-            releaseTagPatternRequireSemver: true,
-            releaseTagPatternPreferDockerVersion: undefined,
-            releaseTagPatternStrictPreid: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
             versionPlans: false,
             resolvedVersionPlans: false,
           },
@@ -105,11 +109,13 @@ describe('shared', () => {
               conventionalCommits: false,
             },
             changelog: false,
-            releaseTagPattern: '{projectName}-{version}',
-            releaseTagPatternCheckAllBranchesWhen: undefined,
-            releaseTagPatternRequireSemver: true,
-            releaseTagPatternPreferDockerVersion: undefined,
-            releaseTagPatternStrictPreid: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
             versionPlans: false,
             resolvedVersionPlans: false,
           },
@@ -122,11 +128,13 @@ describe('shared', () => {
               conventionalCommits: false,
             },
             changelog: false,
-            releaseTagPattern: '{projectName}-{version}',
-            releaseTagPatternCheckAllBranchesWhen: undefined,
-            releaseTagPatternRequireSemver: true,
-            releaseTagPatternPreferDockerVersion: undefined,
-            releaseTagPatternStrictPreid: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
             versionPlans: false,
             resolvedVersionPlans: false,
           },
@@ -196,11 +204,13 @@ describe('shared', () => {
               renderer: 'custom-changelog-renderer',
               renderOptions: { authors: true },
             },
-            releaseTagPattern: '{projectName}-{version}',
-            releaseTagPatternCheckAllBranchesWhen: undefined,
-            releaseTagPatternRequireSemver: true,
-            releaseTagPatternPreferDockerVersion: undefined,
-            releaseTagPatternStrictPreid: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
             name: '__default__',
             versionPlans: false,
             resolvedVersionPlans: false,
@@ -290,7 +300,7 @@ describe('shared', () => {
     it('should use docker version when releaseTagPatternPreferDockerVersion is true', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
-      releaseGroup.releaseTagPatternPreferDockerVersion = true;
+      releaseGroup.releaseTag.preferDockerVersion = true;
 
       const tags = createGitTagValues(
         [releaseGroup],
@@ -317,7 +327,7 @@ describe('shared', () => {
     it('should use semver version when releaseTagPatternPreferDockerVersion is false', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
-      releaseGroup.releaseTagPatternPreferDockerVersion = false;
+      releaseGroup.releaseTag.preferDockerVersion = false;
 
       const tags = createGitTagValues(
         [releaseGroup],
@@ -344,7 +354,7 @@ describe('shared', () => {
     it('should create tags for both versions when releaseTagPatternPreferDockerVersion is "both"', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
-      releaseGroup.releaseTagPatternPreferDockerVersion = 'both';
+      releaseGroup.releaseTag.preferDockerVersion = 'both';
 
       const tags = createGitTagValues(
         [releaseGroup],
@@ -371,7 +381,7 @@ describe('shared', () => {
     it('should handle "both" when only dockerVersion is available', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
-      releaseGroup.releaseTagPatternPreferDockerVersion = 'both';
+      releaseGroup.releaseTag.preferDockerVersion = 'both';
 
       const tags = createGitTagValues(
         [releaseGroup],
@@ -401,11 +411,13 @@ describe('shared', () => {
         name: 'my-group',
         projects,
         projectsRelationship: 'independent',
-        releaseTagPattern: '{projectName}-{version}',
-        releaseTagPatternCheckAllBranchesWhen: undefined,
-        releaseTagPatternRequireSemver: true,
-        releaseTagPatternPreferDockerVersion: 'both',
-        releaseTagPatternStrictPreid: false,
+        releaseTag: {
+          pattern: '{projectName}-{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: 'both',
+          strictPreid: false,
+        },
         changelog: undefined,
         version: undefined,
         versionPlans: false,
@@ -449,11 +461,13 @@ describe('shared', () => {
         name: 'my-group',
         projects,
         projectsRelationship: 'fixed',
-        releaseTagPattern: 'my-group-{version}',
-        releaseTagPatternCheckAllBranchesWhen: undefined,
-        releaseTagPatternRequireSemver: true,
-        releaseTagPatternPreferDockerVersion: undefined,
-        releaseTagPatternStrictPreid: false,
+        releaseTag: {
+          pattern: 'my-group-{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
         changelog: undefined,
         version: undefined,
         versionPlans: false,

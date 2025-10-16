@@ -91,5 +91,7 @@ function getLibraryImportPath(
     }
   }
 
-  return undefined;
+  // Return library name if not found in TS path mappings
+  // This supports TS Solution + PM Workspaces where libs use package.json instead
+  return library;
 }

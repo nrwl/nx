@@ -341,7 +341,7 @@ jobs:
       - ... # other setup steps you may need
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent
@@ -369,7 +369,7 @@ jobs:
       - ... # other setup steps you may need
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent

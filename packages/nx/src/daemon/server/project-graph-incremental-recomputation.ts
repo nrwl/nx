@@ -27,9 +27,13 @@ import {
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
-import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
+import {
+  ConfigurationResult,
+  ConfigurationSourceMaps,
+} from '../../project-graph/utils/project-configuration-utils';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   DaemonProjectGraphError,
@@ -46,6 +50,7 @@ interface SerializedProjectGraph {
   allWorkspaceFiles: FileData[] | null;
   serializedProjectGraph: string | null;
   serializedSourceMaps: string | null;
+  sourceMaps: ConfigurationSourceMaps | null;
   rustReferences: NxWorkspaceFilesExternals | null;
 }
 
@@ -63,7 +68,7 @@ export let currentProjectGraph: ProjectGraph | undefined;
 const collectedUpdatedFiles = new Set<string>();
 const collectedDeletedFiles = new Set<string>();
 const projectGraphRecomputationListeners = new Set<
-  (projectGraph: ProjectGraph) => void
+  (projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
@@ -106,7 +111,10 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
     const result = await cachedSerializedProjectGraphPromise;
 
     if (wasScheduled) {
-      notifyProjectGraphRecomputationListeners(result.projectGraph);
+      notifyProjectGraphRecomputationListeners(
+        result.projectGraph,
+        result.sourceMaps
+      );
     }
 
     return result;
@@ -115,6 +123,7 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       error: e,
       serializedProjectGraph: null,
       serializedSourceMaps: null,
+      sourceMaps: null,
       projectGraph: null,
       projectFileMapCache: null,
       fileMap: null,
@@ -156,19 +165,23 @@ export function addUpdatedAndDeletedFiles(
 
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(await getPlugins());
-      const { projectGraph } = await cachedSerializedProjectGraphPromise;
+      const { projectGraph, sourceMaps } =
+        await cachedSerializedProjectGraphPromise;
 
       if (createdFiles.length > 0) {
         notifyFileWatcherSockets(createdFiles, null, null);
       }
 
-      notifyProjectGraphRecomputationListeners(projectGraph);
+      notifyProjectGraphRecomputationListeners(projectGraph, sourceMaps);
     }, waitPeriod);
   }
 }
 
 export function registerProjectGraphRecomputationListener(
-  listener: (projectGraph: ProjectGraph) => void
+  listener: (
+    projectGraph: ProjectGraph,
+    sourceMaps: ConfigurationSourceMaps
+  ) => void
 ) {
   projectGraphRecomputationListeners.add(listener);
 }
@@ -306,6 +319,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
           allWorkspaceFiles: null,
           serializedProjectGraph: null,
           serializedSourceMaps: null,
+          sourceMaps: null,
         };
       }
     }
@@ -329,6 +343,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         allWorkspaceFiles: null,
         serializedProjectGraph: null,
         serializedSourceMaps: null,
+        sourceMaps: null,
       };
     } else {
       return g;
@@ -343,6 +358,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
       serializedSourceMaps: null,
+      sourceMaps: null,
     };
   }
 }
@@ -411,6 +427,7 @@ async function createAndSerializeProjectGraph({
       allWorkspaceFiles,
       serializedProjectGraph,
       serializedSourceMaps,
+      sourceMaps,
       rustReferences,
     };
   } catch (e) {
@@ -425,6 +442,7 @@ async function createAndSerializeProjectGraph({
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
       serializedSourceMaps: null,
+      sourceMaps: null,
       rustReferences: null,
     };
   }
@@ -451,8 +469,12 @@ async function resetInternalStateIfNxDepsMissing() {
   }
 }
 
-function notifyProjectGraphRecomputationListeners(projectGraph: ProjectGraph) {
+function notifyProjectGraphRecomputationListeners(
+  projectGraph: ProjectGraph,
+  sourceMaps: ConfigurationSourceMaps
+) {
   for (const listener of projectGraphRecomputationListeners) {
-    listener(projectGraph);
+    listener(projectGraph, sourceMaps);
   }
+  notifyProjectGraphListenerSockets(projectGraph, sourceMaps);
 }

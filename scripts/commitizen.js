@@ -35,6 +35,7 @@ const scopes = [
   { value: 'gradle',            name: 'gradle:                anything Gradle specific'},
   { value: 'module-federation', name: 'module-federation:     anything Module Federation specific'},
   { value: 'docker',            name: 'docker:                anything Docker specific'},
+  { value: 'dotnet',            name: 'dotnet:                anything .NET specific'},
 ];
 
 // precomputed scope

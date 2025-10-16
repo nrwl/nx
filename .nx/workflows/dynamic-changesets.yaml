@@ -1,5 +1,5 @@
 distribute-on:
-  default: auto linux-large, 1 linux-extra-large
+  default: 8 linux-large, 1 linux-extra-large
 assignment-rules:
   # e2e-release tests must run sequentially due to shared git state and publishing operations
   - projects:
@@ -24,6 +24,7 @@ assignment-rules:
       - e2e-react
       - e2e-next
       - e2e-web
+      - e2e-eslint
     targets:
       - e2e-ci**react-package**
       - e2e-ci**react.test**
@@ -33,6 +34,8 @@ assignment-rules:
       - e2e-ci**next-ts-solutions**
       - e2e-ci**next-webpack**
       - e2e-ci**web**
+      - e2e-ci**remix-ts-solution**
+      - e2e-ci**linter**
     run-on:
         - agent: linux-large
           parallelism: 1

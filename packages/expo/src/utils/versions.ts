@@ -7,8 +7,8 @@ export const expoSystemUiVersion = '~5.0.8';
 export const expoCliVersion = '~0.24.14'; // @expo/cli
 export const babelPresetExpoVersion = '~13.2.0';
 
-export const reactVersion = '19.0.0';
-export const reactDomVersion = '19.0.0';
+export const reactVersion = '^19.0.0';
+export const reactDomVersion = '^19.0.0';
 export const typesReactVersion = '~19.0.10';
 
 export const reactNativeVersion = '0.79.3';

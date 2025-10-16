@@ -1834,10 +1834,10 @@ describe('app', () => {
 
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.dependencies['react']).toMatchInlineSnapshot(
-        `"19.0.0"`
+        `"^19.0.0"`
       );
       expect(packageJson.dependencies['react-dom']).toMatchInlineSnapshot(
-        `"19.0.0"`
+        `"^19.0.0"`
       );
     });
 

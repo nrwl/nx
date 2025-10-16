@@ -5,6 +5,10 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as parseLinks from 'parse-markdown-links';
 
+const siteUrl = process.env.NX_DEV_URL || 'https://nx.dev';
+
+console.log(`Using site URL: ${siteUrl}`);
+
 /**
  * Check the integrity of internal links on nx-dev
  * - Error if a link present in markdown files target a non-existing nextjs app url
@@ -18,7 +22,8 @@ function isLinkInternal(linkPath: string): boolean {
   return (
     linkPath.startsWith('/') ||
     linkPath.startsWith('https://nx.dev') ||
-    linkPath.startsWith('https://nx-dev')
+    linkPath.startsWith('https://nx-dev') ||
+    linkPath.startsWith(siteUrl)
   );
 }
 
@@ -82,17 +87,29 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
   const parser = new XMLParser();
   const sitemapIndex: {
     sitemapindex: {
-      sitemap: Array<{
-        loc: string;
-      }>;
+      sitemap:
+        | Array<{
+            loc: string;
+          }>
+        | { loc: string };
     };
   } = parser.parse(readFileContents(join(directoryPath, filename)));
 
-  const internalSitemap = sitemapIndex.sitemapindex.sitemap.find(
-    // astro sitemap adds a new item into the sitemap entries with <domain>/docs/sitemap-index.xml.
-    // we already validate the sitemap links insite astro. no need to do it in nextjs
-    (s) => !s.loc.endsWith('/docs/sitemap-index.xml')
-  );
+  if (!sitemapIndex.sitemapindex) {
+    throw new Error(
+      `Invalid sitemap index file: ${join(
+        directoryPath,
+        filename
+      )}. Expected sitemap to have sitemapIndex property`
+    );
+  }
+
+  const internalSitemap = Array.isArray(sitemapIndex.sitemapindex.sitemap)
+    ? sitemapIndex.sitemapindex.sitemap.find(
+        (s) => !s.loc.endsWith('sitemap-index.xml')
+      )
+    : sitemapIndex.sitemapindex.sitemap;
+
   if (!internalSitemap) {
     console.warn(join(directoryPath, filename), sitemapIndex);
     throw new Error('Unable to find sitemap location for nx.dev');
@@ -100,11 +117,15 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
 
   console.log('Using sitemap with url: ', internalSitemap.loc);
   return [
-    join(directoryPath, internalSitemap.loc.replace('https://nx.dev', '')),
+    join(
+      directoryPath,
+      internalSitemap.loc.replace(siteUrl, '').replace('https://nx.dev', '')
+    ),
   ];
 }
 
 function readSiteMapLinks(filePath: string): string[] {
+  console.log('Reading sitemap links from: ', filePath);
   const parser = new XMLParser();
   const sitemap: {
     urlset: {
@@ -121,10 +142,23 @@ function readSiteMapLinks(filePath: string): string[] {
 
 // Main
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
-const sitemapUrls = readSiteMapIndex(
+
+// Read Next.js sitemap URLs
+const nextjsSitemapUrls = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
+console.log(nextjsSitemapUrls.length + ' URLs found in Next.js sitemap');
+
+// Read Astro sitemap URLs
+const astroSitemapUrls = readSiteMapIndex(
+  join(workspaceRoot, 'astro-docs/dist/'),
+  'sitemap-index.xml'
+  // astro-docs links are prefixed with /docs, but that isn't reflected in the file paths
+).flatMap((path) => readSiteMapLinks(path.replace('/docs/', '/')));
+console.log(astroSitemapUrls.length + ' URLs found in Astro sitemap');
+// Combine all sitemap URLs into a single set
+const sitemapUrls = [...new Set([...nextjsSitemapUrls, ...astroSitemapUrls])];
 
 function headerToAnchor(line: string): string {
   return line
@@ -177,6 +211,9 @@ const ignoreAnchorUrls = [
   '/ci/reference',
   '/changelog',
   '/conf',
+  // NOTE: ignore astro docs anchor links since
+  // we don't have a simple way to get all header contents from src at this point
+  '/docs',
 ];
 
 const errors: Array<{ file: string; link: string }> = [];
@@ -185,7 +222,8 @@ for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
     if (
       link.startsWith('https://nx.dev') ||
-      link.startsWith('https://nx-dev')
+      link.startsWith('https://nx-dev') ||
+      link.startsWith(siteUrl)
     ) {
       localLinkErrors.push({ file, link });
     } else if (
@@ -198,7 +236,8 @@ for (let file in documentLinks) {
       errors.push({ file, link });
     } else if (
       !link.includes('#') &&
-      !sitemapUrls.includes(['https://nx.dev', link].join(''))
+      !sitemapUrls.includes(['https://nx.dev', link].join('')) &&
+      !sitemapUrls.includes([siteUrl, link].join(''))
     ) {
       errors.push({ file, link });
     } else if (
@@ -206,7 +245,8 @@ for (let file in documentLinks) {
       ignoreAnchorUrls.some((ignoreAnchorUrl) =>
         link.startsWith(ignoreAnchorUrl)
       ) &&
-      !sitemapUrls.includes(['https://nx.dev', removeAnchors(link)].join(''))
+      !sitemapUrls.includes(['https://nx.dev', removeAnchors(link)].join('')) &&
+      !sitemapUrls.includes([siteUrl, removeAnchors(link)].join(''))
     ) {
       errors.push({ file, link });
     }
