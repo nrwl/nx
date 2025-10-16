@@ -215,11 +215,11 @@ class NxTargetFactory(
 
           if (shouldCreateCiPhase) {
             // Create CI targets for phases with goals, or noop for test/structural phases
-            val ciTarget = if (hasGoals && phase != "test") {
-              createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
-            } else {
+            val ciTarget = if (phase == "test") {
               // Noop for test phase (will be orchestrated by atomized tests) or structural phases
               createNoopPhaseTarget(phase)
+            } else {
+              createPhaseTarget(project, phase, mavenCommand, goalsForPhase ?: emptyList())
             }
             val ciPhaseDependsOn = mutableListOf<String>()
 
@@ -410,43 +410,19 @@ class NxTargetFactory(
     log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
 
     val options = objectMapper.createObjectNode()
+    options.put("phase", phase)
 
-    // Build command with goals bundled together
-    val commandParts = mutableListOf<String>()
-    commandParts.add(mavenCommand)
-
-    // Add build state apply if needed (before goals)
-    if (shouldApplyBuildState()) {
-      commandParts.add(APPLY_GOAL)
+    // Add goals if present (for the batch executor)
+    if (sortedGoals.isNotEmpty()) {
+      val goalsArray = objectMapper.createArrayNode()
+      sortedGoals.forEach { goal -> goalsArray.add(goal.goalSpecifier) }
+      options.set<ArrayNode>("goals", goalsArray)
     }
+    options.put("project", "${project.groupId}:${project.artifactId}")
 
-    // Add all goals for this phase (sorted by priority)
-    commandParts.addAll(sortedGoals.map { it.goalSpecifier })
+    log.info("Created phase target '$phase' with phase: $phase, goals: $sortedGoals")
 
-    // Add build state record if needed (after goals)
-    // TODO: install cannot record because it attaches a unique timestamp to artifacts, breaking caching
-    if (shouldRecordBuildState() && phase !== "install") {
-      commandParts.add(RECORD_GOAL)
-    }
-
-    // Add project selection and non-recursive flag
-    commandParts.add("-pl")
-    commandParts.add("${project.groupId}:${project.artifactId}")
-
-    // Only add -N flag for Maven 4
-    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
-    if (mavenVersion.startsWith("4")) {
-      commandParts.add("-N")
-    }
-
-    commandParts.add("--batch-mode")
-
-    val command = commandParts.joinToString(" ")
-    options.put("command", command)
-
-    log.info("Created phase target '$phase' with command: $command")
-
-    val target = NxTarget("nx:run-commands", options, isCacheable, isThreadSafe)
+    val target = NxTarget("@nx/maven:maven", options, isCacheable, isThreadSafe)
 
     // Copy caching info from analysis
     if (isCacheable) {
@@ -482,16 +458,28 @@ class NxTargetFactory(
   ): NxTarget? {
     val options = objectMapper.createObjectNode()
 
-    // Simple command without nx:apply/nx:record
+    // Use Maven executor with goal specifier
+    options.put("goals", "$goalPrefix:$goalName@${execution.id}")
+
+    // Add standard arguments
+    val args = mutableListOf<String>()
+    args.add("-pl")
+    args.add("${project.groupId}:${project.artifactId}")
+
     val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
-    val nonRecursiveFlag = if (mavenVersion.startsWith("4")) "-N" else ""
-    val command =
-      "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} $nonRecursiveFlag --batch-mode".replace("  ", " ")
-    options.put("command", command)
+    if (mavenVersion.startsWith("4")) {
+      args.add("-N")
+    }
+    args.add("--batch-mode")
+
+    val argsArray = objectMapper.createArrayNode()
+    args.forEach { arg -> argsArray.add(arg) }
+    options.set<ArrayNode>("args", argsArray)
+
     val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
       ?: return null
 
-    val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+    val target = NxTarget("@nx/maven:maven", options, analysis.isCacheable, analysis.isThreadSafe)
 
     // Add inputs and outputs if cacheable
     if (analysis.isCacheable) {
@@ -542,16 +530,26 @@ class NxTargetFactory(
       log.info("Generating target for test class: $targetName'")
 
       val options = objectMapper.createObjectNode()
-      options.put(
-        "command",
-        "$mavenCommand $APPLY_GOAL ${goalDescriptor.goalSpecifier} $RECORD_GOAL -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className} -Dsurefire.failIfNoSpecifiedTests=false"
-      )
+      options.put("goals", goalDescriptor.goalSpecifier)
+
+      // Add arguments for test execution
+      val args = mutableListOf<String>()
+      args.add(APPLY_GOAL)
+      args.add(RECORD_GOAL)
+      args.add("-pl")
+      args.add("${project.groupId}:${project.artifactId}")
+      args.add("-Dtest=${testClass.packagePath}.${testClass.className}")
+      args.add("-Dsurefire.failIfNoSpecifiedTests=false")
+
+      val argsArray = objectMapper.createArrayNode()
+      args.forEach { arg -> argsArray.add(arg) }
+      options.set<ArrayNode>("args", argsArray)
 
       val dependsOn = objectMapper.createArrayNode()
       testDependsOn.forEach { dependsOn.add(it) }
 
       val target = NxTarget(
-        "nx:run-commands",
+        "@nx/maven:maven",
         options,
         analysis.isCacheable,
         analysis.isThreadSafe,

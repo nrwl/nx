@@ -2903,7 +2903,17 @@
   {
     "description": "Nx plugin for Maven integration",
     "documents": [],
-    "executors": [],
+    "executors": [
+      {
+        "description": "Runs Maven phases and goals via Maven executable.",
+        "file": "generated/packages/maven/executors/maven.json",
+        "hidden": false,
+        "name": "maven",
+        "originalFilePath": "/packages/maven/dist/executors/maven/schema.json",
+        "path": "maven/executors/maven",
+        "type": "executor"
+      }
+    ],
     "generators": [
       {
         "description": "Initialize Maven support in an Nx workspace",

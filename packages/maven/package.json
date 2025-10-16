@@ -1,6 +1,6 @@
 {
   "name": "@nx/maven",
-  "version": "0.0.1",
+  "version": "21.7.0",
   "private": false,
   "description": "Nx plugin for Maven integration",
   "repository": {
@@ -45,7 +45,7 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "dependencies": {
-    "@nx/devkit": "workspace:*",
+    "@nx/devkit": "21.7.0",
     "xmldom": "^0.6.0"
   },
   "devDependencies": {

@@ -5,7 +5,10 @@
   "projectType": "library",
   "targets": {
     "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:install"],
+      "dependsOn": [
+        "^nx-release-publish",
+        "nx-maven-plugin:install"
+      ],
       "executor": "@nx/js:release-publish",
       "options": {
         "packageRoot": "packages/maven"
@@ -13,7 +16,17 @@
     },
     "build": {
       "command": "node ./scripts/copy-readme.js maven packages/maven/README.md__tpl__ packages/maven/README.md",
-      "outputs": ["{projectRoot}/README.md"]
+      "outputs": [
+        "{projectRoot}/README.md"
+      ],
+      "dependsOn": [
+        "^build",
+        "typecheck",
+        "legacy-post-build",
+        "build-base",
+        "build-native",
+        "maven-batch-runner:package"
+      ]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -34,13 +47,21 @@
           {
             "input": "packages/maven/src",
             "glob": "**/*.json",
-            "ignore": ["maven-plugin/**/*"],
+            "ignore": [
+              "maven-plugin/**/*"
+            ],
             "output": "/"
           },
           {
             "input": "packages/maven",
             "glob": "@(generators|executors).json",
             "output": "/"
+          },
+          {
+            "input": "packages/maven/batch-runner/target",
+            "glob": "batch-runner.jar",
+            "output": "/",
+            "includeIgnoredFiles": true
           }
         ]
       }
@@ -49,9 +70,14 @@
   "release": {
     "version": {
       "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
+      "manifestRootsToUpdate": [
+        "packages/{projectName}"
+      ]
     }
   },
   "tags": [],
-  "implicitDependencies": ["nx-maven-plugin"]
+  "implicitDependencies": [
+    "nx-maven-plugin",
+    "maven-batch-runner"
+  ]
 }

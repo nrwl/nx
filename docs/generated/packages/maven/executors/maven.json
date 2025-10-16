@@ -1,0 +1,51 @@
+{
+  "name": "maven",
+  "implementation": "/packages/maven/dist/executors/maven/maven.impl.ts",
+  "batchImplementation": "./dist/executors/maven/maven-batch.impl",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "title": "Maven Executor",
+    "description": "The Maven executor is used to run Maven phases and goals.",
+    "type": "object",
+    "properties": {
+      "phase": {
+        "type": "string",
+        "description": "The Maven lifecycle phase to execute (e.g., 'compile', 'test', 'package', 'install')."
+      },
+      "goals": {
+        "oneOf": [
+          { "type": "array", "items": { "type": "string" } },
+          { "type": "string" }
+        ],
+        "description": "The Maven goals to execute (e.g., 'clean:clean', 'compiler:compile')."
+      },
+      "args": {
+        "oneOf": [
+          { "type": "array", "items": { "type": "string" } },
+          { "type": "string" }
+        ],
+        "description": "The arguments to pass to the Maven command.",
+        "examples": [["--quiet", "-DskipTests"], "-X"]
+      },
+      "excludeDependsOn": {
+        "type": "boolean",
+        "description": "If true, the tasks will not execute their dependsOn tasks. If false, the task will execute its dependsOn tasks.",
+        "default": true,
+        "x-priority": "internal"
+      },
+      "__unparsed__": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Additional arguments to pass to the Maven command (automatically populated by Nx).",
+        "x-priority": "internal"
+      }
+    },
+    "presets": []
+  },
+  "description": "Runs Maven phases and goals via Maven executable.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/maven/dist/executors/maven/schema.json",
+  "type": "executor"
+}

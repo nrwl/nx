@@ -21,9 +21,5 @@
     "src/**/*.spec.ts",
     "src/**/*.test.ts"
   ],
-  "references": [
-    {
-      "path": "../devkit/tsconfig.lib.json"
-    }
-  ]
+  "references": []
 }

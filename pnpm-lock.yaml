@@ -3078,8 +3078,8 @@ importers:
   packages/maven:
     dependencies:
       '@nx/devkit':
-        specifier: workspace:*
-        version: link:../devkit
+        specifier: 21.7.0
+        version: 21.7.0(nx@22.0.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.17)))
       xmldom:
         specifier: ^0.6.0
         version: 0.6.0
@@ -8934,6 +8934,11 @@ packages:
     resolution: {integrity: sha512-1Pg3lLTXYYY1CUOcUpJZc5+IdBSvOF8fKlYAwidiUJMG3jrd1/x4twiR5msZHUZpCNq3+EaqhdEx5eR75Ra15Q==}
     peerDependencies:
       nx: 21.0.0
+
+  '@nx/devkit@21.7.0':
+    resolution: {integrity: sha512-QP0ICEC/2zX7UPvH1SiYuKkyL8nDiL5KCo9SQdS9T0OXPehTOpxfcd5G2PNrKMfJzFVAjqpvPRaBPjQPoF1bbw==}
+    peerDependencies:
+      nx: '>= 20 <= 22'
 
   '@nx/devkit@22.0.0-beta.4':
     resolution: {integrity: sha512-mfzsnD30duTsjMMUMRFM380niIQ1B5NHDODja8c2JXFYNIRtKmHB6FZrVdclDfT64Scohu+yfpQBAEwaQESDww==}
@@ -32313,6 +32318,16 @@ snapshots:
       tslib: 2.8.1
       yargs-parser: 21.1.1
 
+  '@nx/devkit@21.7.0(nx@22.0.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.17)))':
+    dependencies:
+      ejs: 3.1.10
+      enquirer: 2.3.6
+      minimatch: 9.0.3
+      nx: 22.0.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.17))
+      semver: 7.7.2
+      tslib: 2.8.1
+      yargs-parser: 21.1.1
+
   '@nx/devkit@22.0.0-beta.4(nx@22.0.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
     dependencies:
       ejs: 3.1.10
@@ -46986,6 +47001,59 @@ snapshots:
       '@nx/nx-win32-x64-msvc': 22.0.0-beta.4
       '@swc-node/register': 1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2)
       '@swc/core': 1.5.7(@swc/helpers@0.5.11)
+    transitivePeerDependencies:
+      - debug
+
+  nx@22.0.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.17)):
+    dependencies:
+      '@napi-rs/wasm-runtime': 0.2.4
+      '@yarnpkg/lockfile': 1.1.0
+      '@yarnpkg/parsers': 3.0.2
+      '@zkochan/js-yaml': 0.0.7
+      axios: 1.12.0
+      chalk: 4.1.2
+      cli-cursor: 3.1.0
+      cli-spinners: 2.6.1
+      cliui: 8.0.1
+      dotenv: 16.4.7
+      dotenv-expand: 11.0.7
+      enquirer: 2.3.6
+      figures: 3.2.0
+      flat: 5.0.2
+      front-matter: 4.0.2
+      ignore: 7.0.5
+      jest-diff: 30.0.2
+      jsonc-parser: 3.2.0
+      lines-and-columns: 2.0.3
+      minimatch: 9.0.3
+      node-machine-id: 1.1.12
+      npm-run-path: 4.0.1
+      open: 8.4.2
+      ora: 5.3.0
+      resolve.exports: 2.0.3
+      semver: 7.7.2
+      string-width: 4.2.3
+      tar-stream: 2.2.0
+      tmp: 0.2.4
+      tree-kill: 1.2.2
+      tsconfig-paths: 4.2.0
+      tslib: 2.8.1
+      yaml: 2.8.0
+      yargs: 17.6.2
+      yargs-parser: 21.1.1
+    optionalDependencies:
+      '@nx/nx-darwin-arm64': 22.0.0-beta.4
+      '@nx/nx-darwin-x64': 22.0.0-beta.4
+      '@nx/nx-freebsd-x64': 22.0.0-beta.4
+      '@nx/nx-linux-arm-gnueabihf': 22.0.0-beta.4
+      '@nx/nx-linux-arm64-gnu': 22.0.0-beta.4
+      '@nx/nx-linux-arm64-musl': 22.0.0-beta.4
+      '@nx/nx-linux-x64-gnu': 22.0.0-beta.4
+      '@nx/nx-linux-x64-musl': 22.0.0-beta.4
+      '@nx/nx-win32-arm64-msvc': 22.0.0-beta.4
+      '@nx/nx-win32-x64-msvc': 22.0.0-beta.4
+      '@swc-node/register': 1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@swc/types@0.1.7)(typescript@5.9.2)
+      '@swc/core': 1.5.7(@swc/helpers@0.5.17)
     transitivePeerDependencies:
       - debug
 
