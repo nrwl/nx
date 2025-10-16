@@ -273,8 +273,23 @@ export function generateOptionsMarkdown(
       .sort((a, b) => sortAlphabeticallyFunction(a.name[0], b.name[0]))
       .filter(({ hidden }) => !hidden)
       .forEach((option) => {
-        function nameAliases(aliases) {
-          return aliases.map((alias) => code('--' + alias)).join(', ');
+        function formatAlias(alias: string, canonical: string) {
+          if (alias === canonical) {
+            return `--${alias}`;
+          }
+
+          if (alias.length === 1) {
+            return `-${alias}`;
+          }
+
+          return `--${alias}`;
+        }
+
+        function nameAliases([canonical, ...aliases]: string[]) {
+          const all = [canonical, ...aliases].map((alias) =>
+            formatAlias(alias, canonical)
+          );
+          return all.map((flag) => code(flag)).join(', ');
         }
         const name = option.deprecated
           ? strikethrough(nameAliases(option.name))
@@ -307,4 +322,8 @@ export function generateOptionsMarkdown(
       });
   }
   return h2('Options', table(items, fields));
+}
+
+function formatFlag(flag: string): string {
+  return flag.length > 1 ? code('--' + flag) : code('-' + flag);
 }
