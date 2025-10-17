@@ -53,6 +53,7 @@
     "@nx/playwright": "workspace:*",
     "@nx/rsbuild": "workspace:*",
     "@nx/vite": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "nx": "workspace:*"
   },
   "optionalDependencies": {
