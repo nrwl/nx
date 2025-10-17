@@ -55,7 +55,7 @@ public static partial class TargetBuilder
             },
             DependsOn = [$"^{targetName}"],
             Cache = true,
-            Inputs = ["default", $"^{productionInput}"],
+            Inputs = [productionInput, $"^{productionInput}"],
             Outputs =
             [
                 $"{outputPrefix}/{outputPath}",
