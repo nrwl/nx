@@ -175,6 +175,19 @@ describe('React Rspack Module Federation Misc', () => {
       `
       );
 
+      [shell, remote1, remote2].forEach((app) => {
+        ['development', 'production'].forEach(async (configuration) => {
+          const cliOutput = runCLI(`run ${app}:build:${configuration}`);
+          expect(cliOutput).toContain('Successfully ran target');
+        });
+      });
+
+      const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
+        output.includes(`http://localhost:${readPort(shell)}`)
+      );
+
+      await killProcessAndPorts(serveResult.pid, readPort(shell));
+
       if (runE2ETests()) {
         const e2eResultsSwc = await runCommandUntil(
           `e2e ${shell}-e2e --verbose`,
