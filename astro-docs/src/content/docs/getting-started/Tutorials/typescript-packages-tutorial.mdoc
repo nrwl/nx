@@ -83,13 +83,13 @@ Let's create two TypeScript packages that demonstrate how to structure a TypeScr
 
 First, generate the `animal` package:
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/js:lib packages/animal --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
 Then generate the `zoo` package:
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
@@ -105,9 +105,10 @@ Running these commands should lead to new directories and files in your workspac
   - vitest.workspace.ts
 
 {%/filetree %}
+
 Let's add some code to our packages. First, add the following code to the `animal` package:
 
-```ts {6-19}
+```ts {% meta="{6-19}" %}
 // packages/animal/src/lib/animal.ts
 export function animal(): string {
   return 'animal';
@@ -141,7 +142,24 @@ export function zoo(): string {
 }
 ```
 
-Also create an executable entry point for the zoo package:
+Add the `@acme/animal` dependency to `zoo`'s `package.json` (use `*` for npm or `workspace:*` for pnpm/yarn):
+
+```json {% meta="{3-5}" %}
+// packages/zoo/package.json
+{
+  "dependencies": {
+    "@acme/animal": "*"
+  }
+}
+```
+
+Then link the packages:
+
+```shell
+npm install
+```
+
+Now create an executable entry point for the zoo package:
 
 ```ts
 // packages/zoo/src/index.ts
@@ -152,13 +170,13 @@ console.log(zoo());
 
 To build your packages, run:
 
-```shell {% frame="none" %}
+```shell
 npx nx build animal
 ```
 
 This creates a compiled version of your package in the `dist/packages/animal` folder. Since the `zoo` package depends on `animal`, building `zoo` will automatically build `animal` first:
 
-```shell {% frame="none" %}
+```shell
 npx nx build zoo
 ```
 
@@ -166,7 +184,7 @@ You'll see both packages are built, with outputs in their respective `dist` fold
 
 You can also run the `zoo` package to see it in action:
 
-```shell {% frame="none" %}
+```shell
 node packages/zoo/dist/index.js
 ```
 
@@ -205,7 +223,7 @@ In `nx.json` there's already the `@nx/js` plugin registered which automatically 
 
 To view the tasks that Nx has detected, look in the [Nx Console](/docs/getting-started/editor-setup) project detail view or run:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project animal
 ```
 
@@ -356,7 +374,7 @@ When you develop packages, creating shared utilities that multiple packages can 
 
 Let's create a shared utilities library that both our existing packages can use:
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
@@ -375,7 +393,7 @@ Now we have:
 
 Let's add a utility function that our packages can share:
 
-```ts {6-12}
+```ts {% meta="{6-12}" %}
 // packages/util/src/lib/util.ts
 export function util(): string {
   return 'util';
@@ -394,7 +412,7 @@ export function getRandomItem<T>(items: T[]): T {
 
 This allows us to easily import them into other packages. Let's update our `animals` package to use the shared utility:
 
-```ts {2,19-21}
+```ts {% meta="{2,19-21}" %}
 // packages/animals/src/lib/animals.ts
 import { getRandomItem } from '@acme/util';
 
@@ -420,7 +438,7 @@ export function getRandomAnimal(): Animal {
 
 And update the `zoo` package to use the formatting utility:
 
-```ts {3,7,8}
+```ts {% meta="{3,7,8}" %}
 // packages/zoo/src/lib/zoo.ts
 import { getRandomAnimal } from '@acme/animal';
 import { formatMessage } from '@acme/util';
@@ -432,11 +450,38 @@ export function zoo(): string {
 }
 ```
 
+Update the dependencies in each package's `package.json`:
+
+```json {% meta="{3-5}" %}
+// packages/animal/package.json
+{
+  "dependencies": {
+    "@acme/util": "*"
+  }
+}
+```
+
+```json {% meta="{3-6}" %}
+// packages/zoo/package.json
+{
+  "dependencies": {
+    "@acme/animal": "*",
+    "@acme/util": "*"
+  }
+}
+```
+
+Link the packages:
+
+```shell
+npm install
+```
+
 Now when you run `npx nx build zoo`, Nx will automatically build all the dependencies in the correct order: first `util`, then `animal`, and finally `zoo`.
 
 Run the `zoo` package to see the updated output format:
 
-```shell {% frame="none" %}
+```shell
 node packages/zoo/dist/index.js
 ```
 
@@ -446,7 +491,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell {% frame="none" %}
+```shell
 npx nx graph
 ```
 
@@ -499,7 +544,7 @@ You should be able to see something similar to the following in your browser.
 
 Let's create a git branch with our new packages so we can open a pull request later:
 
-```shell {% frame="none" %}
+```shell
 git checkout -b add-zoo-packages
 git add .
 git commit -m 'add animal and zoo packages'
@@ -511,13 +556,13 @@ Our packages come with preconfigured building and testing . Let's intentionally 
 
 You can run tests for individual packages:
 
-```shell {% frame="none" %}
+```shell
 npx nx build zoo
 ```
 
 Or run multiple tasks in parallel across all packages:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t build test
 ```
 
@@ -558,7 +603,7 @@ In this section, we'll explore how Nx Cloud can help your pull request get to gr
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```yaml {32,33}
+```yaml {% meta="{32,33}" %}
 # .github/workflows/ci.yml
 name: CI
 
@@ -600,7 +645,7 @@ You will also need to install the [Nx Console](/docs/getting-started/editor-setu
 
 Now, let's push the `add-zoo-packages` branch to GitHub and open a new pull request.
 
-```shell {% frame="none" %}
+```shell
 git push origin add-zoo-packages
 # Don't forget to open a pull request on GitHub
 ```
@@ -647,7 +692,7 @@ If you decide to publish your packages to NPM, Nx can help you [manage the relea
 
 First you'll need to define which projects Nx should manage releases for by setting the `release.projects` property in `nx.json`:
 
-```json {4-6}
+```json {% meta="{4-6}" %}
 // nx.json
 {
   ...
@@ -663,13 +708,13 @@ Now you're ready to use the `nx release` command to publish your packages. The f
 
 To preview your first release, run:
 
-```shell {% frame="none" %}
+```shell
 npx nx release --first-release --dry-run
 ```
 
 The command will ask you a series of questions and then show you what the results would be. Once you are happy with the results, run it again without the `--dry-run` flag:
 
-```shell {% frame="none" %}
+```shell
 npx nx release --first-release
 ```
 
