@@ -631,7 +631,7 @@ describe('Nx Running Tests', () => {
   describe('run-many', () => {
     it('should build specific and all projects', () => {
       // This is required to ensure the numbers used in the assertions make sense for this test
-      const proj = newProject();
+      const proj = newProject({ packages: ['@nx/js', '@nx/node', '@nx/web'] });
       const appA = uniq('appa-rand');
       const libA = uniq('liba-rand');
       const libB = uniq('libb-rand');
