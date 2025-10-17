@@ -2762,6 +2762,9 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      ignore:
+        specifier: ^7.0.5
+        version: 7.0.5
       nx:
         specifier: workspace:*
         version: link:../nx

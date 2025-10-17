@@ -1,11 +1,18 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { logger, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
+import {
+  logger,
+  workspaceRoot,
+  ProjectConfiguration,
+  writeJsonFile,
+} from '@nx/devkit';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { hashObject } from 'nx/src/hasher/file-hasher';
 
-export interface AnalysisResult {
+export interface AnalysisSuccessResult {
   // Maps project file path -> node configuration
   nodesByFile: Record<string, ProjectConfiguration>;
   // Maps project root -> referenced project roots
@@ -13,6 +20,51 @@ export interface AnalysisResult {
     string,
     { refs: string[]; sourceConfigFile: string }
   >;
+}
+export interface AnalysisErrorResult {
+  error: Error;
+}
+export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
+
+const analyzerCaches = new Map<string, Record<string, AnalysisSuccessResult>>();
+
+function getCachePathForOptionsHash(optionsHash: string): string {
+  return join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`);
+}
+
+function readAnalyzerCache(
+  optionsHash: string
+): Record<string, AnalysisSuccessResult> {
+  if (analyzerCaches.has(optionsHash)) {
+    return analyzerCaches.get(optionsHash)!;
+  }
+  const cacheFilePath = getCachePathForOptionsHash(optionsHash);
+  try {
+    return JSON.parse(readFileSync(cacheFilePath, 'utf-8'));
+  } catch {
+    return {};
+  }
+}
+
+function writeAnalyzerCache(
+  optionsHash: string,
+  cache: Record<string, AnalysisSuccessResult>
+): void {
+  analyzerCaches.set(optionsHash, cache);
+  const cacheFilePath = getCachePathForOptionsHash(optionsHash);
+  const cacheDir = dirname(cacheFilePath);
+  if (!existsSync(cacheDir)) {
+    mkdirSync(cacheDir, { recursive: true });
+  }
+  try {
+    writeJsonFile(cacheFilePath, cache);
+  } catch (error) {
+    logger.warn(
+      `Failed to write .NET analyzer cache to ${cacheFilePath}: ${
+        (error as Error).message
+      }`
+    );
+  }
 }
 
 export interface DotNetPluginOptions {
@@ -70,27 +122,13 @@ async function calculateProjectFilesHash(
 }
 
 /**
- * Estimate the command line length for all project files.
- * ARG_MAX is typically 128KB-2MB on modern systems, but we'll be conservative.
- */
-function shouldUseStdin(projectFiles: string[]): boolean {
-  // Use stdin if we have more than 100 files, or if the total length exceeds 50KB
-  if (projectFiles.length > 100) {
-    return true;
-  }
-
-  const totalLength = projectFiles.reduce((sum, f) => sum + f.length, 0);
-  return totalLength > 50 * 1024;
-}
-
-/**
  * Run the msbuild-analyzer and return the results.
  * Uses stdin for large file lists to avoid ARG_MAX issues.
  */
 function runAnalyzer(
   projectFiles: string[],
   options?: DotNetPluginOptions
-): AnalysisResult {
+): AnalysisSuccessResult {
   if (projectFiles.length === 0) {
     return { nodesByFile: {}, referencesByRoot: {} };
   }
@@ -100,27 +138,32 @@ function runAnalyzer(
   // Set environment variables for the analyzer process
   const env = { ...process.env };
 
+  // TODO(@AgentEnder): Remove this if anyone reports issues with being unable
+  // to locate the .NET runtime, currently I'm not hitting the issue but when I was
+  // this solved it, and it took a deal of effort to track down so I'm leaving it here commented for now.
+  // In Nx 23, if no one has reported the issue, its probably safe to remove.
+  //
   // On macOS/Linux, set library path to help find libhostfxr.dylib
-  if (process.platform === 'darwin' || process.platform === 'linux') {
-    const dotnetRoot = process.env.DOTNET_ROOT || '/usr/local/share/dotnet';
-    const hostFxrPath = join(dotnetRoot, 'host', 'fxr');
+  // if (process.platform === 'darwin' || process.platform === 'linux') {
+  //   const dotnetRoot = process.env.DOTNET_ROOT || '/usr/local/share/dotnet';
+  //   const hostFxrPath = join(dotnetRoot, 'host', 'fxr');
 
-    if (existsSync(hostFxrPath)) {
-      const versions = readdirSync(hostFxrPath);
-      if (versions.length > 0) {
-        // Use the latest version
-        const latestVersion = versions.sort().reverse()[0];
-        const fxrDir = join(hostFxrPath, latestVersion);
+  //   if (existsSync(hostFxrPath)) {
+  //     const versions = readdirSync(hostFxrPath);
+  //     if (versions.length > 0) {
+  //       // Use the latest version
+  //       const latestVersion = versions.sort().reverse()[0];
+  //       const fxrDir = join(hostFxrPath, latestVersion);
 
-        const envVar =
-          process.platform === 'darwin'
-            ? 'DYLD_FALLBACK_LIBRARY_PATH'
-            : 'LD_LIBRARY_PATH';
-        const currentValue = env[envVar];
-        env[envVar] = currentValue ? `${fxrDir}:${currentValue}` : fxrDir;
-      }
-    }
-  }
+  //       const envVar =
+  //         process.platform === 'darwin'
+  //           ? 'DYLD_FALLBACK_LIBRARY_PATH'
+  //           : 'LD_LIBRARY_PATH';
+  //       const currentValue = env[envVar];
+  //       env[envVar] = currentValue ? `${fxrDir}:${currentValue}` : fxrDir;
+  //     }
+  //   }
+  // }
 
   try {
     let output: string;
@@ -156,7 +199,7 @@ function runAnalyzer(
 
     output = result.stdout;
 
-    return JSON.parse(output) as AnalysisResult;
+    return JSON.parse(output) as AnalysisSuccessResult;
   } catch (error) {
     const err = error as { stderr?: string; message: string };
     if (err.stderr) {
@@ -179,23 +222,66 @@ export async function analyzeProjects(
   projectFiles: string[],
   options?: DotNetPluginOptions
 ): Promise<AnalysisResult> {
-  const hash = await calculateProjectFilesHash(projectFiles);
+  const filesHash = await calculateProjectFilesHash(projectFiles);
 
   // Return cached results if the hash matches
-  if (cache && cache.hash === hash) {
+  if (
+    cache &&
+    cache.hash === filesHash &&
+    // NOTE: We don't read from the cache here if it's an error result,
+    // to allow retrying analysis in case of transient errors or errors fixed
+    // that may not be reflected in the hash (like setting an env var).
+    isAnalysisSuccessResult(cache.result)
+  ) {
     return cache.result;
   }
 
+  const optionsHash = hashObject(options);
+  const analyzerCache = readAnalyzerCache(optionsHash);
+  const cachedResult = analyzerCache[filesHash];
+  if (cachedResult) {
+    // Update cache
+    cache = {
+      hash: filesHash,
+      result: cachedResult,
+    };
+    return cachedResult;
+  }
+
   // Run the analyzer
-  const result = runAnalyzer(projectFiles, options);
+  try {
+    const result = runAnalyzer(projectFiles, options);
 
-  // Update cache
-  cache = {
-    hash,
-    result,
-  };
+    // Update local cache
+    cache = {
+      hash: filesHash,
+      result,
+    };
+    // Update persistent cache
+    writeAnalyzerCache(optionsHash, {
+      ...analyzerCache,
+      [filesHash]: result,
+    });
 
-  return result;
+    return result;
+  } catch (error) {
+    const err = error as Error;
+    // We save the error result in the local cache to avoid getting
+    // a different error when reading the cached result to createDependencies.
+    // Instead, we'll find a cached error and know that it was printed earlier.
+    // We DO NOT save error results to the on-disk cache to allow retries without
+    // running `nx reset`.
+    const errorResult: AnalysisResult = {
+      nodesByFile: {},
+      referencesByRoot: {},
+      error: err,
+    };
+    cache = {
+      hash: filesHash,
+      result: errorResult,
+    };
+    return errorResult;
+  }
 }
 
 /**
@@ -219,4 +305,16 @@ export function readCachedAnalysisResult(): AnalysisResult {
  */
 export function clearCache(): void {
   cache = null;
+}
+
+export function isAnalysisErrorResult(
+  result: AnalysisResult
+): result is AnalysisErrorResult {
+  return 'error' in result;
+}
+
+export function isAnalysisSuccessResult(
+  result: AnalysisResult
+): result is AnalysisSuccessResult {
+  return !('error' in result);
 }

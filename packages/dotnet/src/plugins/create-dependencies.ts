@@ -5,8 +5,11 @@ import {
   RawProjectGraphDependency,
 } from '@nx/devkit';
 
-import { DotNetPluginOptions } from './create-nodes-analyzer';
-import { readCachedAnalysisResult } from './analyzer-client';
+import { DotNetPluginOptions } from './create-nodes';
+import {
+  readCachedAnalysisResult,
+  isAnalysisErrorResult,
+} from '../analyzer/analyzer-client';
 
 function createProjectRootMappings(
   projects: Record<string, ProjectConfiguration>
@@ -28,7 +31,15 @@ export const createDependencies: CreateDependencies<
 
   // Read the cached analysis result populated by createNodes
   // createNodes always runs before createDependencies, so the cache should be populated
-  const { referencesByRoot, nodesByFile } = readCachedAnalysisResult();
+  const cachedResult = readCachedAnalysisResult();
+
+  if (isAnalysisErrorResult(cachedResult)) {
+    throw new Error(
+      'There was an error analyzing .NET projects. See earlier logs.'
+    );
+  }
+
+  const { referencesByRoot } = cachedResult;
 
   // Map references to dependencies
   // The analyzer returns: { [projectRoot]: [referencedProjectRoot1, referencedProjectRoot2, ...] }

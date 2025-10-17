@@ -1,5 +1,8 @@
 import { CreateNodesV2, logger } from '@nx/devkit';
-import { analyzeProjects } from './analyzer-client';
+import {
+  analyzeProjects,
+  isAnalysisErrorResult,
+} from '../analyzer/analyzer-client';
 
 export interface DotNetPluginOptions {
   buildTargetName?: string;
@@ -27,10 +30,15 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
         packTargetName: options?.packTargetName ?? 'pack',
       };
 
-      const { nodesByFile } = await analyzeProjects(
+      const result = await analyzeProjects(
         [...configFilePaths],
         normalizedOptions
       );
+
+      if (isAnalysisErrorResult(result)) {
+        throw result.error;
+      }
+      const { nodesByFile } = result;
 
       // Return array of [configFile, result] tuples
       return configFilePaths.map((configFile) => {
