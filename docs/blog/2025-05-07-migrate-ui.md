@@ -20,9 +20,9 @@ This article is part of the Nx 21 Launch Week series:
 
 {% /callout %}
 
-Keeping your dependencies up to date is crucial for maintaining a healthy codebase. Nx provides the [`migrate`](/features/automate-updating-dependencies) command to help with this important part of the development process. And although it is a [very powerful and flexible tool](/recipes/tips-n-tricks/advanced-update), most users may not be fully aware of its capabilities.
+Keeping your dependencies up to date is crucial for maintaining a healthy codebase. Nx provides the [`migrate`](/docs/features/automate-updating-dependencies) command to help with this important part of the development process. And although it is a [very powerful and flexible tool](/docs/guides/tips-n-tricks/advanced-update), most users may not be fully aware of its capabilities.
 
-We're excited to introduce the [**Migrate UI**](/recipes/nx-console/console-migrate-ui) in Nx Console, a new feature that simplifies the migration process. This visual interface guides you through each step of the migration, giving you full visibility and control over what's happening to your codebase.
+We're excited to introduce the [**Migrate UI**](/docs/guides/nx-console/console-migrate-ui) in Nx Console, a new feature that simplifies the migration process. This visual interface guides you through each step of the migration, giving you full visibility and control over what's happening to your codebase.
 
 ## Why We Built the Migrate UI
 

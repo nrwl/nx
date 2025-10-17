@@ -10,4 +10,4 @@ In this lesson, we’ll take the Tasker monorepo, push it to GitHub, set up an N
 
 ## Relevant Links
 
-- [Connect to Nx Cloud](/ci/recipes/set-up)
+- [Connect to Nx Cloud](/docs/guides/nx-cloud/setup-ci)

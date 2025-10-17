@@ -12,6 +12,8 @@ export interface CatalogManager {
 
   parseCatalogReference(version: string): CatalogReference | null;
 
+  getCatalogDefinitionFilePaths(): string[];
+
   /**
    * Get catalog definitions from the workspace.
    */

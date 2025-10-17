@@ -127,6 +127,16 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
           'static:storybook',
           'storybook:static',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'storybook:build-deps',
+          'storybook-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'storybook:watch-deps',
+          'storybook-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );

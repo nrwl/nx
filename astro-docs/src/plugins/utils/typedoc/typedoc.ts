@@ -78,6 +78,16 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     join(projectRoot, 'node_modules', '@types'),
   ];
 
+  // This ensures that nx and @nx/<plugin> modules resolve to `dist` rather than what's installed in node_modules.
+  // TODO(jack,caleb): If we move outDir from `dist/packages/nx` to `packages/nx/dist` like standard TS solution setup,
+  //                   then this isn't needed anymore since we should have devDependencies that resolve to local
+  //                   `node_modules` not the root one.
+  tsconfigObj.compilerOptions.baseUrl = workspaceRoot;
+  tsconfigObj.compilerOptions.paths = {
+    'nx/*': ['dist/packages/nx/*', 'packages/nx/src/*'],
+    '@nx/*': ['dist/packages/*', 'packages/*/src/*'],
+  };
+
   tsconfigObj.exclude = [
     ...(tsconfigObj.exclude || []),
     '**/*.spec.ts',

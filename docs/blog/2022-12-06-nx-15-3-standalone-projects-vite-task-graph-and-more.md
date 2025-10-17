@@ -53,7 +53,7 @@ On to 4 million!
 One of our most loved features also just got more powerful: the Nx graph!
 
 Nx already visualizes your project graph, mapping the dependencies different projects have on one another through imports and exports in your code. But your tasks also have a graph. Your task can either depend on another target on the same project, let's say you have a `prebuild`  
-and a `build` target. Whenever you run `build`, you want to run `prebuild` first. Similarly, if your project depends on other projects, you might want to make sure to build them first as well. This is called a [task pipeline](/concepts/task-pipeline-configuration) and can be defined in `nx.json` as follows:
+and a `build` target. Whenever you run `build`, you want to run `prebuild` first. Similarly, if your project depends on other projects, you might want to make sure to build them first as well. This is called a [task pipeline](/docs/concepts/task-pipeline-configuration) and can be defined in `nx.json` as follows:
 
 ```json5 {% fileName="nx.json" %}
 {
@@ -78,7 +78,7 @@ You can add another project as well, showing what the task graph looks like for 
 
 {% youtube src="https://www.youtube.com/watch?v=qEaVzh-oBBc" /%}
 
-Nx is widely known as [THE developer tool](https://monorepo.tools/) people look at when it comes to implementing monorepos in the frontend space. However, a lot of the unique features that Nx ships (in particular when it comes to implementing [Integrated Monorepos](/deprecated/integrated-vs-package-based)) can be beneficial even outside of the typical monorepo scenario. In particular, Nx plugin features such as code generation, pre-configured build tooling setup, and battle-tested integration with best practices tools (e.g. Cypress, Jest, ESLint, Vite, …).
+Nx is widely known as [THE developer tool](https://monorepo.tools/) people look at when it comes to implementing monorepos in the frontend space. However, a lot of the unique features that Nx ships (in particular when it comes to implementing [Integrated Monorepos](/docs/reference/deprecated/integrated-vs-package-based)) can be beneficial even outside of the typical monorepo scenario. In particular, Nx plugin features such as code generation, pre-configured build tooling setup, and battle-tested integration with best practices tools (e.g. Cypress, Jest, ESLint, Vite, …).
 
 But one stands out most prominently: the **ability to easily modularize** your codebase.
 
@@ -198,9 +198,9 @@ If you are currently using the NxExt based Vite plugin, or even a Webpack based 
 npx nx g @nrwl/vite:configuration
 ```
 
-This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/technologies/build-tools/vite/generators/configuration](/technologies/build-tools/vite/api/generators/configuration)
+This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/technologies/build-tools/vite/generators/configuration](/docs/technologies/build-tools/vite/generators)
 
-You can also find all the details about the new Vite package in our docs: [/technologies/build-tools/vite/introduction](/technologies/build-tools/vite/introduction)
+You can also find all the details about the new Vite package in our docs: [/technologies/build-tools/vite/introduction](/docs/technologies/build-tools/vite/introduction)
 
 ## Adopting Nx has never been easier
 
@@ -224,10 +224,10 @@ Running this command will install the `nx` package, and then analyze your existi
 
 Check out our docs for all the details on
 
-- [adding Nx to an existing monorepo](/recipes/adopting-nx/adding-to-monorepo)
-- [adding Nx to any non-monorepo setup](/recipes/adopting-nx/adding-to-existing-project)
-- [migrating your CRA project to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [migrating your Angular CLI app to Nx](/technologies/angular/migration/angular)
+- [adding Nx to an existing monorepo](/docs/guides/adopting-nx/adding-to-monorepo)
+- [adding Nx to any non-monorepo setup](/docs/guides/adopting-nx/adding-to-existing-project)
+- [migrating your CRA project to Nx](/docs/guides/adopting-nx/adding-to-existing-project)
+- [migrating your Angular CLI app to Nx](/docs/technologies/angular/migration/angular)
 
 Oh..you're wondering why you would want to add Nx to an existing non-monorepo project? Then keep reading 👇
 
@@ -271,7 +271,7 @@ This process will ask you a few questions about which operations are cacheable. 
 }
 ```
 
-Read more in our docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
+Read more in our docs: [/recipes/adopting-nx/adding-to-existing-project](/docs/guides/adopting-nx/adding-to-existing-project)
 
 ## Root-level Scripts
 
@@ -310,9 +310,9 @@ You can then run it with
 npx nx docs
 ```
 
-As the next steps you might obviously want to add `docs` to the [cacheable operations](/ci/reference/config) and [fine-tune it's cache inputs](/recipes/running-tasks/configure-inputs).
+As the next steps you might obviously want to add `docs` to the [cacheable operations](/docs/reference/nx-cloud/config) and [fine-tune it's cache inputs](/docs/guides/tasks--caching/configure-inputs).
 
-Read more about it in our docs: [/recipes/running-tasks/root-level-scripts](/recipes/running-tasks/root-level-scripts)
+Read more about it in our docs: [/recipes/running-tasks/root-level-scripts](/docs/guides/tasks--caching/root-level-scripts)
 
 ## Simplified Nx run-commands
 
@@ -343,9 +343,9 @@ Nx can automatically detect your scripts in `package.json`. But if you have an i
 }
 ```
 
-The task itself is handled by an [Nx executor](/extending-nx/recipes/local-executors) that comes with the plugin, in this case `@nrwl/vite:build` to build a Vite project.
+The task itself is handled by an [Nx executor](/docs/extending-nx/local-executors) that comes with the plugin, in this case `@nrwl/vite:build` to build a Vite project.
 
-To add a custom command, like invoking a node script, Nx has the so-called ["run-commands"](/recipes/running-tasks/run-commands-executor). So far you had to wrap those commands as follows:
+To add a custom command, like invoking a node script, Nx has the so-called ["run-commands"](/docs/guides/tasks--caching/run-commands-executor). So far you had to wrap those commands as follows:
 
 ```json5 {% fileName="project.json" %}
 {
@@ -386,7 +386,7 @@ For simple commands this was a huge overhead, so we simplified it to just this:
 
 Simple, isn't it! Obviously the expanded form is still there and also useful for when you need more options, run multiple commands or features such as argument forwarding.
 
-You can read all about it in our docs: [/recipes/running-tasks/run-commands-executor](/recipes/running-tasks/run-commands-executor)
+You can read all about it in our docs: [/recipes/running-tasks/run-commands-executor](/docs/guides/tasks--caching/run-commands-executor)
 
 ## Coming up
 
@@ -414,7 +414,7 @@ npx nx migrate --run-migrations
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

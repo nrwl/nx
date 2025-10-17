@@ -12,7 +12,7 @@ pnpm nx graph
 
 {% callout type="info" title="Install Nx Console" %}
 
-You can also install **Nx Console** which is an extension for VSCode and IntelliJ that enhances the DX when working with Nx monorepos among which there's also the ability to visualize the project graph right in your editor window. Read more [about it here](/getting-started/editor-setup).
+You can also install **Nx Console** which is an extension for VSCode and IntelliJ that enhances the DX when working with Nx monorepos among which there's also the ability to visualize the project graph right in your editor window. Read more [about it here](/docs/getting-started/editor-setup).
 
 {% /callout %}
 
@@ -24,4 +24,4 @@ In this lesson, you'll learn how to define such dependencies using the `implicit
 
 ## Relevant Links
 
-- [Project configuration: implicitDependencies](/reference/project-configuration#implicitdependencies)
+- [Project configuration: implicitDependencies](/docs/reference/project-configuration)

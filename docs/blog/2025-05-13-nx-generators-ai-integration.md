@@ -45,7 +45,7 @@ This predictability is particularly valuable in enterprise settings where:
 - New libraries should follow established architectural patterns
 - Customized setups need to be reproducible across projects
 
-We see a lot of Nx users either tailor existing generators to their needs or [create entirely custom ones](/extending-nx/recipes/local-generators), ensuring that new code follows team standards perfectly.
+We see a lot of Nx users either tailor existing generators to their needs or [create entirely custom ones](/docs/extending-nx/local-generators), ensuring that new code follows team standards perfectly.
 
 ## Where AI Shines: Context and "Intelligence"
 
@@ -86,7 +86,7 @@ library properly in the package.json of the main shop application.
 
 > Note there's two different parts here: the first part that can be perfectly satisfied by an Nx generator, and the 2nd part (`Afterwards, also connect it to the main shop application...`) where the intelligence of the LLM comes in that is able to connect the resulting code to your codebase.
 
-Your coding assistant (in this case VSCode Copilot) invokes the [Nx MCP](/features/enhance-AI) to better understand the underlying workspace structure and then invokes the MCP's tools for code generation:
+Your coding assistant (in this case VSCode Copilot) invokes the [Nx MCP](/docs/features/enhance-ai) to better understand the underlying workspace structure and then invokes the MCP's tools for code generation:
 
 - `nx_generators` - Returns a list of available generators in the workspace
 - `nx_generator_schema` - Provides detailed schema information for a specific generator such as the available options that can be provided to a generator
@@ -117,8 +117,8 @@ As [Victor noted in his recent post](/blog/nx-and-ai-why-they-work-together):
 
 To use this feature, you'll need:
 
-1. [Nx Console](/getting-started/editor-setup) installed in VSCode or Cursor (we're working on IntelliJ)
-2. The [Nx MCP server configured](/features/enhance-AI) for your editor
+1. [Nx Console](/docs/getting-started/editor-setup) installed in VSCode or Cursor (we're working on IntelliJ)
+2. The [Nx MCP server configured](/docs/features/enhance-ai) for your editor
 
 Once set up, you can start leveraging this powerful combination of predictable generators and intelligent AI assistance.
 
@@ -130,8 +130,8 @@ That said, don't forget to subscribe to our [YouTube channel](https://www.youtub
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
-- 🛠️ [Nx Generators](/features/generate-code)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
+- 🛠️ [Nx Generators](/docs/features/generate-code)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)

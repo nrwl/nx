@@ -63,9 +63,12 @@ export interface NxReleaseVersionResult {
 }
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose, () => createAPI({}, false)(args));
 
-export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
+export function createAPI(
+  overrideReleaseConfig: NxReleaseConfiguration,
+  ignoreNxJsonConfig: boolean
+) {
   /**
    * NOTE: This function is also exported for programmatic usage and forms part of the public API
    * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
@@ -75,11 +78,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     args: VersionOptions
   ): Promise<NxReleaseVersionResult> {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
-    const userProvidedReleaseConfig = deepMergeJson(
-      nxJson.release ?? {},
-      overrideReleaseConfig ?? {}
-    );
+    const overriddenConfig = overrideReleaseConfig ?? {};
+    const userProvidedReleaseConfig = ignoreNxJsonConfig
+      ? overriddenConfig
+      : deepMergeJson(readNxJson().release ?? {}, overriddenConfig);
 
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(

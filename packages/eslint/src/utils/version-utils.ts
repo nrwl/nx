@@ -5,6 +5,11 @@ import {
 } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
+import { lt } from 'semver';
+import {
+  eslint9__typescriptESLintVersion,
+  typescriptESLintVersion,
+} from './versions';
 
 export function getInstalledPackageVersion(
   pkgName: string,
@@ -48,4 +53,12 @@ export function getInstalledPackageVersion(
 
 export function getInstalledEslintVersion(tree?: Tree): string | null {
   return getInstalledPackageVersion('eslint', tree);
+}
+
+export function getTypeScriptEslintVersionToInstall(tree: Tree): string | null {
+  const eslintVersion = getInstalledEslintVersion(tree);
+
+  return eslintVersion && lt(eslintVersion, '9.0.0')
+    ? typescriptESLintVersion
+    : eslint9__typescriptESLintVersion;
 }

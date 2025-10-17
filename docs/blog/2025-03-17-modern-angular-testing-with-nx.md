@@ -56,7 +56,7 @@ NX  Successfully ran target e2e for project my-app-e2e (154ms)
 Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-This is a powerful feature, especially when used in conjunction with [Remote Caching](/ci/features/remote-cache) (i.e. Nx Replay).
+This is a powerful feature, especially when used in conjunction with [Remote Caching](/docs/features/ci-features/remote-cache) (i.e. Nx Replay).
 
 How does Nx understand when a task can be read from cache? Well, the `@nx/playwright` also autoconfigures task inputs for you. So, unless a relevant file is changed, the task can be read from cache. That means updates to `README.md` will replay E2E tests from cache rather than running the expensive task.
 
@@ -88,7 +88,7 @@ npx nx show project my-app
 
 ![Nx Cloud Result](/blog/images/2025-03-17/Screenshot_2025-03-05_at_10.44.52_AM.png)
 
-We also recommend that you install the Nx Console extension for VSCode, Cursor, and IntelliJ. It seamlessly integrates the [Project Details View](/recipes/nx-console/console-project-details) with your editor. To install it visit the Marketplace pages:
+We also recommend that you install the Nx Console extension for VSCode, Cursor, and IntelliJ. It seamlessly integrates the [Project Details View](/docs/guides/nx-console/console-project-details) with your editor. To install it visit the Marketplace pages:
 
 - [VSCode extension](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
 - [IntelliJ plugin](https://plugins.jetbrains.com/plugin/21060-nx-console)
@@ -99,17 +99,17 @@ Okay, the caching is already great on its own, but Nx has another very powerful 
 
 As workspaces grow, they often run into CI scaling issues that are hard to solve. E2E tests are often the main culprit of CI slowness, as a test suite can take several hours to run in large workspaces. This is just the reality for many teams, where you need the large test suites to ensure quality, but it's impossible to iterate quickly when each CI run takes hours.
 
-Fortunately, Nx has a solution that does not require complicated pipeline files or a whole team of infrastructure engineers to keep CI running smoothly. That solution is [Automatic Test Splitting](/ci/features/split-e2e-tasks) (or Nx Atomizer).
+Fortunately, Nx has a solution that does not require complicated pipeline files or a whole team of infrastructure engineers to keep CI running smoothly. That solution is [Automatic Test Splitting](/docs/features/ci-features/split-e2e-tasks) (or Nx Atomizer).
 
 If you view the `my-app-e2e` project (`npx nx show project my-app-e2e`), you will notice that there is an `e2e-ci` target, with additional targets created for each test file. This is the task splitting feature that `@nx/playwright` enables. Whereas the `e2e` target runs the full Playwright suite, the `e2e-ci` task runs additional tasks created from test files.
 
-When run on a single machine, `e2e-ci` will be slower because it starts multiple Playwright processes, which is why we only allow it to run through distribution. To [enable distribution](/ci/features/split-e2e-tasks#enable-automated-task-splitting), you must connect your workspace to [Nx Cloud](/nx-cloud). This is easily done with the `connect` command.
+When run on a single machine, `e2e-ci` will be slower because it starts multiple Playwright processes, which is why we only allow it to run through distribution. To [enable distribution](/docs/features/ci-features/split-e2e-tasks#enable-automated-task-splitting), you must connect your workspace to [Nx Cloud](/nx-cloud). This is easily done with the `connect` command.
 
 ```shell
 npx nx@latest connect
 ```
 
-Follow the onboarding steps and you should be connected within five minutes. For more information, check out our [setup guides](/ci/recipes/set-up) for all supported CI providers (GitHub, GitLab, Azure, etc.).
+Follow the onboarding steps and you should be connected within five minutes. For more information, check out our [setup guides](/docs/guides/nx-cloud/setup-ci) for all supported CI providers (GitHub, GitLab, Azure, etc.).
 
 Now, let's take a look at a concrete example to get an idea of how much time-saving you can unlock with Nx Atomizer. I created [this repo](https://github.com/jaysoo/angular-testing-demo) that contains a simple Angular application and a UI package. It also has 40 Playwright test files.
 
@@ -184,7 +184,7 @@ npx nx-cloud start-ci-run --distribute-on="12 linux-medium-js" --stop-agents-aft
 
 ### Dynamic Agent Allocation
 
-You can even [dynamically allocate agents](/ci/features/dynamic-agents#dynamically-allocate-agents) depending on how big the changeset is. To do this, add an YAML file as follows:
+You can even [dynamically allocate agents](/docs/features/ci-features/dynamic-agents#dynamically-allocate-agents) depending on how big the changeset is. To do this, add an YAML file as follows:
 
 ```yaml
 # .nx/workflows/distribution-config.yaml
@@ -202,7 +202,7 @@ npx nx-cloud start-ci-run --distribute-on=".nx/workflows/distribution-config.yam
 
 ### Flakiness Detection and Automatic Re-runs
 
-One last thing I want to mention, is that Nx can also help with flaky tests. Nx Cloud can reliably detect flaky tests and automatically re-run them. See the documentation on the [Re-run Flaky Tests](/ci/features/flaky-tasks) for more detail.
+One last thing I want to mention, is that Nx can also help with flaky tests. Nx Cloud can reliably detect flaky tests and automatically re-run them. See the documentation on the [Re-run Flaky Tests](/docs/features/ci-features/flaky-tasks) for more detail.
 
 All of this power comes at very little complexity and maintenance burden. Nx allows you to declaratively describe what you want to run, and how you want to distribute tasks, and we do all the heavy lifting for you.
 
@@ -382,7 +382,7 @@ npx nx serve my-app
 npx nx test my-app
 ```
 
-For more information, check out our [Getting Started](/getting-started/intro) docs.
+For more information, check out our [Getting Started](/docs/getting-started/intro) docs.
 
 ## **Conclusion**
 

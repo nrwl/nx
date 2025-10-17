@@ -2,7 +2,7 @@
 title: "What's the Point of Generating All This Code If You Can't Merge It?"
 slug: 'pr-review-is-the-bottleneck'
 authors: ['Victor Savkin']
-tags: [nx, nx-cloud, self-healing]
+tags: [nx, nx-cloud, self-healing, ai]
 cover_image: /blog/images/articles/self-healing-pr-bottleneck-hero-img.avif
 description: "AI speeds up code authoring, but PR validation becomes the bottleneck. Learn how Nx's Self-Healing CI automatically fixes broken PRs to keep teams moving."
 pinned: true
@@ -114,7 +114,7 @@ The AI revolution will noticeably decrease PR authoring time, creating more PRs.
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

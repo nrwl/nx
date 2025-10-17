@@ -3,7 +3,7 @@ import { createGradleProject } from './create-gradle-project';
 
 export function setupGradleProject(type: 'kotlin' | 'groovy') {
   const gradleProjectName = uniq('my-gradle-project');
-  newProject();
+  newProject({ packages: [] });
   createGradleProject(gradleProjectName, type);
   runCLI(`add @nx/gradle`);
   return gradleProjectName;
