@@ -31,27 +31,7 @@ assignment-rules:
       - e2e-docker
       - e2e-js
     targets:
-      - e2e-ci**react-package**
-      - e2e-ci**react.test**
-      - e2e-ci**react-router-ts-solution**
-      - e2e-ci**next-e2e-and-snapshots**
-      - e2e-ci**next-generation**
-      - e2e-ci**next-ts-solutions**
-      - e2e-ci**next-webpack**
-      - e2e-ci**web**
-      - e2e-ci**remix-ts-solution**
-      - e2e-ci**linter**
-      - e2e-ci**module-federation/misc-rspack-interoperability**
-      - e2e-ci**module-federation/dynamic-federation.webpack**
-      - e2e-ci**docker**
-      - e2e-ci**cypress-legacy**
-      - e2e-ci**nx-remix**
-      - e2e-ci**cypress**
-      - e2e-ci**src/cypress-component-tests-buildable.test**
-      - e2e-ci**src/cypress-component-tests-implicit-dep.test**
-      - e2e-ci**src/js-executor-swc.test**
-      - e2e-ci**src/js-executor-tsc.test**
-      - e2e-ci**src/js-packaging.test**
+      - e2e-ci**
     run-on:
         - agent: linux-large
           parallelism: 1
@@ -77,10 +57,7 @@ assignment-rules:
         parallelism: 1
   - projects:
       - angular
-      - nx
       - react
-      - remix
-      - workspace
     targets:
       - test
     run-on:
