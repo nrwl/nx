@@ -243,7 +243,7 @@ To run the documentation site locally, run the command:
 nx serve astro-docs
 ```
 
-You can then access the application locally at `localhost:4321`. Changes to markdoc files should reflect automatically in the browser on save. 
+You can then access the application locally at `localhost:4321`. Changes to markdoc files should reflect automatically in the browser on save.
 
 #### Working with Plugin Registry
 
