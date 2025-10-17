@@ -119,9 +119,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       ...
-      - name: Start CI Run
-      - run: npx nx start-ci-run --no-distribution
-      ...
       - run: npx nx affected -t lint test build
 
       - run: npx nx fix-ci
