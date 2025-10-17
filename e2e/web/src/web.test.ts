@@ -20,7 +20,7 @@ import { join } from 'path';
 import { copyFileSync } from 'fs';
 
 describe('Web Components Applications', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => newProject({ packages: ['@nx/web'] }));
   afterAll(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {

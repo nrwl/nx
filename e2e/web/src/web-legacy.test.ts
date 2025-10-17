@@ -14,7 +14,7 @@ import {
 import { join } from 'path';
 
 describe('Web Components Applications (legacy)', () => {
-  beforeEach(() => newProject());
+  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/react'] }));
   afterEach(() => cleanupProject());
 
   it('should remove previous output before building', async () => {

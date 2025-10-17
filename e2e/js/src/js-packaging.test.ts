@@ -19,7 +19,7 @@ describe('packaging libs', () => {
   let scope: string;
 
   beforeEach(() => {
-    scope = newProject();
+    scope = newProject({ packages: ['@nx/js'] });
   });
 
   afterEach(() => cleanupProject());

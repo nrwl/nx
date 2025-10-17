@@ -117,19 +117,28 @@ export function newProject({
         );
       }
 
+      let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {
         console.warn(
           'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options'
         );
+        packagesToInstall = [...nxPackages];
+      } else if (packages.length > 0) {
+        packagesToInstall = packages;
       }
-      const packageInstallStart = performance.mark('packageInstall:start');
-      packageInstall((packages ?? nxPackages).join(` `), projScope);
-      const packageInstallEnd = performance.mark('packageInstall:end');
-      packageInstallMeasure = performance.measure(
-        'packageInstall',
-        packageInstallStart.name,
-        packageInstallEnd.name
-      );
+
+      if (packagesToInstall.length) {
+        const packageInstallStart = performance.mark('packageInstall:start');
+        packageInstall(packagesToInstall.join(` `), projScope);
+        const packageInstallEnd = performance.mark('packageInstall:end');
+        packageInstallMeasure = performance.measure(
+          'packageInstall',
+          packageInstallStart.name,
+          packageInstallEnd.name
+        );
+      } else {
+        console.info('No packages to install');
+      }
       // stop the daemon
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
