@@ -1,4 +1,9 @@
-import { e2eConsoleLogger, tmpProjPath } from '@nx/e2e-utils';
+import {
+  e2eConsoleLogger,
+  tmpProjPath,
+  readFile,
+  updateFile,
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
@@ -138,6 +143,9 @@ export async function createMavenProject(
     addProjectJsonNamePrefix
   );
   await createModule(cwd, 'utils', projectName, [], addProjectJsonNamePrefix);
+
+  updateFile('mvnw', readFile('app/mvnw'));
+  updateFile('mvnw.cmd', readFile('app/mvnw.cmd'));
 
   e2eConsoleLogger('Created multi-module Maven project with Spring Boot');
 }
