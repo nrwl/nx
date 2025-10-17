@@ -1,5 +1,5 @@
 import { runMavenAnalysis } from './maven-analyzer';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { readJsonFile } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -19,6 +19,10 @@ describe('Maven Analyzer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (existsSync as jest.Mock).mockReturnValue(true);
+    // Mock mvnd detection to fail by default, so tests use mvnw/mvn
+    (execSync as jest.Mock).mockImplementation(() => {
+      throw new Error('mvnd not found');
+    });
   });
 
   describe('runMavenAnalysis', () => {
