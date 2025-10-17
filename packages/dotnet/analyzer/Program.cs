@@ -116,7 +116,7 @@ try
             sb.AppendLine($"    - .NET {inst.Version} at {inst.MSBuildPath}");
         }
 
-        if (instances.Any(i => i.MSBuildPath.Contains("preview", StringComparison.OrdinalIgnoreCase)))
+        if (instances.Any(i => i.MSBuildPath.Contains("preview", StringComparison.OrdinalIgnoreCase) || i.MSBuildPath.Contains("-rc.", StringComparison.OrdinalIgnoreCase)))
         {
             sb.AppendLine();
             sb.AppendLine("By default, dotnet will not run via a preview SDK.");
