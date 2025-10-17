@@ -525,7 +525,7 @@ function hackFixForDevkitPeerDependencies() {
     );
     devkitPackageJson.peerDependencies['nx'] = `>= ${majorVersion - 1} <= ${
       majorVersion + 1
-    }`;
+    } || ^${majorVersion}.0.0-0`;
     writeFileSync(
       './dist/packages/devkit/package.json',
       JSON.stringify(devkitPackageJson, null, 2)
