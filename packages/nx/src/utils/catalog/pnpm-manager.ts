@@ -34,6 +34,10 @@ export class PnpmCatalogManager implements CatalogManager {
     };
   }
 
+  getCatalogDefinitionFilePaths(): string[] {
+    return ['pnpm-workspace.yaml'];
+  }
+
   getCatalogDefinitions(treeOrRoot: Tree | string): PnpmWorkspaceYaml | null {
     if (typeof treeOrRoot === 'string') {
       const pnpmWorkspacePath = join(treeOrRoot, 'pnpm-workspace.yaml');

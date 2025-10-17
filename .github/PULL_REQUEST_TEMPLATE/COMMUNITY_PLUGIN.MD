@@ -28,12 +28,12 @@ Note: We reserve the right to remove unmaintained plugins from the registry.  If
 
 ## Steps to Submit Your Plugin
 - Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`
-- Update the `community/approved-plugins.json` file with a new entry for your plugin that includes `name`, `url`, `description`:
+- Update the `astro-docs/src/content/approved-community-plugins.json` file with a new entry for your plugin that includes `name`, `url`, `description`:
 
 Example:
 
 ```json
-// community/approved-plugins.json
+// astro-docs/src/content/approved-community-plugins.json
 
 [{
     "name": "@community/plugin",
@@ -42,7 +42,7 @@ Example:
 }]
 ```
 
-Once merged, your plugin will be available when running the `nx list` command, and will also be available in the Plugin Registry on [nx.dev](https://nx.dev/plugin-registry)
+Once merged, your plugin will be available when running the `nx list` command, and will also be available in the Plugin Registry on [nx.dev](https://nx.dev/docs/plugin-registry)
 -->
 
 # Community Plugin Submission
