@@ -100,7 +100,9 @@ public static partial class TargetBuilder
         var baseOutputPath = properties.GetValueOrDefault("BaseOutputPath");
         if (!string.IsNullOrEmpty(baseOutputPath))
         {
-            return MakeRelativeToWorkspace(baseOutputPath, workspaceRoot).TrimEnd('/');
+            var baseRelativePath = MakeRelativeToWorkspace(baseOutputPath, workspaceRoot);
+            // Normalize path separators and trim
+            return baseRelativePath.Replace('\\', '/').TrimEnd('/');
         }
 
         // Otherwise use OutputPath and strip configuration if present
@@ -130,7 +132,9 @@ public static partial class TargetBuilder
         var baseIntermediatePath = properties.GetValueOrDefault("BaseIntermediateOutputPath");
         if (!string.IsNullOrEmpty(baseIntermediatePath))
         {
-            return MakeRelativeToWorkspace(baseIntermediatePath, workspaceRoot).TrimEnd('/');
+            var baseRelativePath = MakeRelativeToWorkspace(baseIntermediatePath, workspaceRoot);
+            // Normalize path separators and trim
+            return baseRelativePath.Replace('\\', '/').TrimEnd('/');
         }
 
         // Otherwise use IntermediateOutputPath and strip configuration if present
