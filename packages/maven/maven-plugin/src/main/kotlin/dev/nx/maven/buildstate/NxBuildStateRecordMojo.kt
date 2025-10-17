@@ -37,19 +37,23 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             log.info("Recording build state for project: ${project.artifactId}")
 
             // Capture compile source roots
-            val compileSourceRoots = project.compileSourceRoots.toSet()
+            val compileSourceRootsAbsolute = project.compileSourceRoots.toSet()
+            val compileSourceRoots = PathUtils.toRelativePaths(compileSourceRootsAbsolute, project.basedir, log)
             log.info("Captured ${compileSourceRoots.size} compile source roots")
 
             // Capture test compile source roots
-            val testCompileSourceRoots = project.testCompileSourceRoots.toSet()
+            val testCompileSourceRootsAbsolute = project.testCompileSourceRoots.toSet()
+            val testCompileSourceRoots = PathUtils.toRelativePaths(testCompileSourceRootsAbsolute, project.basedir, log)
             log.info("Captured ${testCompileSourceRoots.size} test compile source roots")
 
             // Capture resources
-            val resources = project.resources.map { (it as Resource).directory }.filter { it != null }.toSet()
+            val resourcesAbsolute = project.resources.map { (it as Resource).directory }.filter { it != null }.toSet()
+            val resources = PathUtils.toRelativePaths(resourcesAbsolute, project.basedir, log)
             log.info("Captured ${resources.size} resource directories")
 
             // Capture test resources
-            val testResources = project.testResources.map { (it as Resource).directory }.filter { it != null }.toSet()
+            val testResourcesAbsolute = project.testResources.map { (it as Resource).directory }.filter { it != null }.toSet()
+            val testResources = PathUtils.toRelativePaths(testResourcesAbsolute, project.basedir, log)
             log.info("Captured ${testResources.size} test resource directories")
 
 
@@ -79,34 +83,38 @@ class NxBuildStateRecordMojo : AbstractMojo() {
 //            log.info("Captured ${generatedSourceRoots.size} generated source roots")
 //            log.info("Captured ${generatedTestSourceRoots.size} generated test source roots")
 
-            // Capture output directories
-            val outputDirectory = project.build.outputDirectory
-            val testOutputDirectory = project.build.testOutputDirectory
+            // Capture output directories and convert to relative paths
+            val outputDirectoryAbsolute = project.build.outputDirectory
+            val outputDirectory = PathUtils.toRelativePath(outputDirectoryAbsolute, project.basedir, log)
+            val testOutputDirectoryAbsolute = project.build.testOutputDirectory
+            val testOutputDirectory = PathUtils.toRelativePath(testOutputDirectoryAbsolute, project.basedir, log)
             log.info("Captured output directory: $outputDirectory")
             log.info("Captured test output directory: $testOutputDirectory")
 
-            // Capture compile classpath
-            val compileClasspath = try {
+            // Capture compile classpath and convert to relative paths
+            val compileClasspathAbsolute = try {
                 project.compileClasspathElements.toSet()
             } catch (e: Exception) {
                 log.warn("Failed to capture compile classpath: ${e.message}")
                 emptySet<String>()
             }
+            val compileClasspath = PathUtils.toRelativePaths(compileClasspathAbsolute, project.basedir, log)
             log.info("Captured ${compileClasspath.size} compile classpath elements")
 
-            // Capture test classpath
-            val testClasspath = try {
+            // Capture test classpath and convert to relative paths
+            val testClasspathAbsolute = try {
                 project.testClasspathElements.toSet()
             } catch (e: Exception) {
                 log.warn("Failed to capture test classpath: ${e.message}")
                 emptySet<String>()
             }
+            val testClasspath = PathUtils.toRelativePaths(testClasspathAbsolute, project.basedir, log)
             log.info("Captured ${testClasspath.size} test classpath elements")
 
             // Capture main artifact (only if file exists)
             val mainArtifact = if (project.artifact?.file != null && project.artifact.file.exists()) {
                 ArtifactInfo(
-                    file = project.artifact.file.absolutePath,
+                    file = PathUtils.toRelativePath(project.artifact.file.absolutePath, project.basedir, log),
                     type = project.artifact.type,
                     classifier = project.artifact.classifier,
                     groupId = project.artifact.groupId,
@@ -128,7 +136,7 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             val attachedArtifacts = project.attachedArtifacts.mapNotNull { artifact: Artifact ->
                 if (artifact.file != null && artifact.file.exists()) {
                     ArtifactInfo(
-                        file = artifact.file.absolutePath,
+                        file = PathUtils.toRelativePath(artifact.file.absolutePath, project.basedir, log),
                         type = artifact.type,
                         classifier = artifact.classifier,
                         groupId = artifact.groupId,

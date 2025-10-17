@@ -87,26 +87,42 @@ class NxBuildStateApplyMojo : AbstractMojo() {
 
         // If this is the current project, apply source roots, resources, and output directories
         if (targetProject.artifactId == project.artifactId) {
-            // Apply source roots
-            buildState.compileSourceRoots.forEach { addIfExists(it) { targetProject.addCompileSourceRoot(it) } }
-            buildState.testCompileSourceRoots.forEach { addIfExists(it) { targetProject.addTestCompileSourceRoot(it) } }
+            // Convert relative paths to absolute paths and apply source roots
+            val compileSourceRoots = PathUtils.toAbsolutePaths(buildState.compileSourceRoots, targetProject.basedir, log)
+            compileSourceRoots.forEach { addIfExists(it) { targetProject.addCompileSourceRoot(it) } }
 
-            // Apply resources
-            buildState.resources.forEach { addResourceIfExists(it, targetProject::addResource) }
-            buildState.testResources.forEach { addResourceIfExists(it, targetProject::addTestResource) }
+            val testCompileSourceRoots = PathUtils.toAbsolutePaths(buildState.testCompileSourceRoots, targetProject.basedir, log)
+            testCompileSourceRoots.forEach { addIfExists(it) { targetProject.addTestCompileSourceRoot(it) } }
 
-            // Apply output directories
-            buildState.outputDirectory?.let { if (File(it).isDirectory) targetProject.build.outputDirectory = it }
-            buildState.testOutputDirectory?.let { if (File(it).isDirectory) targetProject.build.testOutputDirectory = it }
+            // Convert relative paths to absolute paths and apply resources
+            val resources = PathUtils.toAbsolutePaths(buildState.resources, targetProject.basedir, log)
+            resources.forEach { addResourceIfExists(it, targetProject::addResource) }
 
-            // Apply classpaths - include all files, not just JARs
-            buildState.compileClasspath.forEach { targetProject.compileClasspathElements.add(it) }
-            buildState.testClasspath.forEach { targetProject.testClasspathElements.add(it) }
+            val testResources = PathUtils.toAbsolutePaths(buildState.testResources, targetProject.basedir, log)
+            testResources.forEach { addResourceIfExists(it, targetProject::addTestResource) }
+
+            // Convert relative paths to absolute paths and apply output directories
+            buildState.outputDirectory?.let {
+                val absPath = PathUtils.toAbsolutePath(it, targetProject.basedir, log)
+                if (File(absPath).isDirectory) targetProject.build.outputDirectory = absPath
+            }
+            buildState.testOutputDirectory?.let {
+                val absPath = PathUtils.toAbsolutePath(it, targetProject.basedir, log)
+                if (File(absPath).isDirectory) targetProject.build.testOutputDirectory = absPath
+            }
+
+            // Convert relative paths to absolute paths and apply classpaths
+            val compileClasspath = PathUtils.toAbsolutePaths(buildState.compileClasspath, targetProject.basedir, log)
+            compileClasspath.forEach { targetProject.compileClasspathElements.add(it) }
+
+            val testClasspath = PathUtils.toAbsolutePaths(buildState.testClasspath, targetProject.basedir, log)
+            testClasspath.forEach { targetProject.testClasspathElements.add(it) }
         }
 
         // Apply main artifact (only if file exists)
         buildState.mainArtifact?.let { artifact ->
-            val file = File(artifact.file)
+            val absPath = PathUtils.toAbsolutePath(artifact.file, targetProject.basedir, log)
+            val file = File(absPath)
             if (file.exists()) {
                 log.info("Applying main artifact: ${file.absolutePath} to ${targetProject.artifactId}")
                 targetProject.artifact.file = file
@@ -117,7 +133,8 @@ class NxBuildStateApplyMojo : AbstractMojo() {
 
         // Apply attached artifacts (only if file exists)
         buildState.attachedArtifacts.forEach { artifact ->
-            val file = File(artifact.file)
+            val absPath = PathUtils.toAbsolutePath(artifact.file, targetProject.basedir, log)
+            val file = File(absPath)
             if (file.exists()) {
                 log.info("Applying attached artifact: ${file.absolutePath} to ${targetProject.artifactId}")
                 if (artifact.classifier.isNullOrEmpty()) {
